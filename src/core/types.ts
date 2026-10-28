@@ -959,6 +959,16 @@ export interface BattleOutcome {
   autoresolved: boolean;
 }
 
+/** Pre-battle estimate shown in the engagement prompt (sim/strategic/autoresolve.ts). */
+export interface BattlePrediction {
+  /** 0..1 chance side 0 (attacker) wins. */
+  attackerWinChance: number;
+  /** Expected casualties per side. */
+  expectedLosses: [number, number];
+  /** Short advisor-style explanation lines. */
+  factors: string[];
+}
+
 // =====================================================================================================
 // Soldier SoA buffers (local level; derived, NOT saved). Layout shared by sim/tactical/soldiers.ts
 // (writer) and render/units (reader). Index i in every array refers to the same soldier.
