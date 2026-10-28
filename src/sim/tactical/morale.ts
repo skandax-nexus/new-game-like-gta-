@@ -59,7 +59,8 @@ export function computeMoraleInputs(state: BattleState, f: FormationState, terra
     supply: f.supply,
     tacticalPosition: Math.max(-1, Math.min(1, higher * 0.5 + wet)),
     recentEvents: recentEventsValue(f, state.time),
-    perceivedRisk: clamp01(enemies / Math.max(1, friends + enemies) - 0.2),
+    // Local odds + accumulated losses (a formation that has lost half its men feels it).
+    perceivedRisk: clamp01(enemies / Math.max(1, friends + enemies) - 0.2 + (1 - f.soldiers / Math.max(1, f.maxSoldiers)) * 0.7),
   };
 }
 

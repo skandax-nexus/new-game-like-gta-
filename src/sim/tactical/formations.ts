@@ -24,6 +24,9 @@ export interface FormationDims {
 }
 
 /** Aspect (files : ranks) per shape. */
+/** Detour headings (radians) tried when the direct step is blocked. */
+const DETOURS = [0.5, -0.5, 1.0, -1.0, 1.5, -1.5];
+
 const SHAPE_ASPECT: Record<FormationShape, number> = { line: 5, column: 0.25, square: 1, wedge: 1.6, loose: 3, circle: 1 };
 const SHAPE_SPREAD: Record<FormationShape, number> = { line: 1, column: 1, square: 1, wedge: 1.1, loose: 1.8, circle: 1.15 };
 
@@ -123,13 +126,28 @@ export function moveFormationToward(
   f.facing = approachAngle(f.facing, desired, turn);
   const speed = formationSpeed(f, terrain, run) * (backwards ? 0.5 : 1);
   const step = Math.min(d, speed * dt);
-  const nx = f.x + (dx / d) * step;
-  const nz = f.z + (dz / d) * step;
-  // Do not walk into deep water (baseline: stop at the bank).
+  let nx = f.x + (dx / d) * step;
+  let nz = f.z + (dz / d) * step;
+  // Baseline obstacle avoidance: deep water blocks; slide along the bank looking for a ford.
+  // TODO(Lead Gameplay): replace with a flow-field / grid path planner (fords, bridges, works).
   if (terrain.terrainClassAt(nx, nz) === 'deep_water') {
-    f.vx = 0;
-    f.vz = 0;
-    return d;
+    let found = false;
+    for (const turnBy of DETOURS) {
+      const h = travelFacing + turnBy;
+      const ax = f.x + dsin(h) * step;
+      const az = f.z + dcos(h) * step;
+      if (terrain.terrainClassAt(ax, az) !== 'deep_water') {
+        nx = ax;
+        nz = az;
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      f.vx = 0;
+      f.vz = 0;
+      return d;
+    }
   }
   f.vx = (nx - f.x) / dt;
   f.vz = (nz - f.z) / dt;

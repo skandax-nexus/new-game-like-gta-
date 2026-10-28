@@ -38,6 +38,8 @@ export interface RiverSample {
   valley: number;
   /** 0 = main river, 1 = tributary, -1 = none. */
   which: number;
+  /** 0..1 ford factor: 1 = shallow crossable ford (depth reduced to ~0.7 m). */
+  ford: number;
 }
 
 /** Detail octaves added on top of the macro terrain, filtered by the sampling cell size. */
@@ -90,7 +92,7 @@ export class TerrainGenerator {
   private readonly junctionAcross: number;
 
   private readonly dTmp = { d: 0 };
-  private readonly tmpRiver: RiverSample = { dist: Infinity, halfWidth: 0, depth: 0, valley: 0, which: -1 };
+  private readonly tmpRiver: RiverSample = { dist: Infinity, halfWidth: 0, depth: 0, valley: 0, which: -1, ford: 0 };
 
   constructor(spec: TerrainSpec) {
     this.seed = spec.seed >>> 0;
@@ -154,6 +156,7 @@ export class TerrainGenerator {
     out.halfWidth = 0;
     out.depth = 0;
     out.valley = 0;
+    out.ford = 0;
     if (!this.river.enabled) return out;
     const along = x * this.ca + z * this.sa;
     const across = -x * this.sa + z * this.ca;
@@ -161,11 +164,14 @@ export class TerrainGenerator {
     const dc = this.dTmp.d;
     const dMain = Math.abs(across - c) / Math.sqrt(1 + dc * dc);
     const widthVar = 1 + 0.22 * this.nRiver.noise1(along / 900 + 40);
+    // Fords: shallow, slightly wider stretches every few hundred meters (crossings for armies).
+    const ford = smoothstep(0.5, 0.68, this.nRiver.noise1(along / 380 + 77.7));
     out.dist = dMain;
-    out.halfWidth = this.river.widthMeters * 0.5 * widthVar;
-    out.depth = this.river.depthMeters;
+    out.halfWidth = this.river.widthMeters * 0.5 * widthVar * (1 + ford * 0.25);
+    out.depth = this.river.depthMeters * (1 - 0.88 * ford);
     out.valley = 430;
     out.which = 0;
+    out.ford = ford;
     if (this.river.tributary) {
       const cJ = this.junctionAcross;
       if (across < cJ + 30) {
@@ -176,9 +182,10 @@ export class TerrainGenerator {
         if (dTrib < dMain) {
           out.dist = dTrib;
           out.halfWidth = this.river.widthMeters * 0.22 * widthVar;
-          out.depth = this.river.depthMeters * 0.45;
+          out.depth = this.river.depthMeters * 0.45 * (1 - 0.8 * ford);
           out.valley = 210;
           out.which = 1;
+          out.ford = ford;
         }
       }
     }
@@ -636,7 +643,8 @@ export function findPresetSite(region: TerrainSpec, preset: TerrainPreset): Vec2
       let score: number;
       switch (preset) {
         case 'river_crossing':
-          score = r.which === 0 ? -Math.abs(rd) / 40 - slope * 10 : -1e9;
+          // On the main river, at a ford, with gentle banks.
+          score = r.which === 0 ? -Math.abs(rd) / 40 - slope * 10 + r.ford * 6 : -1e9;
           break;
         case 'plains':
           score = -slope * 40 - gen.hillsMask(x, z) * 5 - gen.plateauMask(x, z) * 5 + Math.min(rd, 900) / 400;

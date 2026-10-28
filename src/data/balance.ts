@@ -35,8 +35,8 @@ export const BALANCE: BalanceConfig = {
     siegeAttritionPerDay: 0.004,
   },
   morale: {
-    weights: { leadership: 18, cohesion: 22, fatigue: 20, supply: 10, tacticalPosition: 14, recentEvents: 30, perceivedRisk: 26 },
-    routThreshold: 22,
+    weights: { leadership: 18, cohesion: 22, fatigue: 20, supply: 10, tacticalPosition: 14, recentEvents: 36, perceivedRisk: 40 },
+    routThreshold: 26,
     rallyThreshold: 45,
     driftPerSec: 3,
     commanderFallenShock: -0.7,

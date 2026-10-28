@@ -31,6 +31,11 @@ export function applyDamage(state: BattleState, f: FormationState, hpDamage: num
   f.damagePool -= dead * hp;
   f.soldiers -= dead;
   f.killed += dead;
+  // Heavy casualties shock (rate-limited to one event per 3 s).
+  if (dead >= Math.max(2, f.maxSoldiers * 0.02)) {
+    const last = f.moraleEvents.length ? f.moraleEvents[f.moraleEvents.length - 1] : undefined;
+    if (!last || last.kind !== 'heavy_casualties' || state.time - last.time > 3) addMoraleEvent(f, 'heavy_casualties', state.time, -0.12, 20);
+  }
   f.lastHitTime = state.time;
   if (f.hasCommander && f.commanderAlive && f.soldiers < f.maxSoldiers * 0.35) {
     // Baseline: the commander falls when the guard formation is mostly destroyed.

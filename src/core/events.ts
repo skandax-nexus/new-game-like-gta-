@@ -154,6 +154,14 @@ export interface GameEventMap {
   'save:written': { slot: string };
   'save:loaded': { slot: string };
   'ui:notify': { text: string; severity: NotifySeverity };
+  /** UI asks the battle scene to change selection (formation cards, control groups). */
+  'ui:select_formations': { formations: readonly FormationIndex[]; additive: boolean };
+  /** UI asks the world scene to select an entity (list click, notification). */
+  'ui:world_select': { kind: 'army' | 'settlement' | 'province' | 'none'; id: string | null };
+  /** UI asks the active scene to move its camera to a ground point. */
+  'ui:camera_focus': { x: number; z: number; distance: number | null };
+  /** Toggle a map overlay (supply lines, terrain classes, borders). */
+  'ui:overlay': { overlay: 'supply' | 'terrain' | 'borders'; visible: boolean };
   'audio:sfx': { sfx: SfxKind; volume?: number; pan?: number };
   /** Ambience intensity hints for the audio director. */
   'audio:mood': { mood: 'menu' | 'world' | 'battle' | 'city' | 'victory' | 'defeat'; intensity: number };

@@ -10,8 +10,6 @@
  *  - Never mutate data/* definitions; copy into state.
  */
 import type {
-  ArmyState,
-  ArmyUnitState,
   CharacterState,
   DiplomacyState,
   DynastyState,
@@ -30,8 +28,8 @@ import type {
   SettlementState,
   SimEvent,
   TerrainQuery,
+  TerrainSpec,
   TreatyType,
-  UnitClass,
   Vec2,
   VictoryType,
   WorldSetup,
@@ -44,10 +42,9 @@ import { Rng, rngStateFromSeed } from '../../core/rng';
 import { dcos, dsin, TWO_PI } from '../../core/math';
 import { getHeightfield } from '../../core/terrain/cache';
 import type { Heightfield } from '../../core/terrain/heightfield';
-import { resolveSettlementSites } from '../../core/terrain/sites';
+import { resolveSettlementSites, type ResolvedSite } from '../../core/terrain/sites';
 import { traceRoad } from '../../core/terrain/roads';
 import { FACTIONS } from '../../data/factions';
-import { UNITS } from '../../data/units';
 import { REGION } from '../../data/region';
 import { DEFAULT_SCENARIO_ID, SCENARIOS } from '../../data/campaign';
 import { PERSON_NAMES } from '../../data/names';
@@ -76,6 +73,21 @@ export function withWorldRng<T>(world: WorldState, fn: (rng: Rng) => T): T {
 // ---------------------------------------------------------------------------------------------------
 // Creation
 // ---------------------------------------------------------------------------------------------------
+
+let regionCache: { terrain: TerrainSpec; sites: ResolvedSite[] } | null = null;
+
+/**
+ * The region terrain spec with settlement flatten pads + resolved settlement sites. Pure and
+ * deterministic (data/region.ts); cached. Used by createWorld and by scenes that need the region
+ * without a world (menu backdrop, hero mode from the main menu).
+ */
+export function resolveRegionTerrain(): { terrain: TerrainSpec; sites: ResolvedSite[] } {
+  if (!regionCache) {
+    const sites = resolveSettlementSites(REGION.terrain, REGION.settlements);
+    regionCache = { terrain: { ...REGION.terrain, pads: sites.map((s) => s.pad) }, sites };
+  }
+  return { terrain: { ...regionCache.terrain, pads: regionCache.terrain.pads.map((p) => ({ ...p })), river: { ...regionCache.terrain.river } }, sites: regionCache.sites.map((s) => ({ ...s, pad: { ...s.pad } })) };
+}
 
 const EMPTY_LEDGER: FactionLedger = {
   taxIncome: 0,
@@ -217,8 +229,7 @@ export function createWorld(setup: WorldSetup): WorldState {
   const inPlay = new Set(factionIds);
 
   // Terrain: resolve settlement sites, add flatten pads, generate region heightfield.
-  const sites = resolveSettlementSites(REGION.terrain, REGION.settlements);
-  const terrain = { ...REGION.terrain, pads: sites.map((s) => s.pad) };
+  const { terrain, sites } = resolveRegionTerrain();
   const hf = getHeightfield(terrain);
   const half = terrain.sizeMeters / 2;
 

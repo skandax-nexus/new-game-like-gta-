@@ -1,0 +1,280 @@
+/*
+ * Base UI components. OWNER: Lead UI/UX Engineer. Baseline by the CTO. Uses theme.css tokens only.
+ * Layers inside #ui-root: .ui-layer-hud, .ui-layer-panel, .ui-layer-modal, .ui-layer-toast.
+ */
+#ui-root {
+  font-family: var(--font-body);
+  color: var(--ui-text);
+  font-size: calc(var(--fs-md) * var(--ui-scale));
+  line-height: 1.35;
+}
+#ui-root * {
+  box-sizing: border-box;
+}
+.ui-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.ui-layer > * {
+  pointer-events: auto;
+}
+.ui-hidden {
+  display: none !important;
+}
+.ui-noui .ui-layer-hud,
+.ui-noui .ui-layer-panel {
+  display: none !important;
+}
+
+/* Panels with carved-frame look */
+.panel {
+  position: relative;
+  background: var(--ui-panel), var(--pattern-jali);
+  border: var(--border-w) solid var(--ui-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-panel);
+  padding: var(--sp-4);
+  backdrop-filter: blur(6px);
+}
+.panel::before,
+.panel::after {
+  content: '';
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  background: var(--ornament-corner) no-repeat center / contain;
+  pointer-events: none;
+}
+.panel::before {
+  top: 3px;
+  left: 3px;
+}
+.panel::after {
+  bottom: 3px;
+  right: 3px;
+  transform: rotate(180deg);
+}
+.panel-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  color: var(--c-gold);
+  letter-spacing: 0.06em;
+  margin: 0 0 var(--sp-2);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+}
+.divider {
+  height: 12px;
+  margin: var(--sp-2) 0;
+  background: var(--ornament-divider) no-repeat center / contain;
+}
+
+/* Buttons */
+.btn {
+  font: inherit;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  letter-spacing: 0.04em;
+  min-height: var(--touch-min);
+  min-width: var(--touch-min);
+  padding: 8px 16px;
+  color: var(--ui-text);
+  background: linear-gradient(180deg, rgba(70, 46, 86, 0.95), rgba(40, 26, 52, 0.95));
+  border: 1.5px solid var(--ui-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 230, 170, 0.15), 0 2px 6px rgba(0, 0, 0, 0.35);
+  transition: transform 0.08s ease, box-shadow 0.15s ease, background 0.15s ease;
+  touch-action: manipulation;
+  user-select: none;
+}
+.btn:hover {
+  box-shadow: var(--glow-gold);
+}
+.btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  box-shadow: none;
+}
+.btn.primary {
+  color: #fff7e6;
+  background: linear-gradient(180deg, var(--c-saffron), var(--c-saffron-deep));
+  border-color: var(--c-gold);
+}
+.btn.ghost {
+  background: rgba(255, 255, 255, 0.04);
+}
+.btn.icon {
+  padding: 6px;
+  width: var(--touch-min);
+  font-size: 18px;
+}
+.btn.active {
+  background: linear-gradient(180deg, #6a4a1c, #3f2a10);
+  box-shadow: var(--glow-gold);
+}
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* Stats / chips */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--ui-border-soft);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+.chip b {
+  color: var(--c-gold);
+  font-weight: 600;
+}
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px 14px;
+  font-size: var(--fs-sm);
+}
+.stat-grid .k {
+  color: var(--ui-text-dim);
+}
+.bar {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+.bar > i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--c-saffron), var(--c-gold));
+}
+.muted {
+  color: var(--ui-text-dim);
+}
+.positive {
+  color: var(--ui-positive);
+}
+.danger {
+  color: var(--ui-danger);
+}
+
+/* Form controls */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--fs-sm);
+}
+.field select,
+.field input[type='range'],
+.field input[type='number'] {
+  font: inherit;
+  min-height: 38px;
+  color: var(--ui-text);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--ui-border-soft);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+}
+.field input[type='range'] {
+  accent-color: var(--c-saffron);
+  padding: 0;
+}
+
+/* Modal */
+.ui-layer-modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(16px, var(--safe-top)) max(16px, var(--safe-right)) max(16px, var(--safe-bottom)) max(16px, var(--safe-left));
+}
+.ui-layer-modal.has-modal {
+  background: rgba(8, 5, 14, 0.45);
+  pointer-events: auto;
+}
+.modal {
+  width: min(560px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+}
+
+/* Toasts */
+.ui-layer-toast {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding-top: calc(70px + var(--safe-top));
+}
+.toast {
+  pointer-events: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--ui-bg);
+  border: 1px solid var(--ui-border-soft);
+  font-size: var(--fs-sm);
+  animation: toast-in 0.25s ease;
+  max-width: min(520px, 92vw);
+  text-align: center;
+}
+.toast.warning {
+  border-color: var(--ui-warning);
+}
+.toast.danger {
+  border-color: var(--ui-danger);
+}
+.toast.success {
+  border-color: var(--ui-positive);
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+/* Loading overlay */
+.loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: radial-gradient(ellipse at 50% 40%, rgba(58, 35, 80, 0.92), rgba(13, 9, 22, 0.97));
+  pointer-events: auto;
+  z-index: 50;
+}
+.loading .label {
+  font-family: var(--font-display);
+  letter-spacing: 0.2em;
+  color: var(--c-gold-soft);
+  text-transform: uppercase;
+  font-size: var(--fs-sm);
+}
+.loading .bar {
+  width: min(360px, 70vw);
+  height: 4px;
+}
+
+/* Responsive: phones */
+@media (max-width: 640px), (max-height: 480px) {
+  :root {
+    --fs-md: 14px;
+    --fs-lg: 17px;
+  }
+  .panel {
+    padding: var(--sp-3);
+  }
+}

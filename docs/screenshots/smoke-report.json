@@ -1,0 +1,50 @@
+{
+  "build": "0.1.0+2d23313",
+  "quality": "high",
+  "shots": [
+    {
+      "name": "menu",
+      "url": "http://127.0.0.1:4317/?scene=menu&quality=high&noaudio=1",
+      "ms": 14828,
+      "errors": [],
+      "state": {
+        "scene": "menu",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "scene": "menu",
+          "center": {
+            "x": -611.5200000000001,
+            "z": -700.1600000000001
+          }
+        },
+        "fps": 2.1721100631634944,
+        "errors": 0
+      }
+    },
+    {
+      "name": "menu-mobile",
+      "url": "http://127.0.0.1:4317/?scene=menu&quality=low&noaudio=1",
+      "ms": 18527,
+      "errors": [],
+      "state": {
+        "scene": "menu",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "low",
+        "sceneState": {
+          "scene": "menu",
+          "center": {
+            "x": -611.5200000000001,
+            "z": -700.1600000000001
+          }
+        },
+        "fps": 5.9509051798223265,
+        "errors": 0
+      }
+    }
+  ]
+}

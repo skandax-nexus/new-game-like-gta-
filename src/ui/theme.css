@@ -1,0 +1,80 @@
+/*
+ * SAMRAJYA UI design tokens. OWNER: Art Director. Placeholder tokens by the CTO.
+ * Direction: Indian-art inspired - saffron, indigo, vermilion, gold leaf, carved sandstone and
+ * dark lacquered wood; ornamental borders; high contrast for readability on phones.
+ * Components (src/ui/base.css, Lead UI/UX) MUST use these variables, never raw colors.
+ */
+:root {
+  /* Palette */
+  --c-saffron: #e8892b;
+  --c-saffron-deep: #b9561c;
+  --c-gold: #e9b949;
+  --c-gold-soft: #d9b46a;
+  --c-gold-dim: #8a6a2e;
+  --c-indigo: #2c2f6b;
+  --c-indigo-deep: #191a40;
+  --c-vermilion: #d4452b;
+  --c-lotus: #d98aa6;
+  --c-peacock: #1f7a7a;
+  --c-ivory: #f6ecd6;
+  --c-parchment: #efe0bd;
+  --c-sandstone: #c9a272;
+  --c-ink: #24160f;
+  --c-shadow: rgba(12, 6, 18, 0.55);
+
+  /* Semantic */
+  --ui-bg: rgba(24, 16, 36, 0.86);
+  --ui-bg-solid: #1d1430;
+  --ui-panel: linear-gradient(180deg, rgba(48, 30, 62, 0.94), rgba(26, 17, 38, 0.94));
+  --ui-panel-light: linear-gradient(180deg, #f6ecd6, #e7d2a6);
+  --ui-border: #c99a3b;
+  --ui-border-soft: rgba(201, 154, 59, 0.45);
+  --ui-text: #f6ecd6;
+  --ui-text-dim: #cbb994;
+  --ui-text-dark: #2a1a10;
+  --ui-accent: var(--c-saffron);
+  --ui-positive: #7fbf6a;
+  --ui-warning: #e9b949;
+  --ui-danger: #e0533d;
+  --ui-info: #7fb2e5;
+  --ui-player: #e8892b;
+  --ui-enemy: #e0533d;
+
+  /* Type */
+  --font-display: 'Palatino Linotype', 'Book Antiqua', Palatino, 'Noto Serif', Georgia, serif;
+  --font-body: 'Segoe UI', 'Noto Sans', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --fs-xs: 11px;
+  --fs-sm: 13px;
+  --fs-md: 15px;
+  --fs-lg: 19px;
+  --fs-xl: 26px;
+  --fs-title: clamp(34px, 6.5vw, 76px);
+  --letter-title: 0.28em;
+
+  /* Shape */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --border-w: 2px;
+  --shadow-panel: 0 10px 34px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 220, 150, 0.08);
+  --glow-gold: 0 0 0 1px rgba(233, 185, 73, 0.6), 0 0 14px rgba(233, 185, 73, 0.35);
+
+  /* Spacing / touch */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --touch-min: 44px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  /* Ornament: lotus/mandala corner motif (inline SVG, gold) */
+  --ornament-corner: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><g fill='none' stroke='%23e9b949' stroke-width='1.6'><path d='M2 38 L2 2 L38 2'/><path d='M6 34 L6 6 L34 6' opacity='.55'/><circle cx='12' cy='12' r='4'/><path d='M12 4 Q15 9 12 12 Q9 9 12 4 Z M4 12 Q9 9 12 12 Q9 15 4 12 Z'/></g></svg>");
+  --ornament-divider: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12'><g fill='none' stroke='%23c99a3b' stroke-width='1.2'><path d='M0 6 H84'/><path d='M116 6 H200'/><path d='M100 1 L106 6 L100 11 L94 6 Z' fill='%23e9b949'/><circle cx='88' cy='6' r='2'/><circle cx='112' cy='6' r='2'/></g></svg>");
+  --pattern-jali: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><g fill='none' stroke='%23e9b949' stroke-opacity='.08' stroke-width='1'><circle cx='12' cy='12' r='8'/><path d='M12 0 V24 M0 12 H24'/></g></svg>");
+
+  --ui-scale: 1;
+}
