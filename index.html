@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#1b1430" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="description" content="SAMRAJYA: Echoes of Bharat - build a kingdom, unite a civilization, rewrite history." />
+    <title>SAMRAJYA: Echoes of Bharat</title>
+    <style>
+      /* Boot-time critical CSS only. Real theme lives in src/ui/theme.css (Art Director). */
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #120d1f;
+        color: #f3e6c8;
+        overscroll-behavior: none;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: none;
+      }
+      #game {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        touch-action: none;
+        outline: none;
+      }
+      #ui-root,
+      #overlay-root {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+      }
+      #ui-root {
+        z-index: 10;
+      }
+      #overlay-root {
+        z-index: 1000;
+      }
+      #boot-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        background: radial-gradient(ellipse at 50% 40%, #3a2350 0%, #1b1430 55%, #0d0916 100%);
+        font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+        transition: opacity 0.6s ease;
+      }
+      #boot-splash.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #boot-splash .title {
+        font-size: clamp(32px, 7vw, 72px);
+        letter-spacing: 0.32em;
+        color: #e9b949;
+        text-shadow: 0 2px 18px rgba(233, 185, 73, 0.35);
+        padding-left: 0.32em;
+      }
+      #boot-splash .subtitle {
+        font-size: clamp(13px, 2.2vw, 18px);
+        letter-spacing: 0.4em;
+        color: #d9c7a0;
+        text-transform: uppercase;
+        padding-left: 0.4em;
+      }
+      #boot-splash .bar {
+        width: min(320px, 70vw);
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(233, 185, 73, 0.18);
+        overflow: hidden;
+      }
+      #boot-splash .bar > div {
+        width: 30%;
+        height: 100%;
+        background: linear-gradient(90deg, #c8501e, #e9b949);
+        animation: boot-slide 1.4s ease-in-out infinite;
+      }
+      @keyframes boot-slide {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(340%);
+        }
+      }
+      #boot-splash noscript {
+        color: #f3e6c8;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="game" tabindex="0" aria-label="Game view"></canvas>
+    <div id="ui-root"></div>
+    <div id="overlay-root"></div>
+    <div id="boot-splash" role="status" aria-live="polite">
+      <div class="title">SAMRAJYA</div>
+      <div class="subtitle">Echoes of Bharat</div>
+      <div class="bar"><div></div></div>
+      <noscript>This game requires JavaScript and WebGL2.</noscript>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
