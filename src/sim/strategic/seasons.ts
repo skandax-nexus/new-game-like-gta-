@@ -54,7 +54,7 @@ export function totalDays(cal: CalendarState): number {
 }
 
 export function createCalendar(year: number, month: number): CalendarState {
-  return { year, month, day: 0, hour: 6, totalHours: 6 };
+  return { year, month, day: 0, hour: 8, totalHours: 8 };
 }
 
 export interface CalendarAdvance {

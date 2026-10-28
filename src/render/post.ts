@@ -166,7 +166,8 @@ export class PostPipeline {
       this.composer.addPass(ssao);
     }
     if (q.bloom) {
-      this.bloomPass = new UnrealBloomPass(new THREE.Vector2(Math.max(1, w / 2), Math.max(1, h / 2)), 0.32, 0.55, 0.92);
+      // HDR threshold well above the sky's luminance so only the sun, fire and highlights bloom.
+      this.bloomPass = new UnrealBloomPass(new THREE.Vector2(Math.max(1, w / 2), Math.max(1, h / 2)), 0.18, 0.45, 6);
       this.composer.addPass(this.bloomPass);
     }
     this.outputPass = new OutputPass();

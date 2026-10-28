@@ -60,6 +60,11 @@ export interface SamrajyaDebugApi {
   waitForSceneReady(timeoutMs?: number): Promise<boolean>;
   /** Resolves after n rendered frames. */
   waitFrames(n: number): Promise<void>;
+  /**
+   * Stop (true) / restart (false) the frame loop entirely. Screenshot tools freeze after the scene is
+   * ready so capturing does not wait for another (possibly very slow, software-rendered) frame.
+   */
+  freeze(frozen: boolean): void;
   /** Render + capture the canvas as a PNG data URL. */
   screenshot(): string | null;
   /** Quick save to a slot (default "quick"); returns the slot. */

@@ -65,9 +65,9 @@ export function deployZoneFor(setup: Pick<BattleSetup, 'terrain'>, side: SideInd
   const ax = -dsin(a);
   const az = dcos(a);
   const sign = side === 0 ? 1 : -1;
-  const cx = t.centerX + ax * 200 * sign;
-  const cz = t.centerZ + az * 200 * sign;
-  return { minX: cx - 170, minZ: cz - 170, maxX: cx + 170, maxZ: cz + 170 };
+  const cx = t.centerX + ax * 150 * sign;
+  const cz = t.centerZ + az * 150 * sign;
+  return { minX: cx - 150, minZ: cz - 110, maxX: cx + 150, maxZ: cz + 110 };
 }
 
 const LINE_ORDER: Record<UnitClass, number> = {
@@ -163,7 +163,7 @@ function autoDeploy(state: BattleState, side: SideIndex, terrain: TerrainQuery):
       // Mounted wings: split left/right of the main line.
       arr.forEach((f, i) => {
         const wing = i % 2 === 0 ? 1 : -1;
-        const off = 150 + Math.floor(i / 2) * (f.width + 12);
+        const off = 95 + Math.floor(i / 2) * (f.width + 10);
         place(f, cx + rightX * off * wing + fwdX * lineDepth[line]!, cz + rightZ * off * wing + fwdZ * lineDepth[line]!, facing, terrain);
       });
       continue;

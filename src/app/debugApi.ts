@@ -104,6 +104,10 @@ export function createDebugApi(ctx: AppContext, session: GameSession): SamrajyaD
     waitFrames(n: number) {
       return new Promise<void>((resolve) => frameWaiters.push({ remaining: Math.max(1, n), resolve }));
     },
+    freeze(frozen: boolean) {
+      if (frozen) ctx.loop.stop();
+      else ctx.loop.start();
+    },
     screenshot: () => ctx.render.capture(),
     save(slot = 'quick') {
       session.saveGame(slot);

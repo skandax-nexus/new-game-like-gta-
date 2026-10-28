@@ -278,3 +278,24 @@
     padding: var(--sp-3);
   }
 }
+
+/* Compact battle HUD on short (landscape phone) screens: one scrolling order row, no shape row. */
+@media (max-height: 500px) {
+  .battle-bottom {
+    padding: 4px !important;
+    gap: 4px !important;
+  }
+  .battle-bottom .btn {
+    min-height: 38px;
+    padding: 4px 10px;
+    font-size: var(--fs-sm);
+  }
+  .battle-orders {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    max-width: 96vw;
+  }
+  .battle-shapes {
+    display: none !important;
+  }
+}

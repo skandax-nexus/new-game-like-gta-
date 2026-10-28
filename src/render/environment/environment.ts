@@ -113,9 +113,9 @@ export class EnvironmentRig {
     const lightDir = elev < 0 ? this.tmp.set(-dir.x, Math.max(0.3, -dir.y), -dir.z).normalize() : this.tmp.copy(dir);
     this.sun.position.copy(lightDir).multiplyScalar(1500);
     const tint = SEASON_TINT[env.season];
-    this.hemi.color.setRGB(0.62 * tint[0], 0.72 * tint[1], 0.95 * tint[2]).multiplyScalar(0.6 + day * 0.6);
+    this.hemi.color.setRGB(0.72 * tint[0], 0.76 * tint[1], 0.86 * tint[2]).multiplyScalar(0.6 + day * 0.6);
     this.hemi.groundColor.setRGB(0.42 * tint[0], 0.34 * tint[1], 0.22 * tint[2]).multiplyScalar(0.5 + day * 0.5);
-    this.hemi.intensity = 0.35 + day * 0.55 + w.cloudCover * 0.4;
+    this.hemi.intensity = 0.3 + day * 0.4 + w.cloudCover * 0.35;
     // Fog: visibility -> density (exp2: ~ e^-(d*density)^2, 2% at visibility).
     const vis = Math.max(200, Math.min(w.visibility, this.opts.sceneSize * 2.5));
     this.fog.density = 1.98 / vis;
@@ -143,7 +143,7 @@ export class EnvironmentRig {
     this.windStrength = Math.min(1, w.windSpeed / 12);
     const envMap = this.sky.updateEnvironmentMap(w.cloudCover);
     this.scene.environment = envMap;
-    this.scene.environmentIntensity = 0.35 + day * 0.65;
+    this.scene.environmentIntensity = 0.3 + day * 0.5;
   }
 
   /** Per frame: keep the shadow frustum around the camera focus (texel-snapped). */

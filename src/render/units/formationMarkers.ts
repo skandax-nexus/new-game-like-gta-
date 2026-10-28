@@ -27,9 +27,9 @@ export class FormationMarkers {
   ) {
     this.object.name = 'formation-markers';
     this.colorSide = [new THREE.Color(sideColors[0]), new THREE.Color(sideColors[1])];
-    const ringGeo = new THREE.RingGeometry(0.92, 1, 48, 1);
+    const ringGeo = new THREE.RingGeometry(0.975, 1, 64, 1);
     ringGeo.rotateX(-Math.PI / 2);
-    const mat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.75, depthWrite: false, toneMapped: false });
+    const mat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5, depthWrite: false, toneMapped: false });
     this.ring = new THREE.InstancedMesh(ringGeo, mat, max);
     this.ring.frustumCulled = false;
     this.ring.renderOrder = 5;
@@ -48,7 +48,7 @@ export class FormationMarkers {
     for (const f of state.formations) {
       if (f.soldiers <= 0) continue;
       const sel = selection.has(f.index);
-      const r = Math.max(f.width, f.depth) * 0.6 + 2;
+      const r = Math.max(f.width, f.depth) * 0.55 + 1.5;
       this.p.set(f.x, terrain.heightAt(f.x, f.z) + 0.3, f.z);
       this.q.setFromAxisAngle(this.up, f.facing);
       this.s.set(r * (sel ? pulse : 1), 1, r * (sel ? pulse : 1));

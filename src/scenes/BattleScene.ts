@@ -148,9 +148,9 @@ export class BattleScene implements GameScene {
     // Look from behind the player's army toward the enemy.
     const yaw = Math.atan2(a.x - b.x, a.z - b.z);
     const preset = this.ctx.params.camera;
-    const dist = preset === 'close' ? 60 : preset === 'overview' ? 650 : 230;
-    const fx = a.x + (b.x - a.x) * (preset === 'close' ? 0.15 : 0.38);
-    const fz = a.z + (b.z - a.z) * (preset === 'close' ? 0.15 : 0.38);
+    const dist = preset === 'close' ? 55 : preset === 'overview' ? 650 : 165;
+    const fx = a.x + (b.x - a.x) * (preset === 'close' ? 0.12 : 0.3);
+    const fz = a.z + (b.z - a.z) * (preset === 'close' ? 0.12 : 0.3);
     this.cam.setState({ x: fx, z: fz, distance: dist, yaw, tilt: preset === 'close' ? -0.05 : 0 });
   }
 

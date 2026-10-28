@@ -87,4 +87,4 @@ export const GRADE_PRESETS: Readonly<Record<'day' | 'golden' | 'dusk' | 'night' 
 };
 
 /** Exposure per time-of-day bucket. */
-export const EXPOSURE = { day: 0.95, golden: 1.05, dusk: 1.15, night: 1.4 } as const;
+export const EXPOSURE = { day: 0.8, golden: 0.95, dusk: 1.1, night: 1.4 } as const;

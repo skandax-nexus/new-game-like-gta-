@@ -66,15 +66,15 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
     speeds,
     h('button', { class: 'btn icon', onclick: () => (ctx.actions.setPaused(true), ui.show('pause_menu', { mode: ctx.session.mode, canSave: true })) }, '☰'),
   );
-  const orderBar = h('div', { class: 'btn-row', style: { justifyContent: 'center' } });
+  const orderBar = h('div', { class: 'btn-row battle-orders', style: { justifyContent: 'center' } });
   for (const [a, label, key] of ORDERS) orderBar.append(h('button', { class: 'btn', title: `${label} (${key})`, onclick: () => (ctx.bus.emit('audio:sfx', { sfx: 'order_ack' }), ctx.input.injectAction(a)) }, label));
-  const shapeBar = h('div', { class: 'btn-row', style: { justifyContent: 'center' } });
+  const shapeBar = h('div', { class: 'btn-row battle-shapes', style: { justifyContent: 'center' } });
   for (const [a, label] of SHAPES) shapeBar.append(h('button', { class: 'btn ghost', style: { fontSize: 'var(--fs-sm)' }, onclick: () => ctx.input.injectAction(a) }, label));
   shapeBar.append(h('button', { class: 'btn ghost', style: { fontSize: 'var(--fs-sm)' }, onclick: () => ctx.input.injectAction('select_all') }, 'All'));
   const cards = h('div', { style: { display: 'flex', gap: '6px', overflowX: 'auto', padding: '2px', maxWidth: '96vw' } });
   const bottom = h(
     'div',
-    { class: 'panel', style: { position: 'absolute', bottom: 'max(8px, var(--safe-bottom))', left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', gap: '8px', padding: '8px', maxWidth: '98vw', width: 'max-content' } },
+    { class: 'panel battle-bottom', style: { position: 'absolute', bottom: 'max(8px, var(--safe-bottom))', left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', gap: '8px', padding: '8px', maxWidth: '98vw', width: 'max-content' } },
     cards,
     orderBar,
     shapeBar,

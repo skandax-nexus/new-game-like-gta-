@@ -103,11 +103,14 @@ export interface VegetationOptions {
   exclude?: (x: number, z: number) => boolean;
   /** Override instance cap. */
   maxInstances?: number;
+  /** Default true. The strategic map disables tree shadows for performance. */
+  castShadows?: boolean;
 }
 
 export class VegetationRenderer {
   readonly object = new THREE.Group();
   private readonly meshes: THREE.InstancedMesh[] = [];
+  private readonly geometries: THREE.BufferGeometry[] = [];
   private readonly material: THREE.MeshStandardMaterial;
   private readonly uniforms = {
     uTime: { value: 0 },
@@ -162,7 +165,6 @@ export class VegetationRenderer {
         const veg = BIOME_VEG[hf.biomeAt(x, z)];
         if (!veg) continue;
         const p = veg.density * density * ((step * step) / 100);
-        void q;
         if (r0 >= p) continue;
         const jx = x + (hash2(ix, iz, opts.seed + 1) - 0.5) * step;
         const jz = z + (hash2(ix, iz, opts.seed + 2) - 0.5) * step;
@@ -188,29 +190,43 @@ export class VegetationRenderer {
     const pos = new THREE.Vector3();
     const scl = new THREE.Vector3();
     const up = new THREE.Vector3(0, 1, 0);
+    // Spatial tiles so frustum culling works for the main AND shadow passes.
+    const tiles = Math.max(1, Math.min(4, Math.round(hf.spec.sizeMeters / 1400)));
+    const tileW = (b.maxX - b.minX) / tiles;
+    const tileD = (b.maxZ - b.minZ) / tiles;
     for (const s of SPECIES) {
       const arr = lists[s];
       const n = arr.length / 4;
       if (n === 0) continue;
       const geo = speciesGeometry(s);
-      const mesh = new THREE.InstancedMesh(geo, this.material, n);
+      this.geometries.push(geo);
+      const buckets: number[][] = Array.from({ length: tiles * tiles }, () => []);
       for (let i = 0; i < n; i++) {
-        const x = arr[i * 4] as number;
-        const z = arr[i * 4 + 1] as number;
-        const sc = 0.7 + (arr[i * 4 + 2] as number) * 0.7;
-        qrot.setFromAxisAngle(up, (arr[i * 4 + 3] as number) * Math.PI * 2);
-        pos.set(x, hf.heightAt(x, z) - 0.2, z);
-        scl.set(sc, sc * (0.85 + (arr[i * 4 + 2] as number) * 0.3), sc);
-        m.compose(pos, qrot, scl);
-        mesh.setMatrixAt(i, m);
+        const tx = Math.min(tiles - 1, Math.max(0, Math.floor(((arr[i * 4] as number) - b.minX) / tileW)));
+        const tz = Math.min(tiles - 1, Math.max(0, Math.floor(((arr[i * 4 + 1] as number) - b.minZ) / tileD)));
+        buckets[tz * tiles + tx]!.push(i);
       }
-      mesh.instanceMatrix.needsUpdate = true;
-      mesh.castShadow = q.shadows.enabled;
-      mesh.receiveShadow = true;
-      mesh.name = `veg_${s}`;
-      mesh.computeBoundingSphere();
-      this.meshes.push(mesh);
-      this.object.add(mesh);
+      for (const bucket of buckets) {
+        if (bucket.length === 0) continue;
+        const mesh = new THREE.InstancedMesh(geo, this.material, bucket.length);
+        bucket.forEach((i, k) => {
+          const x = arr[i * 4] as number;
+          const z = arr[i * 4 + 1] as number;
+          const sc = 0.7 + (arr[i * 4 + 2] as number) * 0.7;
+          qrot.setFromAxisAngle(up, (arr[i * 4 + 3] as number) * Math.PI * 2);
+          pos.set(x, hf.heightAt(x, z) - 0.2, z);
+          scl.set(sc, sc * (0.85 + (arr[i * 4 + 2] as number) * 0.3), sc);
+          m.compose(pos, qrot, scl);
+          mesh.setMatrixAt(k, m);
+        });
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.castShadow = q.shadows.enabled && opts.castShadows !== false;
+        mesh.receiveShadow = true;
+        mesh.name = `veg_${s}`;
+        mesh.computeBoundingSphere();
+        this.meshes.push(mesh);
+        this.object.add(mesh);
+      }
     }
   }
 
@@ -230,10 +246,8 @@ export class VegetationRenderer {
   }
 
   dispose(): void {
-    for (const m of this.meshes) {
-      m.geometry.dispose();
-      m.dispose();
-    }
+    for (const m of this.meshes) m.dispose();
+    for (const g of this.geometries) g.dispose();
     this.material.dispose();
   }
 }

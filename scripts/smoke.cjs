@@ -53,7 +53,7 @@ const SHOTS = [
   { name: 'battle-river-5000', scene: 'battle', query: 'seed=11&soldiers=5000&preset=river_crossing&hour=17', viewport: [1280, 720], advance: 300 },
   { name: 'hero', scene: 'hero', query: '', viewport: [1280, 720] },
   { name: 'menu-mobile', scene: 'menu', query: '', viewport: [390, 844], quality: 'low', mobile: true },
-  { name: 'battle-mobile', scene: 'battle', query: 'seed=7&soldiers=600&preset=hills', viewport: [844, 390], quality: 'low', mobile: true, advance: 400 },
+  { name: 'battle-mobile', scene: 'battle', query: 'seed=7&soldiers=600&preset=plains', viewport: [844, 390], quality: 'low', mobile: true, advance: 400 },
 ];
 
 function waitForServer(url, ms) {
@@ -78,10 +78,12 @@ async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   if (!process.env.SMOKE_SKIP_BUILD) {
     console.log('[smoke] building...');
-    execSync('npx vite build', { cwd: ROOT, stdio: 'inherit' });
+    execSync(`"${process.execPath}" "${path.join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js')}" build`, { cwd: ROOT, stdio: 'inherit' });
   }
   console.log(`[smoke] starting preview on :${PORT}`);
-  const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
+  // Spawn vite directly (not through npx) so the server process can be killed reliably.
+  const viteBin = path.join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js');
+  const server = spawn(process.execPath, [viteBin, 'preview', '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
   let serverLog = '';
   server.stdout.on('data', (d) => (serverLog += d));
   server.stderr.on('data', (d) => (serverLog += d));
@@ -127,9 +129,11 @@ async function main() {
         }
         await page.evaluate(() => window.__SAMRAJYA__.waitFrames(3));
         state = await page.evaluate(() => window.__SAMRAJYA__.getState());
+        // Freeze the loop so the screenshot does not wait for another software-rendered frame.
+        await page.evaluate(() => window.__SAMRAJYA__.freeze(true));
         const crash = await page.evaluate(() => window.__SAMRAJYA__.getErrors().map((r) => r.message));
         for (const c of crash) errors.push(`crash: ${c}`);
-        await page.screenshot({ path: path.join(OUT, `${shot.name}.png`) });
+        await page.screenshot({ path: path.join(OUT, `${shot.name}.png`), timeout: TIMEOUT });
         if (!report.build) report.build = await page.evaluate(() => window.__SAMRAJYA__.version);
       } catch (err) {
         errors.push(`smoke: ${err && err.message ? err.message : String(err)}`);
@@ -149,6 +153,8 @@ async function main() {
   } finally {
     if (browser) await browser.close();
     server.kill('SIGTERM');
+    server.stdout.destroy();
+    server.stderr.destroy();
   }
   fs.writeFileSync(path.join(OUT, 'smoke-report.json'), JSON.stringify(report, null, 2));
   if (failures.length) {
@@ -157,6 +163,7 @@ async function main() {
     process.exit(1);
   }
   console.log(`[smoke] all ${report.shots.length} shots passed -> ${path.relative(ROOT, OUT)}/`);
+  process.exit(0);
 }
 
 main().catch((err) => {

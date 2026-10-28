@@ -29,6 +29,9 @@ import { predictBattle } from '../sim/strategic/autoresolve';
 import { getCouncilRecommendations } from '../sim/strategic/politics';
 import { applyEnvParams, layoutsFromWorld } from './common';
 
+/** Fixed display hour of the strategic map (late morning light). */
+const WORLD_MAP_HOUR = 10.5;
+
 export class WorldScene implements GameScene {
   readonly id = 'world' as const;
   readonly fixedStep = STRATEGIC_DT;
@@ -83,6 +86,9 @@ export class WorldScene implements GameScene {
     this.veg = new VegetationRenderer(hf, {
       quality: q,
       seed: world.region.terrain.seed,
+      // Strategic zoom: fewer, shadowless trees (TODO(graphics): impostors + LOD).
+      maxInstances: ({ low: 3000, medium: 6000, high: 10000, ultra: 16000 } as const)[q.tier],
+      castShadows: false,
       exclude: (x, z) => {
         for (const l of layouts) {
           const dx = x - l.centerX;
@@ -120,10 +126,12 @@ export class WorldScene implements GameScene {
   }
 
   private applyEnvironment(force: boolean): void {
-    const hour = this.world.calendar.hour;
-    if (!force && hour === this.lastEnvHour) return;
-    this.lastEnvHour = hour;
-    const env = applyEnvParams(getEnvironmentState(this.world), this.ctx.params);
+    // The strategic map changes season/weather daily but keeps a fixed, readable time of day (a day
+    // passes every 2 s at 1x - cycling the sun that fast would strobe). ?hour= overrides.
+    const day = Math.floor(this.world.calendar.totalHours / 24);
+    if (!force && day === this.lastEnvHour) return;
+    this.lastEnvHour = day;
+    const env = applyEnvParams({ ...getEnvironmentState(this.world), hour: WORLD_MAP_HOUR }, this.ctx.params);
     this.env.setEnvironment(env);
     this.terrain.setEnvironment(env);
     this.water.setEnvironment(env);

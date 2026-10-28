@@ -320,7 +320,8 @@ export function evaluateEventsDaily(world: WorldState, out: SimEvent[]): void {
   world.events.scheduled = world.events.scheduled.filter((s) => s.day > day);
   for (const s of due) {
     const def = getEventDef(s.eventId);
-    if (def) fireEvent(world, def, s.scope, out);
+    if (!def || (def.once && world.events.firedOnce.includes(def.id))) continue;
+    fireEvent(world, def, s.scope, out);
   }
   // Triggered.
   for (const fid of sortedKeys(world.factions)) {
