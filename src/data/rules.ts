@@ -24,8 +24,13 @@ export interface RebellionStageEffect {
 export const RULES = {
   // ------------------------------------------------------------------------------------------- §7.3
   storage: {
-    /** Base storage of a settlement in days of its own consumption (household jars, pits). */
-    baseDays: 90,
+    /**
+     * Base storage of a settlement in days of its own consumption (household jars, pits). 120 (was 90, SIM-01 review
+     * CD-8): a balanced settlement needs ~126 days to hold its kharif (35% of the year) and carry the lean months; at
+     * 90 every settlement without a granary spilled grain at the harvest and starved before the next one (passive
+     * sandbox: Giridurga lost on day 233 at 90, holds at 120).
+     */
+    baseDays: 120,
     /** BuildingDef.effects.foodCapacity and landmark foodCapacity are DAYS of storage per level. */
     capacityEffectUnit: 'days',
     /** Spoilage multiplier when the settlement has a granary (BALANCE.economy.granarySpoilagePerDay x this). */

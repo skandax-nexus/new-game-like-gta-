@@ -399,7 +399,7 @@ const BROKEN_CROWN: EventDef[] = [
     scope: 'faction',
     trigger: NEVER,
     choices: [
-      { id: 'hold_reserve', label: 'Hold the royal reserve for the army', description: 'Unrest +0.05 everywhere; legitimacy -0.02.', effects: [addS(ANY_OWNED, 'unrest', 0.05), addF(PLAYER, 'legitimacy', -0.02)], requires: null, aiWeight: 1, advisorSeat: 'commander' },
+      { id: 'hold_reserve', label: 'Keep the royal reserve for the army', description: 'Unrest +0.05 everywhere; legitimacy -0.02. Nothing is released to the bazaars; towns below 30 days still draw relief unless you set "Hold the reserve" in the economy panel.', effects: [addS(ANY_OWNED, 'unrest', 0.05), addF(PLAYER, 'legitimacy', -0.02)], requires: null, aiWeight: 1, advisorSeat: 'commander' },
       { id: 'open_granaries', label: 'Open the royal granaries', description: 'Royal reserve -4,000; grain prices x0.8 and unrest -0.08 everywhere; legitimacy +0.04.', effects: [addF(PLAYER, 'foodReserve', -4000), mulS(ANY_OWNED, 'grainPrice', 0.8), addS(ANY_OWNED, 'unrest', -0.08), addF(PLAYER, 'legitimacy', 0.04)], requires: fv(PLAYER, 'foodReserve', '>=', 4000), aiWeight: 1, advisorSeat: 'chief_minister' },
       { id: 'temple_kitchens', label: 'Fund the temple kitchens', description: 'Treasury -800; unrest -0.05 and loyalty +0.03 everywhere.', effects: [addF(PLAYER, 'treasury', -800), addS(ANY_OWNED, 'unrest', -0.05), addS(ANY_OWNED, 'loyalty', 0.03)], requires: fv(PLAYER, 'treasury', '>=', 800), aiWeight: 1, advisorSeat: 'court_scholar' },
     ],
