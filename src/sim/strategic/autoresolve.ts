@@ -77,6 +77,7 @@ export function battleSetupFromEngagement(world: WorldState, engagementId: Engag
       formations,
       deployZone: deployZoneFor(partial, side),
       supply: armies[0] && armies[0].supply.food > 0 ? 1 : 0.4,
+      aggression: null,
     };
   }) as BattleSetup['sides'];
   return {

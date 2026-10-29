@@ -4,7 +4,8 @@
  */
 import type { InputAction } from '../core/types';
 
-export type InputContext = 'menu' | 'world' | 'battle' | 'hero';
+/** 'lab' (CORE-01 compile-fix): feature labs (?scene=lab) use the global bindings only, like the menu. */
+export type InputContext = 'menu' | 'world' | 'battle' | 'hero' | 'lab';
 
 export type BindingMap = Partial<Record<InputAction, string[]>>;
 
@@ -25,6 +26,7 @@ const GLOBAL: BindingMap = {
 
 const CONTEXT: Record<InputContext, BindingMap> = {
   menu: {},
+  lab: {},
   world: {
     overlay_supply: ['KeyM'],
     overlay_terrain: ['KeyK'],

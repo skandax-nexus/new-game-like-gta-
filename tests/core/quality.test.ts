@@ -34,7 +34,7 @@ describe('quality detection', () => {
     expect(d.isMobile).toBe(true);
   });
   it('builds settings with overrides and steps tiers down', () => {
-    const s = buildQualitySettings('high', { shadows: { enabled: false, mapSize: 1024, cascades: 1, distance: 100, soft: false } });
+    const s = buildQualitySettings('high', { shadows: { enabled: false, mapSize: 1024, cascades: 1, distance: 100, soft: false, contact: false, pcss: false } });
     expect(s.tier).toBe('high');
     expect(s.shadows.enabled).toBe(false);
     expect(s.ao).toBe('gtao');

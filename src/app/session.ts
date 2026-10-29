@@ -259,7 +259,7 @@ export class GameSession implements GameActions, SessionView {
         summary: w ? `${FACTIONS[w.playerFactionId]?.name ?? ''}, ${formatDate(w.calendar)}` : `Skirmish ${this.battle ? `(${Math.round(this.battle.time)}s)` : ''}`,
         thumbnail: null,
       },
-      session: { mode: this.mode ?? 'skirmish', scene, skirmish: this.skirmish, activeEngagementId: this.activeEngagementId },
+      session: { mode: this.mode ?? 'skirmish', scene, skirmish: this.skirmish, activeEngagementId: this.activeEngagementId, hero: null },
       world: w,
       battle: !w && this.battle ? this.battle : null,
     };

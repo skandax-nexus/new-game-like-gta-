@@ -46,6 +46,8 @@ export function createSoldierBuffers(capacity: number): SoldierBuffers {
     flags: new Uint8Array(capacity),
     target: new Int32Array(capacity).fill(-1),
     deathTime: new Float32Array(capacity),
+    animVariant: new Uint8Array(capacity),
+    animStart: new Float32Array(capacity),
   };
 }
 

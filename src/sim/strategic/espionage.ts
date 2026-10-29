@@ -63,8 +63,8 @@ export function updateEspionageDaily(world: WorldState, out: SimEvent[]): void {
         a.status = 'returned';
         if (a.mission === 'gather_intel') {
           const row = (world.espionage.intel[a.ownerFactionId] ??= {});
-          const cur = row[a.targetFactionId] ?? { level: 0, lastUpdatedDay: 0 };
-          row[a.targetFactionId] = { level: Math.min(1, cur.level + 0.35), lastUpdatedDay: totalDays(world.calendar) };
+          const cur = row[a.targetFactionId] ?? { level: 0, lastUpdatedDay: 0, armiesVisibleUntilDay: null };
+          row[a.targetFactionId] = { level: Math.min(1, cur.level + 0.35), lastUpdatedDay: totalDays(world.calendar), armiesVisibleUntilDay: cur.armiesVisibleUntilDay };
         }
         out.push({ kind: 'spy_report', agentId: a.id, success: true, text: `Mission "${a.mission}" succeeded.` });
       }

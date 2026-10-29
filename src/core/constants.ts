@@ -1,5 +1,5 @@
 /**
- * Engine-wide constants. Owned by the CTO. Three-free, DOM-free.
+ * Engine-wide constants. OWNER: CTO (save/schema versions bumped by CORE-01). Three-free, DOM-free.
  */
 
 declare const __BUILD_VERSION__: string;
@@ -67,9 +67,13 @@ export const BATTLE_EVENT_LOG_LIMIT = 500;
 // Persistence
 // ---------------------------------------------------------------------------------------------
 
-/** Bump when the SaveGame/WorldState shape changes; add a migration in core/save.ts. */
-export const SAVE_VERSION = 1;
-export const WORLD_SCHEMA_VERSION = 1;
+/**
+ * Bump when the SaveGame/WorldState shape changes; add a migration in core/save.ts.
+ * v2 (Sprint 1, CORE-01 "Contracts v2"): ages, landmarks, materials, market, monsoon, statistics, placement,
+ * sieges, rally, outcome write-back data... (migration v1 -> v2 with defaults in core/save.ts).
+ */
+export const SAVE_VERSION: number = 2;
+export const WORLD_SCHEMA_VERSION: number = 2;
 export const STORAGE_PREFIX = 'samrajya.';
 export const CHRONICLE_LIMIT = 300;
 export const EVENT_HISTORY_LIMIT = 200;

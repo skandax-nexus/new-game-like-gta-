@@ -93,6 +93,7 @@ export function makeArmy(
     engagementId: null,
     visibility: {},
     createdDay: totalDays(world.calendar),
+    forcedMarch: false,
   };
 }
 
@@ -252,6 +253,7 @@ export function detectContacts(world: WorldState, out: SimEvent[]): void {
         battleId: null,
         battle: null,
         outcome: null,
+        prisonerDecision: null,
       };
       world.engagements[id] = e;
       a.engagementId = id;

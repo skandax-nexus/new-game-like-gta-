@@ -130,6 +130,15 @@ function makeFormation(index: number, side: SideIndex, fs: FormationSetup, sideS
     lastHitTime: -100,
     spotted: true,
     workProgress: 0,
+    // Contracts v2 (CORE-01 compile-fix: neutral values; rules land with GP-01).
+    rallies: 0,
+    shapeChangeUntil: 0,
+    panicUntil: 0,
+    rallyingUntil: 0,
+    disengageUntil: 0,
+    chargeRun: 0,
+    orderTime: 0,
+    hidden: false,
   };
 }
 
@@ -220,6 +229,7 @@ function makeSide(setup: BattleSetup, side: SideIndex, formations: FormationStat
     withdrawn: false,
     surrendered: false,
     groups: Array.from({ length: 10 }, () => []),
+    rallyCooldownUntil: 0,
   };
 }
 
@@ -252,6 +262,9 @@ export function createBattle(setup: BattleSetup, terrain: TerrainQuery): BattleS
     works: [],
     wallHp: [],
     outcome: null,
+    // Contracts v2 (CORE-01 compile-fix; GP-01 implements deployment timing and sieges).
+    deploymentEndsAt: setup.deploymentSec,
+    siege: null,
   };
   autoDeploy(state, 0, terrain);
   autoDeploy(state, 1, terrain);
@@ -618,7 +631,7 @@ function executeOrder(state: BattleState, f: FormationState, dt: number, terrain
         f.activity = 'constructing';
         f.workProgress += dt / 60;
         if (f.workProgress >= 1) {
-          state.works.push({ work: o.work, x: o.x, z: o.z, facing: o.facing, side: f.side, hp: 500 });
+          state.works.push({ work: o.work, x: o.x, z: o.z, facing: o.facing, side: f.side, hp: 500, maxHp: 500, progress: 1, formation: f.index });
           f.workProgress = 0;
           nextOrder(f);
         }
@@ -834,6 +847,7 @@ function buildOutcome(state: BattleState, winner: SideIndex | null, reason: Batt
           fatigue: f.fatigue,
           experienceGained: Math.min(0.2, f.kills / Math.max(1, f.maxSoldiers) + 0.02),
           routed: f.activity === 'routing',
+          routedEnemies: 0,
         };
       });
     const survivors = formations.reduce((a, f) => a + f.survivors, 0);
@@ -847,6 +861,11 @@ function buildOutcome(state: BattleState, winner: SideIndex | null, reason: Batt
       pursuitLosses: pursuit,
       commanderFate: !cmdF ? 'none' : s.commanderAlive ? 'safe' : 'killed',
       formations,
+      // Contracts v2 (CORE-01 compile-fix; GP-01 computes prisoners and captured supply).
+      prisoners: 0,
+      routs: formations.filter((fr) => fr.routed).length,
+      capturedSupply: 0,
+      commanderId: state.setup.sides[side].commanderId,
     };
   }) as [BattleSideResult, BattleSideResult];
   const names = sides.map((s) => FACTIONS[s.factionId]?.shortName ?? s.factionId);
@@ -854,7 +873,8 @@ function buildOutcome(state: BattleState, winner: SideIndex | null, reason: Batt
   if (winner === null) summary.push(`Neither side could claim the field after ${Math.round(state.time / 60)} minutes.`);
   else summary.push(`The ${names[winner]} host carried the field (${reason.replace('_', ' ')}).`);
   summary.push(`${names[0]} losses: ${sides[0].killed}. ${names[1]} losses: ${sides[1].killed}.`);
-  return { battleId: state.id, winner, reason, durationSec: state.time, sides, summary, autoresolved: false };
+  // Contracts v2 (CORE-01 compile-fix): war score, place name and day come with GP-01 / SIM-01.
+  return { battleId: state.id, winner, reason, durationSec: state.time, sides, summary, autoresolved: false, warScore: 0, chronicle: summary[0] ?? '', placeName: null, day: null };
 }
 
 /** Current outcome or null while the battle runs. */
@@ -931,6 +951,7 @@ export function createSkirmishSetup(opts: SkirmishSetup): BattleSetup {
       ),
       deployZone: deployZoneFor(partial, side),
       supply: 1,
+      aggression: null,
     };
   };
   const sides: BattleSetup['sides'] = [mkSide(0), mkSide(1)];

@@ -31,6 +31,9 @@ if (Number(SAVE_VERSION) !== 1) {
 }
 
 const OUT = join(__dirname);
+
+/** The v1 session record (Contracts v2 added `hero`; this generator only ever ran on v1). */
+type V1Session = Omit<SaveSession, 'hero'>;
 const BUILD = '0.1.0+04b6dbb';
 const CREATED_AT = '2026-10-29T11:00:00.000Z';
 
@@ -84,8 +87,8 @@ function stepIntoMelee(state: BattleState, maxSteps: number, afterContact: numbe
   }
 }
 
-function saveOf(slot: string, name: string, session: SaveSession, world: WorldState | null, battle: BattleState | null, playtimeSec: number): SaveGame {
-  return {
+function saveOf(slot: string, name: string, session: V1Session, world: WorldState | null, battle: BattleState | null, playtimeSec: number): SaveGame {
+  const v1: Omit<SaveGame, 'session'> & { session: V1Session } = {
     format: 'samrajya-save',
     version: SAVE_VERSION,
     meta: {
@@ -105,6 +108,7 @@ function saveOf(slot: string, name: string, session: SaveSession, world: WorldSt
     world,
     battle: !world && battle ? battle : null,
   };
+  return v1 as SaveGame;
 }
 
 interface FixtureInfo {

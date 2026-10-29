@@ -1,5 +1,5 @@
 /**
- * SAMRAJYA - THE CONTRACT.
+ * SAMRAJYA - THE CONTRACT. OWNER: CTO (Contracts v2 landed by CORE-01, Sprint 1).
  *
  * Domain types shared by every module. Owned by the CTO; request changes via your report.
  *
@@ -13,6 +13,12 @@
  *  - Facing angle θ: forward vector = (sin θ, cos θ) in (x, z). θ = 0 faces +Z. A three.js object with
  *    `rotation.y = θ` whose model is authored facing +Z faces the same direction.
  *  - Normalized quantities are 0..1 unless documented otherwise. Morale is 0..100.
+ *
+ * Contracts v2 (save format 2, docs/ARCHITECTURE.md "Contracts v2 (Sprint 1)"):
+ *  - Every new persistent field is REQUIRED, initialised where the object is created and defaulted by the
+ *    v1 -> v2 migration in core/save.ts. Optional (`?`) only where absence is meaningful (placement `cell`/`rot`,
+ *    `landmarkId`, `rallyPoint`, `rebelSettlementId`, setup inputs). Fields tagged `@sprint1 <ticket>` are
+ *    contract-only until that ticket implements the behaviour (they hold their neutral default meanwhile).
  */
 
 // =====================================================================================================
@@ -81,8 +87,12 @@ export type NumericKeys<T> = { [K in keyof T]-?: T[K] extends number ? K : never
 export const GAME_MODES = ['campaign', 'sandbox', 'skirmish'] as const;
 export type GameMode = (typeof GAME_MODES)[number];
 
-/** `assetviewer` = debug/lookdev view of a content-pipeline asset (?scene=assetviewer&asset=<id>). */
-export const SCENE_IDS = ['boot', 'menu', 'world', 'battle', 'hero', 'assetviewer'] as const;
+/**
+ * `assetviewer` = debug/lookdev view of a content-pipeline asset (?scene=assetviewer&asset=<id>).
+ * `lab` = feature lab for graphics/gameplay work the game scenes do not drive yet (?scene=lab&lab=<id>,
+ * `*.lab.ts` modules, src/scenes/LabScene.ts).
+ */
+export const SCENE_IDS = ['boot', 'menu', 'world', 'battle', 'hero', 'assetviewer', 'lab'] as const;
 export type SceneId = (typeof SCENE_IDS)[number];
 
 export const DIFFICULTIES = ['easy', 'normal', 'hard', 'very_hard'] as const;
@@ -344,6 +354,19 @@ export type BannerPattern = (typeof BANNER_PATTERNS)[number];
 
 export const AI_PERSONALITIES = ['expansionist', 'defensive', 'mercantile', 'opportunist', 'diplomatic', 'raider'] as const;
 export type AiPersonality = (typeof AI_PERSONALITIES)[number];
+
+/**
+ * Reserved faction id of rebel armies (DESIGN_SPEC §7.9, §14.3 item 2). Legal as `ArmyState.factionId` (with
+ * `ArmyState.rebelSettlementId` naming the revolting settlement); NEVER a key of `WorldState.factions` and not
+ * in data/factions. Rebels are hostile only to the owner of their settlement; the UI shows "Rebels of {name}".
+ */
+export const REBEL_FACTION_ID = 'rebels' as const;
+export type RebelFactionId = typeof REBEL_FACTION_ID;
+
+/** True for the reserved rebel faction id (use instead of comparing strings). */
+export function isRebelFaction(id: FactionId | null | undefined): id is RebelFactionId {
+  return id === REBEL_FACTION_ID;
+}
 
 export interface FactionColors {
   primary: HexColor;
@@ -721,6 +744,12 @@ export interface BattleSideSetup {
   deployZone: Rect;
   /** 0..1 army supply state entering battle. */
   supply: number;
+  /**
+   * 0..1 battle-AI aggression override (chance to attack vs hold). null = the personality's
+   * `AI_PERSONALITY_DEFS[...].battle.aggression`. Autoresolve maps the strategic army stance to 0.75 / 0.5 / 0.3
+   * (DESIGN_SPEC §6.14). @sprint1 SIM-01 (sets it) / SIM-02 (reads it).
+   */
+  aggression: number | null;
 }
 
 export type BattleObjective =
@@ -816,8 +845,28 @@ export interface FormationState {
   lastHitTime: number;
   /** Visible to the other side (scouting / fog). */
   spotted: boolean;
-  /** Construction progress 0..1 for engineer works. */
+  /**
+   * Engineers: construction progress 0..1 of the current work. Supply trains: progress 0..1 toward the next
+   * resupply tick (+25% ammo every 30 s, DESIGN_SPEC §6.3).
+   */
   workProgress: number;
+  // --- Contracts v2 (DESIGN_SPEC §6.2-§6.11; @sprint1 GP-01) ---
+  /** Rallies used this battle (max RULES.battle.rout.maxRallies = 2; the third rout is final - "shattered"). */
+  rallies: number;
+  /** Battle time (s) when the current shape change completes (3 s + 0.02 s x soldiers); cohesion <= 0.6 until then. 0 = none. */
+  shapeChangeUntil: number;
+  /** Battle time (s) when an elephant panic ends (8 s run-away ignoring orders). 0 = not panicking. */
+  panicUntil: number;
+  /** Battle time (s) when the 15 s 'rallying' state ends and the formation is controllable again. 0 = none. */
+  rallyingUntil: number;
+  /** Battle time (s) until which enemies in contact deal x1.5 damage after disengaging (withdraw). 0 = none. */
+  disengageUntil: number;
+  /** Meters run toward the charge target at >= 60% run speed (impact needs >= RULES.battle.charge.minRunMeters). */
+  chargeRun: number;
+  /** Battle time (s) the current order started (flank 30 s timeout, withdraw phases, regroup bonus). */
+  orderTime: number;
+  /** Concealed (ambush / forest): unknown to the enemy until within 60 m or scouted (§6.10). */
+  hidden: boolean;
 }
 
 export type ProjectileKind = 'arrow' | 'fire_arrow' | 'javelin' | 'stone';
@@ -893,9 +942,67 @@ export interface BattleSideState {
   surrendered: boolean;
   /** Control groups 0..9 -> formation indices (player side). */
   groups: FormationIndex[][];
+  /** Battle time (s) when the commander's Rally is available again (cooldown 90 s, DESIGN_SPEC §6.11). 0 = ready. @sprint1 GP-01 */
+  rallyCooldownUntil: number;
 }
 
+/** 'active' = the fighting phase (the spec's "battle"); kept from v1 (no renames). */
 export type BattlePhase = 'deployment' | 'active' | 'ended';
+
+/** An engineer work on the battlefield (palisade, ditch, bridge, ram, ladder, gate repair; DESIGN_SPEC §6.6.5). */
+export interface EngineerWorkState {
+  work: EngineerWork;
+  x: number;
+  z: number;
+  facing: number;
+  side: SideIndex;
+  hp: number;
+  maxHp: number;
+  /** 0..1 construction progress; usable at 1. */
+  progress: number;
+  /** Builder formation (-1 = none / pre-v2). */
+  formation: FormationIndex;
+}
+
+/** One wall segment of the siege ring (RULES.battle.walls.segments = 12, segment i spans angles [i, i+1] x 30 deg). */
+export interface WallSegmentState {
+  hp: number;
+  maxHp: number;
+  /** Assault ladders are up against this segment (escalade). */
+  ladder: boolean;
+}
+
+export interface SiegeGateState {
+  /** Wall segment index the gate sits in. */
+  segment: number;
+  hp: number;
+  maxHp: number;
+}
+
+export interface SiegeTowerState {
+  segment: number;
+  hp: number;
+  maxHp: number;
+  /** Formation shooting from the tower (+20% range/accuracy) or -1. */
+  garrison: FormationIndex;
+}
+
+/**
+ * Siege battle state (DESIGN_SPEC §6.6.5). Geometry derives from `BattleSetup.fortification` (center, radius):
+ * segment i covers facing angles [i, i + 1] x (2 PI / segments). A segment or gate at 0 HP is breached.
+ * @sprint1 GP-01 (simulation), GFX-06 (walls / damage rendering), GP-04 (presentation).
+ */
+export interface BattleSiegeState {
+  /** World settlement under siege (null for skirmish / scripted sieges). */
+  settlementId: SettlementId | null;
+  segments: WallSegmentState[];
+  gates: SiegeGateState[];
+  towers: SiegeTowerState[];
+  /** Breached segment indices (walls and gates), in the order they fell. */
+  breaches: number[];
+  /** Attacker formation holding the inside of a breach and since when (victory after holdBreachSec = 60 s). */
+  breachHold: { formation: FormationIndex; since: number } | null;
+}
 
 export interface BattleObjectiveState {
   id: ObjectiveId;
@@ -923,11 +1030,16 @@ export interface BattleState {
   events: BattleEventRecord[];
   /** Every applied command, for replay (GDD §10 battle replay). */
   commandLog: TimedBattleCommand[];
-  /** Engineer works built during battle (palisades, bridges...). */
-  works: { work: EngineerWork; x: number; z: number; facing: number; side: SideIndex; hp: number }[];
-  /** Wall/gate hit points if fortified (index = segment). */
+  /** Engineer works on the field (built or in progress). */
+  works: EngineerWorkState[];
+  /** @deprecated v1 field, always []. Siege walls live in `siege.segments` (v2). */
   wallHp: number[];
   outcome: BattleOutcome | null;
+  // --- Contracts v2 (@sprint1 GP-01) ---
+  /** Battle time (s) the deployment phase ends (setup.deploymentSec; `begin_battle` moves it to now). */
+  deploymentEndsAt: number;
+  /** Siege walls, gates, towers and breaches; null when the battle is not a siege. */
+  siege: BattleSiegeState | null;
 }
 
 export type BattleCommand =
@@ -940,7 +1052,13 @@ export type BattleCommand =
   | { kind: 'deploy'; formation: FormationIndex; x: number; z: number; facing: number }
   | { kind: 'begin_battle' }
   | { kind: 'withdraw_all' }
-  | { kind: 'surrender' };
+  | { kind: 'surrender' }
+  /**
+   * Commander's Rally (DESIGN_SPEC §6.11): commander formation not engaged; own formations within 120 m gain
+   * +15 morale and a 'rallied' event, routers there with morale > 35 start rallying; cooldown 90 s
+   * (`BattleSideState.rallyCooldownUntil`). @sprint1 GP-01
+   */
+  | { kind: 'rally' };
 
 export interface TimedBattleCommand {
   tick: number;
@@ -970,6 +1088,8 @@ export interface FormationResult {
   fatigue: number;
   experienceGained: number;
   routed: boolean;
+  /** Enemy formations this formation routed (+0.05 experience each, DESIGN_SPEC §6.11). @sprint1 GP-01 */
+  routedEnemies: number;
 }
 
 export interface BattleSideResult {
@@ -982,6 +1102,15 @@ export interface BattleSideResult {
   pursuitLosses: number;
   commanderFate: 'safe' | 'wounded' | 'killed' | 'captured' | 'none';
   formations: FormationResult[];
+  // --- Contracts v2 (DESIGN_SPEC §6.8, §6.12; @sprint1 GP-01 fills, SIM-01 writes back) ---
+  /** Enemy soldiers this side took prisoner (ransom / release decision on the results screen). */
+  prisoners: number;
+  /** Own formations that routed at least once. */
+  routs: number;
+  /** Grain captured from destroyed / surrendered enemy supply trains (50% of what they carried). */
+  capturedSupply: number;
+  /** Character the `commanderFate` refers to (null = unnamed captain / skirmish). */
+  commanderId: CharacterId | null;
 }
 
 export interface BattleOutcome {
@@ -995,6 +1124,15 @@ export interface BattleOutcome {
   summary: string[];
   /** True if resolved without the soldier-level layer (autoresolve / distant battle). */
   autoresolved: boolean;
+  // --- Contracts v2 (DESIGN_SPEC §6.12; @sprint1 GP-01 / SIM-01) ---
+  /** War score change from side 0's perspective (-20..20): 20 x (side-1 losses - side-0 losses) / both starts. */
+  warScore: number;
+  /** Chronicle line, e.g. "The Battle of the Salt Ford: Suvarna defeated Giridurga; 412 fell." */
+  chronicle: string;
+  /** `{place}` of the chronicle line: nearest REGION_FEATURES name within 600 m, else the nearest settlement. */
+  placeName: string | null;
+  /** World day the battle was fought (stamped by the strategic write-back; null = skirmish / pre-v2 history). */
+  day: number | null;
 }
 
 /** Pre-battle estimate shown in the engagement prompt (sim/strategic/autoresolve.ts). */
@@ -1025,14 +1163,26 @@ export const SOLDIER_ANIM = {
   cheer: 9,
   brace: 10,
   work: 11,
+  /** v2: archers nocking between volleys (VAT clip 'reload'). */
+  reload: 12,
+  /** v2: charge run-in (VAT clip 'charge'; mounted: gallop). */
+  charge: 13,
 } as const;
 export type SoldierAnim = (typeof SOLDIER_ANIM)[keyof typeof SOLDIER_ANIM];
 
+/** Number of `SoldierBuffers.animVariant` values per anim (attack: thrust / slash / shield bash; die: 2). */
+export const SOLDIER_ANIM_VARIANTS: Readonly<Partial<Record<keyof typeof SOLDIER_ANIM, number>>> = { attack: 3, die: 2, dead: 2 };
+
+/** Role bits in `SoldierBuffers.flags` (written by the soldier layer, read by crowds/banners/audio). */
 export const SOLDIER_FLAG = {
   commander: 1,
   standardBearer: 2,
   drummer: 4,
   officer: 8,
+  /** v2: rider / crew of a mounted or beast unit (cavalry, chariot, elephant, cart): combined VAT. */
+  mounted: 16,
+  /** v2: conch blower (signals, ASSET_LIST WP5-10). */
+  conch: 32,
 } as const;
 
 /** LOD tiers by camera distance (see QualitySettings.soldierLod). */
@@ -1078,6 +1228,11 @@ export interface SoldierBuffers {
   target: Int32Array;
   /** Battle time of death (for corpse fade). */
   deathTime: Float32Array;
+  // --- Contracts v2 (@sprint1 GP-01 writes, GFX-04 reads) ---
+  /** Clip variant of the current anim (0..SOLDIER_ANIM_VARIANTS[anim]-1, e.g. attack thrust/slash/bash). */
+  animVariant: Uint8Array;
+  /** Battle time (s) the current anim started - VAT phase = (now - animStart) x animSpeed, no per-frame writes. */
+  animStart: Float32Array;
 }
 
 // =====================================================================================================
@@ -1211,20 +1366,52 @@ export interface BuildingFootprint {
   placement: 'inner' | 'outer' | 'perimeter' | 'shore' | 'road' | 'resource';
 }
 
+/**
+ * Settlement build-grid cell (DESIGN_SPEC §8.2): integer [i, j] on the settlement's 4 m grid
+ * (RULES.construction.gridCell) with cell (0, 0) spanning world x in [s.x, s.x + 4), z in [s.z, s.z + 4); +i east,
+ * +j south. A placed footprint's `cell` is its MINIMUM (north-west) cell; it covers w/4 x d/4 cells (swapped when
+ * `rot` is odd). The grid covers radius r + 60 m around the centre.
+ */
+export type GridCell = [number, number];
+/** Quarter turns about the footprint centre; facing theta = rot x PI/2 (0 = model front faces +Z / south). */
+export type Rotation = 0 | 1 | 2 | 3;
+
 export interface BuildingInstance {
   type: BuildingType;
   level: number;
   /** 0..1 */
   condition: number;
+  /** v2 placement (SIM-01 placement / GP-03 ghost). Absent = laid out procedurally (starting buildings, v1 saves). */
+  cell?: GridCell;
+  rot?: Rotation;
 }
 
+/** Materials + wealth + labor actually charged for a job (refunds: paid x (1 - progress) x 0.9). */
+export type PaidCost = MaterialCost;
+
 export interface ConstructionJob {
+  /**
+   * Building built / upgraded. For landmark jobs (`landmarkId` set) this is only a presentation hint
+   * ('palace'): never look a landmark job up in BUILDINGS without checking `landmarkId` first.
+   */
   type: BuildingType;
   targetLevel: number;
   /** 0..1 */
   progress: number;
   startedDay: number;
   laborAssigned: number;
+  // --- Contracts v2 (DESIGN_SPEC §7.6, §8.2, §8.4; @sprint1 SIM-01) ---
+  /** Placement of the new building (absent for upgrades / repairs / procedural placement). */
+  cell?: GridCell;
+  rot?: Rotation;
+  /** LandmarkDef.id when this job raises an age landmark (start_landmark). */
+  landmarkId?: string;
+  /** Repair job (scaffold stage, cost = repairCostFactor x level cost x (1 - condition)). */
+  repair?: boolean;
+  /** What was charged when the job was queued (v1 jobs: zero - v1 charged nothing). */
+  paid: PaidCost;
+  /** Nominal crew = labor cost / days; builders above 1.25 x crew add nothing. */
+  crew: number;
 }
 
 export interface RecruitmentJob {
@@ -1245,7 +1432,28 @@ export interface CropState {
   growth: number;
   /** 0..1 expected yield factor (weather, irrigation, labor). */
   health: number;
+  /** Farmers (labor x farming share) at sowing; health is cut pro rata if farming labor drops below it (§7.3.1). */
+  laborAtSowing: number;
 }
+
+/** A completed age landmark standing in a settlement (DESIGN_SPEC §8.4-§8.5). */
+export interface LandmarkInstance {
+  /** LandmarkDef.id */
+  id: string;
+  /** Faction that raised it (its effects apply only while this faction owns the settlement). */
+  builtBy: FactionId;
+  completedDay: number;
+  /** 0..1 (siege / fire damage). */
+  condition: number;
+  cell?: GridCell;
+  rot?: Rotation;
+}
+
+/** Where newly recruited formations go (DESIGN_SPEC §7.6 rally point output). */
+export type RallyPoint = { kind: 'point'; x: number; z: number } | { kind: 'army'; armyId: ArmyId };
+
+export type CaptureDecision = 'occupy' | 'plunder' | 'liberate';
+export type PrisonerDecision = 'ransom' | 'release';
 
 export interface LaborAllocation {
   farming: number;
@@ -1329,6 +1537,27 @@ export interface SettlementState {
   requisitionedFood: number;
   /** Day of last change in owner. */
   ownerSinceDay: number;
+  // --- Contracts v2 (DESIGN_SPEC §7.2-§7.9, §8; @sprint1 SIM-01 unless noted) ---
+  /** Owner at game start (Liberate is offered only for settlements independent at start, §7.8). */
+  initialOwnerFactionId: FactionId | null;
+  /** Day the current owner took it by force (occupation loyalty penalty fades over 360 days); null = not occupied. */
+  occupiedSinceDay: number | null;
+  /** Captured by `factionId` and waiting for its occupy / plunder / liberate decision (capture_decision). */
+  pendingCapture: { factionId: FactionId; day: number } | null;
+  /** Consecutive days with an empty store (starve-out surrender chance 0.1 x days / 10, famine). */
+  starvationDays: number;
+  /** Day the settlement entered 'revolt' (secession after 30 days); null when not in revolt. */
+  revoltSinceDay: number | null;
+  /** Temporary tax cut from negotiate_rebels (rate restored when it expires); null = none. */
+  taxRelief: { points: number; untilDay: number } | null;
+  /** Grain drawn from the royal reserve as automatic relief this month (cap 30 days of consumption / month). */
+  reliefThisMonth: number;
+  /** 0..1 assault-ladder preparation by besieging engineers (assault without a breach at 1 = 5 days). */
+  ladderProgress: number;
+  /** Age landmarks standing here. */
+  landmarks: LandmarkInstance[];
+  /** Output point for new recruits (absent = garrison). Set by set_rally_point. */
+  rallyPoint?: RallyPoint;
 }
 
 export interface ProvinceState {
@@ -1413,7 +1642,11 @@ export type ArmyOrder =
   | { kind: 'forage' }
   | { kind: 'retreat'; x: number; z: number }
   | { kind: 'escort'; depotId: DepotId }
-  | { kind: 'patrol'; points: Vec2[] };
+  | { kind: 'patrol'; points: Vec2[] }
+  /** v2: march to a source (own settlement / depot id, null = nearest) and refill supply (§7.8). @sprint1 SIM-01 */
+  | { kind: 'resupply'; sourceId: string | null }
+  /** v2: assault a besieged settlement once breached (wallHp <= 50%) or laddered -> siege battle. @sprint1 SIM-01 */
+  | { kind: 'assault'; settlementId: SettlementId };
 export type ArmyOrderKind = ArmyOrder['kind'];
 
 export type ArmyStance = 'aggressive' | 'balanced' | 'cautious';
@@ -1459,6 +1692,24 @@ export interface ArmyState {
   /** Map of faction -> 0..1 how well that faction currently sees this army (espionage/scouting). */
   visibility: Record<FactionId, number>;
   createdDay: number;
+  // --- Contracts v2 (DESIGN_SPEC §7.7, §7.9; @sprint1 SIM-01) ---
+  /** Forced march (x1.3 speed, +0.1 fatigue/day, 0.2%/day attrition). */
+  forcedMarch: boolean;
+  /** Rebel armies only (`factionId === REBEL_FACTION_ID`): the revolting settlement they fight for. */
+  rebelSettlementId?: SettlementId;
+}
+
+/** Last-known position of an enemy army that left visibility (minimap / map ghost outline for 5 days, §7.7). */
+export interface ArmyGhost {
+  armyId: ArmyId;
+  factionId: FactionId;
+  x: number;
+  z: number;
+  facing: number;
+  /** Soldiers as estimated by the observer's intel tier at the time (§7.11). */
+  soldiers: number;
+  /** World day it was last seen. */
+  day: number;
 }
 
 export interface SupplyDepotState {
@@ -1473,6 +1724,8 @@ export interface SupplyDepotState {
   condition: number;
   escortArmyId: ArmyId | null;
   raided: boolean;
+  /** v2: world day the depot becomes usable (built in 5 days, §7.8). @sprint1 SIM-01 */
+  readyOnDay: number;
 }
 
 export type EngagementStatus = 'pending_player' | 'auto' | 'active' | 'resolved';
@@ -1492,6 +1745,8 @@ export interface Engagement {
   /** Formation-level battle state while being resolved (distant battles keep stepping here). */
   battle: BattleState | null;
   outcome: BattleOutcome | null;
+  /** v2: the winner's prisoner decision (results screen / `prisoners` command); null = undecided. @sprint1 SIM-01 */
+  prisonerDecision: PrisonerDecision | null;
 }
 
 // --- Characters, dynasty, council (GDD §7) ---
@@ -1569,6 +1824,8 @@ export interface CharacterState {
   governsProvinceId: ProvinceId | null;
   councilSeat: CouncilSeat | null;
   prestige: number;
+  /** v2: faction holding this character prisoner (captured commanders: ransom 500 or held, §6.8); null = free. */
+  captiveOf: FactionId | null;
 }
 
 export const SUCCESSION_LAWS = ['primogeniture', 'designated_heir', 'council_election', 'seniority'] as const;
@@ -1633,10 +1890,37 @@ export interface FactionAiState {
   lastPlanHour: number;
   /** Perceived threat per other faction 0..1. */
   threat: Record<FactionId, number>;
+  /**
+   * v2: persistent scratch memory for the campaign AI (SIM-02) - e.g. chosen landmark, last war day, plan ids.
+   * Plain values only; saved and hashed like all state.
+   */
+  memory: Record<string, number | string | boolean>;
 }
 
 export const VICTORY_TYPES = ['unification', 'prosperity', 'diplomatic_hegemony', 'cultural_legacy', 'scenario'] as const;
 export type VictoryType = (typeof VICTORY_TYPES)[number];
+
+/** Faction stockpiles of building materials (DESIGN_SPEC §7.5; AoE wood / stone). */
+export interface MaterialStock {
+  timber: number;
+  stone: number;
+}
+
+/** Realm-wide economic policies (economy panel, `set_policy`). */
+export interface FactionPolicies {
+  /** "Hold the reserve": no automatic relief draws from the royal granaries (§7.3.5). */
+  holdReserve: boolean;
+  /** Rationing active until this world day (consumption x0.85, unrest/health costs); null = off. */
+  rationingUntilDay: number | null;
+}
+
+/** AoE market price factors per lot (1 = base price of RULES.market.buy; clamp 0.5..3, recover 1%/day). */
+export interface MarketPrices {
+  grain: number;
+  timber: number;
+  stone: number;
+}
+export type MarketResource = keyof MarketPrices;
 
 export interface FactionState {
   id: FactionId;
@@ -1666,6 +1950,28 @@ export interface FactionState {
   victoryProgress: Record<VictoryType, number>;
   /** Free-form scripted state (event flags scoped to this faction). */
   flags: Record<string, number | boolean | string>;
+  // --- Contracts v2 (DESIGN_SPEC §7-§8; @sprint1 SIM-01 unless noted) ---
+  /** Current age (§8.4). Initial: ScenarioDef.startingAges > FactionDef.startingAge > 'janapada'. */
+  age: AgeId;
+  /** LandmarkDef ids this faction completed, in order (age requirements, exclusivity, score). */
+  landmarks: string[];
+  materials: MaterialStock;
+  policies: FactionPolicies;
+  marketPrices: MarketPrices;
+  /** Ghost markers of enemy armies this faction lost sight of, by army id (kept 5 days). */
+  ghosts: Record<ArmyId, ArmyGhost>;
+  /** Counter-intelligence level from counter_intelligence successes (+0.3 each, divides enemy success, §7.11). */
+  counterIntel: number;
+  /** Day the counter-intelligence bonus expires (null = none active). */
+  counterIntelUntilDay: number | null;
+  /** Day the protect_court bonus (-50% legitimacy loss from plots) expires (null = none active). */
+  protectCourtUntilDay: number | null;
+  /** Consecutive ignored recommendations per council seat (3 in a row -> grievance, §7.12). */
+  advisorIgnored: Record<CouncilSeat, number>;
+  /** Accumulated cultural-legacy points (culture effects x10 per month; victory at RULES.victory.cultural_legacy). */
+  culturePoints: number;
+  /** Consecutive days the prosperity victory conditions held (sustainDays = 180). */
+  prosperityDays: number;
 }
 
 // --- Diplomacy (GDD §7) ---
@@ -1716,6 +2022,10 @@ export interface RelationState {
   warScore: number;
   treatyIds: TreatyId[];
   grievances: Grievance[];
+  /** v2: war weariness points (+3 per month at war; AI peace utility, §7.10). @sprint1 SIM-01 */
+  warWeariness: number;
+  /** v2: no war may be declared before this day (peace truce 360 days); null = no truce. @sprint1 SIM-01 */
+  truceUntilDay: number | null;
 }
 
 export type ProposalType = TreatyType | 'declare_war' | 'ceasefire' | 'demand_tribute' | 'break_treaty';
@@ -1764,6 +2074,8 @@ export interface IntelState {
   /** 0..1 how much the observer knows about the target. */
   level: number;
   lastUpdatedDay: number;
+  /** v2: target armies stay visible until this day (gather_intel success: 60 days); null = no reveal. */
+  armiesVisibleUntilDay: number | null;
 }
 
 export interface EspionageState {
@@ -1815,7 +2127,11 @@ export type Condition =
   | { kind: 'battle_won'; faction: ScopeRef; withinDays: number }
   | { kind: 'army_strength_at_least'; faction: ScopeRef; soldiers: number }
   | { kind: 'event_resolved'; eventId: EventDefId; choiceId: string | null }
-  | { kind: 'random'; chance: number };
+  | { kind: 'random'; chance: number }
+  /** v2 (DESIGN_SPEC §14.3 item 6): the faction has reached `age` or a later one. @sprint1 SIM-01 */
+  | { kind: 'age_at_least'; faction: ScopeRef; age: AgeId }
+  /** v2: the faction completed `landmarkId` (null = any landmark). @sprint1 SIM-01 */
+  | { kind: 'landmark_built'; faction: ScopeRef; landmarkId: string | null };
 
 export type Effect =
   | { kind: 'settlement_var'; target: ScopeRef; variable: SettlementVar; op: 'add' | 'set' | 'mul'; value: number }
@@ -2068,6 +2384,8 @@ export interface SkirmishSetup {
   difficulty: Difficulty;
   /** Spectate AI vs AI (QA / attract mode). */
   aiVsAi: boolean;
+  /** v2: SKIRMISH_COMPOSITIONS ids per side [player, enemy] used when `armies` is null (default: faction default). */
+  compositions?: [string, string];
 }
 
 export type WorldSetup =
@@ -2091,6 +2409,16 @@ export interface RegionState {
   name: string;
   terrain: TerrainSpec;
   bounds: Rect;
+}
+
+/** The monsoon that feeds this year's kharif crop (DESIGN_SPEC §7.3.3). */
+export interface MonsoonState {
+  /** M, 0.4..1.4 (1 = normal; < 0.7 failed, > 1.2 flood). Rolled on month 4 day 1. */
+  strength: number;
+  /** Display year `strength` applies to. */
+  year: number;
+  /** Month-3 forecast shown to the player (+-0.15, exact with a learned court scholar); null outside month 3. */
+  forecast: number | null;
 }
 
 export interface WorldState {
@@ -2126,6 +2454,14 @@ export interface WorldState {
   battleHistory: BattleOutcome[];
   chronicle: ChronicleEntry[];
   stats: WorldStatsSample[];
+  // --- Contracts v2 ---
+  /** This year's monsoon (initial: scenario / sandbox monsoonStrength, else 1). @sprint1 SIM-01 */
+  monsoon: MonsoonState;
+  /**
+   * End-game statistics counters per faction, keyed by END_GAME_STATS ids (src/data/statistics.ts) marked
+   * "tracked" (e.g. soldiers_raised, enemies_killed, famine_days). Absent key = 0. @sprint1 SIM-01
+   */
+  statistics: Record<FactionId, Record<string, number>>;
 }
 
 // =====================================================================================================
@@ -2140,8 +2476,10 @@ export type StrategicCommand =
   | { kind: 'merge_armies'; armyId: ArmyId; otherArmyId: ArmyId }
   | { kind: 'disband_army'; armyId: ArmyId }
   | { kind: 'recruit'; settlementId: SettlementId; unitClass: UnitClass; formations: number; targetArmyId: ArmyId | null }
-  | { kind: 'build'; settlementId: SettlementId; building: BuildingType }
-  | { kind: 'cancel_construction'; settlementId: SettlementId; building: BuildingType }
+  /** v2: `cell`/`rot` place a new building on the settlement grid (absent = auto placement / upgrade). */
+  | { kind: 'build'; settlementId: SettlementId; building: BuildingType; cell?: GridCell; rot?: Rotation }
+  /** v2: `jobIndex` (queue index) wins over `building` and also cancels landmark jobs (locked after 50%). */
+  | { kind: 'cancel_construction'; settlementId: SettlementId; building: BuildingType; jobIndex?: number }
   | { kind: 'repair_road'; edgeId: RoadEdgeId }
   | { kind: 'set_tax_rate'; settlementId: SettlementId; rate: number }
   | { kind: 'set_tax_policy'; policy: TaxPolicy }
@@ -2160,7 +2498,23 @@ export type StrategicCommand =
   | { kind: 'recall_agent'; agentId: AgentId }
   | { kind: 'event_choice'; eventInstanceId: EventInstanceId; choiceId: string }
   | { kind: 'negotiate_rebels'; settlementId: SettlementId; offer: 'relief' | 'tax_cut' | 'autonomy' | 'coercion' }
-  | { kind: 'engagement_decision'; engagementId: EngagementId; decision: 'fight' | 'autoresolve' | 'retreat' };
+  | { kind: 'engagement_decision'; engagementId: EngagementId; decision: 'fight' | 'autoresolve' | 'retreat' }
+  // --- Contracts v2 (DESIGN_SPEC §14.3 item 3; @sprint1 SIM-01 implements, UI-02 / GP-03 issue) ---
+  /** AoE market: buy or sell `lots` x 100 of a resource (needs a Market in any owned settlement). */
+  | { kind: 'market_trade'; resource: MarketResource; lots: number; buy: boolean }
+  /** Start an age landmark at a settlement cell (pays the cost; one per faction per age). */
+  | { kind: 'start_landmark'; landmarkId: string; settlementId: SettlementId; cell: GridCell; rot?: Rotation }
+  /** Economy panel toggles: hold the royal reserve / rationing (120 days). */
+  | { kind: 'set_policy'; policy: 'hold_reserve' | 'rationing'; on: boolean }
+  | { kind: 'forced_march'; armyId: ArmyId; on: boolean }
+  /** Results-screen decision on the prisoners of a won battle. */
+  | { kind: 'prisoners'; engagementId: EngagementId; decision: PrisonerDecision }
+  /** Decision for a settlement in `pendingCapture` (liberate only if independent at start). */
+  | { kind: 'capture_decision'; settlementId: SettlementId; decision: CaptureDecision }
+  /** Where the settlement's new recruits gather (null clears it = garrison). */
+  | { kind: 'set_rally_point'; settlementId: SettlementId; rallyPoint: RallyPoint | null }
+  /** Repair a damaged building (scaffold stage; cost x (1 - condition)). */
+  | { kind: 'repair_building'; settlementId: SettlementId; building: BuildingType };
 
 export interface IssuedStrategicCommand {
   factionId: FactionId;
@@ -2201,7 +2555,25 @@ export type SimEvent =
   | { kind: 'spy_report'; agentId: AgentId; success: boolean; text: string }
   | { kind: 'objective_updated'; objectiveId: ObjectiveId; status: 'complete' | 'failed' }
   | { kind: 'scenario_ended'; outcomeId: string; result: 'victory' | 'defeat' | 'mixed' }
-  | { kind: 'notification'; factionId: FactionId | null; severity: 'info' | 'warning' | 'danger' | 'success'; text: string; focus: Vec2 | null };
+  | { kind: 'notification'; factionId: FactionId | null; severity: 'info' | 'warning' | 'danger' | 'success'; text: string; focus: Vec2 | null }
+  // --- Contracts v2 feedback events (small payloads; @sprint1 SIM-01 emits, GP-03 / UI-02 / AUD-01 consume) ---
+  | { kind: 'construction_started'; settlementId: SettlementId; building: BuildingType; level: number; landmarkId: string | null }
+  | { kind: 'landmark_started'; factionId: FactionId; settlementId: SettlementId; landmarkId: string }
+  /** Landmark completed -> new age (age-up fanfare: camera swoop to the landmark, conch + drums). */
+  | { kind: 'age_advanced'; factionId: FactionId; age: AgeId; landmarkId: string | null; settlementId: SettlementId | null }
+  | { kind: 'monsoon_roll'; strength: number; year: number; result: 'failed' | 'normal' | 'flood' }
+  /** Grain lost: above storage capacity (toast "312 measures spoiled at ...") or daily decay. */
+  | { kind: 'spoilage'; settlementId: SettlementId; amount: number; reason: 'capacity' | 'decay' }
+  | { kind: 'market_trade'; factionId: FactionId; resource: MarketResource; lots: number; buy: boolean; wealth: number }
+  | { kind: 'rebels_spawned'; settlementId: SettlementId; armyId: ArmyId; soldiers: number }
+  | { kind: 'secession'; settlementId: SettlementId; from: FactionId | null }
+  | { kind: 'governor_demand'; provinceId: ProvinceId; characterId: CharacterId }
+  /** Strategic siege: walls at <= 50% (assault possible). */
+  | { kind: 'siege_breach'; settlementId: SettlementId; armyId: ArmyId | null }
+  | { kind: 'depot_raided'; depotId: DepotId; armyId: ArmyId; factionId: FactionId }
+  /** An enemy army entered `observerFactionId`'s sight (minimap ping, ghost cleared). */
+  | { kind: 'army_sighted'; armyId: ArmyId; factionId: FactionId; observerFactionId: FactionId; x: number; z: number }
+  | { kind: 'hero_mission_available'; missionId: string };
 export type SimEventKind = SimEvent['kind'];
 
 // =====================================================================================================
@@ -2373,11 +2745,16 @@ export interface QualitySettings {
   /** Max device pixel ratio used. */
   maxPixelRatio: number;
   dynamicResolution: { enabled: boolean; minScale: number; maxScale: number };
-  shadows: { enabled: boolean; mapSize: number; cascades: number; distance: number; soft: boolean };
+  /**
+   * Sun shadows. v2: `pcss` = PCSS-style kernel scaled by the sun's angular softness (high+), `contact` =
+   * screen-space contact shadows (ultra). Cascades 1/2/3/4 by tier (ART_BIBLE §13).
+   */
+  shadows: { enabled: boolean; mapSize: number; cascades: number; distance: number; soft: boolean; contact: boolean; pcss: boolean };
   ao: 'off' | 'ssao' | 'gtao';
   aoHalfRes: boolean;
   bloom: boolean;
-  antialias: 'none' | 'fxaa' | 'smaa';
+  /** 'taa' (v2) = TAA in hero mode and cutscenes, SMAA elsewhere (post.setTaa, GFX-01). */
+  antialias: 'none' | 'fxaa' | 'smaa' | 'taa';
   colorGrading: boolean;
   vignette: boolean;
   fog: boolean;
@@ -2396,6 +2773,35 @@ export interface QualitySettings {
   /** Cloth/banner simulation in shader. */
   banners: boolean;
   weatherParticles: number;
+  // --- Contracts v2 (ART_BIBLE §13, ARCHITECTURE §19; tuned by GFX-01 which owns core/quality.ts) ---
+  /** Screen-space reflections on water and wet stone (ultra). */
+  ssr: boolean;
+  /** Depth of field, film grain and chromatic aberration: off | hero mode + cutscenes | every close band. */
+  dof: 'off' | 'hero' | 'close';
+  /** Volumetric sun-shaft samples (0 = off; 24 / 32 / 48). */
+  shaftsSamples: number;
+  /** Shafts rendered at half resolution (ultra: full). */
+  shaftsHalfRes: boolean;
+  /** Fog model: FogExp2 (x0.6 density on low) | analytic height fog | height fog + mist-slab noise. */
+  heightFog: 'exp2' | 'height' | 'height_mist';
+  /** Lens dirt on bloom + edge chromatic aberration (ultra). */
+  lensEffects: boolean;
+  /** GPU grass blades per m^2 (0 = off: terrain colour only). */
+  grassDensity: number;
+  /** Practical lights (torches, lamps) rendered as real PointLights; the rest become emissive sprites. */
+  practicalLights: number;
+  /** Trees switch to octahedral impostors beyond this distance (m). */
+  treeImpostorDistance: number;
+  /** Cosmetic villagers per settlement in view (DESIGN_SPEC §8.3: 30 / 60 / 120 / 200). */
+  villagerCap: number;
+  /** Crowd LOD max distances (m): VAT LOD0 (0 = never), VAT LOD1, impostors (beyond: tokens / culled). */
+  crowdLod: { vat0: number; vat1: number; impostor: number };
+  /** Emissive multiplier compensating for missing bloom (low 1.3). */
+  emissiveBoost: number;
+  /** Baked (vertex / macro) AO strength multiplier compensating for missing GTAO (low 1.2). */
+  bakedAoBoost: number;
+  /** Single merged post pass (grade + vignette + FXAA) instead of the full stack (low). */
+  postMerged: boolean;
 }
 
 export interface QualityDetection {
@@ -2465,6 +2871,50 @@ export const INPUT_ACTIONS = [
   'hero_interact',
   'hero_run',
   'hero_exit',
+  // --- Contracts v2 (DESIGN_SPEC §8.8 Classic / Grid presets, §11.8 hero controls; bound by UI-02) ---
+  // battle shapes, stance, commander
+  'shape_loose',
+  'shape_circle',
+  'order_stance',
+  'commander_rally',
+  // AoE world command
+  'idle_builders_next',
+  'idle_army_next',
+  'select_capital',
+  'placement_rotate',
+  // command card (5 x 3 grid, row-major Q W E R T / A S D F G / Z X C V B in the Grid preset)
+  'card_next_tab',
+  'card_slot_0',
+  'card_slot_1',
+  'card_slot_2',
+  'card_slot_3',
+  'card_slot_4',
+  'card_slot_5',
+  'card_slot_6',
+  'card_slot_7',
+  'card_slot_8',
+  'card_slot_9',
+  'card_slot_10',
+  'card_slot_11',
+  'card_slot_12',
+  'card_slot_13',
+  'card_slot_14',
+  // camera
+  'camera_rotate_left',
+  'camera_rotate_right',
+  // hero melee (Wukong set) + cinematics + dialogue
+  'hero_attack_light',
+  'hero_attack_heavy',
+  'hero_roll',
+  'hero_guard',
+  'hero_salve',
+  'hero_lock_on',
+  'hero_skip_cinematic',
+  'dialogue_choice_1',
+  'dialogue_choice_2',
+  'dialogue_choice_3',
+  'dialogue_choice_4',
+  'dialogue_choice_5',
 ] as const;
 export type InputAction = (typeof INPUT_ACTIONS)[number];
 
@@ -2544,7 +2994,27 @@ export interface GameSettings {
   colorblind: 'none' | 'protan' | 'deutan' | 'tritan';
   /** action -> key codes (KeyboardEvent.code), e.g. { order_hold: ['KeyH'] } */
   keybindings: Partial<Record<InputAction, string[]>>;
+  // --- Contracts v2 (DESIGN_SPEC §8.8, §12.3-§12.6; defaults in core/settings.ts) ---
+  /** Key preset: Classic (mnemonic letters, WASD camera) or Grid (AoE IV-like QWERT/ASDFG/ZXCVB). */
+  keyPreset: KeyPreset;
+  /** Auto-pause options (§6.13, §12.6). */
+  autoPause: { battleStart: boolean; commanderFallen: boolean; formationRouted: boolean; narrativeEvents: boolean };
+  /** Tutorial hint ids already shown on this profile (TUTORIAL_HINTS, shown once). */
+  hintsSeen: string[];
+  /** Phone simple command mode (intents/stances/shapes behind "More"). 'auto' = on for touch-primary devices. */
+  simpleMode: boolean | 'auto';
+  /** Colour formations and tokens by relation (own / ally / enemy) instead of faction colour. */
+  relationColoring: boolean;
+  /** Minimap stays north-up instead of rotating with the camera. */
+  minimapNorthUp: boolean;
+  /** Hold-to-toggle accessibility options (§12.5). */
+  holdToToggle: { guard: boolean; run: boolean };
+  /** Subtitles / captions (hero dialogue, barks, cinematics). */
+  subtitles: boolean;
 }
+
+export const KEY_PRESETS = ['classic', 'grid'] as const;
+export type KeyPreset = (typeof KEY_PRESETS)[number];
 
 export interface SaveMeta {
   slot: string;
@@ -2568,6 +3038,11 @@ export interface SaveSession {
   skirmish: SkirmishSetup | null;
   /** Engagement the player is fighting, if saved mid-battle. */
   activeEngagementId: EngagementId | null;
+  /**
+   * v2: hero visit in progress when saved (autosave on entering hero mode, DESIGN_SPEC §2.3) so loading routes
+   * back to the hero scene; a mission restarts from its beginning (mid-mission progress is never saved). null otherwise.
+   */
+  hero: { settlementId: SettlementId | null; missionId: string | null } | null;
 }
 
 export interface SaveGame {
@@ -2771,7 +3246,8 @@ export interface TutorialHintDef {
 export const NEGOTIATION_TACTICS = ['duty', 'gain', 'strength', 'kinship', 'reveal'] as const;
 export type NegotiationTactic = (typeof NEGOTIATION_TACTICS)[number];
 
-export type HeroMood = 'dawn_mist' | 'golden_dust' | 'noon_haze' | 'monsoon_wet' | 'lamp_night' | 'incense_dim';
+export const HERO_MOODS = ['dawn_mist', 'golden_dust', 'noon_haze', 'monsoon_wet', 'lamp_night', 'incense_dim'] as const;
+export type HeroMood = (typeof HERO_MOODS)[number];
 
 /** A district of a hero-explorable settlement. Anchor is polar around the settlement centre. */
 export interface HeroDistrictDef extends Sourced {
@@ -2967,6 +3443,32 @@ export interface HeroMissionDef extends Sourced {
   onFailure: Effect[];
   /** Can the player retry on failure (combat missions: yes; negotiations: no). */
   retryable: boolean;
+}
+
+/**
+ * Result of a hero mission handed to the session at the END of the mission only (DESIGN_SPEC §11.6, §11.9):
+ * `completeHeroMission(result)` (GP-03) applies `onSuccess` / `onFailure` plus the recorded dialogue and clue
+ * effects exactly once through SIM-01 `applyHeroMissionResult(world, factionId, result, out)`. Abandoning a
+ * mission applies nothing. Deterministic plain data (saved in no state; flags it produces are).
+ */
+export interface HeroMissionResult {
+  missionId: string;
+  /** true = success; false = the player accepted the failure ("Accept the outcome"). */
+  success: boolean;
+  /** HeroObjectiveDef ids completed (optional ones included). */
+  objectivesCompleted: string[];
+  /** Clue ids found (become flags `clue_<id>`). */
+  clues: string[];
+  /** Dialogue choices taken as `dlg_<tree>_<choice>` keys whose effects apply once. */
+  dialogueChoices: string[];
+  /** Negotiation results by HeroCharacterDef id. */
+  negotiations: Record<string, 'won' | 'lost'>;
+  /** Hero health 0..1 at the end (a wounded prince feeds events). */
+  heroHealth: number;
+  /** Tries used (1 = first attempt). */
+  attempts: number;
+  /** Real seconds played (statistics only - never read by the sim). */
+  durationSec: number;
 }
 
 /** One move of the hero's focused melee set (Wukong-like feel, tiny scope). Times in seconds. */

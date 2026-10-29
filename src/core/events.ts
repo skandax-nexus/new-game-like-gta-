@@ -1,5 +1,6 @@
 /**
- * Typed event bus + the app-wide event map. Owned by the CTO. Three-free, DOM-free.
+ * Typed event bus + the app-wide event map. OWNER: CTO (Contracts v2 events/SFX added by CORE-01).
+ * Three-free, DOM-free.
  *
  * - Sim code does NOT use the bus (it writes `SimEvent[]` / `BattleEventRecord[]` into out-arrays).
  *   Scenes forward those batches to the bus for UI/audio.
@@ -126,8 +127,68 @@ export const SFX_KINDS = [
   'harvest',
   'thunder',
   'bell',
+  // --- Contracts v2 (AUD-01 synthesizes them; DESIGN_SPEC §11.7 melee, §8 AoE feedback, §6.6.5 sieges) ---
+  // melee (hero:combat drives most of these)
+  'sword_light',
+  'sword_heavy',
+  'parry_ring',
+  'block_thud',
+  'roll_cloth',
+  'body_hit',
+  'stagger_grunt',
+  'salve',
+  // world, construction, sieges, surfaces
+  'bell_temple',
+  'construction_complete',
+  'landmark_complete',
+  'age_up_fanfare',
+  'market_coins',
+  'gate_break',
+  'wall_crumble',
+  'ram_hit',
+  'fire_crackle',
+  'river_splash',
+  'footstep_stone',
+  'footstep_dirt',
 ] as const;
 export type SfxKind = (typeof SFX_KINDS)[number];
+
+/** Music moods for 'audio:mood' (v2 adds hero exploration, hero combat, the duel and sieges). */
+export const AUDIO_MOODS = ['menu', 'world', 'battle', 'city', 'victory', 'defeat', 'hero_explore', 'hero_combat', 'duel', 'siege'] as const;
+export type AudioMood = (typeof AUDIO_MOODS)[number];
+
+/** One-shot musical stingers for 'audio:stinger' (DESIGN_SPEC §8.4 fanfare, §8.2 chime, §11.6 duel bells). */
+export const AUDIO_STINGERS = [
+  'age_up',
+  'landmark_complete',
+  'construction_complete',
+  'harvest',
+  'battle_start',
+  'duel_phase',
+  'mission_success',
+  'mission_failure',
+  'victory',
+  'defeat',
+] as const;
+export type AudioStinger = (typeof AUDIO_STINGERS)[number];
+
+/** Hero melee feedback kinds for 'hero:combat' (audio, camera shake, hit-stop VFX). */
+export type HeroCombatKind = 'hit' | 'parry' | 'perfect_dodge' | 'guard_break' | 'stagger' | 'finisher';
+
+/** Minimap / map ping kinds for 'world:alert' (red attack/siege/revolt, amber shortage/supply, gold good news). */
+export type WorldAlertKind =
+  | 'attack'
+  | 'siege'
+  | 'revolt'
+  | 'army_sighted'
+  | 'shortage'
+  | 'supply_low'
+  | 'construction'
+  | 'landmark'
+  | 'age'
+  | 'treaty'
+  | 'event';
+export type WorldAlertSeverity = 'danger' | 'warning' | 'success';
 
 export type NotifySeverity = 'info' | 'warning' | 'danger' | 'success';
 
@@ -164,10 +225,28 @@ export interface GameEventMap {
   'ui:camera_focus': { x: number; z: number; distance: number | null };
   /** Toggle a map overlay (supply lines, terrain classes, borders). */
   'ui:overlay': { overlay: 'supply' | 'terrain' | 'borders'; visible: boolean };
-  'audio:sfx': { sfx: SfxKind; volume?: number; pan?: number };
+  /** One-shot sound. v2: `position` (world m) makes it spatial (PannerNode); `pan` is ignored when set. */
+  'audio:sfx': { sfx: SfxKind; volume?: number; pan?: number; position?: { x: number; y: number; z: number } };
   /** Ambience intensity hints for the audio director. */
-  'audio:mood': { mood: 'menu' | 'world' | 'battle' | 'city' | 'victory' | 'defeat'; intensity: number };
+  'audio:mood': { mood: AudioMood; intensity: number };
   error: { message: string; fatal: boolean };
+  // --- Contracts v2 (Sprint 1; docs/ARCHITECTURE.md "Contracts v2") ---
+  /** A tutorial trigger key fired (DESIGN_SPEC §12.4, e.g. 'world.build_mode'); the hints service decides. */
+  'ui:hint': { key: string };
+  /** A hero mission ended (after completeHeroMission / accept failure; not on abandon). */
+  'hero:mission_end': { missionId: string; success: boolean };
+  /** Hero melee feedback at a world position; strength 0..1 (audio, shake, VFX). */
+  'hero:combat': { kind: HeroCombatKind; x: number; y: number; z: number; strength: number };
+  /** Map / minimap alert ping (expanding ring: danger red, warning amber, success gold). */
+  'world:alert': { kind: WorldAlertKind; x: number; z: number; severity: WorldAlertSeverity };
+  /** Camera shake request (amplitude m, damped noise); ignored under settings.reducedMotion. */
+  'camera:shake': { amplitude: number; durationSec: number };
+  /** Audio listener pose (world position + forward), from the active camera, ~10 Hz. */
+  'audio:listener': { x: number; y: number; z: number; fx: number; fy: number; fz: number };
+  /** Ambience layer mix (HeroDistrictDef.ambience keys, world beds); layers not listed fade out. */
+  'audio:ambience': { layers: readonly { key: string; gain: number }[] };
+  /** One-shot musical stinger over the score. */
+  'audio:stinger': { stinger: AudioStinger };
 }
 
 export type GameBus = EventBus<GameEventMap>;

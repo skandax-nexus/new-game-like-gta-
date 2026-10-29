@@ -9,10 +9,11 @@
  * intensify with battle size, conch shells and horns at charges, elephant trumpets, distance-based
  * mixing of battle sounds from SoldierBuffers, monsoon rain ambience, positional audio.
  */
-import type { GameBus, SfxKind } from '../core/events';
+import type { AudioMood, GameBus, SfxKind } from '../core/events';
 import type { GameSettings } from '../core/types';
 
-type Mood = 'menu' | 'world' | 'battle' | 'city' | 'victory' | 'defeat';
+/** CORE-01 compile-fix: the bus mood union (v2 adds hero_explore, hero_combat, duel, siege; AUD-01 scores them). */
+type Mood = AudioMood;
 
 export class AudioManager {
   private ctx: AudioContext | null = null;

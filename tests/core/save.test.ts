@@ -10,7 +10,7 @@ function makeSave(): SaveGame {
     format: 'samrajya-save',
     version: SAVE_VERSION,
     meta: { slot: 'slot1', name: 'Test', mode: 'campaign', scene: 'world', playerFactionId: world.playerFactionId, calendar: { ...world.calendar }, createdAt: '2026-01-01T00:00:00.000Z', playtimeSec: 1, buildVersion: 'test', summary: 'test', thumbnail: null },
-    session: { mode: 'campaign', scene: 'world', skirmish: null, activeEngagementId: null },
+    session: { mode: 'campaign', scene: 'world', skirmish: null, activeEngagementId: null, hero: null },
     world,
     battle: null,
   };

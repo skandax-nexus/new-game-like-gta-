@@ -1,17 +1,38 @@
 /**
- * Versioned save/load + state hashing. Owned by the CTO.
+ * Versioned save/load + state hashing. OWNER: CTO (save format v2 + migration by CORE-01).
  *
  * Format: JSON text of `SaveGame` (see types.ts) with:
  *   - `format: 'samrajya-save'`, `version: SAVE_VERSION`
  *   - typed arrays encoded as { "$ta": "<Type>", "b64": "<base64>" } (if any appear)
  *   - non-finite numbers encoded as { "$num": "Infinity" | "-Infinity" | "NaN" }
- * Loading runs registered migrations v(n) -> v(n+1) until SAVE_VERSION, then validates the shape.
+ * Loading runs registered migrations v(n) -> v(n+1) until SAVE_VERSION, then validates the shape
+ * (`describeSaveProblems`: every Contracts v2 field present with the right type, no rebel faction entry).
+ *
+ * Migrations: v1 -> v2 (Contracts v2, Sprint 1) adds every new persistent field with the same value a fresh
+ * v2 world/battle would hold, computed from content where it depends on it (faction starting age and materials,
+ * settlement owner at game start, scenario monsoon) - so this module reads src/data/** (campaign, factions,
+ * region, balance). It is purely additive: every v1 value is kept (tests/contracts/migration.test.ts).
  *
  * Storage: `SaveStore` abstraction - LocalStorageSaveStore in the browser, MemorySaveStore in tests.
  * The sim never reads wall-clock time; `meta.createdAt` is informational only.
  */
-import type { SaveGame, SaveMeta, SaveSlotInfo } from './types';
-import { SAVE_VERSION, STORAGE_PREFIX } from './constants';
+import type {
+  AgeId,
+  BattleOutcome,
+  BattleState,
+  CouncilSeat,
+  FactionId,
+  SaveGame,
+  SaveMeta,
+  SaveSlotInfo,
+  WorldState,
+} from './types';
+import { AGE_IDS, COUNCIL_SEATS, REBEL_FACTION_ID } from './types';
+import { SAVE_VERSION, STORAGE_PREFIX, WORLD_SCHEMA_VERSION } from './constants';
+import { SCENARIOS } from '../data/campaign';
+import { FACTIONS } from '../data/factions';
+import { REGION } from '../data/region';
+import { BALANCE } from '../data/balance';
 
 // ---------------------------------------------------------------------------------------------
 // Base64 (works in browser and node without Buffer)
@@ -237,7 +258,7 @@ export function deserializeSave(text: string): SaveGame {
   return game;
 }
 
-/** Shallow structural validation (throws SaveError). */
+/** Structural validation of a current-version save (throws SaveError listing the first problems). */
 export function validateSave(game: SaveGame): void {
   if (!game.meta || typeof game.meta.slot !== 'string') throw new SaveError('Save missing meta');
   if (!game.session || typeof game.session.mode !== 'string') throw new SaveError('Save missing session');
@@ -251,7 +272,298 @@ export function validateSave(game: SaveGame): void {
     const b = game.battle;
     if (typeof b !== 'object' || !Array.isArray(b.formations) || !b.setup) throw new SaveError('Save has a malformed battle state');
   }
+  const problems = describeSaveProblems(game);
+  if (problems.length) {
+    throw new SaveError(`Save does not match format v${SAVE_VERSION}: ${problems.slice(0, 5).join('; ')}${problems.length > 5 ? ` (+${problems.length - 5} more)` : ''}`);
+  }
 }
+
+// ---------------------------------------------------------------------------------------------
+// Contracts v2 shape check (also used by tests/contracts and QA tools)
+// ---------------------------------------------------------------------------------------------
+
+type Kind = 'number' | 'string' | 'boolean' | 'object' | 'array' | 'number|null' | 'string|null' | 'object|null';
+
+function kindOk(v: unknown, kind: Kind): boolean {
+  const nullable = kind.endsWith('|null');
+  if (v === null) return nullable;
+  const base = nullable ? kind.slice(0, -5) : kind;
+  if (base === 'array') return Array.isArray(v);
+  if (base === 'object') return typeof v === 'object' && !Array.isArray(v);
+  return typeof v === base;
+}
+
+class ShapeChecker {
+  readonly problems: string[] = [];
+  need(o: unknown, path: string, fields: Readonly<Record<string, Kind>>): void {
+    if (typeof o !== 'object' || o === null) {
+      this.problems.push(`${path} is not an object`);
+      return;
+    }
+    const rec = o as Record<string, unknown>;
+    for (const [k, kind] of Object.entries(fields)) {
+      if (!(k in rec)) this.problems.push(`${path}.${k} missing`);
+      else if (!kindOk(rec[k], kind)) this.problems.push(`${path}.${k} is not ${kind}`);
+    }
+  }
+}
+
+const COST_FIELDS = { wealth: 'number', timber: 'number', stone: 'number', labor: 'number' } as const;
+
+function checkOutcome(c: ShapeChecker, o: BattleOutcome, path: string): void {
+  c.need(o, path, { warScore: 'number', chronicle: 'string', placeName: 'string|null', day: 'number|null' });
+  (o.sides ?? []).forEach((s, i) => {
+    c.need(s, `${path}.sides[${i}]`, { prisoners: 'number', routs: 'number', capturedSupply: 'number', commanderId: 'string|null' });
+    (s.formations ?? []).forEach((f, j) => c.need(f, `${path}.sides[${i}].formations[${j}]`, { routedEnemies: 'number' }));
+  });
+}
+
+function checkBattle(c: ShapeChecker, b: BattleState, path: string): void {
+  c.need(b, path, { deploymentEndsAt: 'number', siege: 'object|null', works: 'array', phase: 'string' });
+  if (b.phase !== 'deployment' && b.phase !== 'active' && b.phase !== 'ended') c.problems.push(`${path}.phase '${String(b.phase)}' unknown`);
+  (b.setup?.sides ?? []).forEach((s, i) => c.need(s, `${path}.setup.sides[${i}]`, { aggression: 'number|null' }));
+  (b.sides ?? []).forEach((s, i) => c.need(s, `${path}.sides[${i}]`, { rallyCooldownUntil: 'number' }));
+  (b.formations ?? []).forEach((f, i) =>
+    c.need(f, `${path}.formations[${i}]`, {
+      rallies: 'number',
+      shapeChangeUntil: 'number',
+      panicUntil: 'number',
+      rallyingUntil: 'number',
+      disengageUntil: 'number',
+      chargeRun: 'number',
+      orderTime: 'number',
+      hidden: 'boolean',
+    }),
+  );
+  b.works.forEach((w, i) => c.need(w, `${path}.works[${i}]`, { maxHp: 'number', progress: 'number', formation: 'number' }));
+  if (b.siege) {
+    c.need(b.siege, `${path}.siege`, { segments: 'array', gates: 'array', towers: 'array', breaches: 'array', breachHold: 'object|null' });
+  }
+  if (b.outcome) checkOutcome(c, b.outcome, `${path}.outcome`);
+}
+
+function checkWorld(c: ShapeChecker, w: WorldState): void {
+  if (w.schema !== WORLD_SCHEMA_VERSION) c.problems.push(`world.schema ${w.schema} != ${WORLD_SCHEMA_VERSION}`);
+  if (REBEL_FACTION_ID in w.factions) c.problems.push(`world.factions must not contain the reserved '${REBEL_FACTION_ID}' faction`);
+  c.need(w, 'world', { monsoon: 'object', statistics: 'object' });
+  if (w.monsoon) c.need(w.monsoon, 'world.monsoon', { strength: 'number', year: 'number', forecast: 'number|null' });
+  for (const [fid, f] of Object.entries(w.factions)) {
+    const p = `world.factions.${fid}`;
+    c.need(f, p, {
+      age: 'string',
+      landmarks: 'array',
+      materials: 'object',
+      policies: 'object',
+      marketPrices: 'object',
+      ghosts: 'object',
+      counterIntel: 'number',
+      counterIntelUntilDay: 'number|null',
+      protectCourtUntilDay: 'number|null',
+      advisorIgnored: 'object',
+      culturePoints: 'number',
+      prosperityDays: 'number',
+    });
+    if (!(AGE_IDS as readonly string[]).includes(f.age)) c.problems.push(`${p}.age '${String(f.age)}' unknown`);
+    c.need(f.materials, `${p}.materials`, { timber: 'number', stone: 'number' });
+    c.need(f.policies, `${p}.policies`, { holdReserve: 'boolean', rationingUntilDay: 'number|null' });
+    c.need(f.marketPrices, `${p}.marketPrices`, { grain: 'number', timber: 'number', stone: 'number' });
+    c.need(f.advisorIgnored, `${p}.advisorIgnored`, Object.fromEntries(COUNCIL_SEATS.map((seat) => [seat, 'number' as const])));
+    c.need(f.ai, `${p}.ai`, { memory: 'object' });
+    if (!w.statistics || typeof w.statistics[fid] !== 'object') c.problems.push(`world.statistics.${fid} missing`);
+  }
+  for (const [sid, s] of Object.entries(w.settlements)) {
+    const p = `world.settlements.${sid}`;
+    c.need(s, p, {
+      initialOwnerFactionId: 'string|null',
+      occupiedSinceDay: 'number|null',
+      pendingCapture: 'object|null',
+      starvationDays: 'number',
+      revoltSinceDay: 'number|null',
+      taxRelief: 'object|null',
+      reliefThisMonth: 'number',
+      ladderProgress: 'number',
+      landmarks: 'array',
+    });
+    c.need(s.kharif, `${p}.kharif`, { laborAtSowing: 'number' });
+    c.need(s.rabi, `${p}.rabi`, { laborAtSowing: 'number' });
+    s.construction.forEach((j, i) => {
+      c.need(j, `${p}.construction[${i}]`, { paid: 'object', crew: 'number' });
+      if (j.paid) c.need(j.paid, `${p}.construction[${i}].paid`, COST_FIELDS);
+    });
+  }
+  for (const [id, a] of Object.entries(w.armies)) c.need(a, `world.armies.${id}`, { forcedMarch: 'boolean' });
+  for (const [id, ch] of Object.entries(w.characters)) c.need(ch, `world.characters.${id}`, { captiveOf: 'string|null' });
+  for (const [id, d] of Object.entries(w.depots)) c.need(d, `world.depots.${id}`, { readyOnDay: 'number' });
+  for (const [k, r] of Object.entries(w.diplomacy.relations)) c.need(r, `world.diplomacy.relations.${k}`, { warWeariness: 'number', truceUntilDay: 'number|null' });
+  for (const [o, row] of Object.entries(w.espionage.intel)) {
+    for (const [t, i] of Object.entries(row)) c.need(i, `world.espionage.intel.${o}.${t}`, { armiesVisibleUntilDay: 'number|null' });
+  }
+  for (const [id, e] of Object.entries(w.engagements)) {
+    c.need(e, `world.engagements.${id}`, { prisonerDecision: 'string|null' });
+    if (e.battle) checkBattle(c, e.battle, `world.engagements.${id}.battle`);
+    if (e.outcome) checkOutcome(c, e.outcome, `world.engagements.${id}.outcome`);
+  }
+  w.battleHistory.forEach((o, i) => checkOutcome(c, o, `world.battleHistory[${i}]`));
+}
+
+/**
+ * Every way `game` differs from the current save format (empty = valid). Cheap (one pass, no allocation per
+ * valid field beyond the walk); used by validateSave, the migration tests and QA tools.
+ */
+export function describeSaveProblems(game: SaveGame): string[] {
+  const c = new ShapeChecker();
+  if (game.version !== SAVE_VERSION) c.problems.push(`version ${game.version} != ${SAVE_VERSION}`);
+  c.need(game.session, 'session', { hero: 'object|null' });
+  if (game.world) checkWorld(c, game.world);
+  if (game.battle) checkBattle(c, game.battle, 'battle');
+  return c.problems;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Migration v1 -> v2 (Contracts v2, Sprint 1 / CORE-01)
+// ---------------------------------------------------------------------------------------------
+
+type Raw = Record<string, unknown>;
+
+/** Set `key` only when absent: migrations never overwrite what a newer writer already stored. */
+function fill<T extends object, K extends keyof T>(o: T, key: K, value: T[K]): void {
+  if (!(key in o)) o[key] = value;
+}
+
+const ZERO_COST = (): { wealth: number; timber: number; stone: number; labor: number } => ({ wealth: 0, timber: 0, stone: 0, labor: 0 });
+
+/** Faction age at game start: ScenarioDef.startingAges > FactionDef.startingAge > 'janapada' (DESIGN_SPEC §14.3). */
+export function initialFactionAge(scenarioId: string | null, factionId: FactionId): AgeId {
+  const scenario = scenarioId ? SCENARIOS[scenarioId] : undefined;
+  return scenario?.startingAges?.[factionId] ?? FACTIONS[factionId]?.startingAge ?? 'janapada';
+}
+
+/** Owner of a settlement at game start, exactly as createWorld assigns it (null = independent). */
+function initialOwner(w: WorldState, settlementId: string): FactionId | null {
+  const def = REGION.settlements.find((d) => d.id === settlementId);
+  if (!def) return null;
+  const scenario = w.scenarioId ? SCENARIOS[w.scenarioId] : undefined;
+  const inPlay = new Set<FactionId>(scenario ? scenario.factionIds : [w.playerFactionId, ...(w.sandbox?.rivalFactionIds ?? [])]);
+  let owner: FactionId | null = def.defaultOwner;
+  if (scenario && def.id in scenario.settlementOwners) owner = scenario.settlementOwners[def.id] ?? null;
+  if (owner && !inPlay.has(owner)) owner = null;
+  return owner;
+}
+
+function migrateOutcomeV1(o: BattleOutcome, setupSides: BattleState['setup']['sides'] | null, day: number | null): void {
+  fill(o, 'warScore', 0);
+  fill(o, 'chronicle', o.summary?.[0] ?? '');
+  fill(o, 'placeName', null);
+  fill(o, 'day', day);
+  o.sides.forEach((s, i) => {
+    const other = o.sides[i === 0 ? 1 : 0];
+    fill(s, 'prisoners', other?.captured ?? 0);
+    fill(s, 'routs', s.formations.filter((f) => f.routed).length);
+    fill(s, 'capturedSupply', 0);
+    fill(s, 'commanderId', setupSides?.[i]?.commanderId ?? null);
+    for (const f of s.formations) fill(f, 'routedEnemies', 0);
+  });
+}
+
+/** Upgrade a v1 BattleState in place (skirmish saves and world engagements). */
+export function migrateBattleV1toV2(b: BattleState): void {
+  fill(b, 'deploymentEndsAt', b.setup.deploymentSec);
+  fill(b, 'siege', null);
+  for (const s of b.setup.sides) fill(s, 'aggression', null);
+  for (const s of b.sides) fill(s, 'rallyCooldownUntil', 0);
+  for (const f of b.formations) {
+    fill(f, 'rallies', 0);
+    fill(f, 'shapeChangeUntil', 0);
+    fill(f, 'panicUntil', 0);
+    fill(f, 'rallyingUntil', 0);
+    fill(f, 'disengageUntil', 0);
+    fill(f, 'chargeRun', 0);
+    fill(f, 'orderTime', 0);
+    fill(f, 'hidden', false);
+  }
+  for (const wk of b.works) {
+    fill(wk, 'maxHp', wk.hp);
+    fill(wk, 'progress', 1);
+    fill(wk, 'formation', -1);
+  }
+  if (b.outcome) migrateOutcomeV1(b.outcome, b.setup.sides, null);
+}
+
+/** Upgrade a v1 WorldState in place with the values a fresh v2 world would hold. */
+export function migrateWorldV1toV2(w: WorldState): void {
+  const today = Math.floor(w.calendar.totalHours / 24);
+  const scenario = w.scenarioId ? SCENARIOS[w.scenarioId] : undefined;
+  w.schema = WORLD_SCHEMA_VERSION;
+  fill(w, 'monsoon', {
+    strength: w.sandbox ? w.sandbox.monsoonStrength : scenario && w.calendar.year === scenario.startYear ? (scenario.monsoonStrength ?? 1) : 1,
+    year: w.calendar.year,
+    forecast: null,
+  });
+  fill(w, 'statistics', {});
+  for (const fid of Object.keys(w.factions)) fill(w.statistics, fid, {});
+  for (const [fid, f] of Object.entries(w.factions)) {
+    fill(f, 'age', initialFactionAge(w.scenarioId, fid));
+    fill(f, 'landmarks', []);
+    fill(f, 'materials', { timber: scenario?.materials?.[fid]?.timber ?? 0, stone: scenario?.materials?.[fid]?.stone ?? 0 });
+    fill(f, 'policies', { holdReserve: false, rationingUntilDay: null });
+    fill(f, 'marketPrices', { grain: 1, timber: 1, stone: 1 });
+    fill(f, 'ghosts', {});
+    fill(f, 'counterIntel', 0);
+    fill(f, 'counterIntelUntilDay', null);
+    fill(f, 'protectCourtUntilDay', null);
+    fill(f, 'advisorIgnored', Object.fromEntries(COUNCIL_SEATS.map((seat) => [seat, 0])) as Record<CouncilSeat, number>);
+    fill(f, 'culturePoints', 0);
+    fill(f, 'prosperityDays', 0);
+    fill(f.ai, 'memory', {});
+  }
+  for (const s of Object.values(w.settlements)) {
+    fill(s.kharif, 'laborAtSowing', 0);
+    fill(s.rabi, 'laborAtSowing', 0);
+    fill(s, 'initialOwnerFactionId', initialOwner(w, s.id));
+    fill(s, 'occupiedSinceDay', null);
+    fill(s, 'pendingCapture', null);
+    fill(s, 'starvationDays', 0);
+    // A v1 revolt starts its 30-day secession clock on load instead of seceding at once.
+    fill(s, 'revoltSinceDay', s.rebellionStage === 'revolt' || s.rebellionStage === 'secession' ? today : null);
+    fill(s, 'taxRelief', null);
+    fill(s, 'reliefThisMonth', 0);
+    fill(s, 'ladderProgress', 0);
+    fill(s, 'landmarks', []);
+    for (const job of s.construction) {
+      fill(job, 'paid', ZERO_COST()); // v1 charged nothing
+      fill(job, 'crew', 0); // 0 = derive from the definition
+    }
+  }
+  for (const a of Object.values(w.armies)) fill(a, 'forcedMarch', false);
+  for (const ch of Object.values(w.characters)) fill(ch, 'captiveOf', null);
+  for (const d of Object.values(w.depots)) fill(d, 'readyOnDay', 0);
+  const wearinessPerMonth = BALANCE.diplomacy.warWearinessPerMonth;
+  for (const r of Object.values(w.diplomacy.relations)) {
+    const months = r.atWar && r.warStartDay !== null ? Math.floor(Math.max(0, today - r.warStartDay) / 30) : 0;
+    fill(r, 'warWeariness', months * wearinessPerMonth);
+    fill(r, 'truceUntilDay', null);
+  }
+  for (const row of Object.values(w.espionage.intel)) for (const i of Object.values(row)) fill(i, 'armiesVisibleUntilDay', null);
+  const dayOfBattle = new Map<string, number>();
+  for (const e of Object.values(w.engagements)) {
+    const day = Math.floor(e.startedHour / 24);
+    fill(e, 'prisonerDecision', null);
+    if (e.battle) migrateBattleV1toV2(e.battle);
+    if (e.outcome) {
+      migrateOutcomeV1(e.outcome, e.battle?.setup.sides ?? null, day);
+      dayOfBattle.set(e.outcome.battleId, day);
+    }
+  }
+  for (const o of w.battleHistory) migrateOutcomeV1(o, null, dayOfBattle.get(o.battleId) ?? null);
+}
+
+registerMigration(1, (raw: Raw): Raw => {
+  const game = raw as unknown as SaveGame;
+  if (game.world) migrateWorldV1toV2(game.world);
+  if (game.battle) migrateBattleV1toV2(game.battle);
+  if (game.session) fill(game.session, 'hero', game.session.scene === 'hero' ? { settlementId: null, missionId: null } : null);
+  return raw;
+});
 
 // ---------------------------------------------------------------------------------------------
 // Storage

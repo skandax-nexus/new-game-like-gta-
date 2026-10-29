@@ -130,8 +130,8 @@ function makeSettlement(def: SettlementDef, x: number, z: number, owner: Faction
     foodConsumption: pop * 0.1,
     foodStored: pop * 0.1 * 75,
     foodCapacity: 3000 + pop * 0.6 + granary * 4000,
-    kharif: { sown: 0, growth: 0, health: 1 },
-    rabi: { sown: 0, growth: 0, health: 1 },
+    kharif: { sown: 0, growth: 0, health: 1, laborAtSowing: 0 },
+    rabi: { sown: 0, growth: 0, health: 1, laborAtSowing: 0 },
     lastHarvest: 0,
     grainPrice: 1,
     waterAvailability: Math.min(1, 0.45 + hf.moistureAt(x, z) * 0.5),
@@ -165,6 +165,16 @@ function makeSettlement(def: SettlementDef, x: number, z: number, owner: Faction
     resources: def.resources.slice(),
     requisitionedFood: 0,
     ownerSinceDay: 0,
+    // Contracts v2 (CORE-01 compile-fix: neutral initial values; rules land with SIM-01).
+    initialOwnerFactionId: owner,
+    occupiedSinceDay: null,
+    pendingCapture: null,
+    starvationDays: 0,
+    revoltSinceDay: null,
+    taxRelief: null,
+    reliefThisMonth: 0,
+    ladderProgress: 0,
+    landmarks: [],
   };
 }
 
@@ -214,6 +224,7 @@ function generatedCharacter(world: WorldState, rng: Rng, factionId: FactionId, r
     governsProvinceId: null,
     councilSeat: null,
     prestige: role === 'ruler' ? 50 : 10,
+    captiveOf: null,
   };
 }
 
@@ -271,6 +282,9 @@ export function createWorld(setup: WorldSetup): WorldState {
     battleHistory: [],
     chronicle: [],
     stats: [],
+    // Contracts v2 (CORE-01 compile-fix): this year's monsoon + end-game statistics counters.
+    monsoon: { strength: scenario?.monsoonStrength ?? sandbox?.monsoonStrength ?? 1, year: calendar.year, forecast: null },
+    statistics: Object.fromEntries(factionIds.map((f) => [f, {}])),
   };
   const rng = new Rng(world.rng);
 
@@ -367,6 +381,7 @@ export function createWorld(setup: WorldSetup): WorldState {
         governsProvinceId: c.governsProvinceId,
         councilSeat: c.councilSeat,
         prestige: c.roles.includes('ruler') ? 50 : 10,
+        captiveOf: null,
       };
     }
     for (const c of Object.values(world.characters)) for (const p of c.parentIds) world.characters[p]?.childIds.push(c.id);
@@ -423,9 +438,22 @@ export function createWorld(setup: WorldSetup): WorldState {
       taxPolicy: 'standard',
       council,
       ledger: { ...EMPTY_LEDGER },
-      ai: { personality: def.aiPersonality, goals: [], lastPlanHour: -1, threat: {} },
+      ai: { personality: def.aiPersonality, goals: [], lastPlanHour: -1, threat: {}, memory: {} },
       victoryProgress: zeroVictory(),
       flags: {},
+      // Contracts v2 (CORE-01 compile-fix: initial values per DESIGN_SPEC §14.3; rules land with SIM-01).
+      age: scenario?.startingAges?.[fid] ?? def.startingAge ?? 'janapada',
+      landmarks: [],
+      materials: { timber: scenario?.materials?.[fid]?.timber ?? 0, stone: scenario?.materials?.[fid]?.stone ?? 0 },
+      policies: { holdReserve: false, rationingUntilDay: null },
+      marketPrices: { grain: 1, timber: 1, stone: 1 },
+      ghosts: {},
+      counterIntel: 0,
+      counterIntelUntilDay: null,
+      protectCourtUntilDay: null,
+      advisorIgnored: { chief_minister: 0, commander: 0, treasurer: 0, spymaster: 0, court_scholar: 0 },
+      culturePoints: 0,
+      prosperityDays: 0,
     };
     world.factions[fid] = fs;
     if (capital) ruler.locationSettlementId = capital.id;
@@ -477,11 +505,11 @@ export function createWorld(setup: WorldSetup): WorldState {
     esp.network[a] = {};
     for (let j = 0; j < factionIds.length; j++) {
       const b = factionIds[j] as FactionId;
-      esp.intel[a]![b] = { level: a === b ? 1 : 0.25, lastUpdatedDay: 0 };
+      esp.intel[a]![b] = { level: a === b ? 1 : 0.25, lastUpdatedDay: 0, armiesVisibleUntilDay: null };
       esp.network[a]![b] = a === b ? 1 : 0.1;
       if (j <= i) continue;
       const [x, y] = a < b ? [a, b] : [b, a];
-      dip.relations[relationKey(a, b)] = { a: x, b: y, opinion: 0, trust: 0.5, atWar: false, warStartDay: null, warScore: 0, treatyIds: [], grievances: [] };
+      dip.relations[relationKey(a, b)] = { a: x, b: y, opinion: 0, trust: 0.5, atWar: false, warStartDay: null, warScore: 0, treatyIds: [], grievances: [], warWeariness: 0, truceUntilDay: null };
     }
   }
   if (scenario) {
@@ -650,7 +678,8 @@ export function applyStrategicCommand(world: WorldState, issued: IssuedStrategic
       const s = world.settlements[c.settlementId];
       if (!s) return false;
       const cur = s.buildings.find((b) => b.type === c.building)?.level ?? 0;
-      s.construction.push({ type: c.building, targetLevel: cur + 1, progress: 0, startedDay: totalDays(world.calendar), laborAssigned: 0 });
+      // CORE-01 compile-fix: v2 job fields (nothing is charged yet; crew 0 = derive from the definition).
+      s.construction.push({ type: c.building, targetLevel: cur + 1, progress: 0, startedDay: totalDays(world.calendar), laborAssigned: 0, paid: { wealth: 0, timber: 0, stone: 0, labor: 0 }, crew: 0 });
       return true;
     }
     case 'recruit': {
