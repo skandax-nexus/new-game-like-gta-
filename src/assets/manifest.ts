@@ -9,21 +9,21 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 13304266,
-    "high": 6610545,
-    "mobile": 3536292
+    "ultra": 13359494,
+    "high": 6315259,
+    "mobile": 3476355
   },
   "assets": {
     "banner_cloth": {
       "kind": "model",
       "id": "banner_cloth",
       "category": "banners",
-      "hash": "89029a9e83",
+      "hash": "7a6d24048b",
       "description": "Banner pole + crossbar + finial + tassels and the six BannerShape cloths (variants), cloth weights in COLOR_0.r.",
       "bytes": {
-        "ultra": 47148,
-        "high": 47148,
-        "mobile": 47148
+        "ultra": 59476,
+        "high": 59476,
+        "mobile": 59476
       },
       "tiers": [
         "ultra",
@@ -35,7 +35,7 @@ export const ASSET_MANIFEST = {
         {
           "lod": 0,
           "url": "models/banner_cloth/banner_cloth.lod0.glb",
-          "bytes": 47148,
+          "bytes": 59476,
           "triangles": 3958,
           "drawCalls": 12,
           "distance": 0
@@ -55,14 +55,14 @@ export const ASSET_MANIFEST = {
         "max": [
           0.632,
           4.42,
-          0.035
+          0.0646
         ],
         "center": [
           0,
           2.21,
-          0.0025
+          0.0173
         ],
-        "radius": 2.2988
+        "radius": 2.2991
       },
       "clips": [],
       "skinned": false,
@@ -198,12 +198,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_dust",
       "category": "fx",
-      "hash": "879007c8f7",
-      "description": "Dust: ground puffs (2), expanding ring (top view), hoof kick; neutral albedo + normals, tint by ground.",
+      "hash": "4a931a8bce",
+      "description": "Dust (Eulerian sims): rolling ground puffs (2), closed expanding ring (top view), hoof kick; neutral albedo + normals, tint by ground.",
       "bytes": {
-        "ultra": 250940,
-        "high": 250940,
-        "mobile": 81972
+        "ultra": 95556,
+        "high": 95556,
+        "mobile": 47878
       },
       "tiers": [
         "ultra",
@@ -257,19 +257,19 @@ export const ASSET_MANIFEST = {
         "color": {
           "ultra": {
             "url": "fx/fx_dust/color_1024.webp",
-            "bytes": 232704,
+            "bytes": 70680,
             "width": 1024,
             "height": 1024
           },
           "high": {
             "url": "fx/fx_dust/color_1024.webp",
-            "bytes": 232704,
+            "bytes": 70680,
             "width": 1024,
             "height": 1024
           },
           "mobile": {
             "url": "fx/fx_dust/color_512.webp",
-            "bytes": 74384,
+            "bytes": 37542,
             "width": 512,
             "height": 512
           }
@@ -277,19 +277,19 @@ export const ASSET_MANIFEST = {
         "normal": {
           "ultra": {
             "url": "fx/fx_dust/normal_512.webp",
-            "bytes": 18236,
+            "bytes": 24876,
             "width": 512,
             "height": 512
           },
           "high": {
             "url": "fx/fx_dust/normal_512.webp",
-            "bytes": 18236,
+            "bytes": 24876,
             "width": 512,
             "height": 512
           },
           "mobile": {
             "url": "fx/fx_dust/normal_256.webp",
-            "bytes": 7588,
+            "bytes": 10336,
             "width": 256,
             "height": 256
           }
@@ -300,8 +300,8 @@ export const ASSET_MANIFEST = {
       "softFadeMeters": 0.5,
       "emissiveIntensity": 1,
       "sizeMeters": [
-        2,
-        1.5
+        2.2,
+        2.2
       ],
       "tint": "#b0956e"
     },
@@ -309,12 +309,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_fire",
       "category": "fx",
-      "hash": "7a24047d2e",
-      "description": "Looping flame, premultiplied emission (x8) + soot occlusion, 64 frames at 24 fps.",
+      "hash": "1466ccffa4",
+      "description": "Looping flame (Eulerian sim, licking tongues), premultiplied emission x8 + slight occlusion, no soot; 64 frames at 24 fps.",
       "bytes": {
-        "ultra": 305096,
-        "high": 305096,
-        "mobile": 89428
+        "ultra": 274768,
+        "high": 144920,
+        "mobile": 62630
       },
       "tiers": [
         "ultra",
@@ -340,20 +340,20 @@ export const ASSET_MANIFEST = {
       "maps": {
         "color": {
           "ultra": {
-            "url": "fx/fx_fire/color_1024.webp",
-            "bytes": 305096,
-            "width": 1024,
-            "height": 1024
+            "url": "fx/fx_fire/color_2048.webp",
+            "bytes": 274768,
+            "width": 2048,
+            "height": 2048
           },
           "high": {
             "url": "fx/fx_fire/color_1024.webp",
-            "bytes": 305096,
+            "bytes": 144920,
             "width": 1024,
             "height": 1024
           },
           "mobile": {
             "url": "fx/fx_fire/color_512.webp",
-            "bytes": 89428,
+            "bytes": 62630,
             "width": 512,
             "height": 512
           }
@@ -364,8 +364,8 @@ export const ASSET_MANIFEST = {
       "softFadeMeters": 0.3,
       "emissiveIntensity": 8,
       "sizeMeters": [
-        1.5,
-        2
+        1.9,
+        1.9
       ],
       "tint": "#ffffff"
     },
@@ -373,11 +373,11 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_lightning",
       "category": "fx",
-      "hash": "30989f109c",
+      "hash": "2b5652dc3c",
       "description": "Four forked lightning bolts, white core + violet glow, additive x10 (high / ultra only).",
       "bytes": {
-        "ultra": 12834,
-        "high": 12834,
+        "ultra": 12724,
+        "high": 12724,
         "mobile": 0
       },
       "tiers": [
@@ -431,13 +431,13 @@ export const ASSET_MANIFEST = {
         "color": {
           "ultra": {
             "url": "fx/fx_lightning/color_512.webp",
-            "bytes": 12834,
+            "bytes": 12724,
             "width": 512,
             "height": 512
           },
           "high": {
             "url": "fx/fx_lightning/color_512.webp",
-            "bytes": 12834,
+            "bytes": 12724,
             "width": 512,
             "height": 512
           }
@@ -457,12 +457,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_mist",
       "category": "fx",
-      "hash": "3164fe50d0",
-      "description": "Mist sprites: bank, wisp, puff, sheet; feathered to zero at the edges, lit via soft normals.",
+      "hash": "e5a253710b",
+      "description": "Mist sprites: bank, wisp, puff, sheet - irregular, wide, noise-eroded clusters; zero at the edges, lit via soft normals.",
       "bytes": {
-        "ultra": 37234,
-        "high": 37234,
-        "mobile": 37234
+        "ultra": 16690,
+        "high": 16690,
+        "mobile": 16690
       },
       "tiers": [
         "ultra",
@@ -516,19 +516,19 @@ export const ASSET_MANIFEST = {
         "color": {
           "ultra": {
             "url": "fx/fx_mist/color_512.webp",
-            "bytes": 34892,
+            "bytes": 14642,
             "width": 512,
             "height": 512
           },
           "high": {
             "url": "fx/fx_mist/color_512.webp",
-            "bytes": 34892,
+            "bytes": 14642,
             "width": 512,
             "height": 512
           },
           "mobile": {
             "url": "fx/fx_mist/color_512.webp",
-            "bytes": 34892,
+            "bytes": 14642,
             "width": 512,
             "height": 512
           }
@@ -536,19 +536,19 @@ export const ASSET_MANIFEST = {
         "normal": {
           "ultra": {
             "url": "fx/fx_mist/normal_256.webp",
-            "bytes": 2342,
+            "bytes": 2048,
             "width": 256,
             "height": 256
           },
           "high": {
             "url": "fx/fx_mist/normal_256.webp",
-            "bytes": 2342,
+            "bytes": 2048,
             "width": 256,
             "height": 256
           },
           "mobile": {
             "url": "fx/fx_mist/normal_256.webp",
-            "bytes": 2342,
+            "bytes": 2048,
             "width": 256,
             "height": 256
           }
@@ -559,8 +559,8 @@ export const ASSET_MANIFEST = {
       "softFadeMeters": 2,
       "emissiveIntensity": 1,
       "sizeMeters": [
-        12,
-        5
+        8,
+        6
       ],
       "tint": "#dfe3e6"
     },
@@ -568,12 +568,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_nature",
       "category": "fx",
-      "hash": "c014c330d3",
+      "hash": "d1a7ab8c29",
       "description": "Nature: sal / peepal leaves and palash petals (8-frame tumbles), kash seed, fireflies + motes (additive).",
       "bytes": {
-        "ultra": 23586,
-        "high": 23586,
-        "mobile": 23586
+        "ultra": 21168,
+        "high": 21168,
+        "mobile": 21168
       },
       "tiers": [
         "ultra",
@@ -645,19 +645,19 @@ export const ASSET_MANIFEST = {
         "color": {
           "ultra": {
             "url": "fx/fx_nature/color_512.webp",
-            "bytes": 21372,
+            "bytes": 19302,
             "width": 512,
             "height": 512
           },
           "high": {
             "url": "fx/fx_nature/color_512.webp",
-            "bytes": 21372,
+            "bytes": 19302,
             "width": 512,
             "height": 512
           },
           "mobile": {
             "url": "fx/fx_nature/color_512.webp",
-            "bytes": 21372,
+            "bytes": 19302,
             "width": 512,
             "height": 512
           }
@@ -665,19 +665,19 @@ export const ASSET_MANIFEST = {
         "normal": {
           "ultra": {
             "url": "fx/fx_nature/normal_256.webp",
-            "bytes": 2214,
+            "bytes": 1866,
             "width": 256,
             "height": 256
           },
           "high": {
             "url": "fx/fx_nature/normal_256.webp",
-            "bytes": 2214,
+            "bytes": 1866,
             "width": 256,
             "height": 256
           },
           "mobile": {
             "url": "fx/fx_nature/normal_256.webp",
-            "bytes": 2214,
+            "bytes": 1866,
             "width": 256,
             "height": 256
           }
@@ -697,12 +697,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_rain",
       "category": "fx",
-      "hash": "e70cc0aff4",
+      "hash": "5a8437e240",
       "description": "Rain: streak, 4x4 crown splash, 8-frame ripple (normal map), eave drip.",
       "bytes": {
-        "ultra": 19894,
-        "high": 19894,
-        "mobile": 19894
+        "ultra": 19306,
+        "high": 19306,
+        "mobile": 19306
       },
       "tiers": [
         "ultra",
@@ -756,19 +756,19 @@ export const ASSET_MANIFEST = {
         "color": {
           "ultra": {
             "url": "fx/fx_rain/color_512.webp",
-            "bytes": 17710,
+            "bytes": 17122,
             "width": 512,
             "height": 512
           },
           "high": {
             "url": "fx/fx_rain/color_512.webp",
-            "bytes": 17710,
+            "bytes": 17122,
             "width": 512,
             "height": 512
           },
           "mobile": {
             "url": "fx/fx_rain/color_512.webp",
-            "bytes": 17710,
+            "bytes": 17122,
             "width": 512,
             "height": 512
           }
@@ -808,12 +808,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_smoke",
       "category": "fx",
-      "hash": "90bfe65af7",
-      "description": "Billowing smoke puff over life (64 frames, one-shot), lit via normals; tint #4a4038 for fires.",
+      "hash": "b3a1e52da4",
+      "description": "Billowing smoke puff over life (Eulerian sim, 64 frames, one-shot), lit via density-gradient normals; tint #4a4038 for fires.",
       "bytes": {
-        "ultra": 313822,
-        "high": 313822,
-        "mobile": 98090
+        "ultra": 355066,
+        "high": 167292,
+        "mobile": 69380
       },
       "tiers": [
         "ultra",
@@ -839,40 +839,40 @@ export const ASSET_MANIFEST = {
       "maps": {
         "color": {
           "ultra": {
-            "url": "fx/fx_smoke/color_1024.webp",
-            "bytes": 294082,
-            "width": 1024,
-            "height": 1024
+            "url": "fx/fx_smoke/color_2048.webp",
+            "bytes": 269856,
+            "width": 2048,
+            "height": 2048
           },
           "high": {
             "url": "fx/fx_smoke/color_1024.webp",
-            "bytes": 294082,
+            "bytes": 130752,
             "width": 1024,
             "height": 1024
           },
           "mobile": {
             "url": "fx/fx_smoke/color_512.webp",
-            "bytes": 89732,
+            "bytes": 53998,
             "width": 512,
             "height": 512
           }
         },
         "normal": {
           "ultra": {
-            "url": "fx/fx_smoke/normal_512.webp",
-            "bytes": 19740,
-            "width": 512,
-            "height": 512
+            "url": "fx/fx_smoke/normal_1024.webp",
+            "bytes": 85210,
+            "width": 1024,
+            "height": 1024
           },
           "high": {
             "url": "fx/fx_smoke/normal_512.webp",
-            "bytes": 19740,
+            "bytes": 36540,
             "width": 512,
             "height": 512
           },
           "mobile": {
             "url": "fx/fx_smoke/normal_256.webp",
-            "bytes": 8358,
+            "bytes": 15382,
             "width": 256,
             "height": 256
           }
@@ -883,8 +883,8 @@ export const ASSET_MANIFEST = {
       "softFadeMeters": 0.8,
       "emissiveIntensity": 1,
       "sizeMeters": [
-        4,
-        5
+        3,
+        3
       ],
       "tint": "#4a4038"
     },
@@ -892,12 +892,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_sparks_embers",
       "category": "fx",
-      "hash": "9a9c561d14",
-      "description": "Additive sparks: spark, embers, slash spark, parry flash, finisher burst (premultiplied emission x6).",
+      "hash": "3dcec16842",
+      "description": "Additive sparks (gold -> saffron): spark, embers, slash spark, parry flash, finisher burst with dust shockwave; premultiplied emission x6, lossless.",
       "bytes": {
-        "ultra": 24694,
-        "high": 24694,
-        "mobile": 24694
+        "ultra": 181652,
+        "high": 181652,
+        "mobile": 59682
       },
       "tiers": [
         "ultra",
@@ -959,20 +959,20 @@ export const ASSET_MANIFEST = {
       "maps": {
         "color": {
           "ultra": {
-            "url": "fx/fx_sparks_embers/color_512.webp",
-            "bytes": 24694,
-            "width": 512,
-            "height": 512
+            "url": "fx/fx_sparks_embers/color_1024.webp",
+            "bytes": 181652,
+            "width": 1024,
+            "height": 1024
           },
           "high": {
-            "url": "fx/fx_sparks_embers/color_512.webp",
-            "bytes": 24694,
-            "width": 512,
-            "height": 512
+            "url": "fx/fx_sparks_embers/color_1024.webp",
+            "bytes": 181652,
+            "width": 1024,
+            "height": 1024
           },
           "mobile": {
             "url": "fx/fx_sparks_embers/color_512.webp",
-            "bytes": 24694,
+            "bytes": 59682,
             "width": 512,
             "height": 512
           }
@@ -992,12 +992,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_weapon_trail",
       "category": "fx",
-      "hash": "463c4d90c5",
+      "hash": "c9aa9d3da1",
       "description": "Weapon trail: gradient (edge -> saffron -> tail), wide variant, two u-tileable streak noises.",
       "bytes": {
-        "ultra": 8690,
-        "high": 8690,
-        "mobile": 8690
+        "ultra": 8434,
+        "high": 8434,
+        "mobile": 8434
       },
       "tiers": [
         "ultra",
@@ -1051,19 +1051,19 @@ export const ASSET_MANIFEST = {
         "color": {
           "ultra": {
             "url": "fx/fx_weapon_trail/color_256.webp",
-            "bytes": 8690,
+            "bytes": 8434,
             "width": 256,
             "height": 256
           },
           "high": {
             "url": "fx/fx_weapon_trail/color_256.webp",
-            "bytes": 8690,
+            "bytes": 8434,
             "width": 256,
             "height": 256
           },
           "mobile": {
             "url": "fx/fx_weapon_trail/color_256.webp",
-            "bytes": 8690,
+            "bytes": 8434,
             "width": 256,
             "height": 256
           }
@@ -1234,10 +1234,10 @@ export const ASSET_MANIFEST = {
       "kind": "image",
       "id": "lens_dirt",
       "category": "images",
-      "hash": "b5a61186f2",
-      "description": "Lens dirt: smudges, droplet rings, dust specks, faint hexagonal ghosts (low contrast).",
+      "hash": "395f11ed87",
+      "description": "Lens dirt: soft smudges, fingerprints, a few irregular bokeh shapes, 40 soft specks (low contrast).",
       "bytes": {
-        "ultra": 20152,
+        "ultra": 12220,
         "high": 0,
         "mobile": 0
       },
@@ -1248,7 +1248,7 @@ export const ASSET_MANIFEST = {
       "files": {
         "ultra": {
           "url": "images/lens_dirt/lens_dirt_1024.webp",
-          "bytes": 20152,
+          "bytes": 12220,
           "width": 1024,
           "height": 1024
         }
@@ -1892,12 +1892,12 @@ export const ASSET_MANIFEST = {
       "kind": "hdri",
       "id": "sky_dawn",
       "category": "hdri",
-      "hash": "c8f84b18f8",
+      "hash": "d54ed1791b",
       "description": "Dawn, sun 6 deg E, pink-gold haze, thin clouds.",
       "bytes": {
-        "ultra": 200675,
-        "high": 76545,
-        "mobile": 27696
+        "ultra": 262933,
+        "high": 97979,
+        "mobile": 33851
       },
       "tiers": [
         "ultra",
@@ -1908,19 +1908,19 @@ export const ASSET_MANIFEST = {
       "files": {
         "ultra": {
           "url": "hdri/sky_dawn_2048.exr",
-          "bytes": 200675,
+          "bytes": 262933,
           "width": 2048,
           "height": 1024
         },
         "high": {
           "url": "hdri/sky_dawn_1024.exr",
-          "bytes": 76545,
+          "bytes": 97979,
           "width": 1024,
           "height": 512
         },
         "mobile": {
           "url": "hdri/sky_dawn_512.exr",
-          "bytes": 27696,
+          "bytes": 33851,
           "width": 512,
           "height": 256
         }

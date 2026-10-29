@@ -100,6 +100,10 @@ export const TEXTURE_ENCODING = {
   flipbook_normal: { quality: 90, smartSubsample: true, effort: 6 },
   // Additive-only flipbooks store premultiplied emission: alpha is redundant (the blend ignores it).
   color_additive: { quality: 86, smartSubsample: true, effort: 6 },
+  // Flipbook `encoding` overrides (asset.json flipbook.encoding): thin saturated streaks (sparks) get chroma fringes
+  // from lossy 4:2:0 WebP - lossless keeps them clean (small, sparse atlases only: the publisher logs the size).
+  flipbook_lossless: { lossless: true, effort: 6 },
+  flipbook_near_lossless: { nearLossless: true, quality: 60, effort: 6 },
   image: { quality: 88, alphaQuality: 92, smartSubsample: true, effort: 6 },
 };
 

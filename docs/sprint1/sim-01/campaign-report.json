@@ -1,26 +1,14 @@
 {
  "generatedBy": "scripts/sim/campaign-report.mjs",
  "days": 540,
- "pending": {
-  "laborHealthWeight": 0,
-  "exportAboveDays": 75
+ "shipped": {
+  "storage.baseDays": 90
+ },
+ "requested": {
+  "storage.baseDays": 120
  },
  "calibration": {
   "current": {
-   "normal": {
-    "heartland": -0.00012062687180935949,
-    "highland": -0.330049623362741,
-    "forest": -0.20670155452317163,
-    "frontier": -0.31523570449396077
-   },
-   "drought": {
-    "heartland": -0.20522010819231162,
-    "highland": -0.44856292927972397,
-    "forest": -0.36512783124784465,
-    "frontier": -0.42817044389928194
-   }
-  },
-  "requested": {
    "normal": {
     "heartland": 0.15186790241046944,
     "highland": -0.10839752360840416,
@@ -33,776 +21,391 @@
     "forest": -0.1560377175279517,
     "frontier": -0.2368231853168069
    }
+  },
+  "requested": {
+   "normal": {
+    "heartland": 0.15186790241046944,
+    "highland": -0.10503645885070079,
+    "forest": 0.021159200093148423,
+    "frontier": -0.09493508037759157
+   },
+   "drought": {
+    "heartland": -0.03569526461630257,
+    "highland": -0.2585268901552894,
+    "forest": -0.1560377175279517,
+    "frontier": -0.2368231853168069
+   }
   }
+ },
+ "brokenCrownSeeds": {
+  "current": [
+   {
+    "seed": 1,
+    "outcome": {
+     "status": "ended",
+     "outcomeId": "out_restored",
+     "day": 540
+    },
+    "rajapura": true
+   },
+   {
+    "seed": 2,
+    "outcome": {
+     "status": "ended",
+     "outcomeId": "out_restored",
+     "day": 540
+    },
+    "rajapura": true
+   },
+   {
+    "seed": 3,
+    "outcome": {
+     "status": "ended",
+     "outcomeId": "out_restored",
+     "day": 540
+    },
+    "rajapura": true
+   },
+   {
+    "seed": 4,
+    "outcome": {
+     "status": "ended",
+     "outcomeId": "out_restored",
+     "day": 540
+    },
+    "rajapura": true
+   },
+   {
+    "seed": 5,
+    "outcome": {
+     "status": "ended",
+     "outcomeId": "out_restored",
+     "day": 540
+    },
+    "rajapura": true
+   },
+   {
+    "seed": 6,
+    "outcome": {
+     "status": "ended",
+     "outcomeId": "out_restored",
+     "day": 540
+    },
+    "rajapura": true
+   }
+  ],
+  "requested": [
+   {
+    "seed": 1,
+    "outcome": {
+     "status": "ended",
+     "outcomeId": "out_restored",
+     "day": 540
+    },
+    "rajapura": true
+   },
+   {
+    "seed": 2,
+    "outcome": {
+     "status": "ended",
+     "outcomeId": "out_restored",
+     "day": 540
+    },
+    "rajapura": true
+   },
+   {
+    "seed": 3,
+    "outcome": {
+     "status": "ended",
+     "outcomeId": "out_restored",
+     "day": 540
+    },
+    "rajapura": true
+   },
+   {
+    "seed": 4,
+    "outcome": {
+     "status": "ended",
+     "outcomeId": "out_restored",
+     "day": 540
+    },
+    "rajapura": true
+   },
+   {
+    "seed": 5,
+    "outcome": {
+     "status": "ended",
+     "outcomeId": "out_restored",
+     "day": 540
+    },
+    "rajapura": true
+   },
+   {
+    "seed": 6,
+    "outcome": {
+     "status": "ended",
+     "outcomeId": "out_restored",
+     "day": 540
+    },
+    "rajapura": true
+   }
+  ]
+ },
+ "passive": {
+  "current": [
+   {
+    "realm": "heartland",
+    "outcome": {
+     "status": "ongoing",
+     "outcomeId": null,
+     "day": 540
+    },
+    "end": [
+     "rajapura",
+     "dhanyagram",
+     "kusumpur",
+     "ratnapura",
+     "setupur"
+    ],
+    "starving": {
+     "rajapura": 0,
+     "dhanyagram": 0,
+     "kusumpur": 0,
+     "ratnapura": 0,
+     "setupur": 0
+    },
+    "starvingAll": {
+     "lavanapura": 171,
+     "ushtragram": 136,
+     "tirthaghat": 89,
+     "giridurg": 255,
+     "dvaradurga": 266,
+     "shilapur": 247,
+     "pashanagram": 213,
+     "gajavana": 181,
+     "kandaravasa": 179,
+     "naukapattana": 56,
+     "nilavanapura": 23
+    },
+    "court": 4
+   },
+   {
+    "realm": "highland",
+    "outcome": {
+     "status": "defeat",
+     "outcomeId": "realm_lost",
+     "day": 233
+    },
+    "end": [],
+    "starving": {
+     "giridurg": 53,
+     "shilapur": 47,
+     "dvaradurga": 49,
+     "pashanagram": 44,
+     "kandaravasa": 36
+    },
+    "starvingAll": {
+     "lavanapura": 66,
+     "giridurg": 53,
+     "ushtragram": 52,
+     "tirthaghat": 51,
+     "dvaradurga": 49,
+     "shilapur": 47,
+     "pashanagram": 44,
+     "kandaravasa": 36,
+     "gajavana": 36,
+     "naukapattana": 3
+    },
+    "court": 4
+   },
+   {
+    "realm": "forest",
+    "outcome": {
+     "status": "ongoing",
+     "outcomeId": null,
+     "day": 540
+    },
+    "end": [
+     "nilavanapura"
+    ],
+    "starving": {
+     "nilavanapura": 17,
+     "gajavana": 180
+    },
+    "starvingAll": {
+     "lavanapura": 169,
+     "ushtragram": 132,
+     "tirthaghat": 87,
+     "dvaradurga": 174,
+     "giridurg": 254,
+     "shilapur": 245,
+     "pashanagram": 212,
+     "kandaravasa": 180,
+     "gajavana": 180,
+     "naukapattana": 52,
+     "nilavanapura": 17
+    },
+    "court": 4
+   },
+   {
+    "realm": "frontier",
+    "outcome": {
+     "status": "defeat",
+     "outcomeId": "realm_lost",
+     "day": 219
+    },
+    "end": [],
+    "starving": {
+     "lavanapura": 71,
+     "ushtragram": 47
+    },
+    "starvingAll": {
+     "lavanapura": 71,
+     "ushtragram": 47,
+     "tirthaghat": 46,
+     "dvaradurga": 44,
+     "giridurg": 42,
+     "shilapur": 41,
+     "pashanagram": 37,
+     "kandaravasa": 31,
+     "gajavana": 31
+    },
+    "court": 4
+   }
+  ],
+  "requested": [
+   {
+    "realm": "heartland",
+    "outcome": {
+     "status": "ongoing",
+     "outcomeId": null,
+     "day": 540
+    },
+    "end": [
+     "rajapura",
+     "dhanyagram",
+     "kusumpur",
+     "ratnapura",
+     "setupur"
+    ],
+    "starving": {
+     "rajapura": 0,
+     "dhanyagram": 0,
+     "kusumpur": 0,
+     "ratnapura": 0,
+     "setupur": 0
+    },
+    "starvingAll": {
+     "lavanapura": 259,
+     "dvaradurga": 270,
+     "giridurg": 262,
+     "shilapur": 252,
+     "ushtragram": 64,
+     "naukapattana": 55,
+     "pashanagram": 8,
+     "nilavanapura": 15
+    },
+    "court": 4
+   },
+   {
+    "realm": "highland",
+    "outcome": {
+     "status": "ongoing",
+     "outcomeId": null,
+     "day": 541
+    },
+    "end": [
+     "pashanagram",
+     "kandaravasa"
+    ],
+    "starving": {
+     "giridurg": 252,
+     "shilapur": 254,
+     "dvaradurga": 257,
+     "pashanagram": 26,
+     "kandaravasa": 29
+    },
+    "starvingAll": {
+     "lavanapura": 257,
+     "giridurg": 252,
+     "dvaradurga": 257,
+     "shilapur": 254,
+     "ushtragram": 101,
+     "pashanagram": 26,
+     "naukapattana": 52,
+     "kandaravasa": 29,
+     "nilavanapura": 17
+    },
+    "court": 4
+   },
+   {
+    "realm": "forest",
+    "outcome": {
+     "status": "ongoing",
+     "outcomeId": null,
+     "day": 541
+    },
+    "end": [
+     "nilavanapura",
+     "gajavana"
+    ],
+    "starving": {
+     "nilavanapura": 25,
+     "gajavana": 35
+    },
+    "starvingAll": {
+     "lavanapura": 251,
+     "dvaradurga": 266,
+     "giridurg": 256,
+     "shilapur": 243,
+     "ushtragram": 107,
+     "naukapattana": 54,
+     "pashanagram": 7,
+     "gajavana": 35,
+     "nilavanapura": 25
+    },
+    "court": 4
+   },
+   {
+    "realm": "frontier",
+    "outcome": {
+     "status": "defeat",
+     "outcomeId": "realm_lost",
+     "day": 250
+    },
+    "end": [],
+    "starving": {
+     "lavanapura": 62,
+     "ushtragram": 16
+    },
+    "starvingAll": {
+     "lavanapura": 62,
+     "dvaradurga": 37,
+     "giridurg": 32,
+     "shilapur": 21,
+     "ushtragram": 16,
+     "naukapattana": 3,
+     "pashanagram": 3
+    },
+    "court": 4
+   }
+  ]
  },
  "runs": [
   {
-   "label": "The Broken Crown - current data",
+   "label": "The Broken Crown - data as shipped (storage.baseDays 90)",
    "pendingData": false,
-   "seed": 1,
-   "outcome": {
-    "status": "defeat",
-    "outcomeId": "out_fallen",
-    "day": 252
-   },
-   "score": 612,
-   "final": {
-    "heartland": {
-     "alive": true,
-     "treasury": 8499,
-     "settlements": [
-      "dhanyagram",
-      "kusumpur"
-     ]
-    },
-    "highland": {
-     "alive": false,
-     "treasury": 5819,
-     "settlements": []
-    },
-    "forest": {
-     "alive": false,
-     "treasury": 3491,
-     "settlements": []
-    },
-    "frontier": {
-     "alive": false,
-     "treasury": 2267,
-     "settlements": []
-    }
-   },
-   "months": [
-    {
-     "month": 1,
-     "calendar": "-300/7",
-     "reserveDays": {
-      "rajapura": 28.00742634321276,
-      "dhanyagram": 35.983697440179895,
-      "kusumpur": 35.555620623186016,
-      "ratnapura": 27.337780485302353,
-      "setupur": 13.4288541398549
-     },
-     "unrest": {
-      "rajapura": 0.05,
-      "dhanyagram": 0.05,
-      "kusumpur": 0.05,
-      "ratnapura": 0.3081111437458148,
-      "setupur": 0.05
-     },
-     "stage": {},
-     "ledger": {
-      "taxIncome": 957.3441434747918,
-      "tradeIncome": 325.26113354219666,
-      "tribute": 0,
-      "armyUpkeep": 599.3875,
-      "buildingUpkeep": 84,
-      "administration": 26,
-      "construction": 0,
-      "recruitment": 0,
-      "other": 240,
-      "net": 573.2177770169885,
-      "foodProduced": 101099.24217047679,
-      "foodConsumed": 115889.75803410327
-     },
-     "treasury": 4313.217777016988,
-     "foodReserve": 0,
-     "stability": 0.5792697806977798,
-     "legitimacy": 0.7999999999999999,
-     "settlements": 5,
-     "soldiers": 1492
-    },
-    {
-     "month": 2,
-     "calendar": "-300/8",
-     "reserveDays": {
-      "rajapura": 20.686514233173757,
-      "dhanyagram": 31.707253126466604,
-      "kusumpur": 31.074425911378768,
-      "ratnapura": 18.15414191262562,
-      "setupur": 0
-     },
-     "unrest": {
-      "rajapura": 0.0136439500675257,
-      "dhanyagram": 0.0025396667892921884,
-      "kusumpur": 0.0035158563003155566,
-      "ratnapura": 0.3081111437458148,
-      "setupur": 0.09924977121108558
-     },
-     "stage": {
-      "ratnapura": "protest"
-     },
-     "ledger": {
-      "taxIncome": 1080.5808018539465,
-      "tradeIncome": 329.3176887979557,
-      "tribute": 0,
-      "armyUpkeep": 555.9375000000001,
-      "buildingUpkeep": 84,
-      "administration": 26,
-      "construction": 0,
-      "recruitment": 0,
-      "other": 240,
-      "net": 743.9609906519021,
-      "foodProduced": 100508.9934946014,
-      "foodConsumed": 115971.75978706319
-     },
-     "treasury": 5297.17876766889,
-     "foodReserve": 19711.651330805475,
-     "stability": 0.5869301370499888,
-     "legitimacy": 0.7999999999999999,
-     "settlements": 5,
-     "soldiers": 1377
-    },
-    {
-     "month": 3,
-     "calendar": "-300/9",
-     "reserveDays": {
-      "rajapura": 61.86349118052875,
-      "dhanyagram": 124.87795687805962,
-      "kusumpur": 114.69335718971885,
-      "ratnapura": 62.03037553972764,
-      "setupur": 0
-     },
-     "unrest": {
-      "rajapura": 0,
-      "dhanyagram": 0,
-      "kusumpur": 0,
-      "ratnapura": 0.23204232472240874,
-      "setupur": 0.08595397063996178
-     },
-     "stage": {
-      "ratnapura": "grumbling"
-     },
-     "ledger": {
-      "taxIncome": 969.9562798494687,
-      "tradeIncome": 159.3264507517506,
-      "tribute": 0,
-      "armyUpkeep": 510.66249999999997,
-      "buildingUpkeep": 72,
-      "administration": 20.8,
-      "construction": 0,
-      "recruitment": 0,
-      "other": 132,
-      "net": 525.8202306012195,
-      "foodProduced": 86551.38824908416,
-      "foodConsumed": 94415.17546995387
-     },
-     "treasury": 5954.99899827011,
-     "foodReserve": 18903.096450205234,
-     "stability": 0.5916998006125902,
-     "legitimacy": 0.72,
-     "settlements": 4,
-     "soldiers": 1271
-    },
-    {
-     "month": 4,
-     "calendar": "-300/10",
-     "reserveDays": {
-      "rajapura": 41.41058016532018,
-      "dhanyagram": 110.20171190776844,
-      "kusumpur": 100.38420018685441,
-      "setupur": 0
-     },
-     "unrest": {
-      "rajapura": 0,
-      "dhanyagram": 0,
-      "kusumpur": 0,
-      "setupur": 0.7201020795413986
-     },
-     "stage": {
-      "setupur": "revolt"
-     },
-     "ledger": {
-      "taxIncome": 882.7911158617949,
-      "tradeIncome": 159.14175124294337,
-      "tribute": 0,
-      "armyUpkeep": 439.825,
-      "buildingUpkeep": 72,
-      "administration": 20.8,
-      "construction": 0,
-      "recruitment": 0,
-      "other": 120,
-      "net": 509.30786710473825,
-      "foodProduced": 83620.02830066571,
-      "foodConsumed": 94079.03815677158
-     },
-     "treasury": 6784.306865374848,
-     "foodReserve": 18115.05297194432,
-     "stability": 0.5923587770754792,
-     "legitimacy": 0.69,
-     "settlements": 4,
-     "soldiers": 1102
-    },
-    {
-     "month": 5,
-     "calendar": "-300/11",
-     "reserveDays": {
-      "rajapura": 29.840024191488936,
-      "dhanyagram": 98.00825546253078,
-      "kusumpur": 87.91897098888649,
-      "setupur": 0
-     },
-     "unrest": {
-      "rajapura": 0,
-      "dhanyagram": 0,
-      "kusumpur": 0,
-      "setupur": 1
-     },
-     "stage": {
-      "setupur": "secession"
-     },
-     "ledger": {
-      "taxIncome": 778.0972696935812,
-      "tradeIncome": 157.0215674099789,
-      "tribute": 0,
-      "armyUpkeep": 397.3625,
-      "buildingUpkeep": 72,
-      "administration": 20.8,
-      "construction": 0,
-      "recruitment": 0,
-      "other": 120,
-      "net": 444.9563371035601,
-      "foodProduced": 83664.1648584785,
-      "foodConsumed": 93905.27952011117
-     },
-     "treasury": 7349.263202478408,
-     "foodReserve": 0,
-     "stability": 0.591615348499337,
-     "legitimacy": 0.69,
-     "settlements": 4,
-     "soldiers": 988
-    },
-    {
-     "month": 6,
-     "calendar": "-300/12",
-     "reserveDays": {
-      "rajapura": 13.095892261858275,
-      "dhanyagram": 85.98477909497838,
-      "kusumpur": 75.62678084821668,
-      "setupur": 0
-     },
-     "unrest": {
-      "rajapura": 0.04153158663797863,
-      "dhanyagram": 0,
-      "kusumpur": 0,
-      "setupur": 1
-     },
-     "stage": {
-      "setupur": "secession"
-     },
-     "ledger": {
-      "taxIncome": 685.9171613803003,
-      "tradeIncome": 157.10276521751913,
-      "tribute": 0,
-      "armyUpkeep": 353.9625,
-      "buildingUpkeep": 63,
-      "administration": 15.600000000000001,
-      "construction": 0,
-      "recruitment": 0,
-      "other": 120,
-      "net": 410.45742659781945,
-      "foodProduced": 83359.04854563077,
-      "foodConsumed": 88102.00174691994
-     },
-     "treasury": 7879.720629076228,
-     "foodReserve": 0,
-     "stability": 0.6103063606057955,
-     "legitimacy": 0.69,
-     "settlements": 3,
-     "soldiers": 856
-    },
-    {
-     "month": 7,
-     "calendar": "-299/1",
-     "reserveDays": {
-      "rajapura": 0,
-      "dhanyagram": 74.13485145147746,
-      "kusumpur": 63.511598517118074
-     },
-     "unrest": {
-      "rajapura": 0.35595672419598334,
-      "dhanyagram": 0,
-      "kusumpur": 0
-     },
-     "stage": {
-      "rajapura": "protest"
-     },
-     "ledger": {
-      "taxIncome": 512.9773243989948,
-      "tradeIncome": 142.25552789443097,
-      "tribute": 0,
-      "armyUpkeep": 141.525,
-      "buildingUpkeep": 63,
-      "administration": 15.600000000000001,
-      "construction": 0,
-      "recruitment": 0,
-      "other": 120,
-      "net": 435.1078522934258,
-      "foodProduced": 81991.05360869516,
-      "foodConsumed": 87862.80203580168
-     },
-     "treasury": 8434.828481369654,
-     "foodReserve": 0,
-     "stability": 0.6115918384619882,
-     "legitimacy": 0.69,
-     "settlements": 3,
-     "soldiers": 364
-    },
-    {
-     "month": 8,
-     "calendar": "-299/2",
-     "reserveDays": {
-      "rajapura": 0,
-      "dhanyagram": 68.64058167435212,
-      "kusumpur": 57.91875609249735
-     },
-     "unrest": {
-      "rajapura": 0.9150261222413156,
-      "dhanyagram": 0,
-      "kusumpur": 0
-     },
-     "stage": {
-      "rajapura": "secession"
-     },
-     "ledger": {
-      "taxIncome": 145.30765548033935,
-      "tradeIncome": 12.494009946437595,
-      "tribute": 0,
-      "armyUpkeep": 81,
-      "buildingUpkeep": 63,
-      "administration": 15.600000000000001,
-      "construction": 0,
-      "recruitment": 0,
-      "other": 58.08839999999998,
-      "net": -1.798334573223066,
-      "foodProduced": 31390.96032641445,
-      "foodConsumed": 84769.97134066254
-     },
-     "treasury": 8491.11854679643,
-     "foodReserve": 6519.678208563036,
-     "stability": 0.606553800990625,
-     "legitimacy": 0.69,
-     "settlements": 3,
-     "soldiers": 209
-    }
-   ],
-   "battles": [
-    {
-     "day": 9,
-     "chronicle": "The Battle of the Setu Bridge: Giridurga defeated Suvarna; 197 fell.",
-     "winner": "highland",
-     "killed": 197
-    },
-    {
-     "day": 163,
-     "chronicle": "The Battle of Sangam of the Two Rivers: Suvarna defeated Giridurga; 28 fell.",
-     "winner": "heartland",
-     "killed": 28
-    },
-    {
-     "day": 166,
-     "chronicle": "The Battle of Sangam of the Two Rivers: Suvarna defeated Nilavana; 41 fell.",
-     "winner": "heartland",
-     "killed": 41
-    },
-    {
-     "day": 178,
-     "chronicle": "The Battle of Ratnapura: The rebels of Ratnapura defeated Nilavana; 23 fell.",
-     "winner": "rebels",
-     "killed": 23
-    },
-    {
-     "day": 182,
-     "chronicle": "The Battle of the White Flats: The rebels of Lavanapura defeated Marudesha; 4 fell.",
-     "winner": "rebels",
-     "killed": 4
-    },
-    {
-     "day": 184,
-     "chronicle": "The Battle of Sangam of the Two Rivers: neither Giridurga nor Suvarna could claim the field; 0 fell.",
-     "winner": null,
-     "killed": 0
-    },
-    {
-     "day": 192,
-     "chronicle": "The Battle of the Dvara Pass: The rebels of Dvaradurga defeated Giridurga; 12 fell.",
-     "winner": "rebels",
-     "killed": 12
-    },
-    {
-     "day": 192,
-     "chronicle": "The Battle of Ratnapura: neither Nilavana nor Suvarna could claim the field; 0 fell.",
-     "winner": null,
-     "killed": 0
-    },
-    {
-     "day": 196,
-     "chronicle": "The Battle of Ushtragram: The rebels of Ushtragram defeated Marudesha; 1 fell.",
-     "winner": "rebels",
-     "killed": 1
-    },
-    {
-     "day": 198,
-     "chronicle": "The Battle of Pashanagram: The rebels of Pashanagram defeated Giridurga; 11 fell.",
-     "winner": "rebels",
-     "killed": 11
-    },
-    {
-     "day": 205,
-     "chronicle": "The Battle of Ratnapura: neither Nilavana nor Suvarna could claim the field; 0 fell.",
-     "winner": null,
-     "killed": 0
-    },
-    {
-     "day": 207,
-     "chronicle": "The Battle of Sangam of the Two Rivers: neither Giridurga nor Suvarna could claim the field; 0 fell.",
-     "winner": null,
-     "killed": 0
-    },
-    {
-     "day": 212,
-     "chronicle": "The Battle of Ratnapura: neither Nilavana nor Suvarna could claim the field; 0 fell.",
-     "winner": null,
-     "killed": 0
-    },
-    {
-     "day": 217,
-     "chronicle": "The Battle of Kandaravasa: The rebels of Kandaravasa defeated Giridurga; 1 fell.",
-     "winner": "rebels",
-     "killed": 1
-    },
-    {
-     "day": 222,
-     "chronicle": "The Battle of Sangam of the Two Rivers: The rebels of Rajapura defeated Suvarna; 26 fell.",
-     "winner": "rebels",
-     "killed": 26
-    }
-   ],
-   "events": [
-    {
-     "day": 1,
-     "id": "evt_bc_prologue",
-     "title": "The Broken Crown",
-     "choice": "Take up the regency"
-    },
-    {
-     "day": 3,
-     "id": "evt_court_succession",
-     "title": "Whispers in the Hall of Pillars",
-     "choice": "Proclaim Kumara Aditya heir before the court"
-    },
-    {
-     "day": 14,
-     "id": "evt_bc_council_of_war",
-     "title": "The Council of War",
-     "choice": "Grain first: fill the granaries before the hot season"
-    },
-    {
-     "day": 23,
-     "id": "evt_bc_claimant_plot",
-     "title": "The Prince's Letters",
-     "choice": "Watch and wait"
-    },
-    {
-     "day": 31,
-     "id": "evt_protest",
-     "title": "Protest in Ratnapura",
-     "choice": "Hear their grievances"
-    },
-    {
-     "day": 32,
-     "id": "evt_bc_envoys_hills",
-     "title": "Envoys from the Seven Peaks",
-     "choice": "Send them home: the bridge is ours"
-    },
-    {
-     "day": 46,
-     "id": "evt_bc_thin_harvest",
-     "title": "A Thin Harvest",
-     "choice": "Trust the winter crop"
-    },
-    {
-     "day": 52,
-     "id": "evt_bc_hill_raid",
-     "title": "Raiders at the Setu Bridge",
-     "choice": "Repair what we can"
-    },
-    {
-     "day": 61,
-     "id": "evt_governor_demands",
-     "title": "The Governor's Ultimatum",
-     "choice": "Negotiate lower taxes"
-    },
-    {
-     "day": 63,
-     "id": "evt_bc_gates_of_ratnapura",
-     "title": "The Gates of Ratnapura",
-     "choice": "Let him go - and march"
-    },
-    {
-     "day": 98,
-     "id": "evt_protest",
-     "title": "Protest in Setupur",
-     "choice": "Hear their grievances"
-    },
-    {
-     "day": 99,
-     "id": "evt_pilgrims",
-     "title": "Pilgrims on the Road",
-     "choice": "Welcome them"
-    },
-    {
-     "day": 108,
-     "id": "evt_tax_refusal",
-     "title": "Tax Refusal in Setupur",
-     "choice": "Negotiate a lower rate"
-    },
-    {
-     "day": 115,
-     "id": "evt_riots",
-     "title": "Riots in Setupur",
-     "choice": "Let it burn out"
-    },
-    {
-     "day": 119,
-     "id": "evt_revolt",
-     "title": "Revolt in Setupur",
-     "choice": "Negotiate with the rebel leaders"
-    },
-    {
-     "day": 120,
-     "id": "evt_bc_act2",
-     "title": "The Grain and the Sword",
-     "choice": "Count the granaries"
-    },
-    {
-     "day": 136,
-     "id": "evt_bandits",
-     "title": "Bandits on the Road",
-     "choice": "Let the villages deal with it"
-    },
-    {
-     "day": 138,
-     "id": "evt_bc_siege_grain",
-     "title": "Grain for the Host",
-     "choice": "The host will live off the land"
-    },
-    {
-     "day": 145,
-     "id": "evt_protest",
-     "title": "Protest in Setupur",
-     "choice": "Hear their grievances"
-    },
-    {
-     "day": 179,
-     "id": "evt_bc_hill_raid",
-     "title": "Raiders at the Setu Bridge",
-     "choice": "Repair what we can"
-    },
-    {
-     "day": 180,
-     "id": "evt_bc_temple_town",
-     "title": "The Temple Town Seeks a Protector",
-     "choice": "Leave the sacred town free"
-    },
-    {
-     "day": 230,
-     "id": "evt_tax_refusal",
-     "title": "Tax Refusal in Rajapura",
-     "choice": "Negotiate a lower rate"
-    },
-    {
-     "day": 245,
-     "id": "evt_bc_lean_months",
-     "title": "The Lean Months",
-     "choice": "Hold the royal reserve for the army"
-    }
-   ],
-   "incidents": [
-    {
-     "day": 63,
-     "kind": "capture",
-     "text": "Ratnapura: heartland -> forest"
-    },
-    {
-     "day": 63,
-     "kind": "war",
-     "text": "forest declared war on heartland"
-    },
-    {
-     "day": 119,
-     "kind": "revolt",
-     "text": "Setupur: 64 rebels"
-    },
-    {
-     "day": 127,
-     "kind": "revolt",
-     "text": "Setupur: 63 rebels"
-    },
-    {
-     "day": 157,
-     "kind": "secession",
-     "text": "Setupur left heartland"
-    },
-    {
-     "day": 161,
-     "kind": "revolt",
-     "text": "Ratnapura: 212 rebels"
-    },
-    {
-     "day": 182,
-     "kind": "revolt",
-     "text": "Lavanapura: 130 rebels"
-    },
-    {
-     "day": 191,
-     "kind": "secession",
-     "text": "Ratnapura left forest"
-    },
-    {
-     "day": 192,
-     "kind": "revolt",
-     "text": "Dvaradurga: 71 rebels"
-    },
-    {
-     "day": 195,
-     "kind": "revolt",
-     "text": "Shilapur: 166 rebels"
-    },
-    {
-     "day": 196,
-     "kind": "revolt",
-     "text": "Ushtragram: 39 rebels"
-    },
-    {
-     "day": 196,
-     "kind": "capture",
-     "text": "Ushtragram: frontier -> rebels"
-    },
-    {
-     "day": 198,
-     "kind": "revolt",
-     "text": "Pashanagram: 48 rebels"
-    },
-    {
-     "day": 198,
-     "kind": "capture",
-     "text": "Pashanagram: highland -> rebels"
-    },
-    {
-     "day": 199,
-     "kind": "revolt",
-     "text": "Giridurg: 177 rebels"
-    },
-    {
-     "day": 211,
-     "kind": "revolt",
-     "text": "Nilavanapura: 282 rebels"
-    },
-    {
-     "day": 212,
-     "kind": "revolt",
-     "text": "Gajavana: 44 rebels"
-    },
-    {
-     "day": 212,
-     "kind": "secession",
-     "text": "Lavanapura left frontier"
-    },
-    {
-     "day": 213,
-     "kind": "revolt",
-     "text": "Kandaravasa: 54 rebels"
-    },
-    {
-     "day": 217,
-     "kind": "capture",
-     "text": "Kandaravasa: highland -> rebels"
-    },
-    {
-     "day": 222,
-     "kind": "secession",
-     "text": "Dvaradurga left highland"
-    },
-    {
-     "day": 222,
-     "kind": "revolt",
-     "text": "Rajapura: 714 rebels"
-    },
-    {
-     "day": 225,
-     "kind": "secession",
-     "text": "Shilapur left highland"
-    },
-    {
-     "day": 226,
-     "kind": "secession",
-     "text": "Ushtragram left rebels"
-    },
-    {
-     "day": 228,
-     "kind": "secession",
-     "text": "Pashanagram left rebels"
-    },
-    {
-     "day": 229,
-     "kind": "secession",
-     "text": "Giridurg left highland"
-    },
-    {
-     "day": 241,
-     "kind": "secession",
-     "text": "Nilavanapura left forest"
-    },
-    {
-     "day": 242,
-     "kind": "secession",
-     "text": "Gajavana left forest"
-    },
-    {
-     "day": 243,
-     "kind": "secession",
-     "text": "Kandaravasa left rebels"
-    },
-    {
-     "day": 252,
-     "kind": "secession",
-     "text": "Rajapura left heartland"
-    }
-   ],
-   "statistics": {
-    "grain_harvested": 764555.1210707718,
-    "events_resolved": 23,
-    "battles_fought": 9,
-    "enemies_killed": 118,
-    "soldiers_lost": 1443,
-    "formations_routed": 52,
-    "largest_battle": 1273,
-    "wealth_earned": 8604.98104679643,
-    "trade_income": 1441.920894803213,
-    "famine_days": 104,
-    "grain_spoiled": 10278.315215694613,
-    "wars": 1,
-    "revolts": 3,
-    "settlements_lost_to_rebels": 2,
-    "battles_won": 2,
-    "mtd_other_income": 8.265599999999997
-   },
-   "seconds": 2.064
-  },
-  {
-   "label": "The Broken Crown - requested data (CD-1, CD-2)",
-   "pendingData": true,
    "seed": 1,
    "outcome": {
     "status": "ended",
     "outcomeId": "out_restored",
     "day": 540
    },
-   "score": 1471,
+   "score": 1555,
    "final": {
     "heartland": {
      "alive": true,
-     "treasury": 17687,
+     "treasury": 17492,
      "settlements": [
       "rajapura",
       "dhanyagram",
@@ -811,17 +414,17 @@
     },
     "highland": {
      "alive": false,
-     "treasury": 6062,
+     "treasury": 6149,
      "settlements": []
     },
     "forest": {
      "alive": false,
-     "treasury": 4912,
+     "treasury": 4526,
      "settlements": []
     },
     "frontier": {
      "alive": false,
-     "treasury": 2320,
+     "treasury": 2326,
      "settlements": []
     }
    },
@@ -830,11 +433,11 @@
      "month": 1,
      "calendar": "-300/7",
      "reserveDays": {
-      "rajapura": 29.228168906270497,
+      "rajapura": 29.223937164804347,
       "dhanyagram": 38.46370557691104,
       "kusumpur": 37.99835810016396,
       "ratnapura": 28.7504063539981,
-      "setupur": 14.919863323266
+      "setupur": 14.821591602791662
      },
      "unrest": {
       "rajapura": 0.05,
@@ -845,38 +448,38 @@
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 965.9660976775643,
+      "taxIncome": 965.9352225695932,
       "tradeIncome": 327.0229485018585,
       "tribute": 0,
-      "armyUpkeep": 599.3875,
+      "armyUpkeep": 601.7125,
       "buildingUpkeep": 84,
       "administration": 26,
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 583.6015461794227,
+      "net": 581.2456710714517,
       "foodProduced": 112148.36384194726,
       "foodConsumed": 115889.75803410327
      },
-     "treasury": 4323.601546179423,
+     "treasury": 4321.245671071451,
      "foodReserve": 0,
-     "stability": 0.5792888317674588,
+     "stability": 0.579288696451633,
      "legitimacy": 0.7999999999999999,
      "settlements": 5,
-     "soldiers": 1492
+     "soldiers": 1498
     },
     {
      "month": 2,
      "calendar": "-300/8",
      "reserveDays": {
-      "rajapura": 22.55694119795081,
+      "rajapura": 22.55273942047306,
       "dhanyagram": 35.41008184379646,
       "kusumpur": 34.72706888902801,
       "ratnapura": 20.227769459605224,
-      "setupur": 0.06599281496258452
+      "setupur": 0
      },
      "unrest": {
-      "rajapura": 0.009360907392568982,
+      "rajapura": 0.009369615852221276,
       "dhanyagram": 0,
       "kusumpur": 0.00004787945185212713,
       "ratnapura": 0.3063584734865724,
@@ -886,113 +489,113 @@
       "ratnapura": "protest"
      },
      "ledger": {
-      "taxIncome": 1088.2571708259943,
+      "taxIncome": 1088.2012929997993,
       "tradeIncome": 331.08266994311043,
       "tribute": 0,
-      "armyUpkeep": 568.25,
+      "armyUpkeep": 570.7000000000002,
       "buildingUpkeep": 84,
       "administration": 26,
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 741.0898407691047,
+      "net": 738.5839629429096,
       "foodProduced": 111402.66211109073,
       "foodConsumed": 115982.92377746946
      },
-     "treasury": 5304.691386948528,
-     "foodReserve": 22111.101956970233,
-     "stability": 0.6320474447768213,
+     "treasury": 5299.829634014361,
+     "foodReserve": 22110.599854137912,
+     "stability": 0.6320466565964892,
      "legitimacy": 0.7999999999999999,
      "settlements": 5,
-     "soldiers": 1410
+     "soldiers": 1417
     },
     {
      "month": 3,
      "calendar": "-300/9",
      "reserveDays": {
-      "rajapura": 72.33325335353648,
+      "rajapura": 72.32935274297473,
       "dhanyagram": 145.98314092794575,
       "kusumpur": 118.30017793779778,
       "ratnapura": 72.75760222825761,
-      "setupur": 6.191363031735304
+      "setupur": 7.094285124918337
      },
      "unrest": {
       "rajapura": 0,
       "dhanyagram": 0,
       "kusumpur": 0,
       "ratnapura": 0.22449402086765524,
-      "setupur": 0.008110348183807632
+      "setupur": 0.00826374011444982
      },
      "stage": {
       "ratnapura": "grumbling"
      },
      "ledger": {
-      "taxIncome": 976.8936877978397,
+      "taxIncome": 977.0576473917013,
       "tradeIncome": 160.36963148450042,
       "tribute": 0,
-      "armyUpkeep": 523.05,
+      "armyUpkeep": 492.06249999999994,
       "buildingUpkeep": 72,
       "administration": 20.8,
       "construction": 0,
       "recruitment": 0,
       "other": 132,
-      "net": 521.4133192823401,
+      "net": 552.5647788762017,
       "foodProduced": 95318.52513850381,
       "foodConsumed": 94427.38106178332
      },
-     "treasury": 5958.104706230868,
-     "foodReserve": 21430.101956970273,
-     "stability": 0.6324599005785464,
+     "treasury": 5984.394412890562,
+     "foodReserve": 20383.242833637483,
+     "stability": 0.6274589103143395,
      "legitimacy": 0.72,
      "settlements": 4,
-     "soldiers": 1304
+     "soldiers": 1250
     },
     {
      "month": 4,
      "calendar": "-300/10",
      "reserveDays": {
-      "rajapura": 56.77694203812285,
-      "dhanyagram": 107.64857873637528,
-      "kusumpur": 91.96448146959577,
+      "rajapura": 56.77528553907918,
+      "dhanyagram": 107.63453986938852,
+      "kusumpur": 91.95657587713265,
       "setupur": 0
      },
      "unrest": {
       "rajapura": 0,
       "dhanyagram": 0,
       "kusumpur": 0,
-      "setupur": 0.6186623487656054
+      "setupur": 0.5001769822027574
      },
      "stage": {
-      "setupur": "unrest"
+      "setupur": "tax_refusal"
      },
      "ledger": {
-      "taxIncome": 942.175096094557,
-      "tradeIncome": 159.13654857484926,
+      "taxIncome": 942.1698834347922,
+      "tradeIncome": 159.63145376637934,
       "tribute": 0,
-      "armyUpkeep": 446.79999999999995,
+      "armyUpkeep": 492.06249999999994,
       "buildingUpkeep": 72,
       "administration": 20.8,
       "construction": 0,
       "recruitment": 0,
       "other": 120,
-      "net": 561.7116446694063,
-      "foodProduced": 94029.17634500888,
-      "foodConsumed": 94345.5060706162
+      "net": 516.9388372011715,
+      "foodProduced": 94735.50213995272,
+      "foodConsumed": 94354.30960217273
      },
-     "treasury": 6639.816350900274,
-     "foodReserve": 20541.841087405108,
-     "stability": 0.6296963431396151,
+     "treasury": 6621.333250091734,
+     "foodReserve": 18266.286311898362,
+     "stability": 0.6202388703189953,
      "legitimacy": 0.72,
      "settlements": 4,
-     "soldiers": 1127
+     "soldiers": 1250
     },
     {
      "month": 5,
      "calendar": "-300/11",
      "reserveDays": {
-      "rajapura": 41.62656727663438,
-      "dhanyagram": 77.36316292772106,
-      "kusumpur": 73.67777041317908,
+      "rajapura": 41.62516556725676,
+      "dhanyagram": 77.36019499258002,
+      "kusumpur": 73.67561047992119,
       "setupur": 0
      },
      "unrest": {
@@ -1005,33 +608,33 @@
       "setupur": "secession"
      },
      "ledger": {
-      "taxIncome": 870.9124373410149,
-      "tradeIncome": 157.98736903837695,
+      "taxIncome": 870.945648940927,
+      "tradeIncome": 157.98493025309378,
       "tribute": 0,
-      "armyUpkeep": 411.6375,
+      "armyUpkeep": 484.675,
       "buildingUpkeep": 72,
       "administration": 20.8,
       "construction": 0,
       "recruitment": 0,
       "other": 120,
-      "net": 524.4623063793917,
-      "foodProduced": 91891.69945509662,
-      "foodConsumed": 93984.24806582367
+      "net": 451.4555791940208,
+      "foodProduced": 91894.3281703205,
+      "foodConsumed": 94004.95005383955
      },
-     "treasury": 7284.278657279666,
-     "foodReserve": 20183.509250448602,
-     "stability": 0.6255665696207197,
+     "treasury": 7192.788829285755,
+     "foodReserve": 17158.359474941848,
+     "stability": 0.6120060578719488,
      "legitimacy": 0.69,
      "settlements": 4,
-     "soldiers": 1037
+     "soldiers": 1231
     },
     {
      "month": 6,
      "calendar": "-300/12",
      "reserveDays": {
-      "rajapura": 29.978441067754304,
-      "dhanyagram": 67.93936899731699,
-      "kusumpur": 64.21355387929373,
+      "rajapura": 29.95912054397302,
+      "dhanyagram": 67.9372201241644,
+      "kusumpur": 64.21142644226188,
       "setupur": 0
      },
      "unrest": {
@@ -1044,138 +647,138 @@
       "setupur": "secession"
      },
      "ledger": {
-      "taxIncome": 775.3205713305696,
-      "tradeIncome": 158.07955649087478,
+      "taxIncome": 775.4024253935544,
+      "tradeIncome": 137.30123240361505,
       "tribute": 0,
-      "armyUpkeep": 380.625,
+      "armyUpkeep": 385.375,
       "buildingUpkeep": 63,
       "administration": 15.600000000000001,
       "construction": 0,
       "recruitment": 0,
       "other": 120,
-      "net": 474.17512782144433,
-      "foodProduced": 91457.19425660445,
-      "foodConsumed": 88096.28317798846
+      "net": 448.7286577971694,
+      "foodProduced": 91462.88622744326,
+      "foodConsumed": 88102.26758549608
      },
-     "treasury": 7878.45378510111,
-     "foodReserve": 4860.649200935334,
-     "stability": 0.6360967854347997,
+     "treasury": 7761.517487082924,
+     "foodReserve": 1673.5743890666865,
+     "stability": 0.6288935766059924,
      "legitimacy": 0.69,
      "settlements": 3,
-     "soldiers": 934
+     "soldiers": 1025
     },
     {
      "month": 7,
      "calendar": "-299/1",
      "reserveDays": {
-      "rajapura": 16.157560863115314,
-      "dhanyagram": 58.99362485805184,
-      "kusumpur": 54.891772018742756
+      "rajapura": 15.009643675189444,
+      "dhanyagram": 58.99150832124878,
+      "kusumpur": 54.88967658743547
      },
      "unrest": {
-      "rajapura": 0.029323087079692566,
+      "rajapura": 0.03459829474348516,
       "dhanyagram": 0,
       "kusumpur": 0
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 698.2926241817565,
-      "tradeIncome": 158.139605333655,
+      "taxIncome": 691.8329313497559,
+      "tradeIncome": 137.35407018475746,
       "tribute": 0,
-      "armyUpkeep": 365.1,
+      "armyUpkeep": 350.2625,
       "buildingUpkeep": 63,
       "administration": 15.600000000000001,
       "construction": 0,
       "recruitment": 0,
       "other": 120,
-      "net": 412.7322295154115,
-      "foodProduced": 91532.48881599339,
-      "foodConsumed": 88169.34065770791
+      "net": 400.32450153451333,
+      "foodProduced": 91538.18559558596,
+      "foodConsumed": 88175.33012102885
      },
-     "treasury": 8411.186014616522,
+     "treasury": 8281.841988617438,
      "foodReserve": 0,
-     "stability": 0.6402764028610971,
+     "stability": 0.6387834305516464,
      "legitimacy": 0.69,
      "settlements": 3,
-     "soldiers": 886
+     "soldiers": 925
     },
     {
      "month": 8,
      "calendar": "-299/2",
      "reserveDays": {
-      "rajapura": 8.939594484247642,
-      "dhanyagram": 54.86514506246516,
-      "kusumpur": 50.58973766369914
+      "rajapura": 7.815398641720827,
+      "dhanyagram": 54.86304344868527,
+      "kusumpur": 50.58765700284743
      },
      "unrest": {
-      "rajapura": 0.08255601758689222,
+      "rajapura": 0.09232690992618968,
       "dhanyagram": 0,
       "kusumpur": 0
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 852.9829321475042,
-      "tradeIncome": 158.19972334646488,
+      "taxIncome": 850.1604193876615,
+      "tradeIncome": 158.20467103029077,
       "tribute": 0,
-      "armyUpkeep": 278.2,
+      "armyUpkeep": 274.73749999999995,
       "buildingUpkeep": 63,
       "administration": 15.600000000000001,
       "construction": 0,
       "recruitment": 0,
       "other": 120,
-      "net": 654.3826554939691,
-      "foodProduced": 91607.86495240495,
-      "foodConsumed": 88242.48247384423
+      "net": 655.0275904179523,
+      "foodProduced": 91613.56654716135,
+      "foodConsumed": 88248.47699971791
      },
-     "treasury": 9185.568670110491,
-     "foodReserve": 22625.195997044073,
-     "stability": 0.6438083906267963,
+     "treasury": 8756.86957903539,
+     "foodReserve": 22446.168801743057,
+     "stability": 0.6474430713155394,
      "legitimacy": 0.69,
      "settlements": 3,
-     "soldiers": 677
+     "soldiers": 726
     },
     {
      "month": 9,
      "calendar": "-299/3",
      "reserveDays": {
-      "rajapura": 62.546761427012314,
-      "dhanyagram": 155.82195876831926,
-      "kusumpur": 111.37202827722687
+      "rajapura": 65.59107963974645,
+      "dhanyagram": 157.91925734013816,
+      "kusumpur": 113.42100104104615
      },
      "unrest": {
-      "rajapura": 0.08162132516269033,
+      "rajapura": 0.09233379139216477,
       "dhanyagram": 0.05,
       "kusumpur": 0.05
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 917.4439958281326,
-      "tradeIncome": 158.25990185433764,
+      "taxIncome": 915.6110839338937,
+      "tradeIncome": 158.26485372129818,
       "tribute": 0,
-      "armyUpkeep": 277.5625,
+      "armyUpkeep": 274.73749999999995,
       "buildingUpkeep": 63,
       "administration": 15.600000000000001,
       "construction": 0,
       "recruitment": 0,
       "other": 120,
-      "net": 719.5413976824703,
-      "foodProduced": 91683.31391662505,
-      "foodConsumed": 88315.69797890028
+      "net": 720.5384376551918,
+      "foodProduced": 91689.02033189687,
+      "foodConsumed": 88321.69757295324
      },
-     "treasury": 10025.110067792963,
-     "foodReserve": 22625.195997044073,
-     "stability": 0.6365321734503456,
+     "treasury": 9597.408016690582,
+     "foodReserve": 22446.168801743057,
+     "stability": 0.6397821417780917,
      "legitimacy": 0.6699999999999999,
      "settlements": 3,
-     "soldiers": 674
+     "soldiers": 726
     },
     {
      "month": 10,
      "calendar": "-299/4",
      "reserveDays": {
-      "rajapura": 49.76831458425176,
-      "dhanyagram": 93.23922097558051,
-      "kusumpur": 78.95866170847457
+      "rajapura": 49.22763800605222,
+      "dhanyagram": 91.60711414001915,
+      "kusumpur": 77.9410695871796
      },
      "unrest": {
       "rajapura": 0,
@@ -1184,33 +787,33 @@
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 901.0564078510736,
-      "tradeIncome": 158.32013614005015,
+      "taxIncome": 897.910575811528,
+      "tradeIncome": 158.325092194277,
       "tribute": 0,
-      "armyUpkeep": 277.5625,
+      "armyUpkeep": 274.73749999999995,
       "buildingUpkeep": 63,
       "administration": 15.600000000000001,
       "construction": 0,
       "recruitment": 0,
       "other": 120,
-      "net": 703.2140439911237,
-      "foodProduced": 91758.83095527955,
-      "foodConsumed": 88388.98138281652
+      "net": 702.8981680058051,
+      "foodProduced": 91764.5421958421,
+      "foodConsumed": 88394.98605006935
      },
-     "treasury": 10548.324111784086,
-     "foodReserve": 22625.195997044073,
-     "stability": 0.6301110473379147,
+     "treasury": 10420.306184696388,
+     "foodReserve": 22446.168801743057,
+     "stability": 0.633022788578534,
      "legitimacy": 0.6699999999999999,
      "settlements": 3,
-     "soldiers": 674
+     "soldiers": 726
     },
     {
      "month": 11,
      "calendar": "-299/5",
      "reserveDays": {
-      "rajapura": 30.409495508627565,
-      "dhanyagram": 57.965103834179736,
-      "kusumpur": 64.89725640044445
+      "rajapura": 29.9856,
+      "dhanyagram": 55.75814467935407,
+      "kusumpur": 64.1673962630152
      },
      "unrest": {
       "rajapura": 0,
@@ -1219,145 +822,143 @@
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 796.2434879833249,
-      "tradeIncome": 158.16704685136565,
+      "taxIncome": 793.535355384381,
+      "tradeIncome": 158.38538389250712,
       "tribute": 0,
-      "armyUpkeep": 277.5625,
+      "armyUpkeep": 274.73749999999995,
       "buildingUpkeep": 63,
       "administration": 15.600000000000001,
       "construction": 0,
       "recruitment": 0,
       "other": 120,
-      "net": 598.2480348346905,
-      "foodProduced": 111615.02132100226,
-      "foodConsumed": 88208.12937919947
+      "net": 598.5832392768881,
+      "foodProduced": 112163.68564402821,
+      "foodConsumed": 88468.33929264535
      },
-     "treasury": 11266.572146618777,
-     "foodReserve": 22625.195997044073,
-     "stability": 0.6242435217199934,
+     "treasury": 11138.889423973276,
+     "foodReserve": 21775.670121871677,
+     "stability": 0.6268491931370258,
      "legitimacy": 0.6699999999999999,
      "settlements": 3,
-     "soldiers": 674
+     "soldiers": 726
     },
     {
      "month": 12,
      "calendar": "-299/6",
      "reserveDays": {
-      "rajapura": 20.72235115004699,
-      "dhanyagram": 45.22376406402072,
-      "kusumpur": 51.86836084601375
+      "rajapura": 20.0167090143592,
+      "dhanyagram": 43.10869281486836,
+      "kusumpur": 51.149480292143664
      },
      "unrest": {
-      "rajapura": 0.059151951633506165,
-      "dhanyagram": 0.05,
-      "kusumpur": 0.05
+      "rajapura": 0.010781059496956782,
+      "dhanyagram": 0,
+      "kusumpur": 0
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 713.0305228516721,
-      "tradeIncome": 158.22675181829663,
+      "taxIncome": 710.7068745317131,
+      "tradeIncome": 158.4457274390931,
       "tribute": 0,
-      "armyUpkeep": 275.61249999999995,
+      "armyUpkeep": 269.95,
       "buildingUpkeep": 63,
       "administration": 15.600000000000001,
       "construction": 0,
       "recruitment": 0,
       "other": 120,
-      "net": 517.0447746699688,
-      "foodProduced": 112285.26526833262,
-      "foodConsumed": 88280.773311195
+      "net": 520.6026019708062,
+      "foodProduced": 112741.31447027288,
+      "foodConsumed": 88541.75561029183
      },
-     "treasury": 11903.616921288745,
+     "treasury": 11779.492025944082,
      "foodReserve": 0,
-     "stability": 0.6366083342202677,
-     "legitimacy": 0.6699999999999999,
+     "stability": 0.6203488104751598,
+     "legitimacy": 0.6499999999999999,
      "settlements": 3,
-     "soldiers": 667
+     "soldiers": 713
     },
     {
      "month": 13,
      "calendar": "-299/7",
      "reserveDays": {
-      "rajapura": 6.612920178010016,
-      "dhanyagram": 38.60725690641913,
-      "kusumpur": 44.67882439118833
+      "rajapura": 5.9179566228764715,
+      "dhanyagram": 36.522411699181646,
+      "kusumpur": 43.97075823632491
      },
      "unrest": {
-      "rajapura": 0.1530137702616323,
-      "dhanyagram": 0.020082651992373322,
-      "kusumpur": 0.020082652150334147
+      "rajapura": 0.10886948878250988,
+      "dhanyagram": 0.000003082853635237321,
+      "kusumpur": 0
      },
-     "stage": {
-      "rajapura": "grumbling"
-     },
+     "stage": {},
      "ledger": {
-      "taxIncome": 583.414257944817,
-      "tradeIncome": 158.2867220187291,
+      "taxIncome": 605.1937668325007,
+      "tradeIncome": 158.50612210128932,
       "tribute": 0,
-      "armyUpkeep": 155.16250000000002,
+      "armyUpkeep": 167.95,
       "buildingUpkeep": 63,
       "administration": 15.600000000000001,
       "construction": 0,
       "recruitment": 0,
       "other": 120,
-      "net": 507.9384799635461,
-      "foodProduced": 112377.26666530792,
-      "foodConsumed": 88353.73973712648
+      "net": 517.1498889337901,
+      "foodProduced": 112834.214629909,
+      "foodConsumed": 88615.23410320254
      },
-     "treasury": 12531.555401252292,
+     "treasury": 12416.641914877873,
      "foodReserve": 0,
-     "stability": 0.6291627370343607,
-     "legitimacy": 0.6699999999999999,
+     "stability": 0.613881505672663,
+     "legitimacy": 0.6499999999999999,
      "settlements": 3,
-     "soldiers": 380
+     "soldiers": 474
     },
     {
      "month": 14,
      "calendar": "-299/8",
      "reserveDays": {
-      "rajapura": 0.10178805430628249,
-      "dhanyagram": 35.5533856217315,
-      "kusumpur": 41.360820160571244
+      "rajapura": 0,
+      "dhanyagram": 33.482821307326276,
+      "kusumpur": 40.65774489810005
      },
      "unrest": {
-      "rajapura": 0.2459720084247091,
-      "dhanyagram": 0.000717834436691986,
+      "rajapura": 0.2556319785435671,
+      "dhanyagram": 0.005662035606772478,
       "kusumpur": 0
      },
      "stage": {
       "rajapura": "grumbling"
      },
      "ledger": {
-      "taxIncome": 770.7625355834782,
-      "tradeIncome": 158.34685977288188,
+      "taxIncome": 761.1134656473789,
+      "tradeIncome": 158.5130970708505,
       "tribute": 0,
-      "armyUpkeep": 100.44999999999999,
+      "armyUpkeep": 114.02499999999999,
       "buildingUpkeep": 63,
       "administration": 15.600000000000001,
       "construction": 0,
       "recruitment": 0,
       "other": 120,
-      "net": 750.0593953563601,
-      "foodProduced": 112469.59553251299,
-      "foodConsumed": 88426.90989683183
+      "net": 727.0015627182295,
+      "foodProduced": 112851.33439037006,
+      "foodConsumed": 88624.01179198024
      },
-     "treasury": 13401.614796608652,
-     "foodReserve": 33039.625491789055,
-     "stability": 0.6236307156158905,
-     "legitimacy": 0.72,
+     "treasury": 13263.643477596102,
+     "foodReserve": 32836.518484903376,
+     "stability": 0.6091515193072746,
+     "legitimacy": 0.7,
      "settlements": 3,
-     "soldiers": 244
+     "soldiers": 306
     },
     {
      "month": 15,
      "calendar": "-299/9",
      "reserveDays": {
-      "rajapura": 116.58686135927006,
-      "dhanyagram": 162.89582514467025,
+      "rajapura": 116.11216298972998,
+      "dhanyagram": 162.89237214769247,
       "kusumpur": 118.30250638520917
      },
      "unrest": {
-      "rajapura": 0.22076945422790026,
+      "rajapura": 0.23538719334595973,
       "dhanyagram": 0,
       "kusumpur": 0
      },
@@ -1365,36 +966,36 @@
       "rajapura": "grumbling"
      },
      "ledger": {
-      "taxIncome": 852.6997348584719,
-      "tradeIncome": 158.4071117832854,
+      "taxIncome": 848.8700423423045,
+      "tradeIncome": 158.57315577498437,
       "tribute": 0,
-      "armyUpkeep": 100.44999999999999,
+      "armyUpkeep": 114.02499999999999,
       "buildingUpkeep": 63,
       "administration": 15.600000000000001,
       "construction": 0,
       "recruitment": 0,
       "other": 120,
-      "net": 832.0568466417573,
-      "foodProduced": 112562.13794012865,
-      "foodConsumed": 88500.21899082263
+      "net": 814.8181981172888,
+      "foodProduced": 112943.75719422734,
+      "foodConsumed": 88697.07404148632
      },
-     "treasury": 14353.671643250409,
-     "foodReserve": 33039.625491789055,
-     "stability": 0.619248119395192,
-     "legitimacy": 0.72,
+     "treasury": 14198.461675713392,
+     "foodReserve": 32836.518484903376,
+     "stability": 0.6054738220878406,
+     "legitimacy": 0.7,
      "settlements": 3,
-     "soldiers": 244
+     "soldiers": 306
     },
     {
      "month": 16,
      "calendar": "-299/10",
      "reserveDays": {
-      "rajapura": 97.81269527051488,
-      "dhanyagram": 150.60316900188025,
+      "rajapura": 97.24700155157701,
+      "dhanyagram": 150.5988019040226,
       "kusumpur": 106.28597901596238
      },
      "unrest": {
-      "rajapura": 0.11143021199429635,
+      "rajapura": 0.12578865337340564,
       "dhanyagram": 0,
       "kusumpur": 0
      },
@@ -1402,67 +1003,67 @@
       "rajapura": "grumbling"
      },
      "ledger": {
-      "taxIncome": 933.9412078907867,
-      "tradeIncome": 158.46744897594954,
+      "taxIncome": 932.9399766703568,
+      "tradeIncome": 158.63344256844184,
       "tribute": 0,
-      "armyUpkeep": 100.44999999999999,
+      "armyUpkeep": 114.02499999999999,
       "buildingUpkeep": 63,
       "administration": 15.600000000000001,
       "construction": 0,
       "recruitment": 0,
       "other": 120,
-      "net": 913.3586568667362,
-      "foodProduced": 112654.83172727338,
-      "foodConsumed": 88573.63167075928
+      "net": 898.9484192387986,
+      "foodProduced": 113036.51426018609,
+      "foodConsumed": 88770.41726579845
      },
-     "treasury": 15587.030300117145,
-     "foodReserve": 33039.625491789055,
-     "stability": 0.615295241106995,
+     "treasury": 15417.41009495219,
+     "foodReserve": 32836.518484903376,
+     "stability": 0.6027994524259264,
      "legitimacy": 0.7,
      "settlements": 3,
-     "soldiers": 244
+     "soldiers": 306
     },
     {
      "month": 17,
      "calendar": "-299/11",
      "reserveDays": {
-      "rajapura": 80.60927934780042,
-      "dhanyagram": 140.41410569891934,
+      "rajapura": 79.95383690784303,
+      "dhanyagram": 140.4093153069077,
       "kusumpur": 96.33134061804569
      },
      "unrest": {
-      "rajapura": 0.001673257028104039,
+      "rajapura": 0.01604707142395819,
       "dhanyagram": 0,
       "kusumpur": 0
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 946.9592254692209,
-      "tradeIncome": 158.52785549903774,
+      "taxIncome": 947.115514228627,
+      "tradeIncome": 158.69387675312328,
       "tribute": 0,
-      "armyUpkeep": 100.44999999999999,
+      "armyUpkeep": 114.02499999999999,
       "buildingUpkeep": 63,
       "administration": 15.600000000000001,
       "construction": 0,
       "recruitment": 0,
       "other": 120,
-      "net": 926.4370809682586,
-      "foodProduced": 112747.6429905605,
-      "foodConsumed": 88647.12866389344
+      "net": 913.1843909817503,
+      "foodProduced": 113129.48874438007,
+      "foodConsumed": 88843.94169687957
      },
-     "treasury": 16633.467381085404,
-     "foodReserve": 33039.625491789055,
-     "stability": 0.6119170952616364,
+     "treasury": 16450.59448593394,
+     "foodReserve": 32836.518484903376,
+     "stability": 0.6006151133280444,
      "legitimacy": 0.7,
      "settlements": 3,
-     "soldiers": 244
+     "soldiers": 306
     },
     {
      "month": 18,
      "calendar": "-299/12",
      "reserveDays": {
-      "rajapura": 63.66670950009248,
-      "dhanyagram": 130.37811894530594,
+      "rajapura": 62.92286040322758,
+      "dhanyagram": 130.37315236292702,
       "kusumpur": 86.52645357998675
      },
      "unrest": {
@@ -1472,45 +1073,57 @@
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 954.3316819971496,
-      "tradeIncome": 158.58832271825779,
+      "taxIncome": 955.167646301833,
+      "tradeIncome": 158.75441429183414,
       "tribute": 0,
-      "armyUpkeep": 100.44999999999999,
+      "armyUpkeep": 114.02499999999999,
       "buildingUpkeep": 63,
       "administration": 15.600000000000001,
       "construction": 0,
       "recruitment": 0,
       "other": 120,
-      "net": 933.8700047154074,
-      "foodProduced": 112840.55325141999,
-      "foodConsumed": 88720.69947260979
+      "net": 921.2970605936671,
+      "foodProduced": 113222.61688610351,
+      "foodConsumed": 88917.59289063442
      },
-     "treasury": 17687.337385800813,
-     "foodReserve": 33039.625491789055,
-     "stability": 0.608968959200716,
+     "treasury": 17491.891546527608,
+     "foodReserve": 32836.518484903376,
+     "stability": 0.598765689149978,
      "legitimacy": 0.7,
      "settlements": 3,
-     "soldiers": 244
+     "soldiers": 306
     }
    ],
    "battles": [
     {
      "day": 9,
-     "chronicle": "The Battle of the Setu Bridge: Giridurga defeated Suvarna; 197 fell.",
+     "chronicle": "The Battle of the Setu Bridge: Giridurga defeated Suvarna; 189 fell.",
      "winner": "highland",
-     "killed": 197
+     "killed": 189
     },
     {
-     "day": 169,
-     "chronicle": "The Battle of Sangam of the Two Rivers: Suvarna defeated Giridurga; 22 fell.",
+     "day": 69,
+     "chronicle": "The Battle of the Setu Bridge: Giridurga defeated Suvarna; 226 fell.",
+     "winner": "highland",
+     "killed": 226
+    },
+    {
+     "day": 172,
+     "chronicle": "The Battle of Sangam of the Two Rivers: Suvarna defeated Giridurga; 21 fell.",
      "winner": "heartland",
-     "killed": 22
+     "killed": 21
     },
     {
-     "day": 194,
-     "chronicle": "The Battle of the White Flats: The rebels of Lavanapura defeated Marudesha; 3 fell.",
+     "day": 175,
+     "chronicle": "The Battle of Sangam of the Two Rivers: Suvarna defeated Nilavana; 130 fell.",
+     "winner": "heartland",
+     "killed": 130
+    },
+    {
+     "day": 189,
+     "chronicle": "The Battle of the White Flats: The rebels of Lavanapura defeated Marudesha; 4 fell.",
      "winner": "rebels",
-     "killed": 3
+     "killed": 4
     },
     {
      "day": 207,
@@ -1520,9 +1133,9 @@
     },
     {
      "day": 208,
-     "chronicle": "The Battle of Ushtragram: The rebels of Ushtragram defeated Marudesha; 1 fell.",
+     "chronicle": "The Battle of Ushtragram: The rebels of Ushtragram defeated Marudesha; 0 fell.",
      "winner": "rebels",
-     "killed": 1
+     "killed": 0
     },
     {
      "day": 214,
@@ -1531,22 +1144,16 @@
      "killed": 9
     },
     {
-     "day": 220,
-     "chronicle": "The Battle of Sangam of the Two Rivers: neither Giridurga nor Suvarna could claim the field; 0 fell.",
-     "winner": null,
+     "day": 242,
+     "chronicle": "The Battle of Kandaravasa: The rebels of Kandaravasa defeated Giridurga; 0 fell.",
+     "winner": "rebels",
      "killed": 0
     },
     {
-     "day": 241,
-     "chronicle": "The Battle of Kandaravasa: The rebels of Kandaravasa defeated Giridurga; 22 fell.",
+     "day": 347,
+     "chronicle": "The Battle of Gajavana: The rebels of Gajavana defeated Nilavana; 1 fell.",
      "winner": "rebels",
-     "killed": 22
-    },
-    {
-     "day": 352,
-     "chronicle": "The Battle of the Nilavana: The rebels of Nilavanapura defeated Nilavana; 2 fell.",
-     "winner": "rebels",
-     "killed": 2
+     "killed": 1
     }
    ],
    "events": [
@@ -1611,22 +1218,16 @@
      "choice": "Let him go - and march"
     },
     {
-     "day": 107,
+     "day": 109,
      "id": "evt_protest",
      "title": "Protest in Setupur",
      "choice": "Hear their grievances"
     },
     {
-     "day": 114,
-     "id": "evt_bc_hill_raid",
-     "title": "Raiders at the Setu Bridge",
-     "choice": "Repair what we can"
-    },
-    {
-     "day": 117,
-     "id": "evt_riots",
-     "title": "Riots in Setupur",
-     "choice": "Let it burn out"
+     "day": 116,
+     "id": "evt_tax_refusal",
+     "title": "Tax Refusal in Setupur",
+     "choice": "Negotiate a lower rate"
     },
     {
      "day": 120,
@@ -1635,19 +1236,13 @@
      "choice": "Count the granaries"
     },
     {
-     "day": 120,
-     "id": "evt_tax_refusal",
-     "title": "Tax Refusal in Setupur",
-     "choice": "Negotiate a lower rate"
+     "day": 123,
+     "id": "evt_riots",
+     "title": "Riots in Setupur",
+     "choice": "Let it burn out"
     },
     {
-     "day": 122,
-     "id": "evt_bandits",
-     "title": "Bandits on the Road",
-     "choice": "Let the villages deal with it"
-    },
-    {
-     "day": 128,
+     "day": 129,
      "id": "evt_revolt",
      "title": "Revolt in Setupur",
      "choice": "Negotiate with the rebel leaders"
@@ -1659,7 +1254,13 @@
      "choice": "The host will live off the land"
     },
     {
-     "day": 153,
+     "day": 151,
+     "id": "evt_bc_hill_raid",
+     "title": "Raiders at the Setu Bridge",
+     "choice": "Repair what we can"
+    },
+    {
+     "day": 154,
      "id": "evt_protest",
      "title": "Protest in Setupur",
      "choice": "Hear their grievances"
@@ -1671,10 +1272,10 @@
      "choice": "Leave the sacred town free"
     },
     {
-     "day": 225,
-     "id": "evt_bc_hill_raid",
-     "title": "Raiders at the Setu Bridge",
-     "choice": "Repair what we can"
+     "day": 230,
+     "id": "evt_salt_caravan",
+     "title": "The Salt Caravan",
+     "choice": "Buy salt for the granaries"
     },
     {
      "day": 245,
@@ -1683,10 +1284,16 @@
      "choice": "Hold the royal reserve for the army"
     },
     {
-     "day": 274,
-     "id": "evt_salt_caravan",
-     "title": "The Salt Caravan",
-     "choice": "Buy salt for the granaries"
+     "day": 249,
+     "id": "evt_bazaar_fire",
+     "title": "Fire in the Bazaar",
+     "choice": "Let the merchants rebuild"
+    },
+    {
+     "day": 297,
+     "id": "evt_bc_hill_raid",
+     "title": "Raiders at the Setu Bridge",
+     "choice": "Repair what we can"
     },
     {
      "day": 300,
@@ -1695,15 +1302,9 @@
      "choice": "Wait for the rains"
     },
     {
-     "day": 315,
+     "day": 312,
      "id": "evt_monsoon_flood",
      "title": "The River Rises",
-     "choice": "Endure it"
-    },
-    {
-     "day": 326,
-     "id": "evt_fever",
-     "title": "Fever in the Lanes",
      "choice": "Endure it"
     },
     {
@@ -1713,46 +1314,22 @@
      "choice": "Decline politely"
     },
     {
-     "day": 340,
-     "id": "evt_bc_hill_raid",
-     "title": "Raiders at the Setu Bridge",
-     "choice": "Repair what we can"
-    },
-    {
-     "day": 345,
-     "id": "evt_failed_monsoon",
-     "title": "The Rains Fail",
-     "choice": "Pray for rain"
-    },
-    {
-     "day": 430,
-     "id": "evt_bc_last_envoy",
-     "title": "The Last Envoy",
-     "choice": "Refuse: the war ends on our terms"
-    },
-    {
-     "day": 442,
-     "id": "evt_bc_hill_raid",
-     "title": "Raiders at the Setu Bridge",
-     "choice": "Repair what we can"
-    },
-    {
-     "day": 464,
-     "id": "evt_pilgrims",
-     "title": "Pilgrims on the Road",
-     "choice": "Welcome them"
-    },
-    {
-     "day": 473,
+     "day": 346,
      "id": "evt_bc_regent_ailing",
      "title": "The Regent Is Unwell",
      "choice": "Let her rest; the council keeps the seal"
     },
     {
-     "day": 510,
+     "day": 406,
      "id": "evt_bc_hill_raid",
      "title": "Raiders at the Setu Bridge",
      "choice": "Repair what we can"
+    },
+    {
+     "day": 474,
+     "id": "evt_pilgrims",
+     "title": "Pilgrims on the Road",
+     "choice": "Welcome them"
     },
     {
      "day": 515,
@@ -1773,29 +1350,29 @@
      "text": "forest declared war on heartland"
     },
     {
-     "day": 126,
+     "day": 129,
      "kind": "revolt",
      "text": "Setupur: 64 rebels"
     },
     {
-     "day": 133,
+     "day": 136,
      "kind": "revolt",
-     "text": "Setupur: 64 rebels"
+     "text": "Setupur: 63 rebels"
     },
     {
-     "day": 163,
+     "day": 166,
      "kind": "secession",
      "text": "Setupur left heartland"
     },
     {
-     "day": 180,
+     "day": 189,
      "kind": "revolt",
-     "text": "Ratnapura: 212 rebels"
+     "text": "Lavanapura: 131 rebels"
     },
     {
-     "day": 194,
+     "day": 193,
      "kind": "revolt",
-     "text": "Lavanapura: 130 rebels"
+     "text": "Ratnapura: 212 rebels"
     },
     {
      "day": 207,
@@ -1811,11 +1388,6 @@
      "day": 208,
      "kind": "capture",
      "text": "Ushtragram: frontier -> rebels"
-    },
-    {
-     "day": 210,
-     "kind": "secession",
-     "text": "Ratnapura left forest"
     },
     {
      "day": 210,
@@ -1838,9 +1410,14 @@
      "text": "Giridurg: 178 rebels"
     },
     {
-     "day": 224,
+     "day": 219,
      "kind": "secession",
      "text": "Lavanapura left frontier"
+    },
+    {
+     "day": 223,
+     "kind": "secession",
+     "text": "Ratnapura left forest"
     },
     {
      "day": 237,
@@ -1863,12 +1440,7 @@
      "text": "Kandaravasa: 54 rebels"
     },
     {
-     "day": 241,
-     "kind": "succession",
-     "text": "highland: Kumari Meghavati"
-    },
-    {
-     "day": 241,
+     "day": 242,
      "kind": "capture",
      "text": "Kandaravasa: highland -> rebels"
     },
@@ -1893,59 +1465,94 @@
      "text": "M = 1.12 (normal)"
     },
     {
-     "day": 350,
+     "day": 347,
      "kind": "revolt",
      "text": "Gajavana: 44 rebels"
     },
     {
-     "day": 352,
+     "day": 347,
+     "kind": "capture",
+     "text": "Gajavana: forest -> rebels"
+    },
+    {
+     "day": 356,
      "kind": "revolt",
      "text": "Nilavanapura: 284 rebels"
     },
     {
-     "day": 380,
+     "day": 377,
      "kind": "secession",
-     "text": "Gajavana left forest"
+     "text": "Gajavana left rebels"
     },
     {
-     "day": 382,
+     "day": 377,
+     "kind": "revolt",
+     "text": "Nilavanapura: 277 rebels"
+    },
+    {
+     "day": 407,
      "kind": "secession",
      "text": "Nilavanapura left forest"
     }
    ],
    "statistics": {
-    "grain_harvested": 1965000.57644884,
-    "events_resolved": 35,
-    "battles_fought": 3,
-    "enemies_killed": 71,
-    "soldiers_lost": 1406,
+    "grain_harvested": 1969581.7961793025,
+    "events_resolved": 30,
+    "battles_fought": 4,
+    "enemies_killed": 239,
+    "soldiers_lost": 1344,
     "formations_routed": 19,
-    "largest_battle": 1123,
-    "wealth_earned": 21146.29988580081,
-    "trade_income": 3193.6162101458817,
-    "grain_spoiled": 62578.22879916993,
+    "largest_battle": 1529,
+    "wealth_earned": 21095.916546527602,
+    "trade_income": 3154.0467733753044,
+    "grain_spoiled": 67155.26351413783,
     "wars": 1,
-    "famine_days": 67,
+    "famine_days": 71,
     "revolts": 2,
     "settlements_lost_to_rebels": 1,
-    "battles_won": 1
+    "battles_won": 2
    },
-   "seconds": 1.551
+   "player": "heartland",
+   "startOwned": [
+    "rajapura",
+    "dhanyagram",
+    "kusumpur",
+    "ratnapura",
+    "setupur"
+   ],
+   "starving": {
+    "setupur": 285,
+    "ratnapura": 163,
+    "lavanapura": 162,
+    "dvaradurga": 214,
+    "ushtragram": 148,
+    "tirthaghat": 89,
+    "shilapur": 201,
+    "giridurg": 185,
+    "pashanagram": 137,
+    "gajavana": 71,
+    "kandaravasa": 61,
+    "naukapattana": 84,
+    "nilavanapura": 159,
+    "rajapura": 2
+   },
+   "court": 9,
+   "seconds": 4.182
   },
   {
-   "label": "The Seven Hills - requested data",
-   "pendingData": true,
+   "label": "The Seven Hills - data as shipped (storage.baseDays 90)",
+   "pendingData": false,
    "seed": 1,
    "outcome": {
     "status": "defeat",
     "outcomeId": "out_sh_fallen",
-    "day": 215
+    "day": 232
    },
-   "score": 182,
+   "score": 187,
    "final": {
     "heartland": {
      "alive": true,
-     "treasury": 12773,
+     "treasury": 13105,
      "settlements": [
       "rajapura",
       "dhanyagram",
@@ -1956,25 +1563,23 @@
     },
     "highland": {
      "alive": true,
-     "treasury": 4591,
+     "treasury": 4834,
      "settlements": [
       "kandaravasa"
      ]
     },
     "forest": {
      "alive": true,
-     "treasury": 2940,
+     "treasury": 3022,
      "settlements": [
       "nilavanapura",
       "gajavana"
      ]
     },
     "frontier": {
-     "alive": true,
-     "treasury": 2034,
-     "settlements": [
-      "lavanapura"
-     ]
+     "alive": false,
+     "treasury": 2331,
+     "settlements": []
     }
    },
    "months": [
@@ -1982,11 +1587,11 @@
      "month": 1,
      "calendar": "-300/7",
      "reserveDays": {
-      "giridurg": 26.659853603021293,
-      "shilapur": 17.108739342183696,
-      "dvaradurga": 23.417843681714324,
-      "pashanagram": 28.992018003151905,
-      "kandaravasa": 31.39892518259008
+      "giridurg": 35.22500654285545,
+      "shilapur": 23.548831404435404,
+      "dvaradurga": 27.603858057492502,
+      "pashanagram": 37.954609263991216,
+      "kandaravasa": 40.78628669238132
      },
      "unrest": {
       "giridurg": 0.05,
@@ -1997,228 +1602,225 @@
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 302.18196463827337,
-      "tradeIncome": 51.690167564342815,
+      "taxIncome": 320.3261213568657,
+      "tradeIncome": 51.68975197518579,
       "tribute": 0,
-      "armyUpkeep": 296.40000000000003,
+      "armyUpkeep": 319.7,
       "buildingUpkeep": 65.5,
       "administration": 16,
       "construction": 0,
       "recruitment": 0,
       "other": 480,
-      "net": -24.027867797383863,
-      "foodProduced": 39288.114987922025,
-      "foodConsumed": 52239.58901327103
+      "net": -29.184126667948476,
+      "foodProduced": 39287.58349780629,
+      "foodConsumed": 44403.04996813219
      },
-     "treasury": 2985.972132202616,
+     "treasury": 2965.8158733320515,
      "foodReserve": 0,
-     "stability": 0.5727152162895638,
+     "stability": 0.5728379485618103,
      "legitimacy": 0.61,
      "settlements": 5,
-     "soldiers": 883
+     "soldiers": 951
     },
     {
      "month": 2,
      "calendar": "-300/8",
      "reserveDays": {
-      "giridurg": 18.084598085433445,
-      "shilapur": 6.544708742499368,
-      "dvaradurga": 14.326063600484614,
-      "pashanagram": 21.562575113444215,
-      "kandaravasa": 25.08753025248293
+      "giridurg": 27.571162464144837,
+      "shilapur": 13.351202931069722,
+      "dvaradurga": 19.362917397213998,
+      "pashanagram": 31.625991348894306,
+      "kandaravasa": 35.77307432671612
      },
      "unrest": {
-      "giridurg": 0.02774493227210422,
-      "shilapur": 0.036349127747566864,
-      "dvaradurga": 0.05809388194166482,
-      "pashanagram": 0.028978807802551135,
-      "kandaravasa": 0.01692107217414756
+      "giridurg": 0.0016582346780395145,
+      "shilapur": 0.030608932741291554,
+      "dvaradurga": 0.02679097850958205,
+      "pashanagram": 0.0007391435978147884,
+      "kandaravasa": 0
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 345.31360113972323,
-      "tradeIncome": 52.33977878622222,
+      "taxIncome": 356.06866820371766,
+      "tradeIncome": 52.33785979205835,
       "tribute": 0,
-      "armyUpkeep": 262.25,
+      "armyUpkeep": 294.34999999999997,
       "buildingUpkeep": 65.5,
       "administration": 16,
       "construction": 0,
       "recruitment": 0,
       "other": 480,
-      "net": 53.903379925945444,
-      "foodProduced": 37470.78410305354,
-      "foodConsumed": 52279.473750738725
+      "net": 32.55652799577604,
+      "foodProduced": 37468.35021165767,
+      "foodConsumed": 44434.6662745849
      },
-     "treasury": 3519.8755121285617,
-     "foodReserve": 2452.373494546712,
-     "stability": 0.5745986834151191,
+     "treasury": 3478.3724013278274,
+     "foodReserve": 6746.653073742863,
+     "stability": 0.5749792239751276,
      "legitimacy": 0.62,
      "settlements": 5,
-     "soldiers": 758
+     "soldiers": 858
     },
     {
      "month": 3,
      "calendar": "-300/9",
      "reserveDays": {
-      "giridurg": 50.85605995405013,
-      "shilapur": 25.687851904517533,
-      "dvaradurga": 35.37827505900292,
-      "pashanagram": 57.767614315267956,
-      "kandaravasa": 64.84569515534558
+      "giridurg": 66.53578223835919,
+      "shilapur": 38.772110425607025,
+      "dvaradurga": 45.99753752446152,
+      "pashanagram": 72.4760493218228,
+      "kandaravasa": 84.09110060512472
      },
      "unrest": {
       "giridurg": 0,
       "shilapur": 0,
-      "dvaradurga": 0.03459486265055445,
-      "pashanagram": 0.005650180910072954,
-      "kandaravasa": 0
-     },
-     "stage": {},
-     "ledger": {
-      "taxIncome": 334.9506724816171,
-      "tradeIncome": 52.36126030297973,
-      "tribute": 0,
-      "armyUpkeep": 262.25,
-      "buildingUpkeep": 65.5,
-      "administration": 16,
-      "construction": 0,
-      "recruitment": 0,
-      "other": 480,
-      "net": 43.56193278459682,
-      "foodProduced": 36635.18605863961,
-      "foodConsumed": 52318.772951323146
-     },
-     "treasury": 3743.4374449131583,
-     "foodReserve": 0,
-     "stability": 0.6217265289429346,
-     "legitimacy": 0.63,
-     "settlements": 5,
-     "soldiers": 758
-    },
-    {
-     "month": 4,
-     "calendar": "-300/10",
-     "reserveDays": {
-      "giridurg": 30.24625886793148,
-      "shilapur": 0.5360795735830161,
-      "dvaradurga": 12.93114820536266,
-      "pashanagram": 38.8708026244372,
-      "kandaravasa": 47.814764550118625
-     },
-     "unrest": {
-      "giridurg": 0,
-      "shilapur": 0.062311143517431195,
-      "dvaradurga": 0.046401681706197934,
+      "dvaradurga": 0.0001369128090855879,
       "pashanagram": 0,
       "kandaravasa": 0
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 280.7900807330443,
-      "tradeIncome": 52.382577527250554,
+      "taxIncome": 360.0463238757221,
+      "tradeIncome": 52.35722188838838,
       "tribute": 0,
-      "armyUpkeep": 235.55,
+      "armyUpkeep": 294.34999999999997,
       "buildingUpkeep": 65.5,
       "administration": 16,
       "construction": 0,
       "recruitment": 0,
       "other": 480,
-      "net": 16.122658260294827,
-      "foodProduced": 35798.102374130416,
-      "foodConsumed": 52357.76543478706
+      "net": 36.55354576411054,
+      "foodProduced": 36630.11388855406,
+      "foodConsumed": 44464.79996978814
      },
-     "treasury": 4239.560103173453,
+     "treasury": 3694.925947091938,
+     "foodReserve": 6746.653073742863,
+     "stability": 0.6223556209192794,
+     "legitimacy": 0.63,
+     "settlements": 5,
+     "soldiers": 858
+    },
+    {
+     "month": 4,
+     "calendar": "-300/10",
+     "reserveDays": {
+      "giridurg": 47.44592207770331,
+      "shilapur": 23.212426088247827,
+      "dvaradurga": 24.70413882029557,
+      "pashanagram": 55.366676589483866,
+      "kandaravasa": 69.09746575185284
+     },
+     "unrest": {
+      "giridurg": 0,
+      "shilapur": 0,
+      "dvaradurga": 0.007703309108327195,
+      "pashanagram": 0,
+      "kandaravasa": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 327.86342207454715,
+      "tradeIncome": 52.37607888527853,
+      "tribute": 0,
+      "armyUpkeep": 291.55,
+      "buildingUpkeep": 65.5,
+      "administration": 16,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 480,
+      "net": 7.189500959825693,
+      "foodProduced": 35790.08427904525,
+      "foodConsumed": 44494.13254585962
+     },
+     "treasury": 4182.115448051763,
      "foodReserve": 0,
-     "stability": 0.6241323688451742,
+     "stability": 0.6251821536373483,
      "legitimacy": 0.64,
      "settlements": 5,
-     "soldiers": 660
+     "soldiers": 848
     },
     {
      "month": 5,
      "calendar": "-300/11",
      "reserveDays": {
-      "giridurg": 10.902300942255865,
+      "giridurg": 21.87170503903,
       "shilapur": 0,
-      "dvaradurga": 0,
-      "pashanagram": 21.604736532987822,
-      "kandaravasa": 32.56556092457056
+      "dvaradurga": 1.8282100995035164,
+      "pashanagram": 30.625375622180528,
+      "kandaravasa": 44.24757364686245
      },
      "unrest": {
-      "giridurg": 0.061304684113625746,
-      "shilapur": 0.7320113392363587,
-      "dvaradurga": 0.505262665054416,
-      "pashanagram": 0.028601248289106717,
-      "kandaravasa": 0.0005516259186510585
+      "giridurg": 0.007790779007969522,
+      "shilapur": 0.2632968341595316,
+      "dvaradurga": 0.12968865401737298,
+      "pashanagram": 0.0009610384837988985,
+      "kandaravasa": 0
      },
      "stage": {
-      "shilapur": "unrest",
-      "dvaradurga": "tax_refusal"
+      "shilapur": "grumbling"
      },
      "ledger": {
-      "taxIncome": 141.44085907284241,
-      "tradeIncome": 34.41742034740088,
+      "taxIncome": 256.84727447461654,
+      "tradeIncome": 52.32443662899617,
       "tribute": 0,
-      "armyUpkeep": 127.5,
+      "armyUpkeep": 238.79999999999998,
       "buildingUpkeep": 65.5,
       "administration": 16,
       "construction": 0,
       "recruitment": 0,
-      "other": 470.1400000000002,
-      "net": -33.14172057975671,
-      "foodProduced": 32225.390259503405,
-      "foodConsumed": 51799.49677819088
+      "other": 480,
+      "net": -11.12828889638726,
+      "foodProduced": 34892.90282930316,
+      "foodConsumed": 52253.892701613775
      },
-     "treasury": 4676.558382593699,
+     "treasury": 4650.9871591553765,
      "foodReserve": 0,
-     "stability": 0.6132809887680416,
+     "stability": 0.6273722764425363,
      "legitimacy": 0.65,
      "settlements": 5,
-     "soldiers": 355
+     "soldiers": 655
     },
     {
      "month": 6,
      "calendar": "-300/12",
      "reserveDays": {
-      "giridurg": 0,
+      "giridurg": 2.6543199307213654,
       "shilapur": 0,
       "dvaradurga": 0,
-      "pashanagram": 5.233490609738042,
-      "kandaravasa": 18.880963230037352
+      "pashanagram": 13.561878326060068,
+      "kandaravasa": 29.087268666452836
      },
      "unrest": {
-      "giridurg": 0.5764880895048987,
+      "giridurg": 0.12672646631514317,
       "shilapur": 1,
-      "dvaradurga": 1,
-      "pashanagram": 0.17178894928541646,
-      "kandaravasa": 0.06263249736381928
+      "dvaradurga": 0.8348367849825601,
+      "pashanagram": 0.08058593732852014,
+      "kandaravasa": 0.006056358412638831
      },
      "stage": {
       "shilapur": "secession",
-      "dvaradurga": "secession",
-      "giridurg": "tax_refusal",
-      "pashanagram": "grumbling"
+      "dvaradurga": "revolt"
      },
      "ledger": {
-      "taxIncome": 47.19292398143211,
-      "tradeIncome": 15.771302414267302,
+      "taxIncome": 130.18507607543768,
+      "tradeIncome": 19.54960069270421,
       "tribute": 0,
-      "armyUpkeep": 48.65,
+      "armyUpkeep": 114.84999999999998,
       "buildingUpkeep": 65.5,
       "administration": 16,
       "construction": 0,
       "recruitment": 0,
-      "other": 250.76849999999973,
-      "net": -67.18577360430058,
-      "foodProduced": 23963.646354137505,
-      "foodConsumed": 50007.515208108125
+      "other": 395.0168500000001,
+      "net": -46.615323231858085,
+      "foodProduced": 24723.719866220235,
+      "foodConsumed": 50782.37298389679
      },
-     "treasury": 4560.1411089894,
+     "treasury": 4999.3886859235245,
      "foodReserve": 0,
-     "stability": 0.5898423452786548,
+     "stability": 0.6101254016144506,
      "legitimacy": 0.63,
      "settlements": 5,
-     "soldiers": 137
+     "soldiers": 310
     },
     {
      "month": 7,
@@ -2228,56 +1830,56 @@
       "shilapur": 0,
       "dvaradurga": 0,
       "pashanagram": 0,
-      "kandaravasa": 3.318651361912718
+      "kandaravasa": 13.545461826386305
      },
      "unrest": {
       "giridurg": 1,
       "shilapur": 1,
       "dvaradurga": 1,
-      "pashanagram": 0.7885927871893642,
-      "kandaravasa": 0.5016128440090843
+      "pashanagram": 0.41884055845517887,
+      "kandaravasa": 0.32695598042063656
      },
      "stage": {
-      "giridurg": "secession",
       "shilapur": "secession",
       "dvaradurga": "secession",
-      "pashanagram": "revolt",
-      "kandaravasa": "tax_refusal"
+      "giridurg": "secession",
+      "pashanagram": "protest",
+      "kandaravasa": "protest"
      },
      "ledger": {
-      "taxIncome": 0,
-      "tradeIncome": 1.3217760809922985,
+      "taxIncome": 36.24039793065881,
+      "tradeIncome": 6.391092306637617,
       "tribute": 0,
-      "armyUpkeep": 2.3,
-      "buildingUpkeep": 28.5,
-      "administration": 6.4,
+      "armyUpkeep": 46.95,
+      "buildingUpkeep": 36,
+      "administration": 9.600000000000001,
       "construction": 0,
       "recruitment": 0,
-      "other": 62.24810000000004,
-      "net": -35.8782239190077,
-      "foodProduced": 7761.570178517628,
-      "foodConsumed": 22148.42028365297
+      "other": 162.35099999999997,
+      "net": -49.91850976270358,
+      "foodProduced": 12379.80314436019,
+      "foodConsumed": 27490.172503524635
      },
-     "treasury": 4586.510985070395,
+     "treasury": 5111.821176160843,
      "foodReserve": 0,
-     "stability": 0.5409284940684269,
+     "stability": 0.571021123220912,
      "legitimacy": 0.64,
-     "settlements": 2,
-     "soldiers": 9
+     "settlements": 3,
+     "soldiers": 124
     }
    ],
    "battles": [
     {
      "day": 10,
-     "chronicle": "The Battle of the Red Quarries: Suvarna defeated Giridurga; 357 fell.",
+     "chronicle": "The Battle of the Red Quarries: Suvarna defeated Giridurga; 296 fell.",
      "winner": "heartland",
-     "killed": 357
+     "killed": 296
     },
     {
-     "day": 157,
-     "chronicle": "The Battle of the Dvara Pass: The rebels of Dvaradurga defeated Giridurga; 8 fell.",
+     "day": 172,
+     "chronicle": "The Battle of the Dvara Pass: The rebels of Dvaradurga defeated Giridurga; 10 fell.",
      "winner": "rebels",
-     "killed": 8
+     "killed": 10
     },
     {
      "day": 189,
@@ -2286,34 +1888,70 @@
      "killed": 4
     },
     {
-     "day": 190,
+     "day": 203,
      "chronicle": "The Battle of Kandaravasa: neither Suvarna nor Giridurga could claim the field; 0 fell.",
      "winner": null,
      "killed": 0
     },
     {
-     "day": 205,
+     "day": 208,
+     "chronicle": "The Battle of Ushtragram: The rebels of Ushtragram defeated Marudesha; 0 fell.",
+     "winner": "rebels",
+     "killed": 0
+    },
+    {
+     "day": 215,
+     "chronicle": "The Battle of Kandaravasa: Suvarna defeated Giridurga; 11 fell.",
+     "winner": "heartland",
+     "killed": 11
+    },
+    {
+     "day": 220,
      "chronicle": "The Battle of Pashanagram: The rebels of Pashanagram defeated Giridurga; 0 fell.",
      "winner": "rebels",
      "killed": 0
     },
     {
-     "day": 207,
+     "day": 220,
+     "chronicle": "The Battle of the Dakshina Scarp: The rebels of Giridurg defeated Giridurga; 6 fell.",
+     "winner": "rebels",
+     "killed": 6
+    },
+    {
+     "day": 220,
+     "chronicle": "The Battle of the Dakshina Scarp: Suvarna defeated Giridurga; 6 fell.",
+     "winner": "heartland",
+     "killed": 6
+    },
+    {
+     "day": 221,
+     "chronicle": "The Battle of the Dakshina Scarp: Suvarna defeated Giridurga; 6 fell.",
+     "winner": "heartland",
+     "killed": 6
+    },
+    {
+     "day": 222,
+     "chronicle": "The Battle of Shilapur: Suvarna defeated Giridurga; 5 fell.",
+     "winner": "heartland",
+     "killed": 5
+    },
+    {
+     "day": 223,
+     "chronicle": "The Battle of Shilapur: Suvarna defeated Giridurga; 4 fell.",
+     "winner": "heartland",
+     "killed": 4
+    },
+    {
+     "day": 224,
      "chronicle": "The Battle of Kandaravasa: Suvarna defeated Giridurga; 3 fell.",
      "winner": "heartland",
      "killed": 3
     },
     {
-     "day": 208,
-     "chronicle": "The Battle of Ushtragram: The rebels of Ushtragram defeated Marudesha; 1 fell.",
-     "winner": "rebels",
-     "killed": 1
-    },
-    {
-     "day": 211,
-     "chronicle": "The Battle of Kandaravasa: Suvarna defeated Giridurga; 0 fell.",
+     "day": 226,
+     "chronicle": "The Battle of Kandaravasa: Suvarna defeated Giridurga; 2 fell.",
      "winner": "heartland",
-     "killed": 0
+     "killed": 2
     }
    ],
    "events": [
@@ -2348,16 +1986,10 @@
      "choice": "Seek consensus"
     },
     {
-     "day": 116,
+     "day": 121,
      "id": "evt_sh_lowland_patrols",
      "title": "Lowland Patrols",
      "choice": "Endure it"
-    },
-    {
-     "day": 129,
-     "id": "evt_protest",
-     "title": "Protest in Shilapur",
-     "choice": "Hear their grievances"
     },
     {
      "day": 140,
@@ -2366,28 +1998,28 @@
      "choice": "Look to the river"
     },
     {
-     "day": 140,
+     "day": 153,
+     "id": "evt_protest",
+     "title": "Protest in Shilapur",
+     "choice": "Hear their grievances"
+    },
+    {
+     "day": 155,
+     "id": "evt_bandits",
+     "title": "Bandits on the Road",
+     "choice": "Let the villages deal with it"
+    },
+    {
+     "day": 160,
      "id": "evt_tax_refusal",
      "title": "Tax Refusal in Shilapur",
      "choice": "Negotiate a lower rate"
     },
     {
-     "day": 148,
+     "day": 168,
      "id": "evt_riots",
-     "title": "Riots in Shilapur",
+     "title": "Riots in Dvaradurga",
      "choice": "Let it burn out"
-    },
-    {
-     "day": 153,
-     "id": "evt_revolt",
-     "title": "Revolt in Shilapur",
-     "choice": "Negotiate with the rebel leaders"
-    },
-    {
-     "day": 167,
-     "id": "evt_salt_caravan",
-     "title": "The Salt Caravan",
-     "choice": "Buy salt for the granaries"
     },
     {
      "day": 170,
@@ -2396,19 +2028,25 @@
      "choice": "Decline the alliance"
     },
     {
-     "day": 177,
+     "day": 174,
+     "id": "evt_revolt",
+     "title": "Revolt in Dvaradurga",
+     "choice": "Negotiate with the rebel leaders"
+    },
+    {
+     "day": 199,
      "id": "evt_protest",
      "title": "Protest in Dvaradurga",
      "choice": "Hear their grievances"
     },
     {
-     "day": 180,
-     "id": "evt_bandits",
-     "title": "Bandits on the Road",
-     "choice": "Let the villages deal with it"
+     "day": 212,
+     "id": "evt_salt_caravan",
+     "title": "The Salt Caravan",
+     "choice": "Buy salt for the granaries"
     },
     {
-     "day": 202,
+     "day": 220,
      "id": "evt_sh_lowland_patrols",
      "title": "Lowland Patrols",
      "choice": "Endure it"
@@ -2416,34 +2054,19 @@
    ],
    "incidents": [
     {
-     "day": 151,
+     "day": 171,
      "kind": "revolt",
      "text": "Shilapur: 163 rebels"
     },
     {
-     "day": 157,
+     "day": 172,
      "kind": "revolt",
      "text": "Dvaradurga: 71 rebels"
     },
     {
-     "day": 158,
+     "day": 178,
      "kind": "revolt",
-     "text": "Shilapur: 161 rebels"
-    },
-    {
-     "day": 185,
-     "kind": "revolt",
-     "text": "Giridurg: 179 rebels"
-    },
-    {
-     "day": 187,
-     "kind": "secession",
-     "text": "Dvaradurga left highland"
-    },
-    {
-     "day": 188,
-     "kind": "secession",
-     "text": "Shilapur left highland"
+     "text": "Dvaradurga: 70 rebels"
     },
     {
      "day": 189,
@@ -2451,14 +2074,19 @@
      "text": "Lavanapura: 131 rebels"
     },
     {
-     "day": 205,
-     "kind": "revolt",
-     "text": "Pashanagram: 49 rebels"
+     "day": 201,
+     "kind": "secession",
+     "text": "Shilapur left highland"
     },
     {
-     "day": 205,
-     "kind": "capture",
-     "text": "Pashanagram: highland -> rebels"
+     "day": 202,
+     "kind": "revolt",
+     "text": "Giridurg: 179 rebels"
+    },
+    {
+     "day": 208,
+     "kind": "secession",
+     "text": "Dvaradurga left highland"
     },
     {
      "day": 208,
@@ -2471,43 +2099,79 @@
      "text": "Ushtragram: frontier -> rebels"
     },
     {
-     "day": 215,
+     "day": 219,
+     "kind": "secession",
+     "text": "Lavanapura left frontier"
+    },
+    {
+     "day": 220,
+     "kind": "revolt",
+     "text": "Pashanagram: 49 rebels"
+    },
+    {
+     "day": 220,
+     "kind": "capture",
+     "text": "Pashanagram: highland -> rebels"
+    },
+    {
+     "day": 232,
      "kind": "secession",
      "text": "Giridurg left highland"
     }
    ],
    "statistics": {
-    "grain_harvested": 238250.1887733866,
+    "grain_harvested": 274594.1601485011,
     "events_resolved": 16,
-    "battles_fought": 6,
-    "enemies_killed": 96,
-    "soldiers_lost": 1119,
-    "formations_routed": 14,
+    "battles_fought": 12,
+    "enemies_killed": 92,
+    "soldiers_lost": 1129,
+    "formations_routed": 12,
     "largest_battle": 1552,
-    "wealth_earned": 4415.3109850703895,
-    "trade_income": 260.2842830234558,
-    "grain_spoiled": 6314.945076685835,
-    "famine_days": 180,
+    "wealth_earned": 5031.971176160815,
+    "trade_income": 287.026042169249,
+    "grain_spoiled": 10193.342556098492,
+    "famine_days": 171,
     "revolts": 5,
     "settlements_lost_to_rebels": 3,
-    "mtd_other_income": 4.935
+    "mtd_other_income": 21.71399999999999
    },
-   "seconds": 1.373
+   "player": "highland",
+   "startOwned": [
+    "giridurg",
+    "shilapur",
+    "dvaradurga",
+    "pashanagram",
+    "kandaravasa"
+   ],
+   "starving": {
+    "shilapur": 73,
+    "dvaradurga": 63,
+    "lavanapura": 47,
+    "giridurg": 37,
+    "ushtragram": 29,
+    "tirthaghat": 26,
+    "pashanagram": 18,
+    "gajavana": 7,
+    "naukapattana": 4,
+    "nilavanapura": 3
+   },
+   "court": 5,
+   "seconds": 1.954
   },
   {
-   "label": "Sandbox (River of Kings) - requested data",
-   "pendingData": true,
+   "label": "Sandbox (default, Suvarna) - data as shipped (storage.baseDays 90)",
+   "pendingData": false,
    "seed": 1,
    "outcome": {
     "status": "ongoing",
     "outcomeId": null,
     "day": 540
    },
-   "score": 1189,
+   "score": 1194,
    "final": {
     "heartland": {
      "alive": true,
-     "treasury": 27110,
+     "treasury": 27383,
      "settlements": [
       "rajapura",
       "dhanyagram",
@@ -2518,19 +2182,19 @@
     },
     "highland": {
      "alive": false,
-     "treasury": 6563,
+     "treasury": 5987,
      "settlements": []
     },
     "forest": {
      "alive": true,
-     "treasury": 6201,
+     "treasury": 6559,
      "settlements": [
       "nilavanapura"
      ]
     },
     "frontier": {
      "alive": false,
-     "treasury": 2663,
+     "treasury": 3564,
      "settlements": []
     }
    },
@@ -2570,7 +2234,7 @@
      "treasury": 4409.361964590238,
      "foodReserve": 2000,
      "stability": 0.6052925364947739,
-     "legitimacy": 0.6,
+     "legitimacy": 0.61,
      "settlements": 5,
      "soldiers": 632
     },
@@ -2593,7 +2257,7 @@
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 1164.1571883341726,
+      "taxIncome": 1165.3649014614004,
       "tradeIncome": 311.1659549369905,
       "tribute": 0,
       "armyUpkeep": 196.5,
@@ -2602,14 +2266,14 @@
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 1168.8231432711632,
+      "net": 1170.0308563983908,
       "foodProduced": 133885.519658313,
       "foodConsumed": 115982.92377746946
      },
-     "treasury": 5818.185107861402,
+     "treasury": 5819.392820988629,
      "foodReserve": 40958.949260329435,
-     "stability": 0.609634066424474,
-     "legitimacy": 0.6,
+     "stability": 0.6099613373653111,
+     "legitimacy": 0.62,
      "settlements": 5,
      "soldiers": 632
     },
@@ -2632,7 +2296,7 @@
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 1176.1527399484817,
+      "taxIncome": 1179.2521202393525,
       "tradeIncome": 311.2514705334844,
       "tribute": 0,
       "armyUpkeep": 196.5,
@@ -2641,14 +2305,14 @@
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 1180.904210481966,
+      "net": 1184.003590772837,
       "foodProduced": 133993.34071827237,
       "foodConsumed": 116076.2985006988
      },
-     "treasury": 7239.089318343367,
+     "treasury": 7243.396411761466,
      "foodReserve": 40958.949260329435,
-     "stability": 0.6133754230167612,
-     "legitimacy": 0.6,
+     "stability": 0.6143393846157901,
+     "legitimacy": 0.63,
      "settlements": 5,
      "soldiers": 632
     },
@@ -2656,9 +2320,9 @@
      "month": 4,
      "calendar": "-300/4",
      "reserveDays": {
-      "rajapura": 77.54921799036497,
-      "dhanyagram": 108.41935321456798,
-      "kusumpur": 83.18279040158602,
+      "rajapura": 77.49101190704121,
+      "dhanyagram": 108.3952877303942,
+      "kusumpur": 83.1766802280245,
       "ratnapura": 59.95199999999999,
       "setupur": 59.95199999999999
      },
@@ -2671,7 +2335,7 @@
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 1179.1180762020635,
+      "taxIncome": 1184.4673165254549,
       "tradeIncome": 311.33713943737285,
       "tribute": 0,
       "armyUpkeep": 196.5,
@@ -2680,14 +2344,14 @@
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 1183.9552156394363,
-      "foodProduced": 134101.33769378412,
+      "net": 1189.3044559628277,
+      "foodProduced": 130618.04113009751,
       "foodConsumed": 116169.82174803228
      },
-     "treasury": 8663.044533982804,
+     "treasury": 8672.700867724294,
      "foodReserve": 40958.949260329435,
-     "stability": 0.6166578642562252,
-     "legitimacy": 0.6,
+     "stability": 0.6185451088132154,
+     "legitimacy": 0.64,
      "settlements": 5,
      "soldiers": 632
     },
@@ -2695,11 +2359,11 @@
      "month": 5,
      "calendar": "-300/5",
      "reserveDays": {
-      "rajapura": 57.15105661876106,
-      "dhanyagram": 75.56050966892425,
-      "kusumpur": 67.41554086470434,
-      "ratnapura": 44.14943511641203,
-      "setupur": 45.33172612585592
+      "rajapura": 56.96399115957755,
+      "dhanyagram": 62.47891029292769,
+      "kusumpur": 67.41006611029239,
+      "ratnapura": 42.79284770298825,
+      "setupur": 44.07663685235262
      },
      "unrest": {
       "rajapura": 0,
@@ -2710,7 +2374,7 @@
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 1158.151390055966,
+      "taxIncome": 1163.6057974078017,
       "tradeIncome": 311.4229236775582,
       "tribute": 0,
       "armyUpkeep": 196.5,
@@ -2719,14 +2383,14 @@
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 1163.0743137335241,
-      "foodProduced": 130924.90138783661,
+      "net": 1168.5287210853598,
+      "foodProduced": 130431.93702964144,
       "foodConsumed": 116263.46054016303
      },
-     "treasury": 10066.118847716329,
+     "treasury": 10081.229588809654,
      "foodReserve": 40958.949260329435,
-     "stability": 0.6195143363513437,
-     "legitimacy": 0.6,
+     "stability": 0.6225830669779658,
+     "legitimacy": 0.65,
      "settlements": 5,
      "soldiers": 632
     },
@@ -2734,22 +2398,22 @@
      "month": 6,
      "calendar": "-300/6",
      "reserveDays": {
-      "rajapura": 37.36276063869803,
-      "dhanyagram": 48.81137946379374,
-      "kusumpur": 54.348662067078216,
+      "rajapura": 37.17823693683254,
+      "dhanyagram": 49.70896714178654,
+      "kusumpur": 54.34326968042284,
       "ratnapura": 29.976,
       "setupur": 29.976
      },
      "unrest": {
-      "rajapura": 0,
-      "dhanyagram": 0,
-      "kusumpur": 0,
-      "ratnapura": 0.0056174418246311576,
-      "setupur": 0.005643447527374921
+      "rajapura": 0.05,
+      "dhanyagram": 0.05,
+      "kusumpur": 0.05,
+      "ratnapura": 0.056264629606285206,
+      "setupur": 0.05599610595452384
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 1021.0013229483947,
+      "taxIncome": 1026.0255810874078,
       "tradeIncome": 311.5088025465201,
       "tribute": 0,
       "armyUpkeep": 196.5,
@@ -2758,14 +2422,14 @@
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 1026.0101254949147,
-      "foodProduced": 130360.96519527929,
+      "net": 1031.034383633928,
+      "foodProduced": 131030.49667544418,
       "foodConsumed": 116357.19689653475
      },
-     "treasury": 11332.128973211244,
-     "foodReserve": 34673.44098401713,
-     "stability": 0.6217462522763149,
-     "legitimacy": 0.6,
+     "treasury": 11352.263972443583,
+     "foodReserve": 33433.52460022371,
+     "stability": 0.6441580203697981,
+     "legitimacy": 0.66,
      "settlements": 5,
      "soldiers": 632
     },
@@ -2773,22 +2437,22 @@
      "month": 7,
      "calendar": "-300/7",
      "reserveDays": {
-      "rajapura": 29.965665610532827,
-      "dhanyagram": 25.478012628428953,
-      "kusumpur": 47.12176831976876,
-      "ratnapura": 29.36298799922192,
-      "setupur": 29.436866579534783
+      "rajapura": 29.028852078400632,
+      "dhanyagram": 43.02333231989487,
+      "kusumpur": 47.11645705760239,
+      "ratnapura": 28.64301454559037,
+      "setupur": 28.359933291567753
      },
      "unrest": {
-      "rajapura": 0.000056894608306806444,
-      "dhanyagram": 0,
-      "kusumpur": 0,
-      "ratnapura": 0.043503040755725086,
-      "setupur": 0.05037578791271503
+      "rajapura": 0.0001227780578367979,
+      "dhanyagram": 0.017688455722554692,
+      "kusumpur": 0.017688455722554692,
+      "ratnapura": 0.09551664023856744,
+      "setupur": 0.10239055384273248
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 918.7727992712107,
+      "taxIncome": 928.0372266288613,
       "tradeIncome": 311.5947647624444,
       "tribute": 0,
       "armyUpkeep": 196.5,
@@ -2797,14 +2461,14 @@
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 923.8675640336551,
+      "net": 933.1319913913057,
       "foodProduced": 131136.19150927535,
       "foodConsumed": 116451.0210259665
      },
-     "treasury": 12495.996537244899,
+     "treasury": 12525.39596383489,
      "foodReserve": 0,
-     "stability": 0.6182045488442295,
-     "legitimacy": 0.6,
+     "stability": 0.6403755263240734,
+     "legitimacy": 0.67,
      "settlements": 5,
      "soldiers": 632
     },
@@ -2812,24 +2476,22 @@
      "month": 8,
      "calendar": "-300/8",
      "reserveDays": {
-      "rajapura": 23.288949514979237,
-      "dhanyagram": 26.992090146869167,
-      "kusumpur": 43.786532735701456,
-      "ratnapura": 20.83369408858243,
-      "setupur": 21.935522564680756
+      "rajapura": 22.358778551479862,
+      "dhanyagram": 39.937897591647015,
+      "kusumpur": 43.78125891201448,
+      "ratnapura": 20.12198555316688,
+      "setupur": 20.870957773718022
      },
      "unrest": {
-      "rajapura": 0.007004233340934305,
-      "dhanyagram": 0.1577494915694746,
+      "rajapura": 0.009075164643496924,
+      "dhanyagram": 0,
       "kusumpur": 0,
-      "ratnapura": 0.07326391402766018,
-      "setupur": 0.08364836869612226
+      "ratnapura": 0.1275215882145576,
+      "setupur": 0.13893854862078966
      },
-     "stage": {
-      "dhanyagram": "grumbling"
-     },
+     "stage": {},
      "ledger": {
-      "taxIncome": 1073.371035929621,
+      "taxIncome": 1094.8341534853798,
       "tradeIncome": 311.6808041903469,
       "tribute": 0,
       "armyUpkeep": 196.5,
@@ -2838,14 +2500,14 @@
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 1078.551840119968,
+      "net": 1100.0149576757267,
       "foodProduced": 131241.97959965005,
       "foodConsumed": 116544.92760928338
      },
-     "treasury": 13814.548377364867,
-     "foodReserve": 42008.63829012342,
-     "stability": 0.6143495638415373,
-     "legitimacy": 0.6,
+     "treasury": 13865.410921510616,
+     "foodReserve": 42236.76073751464,
+     "stability": 0.6370948710290799,
+     "legitimacy": 0.68,
      "settlements": 5,
      "soldiers": 632
     },
@@ -2853,24 +2515,22 @@
      "month": 9,
      "calendar": "-300/9",
      "reserveDays": {
-      "rajapura": 118.48893143220113,
-      "dhanyagram": 162.19578242624954,
-      "kusumpur": 117.95836721168268,
+      "rajapura": 117.5692664739217,
+      "dhanyagram": 162.1847019485193,
+      "kusumpur": 117.95289357741213,
       "ratnapura": 59.952000000000005,
       "setupur": 61.4429134038445
      },
      "unrest": {
       "rajapura": 0,
-      "dhanyagram": 0.14179646238746166,
+      "dhanyagram": 0,
       "kusumpur": 0,
-      "ratnapura": 0.04672035538647867,
-      "setupur": 0.060341349476886096
+      "ratnapura": 0.10181126905778767,
+      "setupur": 0.11657778815843153
      },
-     "stage": {
-      "dhanyagram": "grumbling"
-     },
+     "stage": {},
      "ledger": {
-      "taxIncome": 1146.3922452060854,
+      "taxIncome": 1166.6262143902643,
       "tradeIncome": 311.7669175057848,
       "tribute": 0,
       "armyUpkeep": 196.5,
@@ -2879,14 +2539,14 @@
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 1151.65916271187,
+      "net": 1171.893131896049,
       "foodProduced": 131347.85754327904,
       "foodConsumed": 116638.91376953585
      },
-     "treasury": 15206.207540076737,
-     "foodReserve": 42008.63829012342,
-     "stability": 0.6114304695657671,
-     "legitimacy": 0.6,
+     "treasury": 15277.304053406666,
+     "foodReserve": 42236.76073751464,
+     "stability": 0.6349379964522346,
+     "legitimacy": 0.6900000000000001,
      "settlements": 5,
      "soldiers": 632
     },
@@ -2894,22 +2554,22 @@
      "month": 10,
      "calendar": "-300/10",
      "reserveDays": {
-      "rajapura": 92.75842258116849,
-      "dhanyagram": 134.18744719698302,
-      "kusumpur": 98.91154516405666,
+      "rajapura": 91.90676707995787,
+      "dhanyagram": 133.83956126476295,
+      "kusumpur": 98.7579681026077,
       "ratnapura": 59.95199999999999,
       "setupur": 59.952
      },
      "unrest": {
       "rajapura": 0,
-      "dhanyagram": 0.08285316753018873,
+      "dhanyagram": 0,
       "kusumpur": 0,
-      "ratnapura": 0,
-      "setupur": 0
+      "ratnapura": 0.025587695183807376,
+      "setupur": 0.04891796270901411
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 1150.0899246498166,
+      "taxIncome": 1188.165867410138,
       "tradeIncome": 311.8531029191285,
       "tribute": 0,
       "armyUpkeep": 196.5,
@@ -2918,14 +2578,14 @@
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 1155.4430275689451,
+      "net": 1193.5189703292665,
       "foodProduced": 131453.82351318168,
       "foodConsumed": 116732.97796356844
      },
-     "treasury": 16801.650567645684,
-     "foodReserve": 42008.63829012342,
-     "stability": 0.6093114780371032,
-     "legitimacy": 0.6,
+     "treasury": 16710.82302373593,
+     "foodReserve": 42236.76073751464,
+     "stability": 0.6336977015936923,
+     "legitimacy": 0.7000000000000001,
      "settlements": 5,
      "soldiers": 632
     },
@@ -2933,11 +2593,11 @@
      "month": 11,
      "calendar": "-300/11",
      "reserveDays": {
-      "rajapura": 71.66653303226404,
-      "dhanyagram": 94.2796517649259,
-      "kusumpur": 79.39982875382832,
-      "ratnapura": 58.20818153142441,
-      "setupur": 58.38389470321285
+      "rajapura": 71.63424993414182,
+      "dhanyagram": 94.58112967109865,
+      "kusumpur": 79.5947375160585,
+      "ratnapura": 58.26516431112128,
+      "setupur": 58.43513567613851
      },
      "unrest": {
       "rajapura": 0,
@@ -2948,7 +2608,7 @@
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 1153.3870803782354,
+      "taxIncome": 1199.712794833367,
       "tradeIncome": 311.9393594789197,
       "tribute": 0,
       "armyUpkeep": 196.5,
@@ -2957,14 +2617,14 @@
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 1158.826439857155,
+      "net": 1205.1521543122867,
       "foodProduced": 131559.87654325474,
       "foodConsumed": 116827.1193766877
      },
-     "treasury": 18200.47700750284,
-     "foodReserve": 42008.63829012342,
-     "stability": 0.6076079730352075,
-     "legitimacy": 0.6,
+     "treasury": 17855.97517804822,
+     "foodReserve": 42236.76073751464,
+     "stability": 0.6331371789176563,
+     "legitimacy": 0.7100000000000001,
      "settlements": 5,
      "soldiers": 632
     },
@@ -2972,11 +2632,11 @@
      "month": 12,
      "calendar": "-300/12",
      "reserveDays": {
-      "rajapura": 57.35052700148735,
-      "dhanyagram": 76.31313657921552,
-      "kusumpur": 72.11973577324957,
-      "ratnapura": 44.6332716695367,
-      "setupur": 46.435327010142814
+      "rajapura": 57.08833527756874,
+      "dhanyagram": 75.56911726822618,
+      "kusumpur": 70.83279168637934,
+      "ratnapura": 45.06430182388057,
+      "setupur": 46.566265050718286
      },
      "unrest": {
       "rajapura": 0,
@@ -2987,7 +2647,7 @@
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 1133.3867027450292,
+      "taxIncome": 1186.5154145281533,
       "tradeIncome": 312.0256866914435,
       "tribute": 0,
       "armyUpkeep": 196.5,
@@ -2996,14 +2656,14 @@
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 1138.9123894364727,
+      "net": 1192.0411012195968,
       "foodProduced": 131666.0161375669,
       "foodConsumed": 116921.33759206998
      },
-     "treasury": 19279.38939693931,
-     "foodReserve": 42008.63829012342,
-     "stability": 0.606124735001176,
-     "legitimacy": 0.6,
+     "treasury": 19288.016279267817,
+     "foodReserve": 42236.76073751464,
+     "stability": 0.6330492467951779,
+     "legitimacy": 0.7200000000000001,
      "settlements": 5,
      "soldiers": 632
     },
@@ -3011,9 +2671,9 @@
      "month": 13,
      "calendar": "-299/1",
      "reserveDays": {
-      "rajapura": 40.09785070364984,
-      "dhanyagram": 67.13747636474642,
-      "kusumpur": 62.67907120700708,
+      "rajapura": 39.83625467582817,
+      "dhanyagram": 38.94041807120524,
+      "kusumpur": 61.41148711920729,
       "ratnapura": 29.975999999999996,
       "setupur": 29.976
      },
@@ -3021,12 +2681,12 @@
       "rajapura": 0,
       "dhanyagram": 0,
       "kusumpur": 0,
-      "ratnapura": 0.004034929496706832,
-      "setupur": 0.0023288406095449926
+      "ratnapura": 0.0035157304896021747,
+      "setupur": 0.0021695360882555705
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 1015.2256825038664,
+      "taxIncome": 1060.9885699757413,
       "tradeIncome": 312.1120843129804,
       "tribute": 0,
       "armyUpkeep": 196.5,
@@ -3035,14 +2695,14 @@
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 1020.8377668168469,
+      "net": 1066.6006542887217,
       "foodProduced": 131772.24205698614,
       "foodConsumed": 117015.63241021121
      },
-     "treasury": 20540.227163756157,
-     "foodReserve": 38210.13041030058,
-     "stability": 0.604587616825933,
-     "legitimacy": 0.6,
+     "treasury": 20594.61693355654,
+     "foodReserve": 41759.83337883763,
+     "stability": 0.6330734100707172,
+     "legitimacy": 0.7300000000000001,
      "settlements": 5,
      "soldiers": 632
     },
@@ -3050,22 +2710,22 @@
      "month": 14,
      "calendar": "-299/2",
      "reserveDays": {
-      "rajapura": 32.13471296545401,
-      "dhanyagram": 62.95159251988169,
-      "kusumpur": 58.32216098763213,
+      "rajapura": 31.874971877770673,
+      "dhanyagram": 34.95333592041118,
+      "kusumpur": 57.063511623991715,
       "ratnapura": 29.975999999999996,
       "setupur": 29.975999999999996
      },
      "unrest": {
       "rajapura": 0,
-      "dhanyagram": 0,
+      "dhanyagram": 0.15,
       "kusumpur": 0,
-      "ratnapura": 0.02012074152811524,
-      "setupur": 0.020040444452134314
+      "ratnapura": 0.019314331878003573,
+      "setupur": 0.019749205983254053
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 1100.8852913211877,
+      "taxIncome": 1150.681154344968,
       "tradeIncome": 312.19855223635454,
       "tribute": 0,
       "armyUpkeep": 196.5,
@@ -3074,14 +2734,14 @@
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 1106.5838435575422,
+      "net": 1156.3797065813226,
       "foodProduced": 131878.55420265158,
       "foodConsumed": 117110.00375031946
      },
-     "treasury": 21886.8110073137,
-     "foodReserve": 62924.7364334614,
-     "stability": 0.603058395659348,
-     "legitimacy": 0.6,
+     "treasury": 21990.996640137862,
+     "foodReserve": 67513.03332474125,
+     "stability": 0.6328435391705906,
+     "legitimacy": 0.7400000000000001,
      "settlements": 5,
      "soldiers": 632
     },
@@ -3089,22 +2749,22 @@
      "month": 15,
      "calendar": "-299/3",
      "reserveDays": {
-      "rajapura": 90.61862004451315,
-      "dhanyagram": 150.80323341177075,
-      "kusumpur": 109.06735522652669,
+      "rajapura": 90.37037239027609,
+      "dhanyagram": 146.54018323841228,
+      "kusumpur": 109.01173998492617,
       "ratnapura": 59.952,
       "setupur": 59.952
      },
      "unrest": {
       "rajapura": 0,
-      "dhanyagram": 0,
+      "dhanyagram": 0.12302769891865868,
       "kusumpur": 0,
       "ratnapura": 0,
       "setupur": 0
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 1144.1225480933758,
+      "taxIncome": 1173.9821196707378,
       "tradeIncome": 312.2850904289776,
       "tribute": 0,
       "armyUpkeep": 196.5,
@@ -3113,14 +2773,14 @@
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 1149.9076385223534,
+      "net": 1179.7672100997154,
       "foodProduced": 131984.95255233473,
       "foodConsumed": 117204.45159646106
      },
-     "treasury": 23276.718645836052,
-     "foodReserve": 62924.7364334614,
-     "stability": 0.6019200146032367,
-     "legitimacy": 0.6,
+     "treasury": 23410.763850237578,
+     "foodReserve": 67513.03332474125,
+     "stability": 0.6333648814577756,
+     "legitimacy": 0.7500000000000001,
      "settlements": 5,
      "soldiers": 632
     },
@@ -3128,11 +2788,11 @@
      "month": 16,
      "calendar": "-299/4",
      "reserveDays": {
-      "rajapura": 65.22495532525684,
-      "dhanyagram": 57.49361470986773,
-      "kusumpur": 77.29315999912698,
-      "ratnapura": 53.93529618029953,
-      "setupur": 54.271613543453356
+      "rajapura": 65.13644883036864,
+      "dhanyagram": 89.55081425759234,
+      "kusumpur": 77.09980719554436,
+      "ratnapura": 55.091743859910146,
+      "setupur": 55.365805454236764
      },
      "unrest": {
       "rajapura": 0,
@@ -3143,7 +2803,7 @@
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 1149.4614296417278,
+      "taxIncome": 1184.1790928700952,
       "tradeIncome": 312.37169889901537,
       "tribute": 0,
       "armyUpkeep": 196.5,
@@ -3152,14 +2812,14 @@
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 1155.3331285407432,
+      "net": 1190.0507917691107,
       "foodProduced": 132091.43712568408,
       "foodConsumed": 117298.97596814753
      },
-     "treasury": 24672.051774376796,
-     "foodReserve": 65924.7364334614,
-     "stability": 0.6010279712238541,
-     "legitimacy": 0.6,
+     "treasury": 24840.814642006688,
+     "foodReserve": 67513.03332474125,
+     "stability": 0.6344702721234868,
+     "legitimacy": 0.7600000000000001,
      "settlements": 5,
      "soldiers": 632
     },
@@ -3167,22 +2827,22 @@
      "month": 17,
      "calendar": "-299/5",
      "reserveDays": {
-      "rajapura": 43.899921152114736,
-      "dhanyagram": 42.94702388258448,
-      "kusumpur": 61.891521373479065,
-      "ratnapura": 31.10005341640039,
-      "setupur": 32.958472995832004
+      "rajapura": 43.869705164915075,
+      "dhanyagram": 69.06634743117459,
+      "kusumpur": 61.733334944282745,
+      "ratnapura": 33.546805102338645,
+      "setupur": 35.26442520509804
      },
      "unrest": {
       "rajapura": 0,
-      "dhanyagram": 0.15,
+      "dhanyagram": 0,
       "kusumpur": 0,
       "ratnapura": 0,
       "setupur": 0
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 1048.234723161303,
+      "taxIncome": 1094.8582850118125,
       "tradeIncome": 312.45782467471054,
       "tribute": 0,
       "armyUpkeep": 196.5,
@@ -3191,14 +2851,14 @@
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 1054.1925478360135,
+      "net": 1100.816109686523,
       "foodProduced": 92844.92447434373,
       "foodConsumed": 117393.007623403
      },
-     "treasury": 25966.24432221281,
-     "foodReserve": 65924.7364334614,
-     "stability": 0.5996914110768768,
-     "legitimacy": 0.6,
+     "treasury": 26181.63075169321,
+     "foodReserve": 67513.03332474125,
+     "stability": 0.6358268059416616,
+     "legitimacy": 0.7700000000000001,
      "settlements": 5,
      "soldiers": 632
     },
@@ -3207,21 +2867,21 @@
      "calendar": "-299/6",
      "reserveDays": {
       "rajapura": 29.985599999999994,
-      "dhanyagram": 29.985599999999998,
-      "kusumpur": 47.16504426134152,
+      "dhanyagram": 54.589466755334776,
+      "kusumpur": 47.00923565993132,
       "ratnapura": 29.975999999999996,
       "setupur": 29.975999999999996
      },
      "unrest": {
       "rajapura": 0,
-      "dhanyagram": 0.12814639627673105,
+      "dhanyagram": 0,
       "kusumpur": 0,
-      "ratnapura": 0.02674160471303734,
-      "setupur": 0.0314192251551622
+      "ratnapura": 0.02254861038678166,
+      "setupur": 0.026323020094572488
      },
      "stage": {},
      "ledger": {
-      "taxIncome": 897.5493441651627,
+      "taxIncome": 955.4033041212085,
       "tradeIncome": 312.5432964745755,
       "tribute": 0,
       "armyUpkeep": 196.5,
@@ -3230,21 +2890,21 @@
       "construction": 0,
       "recruitment": 0,
       "other": 240,
-      "net": 903.5926406397382,
+      "net": 961.446600595784,
       "foodProduced": 104174.97476909432,
       "foodConsumed": 117486.30596751411
      },
-     "treasury": 27109.836962852547,
-     "foodReserve": 29166.712560885782,
-     "stability": 0.5980716400111352,
-     "legitimacy": 0.6,
+     "treasury": 27383.077352288994,
+     "foodReserve": 33292.830956172416,
+     "stability": 0.6370585786334719,
+     "legitimacy": 0.7800000000000001,
      "settlements": 5,
      "soldiers": 632
     }
    ],
    "battles": [
     {
-     "day": 184,
+     "day": 183,
      "chronicle": "The Battle of the White Flats: The rebels of Lavanapura defeated Marudesha; 31 fell.",
      "winner": "rebels",
      "killed": 31
@@ -3256,75 +2916,57 @@
      "killed": 24
     },
     {
-     "day": 196,
-     "chronicle": "The Battle of the Dakshina Scarp: The rebels of Giridurg defeated Giridurga; 34 fell.",
+     "day": 198,
+     "chronicle": "The Battle of the Dakshina Scarp: The rebels of Giridurg defeated Giridurga; 35 fell.",
      "winner": "rebels",
-     "killed": 34
+     "killed": 35
     }
    ],
    "events": [
     {
-     "day": 168,
-     "id": "evt_monsoon_flood",
-     "title": "The River Rises",
-     "choice": "Endure it"
-    },
-    {
-     "day": 207,
-     "id": "evt_grain_requisition",
-     "title": "Grain for the Host",
-     "choice": "Requisition the grain"
-    },
-    {
-     "day": 232,
-     "id": "evt_prices_rise",
-     "title": "The Price of Bread",
-     "choice": "Markets will settle on their own"
-    },
-    {
-     "day": 245,
-     "id": "evt_elephant_fair",
-     "title": "The Elephant Fair at Gajavana",
-     "choice": "Not this year"
-    },
-    {
-     "day": 272,
-     "id": "evt_governor_demands",
-     "title": "The Governor's Ultimatum",
-     "choice": "Negotiate lower taxes"
-    },
-    {
-     "day": 282,
-     "id": "evt_pilgrims",
-     "title": "Pilgrims on the Road",
-     "choice": "Welcome them"
-    },
-    {
-     "day": 344,
-     "id": "evt_salt_caravan",
-     "title": "The Salt Caravan",
-     "choice": "Buy salt for the granaries"
-    },
-    {
-     "day": 458,
+     "day": 116,
      "id": "evt_bazaar_fire",
      "title": "Fire in the Bazaar",
      "choice": "Let the merchants rebuild"
     },
     {
-     "day": 474,
+     "day": 133,
+     "id": "evt_monsoon_flood",
+     "title": "The River Rises",
+     "choice": "Endure it"
+    },
+    {
+     "day": 164,
+     "id": "evt_failed_monsoon",
+     "title": "The Rains Fail",
+     "choice": "Pray for rain"
+    },
+    {
+     "day": 298,
+     "id": "evt_elephant_fair",
+     "title": "The Elephant Fair at Gajavana",
+     "choice": "Not this year"
+    },
+    {
+     "day": 330,
+     "id": "evt_salt_caravan",
+     "title": "The Salt Caravan",
+     "choice": "Buy salt for the granaries"
+    },
+    {
+     "day": 381,
      "id": "evt_grain_requisition",
      "title": "Grain for the Host",
      "choice": "Requisition the grain"
     },
     {
-     "day": 499,
+     "day": 406,
      "id": "evt_prices_rise",
      "title": "The Price of Bread",
      "choice": "Markets will settle on their own"
     },
     {
-     "day": 539,
+     "day": 446,
      "id": "evt_governor_demands",
      "title": "The Governor's Ultimatum",
      "choice": "Negotiate lower taxes"
@@ -3337,9 +2979,14 @@
      "text": "M = 0.95 (normal)"
     },
     {
-     "day": 184,
+     "day": 183,
      "kind": "revolt",
      "text": "Lavanapura: 129 rebels"
+    },
+    {
+     "day": 189,
+     "kind": "revolt",
+     "text": "Lavanapura: 128 rebels"
     },
     {
      "day": 189,
@@ -3352,37 +2999,37 @@
      "text": "Ushtragram: frontier -> rebels"
     },
     {
-     "day": 193,
+     "day": 197,
      "kind": "revolt",
-     "text": "Dvaradurga: 71 rebels"
-    },
-    {
-     "day": 196,
-     "kind": "revolt",
-     "text": "Giridurg: 178 rebels"
-    },
-    {
-     "day": 196,
-     "kind": "revolt",
-     "text": "Shilapur: 166 rebels"
+     "text": "Dvaradurga: 69 rebels"
     },
     {
      "day": 198,
      "kind": "revolt",
-     "text": "Pashanagram: 48 rebels"
+     "text": "Giridurg: 178 rebels"
     },
     {
-     "day": 202,
+     "day": 198,
      "kind": "revolt",
-     "text": "Gajavana: 42 rebels"
+     "text": "Shilapur: 166 rebels"
+    },
+    {
+     "day": 200,
+     "kind": "revolt",
+     "text": "Pashanagram: 48 rebels"
     },
     {
      "day": 203,
      "kind": "revolt",
+     "text": "Gajavana: 42 rebels"
+    },
+    {
+     "day": 206,
+     "kind": "revolt",
      "text": "Kandaravasa: 54 rebels"
     },
     {
-     "day": 214,
+     "day": 219,
      "kind": "secession",
      "text": "Lavanapura left frontier"
     },
@@ -3392,32 +3039,32 @@
      "text": "Ushtragram left rebels"
     },
     {
-     "day": 223,
+     "day": 227,
      "kind": "secession",
      "text": "Dvaradurga left highland"
     },
     {
-     "day": 226,
+     "day": 228,
      "kind": "secession",
      "text": "Giridurg left highland"
     },
     {
-     "day": 226,
+     "day": 228,
      "kind": "secession",
      "text": "Shilapur left highland"
     },
     {
-     "day": 228,
+     "day": 230,
      "kind": "secession",
      "text": "Pashanagram left highland"
     },
     {
-     "day": 232,
+     "day": 233,
      "kind": "secession",
      "text": "Gajavana left forest"
     },
     {
-     "day": 233,
+     "day": 236,
      "kind": "secession",
      "text": "Kandaravasa left highland"
     },
@@ -3428,13 +3075,2623 @@
     }
    ],
    "statistics": {
-    "grain_harvested": 2257046.7229641736,
-    "wealth_earned": 29726.836962852547,
+    "grain_harvested": 2256995.1003416707,
+    "wealth_earned": 30200.07735228899,
     "trade_income": 5608.863168003283,
-    "grain_spoiled": 146974.69010028968,
-    "events_resolved": 11
+    "grain_spoiled": 141436.51110270698,
+    "events_resolved": 8
    },
-   "seconds": 0.857
+   "player": "heartland",
+   "startOwned": [
+    "rajapura",
+    "dhanyagram",
+    "kusumpur",
+    "ratnapura",
+    "setupur"
+   ],
+   "starving": {
+    "lavanapura": 171,
+    "ushtragram": 136,
+    "tirthaghat": 89,
+    "giridurg": 255,
+    "dvaradurga": 266,
+    "shilapur": 247,
+    "pashanagram": 213,
+    "gajavana": 181,
+    "kandaravasa": 179,
+    "naukapattana": 56,
+    "nilavanapura": 23
+   },
+   "court": 4,
+   "seconds": 1.312
+  },
+  {
+   "label": "The Broken Crown - requested data (storage.baseDays 120)",
+   "pendingData": true,
+   "seed": 1,
+   "outcome": {
+    "status": "ended",
+    "outcomeId": "out_restored",
+    "day": 540
+   },
+   "score": 1560,
+   "final": {
+    "heartland": {
+     "alive": true,
+     "treasury": 17347,
+     "settlements": [
+      "rajapura",
+      "dhanyagram",
+      "kusumpur"
+     ]
+    },
+    "highland": {
+     "alive": false,
+     "treasury": 6213,
+     "settlements": []
+    },
+    "forest": {
+     "alive": false,
+     "treasury": 5479,
+     "settlements": []
+    },
+    "frontier": {
+     "alive": false,
+     "treasury": 2234,
+     "settlements": []
+    }
+   },
+   "months": [
+    {
+     "month": 1,
+     "calendar": "-300/7",
+     "reserveDays": {
+      "rajapura": 29.223937164804347,
+      "dhanyagram": 38.46370557691104,
+      "kusumpur": 37.99835810016396,
+      "ratnapura": 28.7504063539981,
+      "setupur": 14.821591602791662
+     },
+     "unrest": {
+      "rajapura": 0.05,
+      "dhanyagram": 0.05,
+      "kusumpur": 0.05,
+      "ratnapura": 0.3063584734865724,
+      "setupur": 0.05
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 965.9352225695932,
+      "tradeIncome": 327.0229485018585,
+      "tribute": 0,
+      "armyUpkeep": 601.7125,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 581.2456710714517,
+      "foodProduced": 112148.36384194726,
+      "foodConsumed": 115889.75803410327
+     },
+     "treasury": 4321.245671071451,
+     "foodReserve": 0,
+     "stability": 0.579288696451633,
+     "legitimacy": 0.7999999999999999,
+     "settlements": 5,
+     "soldiers": 1498
+    },
+    {
+     "month": 2,
+     "calendar": "-300/8",
+     "reserveDays": {
+      "rajapura": 22.55273942047306,
+      "dhanyagram": 35.41008184379646,
+      "kusumpur": 34.72706888902801,
+      "ratnapura": 20.227769459605224,
+      "setupur": 0
+     },
+     "unrest": {
+      "rajapura": 0.009369615852221276,
+      "dhanyagram": 0,
+      "kusumpur": 0.00004787945185212713,
+      "ratnapura": 0.3063584734865724,
+      "setupur": 0.05
+     },
+     "stage": {
+      "ratnapura": "protest"
+     },
+     "ledger": {
+      "taxIncome": 1088.2012929997993,
+      "tradeIncome": 331.08266994311043,
+      "tribute": 0,
+      "armyUpkeep": 570.7000000000002,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 738.5839629429096,
+      "foodProduced": 111402.66211109073,
+      "foodConsumed": 115982.92377746946
+     },
+     "treasury": 5299.829634014361,
+     "foodReserve": 22110.599854137912,
+     "stability": 0.6320466565964892,
+     "legitimacy": 0.7999999999999999,
+     "settlements": 5,
+     "soldiers": 1417
+    },
+    {
+     "month": 3,
+     "calendar": "-300/9",
+     "reserveDays": {
+      "rajapura": 72.32935274297473,
+      "dhanyagram": 145.98314092794575,
+      "kusumpur": 142.2629579630222,
+      "ratnapura": 72.75760222825761,
+      "setupur": 7.094285124918337
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "ratnapura": 0.22449402086765524,
+      "setupur": 0.00826374011444982
+     },
+     "stage": {
+      "ratnapura": "grumbling"
+     },
+     "ledger": {
+      "taxIncome": 977.0576473917013,
+      "tradeIncome": 160.36963148450042,
+      "tribute": 0,
+      "armyUpkeep": 492.06249999999994,
+      "buildingUpkeep": 72,
+      "administration": 20.8,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 132,
+      "net": 552.5647788762017,
+      "foodProduced": 95318.52513850381,
+      "foodConsumed": 94427.38106178332
+     },
+     "treasury": 5984.394412890562,
+     "foodReserve": 20383.242833637483,
+     "stability": 0.6274589103143395,
+     "legitimacy": 0.72,
+     "settlements": 4,
+     "soldiers": 1250
+    },
+    {
+     "month": 4,
+     "calendar": "-300/10",
+     "reserveDays": {
+      "rajapura": 57.69103105526305,
+      "dhanyagram": 107.66762858258582,
+      "kusumpur": 105.34288639275807,
+      "setupur": 0
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "setupur": 0.5001769822027574
+     },
+     "stage": {
+      "setupur": "tax_refusal"
+     },
+     "ledger": {
+      "taxIncome": 944.6584639508915,
+      "tradeIncome": 159.63145376637934,
+      "tribute": 0,
+      "armyUpkeep": 492.06249999999994,
+      "buildingUpkeep": 72,
+      "administration": 20.8,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 120,
+      "net": 519.4274177172708,
+      "foodProduced": 94735.50213995272,
+      "foodConsumed": 94354.30960217273
+     },
+     "treasury": 6623.821830607833,
+     "foodReserve": 18266.286311898362,
+     "stability": 0.6202395699480402,
+     "legitimacy": 0.72,
+     "settlements": 4,
+     "soldiers": 1250
+    },
+    {
+     "month": 5,
+     "calendar": "-300/11",
+     "reserveDays": {
+      "rajapura": 43.44692778721893,
+      "dhanyagram": 77.36719022622412,
+      "kusumpur": 76.66043185759928,
+      "setupur": 0
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "setupur": 1
+     },
+     "stage": {
+      "setupur": "secession"
+     },
+     "ledger": {
+      "taxIncome": 881.1497196728592,
+      "tradeIncome": 157.98493025309378,
+      "tribute": 0,
+      "armyUpkeep": 484.51249999999993,
+      "buildingUpkeep": 72,
+      "administration": 20.8,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 120,
+      "net": 461.82214992595306,
+      "foodProduced": 91894.3281703205,
+      "foodConsumed": 94004.95005383955
+     },
+     "treasury": 7205.643980533787,
+     "foodReserve": 17158.359474941848,
+     "stability": 0.6120166662299562,
+     "legitimacy": 0.69,
+     "settlements": 4,
+     "soldiers": 1230
+    },
+    {
+     "month": 6,
+     "calendar": "-300/12",
+     "reserveDays": {
+      "rajapura": 29.96629677409801,
+      "dhanyagram": 67.94228488099357,
+      "kusumpur": 66.99072894967975,
+      "setupur": 0
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "setupur": 1
+     },
+     "stage": {
+      "setupur": "secession"
+     },
+     "ledger": {
+      "taxIncome": 780.7141654172711,
+      "tradeIncome": 158.08449582319693,
+      "tribute": 0,
+      "armyUpkeep": 390.49999999999994,
+      "buildingUpkeep": 63,
+      "administration": 15.600000000000001,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 120,
+      "net": 469.69866124046814,
+      "foodProduced": 91462.88622744326,
+      "foodConsumed": 88102.26758549608
+     },
+     "treasury": 7795.342641774255,
+     "foodReserve": 6024.162942074314,
+     "stability": 0.6289262358948315,
+     "legitimacy": 0.69,
+     "settlements": 3,
+     "soldiers": 1013
+    },
+    {
+     "month": 7,
+     "calendar": "-299/1",
+     "reserveDays": {
+      "rajapura": 16.54196609331854,
+      "dhanyagram": 58.996496863366524,
+      "kusumpur": 57.62716653390208
+     },
+     "unrest": {
+      "rajapura": 0.026867681785562696,
+      "dhanyagram": 0,
+      "kusumpur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 702.4647657378306,
+      "tradeIncome": 137.35407018475746,
+      "tribute": 0,
+      "armyUpkeep": 358.73750000000007,
+      "buildingUpkeep": 63,
+      "administration": 15.600000000000001,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 120,
+      "net": 402.48133592258796,
+      "foodProduced": 91538.18559558596,
+      "foodConsumed": 88175.33012102885
+     },
+     "treasury": 8317.823977696842,
+     "foodReserve": 0,
+     "stability": 0.6382441529923379,
+     "legitimacy": 0.6699999999999999,
+     "settlements": 3,
+     "soldiers": 928
+    },
+    {
+     "month": 8,
+     "calendar": "-299/2",
+     "reserveDays": {
+      "rajapura": 9.336855976798805,
+      "dhanyagram": 54.86799681819016,
+      "kusumpur": 53.30585069585793
+     },
+     "unrest": {
+      "rajapura": 0.07853874639339098,
+      "dhanyagram": 0,
+      "kusumpur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 853.2809065559867,
+      "tradeIncome": 158.20467103029077,
+      "tribute": 0,
+      "armyUpkeep": 297.93750000000006,
+      "buildingUpkeep": 63,
+      "administration": 15.600000000000001,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 120,
+      "net": 634.9480775862775,
+      "foodProduced": 91613.56654716135,
+      "foodConsumed": 88248.47699971791
+     },
+     "treasury": 9072.77205528312,
+     "foodReserve": 22749.58197155936,
+     "stability": 0.6463596692290886,
+     "legitimacy": 0.6699999999999999,
+     "settlements": 3,
+     "soldiers": 787
+    },
+    {
+     "month": 9,
+     "calendar": "-299/3",
+     "reserveDays": {
+      "rajapura": 62.08599318188361,
+      "dhanyagram": 160.13071963774198,
+      "kusumpur": 140.68353875236562
+     },
+     "unrest": {
+      "rajapura": 0.07727406375558712,
+      "dhanyagram": 0.05,
+      "kusumpur": 0.05
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 915.7210635755077,
+      "tradeIncome": 158.26485372129818,
+      "tribute": 0,
+      "armyUpkeep": 297.93750000000006,
+      "buildingUpkeep": 63,
+      "administration": 15.600000000000001,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 120,
+      "net": 697.4484172968058,
+      "foodProduced": 89617.03971810886,
+      "foodConsumed": 88321.69757295324
+     },
+     "treasury": 9890.220472579926,
+     "foodReserve": 22749.58197155936,
+     "stability": 0.6381669550681623,
+     "legitimacy": 0.6499999999999999,
+     "settlements": 3,
+     "soldiers": 787
+    },
+    {
+     "month": 10,
+     "calendar": "-299/4",
+     "reserveDays": {
+      "rajapura": 50.96015983308396,
+      "dhanyagram": 91.07913390349486,
+      "kusumpur": 85.96272249857346
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0.00003945239533598372,
+      "kusumpur": 0.00003945419258748282
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 896.1266233203434,
+      "tradeIncome": 158.325092194277,
+      "tribute": 0,
+      "armyUpkeep": 297.93750000000006,
+      "buildingUpkeep": 63,
+      "administration": 15.600000000000001,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 120,
+      "net": 677.9142155146204,
+      "foodProduced": 91764.5421958421,
+      "foodConsumed": 88394.98605006935
+     },
+     "treasury": 10388.134688094546,
+     "foodReserve": 22749.58197155936,
+     "stability": 0.6308871591245504,
+     "legitimacy": 0.6499999999999999,
+     "settlements": 3,
+     "soldiers": 787
+    },
+    {
+     "month": 11,
+     "calendar": "-299/5",
+     "reserveDays": {
+      "rajapura": 31.642093895739826,
+      "dhanyagram": 71.00896285996743,
+      "kusumpur": 68.73555519923184
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 803.0430596523538,
+      "tradeIncome": 158.38538389250712,
+      "tribute": 0,
+      "armyUpkeep": 297.93750000000006,
+      "buildingUpkeep": 63,
+      "administration": 15.600000000000001,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 120,
+      "net": 584.8909435448608,
+      "foodProduced": 112648.492132191,
+      "foodConsumed": 88468.33929264535
+     },
+     "treasury": 11093.025631639406,
+     "foodReserve": 22749.58197155936,
+     "stability": 0.6242448286450031,
+     "legitimacy": 0.6499999999999999,
+     "settlements": 3,
+     "soldiers": 787
+    },
+    {
+     "month": 12,
+     "calendar": "-299/6",
+     "reserveDays": {
+      "rajapura": 21.81107580813853,
+      "dhanyagram": 58.24556062075529,
+      "kusumpur": 55.648918551371075
+     },
+     "unrest": {
+      "rajapura": 0.05677729462170214,
+      "dhanyagram": 0.05,
+      "kusumpur": 0.05
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 726.0513709225793,
+      "tradeIncome": 158.4457274390931,
+      "tribute": 0,
+      "armyUpkeep": 296.57500000000005,
+      "buildingUpkeep": 63,
+      "administration": 15.600000000000001,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 120,
+      "net": 509.3220983616724,
+      "foodProduced": 112741.31447027288,
+      "foodConsumed": 88541.75561029183
+     },
+     "treasury": 11722.347730001078,
+     "foodReserve": 0,
+     "stability": 0.635993776790658,
+     "legitimacy": 0.6499999999999999,
+     "settlements": 3,
+     "soldiers": 781
+    },
+    {
+     "month": 13,
+     "calendar": "-299/7",
+     "reserveDays": {
+      "rajapura": 7.685169014470693,
+      "dhanyagram": 51.43151129651358,
+      "kusumpur": 48.4025097006054
+     },
+     "unrest": {
+      "rajapura": 0.14330127363600914,
+      "dhanyagram": 0.026058520701777946,
+      "kusumpur": 0.026058520824179372
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 624.1058586045717,
+      "tradeIncome": 158.50612210128932,
+      "tribute": 0,
+      "armyUpkeep": 239.57500000000002,
+      "buildingUpkeep": 63,
+      "administration": 15.600000000000001,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 120,
+      "net": 464.43698070586095,
+      "foodProduced": 112834.214629909,
+      "foodConsumed": 88615.23410320254
+     },
+     "treasury": 12306.78471070694,
+     "foodReserve": 0,
+     "stability": 0.6281270752319041,
+     "legitimacy": 0.6499999999999999,
+     "settlements": 3,
+     "soldiers": 598
+    },
+    {
+     "month": 14,
+     "calendar": "-299/8",
+     "reserveDays": {
+      "rajapura": 1.1664337271348386,
+      "dhanyagram": 48.28680517853665,
+      "kusumpur": 45.05825861077298
+     },
+     "unrest": {
+      "rajapura": 0.23162301715666675,
+      "dhanyagram": 0,
+      "kusumpur": 0
+     },
+     "stage": {
+      "rajapura": "grumbling"
+     },
+     "ledger": {
+      "taxIncome": 777.2201466150154,
+      "tradeIncome": 158.5665674980448,
+      "tribute": 0,
+      "armyUpkeep": 135.02499999999998,
+      "buildingUpkeep": 63,
+      "administration": 15.600000000000001,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 120,
+      "net": 722.1617141130603,
+      "foodProduced": 112927.19214478634,
+      "foodConsumed": 88688.774303216
+     },
+     "treasury": 13148.94642482,
+     "foodReserve": 34371.81352143813,
+     "stability": 0.622246477733188,
+     "legitimacy": 0.7,
+     "settlements": 3,
+     "soldiers": 392
+    },
+    {
+     "month": 15,
+     "calendar": "-299/9",
+     "reserveDays": {
+      "rajapura": 116.98388458816193,
+      "dhanyagram": 192.20372404050192,
+      "kusumpur": 147.6140306619109
+     },
+     "unrest": {
+      "rajapura": 0.2057359631758343,
+      "dhanyagram": 0,
+      "kusumpur": 0
+     },
+     "stage": {
+      "rajapura": "grumbling"
+     },
+     "ledger": {
+      "taxIncome": 905.8277618320076,
+      "tradeIncome": 158.62706344033427,
+      "tribute": 0,
+      "armyUpkeep": 135.02499999999998,
+      "buildingUpkeep": 63,
+      "administration": 15.600000000000001,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 120,
+      "net": 850.8298252723418,
+      "foodProduced": 113020.24678916499,
+      "foodConsumed": 88762.37597784978
+     },
+     "treasury": 14319.776250092342,
+     "foodReserve": 34371.81352143813,
+     "stability": 0.6176032781323584,
+     "legitimacy": 0.7,
+     "settlements": 3,
+     "soldiers": 392
+    },
+    {
+     "month": 16,
+     "calendar": "-299/10",
+     "reserveDays": {
+      "rajapura": 98.03224653333275,
+      "dhanyagram": 179.46909913878852,
+      "kusumpur": 135.1565592459452
+     },
+     "unrest": {
+      "rajapura": 0.09615241854961992,
+      "dhanyagram": 0,
+      "kusumpur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 930.59675244978,
+      "tradeIncome": 158.68760984398688,
+      "tribute": 0,
+      "armyUpkeep": 135.02499999999998,
+      "buildingUpkeep": 63,
+      "administration": 15.600000000000001,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 120,
+      "net": 875.6593622937669,
+      "foodProduced": 113113.37846867375,
+      "foodConsumed": 88836.03902331175
+     },
+     "treasury": 15315.435612386109,
+     "foodReserve": 34371.81352143813,
+     "stability": 0.6137512495360367,
+     "legitimacy": 0.7,
+     "settlements": 3,
+     "soldiers": 392
+    },
+    {
+     "month": 17,
+     "calendar": "-299/11",
+     "reserveDays": {
+      "rajapura": 80.65418924604909,
+      "dhanyagram": 168.84519458075036,
+      "kusumpur": 124.76761013537384
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 946.2017539336341,
+      "tradeIncome": 158.7482066820934,
+      "tribute": 0,
+      "armyUpkeep": 135.02499999999998,
+      "buildingUpkeep": 63,
+      "administration": 15.600000000000001,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 120,
+      "net": 891.3249606157276,
+      "foodProduced": 113206.58716068874,
+      "foodConsumed": 88909.76340608874
+     },
+     "treasury": 16326.760573001837,
+     "foodReserve": 34371.81352143813,
+     "stability": 0.6104900472779932,
+     "legitimacy": 0.7,
+     "settlements": 3,
+     "soldiers": 392
+    },
+    {
+     "month": 18,
+     "calendar": "-299/12",
+     "reserveDays": {
+      "rajapura": 63.53976567770545,
+      "dhanyagram": 158.3811504869988,
+      "kusumpur": 114.53494590691356
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 954.9922114008479,
+      "tradeIncome": 158.80885395902297,
+      "tribute": 0,
+      "armyUpkeep": 135.02499999999998,
+      "buildingUpkeep": 63,
+      "administration": 15.600000000000001,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 120,
+      "net": 900.1760653598708,
+      "foodProduced": 113299.87288178156,
+      "foodConsumed": 88983.5491310561
+     },
+     "treasury": 17346.93663836171,
+     "foodReserve": 34371.81352143813,
+     "stability": 0.6076616944574267,
+     "legitimacy": 0.7,
+     "settlements": 3,
+     "soldiers": 392
+    }
+   ],
+   "battles": [
+    {
+     "day": 9,
+     "chronicle": "The Battle of the Setu Bridge: Giridurga defeated Suvarna; 189 fell.",
+     "winner": "highland",
+     "killed": 189
+    },
+    {
+     "day": 69,
+     "chronicle": "The Battle of the Setu Bridge: Giridurga defeated Suvarna; 226 fell.",
+     "winner": "highland",
+     "killed": 226
+    },
+    {
+     "day": 172,
+     "chronicle": "The Battle of Sangam of the Two Rivers: Suvarna defeated Giridurga; 21 fell.",
+     "winner": "heartland",
+     "killed": 21
+    },
+    {
+     "day": 173,
+     "chronicle": "The Battle of Sangam of the Two Rivers: Suvarna defeated Nilavana; 159 fell.",
+     "winner": "heartland",
+     "killed": 159
+    },
+    {
+     "day": 208,
+     "chronicle": "The Battle of the White Flats: The rebels of Lavanapura defeated Marudesha; 4 fell.",
+     "winner": "rebels",
+     "killed": 4
+    },
+    {
+     "day": 221,
+     "chronicle": "The Battle of the Dvara Pass: The rebels of Dvaradurga defeated Giridurga; 12 fell.",
+     "winner": "rebels",
+     "killed": 12
+    },
+    {
+     "day": 341,
+     "chronicle": "The Battle of Pashanagram: The rebels of Pashanagram defeated Giridurga; 1 fell.",
+     "winner": "rebels",
+     "killed": 1
+    },
+    {
+     "day": 346,
+     "chronicle": "The Battle of Ushtragram: The rebels of Ushtragram defeated Marudesha; 0 fell.",
+     "winner": "rebels",
+     "killed": 0
+    },
+    {
+     "day": 374,
+     "chronicle": "The Battle of Gajavana: The rebels of Gajavana defeated Nilavana; 0 fell.",
+     "winner": "rebels",
+     "killed": 0
+    },
+    {
+     "day": 386,
+     "chronicle": "The Battle of Kandaravasa: The rebels of Kandaravasa defeated Giridurga; 0 fell.",
+     "winner": "rebels",
+     "killed": 0
+    }
+   ],
+   "events": [
+    {
+     "day": 1,
+     "id": "evt_bc_prologue",
+     "title": "The Broken Crown",
+     "choice": "Take up the regency"
+    },
+    {
+     "day": 3,
+     "id": "evt_court_succession",
+     "title": "Whispers in the Hall of Pillars",
+     "choice": "Proclaim Kumara Aditya heir before the court"
+    },
+    {
+     "day": 14,
+     "id": "evt_bc_council_of_war",
+     "title": "The Council of War",
+     "choice": "Grain first: fill the granaries before the hot season"
+    },
+    {
+     "day": 23,
+     "id": "evt_bc_claimant_plot",
+     "title": "The Prince's Letters",
+     "choice": "Watch and wait"
+    },
+    {
+     "day": 31,
+     "id": "evt_protest",
+     "title": "Protest in Ratnapura",
+     "choice": "Hear their grievances"
+    },
+    {
+     "day": 32,
+     "id": "evt_bc_envoys_hills",
+     "title": "Envoys from the Seven Peaks",
+     "choice": "Send them home: the bridge is ours"
+    },
+    {
+     "day": 46,
+     "id": "evt_bc_thin_harvest",
+     "title": "A Thin Harvest",
+     "choice": "Trust the winter crop"
+    },
+    {
+     "day": 52,
+     "id": "evt_bc_hill_raid",
+     "title": "Raiders at the Setu Bridge",
+     "choice": "Repair what we can"
+    },
+    {
+     "day": 61,
+     "id": "evt_governor_demands",
+     "title": "The Governor's Ultimatum",
+     "choice": "Negotiate lower taxes"
+    },
+    {
+     "day": 63,
+     "id": "evt_bc_gates_of_ratnapura",
+     "title": "The Gates of Ratnapura",
+     "choice": "Let him go - and march"
+    },
+    {
+     "day": 109,
+     "id": "evt_protest",
+     "title": "Protest in Setupur",
+     "choice": "Hear their grievances"
+    },
+    {
+     "day": 116,
+     "id": "evt_tax_refusal",
+     "title": "Tax Refusal in Setupur",
+     "choice": "Negotiate a lower rate"
+    },
+    {
+     "day": 120,
+     "id": "evt_bc_act2",
+     "title": "The Grain and the Sword",
+     "choice": "Count the granaries"
+    },
+    {
+     "day": 123,
+     "id": "evt_riots",
+     "title": "Riots in Setupur",
+     "choice": "Let it burn out"
+    },
+    {
+     "day": 129,
+     "id": "evt_revolt",
+     "title": "Revolt in Setupur",
+     "choice": "Negotiate with the rebel leaders"
+    },
+    {
+     "day": 138,
+     "id": "evt_bc_siege_grain",
+     "title": "Grain for the Host",
+     "choice": "The host will live off the land"
+    },
+    {
+     "day": 155,
+     "id": "evt_protest",
+     "title": "Protest in Setupur",
+     "choice": "Hear their grievances"
+    },
+    {
+     "day": 180,
+     "id": "evt_bc_temple_town",
+     "title": "The Temple Town Seeks a Protector",
+     "choice": "Leave the sacred town free"
+    },
+    {
+     "day": 190,
+     "id": "evt_bc_hill_raid",
+     "title": "Raiders at the Setu Bridge",
+     "choice": "Repair what we can"
+    },
+    {
+     "day": 208,
+     "id": "evt_bc_regent_ailing",
+     "title": "The Regent Is Unwell",
+     "choice": "Let her rest; the council keeps the seal"
+    },
+    {
+     "day": 245,
+     "id": "evt_bc_lean_months",
+     "title": "The Lean Months",
+     "choice": "Hold the royal reserve for the army"
+    },
+    {
+     "day": 261,
+     "id": "evt_bazaar_fire",
+     "title": "Fire in the Bazaar",
+     "choice": "Let the merchants rebuild"
+    },
+    {
+     "day": 286,
+     "id": "evt_bc_hill_raid",
+     "title": "Raiders at the Setu Bridge",
+     "choice": "Repair what we can"
+    },
+    {
+     "day": 296,
+     "id": "evt_salt_caravan",
+     "title": "The Salt Caravan",
+     "choice": "Buy salt for the granaries"
+    },
+    {
+     "day": 300,
+     "id": "evt_bc_monsoon_omens",
+     "title": "The Monsoon Comes",
+     "choice": "Wait for the rains"
+    },
+    {
+     "day": 330,
+     "id": "evt_bc_port_charter",
+     "title": "The Guild Charter of Naukapattana",
+     "choice": "Decline politely"
+    },
+    {
+     "day": 348,
+     "id": "evt_failed_monsoon",
+     "title": "The Rains Fail",
+     "choice": "Pray for rain"
+    },
+    {
+     "day": 412,
+     "id": "evt_bc_hill_raid",
+     "title": "Raiders at the Setu Bridge",
+     "choice": "Repair what we can"
+    },
+    {
+     "day": 436,
+     "id": "evt_pilgrims",
+     "title": "Pilgrims on the Road",
+     "choice": "Welcome them"
+    },
+    {
+     "day": 473,
+     "id": "evt_bc_hill_raid",
+     "title": "Raiders at the Setu Bridge",
+     "choice": "Repair what we can"
+    },
+    {
+     "day": 515,
+     "id": "evt_bc_year_turns",
+     "title": "The Year Turns",
+     "choice": "Let them write"
+    }
+   ],
+   "incidents": [
+    {
+     "day": 63,
+     "kind": "capture",
+     "text": "Ratnapura: heartland -> forest"
+    },
+    {
+     "day": 63,
+     "kind": "war",
+     "text": "forest declared war on heartland"
+    },
+    {
+     "day": 129,
+     "kind": "revolt",
+     "text": "Setupur: 64 rebels"
+    },
+    {
+     "day": 136,
+     "kind": "revolt",
+     "text": "Setupur: 63 rebels"
+    },
+    {
+     "day": 166,
+     "kind": "secession",
+     "text": "Setupur left heartland"
+    },
+    {
+     "day": 189,
+     "kind": "revolt",
+     "text": "Ratnapura: 213 rebels"
+    },
+    {
+     "day": 208,
+     "kind": "revolt",
+     "text": "Lavanapura: 131 rebels"
+    },
+    {
+     "day": 219,
+     "kind": "secession",
+     "text": "Ratnapura left forest"
+    },
+    {
+     "day": 221,
+     "kind": "revolt",
+     "text": "Dvaradurga: 71 rebels"
+    },
+    {
+     "day": 225,
+     "kind": "revolt",
+     "text": "Shilapur: 166 rebels"
+    },
+    {
+     "day": 226,
+     "kind": "revolt",
+     "text": "Giridurg: 178 rebels"
+    },
+    {
+     "day": 238,
+     "kind": "secession",
+     "text": "Lavanapura left frontier"
+    },
+    {
+     "day": 251,
+     "kind": "secession",
+     "text": "Dvaradurga left highland"
+    },
+    {
+     "day": 255,
+     "kind": "secession",
+     "text": "Shilapur left highland"
+    },
+    {
+     "day": 273,
+     "kind": "revolt",
+     "text": "Giridurg: 178 rebels"
+    },
+    {
+     "day": 301,
+     "kind": "monsoon",
+     "text": "M = 1.12 (normal)"
+    },
+    {
+     "day": 303,
+     "kind": "secession",
+     "text": "Giridurg left highland"
+    },
+    {
+     "day": 341,
+     "kind": "revolt",
+     "text": "Pashanagram: 51 rebels"
+    },
+    {
+     "day": 341,
+     "kind": "capture",
+     "text": "Pashanagram: highland -> rebels"
+    },
+    {
+     "day": 346,
+     "kind": "revolt",
+     "text": "Ushtragram: 40 rebels"
+    },
+    {
+     "day": 346,
+     "kind": "capture",
+     "text": "Ushtragram: frontier -> rebels"
+    },
+    {
+     "day": 359,
+     "kind": "revolt",
+     "text": "Nilavanapura: 283 rebels"
+    },
+    {
+     "day": 371,
+     "kind": "secession",
+     "text": "Pashanagram left rebels"
+    },
+    {
+     "day": 374,
+     "kind": "revolt",
+     "text": "Gajavana: 47 rebels"
+    },
+    {
+     "day": 374,
+     "kind": "capture",
+     "text": "Gajavana: forest -> rebels"
+    },
+    {
+     "day": 376,
+     "kind": "secession",
+     "text": "Ushtragram left rebels"
+    },
+    {
+     "day": 386,
+     "kind": "revolt",
+     "text": "Kandaravasa: 55 rebels"
+    },
+    {
+     "day": 386,
+     "kind": "capture",
+     "text": "Kandaravasa: highland -> rebels"
+    },
+    {
+     "day": 389,
+     "kind": "secession",
+     "text": "Nilavanapura left forest"
+    },
+    {
+     "day": 404,
+     "kind": "secession",
+     "text": "Gajavana left rebels"
+    },
+    {
+     "day": 416,
+     "kind": "secession",
+     "text": "Kandaravasa left rebels"
+    }
+   ],
+   "statistics": {
+    "grain_harvested": 1970251.7498846939,
+    "events_resolved": 31,
+    "battles_fought": 4,
+    "enemies_killed": 253,
+    "soldiers_lost": 1258,
+    "formations_routed": 19,
+    "largest_battle": 1532,
+    "wealth_earned": 21260.449138361706,
+    "trade_income": 3175.1003517591344,
+    "wars": 1,
+    "famine_days": 69,
+    "revolts": 2,
+    "settlements_lost_to_rebels": 1,
+    "battles_won": 2,
+    "grain_spoiled": 39003.79755400737
+   },
+   "player": "heartland",
+   "startOwned": [
+    "rajapura",
+    "dhanyagram",
+    "kusumpur",
+    "ratnapura",
+    "setupur"
+   ],
+   "starving": {
+    "setupur": 263,
+    "ratnapura": 149,
+    "lavanapura": 189,
+    "dvaradurga": 195,
+    "giridurg": 189,
+    "shilapur": 121,
+    "naukapattana": 84,
+    "nilavanapura": 61,
+    "pashanagram": 65,
+    "ushtragram": 63,
+    "gajavana": 46,
+    "tirthaghat": 43,
+    "kandaravasa": 16
+   },
+   "court": 9,
+   "seconds": 1.036
+  },
+  {
+   "label": "The Seven Hills - requested data (storage.baseDays 120)",
+   "pendingData": true,
+   "seed": 1,
+   "outcome": {
+    "status": "defeat",
+    "outcomeId": "out_sh_fallen",
+    "day": 232
+   },
+   "score": 304,
+   "final": {
+    "heartland": {
+     "alive": true,
+     "treasury": 13202,
+     "settlements": [
+      "rajapura",
+      "dhanyagram",
+      "kusumpur",
+      "ratnapura",
+      "setupur"
+     ]
+    },
+    "highland": {
+     "alive": true,
+     "treasury": 5197,
+     "settlements": [
+      "pashanagram",
+      "kandaravasa"
+     ]
+    },
+    "forest": {
+     "alive": true,
+     "treasury": 3038,
+     "settlements": [
+      "nilavanapura",
+      "gajavana"
+     ]
+    },
+    "frontier": {
+     "alive": true,
+     "treasury": 2245,
+     "settlements": [
+      "lavanapura",
+      "ushtragram"
+     ]
+    }
+   },
+   "months": [
+    {
+     "month": 1,
+     "calendar": "-300/7",
+     "reserveDays": {
+      "giridurg": 35.22500654285545,
+      "shilapur": 23.548831404435404,
+      "dvaradurga": 27.603858057492502,
+      "pashanagram": 37.954609263991216,
+      "kandaravasa": 40.78628669238132
+     },
+     "unrest": {
+      "giridurg": 0.05,
+      "shilapur": 0.05,
+      "dvaradurga": 0.05,
+      "pashanagram": 0.05,
+      "kandaravasa": 0.05
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 320.3261213568657,
+      "tradeIncome": 51.68975197518579,
+      "tribute": 0,
+      "armyUpkeep": 319.7,
+      "buildingUpkeep": 65.5,
+      "administration": 16,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 480,
+      "net": -29.184126667948476,
+      "foodProduced": 39287.58349780629,
+      "foodConsumed": 44403.04996813219
+     },
+     "treasury": 2965.8158733320515,
+     "foodReserve": 0,
+     "stability": 0.5728379485618103,
+     "legitimacy": 0.61,
+     "settlements": 5,
+     "soldiers": 951
+    },
+    {
+     "month": 2,
+     "calendar": "-300/8",
+     "reserveDays": {
+      "giridurg": 27.571162464144837,
+      "shilapur": 13.351202931069722,
+      "dvaradurga": 19.362917397213998,
+      "pashanagram": 31.625991348894306,
+      "kandaravasa": 35.77307432671612
+     },
+     "unrest": {
+      "giridurg": 0.0016582346780395145,
+      "shilapur": 0.030608932741291554,
+      "dvaradurga": 0.02679097850958205,
+      "pashanagram": 0.0007391435978147884,
+      "kandaravasa": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 356.06866820371766,
+      "tradeIncome": 52.33785979205835,
+      "tribute": 0,
+      "armyUpkeep": 294.34999999999997,
+      "buildingUpkeep": 65.5,
+      "administration": 16,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 480,
+      "net": 32.55652799577604,
+      "foodProduced": 37468.35021165767,
+      "foodConsumed": 44434.6662745849
+     },
+     "treasury": 3478.3724013278274,
+     "foodReserve": 6746.653073742863,
+     "stability": 0.5749792239751276,
+     "legitimacy": 0.62,
+     "settlements": 5,
+     "soldiers": 858
+    },
+    {
+     "month": 3,
+     "calendar": "-300/9",
+     "reserveDays": {
+      "giridurg": 66.53578223835919,
+      "shilapur": 41.47005475114437,
+      "dvaradurga": 46.57437473196048,
+      "pashanagram": 77.63489243690968,
+      "kandaravasa": 118.07430533268447
+     },
+     "unrest": {
+      "giridurg": 0,
+      "shilapur": 0,
+      "dvaradurga": 0.0001369128090855879,
+      "pashanagram": 0,
+      "kandaravasa": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 362.12737562320854,
+      "tradeIncome": 52.35722188838838,
+      "tribute": 0,
+      "armyUpkeep": 294.34999999999997,
+      "buildingUpkeep": 65.5,
+      "administration": 16,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 480,
+      "net": 38.63459751159695,
+      "foodProduced": 36630.11388855406,
+      "foodConsumed": 44464.79996978814
+     },
+     "treasury": 3697.0069988394243,
+     "foodReserve": 6746.653073742863,
+     "stability": 0.6223621279663123,
+     "legitimacy": 0.63,
+     "settlements": 5,
+     "soldiers": 858
+    },
+    {
+     "month": 4,
+     "calendar": "-300/10",
+     "reserveDays": {
+      "giridurg": 47.44592207770331,
+      "shilapur": 24.948041467930558,
+      "dvaradurga": 26.027797110874275,
+      "pashanagram": 60.182090426744246,
+      "kandaravasa": 102.25240873931186
+     },
+     "unrest": {
+      "giridurg": 0,
+      "shilapur": 0,
+      "dvaradurga": 0.006314860060247587,
+      "pashanagram": 0,
+      "kandaravasa": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 329.9771415256165,
+      "tradeIncome": 52.37607888527853,
+      "tribute": 0,
+      "armyUpkeep": 293.54999999999995,
+      "buildingUpkeep": 65.5,
+      "administration": 16,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 480,
+      "net": 7.303220410895051,
+      "foodProduced": 35790.08427904525,
+      "foodConsumed": 44494.13254585962
+     },
+     "treasury": 4184.310219250319,
+     "foodReserve": 0,
+     "stability": 0.6252063646819046,
+     "legitimacy": 0.64,
+     "settlements": 5,
+     "soldiers": 855
+    },
+    {
+     "month": 5,
+     "calendar": "-300/11",
+     "reserveDays": {
+      "giridurg": 21.87170503903,
+      "shilapur": 0,
+      "dvaradurga": 2.9259018564892445,
+      "pashanagram": 34.61874429123121,
+      "kandaravasa": 71.74227400175182
+     },
+     "unrest": {
+      "giridurg": 0.007790779007969522,
+      "shilapur": 0.03965675297514354,
+      "dvaradurga": 0.1206648955497619,
+      "pashanagram": 0,
+      "kandaravasa": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 267.39280556578905,
+      "tradeIncome": 52.387000291027,
+      "tribute": 0,
+      "armyUpkeep": 241.45,
+      "buildingUpkeep": 65.5,
+      "administration": 16,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 480,
+      "net": -3.1701941431839487,
+      "foodProduced": 34949.1151368917,
+      "foodConsumed": 52380.81366106314
+     },
+     "treasury": 4661.140025107135,
+     "foodReserve": 0,
+     "stability": 0.6275690995721995,
+     "legitimacy": 0.65,
+     "settlements": 5,
+     "soldiers": 664
+    },
+    {
+     "month": 6,
+     "calendar": "-300/12",
+     "reserveDays": {
+      "giridurg": 2.6543199307213654,
+      "shilapur": 0,
+      "dvaradurga": 0,
+      "pashanagram": 17.457819373667594,
+      "kandaravasa": 55.91084684716999
+     },
+     "unrest": {
+      "giridurg": 0.12672646631514317,
+      "shilapur": 0.9174954826161914,
+      "dvaradurga": 0.8616996963569467,
+      "pashanagram": 0.05237613227808111,
+      "kandaravasa": 0
+     },
+     "stage": {
+      "shilapur": "secession",
+      "dvaradurga": "secession"
+     },
+     "ledger": {
+      "taxIncome": 139.41875390488244,
+      "tradeIncome": 21.97089533280033,
+      "tribute": 0,
+      "armyUpkeep": 115.75,
+      "buildingUpkeep": 65.5,
+      "administration": 16,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 432.68305000000026,
+      "net": -35.86035076231724,
+      "foodProduced": 24742.25312162631,
+      "foodConsumed": 50939.715342943135
+     },
+     "treasury": 5057.96272434482,
+     "foodReserve": 0,
+     "stability": 0.6108183541069433,
+     "legitimacy": 0.63,
+     "settlements": 5,
+     "soldiers": 315
+    },
+    {
+     "month": 7,
+     "calendar": "-299/1",
+     "reserveDays": {
+      "giridurg": 0,
+      "shilapur": 0,
+      "dvaradurga": 0,
+      "pashanagram": 0.6568479972782619,
+      "kandaravasa": 32.62452580425103
+     },
+     "unrest": {
+      "giridurg": 1,
+      "shilapur": 1,
+      "dvaradurga": 1,
+      "pashanagram": 0.22587507533344378,
+      "kandaravasa": 0.2
+     },
+     "stage": {
+      "shilapur": "secession",
+      "dvaradurga": "secession",
+      "giridurg": "secession",
+      "pashanagram": "grumbling",
+      "kandaravasa": "grumbling"
+     },
+     "ledger": {
+      "taxIncome": 49.95907037213163,
+      "tradeIncome": 7.114716794787615,
+      "tribute": 0,
+      "armyUpkeep": 50.49999999999999,
+      "buildingUpkeep": 52.5,
+      "administration": 12.8,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 175.19415,
+      "net": -58.72621283308075,
+      "foodProduced": 13276.712336780474,
+      "foodConsumed": 34001.23345105516
+     },
+     "treasury": 5174.430661511739,
+     "foodReserve": 0,
+     "stability": 0.5863139554768082,
+     "legitimacy": 0.64,
+     "settlements": 4,
+     "soldiers": 137
+    }
+   ],
+   "battles": [
+    {
+     "day": 10,
+     "chronicle": "The Battle of the Red Quarries: Suvarna defeated Giridurga; 296 fell.",
+     "winner": "heartland",
+     "killed": 296
+    },
+    {
+     "day": 176,
+     "chronicle": "The Battle of the Dvara Pass: The rebels of Dvaradurga defeated Giridurga; 7 fell.",
+     "winner": "rebels",
+     "killed": 7
+    },
+    {
+     "day": 208,
+     "chronicle": "The Battle of the White Flats: The rebels of Lavanapura defeated Marudesha; 5 fell.",
+     "winner": "rebels",
+     "killed": 5
+    },
+    {
+     "day": 208,
+     "chronicle": "The Battle of Kandaravasa: neither Suvarna nor Giridurga could claim the field; 0 fell.",
+     "winner": null,
+     "killed": 0
+    }
+   ],
+   "events": [
+    {
+     "day": 1,
+     "id": "evt_sh_prologue",
+     "title": "The Seven Hills",
+     "choice": "Ring the assembly drum"
+    },
+    {
+     "day": 8,
+     "id": "evt_sh_hungry_plateau",
+     "title": "The Hungry Plateau",
+     "choice": "Ration the clans"
+    },
+    {
+     "day": 25,
+     "id": "evt_sh_lowland_patrols",
+     "title": "Lowland Patrols",
+     "choice": "Endure it"
+    },
+    {
+     "day": 28,
+     "id": "evt_sh_lowland_envoy",
+     "title": "A Letter from Ratnapura",
+     "choice": "Burn the letter"
+    },
+    {
+     "day": 70,
+     "id": "evt_sh_clan_assembly",
+     "title": "The Assembly of the Seven Clans",
+     "choice": "Seek consensus"
+    },
+    {
+     "day": 140,
+     "id": "evt_sh_act2",
+     "title": "The River Oath",
+     "choice": "Look to the river"
+    },
+    {
+     "day": 161,
+     "id": "evt_protest",
+     "title": "Protest in Dvaradurga",
+     "choice": "Hear their grievances"
+    },
+    {
+     "day": 164,
+     "id": "evt_sh_lowland_patrols",
+     "title": "Lowland Patrols",
+     "choice": "Endure it"
+    },
+    {
+     "day": 165,
+     "id": "evt_tax_refusal",
+     "title": "Tax Refusal in Shilapur",
+     "choice": "Negotiate a lower rate"
+    },
+    {
+     "day": 170,
+     "id": "evt_sh_salt_riders",
+     "title": "Riders of the Salt Road",
+     "choice": "Decline the alliance"
+    },
+    {
+     "day": 171,
+     "id": "evt_riots",
+     "title": "Riots in Dvaradurga",
+     "choice": "Let it burn out"
+    },
+    {
+     "day": 179,
+     "id": "evt_revolt",
+     "title": "Revolt in Dvaradurga",
+     "choice": "Negotiate with the rebel leaders"
+    },
+    {
+     "day": 206,
+     "id": "evt_protest",
+     "title": "Protest in Dvaradurga",
+     "choice": "Hear their grievances"
+    }
+   ],
+   "incidents": [
+    {
+     "day": 176,
+     "kind": "revolt",
+     "text": "Dvaradurga: 71 rebels"
+    },
+    {
+     "day": 176,
+     "kind": "revolt",
+     "text": "Shilapur: 163 rebels"
+    },
+    {
+     "day": 182,
+     "kind": "revolt",
+     "text": "Dvaradurga: 70 rebels"
+    },
+    {
+     "day": 202,
+     "kind": "revolt",
+     "text": "Giridurg: 179 rebels"
+    },
+    {
+     "day": 206,
+     "kind": "secession",
+     "text": "Shilapur left highland"
+    },
+    {
+     "day": 208,
+     "kind": "revolt",
+     "text": "Lavanapura: 131 rebels"
+    },
+    {
+     "day": 212,
+     "kind": "secession",
+     "text": "Dvaradurga left highland"
+    },
+    {
+     "day": 232,
+     "kind": "secession",
+     "text": "Giridurg left highland"
+    },
+    {
+     "day": 232,
+     "kind": "revolt",
+     "text": "Pashanagram: 50 rebels"
+    }
+   ],
+   "statistics": {
+    "grain_harvested": 288586.3036804308,
+    "events_resolved": 13,
+    "battles_fought": 3,
+    "enemies_killed": 92,
+    "soldiers_lost": 1039,
+    "formations_routed": 14,
+    "largest_battle": 1552,
+    "wealth_earned": 5123.380661511737,
+    "trade_income": 290.23352495952605,
+    "grain_spoiled": 211.6287681716749,
+    "famine_days": 168,
+    "revolts": 5,
+    "settlements_lost_to_rebels": 3,
+    "mtd_other_income": 22.84169999999999
+   },
+   "player": "highland",
+   "startOwned": [
+    "giridurg",
+    "shilapur",
+    "dvaradurga",
+    "pashanagram",
+    "kandaravasa"
+   ],
+   "starving": {
+    "shilapur": 68,
+    "dvaradurga": 63,
+    "giridurg": 39,
+    "lavanapura": 31,
+    "pashanagram": 13,
+    "naukapattana": 5,
+    "nilavanapura": 3
+   },
+   "court": 5,
+   "seconds": 1.319
+  },
+  {
+   "label": "Sandbox (default, Suvarna) - requested data (storage.baseDays 120)",
+   "pendingData": true,
+   "seed": 1,
+   "outcome": {
+    "status": "ongoing",
+    "outcomeId": null,
+    "day": 540
+   },
+   "score": 1200,
+   "final": {
+    "heartland": {
+     "alive": true,
+     "treasury": 28190,
+     "settlements": [
+      "rajapura",
+      "dhanyagram",
+      "kusumpur",
+      "ratnapura",
+      "setupur"
+     ]
+    },
+    "highland": {
+     "alive": true,
+     "treasury": 5628,
+     "settlements": [
+      "pashanagram",
+      "kandaravasa"
+     ]
+    },
+    "forest": {
+     "alive": true,
+     "treasury": 6485,
+     "settlements": [
+      "nilavanapura",
+      "gajavana"
+     ]
+    },
+    "frontier": {
+     "alive": false,
+     "treasury": 2391,
+     "settlements": []
+    }
+   },
+   "months": [
+    {
+     "month": 1,
+     "calendar": "-300/1",
+     "reserveDays": {
+      "rajapura": 57.50996007918768,
+      "dhanyagram": 65.9478018413297,
+      "kusumpur": 65.51554124251331,
+      "ratnapura": 54.711029168184105,
+      "setupur": 56.71868424867325
+     },
+     "unrest": {
+      "rajapura": 0.05,
+      "dhanyagram": 0.05,
+      "kusumpur": 0.05,
+      "ratnapura": 0.05,
+      "setupur": 0.05
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 1168.5142702935639,
+      "tradeIncome": 307.34769429667375,
+      "tribute": 0,
+      "armyUpkeep": 196.5,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 1169.3619645902377,
+      "foodProduced": 133777.9479762949,
+      "foodConsumed": 115889.75803410327
+     },
+     "treasury": 4409.361964590238,
+     "foodReserve": 2000,
+     "stability": 0.6052925364947739,
+     "legitimacy": 0.61,
+     "settlements": 5,
+     "soldiers": 632
+    },
+    {
+     "month": 2,
+     "calendar": "-300/2",
+     "reserveDays": {
+      "rajapura": 49.41789665260409,
+      "dhanyagram": 61.769707507915804,
+      "kusumpur": 61.137988864589495,
+      "ratnapura": 45.413170921822186,
+      "setupur": 48.34078607398061
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "ratnapura": 0,
+      "setupur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 1165.3649014614004,
+      "tradeIncome": 311.1659549369905,
+      "tribute": 0,
+      "armyUpkeep": 196.5,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 1170.0308563983908,
+      "foodProduced": 133885.519658313,
+      "foodConsumed": 115982.92377746946
+     },
+     "treasury": 5819.392820988629,
+     "foodReserve": 40958.949260329435,
+     "stability": 0.6099613373653111,
+     "legitimacy": 0.62,
+     "settlements": 5,
+     "soldiers": 632
+    },
+    {
+     "month": 3,
+     "calendar": "-300/3",
+     "reserveDays": {
+      "rajapura": 108.6014173987622,
+      "dhanyagram": 176.97892306630754,
+      "kusumpur": 140.68078582073153,
+      "ratnapura": 80.21945110568535,
+      "setupur": 86.06464339767392
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "ratnapura": 0,
+      "setupur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 1179.2946946282693,
+      "tradeIncome": 311.2514705334844,
+      "tribute": 0,
+      "armyUpkeep": 196.5,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 1184.0461651617538,
+      "foodProduced": 133993.34071827237,
+      "foodConsumed": 116076.2985006988
+     },
+     "treasury": 7243.438986150382,
+     "foodReserve": 40958.949260329435,
+     "stability": 0.6143394262021931,
+     "legitimacy": 0.63,
+     "settlements": 5,
+     "soldiers": 632
+    },
+    {
+     "month": 4,
+     "calendar": "-300/4",
+     "reserveDays": {
+      "rajapura": 84.648784550847,
+      "dhanyagram": 154.1868831093346,
+      "kusumpur": 120.02685206844934,
+      "ratnapura": 59.95199999999999,
+      "setupur": 62.80363888782723
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "ratnapura": 0,
+      "setupur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 1184.5335712476406,
+      "tradeIncome": 311.33713943737285,
+      "tribute": 0,
+      "armyUpkeep": 196.5,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 1189.3707106850134,
+      "foodProduced": 130618.04113009751,
+      "foodConsumed": 116169.82174803228
+     },
+     "treasury": 8672.809696835397,
+     "foodReserve": 40958.949260329435,
+     "stability": 0.6185456703754052,
+     "legitimacy": 0.64,
+     "settlements": 5,
+     "soldiers": 632
+    },
+    {
+     "month": 5,
+     "calendar": "-300/5",
+     "reserveDays": {
+      "rajapura": 63.30867513136018,
+      "dhanyagram": 82.11046094308128,
+      "kusumpur": 82.2706752452146,
+      "ratnapura": 54.699351674985394,
+      "setupur": 55.09232249571722
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "ratnapura": 0,
+      "setupur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 1184.5467734907456,
+      "tradeIncome": 311.4229236775582,
+      "tribute": 0,
+      "armyUpkeep": 196.5,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 1189.4696971683038,
+      "foodProduced": 130431.93702964144,
+      "foodConsumed": 116263.46054016303
+     },
+     "treasury": 10102.2793940037,
+     "foodReserve": 40958.949260329435,
+     "stability": 0.6226335278106291,
+     "legitimacy": 0.65,
+     "settlements": 5,
+     "soldiers": 632
+    },
+    {
+     "month": 6,
+     "calendar": "-300/6",
+     "reserveDays": {
+      "rajapura": 43.45567136210478,
+      "dhanyagram": 67.26119804473986,
+      "kusumpur": 67.1212137778557,
+      "ratnapura": 33.81996562470832,
+      "setupur": 35.80128383784402
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "ratnapura": 0,
+      "setupur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 1088.7613224017891,
+      "tradeIncome": 311.5088025465201,
+      "tribute": 0,
+      "armyUpkeep": 196.5,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 1093.7701249483093,
+      "foodProduced": 131030.49667544418,
+      "foodConsumed": 116357.19689653475
+     },
+     "treasury": 11436.04951895201,
+     "foodReserve": 40958.949260329435,
+     "stability": 0.6264783306319783,
+     "legitimacy": 0.66,
+     "settlements": 5,
+     "soldiers": 632
+    },
+    {
+     "month": 7,
+     "calendar": "-300/7",
+     "reserveDays": {
+      "rajapura": 29.985599999999998,
+      "dhanyagram": 60.31143638356416,
+      "kusumpur": 59.70216638930543,
+      "ratnapura": 29.975999999999996,
+      "setupur": 29.975999999999996
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "ratnapura": 0.02197454886947664,
+      "setupur": 0.02399273237979503
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 966.4210019396461,
+      "tradeIncome": 311.5947647624444,
+      "tribute": 0,
+      "armyUpkeep": 196.5,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 971.5157667020906,
+      "foodProduced": 131136.19150927535,
+      "foodConsumed": 116451.0210259665
+     },
+     "treasury": 12647.5652856541,
+     "foodReserve": 22664.336378626314,
+     "stability": 0.6248814738117974,
+     "legitimacy": 0.67,
+     "settlements": 5,
+     "soldiers": 632
+    },
+    {
+     "month": 8,
+     "calendar": "-300/8",
+     "reserveDays": {
+      "rajapura": 29.34590645952681,
+      "dhanyagram": 57.10410877026017,
+      "kusumpur": 56.27825301847882,
+      "ratnapura": 28.75048182620032,
+      "setupur": 28.89817821300097
+     },
+     "unrest": {
+      "rajapura": 0.00027900698656002816,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "ratnapura": 0.04179120163724428,
+      "setupur": 0.04789266643180511
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 1118.8256130899529,
+      "tradeIncome": 310.8364245081822,
+      "tribute": 0,
+      "armyUpkeep": 196.5,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 1123.1620375981352,
+      "foodProduced": 131241.97959965005,
+      "foodConsumed": 116544.92760928338
+     },
+     "treasury": 14010.727323252235,
+     "foodReserve": 44753.29431181135,
+     "stability": 0.6236416858866178,
+     "legitimacy": 0.68,
+     "settlements": 5,
+     "soldiers": 632
+    },
+    {
+     "month": 9,
+     "calendar": "-300/9",
+     "reserveDays": {
+      "rajapura": 131.6363533929352,
+      "dhanyagram": 199.11079718851357,
+      "kusumpur": 154.37083848905178,
+      "ratnapura": 92.30155027568482,
+      "setupur": 95.28649954161327
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "ratnapura": 0.011515520557017761,
+      "setupur": 0.0214716668562044
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 1177.6984887729216,
+      "tradeIncome": 311.7669175057848,
+      "tribute": 0,
+      "armyUpkeep": 196.5,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 1182.9654062787063,
+      "foodProduced": 131347.85754327904,
+      "foodConsumed": 116638.91376953585
+     },
+     "treasury": 15133.692729530942,
+     "foodReserve": 44753.29431181135,
+     "stability": 0.6231845679645485,
+     "legitimacy": 0.6900000000000001,
+     "settlements": 5,
+     "soldiers": 632
+    },
+    {
+     "month": 10,
+     "calendar": "-300/10",
+     "reserveDays": {
+      "rajapura": 111.96623617112203,
+      "dhanyagram": 189.17949014030935,
+      "kusumpur": 142.68077488755458,
+      "ratnapura": 70.61041818777642,
+      "setupur": 75.35292229460138
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "ratnapura": 0,
+      "setupur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 1204.345494860251,
+      "tradeIncome": 311.8531029191285,
+      "tribute": 0,
+      "armyUpkeep": 196.5,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 1209.6985977793795,
+      "foodProduced": 131453.82351318168,
+      "foodConsumed": 116732.97796356844
+     },
+     "treasury": 16783.39132731032,
+     "foodReserve": 44753.29431181135,
+     "stability": 0.6233928953224704,
+     "legitimacy": 0.7000000000000001,
+     "settlements": 5,
+     "soldiers": 632
+    },
+    {
+     "month": 11,
+     "calendar": "-300/11",
+     "reserveDays": {
+      "rajapura": 91.96632825335278,
+      "dhanyagram": 169.38661897107764,
+      "kusumpur": 127.1145466679891,
+      "ratnapura": 59.95199999999999,
+      "setupur": 59.952
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "ratnapura": 0,
+      "setupur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 1209.6927255756054,
+      "tradeIncome": 311.9393594789197,
+      "tribute": 0,
+      "armyUpkeep": 196.5,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 1215.132085054525,
+      "foodProduced": 131559.87654325474,
+      "foodConsumed": 116827.1193766877
+     },
+     "treasury": 18238.523412364844,
+     "foodReserve": 44753.29431181135,
+     "stability": 0.6240135005558283,
+     "legitimacy": 0.7100000000000001,
+     "settlements": 5,
+     "soldiers": 632
+    },
+    {
+     "month": 12,
+     "calendar": "-300/12",
+     "reserveDays": {
+      "rajapura": 71.8643928780275,
+      "dhanyagram": 122.19595673517618,
+      "kusumpur": 97.8676222095052,
+      "ratnapura": 59.95199999999999,
+      "setupur": 59.95199999999999
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "ratnapura": 0,
+      "setupur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 1214.2521703864115,
+      "tradeIncome": 312.0256866914435,
+      "tribute": 0,
+      "armyUpkeep": 196.5,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 1219.777857077855,
+      "foodProduced": 131666.0161375669,
+      "foodConsumed": 116921.33759206998
+     },
+     "treasury": 19698.301269442698,
+     "foodReserve": 44753.29431181135,
+     "stability": 0.6249715342097042,
+     "legitimacy": 0.7200000000000001,
+     "settlements": 5,
+     "soldiers": 632
+    },
+    {
+     "month": 13,
+     "calendar": "-299/1",
+     "reserveDays": {
+      "rajapura": 54.421335187349925,
+      "dhanyagram": 51.38099152179711,
+      "kusumpur": 75.31713229535963,
+      "ratnapura": 49.69097284600389,
+      "setupur": 50.72493114788357
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "ratnapura": 0,
+      "setupur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 1191.3834537449222,
+      "tradeIncome": 312.1120843129804,
+      "tribute": 0,
+      "armyUpkeep": 196.5,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 1196.9955380579026,
+      "foodProduced": 131772.24205698614,
+      "foodConsumed": 117015.63241021121
+     },
+     "treasury": 21135.2968075006,
+     "foodReserve": 47753.29431181135,
+     "stability": 0.6261529011000114,
+     "legitimacy": 0.7300000000000001,
+     "settlements": 5,
+     "soldiers": 632
+    },
+    {
+     "month": 14,
+     "calendar": "-299/2",
+     "reserveDays": {
+      "rajapura": 46.35671471579186,
+      "dhanyagram": 47.30631906979373,
+      "kusumpur": 70.8694265546702,
+      "ratnapura": 40.45166856221677,
+      "setupur": 42.41667840735793
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0.15,
+      "kusumpur": 0,
+      "ratnapura": 0,
+      "setupur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 1193.8273227550817,
+      "tradeIncome": 312.19855223635454,
+      "tribute": 0,
+      "armyUpkeep": 196.5,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 1199.5258749914362,
+      "foodProduced": 131878.55420265158,
+      "foodConsumed": 117110.00375031946
+     },
+     "treasury": 22574.822682492035,
+     "foodReserve": 85563.65247326509,
+     "stability": 0.6270806537714829,
+     "legitimacy": 0.7400000000000001,
+     "settlements": 5,
+     "soldiers": 632
+    },
+    {
+     "month": 15,
+     "calendar": "-299/3",
+     "reserveDays": {
+      "rajapura": 104.52051800449522,
+      "dhanyagram": 162.29887442992356,
+      "kusumpur": 140.68361127828044,
+      "ratnapura": 74.83176081233654,
+      "setupur": 86.06703782700865
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0.11630339748766395,
+      "kusumpur": 0,
+      "ratnapura": 0,
+      "setupur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 1187.9152219075277,
+      "tradeIncome": 312.2850904289776,
+      "tribute": 0,
+      "armyUpkeep": 196.5,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 1193.7003123365052,
+      "foodProduced": 131984.95255233473,
+      "foodConsumed": 117204.45159646106
+     },
+     "treasury": 24008.52299482854,
+     "foodReserve": 85563.65247326509,
+     "stability": 0.6284571007470903,
+     "legitimacy": 0.7500000000000001,
+     "settlements": 5,
+     "soldiers": 632
+    },
+    {
+     "month": 16,
+     "calendar": "-299/4",
+     "reserveDays": {
+      "rajapura": 79.98617865397792,
+      "dhanyagram": 134.46824433967845,
+      "kusumpur": 115.79890668690545,
+      "ratnapura": 59.95199999999999,
+      "setupur": 62.80650189789529
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "ratnapura": 0,
+      "setupur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 1195.2288337950924,
+      "tradeIncome": 312.37169889901537,
+      "tribute": 0,
+      "armyUpkeep": 196.5,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 1201.1005326941079,
+      "foodProduced": 132091.43712568408,
+      "foodConsumed": 117298.97596814753
+     },
+     "treasury": 25449.62352752265,
+     "foodReserve": 85563.65247326509,
+     "stability": 0.6302115998970147,
+     "legitimacy": 0.7600000000000001,
+     "settlements": 5,
+     "soldiers": 632
+    },
+    {
+     "month": 17,
+     "calendar": "-299/5",
+     "reserveDays": {
+      "rajapura": 58.20452615193298,
+      "dhanyagram": 82.89854664891661,
+      "kusumpur": 77.87823961817496,
+      "ratnapura": 52.96634773677404,
+      "setupur": 53.4313587965456
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "ratnapura": 0,
+      "setupur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 1192.5797049447995,
+      "tradeIncome": 312.45782467471054,
+      "tribute": 0,
+      "armyUpkeep": 196.5,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 1198.53752961951,
+      "foodProduced": 92844.92447434373,
+      "foodConsumed": 117393.007623403
+     },
+     "treasury": 26888.16105714216,
+     "foodReserve": 85563.65247326509,
+     "stability": 0.6322324271427239,
+     "legitimacy": 0.7700000000000001,
+     "settlements": 5,
+     "soldiers": 632
+    },
+    {
+     "month": 18,
+     "calendar": "-299/6",
+     "reserveDays": {
+      "rajapura": 37.28785468076168,
+      "dhanyagram": 66.22341498248655,
+      "kusumpur": 62.61488271812557,
+      "ratnapura": 30.544531982047324,
+      "setupur": 32.53367630701535
+     },
+     "unrest": {
+      "rajapura": 0,
+      "dhanyagram": 0,
+      "kusumpur": 0,
+      "ratnapura": 0,
+      "setupur": 0
+     },
+     "stage": {},
+     "ledger": {
+      "taxIncome": 1055.6384027088422,
+      "tradeIncome": 312.5432964745755,
+      "tribute": 0,
+      "armyUpkeep": 196.5,
+      "buildingUpkeep": 84,
+      "administration": 26,
+      "construction": 0,
+      "recruitment": 0,
+      "other": 240,
+      "net": 1061.6816991834178,
+      "foodProduced": 104174.97476909432,
+      "foodConsumed": 117486.30596751411
+     },
+     "treasury": 28189.842756325575,
+     "foodReserve": 85563.65247326509,
+     "stability": 0.6342475105424457,
+     "legitimacy": 0.7800000000000001,
+     "settlements": 5,
+     "soldiers": 632
+    }
+   ],
+   "battles": [
+    {
+     "day": 198,
+     "chronicle": "The Battle of the White Flats: The rebels of Lavanapura defeated Marudesha; 33 fell.",
+     "winner": "rebels",
+     "killed": 33
+    },
+    {
+     "day": 217,
+     "chronicle": "The Battle of the Dakshina Scarp: The rebels of Giridurg defeated Giridurga; 34 fell.",
+     "winner": "rebels",
+     "killed": 34
+    },
+    {
+     "day": 235,
+     "chronicle": "The Battle of Ushtragram: Marudesha defeated the rebels of Ushtragram; 32 fell.",
+     "winner": "frontier",
+     "killed": 32
+    }
+   ],
+   "events": [
+    {
+     "day": 116,
+     "id": "evt_bazaar_fire",
+     "title": "Fire in the Bazaar",
+     "choice": "Let the merchants rebuild"
+    },
+    {
+     "day": 133,
+     "id": "evt_monsoon_flood",
+     "title": "The River Rises",
+     "choice": "Endure it"
+    },
+    {
+     "day": 255,
+     "id": "evt_salt_caravan",
+     "title": "The Salt Caravan",
+     "choice": "Buy salt for the granaries"
+    },
+    {
+     "day": 273,
+     "id": "evt_pilgrims",
+     "title": "Pilgrims on the Road",
+     "choice": "Welcome them"
+    },
+    {
+     "day": 378,
+     "id": "evt_grain_requisition",
+     "title": "Grain for the Host",
+     "choice": "Requisition the grain"
+    },
+    {
+     "day": 403,
+     "id": "evt_prices_rise",
+     "title": "The Price of Bread",
+     "choice": "Markets will settle on their own"
+    },
+    {
+     "day": 420,
+     "id": "evt_bazaar_fire",
+     "title": "Fire in the Bazaar",
+     "choice": "Let the merchants rebuild"
+    },
+    {
+     "day": 443,
+     "id": "evt_governor_demands",
+     "title": "The Governor's Ultimatum",
+     "choice": "Negotiate lower taxes"
+    }
+   ],
+   "incidents": [
+    {
+     "day": 121,
+     "kind": "monsoon",
+     "text": "M = 0.95 (normal)"
+    },
+    {
+     "day": 198,
+     "kind": "revolt",
+     "text": "Lavanapura: 129 rebels"
+    },
+    {
+     "day": 205,
+     "kind": "revolt",
+     "text": "Lavanapura: 128 rebels"
+    },
+    {
+     "day": 215,
+     "kind": "revolt",
+     "text": "Dvaradurga: 69 rebels"
+    },
+    {
+     "day": 217,
+     "kind": "revolt",
+     "text": "Giridurg: 178 rebels"
+    },
+    {
+     "day": 223,
+     "kind": "revolt",
+     "text": "Shilapur: 166 rebels"
+    },
+    {
+     "day": 235,
+     "kind": "secession",
+     "text": "Lavanapura left frontier"
+    },
+    {
+     "day": 235,
+     "kind": "revolt",
+     "text": "Ushtragram: 42 rebels"
+    },
+    {
+     "day": 245,
+     "kind": "secession",
+     "text": "Dvaradurga left highland"
+    },
+    {
+     "day": 247,
+     "kind": "secession",
+     "text": "Giridurg left highland"
+    },
+    {
+     "day": 253,
+     "kind": "secession",
+     "text": "Shilapur left highland"
+    },
+    {
+     "day": 384,
+     "kind": "revolt",
+     "text": "Ushtragram: 41 rebels"
+    },
+    {
+     "day": 384,
+     "kind": "secession",
+     "text": "Ushtragram left frontier"
+    },
+    {
+     "day": 481,
+     "kind": "monsoon",
+     "text": "M = 0.56 (failed)"
+    }
+   ],
+   "statistics": {
+    "grain_harvested": 2256596.022369695,
+    "wealth_earned": 30806.842756325575,
+    "trade_income": 5608.018788321118,
+    "grain_spoiled": 56868.67109200985,
+    "events_resolved": 8
+   },
+   "player": "heartland",
+   "startOwned": [
+    "rajapura",
+    "dhanyagram",
+    "kusumpur",
+    "ratnapura",
+    "setupur"
+   ],
+   "starving": {
+    "lavanapura": 259,
+    "dvaradurga": 270,
+    "giridurg": 262,
+    "shilapur": 252,
+    "ushtragram": 64,
+    "naukapattana": 55,
+    "pashanagram": 8,
+    "nilavanapura": 15
+   },
+   "court": 4,
+   "seconds": 1.177
   }
  ]
 }

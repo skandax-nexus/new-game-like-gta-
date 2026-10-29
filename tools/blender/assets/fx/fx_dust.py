@@ -2,13 +2,20 @@
 @asset fx_dust
 @kind flipbook
 
-Dust for marching feet, hooves, construction and heavy landings (8 x 8 atlas, four one-shot sequences of 16
-frames, ASSET_LIST WP7-10): `puff` and `puff_b` (low, wide ground puffs 1-2 m, ART_BIBLE §10 marching dust),
-`ring` (3 m expanding ground ring, seen from above - construction completion / heavy landing decal particle)
-and `hoof` (dust kicked backwards by a hoof or wheel). Curl-noise particle volumes rendered with Cycles as a
-neutral, occlusion-only albedo plus normals from optical depth: the runtime tints by the ground color (sample
-the splat albedo, lighten 15 %) and lights it with the sun. Atlas 1024 / 1024 / 512. OWNER: Technical Artist G (TA-07).
+Dust for marching feet, hooves, construction and heavy landings (8 x 8 atlas, four one-shot sequences of 16 frames,
+ASSET_LIST WP7-10, ART_BIBLE §10 "low and wide, drifts downwind"): Eulerian dust simulations (lib/flipbook FluidSim
+with a free-slip ground) rendered noise-free as a neutral, occlusion-only albedo plus density-gradient normals, so
+the runtime tints by the ground color (sample the splat albedo, lighten 15 %) and lights it with the sun.
+  `puff`, `puff_b`  a dome of kicked-up dust whose wall jet rolls outward along the ground into rounded billowing
+                    lobes and drifts downwind (+x); low and wide (width : height ~2 : 1); the ground contact fades
+                    over 14 cm, so there is no straight base edge
+  `ring`            the construction-completion / heavy-landing ring seen from above: a symmetric radial wall jet
+                    (no wind, no mean drift) that stays a closed, centred ring while it expands to ~2 m
+  `hoof`            a low spray kicked backwards (+x) and up by a hoof or wheel that falls back and settles into a
+                    rolling puff
+Every frame keeps its border clear (flipbook border guard). Atlas 1024 / 1024 / 512. OWNER: Technical Artist G (TA-07).
 """
+import math
 import pathlib
 import sys
 
@@ -18,64 +25,97 @@ import numpy as np  # noqa: E402
 
 import _fxkit as kit  # noqa: E402
 from lib import flipbook as fb  # noqa: E402
+from lib.core import log, timer  # noqa: E402
 
 ctx = fb.begin(__file__)
-grid = 64 if not ctx.draft else 40
-px = ctx.res(128, 64)
-count = 2200 if not ctx.draft else 900
+H = 0.022 if not ctx.draft else 0.045
+PX = 128 if not ctx.draft else 64
+N = 16
 ALBEDO = (0.74, 0.72, 0.69)
 color: list = []
 normals: list = []
-sequences = []
+sequences: list = []
 
 
-def add(name: str, dens: list, extent: tuple, view: str, duration: float, depth: float) -> None:
-    vox = max(extent) / (grid - 1)
-    axis = 2 if view == "top" else 1
-    peak = float(max((f.sum(axis=axis) * vox).max() for f in dens))
-    c, n = kit.lit_volume_frames(dens, extent, px, k_ext=depth / max(peak, 1e-6), albedo=ALBEDO, samples=ctx.samples(16, 6),
-                                 view=view, ambient_blur=4.0, flatten=0.55)
-    sequences.append({"name": name, "start": len(color), "count": len(dens), "fps": round(len(dens) / duration, 3), "loop": False})
+def run(name: str, kind: str, seed: int, dur: float, *, jet: float, up: float, temp: float, buoy: float, weight: float,
+        damp: float, exp: float, wind: float, size: float, width: float = 0.42, height: float = 0.25, vort: float = 4.0) -> None:
+    rng = np.random.default_rng(seed)
+    if kind == "ring":
+        S = 3.6
+        shape, ext = kit.sim_box((S * 1.15, S * 1.15, 0.9), H)
+        view, frame = "top", (0.0, 0.0, S)
+    else:
+        S = size
+        shape, ext = kit.sim_box((S * 1.25, S * 0.7, S * 0.6), H)
+        view, frame = "front", ((0.2 if kind == "puff" else 0.12) * S / 2.2, S / 2 - 0.05, S)
+    sim = fb.FluidSim(shape, ext, floor=True, vorticity=vort, sponge=0.06, sponge_top=0.08)
+    x, y, z = sim.world()
+    nz = fb.value_noise3(shape, 0.08 / H, seed, octaves=3)
+    kick = 0.6 + 0.8 * fb.value_noise3(shape, 0.2 / H, seed + 50, octaves=2)  # uneven jet -> irregular lobes
+    rh = np.maximum(np.sqrt(x ** 2 + y ** 2), 1e-3)
+    if kind == "puff":
+        # a dome: wide at the ground, narrower at the top
+        q = np.sqrt((x / (width * (1.15 - 0.5 * z / height))) ** 2 + (y / width) ** 2 + ((z - 0.06) / height) ** 2)
+        d = np.clip((1 - q) / 0.35, 0, 1) * (0.4 + 1.2 * nz)
+        sim.vel[0] = d * x / rh * jet * kick
+        sim.vel[1] = d * y / rh * jet * kick
+        sim.vel[2] = d * up * kick
+        w = (wind, 0.0, 0.0)
+    elif kind == "ring":
+        q = np.sqrt(((rh - 0.34) / width) ** 2 + ((z - 0.1) / 0.14) ** 2)
+        d = np.clip((1 - q) / 0.4, 0, 1) * (0.4 + 1.2 * nz)
+        sim.vel[0] = d * x / rh * jet * kick
+        sim.vel[1] = d * y / rh * jet * kick
+        sim.vel[2] = d * up
+        w = (0.0, 0.0, 0.0)
+    else:  # hoof: kicked backwards (+x) and up, faster at the back -> a stretched spray
+        q = np.sqrt(((x + 0.55) / width) ** 2 + (y / width) ** 2 + ((z - 0.1) / (width * 0.8)) ** 2)
+        d = np.clip((1 - q) / 0.4, 0, 1) * (0.4 + 1.2 * nz)
+        stretch = np.clip(1.0 + (x + 0.55) / width, 0.3, 2.0)
+        sim.vel[0] = d * jet * kick * stretch
+        sim.vel[1] = d * rng.normal(0, 0.3) * kick
+        sim.vel[2] = d * up * kick
+        w = (wind, 0.0, 0.0)
+    sim.dens = d.astype(np.float32)
+    sim.temp = (d * temp).astype(np.float32)
+    # fine detail carried by the flow (stretched into grainy wisps), multiplied into the rendered density
+    sim.fields["detail"] = fb.value_noise3(shape, 0.05 / H, seed + 31, octaves=3)
+    frames = []
+    dt = dur / N
+    with timer(f"dust {name} sim {shape}"):
+        for _ in range(N):
+            sim.step(dt, buoyancy=buoy, weight=weight, vorticity=vort, cooling=1.0, dissipation=0.05, damping=damp, wind=w,
+                     expansion=exp * math.exp(-sim.t / 0.35), substeps=3)
+            frames.append((sim.dens * np.clip(0.5 + sim.fields["detail"], 0, None)).astype(np.float32))
+    # soft, ragged ground contact: the ground line g0 wanders -4..+30 cm along the ground (noise), then a 12 cm soft
+    # fade above it - no straight base edge (the old puffs sat on a hard flat base)
+    gn = fb.value_noise3((shape[0], shape[1], 1), 0.2 / H, seed + 77, octaves=2)[:, :, 0]
+    gf = (-0.04 + 0.34 * kit.smooth01((gn - 0.25) / 0.5)) if view == "front" else 0.0
+    c, n, worst = kit.lit_frames(frames, ext, H, PX, view=view, frame=frame, depth=2.6, albedo=ALBEDO, flatten=0.55,
+                                 fades=kit.life_fade(N, 0.08, 0.35), normal_blur=1.5, normal_strength=0.75, ground_fade=gf)
+    for i in (5, 10):
+        ys, xs = np.nonzero(c[i][..., 3] > 0.1)
+        if len(xs):
+            log(f"dust {name} frame {i}: width : height {(xs.max() - xs.min() + 1) / (ys.max() - ys.min() + 1):.2f}, "
+                f"straight base {100 * kit.straight_base_fraction(c[i][..., 3]):.0f} % of the frame width")
+    log(f"dust {name}: pre-window border alpha {worst * 255:.2f}/255")
+    sequences.append({"name": name, "start": len(color), "count": N, "fps": round(N / dur, 3), "loop": False})
     color.extend(c)
     normals.extend(n)
 
 
-# puff: low and wide, drifting downwind (+x), settling
-E1 = (2.6, 2.6, 2.0)
-add("puff", kit.puff_frames(5, 16, 2.5, E1, grid=grid, count=count, origin=(-0.2, 0.0, 0.3), radius=0.42, clusters=12, burst=1.1,
-                            direction=(0.25, 0, 0), rise=0.15, drag=1.2, turbulence=0.3, curl_freq=2.4, flatten=0.55,
-                            ground=0.04, fade_out=0.4), E1, "front", 2.5, 2.4)
-add("puff_b", kit.puff_frames(9, 16, 2.5, E1, grid=grid, count=count, origin=(-0.2, 0.0, 0.2), radius=0.36, clusters=10,
-                              burst=0.85, direction=(0.2, 0, 0.05), rise=0.1, drag=1.5, turbulence=0.36, curl_freq=2.0,
-                              flatten=0.45, ground=0.04, fade_out=0.4), E1, "front", 2.5, 2.4)
-
-# ring: particles on a circle bursting outwards along the ground (top view)
-E2 = (3.6, 3.6, 1.0)
-rng = np.random.default_rng(21)
-sim = fb.ParticleVolume(grid, E2, 21, turbulence=0.25, curl=fb.CurlNoise(44, octaves=3, base_freq=2.4, speed=0.4))
-a = rng.uniform(0, 2 * np.pi, count)
-r = 0.3 + rng.normal(0, 0.06, count)
-pos = np.stack([np.cos(a) * r, np.sin(a) * r, rng.uniform(0.05, 0.25, count)], axis=1)
-vel = np.stack([np.cos(a), np.sin(a), np.zeros(count)], axis=1) * rng.uniform(1.4, 2.0, (count, 1)) + rng.normal(0, 0.12, (count, 3))
-vel[:, 2] = rng.uniform(0.05, 0.3, count)
-sim.emit(pos, vel, rng.uniform(1.6, 2.1, count), rng.uniform(0.6, 1.0, count))
-ring = []
-for _ in range(16):
-    sim.step(2.0 / 16, buoyancy=0.05, drag=1.6)
-    d, _ = sim.fields(bands=((0.0, 0.3, 0.9), (0.3, 0.65, 1.6), (0.65, 1.01, 2.6)), fade_out=0.4)
-    ring.append(d)
-add("ring", ring, E2, "top", 2.0, 1.8)
-
-# hoof: kicked backwards (+x) and up, falling back
-E3 = (2.4, 2.4, 1.6)
-add("hoof", kit.puff_frames(13, 16, 1.6, E3, grid=grid, count=count, origin=(-0.7, 0.0, 0.1), radius=0.22, clusters=8, burst=0.7,
-                            direction=(1.6, 0, 0.7), rise=-0.25, drag=1.4, turbulence=0.3, curl_freq=2.6, ground=0.04,
-                            fade_out=0.4), E3, "front", 1.6, 2.2)
+run("puff", "puff", 5, 2.5, jet=2.2, up=1.6, temp=0.8, buoy=2.2, weight=0.25, damp=0.25, exp=4.0, wind=0.3, size=2.2,
+    width=0.45, height=0.3)
+run("puff_b", "puff", 9, 2.5, jet=2.2, up=1.7, temp=0.85, buoy=2.4, weight=0.25, damp=0.25, exp=3.8, wind=0.25, size=2.2,
+    width=0.42, height=0.3)
+run("ring", "ring", 21, 2.0, jet=4.5, up=0.8, temp=0.5, buoy=1.2, weight=0.2, damp=0.15, exp=2.5, wind=0.0, size=3.6, width=0.18)
+run("hoof", "hoof", 13, 1.6, jet=4.6, up=1.3, temp=0.4, buoy=1.0, weight=1.1, damp=0.25, exp=2.5, wind=0.25, size=2.2, width=0.22)
 
 meta = fb.write(ctx, color, 8, 8, fps=8, loop=False, sequences=sequences, normals=normals, blend="alpha", lit=True,
-                soft_fade_m=0.5, size_m=(2.0, 1.5), atlas_px={"ultra": 1024, "high": 1024, "mobile": 512},
+                soft_fade_m=0.5, size_m=(2.2, 2.2), atlas_px={"ultra": 1024, "high": 1024, "mobile": 512},
                 labels=kit.label_sequences(sequences),
-                description="Dust: ground puffs (2), expanding ring (top view), hoof kick; neutral albedo + normals, tint by ground.")
+                description="Dust (Eulerian sims): rolling ground puffs (2), closed expanding ring (top view), hoof kick; "
+                            "neutral albedo + normals, tint by ground.")
 meta["tint"] = "#b0956e"
 ctx.meta.update(meta)
 ctx.finish()

@@ -9,7 +9,9 @@ now, 1 = the oldest tail point) and v = across the ribbon (0 = blade root, 1 = b
   `trail_wide` softer and wider, for heavy / finisher swings
   `noise`      tileable-in-u grayscale streak noise, scrolled along u and multiplied in to break the ribbon up
   `noise_b`    a second, finer noise to cross-scroll against `noise`
-Additive (premultiplied emission x emissiveIntensity 3). OWNER: Technical Artist G (TA-07).
+Additive (premultiplied emission x emissiveIntensity 3). Border guard: the trail gradients are bright at their LEFT
+edge by design (u = 0 is the blade edge now) and the noises tile in u (and wrap in v), so those sequences open
+exactly those edges (`open_edges`); every other edge fades to 0. OWNER: Technical Artist G (TA-07).
 """
 import pathlib
 import sys
@@ -38,13 +40,14 @@ def seq(name: str, img: np.ndarray, **extra: object) -> None:
 def trail(width_pow: float, edge_w: float, tail_pow: float, gain: float) -> np.ndarray:
     fade_age = (1.0 - u) ** tail_pow
     edge = np.exp(-(u / edge_w) ** 2)  # the white-hot leading edge
-    across = kit.smoothstep(0.0, 0.25, v) * kit.smoothstep(1.0, 0.85, v) * (0.35 + 0.65 * v ** width_pow)
+    across = kit.smoothstep(0.03, 0.25, v) * kit.smoothstep(0.97, 0.82, v) * (0.35 + 0.65 * v ** width_pow)
+    fade_age = fade_age * kit.smoothstep(0.98, 0.88, u)  # the oldest tail point reaches exactly 0
     i = (fade_age * 0.95 + edge * 0.8) * across * gain
     return kit.emissive_frame(i, "#fff2c0", "#e8892b", 0.8)
 
 
-seq("trail", trail(1.6, 0.05, 1.5, 1.2))
-seq("trail_wide", trail(0.8, 0.1, 1.1, 0.85))
+seq("trail", trail(1.6, 0.05, 1.5, 1.2), open_edges=["left"])
+seq("trail_wide", trail(0.8, 0.1, 1.1, 0.85), open_edges=["left"])
 
 
 def streak_noise(seed: int, rows: int, stretch: float) -> np.ndarray:
@@ -65,7 +68,8 @@ def streak_noise(seed: int, rows: int, stretch: float) -> np.ndarray:
 for name, seed, rows, stretch in (("noise", 5, 44, 1.0), ("noise_b", 6, 80, 2.0)):
     n = streak_noise(seed, rows, stretch)
     # grayscale multiplier stored as white-on-black emission with alpha = value (sampled as data, not drawn alone)
-    seq(name, np.concatenate([np.repeat(n[..., None], 3, axis=-1), n[..., None]], axis=-1), blend="additive", lit=False)
+    seq(name, np.concatenate([np.repeat(n[..., None], 3, axis=-1), n[..., None]], axis=-1), blend="additive", lit=False,
+        open_edges=["all"])
 
 meta = fb.write(ctx, frames, 2, 2, fps=1, loop=True, sequences=seqs, blend="additive", lit=False, emissive_intensity=3.0,
                 soft_fade_m=0.0, size_m=(1.2, 1.0), atlas_px={"ultra": 256, "high": 256, "mobile": 256},

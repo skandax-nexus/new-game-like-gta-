@@ -742,14 +742,22 @@ function packageTotals(rec) {
   return out;
 }
 
-function checkBudgets(rec) {
+/**
+ * Budget / record check. `strictIds` (a publish run: the ids it just built) limits the file-on-disk checks to those
+ * assets - another runner may be re-publishing a different asset's files right now (its publish stage writes them
+ * outside the lock, its record lands when it commits), which is a warning there, not this run's failure.
+ * --check passes no strictIds: every file is checked strictly.
+ */
+function checkBudgets(rec, strictIds = null) {
   const errors = [];
   const totals = Object.fromEntries(TIERS.map((t) => [t, 0]));
   for (const a of Object.values(rec.assets)) {
+    const strict = !strictIds || strictIds.has(a.id);
+    const report = (msg) => (strict ? errors.push(msg) : console.warn(`[assets] WARN ${msg} (another run re-publishing it?)`));
     for (const f of a.files) {
       const p = path.join(PUBLIC_DIR, f.path);
-      if (!fs.existsSync(p)) errors.push(`missing published file ${rel(p)} (run npm run assets -- ${a.id})`);
-      else if (fs.statSync(p).size !== f.bytes) errors.push(`${rel(p)} size differs from the build record`);
+      if (!fs.existsSync(p)) report(`missing published file ${rel(p)} (run npm run assets -- ${a.id})`);
+      else if (fs.statSync(p).size !== f.bytes) report(`${rel(p)} size differs from the build record`);
       if (f.bytes > BUDGETS.fileBytes) errors.push(`${f.path}: ${mb(f.bytes)} MB > single-file budget`);
     }
     for (const t of TIERS) totals[t] += a.bytes?.[t] ?? 0;
@@ -909,7 +917,7 @@ async function main() {
     savePublished(fresh);
     const res = writeManifest(fresh);
     console.log(`[assets] manifest ${res.upToDate ? 'unchanged' : 'written'}: ${rel(res.path)}`);
-    return checkBudgets(fresh);
+    return checkBudgets(fresh, new Set(built.keys()));
   });
   if (failure) throw failure;
   console.log(`[assets] ${built.size} published in ${((Date.now() - t0) / 1000).toFixed(1)} s`);

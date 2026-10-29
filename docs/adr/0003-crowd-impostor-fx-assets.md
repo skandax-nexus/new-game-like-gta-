@@ -108,23 +108,36 @@ current level casts a shadow (no double shadow).
 
 ### Flipbooks - VFX
 
-- **Authoring** (`lib/flipbook.py`): numpy particle volumes (divergence-free curl noise, age bands blurred
-  more as they age = expansion, buoyancy / heat / drag) -> density (+ temperature) grids -> precomputed
-  lighting (`light_volume`: optical depth to the key + blurred ambient occlusion) -> **Cycles
-  emission-absorption render** of the grid through a 2D slice-atlas volume shader (Blender 5 has no Point
-  Density node and no OpenVDB in the bpy wheel). 2D sprites (sparks, rain, leaves, trails) are drawn in numpy.
-  `loop_blend` cross-fades simulated fields for seamless loops.
-  Why not render particles as meshes or use Mantaflow: Mantaflow needs a GUI-era cache and minutes per
-  frame on CPU; the numpy + slice-atlas path is deterministic, ~5 s per 128 px frame, and keeps everything
-  scriptable and diff-reviewable.
+- **Authoring** (`lib/flipbook.py`), rework round 1:
+  - **Simulation:** `FluidSim`, an Eulerian smoke / fire / dust solver in numpy ("stable fluids": buoyancy from
+    temperature, weight from density, vorticity confinement, RK2 semi-Lagrangian advection, an exact spectral
+    pressure projection with an optional prescribed divergence for expanding hot gas, a free-slip floor by
+    mirroring, sponge layers at the open borders, passive scalars such as a flow-advected detail noise).
+    Grids of 1-2.3 M cells (fire 99 x 70 x 141 at 1.35 cm, smoke 136 x 109 x 157 at 2.2 cm), 0.5-1 s per step on
+    one CPU, deterministic. It replaces the curl-noise particle splats for fire / smoke / dust, which could not
+    make flame tongues or rolling lobes (Technical Art Director / Art Director review). `ParticleVolume` stays
+    for light effects.
+  - **Rendering:** `integrate_volume` evaluates the emission-absorption integral EXACTLY (front-to-back compositing
+    of piecewise-constant voxels, 2 sub-slices per voxel, bilinear resampling to the frame) instead of estimating
+    it with Cycles - no sampling grain at any resolution, ~0.1-1 s per frame. The Cycles slice-atlas renderer
+    (`render_volumes`) remains in the library and in the selftest as the reference. Lighting: `light_volume`
+    (ambient occlusion baked in the colour) + **density-gradient normals** (`density_normals`, the
+    transmittance-weighted outward normal along each pixel's ray), so the runtime sun gives a lit top and a
+    shaded side; fire uses a temperature ramp with a steep ignition threshold (crisp tongues) and no soot.
+  - 2D sprites (sparks, rain, leaves, trails, mist) are drawn in numpy with `frame_window` (exact zero at the
+    border). `loop_blend` cross-fades simulated fields for seamless loops.
+  Why not Mantaflow: it needs a GUI-era cache and minutes per frame on CPU; the numpy solver is deterministic,
+  scriptable and diff-reviewable, and its output is integrated without noise.
 - **Format:** atlas `cols x rows` (frame k row-major from the top-left, flipY false), `sequences`
   (name, start, count, fps, loop, optional per-sequence `blend` / `lit` overrides), `blend` alpha | additive |
   premultiplied, `lit` (normal map present: the particle is lit by the sun - smoke, dust, mist, leaves),
   `emissiveIntensity`, `softFadeMeters`, `sizeMeters`, `tint`. Color is sRGB, alpha linear; normals are
   tangent space (+Y up).
 - **Publish:** color atlas at `atlasPx` per tier (lossy WebP q86 + alpha q90; additive-only books drop the
-  redundant alpha), normal atlas at half resolution, lossy q90 (`FLIPBOOK_NORMAL_SCALE`: soft volume normals
-  lose nothing visible and the payload halves), same grid so the UVs are shared.
+  redundant alpha; `encoding: 'lossless' | 'near_lossless'` overrides it - fx_sparks_embers is lossless because
+  4:2:0 chroma put cyan fringes on its thin streaks), normal atlas at half resolution, lossy q90
+  (`FLIPBOOK_NORMAL_SCALE`), same grid so the UVs are shared. fx_fire and fx_smoke ship 2048 atlases (256 px
+  frames) on ultra (Art Director decision), 1024 on high, 512 on mobile.
 - **Border guard:** `flipbook.write()` fails the bake when any frame's outer 2 px carry coverage / emission above
   2/255 in the encoded atlas, checked at the source resolution and after downsampling to the smallest shipped
   frame size (a puff cut by its frame edge shows as a hard straight line on the particle quad). Sequences that
@@ -181,12 +194,23 @@ showed a rectangle with a dark AO halo - Art Director review).
 ### Skies (WP7)
 
 Time-of-day / weather skies are generated from `LIGHTING_PRESETS` (`hdri/_skykit.py`, `@style
-lighting:LIGHTING_PRESETS.<preset>`): Nishita bake via `lib/sky.bake_sky`, weather treatment in numpy (night:
-moonlit dome + stars + Milky Way, moon removed and exported as the manifest `sun`; overcast: CIE dome over a
-cloud deck; dusk: afterglow band + under-lit clouds; haze / fog: blend to the preset fog tone), then
+lighting:LIGHTING_PRESETS.<preset>`): Nishita bake via `lib/sky.bake_sky` (without its flat cloud layer), weather
+treatment in numpy (night: moonlit dome + stars + Milky Way, moon removed and exported as the manifest `sun`;
+overcast: a monsoon **nimbostratus deck** - continuous cover, darker rain-laden bases at ~0.62-0.75 x the deck,
+ragged lighter thinning towards az 180, a brighter wet-haze band in the fog family over the last ~8 deg, two
+distant rain shafts; dusk: afterglow band + afterglow-lit clouds; haze / fog: blend to the preset fog tone), then
 **calibrated so `ambientIrradiance` equals the preset's `sky.irradiance`** (environmentIntensity = 1 under the
 matching preset, ART_BIBLE §4.4) and re-encoded as DWAB EXR at DWA quality 40 / 45 / 42 (ultra / high /
 mobile) - ~200 KB at 2048 instead of ~600 KB, with no visible artifacts on smooth skies.
+- **Clouds** (`hdri/_clouds.py cloud_layer`) are shaded by the sun: domain-warped fBm eroded at the edges (wispy),
+  optical depth marched towards the sun through the layer -> a 3-tone lit / mid / shadow ramp, darker thick bases,
+  and a forward-scattering silver lining on thin edges within ~35 deg of the sun (dawn: warm lit sides, long
+  shadows; noon: white tops, grey bases; dusk: lit from below by the afterglow; night: moonlit).
+- **Horizon:** the lower hemisphere is rebuilt after calibration (`lower_hemisphere`): each column continues its
+  horizon radiance and blends to the ground bounce (albedo x (E_sky + E_sun) / pi) over 5 deg. The Nishita render
+  is black just below the horizon, so the first version baked a dark seam there (Art Director review: noon 0.453
+  -> 0.018); now no row within 6 deg below the horizon is darker than 0.6 x the row above it. ambientIrradiance
+  integrates only the upper hemisphere and is unchanged.
 
 ## Budgets
 

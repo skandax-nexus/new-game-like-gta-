@@ -7,8 +7,9 @@ Builds a tiny skinned mannequin with standard clips, exports it, re-reads the GL
 animations, UV sets, tangents and binding extras; checks decimation, a high->low normal bake and a
 procedural texture-set bake. TA-07 cases: VAT bake (reconstruction error, texture layout, GLB vertex order,
 octahedral normals, stride), impostor capture (hemi-octahedral math, coverage, normals, depth), flipbook
-volumes (curl-noise divergence, Cycles volume render, loop blend, normals from density, packing) and the
-flipbook border guard (frames touching their border fail the bake unless the sequence opens that edge).
+volumes (curl-noise divergence, Cycles volume render, loop blend, normals from density, packing), the Eulerian
+solver (projection, buoyancy, free-slip floor), the exact integrator against Cycles, and the flipbook border guard
+(frames touching their border fail the bake unless the sequence opens that edge).
 Writes to .asset-cache/_selftest/. Exit code 1 on failure.
 OWNER: Technical Art Director (TA-07 adds the vat / impostor / flipbook cases).
 """
@@ -336,6 +337,61 @@ def test_flipbook() -> None:
           and meta["cols"] == 2 and meta["frames"] == 3)
 
 
+def test_fluid_and_integrator() -> None:
+    """FluidSim (projection, buoyancy, floor) and the exact emission-absorption integrator vs Cycles."""
+    nz = flipbook.value_noise3((24, 24, 24), 6.0, 3, octaves=2)
+    sim = flipbook.FluidSim((24, 24, 24), (1.2, 1.2, 1.2), floor=False, vorticity=0.0)
+    for a in range(3):
+        sim.vel[a] = (flipbook.value_noise3((24, 24, 24), 6.0, 10 + a, octaves=2) - 0.5) * 2.0
+    h = sim.h
+
+    def div_ratio(v: np.ndarray) -> float:
+        dv = np.gradient(v[0], h, axis=0) + np.gradient(v[1], h, axis=1) + np.gradient(v[2], h, axis=2)
+        g = max(float(np.abs(np.gradient(v[0], h, axis=0)).max()), 1e-9)
+        return float(np.abs(dv).max()) / g
+
+    before = div_ratio(sim.vel)
+    sim.project()
+    after = div_ratio(sim.vel)
+    check("fluid: pressure projection removes the divergence", after < 0.15 * before, f"max|div| / max|du/dx| {before:.3f} -> {after:.3f}")
+    # a hot blob rises (buoyancy) and expands with a prescribed divergence
+    sim = flipbook.FluidSim((24, 24, 32), (1.2, 1.2, 1.6), floor=True, vorticity=2.0)
+    x, y, z = sim.world()
+    blob = np.clip((0.22 - np.sqrt(x ** 2 + y ** 2 + (z - 0.35) ** 2)) / 0.06, 0, 1).astype(np.float32)
+    sim.dens = blob.copy()
+    sim.temp = blob.copy()
+    cz0 = float((sim.dens * z).sum() / sim.dens.sum())
+    for _ in range(6):
+        sim.step(0.05, buoyancy=3.0, expansion=1.0, substeps=2)
+    cz1 = float((sim.dens * z).sum() / max(float(sim.dens.sum()), 1e-9))
+    check("fluid: buoyant hot blob rises", cz1 > cz0 + 0.05, f"density centroid z {cz0:.3f} -> {cz1:.3f} m")
+    # free-slip floor: no flow through z = 0 after projection (mirror-symmetric pressure)
+    sim2 = flipbook.FluidSim((16, 16, 16), (1.0, 1.0, 1.0), floor=True, vorticity=0.0)
+    sim2.vel[2][:] = -1.0
+    sim2.project()
+    check("fluid: free-slip floor stops flow into the ground", float(np.abs(sim2.vel[2][:, :, 0]).mean()) < 0.2,
+          f"mean |w| in the first cell {float(np.abs(sim2.vel[2][:, :, 0]).mean()):.3f} (was 1.0)")
+    # exact integration of a uniform sphere vs Cycles (64 samples) on the same vertex grid
+    n = 32
+    g = (np.arange(n) / (n - 1) * 2 - 1).astype(np.float32)
+    X, Y, Z = np.meshgrid(g, g, g, indexing="ij")
+    sig = (np.sqrt(X ** 2 + Y ** 2 + Z ** 2) < 0.6).astype(np.float32) * 2.0
+    rad = np.zeros(sig.shape + (3,), np.float32) + np.array([0.8, 0.5, 0.2], np.float32)
+    core.reset_scene()
+    cyc = flipbook.render_volumes([(sig, rad)], (2.0, 2.0, 2.0), 32, samples=64)[0]
+    ex, _ = flipbook.integrate_volume(sig, rad, (2.0, 2.0, 2.0), 32, view="front", centered=False)
+    da = float(np.abs(cyc[..., 3] - ex[..., 3]).mean())
+    dc = float(np.abs(cyc[..., :3] - ex[..., :3]).mean())
+    check("integrator: exact emission-absorption matches Cycles (uniform sphere)", da < 0.03 and dc < 0.03,
+          f"mean |alpha diff| {da:.4f}, mean |rgb diff| {dc:.4f}; centre alpha cycles {float(cyc[16, 16, 3]):.3f} exact {float(ex[16, 16, 3]):.3f}")
+    nrm = flipbook.density_normals(sig, 1.0)
+    _, tn = flipbook.integrate_volume(sig, rad, (2.0, 2.0, 2.0), 32, view="front", centered=False, normals=nrm)
+    right = tn[16, 24] * 2 - 1
+    top = tn[8, 16] * 2 - 1
+    check("integrator: density-gradient normals point outward (right edge +x, top +y)", right[0] > 0.3 and top[1] > 0.3,
+          f"right {np.round(right, 2)}, top {np.round(top, 2)}")
+
+
 def test_flipbook_border_guard() -> None:
     """lib/flipbook.write() fails the bake when content touches a frame border (TA-07 rework: fx_smoke / sparks)."""
     import os
@@ -389,7 +445,7 @@ def test_flipbook_border_guard() -> None:
 
 
 for t in (test_skinned_export, test_lod, test_normal_bake, test_texture_set_bake, test_vat, test_impostor, test_flipbook,
-          test_flipbook_border_guard):
+          test_fluid_and_integrator, test_flipbook_border_guard):
     try:
         t()
     except Exception as e:  # noqa: BLE001

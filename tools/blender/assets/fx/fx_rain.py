@@ -4,7 +4,7 @@
 
 Monsoon rain atlas (8 x 8 frames of 64 px = 512, ASSET_LIST WP7-12, ART_BIBLE §10 rain): `streak` (soft 1.5-3 cm
 x 30-60 cm drop streak with a brighter head, stretched by speed and angled by wind at runtime), `splash`
-(4 x 4 = 16 frames: crown splash - a ring of droplets thrown up and out, falling back, side view), `ripple`
+(16 frames: a coronet - flaring crown walls, 8 rim cusps throwing fingers and droplets, collapsing to a ring), `ripple`
 (8 frames: expanding concentric rings - the NORMAL map carries the ripple normals for puddles / water, the
 color frames a faint highlight), `drip` (eave drip: a hanging drop with a thin tail, hero mode).
 Straight alpha, unlit (droplets pick up the sky via the runtime tint). OWNER: Technical Artist G (TA-07).
@@ -28,10 +28,11 @@ color: list = []
 normals: list = []
 seqs: list = []
 FLAT = np.concatenate([np.full((PX, PX, 2), 0.5, np.float32), np.ones((PX, PX, 1), np.float32)], axis=-1)
+WIN = fb.frame_window(PX, 0.03, 0.06)
 
 
 def rgba(a: np.ndarray, tint: np.ndarray = WATER) -> np.ndarray:
-    a = np.clip(a, 0, 1).astype(np.float32)
+    a = (np.clip(a, 0, 1) * WIN).astype(np.float32)  # every sprite fades to 0 before its frame border
     return np.concatenate([np.broadcast_to(tint, a.shape + (3,)), a[..., None]], axis=-1).astype(np.float32)
 
 
@@ -46,24 +47,47 @@ w = 0.035
 s = np.exp(-(x / w) ** 2) * np.clip(1.0 - np.abs(y) / 0.95, 0, 1) ** 0.6 * (0.45 + 0.55 * np.clip((0.9 - y) / 1.8, 0, 1))
 seq("streak", [rgba(s * 0.85)], 1)
 
-# splash: crown of droplets (side view, ground at y = -0.75)
-drops = [(rng.uniform(-1.0, 1.0), rng.uniform(1.4, 2.4), rng.uniform(0.03, 0.055)) for _ in range(20)]
+# splash: a crown (coronet) seen from the side, slightly from above - a thin sheet whose walls FLARE OUTWARD from the
+# impact (wider at the top, never a "[ ]" bucket), a rim of 8 cusps each throwing a finger and a droplet, collapsing
+# into a ring while the droplets fall back (ground at y = -0.72).
+GROUND = -0.72
+cusps = [(2 * np.pi * (k + rng.uniform(-0.2, 0.2)) / 8, rng.uniform(0.8, 1.2)) for k in range(8)]
+extra = [(rng.uniform(-1.0, 1.0), rng.uniform(1.2, 2.0), rng.uniform(0.022, 0.04)) for _ in range(10)]
 imgs = []
 for f in range(16):
-    t = f / 15.0
+    t = (f + 1) / 16.0  # frame 0 already shows the crown rising (no empty first frame)
+    grow = np.sin(np.pi * min(1.0, t * 1.5)) * (1.0 - 0.5 * t)
+    h = 0.55 * grow                       # crown height
+    w0 = 0.12 + 0.35 * t                  # radius at the ground
+    w1 = w0 + 0.22 * grow + 0.15 * t      # radius at the rim: flares outward
     a = np.zeros_like(x)
-    crown_h = 0.5 * np.sin(np.pi * min(1.0, t * 1.6)) * (1 - t)
-    cw = 0.14 + 0.6 * t
-    crown = np.exp(-((np.abs(x) - cw) / 0.05) ** 2) * ((y > -0.75) & (y < -0.75 + crown_h + 0.02)) * (1 - t) ** 0.8
-    a += crown * 0.9
-    sheet = np.exp(-((y + 0.75) / 0.03) ** 2) * np.clip(1 - np.abs(x) / (cw + 0.05), 0, 1) * (1 - t) * 0.7
-    a += sheet
-    for vx, vy, r in drops:
-        px_ = vx * 0.8 * t
-        py_ = -0.75 + vy * t - 2.5 * t * t
-        if py_ < -0.78:
+    if h > 0.02:
+        # walls: the cylinder's silhouette edges, slanted outward
+        for side in (-1.0, 1.0):
+            a += kit.streak(x, y, (side * w0, GROUND), (side * w1, GROUND + h), 0.022, 1.0) * 0.85
+        # faint sheet between the walls (thinning upward)
+        yy = np.clip((y - GROUND) / max(h, 1e-3), 0, 1)
+        wy = w0 + (w1 - w0) * yy
+        a += (np.abs(x) < wy) * (y > GROUND) * (y < GROUND + h) * (0.18 * (1.0 - yy))
+        # rim ellipse (seen slightly from above) with cusps, each throwing a finger + droplet
+        for ang, lk in cusps:
+            cx = w1 * np.cos(ang)
+            cy = GROUND + h + 0.06 * np.sin(ang) * w1
+            fl = 0.16 * grow * lk
+            tipx = cx * (1.0 + 0.35 * t)
+            tipy = cy + fl
+            a += kit.streak(x, y, (cx, cy), (tipx, tipy), 0.014, 1.0) * 0.9 * (0.6 + 0.4 * np.sin(ang) ** 2)
+            dr = 0.028 * lk
+            a += np.exp(-(((x - tipx) / dr) ** 2 + ((y - tipy - dr) / (dr * 1.3)) ** 2)) * 0.95
+    # detached droplets flying out and falling back
+    for vx, vy, rr in extra:
+        px_ = vx * 0.75 * t
+        py_ = GROUND + 0.2 + vy * t * 0.7 - 2.2 * t * t
+        if py_ < GROUND - 0.02 or t < 0.15:
             continue
-        a += np.exp(-(((x - px_) / r) ** 2 + ((y - py_) / (r * 1.4)) ** 2)) * (1 - t * 0.6)
+        a += np.exp(-(((x - px_) / rr) ** 2 + ((y - py_) / (rr * 1.4)) ** 2)) * (1 - t * 0.5)
+    # base ring on the ground as the crown collapses
+    a += np.exp(-((y - GROUND) / 0.025) ** 2) * np.exp(-((np.abs(x) - (w0 + 0.1 * t)) / 0.06) ** 2) * t * 0.6
     imgs.append(rgba(a))
 seq("splash", imgs, 30)
 

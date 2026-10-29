@@ -198,6 +198,8 @@ class FluidSim:
         self.vel = np.zeros((3, nx, ny, nz), F)
         self.dens = np.zeros(self.n, F)
         self.temp = np.zeros(self.n, F)
+        # passive scalars advected with the flow (e.g. a fine detail noise that the flow stretches into wisps)
+        self.fields: dict[str, np.ndarray] = {}
         self.t = 0.0
         I, J, K = np.meshgrid(np.arange(nx, dtype=F), np.arange(ny, dtype=F), np.arange(nz, dtype=F), indexing="ij")
         self._I, self._J, self._K = I, J, K
@@ -327,6 +329,8 @@ class FluidSim:
         self.vel = np.stack([self._gather(u, iw), self._gather(v, iw), self._gather(w, iw)])
         self.dens = self._gather(self.dens, iw)
         self.temp = self._gather(self.temp, iw)
+        for k in list(self.fields):
+            self.fields[k] = self._gather(self.fields[k], iw)
 
     def step(self, dt: float, *, buoyancy: float = 1.0, weight: float = 0.0, vorticity: float | None = None,
              cooling: float = 0.0, dissipation: float = 0.0, damping: float = 0.0, wind: Sequence[float] = (0.0, 0.0, 0.0),

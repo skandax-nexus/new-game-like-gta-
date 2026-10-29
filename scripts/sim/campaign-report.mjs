@@ -8,8 +8,9 @@
  * Loads the real TypeScript simulation through Vite's SSR module loader (no extra dependencies) and plays whole
  * campaigns headless with every player event answered with its first (safe default) choice and every engagement
  * autoresolved - the same rules as tests/sim/strategic/helpers.ts:
- *   - The Broken Crown, seed 1, with the current data and with the data changes requested from the Creative Director;
- *   - The Seven Hills, seed 1, and the default sandbox, seed 1 (with the requested data).
+ *   - The Broken Crown seed 1, The Seven Hills seed 1 and the default sandbox seed 1, with the data as shipped;
+ *   - the same runs with the data change still pending at the Creative Director (REQUESTED below), when it differs;
+ *   - The Broken Crown seeds 1-6 (outcome only) and a passive sandbox player as each realm (outcome, starving days).
  * Records per month: the player's ledger (tax, trade, tribute, army, buildings, administration, net, treasury, royal
  * reserve, stability, legitimacy), reserve days (minimum of the month) and unrest (maximum) per own settlement;
  * battles, events, rebellions, secessions and captures; the outcome; the §13.2 grain calibration with both data sets.
@@ -23,18 +24,31 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const OUT = resolve(ROOT, process.env.REPORT_OUT || 'docs/sprint1/sim-01');
 const DAYS = 540;
 
-/** Data changes requested from the Creative Director (mirrors tests/sim/strategic/helpers.ts). */
-const PENDING = { laborHealthWeight: 0, exportAboveDays: 75 };
+/**
+ * Data change still pending at the Creative Director (review B2: RULES.storage.baseDays 90 -> 120). The tests read
+ * RULES, so it lands without a code change; once src/data/rules.ts carries it the "requested" runs are skipped.
+ */
+const REQUESTED = { 'storage.baseDays': 120 };
 
-/** The data requests this report backs (numbers in the tables above them). */
+/** Data requests already applied by the Creative Director (ba45410). */
+const APPLIED = [
+  '**CD-1** `RULES.population.laborHealthWeight` 0.5 -> 0 (applied in ba45410).',
+  '**CD-2** `RULES.distribution.exportAboveDays` 120 -> 75 (applied in ba45410).',
+  '**CD-5** `RULES.politics.offers.autonomy.taxShare` -0.25 -> -0.125, informational; the sim applies the §7.5 formula (applied in ba45410).',
+  '**CD-6** `RULES.roads.repairWealthPerKm` and `RULES.politics.governor.loyaltyDrift` (applied in ba45410); the sim now reads them (commands.roadRepairCost, politics.governorLoyaltyTarget) instead of in-code constants.',
+];
+
+/** Open data requests to the Creative Director; {...} placeholders are filled with the measurements of this run. */
 const DATA_REQUESTS = [
-  '**CD-1** `RULES.population.laborHealthWeight` 0.5 -> **0**: the §13.2 bands were calibrated with labor = population x 0.45; health-weighted labor removes 10-18% of farm labor (calibration table, "current data" columns).',
-  '**CD-2** `RULES.distribution.exportAboveDays` 120 -> **75**: grain villages hover at 40-170 reserve days, so at 120 they rarely export and Rajapura (break-even on its own fields) starves every lean season - The Broken Crown loses the capital with the current data and ends `out_restored` with CD-1 + CD-2 (Outcomes). Auto-resolved survival over seeds 1-10 with CD-1: 120 days -> 1/10, 90 -> 9/10, 75 -> 10/10, 60 -> 10/10; at 90 the result moves with tactical battle outcomes (a capital that empties days before the second rabi harvest revolts - CD-3), 75 leaves a margin.',
-  '**CD-3** Deficit realms (Giridurga -9%, Marudesha -8% by design) revolt every lean season under the flat +0.02/day starvation unrest unless their AI buys or rations grain; consider scaling that term by the unmet share of need (0.02 x deficit share) or raising their fertility. Until SIM-02 manages grain, most AI settlements secede within the first year (Incidents).',
+  '**CD-8** `RULES.storage.baseDays` 90 -> **120** (the Creative Director\'s own review item B2; tests/sim/strategic/economy.test.ts now reads the value). A balanced settlement needs ~126 days of storage to hold its kharif (35% of the year) and carry the lean months to the next one; at 90 every settlement without a granary spills grain at harvest and starves before the next. Measured below: passive sandbox player per realm ({passiveSummary}); The Broken Crown seeds 1-6 ({bcSummary}); the §13.2 calibration does not move (it measures annual production).',
+  '**CD-3** Deficit realms (Giridurga -9%, Marudesha -8% by design) still starve every lean season unless someone buys or rations grain, and the flat +0.02/day starvation unrest walks them from famine to revolt to secession in ~45 days: with CD-8 a passive Marudesha player still loses the realm ({frontierPassive}). Please consider scaling that term by the unmet share of need (0.02 x deficit share) or raising their fertility; SIM-02 (campaign AI) is the other half - AI realms must use the market and the rationing rule. A deficit town that secedes never recovers: §7.3.1 production is linear in farm labor, so famine deaths shrink production as fast as need (Giridurg as a free town starved 150 days running in the passive Giridurga run); a rule for free towns in famine (shift labor to farming, or land-limited yields) would let them settle.',
   '**CD-4** Landmark rules are keyed by landmark id in code (Royal Granary spoilage x0.5, Cliff Cistern besieged consumption x0.6, Elephant Grove elephant recruit time x0.7, Great Road royal-road speed); please add `LandmarkDef` fields (`spoilageFactor`, `besiegedConsumption`, `recruitTime: { war_elephants: 0.7 }`, `roadSpeed`).',
-  '**CD-5** negotiate_rebels autonomy: `offers.autonomy.taxShare` -0.25 disagrees with the §7.5 tax formula (1 - 0.5 x autonomy, so +0.25 autonomy = -12.5% tax); the sim uses the formula - please pick one.',
-  '**CD-6** Constants still in code, please move them to RULES: road repair 20 wealth per km per missing condition point (`commands.ROAD_REPAIR_WEALTH_PER_KM`); governor loyalty drifts 10%/month toward 0.5 + 0.15 (interest met) or - 0.1 (not met) - 0.2 x province unrest + 0.2 x (legitimacy - 0.5) (`politics.governorLoyaltyTarget`).',
   '**CD-7** Restate the DESIGN_SPEC worked examples with the real map and modifiers: Rajapura -> Giridurg is 114 km of road (4.3 days; the example assumed 81 km), 9.2 days across country (terrain + the river crossing); the Royal Host eats 195 grain/day and carries 23.5 days (27 with Suvarna supplyEfficiency 1.15); Giridurg (4,200 wall HP) falls in 52.5 days to one engineer formation at siegeStrength 1 (48 for Suvarna, 1.1); the Palace takes 144 days at constructionSpeed 1 (131 for Suvarna).',
+];
+
+/** Contract request to the CTO that the review raised (B3 narrative). */
+const CTO_REQUESTS = [
+  '**CTO-1** `src/core/types.ts` Effect: add `{ kind: \'defect_character\'; character: ScopeRef; to: ScopeRef; withArmies: boolean }` (\'Let him go\' sets `claimant_defected`, yet Prince Devavarman stays in the Suvarna court). SIM-01 then implements it in events.applyEffect: the character changes faction, leaves offices, council seat, heir role and governorship (as on death), his dynasty membership stays; with `withArmies` the armies he commands change owner with him; the Creative Director adds it to `evt_bc_gates_of_ratnapura/let_go`.',
 ];
 
 const server = await createServer({
@@ -56,11 +70,19 @@ try {
   const { defaultSandbox } = await server.ssrLoadModule('/src/data/campaign.ts');
   const { createWorld, getRegionHeightfield, tickWorld } = worldMod;
 
-  const original = { laborHealthWeight: RULES.population.laborHealthWeight, exportAboveDays: RULES.distribution.exportAboveDays };
-  const applyData = (pending) => {
-    RULES.population.laborHealthWeight = pending ? PENDING.laborHealthWeight : original.laborHealthWeight;
-    RULES.distribution.exportAboveDays = pending ? PENDING.exportAboveDays : original.exportAboveDays;
+  const getPath = (path) => path.split('.').reduce((o, k) => o[k], RULES);
+  const setPath = (path, v) => {
+    const keys = path.split('.');
+    const last = keys.pop();
+    keys.reduce((o, k) => o[k], RULES)[last] = v;
   };
+  const original = Object.fromEntries(Object.keys(REQUESTED).map((k) => [k, getPath(k)]));
+  /** True while the shipped data still differs from the request (otherwise the requested runs are skipped). */
+  const pendingDiffers = Object.entries(REQUESTED).some(([k, v]) => original[k] !== v);
+  const applyData = (pending) => {
+    for (const k of Object.keys(REQUESTED)) setPath(k, pending ? REQUESTED[k] : original[k]);
+  };
+  const dataLabel = (pending) => (pending ? `requested data (${Object.entries(REQUESTED).map(([k, v]) => `${k} ${v}`).join(', ')})` : `data as shipped (${Object.entries(original).map(([k, v]) => `${k} ${v}`).join(', ')})`);
 
   const issued = (w, cmd) => ({ factionId: w.playerFactionId, hour: w.calendar.totalHours, cmd });
 
@@ -73,6 +95,8 @@ try {
     const months = [];
     const events = [];
     const incidents = [];
+    const starving = {};
+    const startOwned = Object.values(w.settlements).filter((s) => s.ownerFactionId === pid).map((s) => s.id);
     let cur = null;
     const startMonth = () => {
       cur = { month: months.length + 1, calendar: `${w.calendar.year}/${w.calendar.month + 1}`, reserveDays: {}, unrest: {}, stage: {} };
@@ -104,6 +128,7 @@ try {
         if (e.kind === 'succession') incidents.push({ day, kind: 'succession', text: `${e.factionId}: ${w.characters[e.newRulerId]?.name}${e.crisis ? ' (crisis)' : ''}` });
         if (e.kind === 'monsoon_roll') incidents.push({ day, kind: 'monsoon', text: `M = ${e.strength.toFixed(2)} (${e.result})` });
       }
+      if (w.calendar.hour === 0) for (const s of Object.values(w.settlements)) if (s.starvationDays > 0) starving[s.id] = (starving[s.id] ?? 0) + 1;
       for (const s of Object.values(w.settlements)) {
         if (s.ownerFactionId !== pid) continue;
         const rd = econMod.reserveDays(s);
@@ -144,6 +169,10 @@ try {
       events,
       incidents,
       statistics: w.statistics[pid] ?? {},
+      player: pid,
+      startOwned,
+      starving,
+      court: Object.values(w.characters).filter((c) => c.factionId === pid && c.alive).length,
       seconds: (Date.now() - t0) / 1000,
     };
     applyData(false);
@@ -176,19 +205,37 @@ try {
     return res;
   }
 
-  const runs = [
-    play('The Broken Crown - current data', { kind: 'scenario', scenarioId: 'broken_crown', seed: 1, difficulty: 'normal' }, false),
-    play('The Broken Crown - requested data (CD-1, CD-2)', { kind: 'scenario', scenarioId: 'broken_crown', seed: 1, difficulty: 'normal' }, true),
-    play('The Seven Hills - requested data', { kind: 'scenario', scenarioId: 'seven_hills', seed: 1, difficulty: 'normal' }, true),
-    play('Sandbox (River of Kings) - requested data', { kind: 'sandbox', sandbox: defaultSandbox(1) }, true),
-  ];
-  const calibration = {
-    current: { normal: calibrate(1, false), drought: calibrate(0.7, false) },
-    requested: { normal: calibrate(1, true), drought: calibrate(0.7, true) },
-  };
+  const sets = pendingDiffers ? [false, true] : [false];
+  const bc = (seed) => ({ kind: 'scenario', scenarioId: 'broken_crown', seed, difficulty: 'normal' });
+  const runs = [];
+  for (const pending of sets) {
+    runs.push(play(`The Broken Crown - ${dataLabel(pending)}`, bc(1), pending));
+    runs.push(play(`The Seven Hills - ${dataLabel(pending)}`, { kind: 'scenario', scenarioId: 'seven_hills', seed: 1, difficulty: 'normal' }, pending));
+    runs.push(play(`Sandbox (default, Suvarna) - ${dataLabel(pending)}`, { kind: 'sandbox', sandbox: defaultSandbox(1) }, pending));
+  }
+  /** The Broken Crown seeds 1-6, outcome only (the campaign test's 6/6 'mixed'). */
+  const brokenCrownSeeds = {};
+  for (const pending of sets) {
+    brokenCrownSeeds[pending ? 'requested' : 'current'] = [1, 2, 3, 4, 5, 6].map((seed) => {
+      const r = play(`bc${seed}`, bc(seed), pending);
+      return { seed, outcome: r.outcome, rajapura: r.final.heartland?.settlements.includes('rajapura') ?? false };
+    });
+  }
+  /** A passive sandbox player as each realm (seed 1): outcome and starving days of the starting settlements. */
+  const REALMS = ['heartland', 'highland', 'forest', 'frontier'];
+  const passive = {};
+  for (const pending of sets) {
+    passive[pending ? 'requested' : 'current'] = REALMS.map((pid) => {
+      const r = play(`passive ${pid}`, { kind: 'sandbox', sandbox: { ...defaultSandbox(1), playerFactionId: pid, rivalFactionIds: REALMS.filter((x) => x !== pid) } }, pending);
+      const own = Object.fromEntries(r.startOwned.map((id) => [id, r.starving[id] ?? 0]));
+      return { realm: pid, outcome: r.outcome, end: r.final[pid]?.settlements ?? [], starving: own, starvingAll: r.starving, court: r.court };
+    });
+  }
+  const calibration = { current: { normal: calibrate(1, false), drought: calibrate(0.7, false) } };
+  if (pendingDiffers) calibration.requested = { normal: calibrate(1, true), drought: calibrate(0.7, true) };
 
   mkdirSync(OUT, { recursive: true });
-  writeFileSync(resolve(OUT, 'campaign-report.json'), JSON.stringify({ generatedBy: 'scripts/sim/campaign-report.mjs', days: DAYS, pending: PENDING, calibration, runs }, null, 1));
+  writeFileSync(resolve(OUT, 'campaign-report.json'), JSON.stringify({ generatedBy: 'scripts/sim/campaign-report.mjs', days: DAYS, shipped: original, requested: pendingDiffers ? REQUESTED : null, calibration, brokenCrownSeeds, passive, runs }, null, 1));
 
   // ---------------------------------------------------------------------------------------------------- SVG charts
   const COLORS = ['#b5532a', '#2f6f8f', '#6b8e23', '#8e5ba8', '#c99a2e', '#4a4a4a', '#b03060', '#2e8b57'];
@@ -212,7 +259,7 @@ try {
     run.months.forEach((m, i) => {
       if (i % 3 === 0) svg += `<text x="${x(i)}" y="${H - B + 16}" text-anchor="middle">${m.month}</text>`;
     });
-    svg += `<text x="${(W + L) / 2}" y="${H - 4}" text-anchor="middle">month</text><text x="12" y="${T + 10}">${yLabel}</text>`;
+    svg += `<text x="${(W + L) / 2}" y="${H - 4}" text-anchor="middle">month</text><text x="14" y="${(T + H - B) / 2}" text-anchor="middle" transform="rotate(-90 14 ${(T + H - B) / 2})">${yLabel}</text>`;
     ids.forEach((id, k) => {
       const pts = run.months.map((m, i) => (m[key][id] === undefined ? null : `${x(i).toFixed(1)},${y(m[key][id]).toFixed(1)}`)).filter(Boolean);
       if (pts.length > 1) svg += `<polyline fill="none" stroke="${COLORS[k % COLORS.length]}" stroke-width="2" points="${pts.join(' ')}"/>`;
@@ -220,29 +267,43 @@ try {
     });
     return svg + '</svg>';
   }
-  const bc = runs[1];
-  writeFileSync(resolve(OUT, 'campaign-reserve-days.svg'), lineChart('The Broken Crown (requested data): lowest reserve days per month', bc, 'reserveDays', 180, 'days', 30));
-  writeFileSync(resolve(OUT, 'campaign-unrest.svg'), lineChart('The Broken Crown (requested data): highest unrest per month', bc, 'unrest', 1, 'unrest', 0.75));
-  writeFileSync(resolve(OUT, 'campaign-reserve-days-current-data.svg'), lineChart('The Broken Crown (current data): lowest reserve days per month', runs[0], 'reserveDays', 180, 'days', 30));
+  const bcCurrent = runs[0];
+  const bcRequested = pendingDiffers ? runs[3] : null;
+  writeFileSync(resolve(OUT, 'campaign-reserve-days.svg'), lineChart(`The Broken Crown (${dataLabel(false)}): lowest reserve days per month`, bcCurrent, 'reserveDays', 210, 'days', 30));
+  writeFileSync(resolve(OUT, 'campaign-unrest.svg'), lineChart(`The Broken Crown (${dataLabel(false)}): highest unrest per month`, bcCurrent, 'unrest', 1, 'unrest', 0.75));
+  if (bcRequested) writeFileSync(resolve(OUT, 'campaign-reserve-days-requested-data.svg'), lineChart(`The Broken Crown (${dataLabel(true)}): lowest reserve days per month`, bcRequested, 'reserveDays', 210, 'days', 30));
 
   // ---------------------------------------------------------------------------------------------------- Markdown
   const pct = (v) => `${v >= 0 ? '+' : ''}${(v * 100).toFixed(1)}%`;
   const r0 = (v) => (v === undefined || v === null ? '' : Math.round(v).toLocaleString('en-US'));
   let md = `# SIM-01 campaign report (540 days)\n\nGenerated by \`node scripts/sim/campaign-report.mjs\` (headless, the real simulation; every player event answered with its first - safe default - choice, every engagement autoresolved, no other player input). Raw data: \`campaign-report.json\`.\n\n`;
-  md += `Requested data (the Creative Director's call, see "Data requests" below): CD-1 \`RULES.population.laborHealthWeight\` 0.5 -> ${PENDING.laborHealthWeight}; CD-2 \`RULES.distribution.exportAboveDays\` 120 -> ${PENDING.exportAboveDays}.\n\n`;
+  md += `Data as shipped: ${Object.entries(original).map(([k, v]) => `\`RULES.${k}\` ${v}`).join(', ')} (CD-1, CD-2, CD-5 and CD-6 are applied). ${pendingDiffers ? `Requested data: ${Object.entries(REQUESTED).map(([k, v]) => `\`RULES.${k}\` ${v}`).join(', ')} (CD-8, see "Data requests").` : 'No data request is pending.'}\n\n`;
   md += `## Outcomes\n\n| Run | Outcome | Day | Score | Player settlements at the end | Battles | Revolts | Secessions | Real seconds |\n|---|---|---|---|---|---|---|---|---|\n`;
   for (const r of runs) {
-    const pidSettlements = Object.values(r.final).find((x) => x.settlements.length >= 0);
-    void pidSettlements;
-    const player = r.label.startsWith('The Seven') ? 'highland' : 'heartland';
-    md += `| ${r.label} | ${r.outcome.status} (${r.outcome.outcomeId ?? '-'}) | ${r.outcome.day} | ${r.score} | ${r.final[player]?.settlements.join(', ') || '-'} | ${r.battles.length} | ${r.incidents.filter((i) => i.kind === 'revolt').length} | ${r.incidents.filter((i) => i.kind === 'secession').length} | ${r.seconds.toFixed(1)} |\n`;
+    md += `| ${r.label} | ${r.outcome.status} (${r.outcome.outcomeId ?? '-'}) | ${r.outcome.day} | ${r.score} | ${r.final[r.player]?.settlements.join(', ') || '-'} | ${r.battles.length} | ${r.incidents.filter((i) => i.kind === 'revolt').length} | ${r.incidents.filter((i) => i.kind === 'secession').length} | ${r.seconds.toFixed(1)} |\n`;
   }
-  md += `\n## DESIGN_SPEC §13.2 grain calibration (annual civilian balance, measured with the daily economy)\n\n| Realm | Target (normal) | Current data, M = 1 | Requested data, M = 1 | Current data, M = 0.7 | Requested data, M = 0.7 |\n|---|---|---|---|---|---|\n`;
+  const seedLine = (list) => list.map((x) => `seed ${x.seed}: ${x.outcome.status} (${x.outcome.outcomeId ?? '-'}) day ${x.outcome.day}${x.rajapura ? '' : ', Rajapura lost'}`).join('; ');
+  md += `\n### The Broken Crown, seeds 1-6 (every event auto-resolved)\n\n`;
+  for (const [k, list] of Object.entries(brokenCrownSeeds)) md += `- ${dataLabel(k === 'requested')}: ${list.filter((x) => x.outcome.outcomeId === 'out_restored' || x.outcome.outcomeId === 'out_iron').length}/6 mixed - ${seedLine(list)}\n`;
+  md += `\n### A passive sandbox player as each realm (seed 1, normal monsoon, no input; review B2)\n\nStarving days = days with an empty store over the 540 days, whoever held the settlement, for each settlement the realm owned at the start (a seceded town keeps counting). Living court = the realm's living characters at the end (review B4: ruler, spouse, heir, general).\n\n| Data | Realm | Outcome | Day | Settlements at the end | Starving days (settlements owned at the start) | Living court |\n|---|---|---|---|---|---|---|\n`;
+  for (const [k, list] of Object.entries(passive)) {
+    for (const p of list) md += `| ${k === 'requested' ? 'requested' : 'shipped'} | ${p.realm} | ${p.outcome.status} (${p.outcome.outcomeId ?? '-'}) | ${p.outcome.day} | ${p.end.join(', ') || '-'} | ${Object.entries(p.starving).map(([id, d]) => `${id} ${d}`).join(', ')} | ${p.court} |\n`;
+  }
+  md += `\n## DESIGN_SPEC §13.2 grain calibration (annual civilian balance, measured with the daily economy)\n\n| Realm | Target (normal) | ${dataLabel(false)}, M = 1 | M = 0.7 |${calibration.requested ? ` ${dataLabel(true)}, M = 1 | M = 0.7 |` : ''}\n|---|---|---|---|${calibration.requested ? '---|---|' : ''}\n`;
   const targets = { heartland: '+15%', highland: '-9%', forest: '+3%', frontier: '-8%' };
   for (const k of Object.keys(calibration.current.normal)) {
-    md += `| ${k} | ${targets[k] ?? '-'} | ${pct(calibration.current.normal[k])} | ${pct(calibration.requested.normal[k])} | ${pct(calibration.current.drought[k])} | ${pct(calibration.requested.drought[k])} |\n`;
+    md += `| ${k} | ${targets[k] ?? '-'} | ${pct(calibration.current.normal[k])} | ${pct(calibration.current.drought[k])} |${calibration.requested ? ` ${pct(calibration.requested.normal[k])} | ${pct(calibration.requested.drought[k])} |` : ''}\n`;
   }
-  md += `\n## Data requests (Creative Director, \`src/data/**\`)\n\n${DATA_REQUESTS.map((t, i) => `${i + 1}. ${t}`).join('\n')}\n`;
+  const summarizePassive = (key) => (passive[key] ?? []).map((p) => `${p.realm} ${p.outcome.status === 'defeat' ? `lost day ${p.outcome.day}` : 'holds'}`).join(', ');
+  const fill = (t) =>
+    t
+      .replace('{passiveSummary}', pendingDiffers ? `shipped: ${summarizePassive('current')}; requested: ${summarizePassive('requested')}` : summarizePassive('current'))
+      .replace('{bcSummary}', Object.entries(brokenCrownSeeds).map(([k, list]) => `${k === 'requested' ? 'requested' : 'shipped'} ${list.filter((x) => x.outcome.outcomeId === 'out_restored' || x.outcome.outcomeId === 'out_iron').length}/6 mixed`).join(', '))
+      .replace('{frontierPassive}', (() => {
+        const p = (passive.requested ?? passive.current).find((x) => x.realm === 'frontier');
+        return p ? `${p.outcome.status === 'defeat' ? `realm lost on day ${p.outcome.day}` : 'it holds'}; ${Object.entries(p.starving).map(([id, d]) => `${id} ${d}`).join(', ')} starving days` : '';
+      })());
+  md += `\n## Data requests (Creative Director, \`src/data/**\`)\n\nOpen:\n\n${DATA_REQUESTS.map((t, i) => `${i + 1}. ${fill(t)}`).join('\n')}\n\nApplied:\n\n${APPLIED.map((t) => `- ${t}`).join('\n')}\n\n## Contract requests (CTO)\n\n${CTO_REQUESTS.map((t) => `- ${t}`).join('\n')}\n`;
   for (const r of runs) {
     md += `\n## ${r.label}\n\n### Monthly ledger (player)\n\n| Month | Date | Tax | Trade | Tribute | Army | Buildings | Admin | Net | Treasury | Royal reserve | Stability | Legitimacy | Settlements | Soldiers |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n`;
     for (const m of r.months) {
@@ -262,7 +323,7 @@ try {
     for (const e of r.events) md += `- day ${e.day}: ${e.title} -> ${e.choice}\n`;
     md += `\n### Statistics\n\n${Object.entries(r.statistics).filter(([k]) => !k.startsWith('mtd_')).map(([k, v]) => `\`${k}\` ${Math.round(v)}`).join(' · ')}\n`;
   }
-  md += `\n## Charts\n\n![reserve days](campaign-reserve-days.svg)\n\n![unrest](campaign-unrest.svg)\n\n![reserve days, current data](campaign-reserve-days-current-data.svg)\n`;
+  md += `\n## Charts\n\n![reserve days](campaign-reserve-days.svg)\n\n![unrest](campaign-unrest.svg)\n${bcRequested ? '\n![reserve days, requested data](campaign-reserve-days-requested-data.svg)\n' : ''}`;
   writeFileSync(resolve(OUT, 'campaign-report.md'), md);
   console.log(`campaign report -> ${OUT}`);
   for (const r of runs) console.log(`  ${r.label}: ${r.outcome.status} ${r.outcome.outcomeId ?? ''} day ${r.outcome.day}, ${r.battles.length} battles, ${r.seconds.toFixed(1)} s`);

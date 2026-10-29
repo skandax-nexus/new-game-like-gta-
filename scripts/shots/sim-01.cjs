@@ -128,10 +128,18 @@ async function advanceDays(page, days) {
       });
       report.clicks = report.clicks || [];
       report.clicks.push({ day: st.world.day, clicked });
-      await page.evaluate(() => window.__SAMRAJYA__.waitFrames(3));
+      // Closing a prompt resumes the game; pause again so the world only moves by step() and the hashes below are
+      // reproducible run to run (not wall-clock dependent).
+      await page.evaluate(() => {
+        window.__SAMRAJYA__.pause();
+        return window.__SAMRAJYA__.waitFrames(3);
+      });
       continue;
     }
-    await page.evaluate(() => window.__SAMRAJYA__.step(24));
+    await page.evaluate(() => {
+      window.__SAMRAJYA__.pause();
+      window.__SAMRAJYA__.step(24);
+    });
   }
   await page.evaluate(() => window.__SAMRAJYA__.waitFrames(2));
 }
@@ -153,10 +161,19 @@ async function captureWorld(browser, base) {
   report.march = march;
   await shot(page, 'world-march', 'army_royal ordered to besiege Giridurg (issueStrategicCommand), 6 days later');
   await advanceDays(page, 54);
-  const later = await worldInfo(page);
+  let later = await worldInfo(page);
   check('world: 60 simulated days later the world has moved on', later.hash !== march.hash, { hash: later.hash, sceneState: later.sceneState });
   report.day60 = later;
-  await shot(page, 'world-day60', '60 days: harvest, prices, events and AI moves (HUD values changed)');
+  // Day 60 of seed 7 is a hemanta fog morning (the overview is a grey veil): the shot waits for the fog to lift
+  // (whole days, at most 5) so the map is readable; the check above is on day 60 itself.
+  let waited = 0;
+  while (waited < 5 && later.sceneState?.world?.weather === 'fog') {
+    await advanceDays(page, 1);
+    later = await worldInfo(page);
+    waited++;
+  }
+  report.day60Shot = { waitedDays: waited, day: later.sceneState?.world?.day, weather: later.sceneState?.world?.weather };
+  await shot(page, 'world-day60', `60 days (+${waited} until the fog lifts): harvest, prices, events and AI moves (HUD values changed)`);
   // Statistics screen over the live world (UI-01 owns the screen; the counters are SIM-01's).
   const screens = await page.evaluate(() => window.__SAMRAJYA__.screens().map((s) => `${s.id}:${s.source}`));
   report.screens = screens;

@@ -21,6 +21,15 @@ Pipeline per sky:
      intensity is kept in `baked.sunIntensity` for reference.
   4. Tiers re-encoded as half-float DWAB EXR with a tuned DWA quality (lib/sky uses 90: ~600 KB at 2048; the WP7
      budget needs ~250 KB) - smooth skies show no DWA artifacts at these settings (checked in the previews).
+Rework round 1 (Art Director review):
+  - clouds are no longer lib/sky's flat fills: _clouds.cloud_layer shades them by the sun (optical depth marched
+    towards the sun through the layer, 3-tone lit / mid / shadow ramp, darker bases, a backlit silver lining within
+    ~35 deg of the sun, eroded wispy edges) - dawn, noon, haze, dusk (afterglow-lit) and night (moonlit);
+  - sky_overcast is a monsoon nimbostratus deck (_clouds.nimbostratus): continuous deck, darker rain-laden bases,
+    ragged thinning towards az 180, a brighter wet-haze band in the fog family, two distant rain shafts;
+  - the lower hemisphere is rebuilt after calibration (lower_hemisphere): the horizon radiance continues below the
+    horizon and blends to the ground bounce over 5 deg - no black seam (the Nishita render is black just below
+    the horizon and lib/sky only blended 0-4 deg into it). ambientIrradiance (upper hemisphere) is unchanged.
 """
 from __future__ import annotations
 
@@ -34,6 +43,7 @@ from typing import Any
 import bpy
 import numpy as np
 
+import _clouds as C
 from lib import core, sky as S, texgen as tg
 from lib.core import AssetContext, log, timer
 
@@ -180,24 +190,46 @@ def afterglow(sky: np.ndarray, glow: np.ndarray, sun_az: float, clouds: float, c
     band = np.exp(-np.clip(LAT, 0, None) / math.radians(8.0)) * (0.25 + 0.75 * ((cosd + 1) / 2) ** 3) * (LAT > 0)
     out = (sky + band[..., None] * g[None, None, :] * hl * 1.6).astype(F)
     if clouds > 0:
-        out = S.add_clouds(out, d, (g * hl * 5.0).astype(F), clouds, rng, cloud_scale)
+        # clouds lit from below by the afterglow: a virtual sun 1 deg up at the sun's azimuth, warm glow color
+        out, _ = C.cloud_layer(out, d, (g * hl * 5.0).astype(F), clouds, int(rng.integers(1 << 30)), scale=cloud_scale,
+                               lit_gain=0.32, rim_gain=0.8, thickness=1.8)
     return out
 
 
-def overcast(sky: np.ndarray, fog_color: np.ndarray, rng: np.random.Generator, d_bl: tuple[float, float, float]) -> np.ndarray:
+def overcast(sky: np.ndarray, p: dict[str, Any], rng: np.random.Generator) -> tuple[np.ndarray, dict[str, float]]:
+    """Monsoon nimbostratus dome (_clouds.nimbostratus) over the deck tone of the preset fog family; relative radiance
+    (calibrated by the caller). The lower hemisphere keeps the baked rows (rebuilt later by lower_hemisphere)."""
     H, W = sky.shape[:2]
     LAT, _ = latlon(H, W)
-    zen = float(np.median(luminance(sky[: H // 8])))
-    base = (1 + 2 * np.sin(np.clip(LAT, 0, None))) / 3.0
-    gray = fog_color / max(float(luminance(fog_color[None, None, :])[0, 0]), 1e-6)
-    dome = (base[..., None] * gray[None, None, :] * zen * 1.6).astype(F)
-    up = (LAT > 0)[..., None]
-    out = np.where(up, sky * 0.12 + dome * 0.88, sky).astype(F)
-    # heavy cloud deck structure (dark bases, brighter breaks), lit diffusely; faded out towards the horizon where
-    # the flat-layer projection compresses the noise into specks
-    clouded = S.add_clouds(out, d_bl, gray.astype(F) * zen * 2.2, 0.95, rng, 0.7)
-    w = tg.smoothstep(math.radians(3.0), math.radians(18.0), LAT)[..., None]
-    return (out * (1 - w) + clouded * w).astype(F)
+    deck = hex_linear(p["fog"]["color"]) * 0.85  # #8c989a family, a touch darker than the haze band
+    dome, stats = C.nimbostratus((H, W), deck, hex_linear(p["fog"]["color"]), hex_linear(p["fog"]["inscatter"]),
+                                 int(rng.integers(1 << 30)))
+    return np.where((LAT > 0)[..., None], dome, sky).astype(F), stats
+
+
+def lower_hemisphere(sky: np.ndarray, albedo: np.ndarray, sun_rgb: np.ndarray, sun_el_deg: float, direct: float,
+                     width_deg: float = 5.0) -> tuple[np.ndarray, np.ndarray]:
+    """Rebuild everything below the horizon: each column continues its horizon radiance (mean of the rows within
+    0.6 deg above the horizon) and blends to the ground bounce albedo x (E_sky + direct x E_sun) / pi over
+    `width_deg` (no black seam; no row within 6 deg below the horizon < 0.6 x the row above it).
+    Returns (sky, ground rgb)."""
+    H, W = sky.shape[:2]
+    lat = (0.5 - (np.arange(H) + 0.5) / H) * math.pi
+    dO = (2 * math.pi / W) * (math.pi / H) * np.cos(lat)
+    up = lat > 0
+    e_sky = (sky[up] * (dO[up] * np.sin(lat[up]))[:, None, None]).sum(axis=(0, 1))
+    e_sun = sun_rgb * max(0.0, math.sin(math.radians(sun_el_deg))) * direct
+    ground = (albedo * (e_sky + e_sun) / math.pi).astype(F)
+    band = (lat > 0) & (lat <= math.radians(0.6))
+    if not band.any():
+        band = np.zeros(H, bool)
+        band[int(np.argmin(np.where(up, lat, 9.0)))] = True
+    horizon = sky[band].mean(axis=0)  # (W, 3)
+    out = sky.copy()
+    below = ~up
+    t = tg.smoothstep(0.0, math.radians(width_deg), -lat[below])[:, None, None]
+    out[below] = (horizon[None, :, :] * (1 - t) + ground[None, None, :] * t).astype(F)
+    return out, ground
 
 
 def recompress(ctx: AssetContext) -> None:
@@ -224,15 +256,19 @@ def build(script_file: str, preset_name: str, *, treatment: str = "clear", stars
     # Night: bake the dome lit from the moon's position (the preset's light) - a moonlit sky.
     el, az = (float(sun["elevationDeg"]), float(sun["azimuthDeg"])) if night else (float(n["sunElevationDeg"]), float(n["sunAzimuthDeg"]))
     master = {"ultra": max(tiers.values())}
-    # clouds are composited by the treatment for these (occluding stars, afterglow-lit, hidden in fog)
-    clouds = 0.0 if treatment in ("night", "overcast", "dusk", "fog") else float(n["clouds"])
+    # clouds are composited here, shaded by the sun (_clouds.cloud_layer), never by lib/sky's flat layer
+    clouds = float(n["clouds"])
+    cscale = float(n.get("cloudScale", 1.0))
     baked = S.bake_sky(ctx, sun_elevation=el, sun_azimuth=az, tiers=master, altitude=float(n.get("altitude", 0)),
                        air=float(n["air"]), aerosol=float(n["aerosol"]), ozone=float(n["ozone"]),
-                       ground_albedo=tuple(n["groundAlbedo"]), clouds=clouds, cloud_scale=float(n.get("cloudScale", 1.0)))
+                       ground_albedo=tuple(n["groundAlbedo"]), clouds=0.0, cloud_scale=cscale)
     sky = load_exr(ctx.path(f"{ctx.id}.ultra.exr"))
     d_bl = sun_dir_bl(el, az)
     fog = hex_linear(p["fog"]["color"])
     rng = np.random.default_rng(ctx.seed % (2 ** 32))
+    bsun = np.array(baked["sun"]["color"], F) * float(baked["sun"]["intensity"])
+    cloud_seed = int(rng.integers(1 << 30))
+    overcast_stats: dict[str, float] = {}
     with timer(f"treatment {treatment}"):
         if night:
             lum = luminance(sky)[..., None]
@@ -244,10 +280,19 @@ def build(script_file: str, preset_name: str, *, treatment: str = "clear", stars
             zen = 0.5 + 0.5 * np.exp(-np.clip(LAT, 0, None) / math.radians(22.0))
             sky = (sky * np.where(LAT > 0, zen, 1.0)[..., None]).astype(F)
         elif treatment == "overcast":
-            sky = overcast(sky, fog, rng, d_bl)
+            sky, overcast_stats = overcast(sky, p, rng)
         elif treatment == "haze":
-            # pale, bright dusty dome: the fog tone lifted halfway to white, brighter than the clear horizon
+            # thin sun-shaded clouds first, then the pale, bright dusty dome over them (the fog tone lifted halfway to
+            # white, brighter than the clear horizon)
+            sky, _ = C.cloud_layer(sky, d_bl, bsun, clouds, cloud_seed, scale=cscale)
             sky = horizon_blend(sky, fog * 0.5 + 0.5 * float(fog.max()), 20.0, 0.35, desat=0.3, floor=0.5, gain=1.8)
+        elif treatment == "clear":
+            if el < 15:  # low sun (dawn): warm lit sides, long shadows through the layer, strong silver lining
+                sky, _ = C.cloud_layer(sky, d_bl, bsun, clouds, cloud_seed, scale=cscale, thickness=3.0, sun_white=0.08,
+                                       lit_gain=0.26, base_dark=0.25, rim_gain=1.6)
+            else:  # high sun: white tops / sides, grey bases
+                sky, _ = C.cloud_layer(sky, d_bl, bsun, clouds, cloud_seed, scale=cscale, thickness=2.4, sun_white=0.25,
+                                       lit_gain=0.3, base_dark=0.3, shadow_gain=1.1)
         elif treatment == "fog":
             sky = horizon_blend(sky, fog, 25.0, 0.33, desat=0.5, floor=0.62)
         elif treatment == "dusk":
@@ -260,13 +305,21 @@ def build(script_file: str, preset_name: str, *, treatment: str = "clear", stars
     if night:
         with timer("stars + moonlit clouds"):
             sky = add_stars(sky, rng)
-            # thin, dim moonlit clouds (a quarter of the moon's light: grey-blue, never daylight-white)
+            # thin, dim moonlit clouds, shaded by the moon (grey-blue, never daylight-white); they occlude the stars
             moon = hex_linear(sun["color"])
-            sky = S.add_clouds(sky, d_bl, (moon / moon.max() * float(sun["intensity"]) * 0.25).astype(F), float(n["clouds"]), rng, 1.0)
+            sky, _ = C.cloud_layer(sky, d_bl, (moon / moon.max() * float(sun["intensity"]) * 0.25).astype(F), clouds,
+                                   cloud_seed, scale=cscale, lit_gain=0.3, rim_gain=0.6)
         # stars / clouds shift the irradiance slightly: re-calibrate exactly
         k2 = target / max(ambient_irradiance(sky), 1e-9)
         sky = (sky * k2).astype(F)
         k *= k2
+    if overcast_stats:
+        log(f"{ctx.id}: nimbostratus deck {overcast_stats}")
+    # lower hemisphere: continue the horizon, blend to the ground bounce in preset light units (after calibration)
+    direct = {"clear": 1.0, "night": 1.0, "dusk": 0.0, "haze": 0.8, "fog": 0.4, "overcast": 0.15}.get(treatment, 1.0)
+    sun_lin = hex_linear(sun["color"])
+    sky, ground = lower_hemisphere(sky, np.array(n["groundAlbedo"], F), (sun_lin / sun_lin.max() * float(sun["intensity"])).astype(F),
+                                   float(sun["elevationDeg"]), direct)
     amb = ambient_irradiance(sky)
     files: dict[str, dict[str, int]] = {}
     for tier, tw in sorted(tiers.items(), key=lambda kv: -kv[1]):
@@ -289,6 +342,7 @@ def build(script_file: str, preset_name: str, *, treatment: str = "clear", stars
         "tiers": files,
         "preset": preset_name,
         "treatment": treatment,
+        "ground": [round(float(c), 5) for c in ground],
         "baked": {"sunIntensity": baked["sun"]["intensity"], "ambientIrradiance": baked["ambientIrradiance"],
                   "calibration": round(k, 5)},
         "description": description,
@@ -298,4 +352,5 @@ def build(script_file: str, preset_name: str, *, treatment: str = "clear", stars
     return ctx
 
 
-__all__ = ["DWA_QUALITY", "TIERS", "add_stars", "afterglow", "ambient_irradiance", "build", "horizon_blend", "overcast", "recompress", "style"]
+__all__ = ["DWA_QUALITY", "TIERS", "add_stars", "afterglow", "ambient_irradiance", "build", "horizon_blend", "lower_hemisphere",
+           "overcast", "recompress", "style"]

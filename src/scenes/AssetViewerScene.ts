@@ -737,10 +737,10 @@ export class AssetViewerScene implements GameScene {
     this.handles.push(fb as FlipbookHandle);
     const e = fb.entry;
     const seqs = e.sequences;
-    // Atlas frames are square: show every sequence on a square quad of the effect's largest size.
+    // Quads at the effect's authored sizeMeters (mist 8 x 6 m, lightning 600 x 1200 m ...): aspect as in the game.
     const size = e.sizeMeters ?? [2, 2];
-    const w = Math.max(size[0] ?? 2, size[1] ?? 2);
-    const h = w;
+    const w = size[0] ?? 2;
+    const h = size[1] ?? w;
     const cols = Math.min(seqs.length, 4);
     seqs.forEach((s, i) => {
       const tint = this.opts.tint === 'none' ? undefined : this.opts.tint ? `#${this.opts.tint.replace(/^#/, '')}` : e.tint !== '#ffffff' ? e.tint : undefined;
@@ -981,8 +981,19 @@ export class AssetViewerScene implements GameScene {
     mesh.receiveShadow = true;
     this.scene.add(mesh);
     this.owned.push(geo, mat, weights);
+    // 18 % grey card (albedo 0.18, matte) standing on the patch: the exposure / albedo reference for judging layers
+    // (Art Director: judge TA-01 albedo against a grey card under sky_noon).
+    const cardGeo = new THREE.BoxGeometry(0.6, 0.9, 0.04);
+    const cardMat = new THREE.MeshStandardMaterial({ color: new THREE.Color().setRGB(0.18, 0.18, 0.18, THREE.LinearSRGBColorSpace), roughness: 0.95 });
+    const card = new THREE.Mesh(cardGeo, cardMat);
+    card.position.set(0, 0.157 + 0.44, 6); // patch height at (0, 6) is 0.157 m
+    card.rotation.x = -0.12;
+    card.castShadow = true;
+    card.name = 'grey_card_18';
+    this.scene.add(card);
+    this.owned.push(cardGeo, cardMat);
     this.bounds.set(new THREE.Vector3(-24, -0.5, -24), new THREE.Vector3(24, 1.5, 24));
-    this.notes.push(`splat layers: ${ids.join(', ') || '(none)'}`);
+    this.notes.push(`splat layers: ${ids.join(', ') || '(none)'} + 18 % grey card`);
   }
 
   // ------------------------------------------------------------------ kit grid (TA-02 / TA-03)
@@ -1157,7 +1168,10 @@ export class AssetViewerScene implements GameScene {
     el.style.cssText =
       'position:absolute;left:max(12px,env(safe-area-inset-left));bottom:max(12px,env(safe-area-inset-bottom));' +
       'padding:8px 12px;border-radius:6px;background:rgba(18,13,31,0.62);color:#f3e6c8;font:12px/1.45 ui-monospace,monospace;' +
-      'pointer-events:none;white-space:pre;';
+      // wraps on phones instead of running off the screen (lead review: mobile HUD clipped)
+      'pointer-events:none;white-space:pre-wrap;overflow-wrap:anywhere;box-sizing:border-box;' +
+      'max-width:calc(100vw - max(24px, env(safe-area-inset-left) + env(safe-area-inset-right) + 24px));';
+    if (window.innerWidth < 600) el.style.fontSize = '10px';
     this.ctx.uiRoot.appendChild(el);
     this.hud = el;
     // Controls panel (sky picker, impostor distance): touch-friendly, events shielded from the canvas.

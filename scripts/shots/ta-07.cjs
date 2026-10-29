@@ -148,6 +148,8 @@ async function main() {
       await page.goto(url, { waitUntil: 'load', timeout: 240000 });
       await page.waitForFunction(() => window.__SAMRAJYA__ && window.__SAMRAJYA__.ready && window.__SAMRAJYA__.sceneReady, null, { timeout: 240000, polling: 250 });
       await page.evaluate((n) => window.__SAMRAJYA__.waitFrames(n), opts.frames || 4);
+      // evidence hygiene: the boot-splash title fades out over 0.6 s and is then removed - never shoot through it
+      await page.waitForFunction(() => !document.getElementById('boot-splash'), null, { timeout: 30000, polling: 100 }).catch(() => undefined);
       if (opts.until) await page.waitForFunction(opts.until, null, { timeout: 240000, polling: 500 });
       state = await page.evaluate(() => window.__SAMRAJYA__.getState().sceneState);
       if (opts.memory) state.memory = await page.evaluate(() => window.__SAMRAJYA__.getProfile());
@@ -313,7 +315,8 @@ async function main() {
       report.numbers.kit = s?.kit ?? null;
       if (s?.kit) console.log(`[ta-07] kit draw calls: ${s.kit.map((k) => `${k.id} ${k.meshes}`).join(', ')}`);
     }
-    if (run('splat')) await shoot('splat_lookdev', 'splat=ground_dry_earth,sandstone_carved_red&hdri=sky_golden&camera=hero', { quality: 'high' });
+    // TA-01 lookdev under the neutral noon sky with an 18 % grey card (Art Director: golden was too dark to judge albedo)
+    if (run('splat')) await shoot('splat_lookdev', 'splat=ground_dry_earth,sandstone_carved_red&hdri=sky_noon&camera=hero', { quality: 'high' });
 
     // ---------------------------------------------------------------- images
     if (run('images')) for (const img of idsOfKind('image')) await shoot(`${img}_view`, `asset=${img}&hdri=sky_day&camera=front&noui=1`, { quality: 'ultra' });

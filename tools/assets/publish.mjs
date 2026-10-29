@@ -448,14 +448,17 @@ async function publishFlipbook(asset, srcDir, meta, outFiles, tiers) {
       const hasAlpha = map === 'color' && !additiveOnly;
       const raw = await resampleAtlas(path.join(srcDir, f.path), cols, rows, fw, fh, { alpha: hasAlpha });
       const relPath = `fx/${asset.id}/${map}_${raw.width}.webp`;
+      const override = m.encoding === 'lossless' ? TEXTURE_ENCODING.flipbook_lossless : m.encoding === 'near_lossless' ? TEXTURE_ENCODING.flipbook_near_lossless : null;
+      if (m.encoding && !override) throw new Error(`${asset.id}: unknown flipbook encoding "${m.encoding}" (lossless | near_lossless)`);
       const enc =
         map === 'normal'
           ? TEXTURE_ENCODING.flipbook_normal
           : map === 'color'
-            ? hasAlpha
-              ? TEXTURE_ENCODING.color_alpha
-              : TEXTURE_ENCODING.color_additive
-            : TEXTURE_ENCODING.emissive;
+            ? (override ??
+              (hasAlpha
+                ? TEXTURE_ENCODING.color_alpha
+                : TEXTURE_ENCODING.color_additive))
+            : (override ?? TEXTURE_ENCODING.emissive);
       await writeWebpRaw(raw, relPath, enc, { alpha: hasAlpha });
       const rf = record(outFiles, relPath, ts, { kind: 'flipbook', map, size: raw.width });
       for (const t of ts) maps[map][t] = { path: relPath, bytes: rf.bytes, width: raw.width, height: raw.height };

@@ -6,7 +6,7 @@
       "kind": "model",
       "category": "banners",
       "script": "tools/blender/assets/banners/banner_cloth.py",
-      "inputHash": "89029a9e836078fb9add9c09e1ced1f4d00819689b0b5c3928e4e7863664fc8c",
+      "inputHash": "7a6d24048bcfabdfba6e397375934b48410654d7bf7d025b2f9c9a4d922a44b0",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -14,19 +14,19 @@
           "center": [
             0,
             2.21,
-            0.0025
+            0.0173
           ],
           "max": [
             0.632,
             4.42,
-            0.035
+            0.0646
           ],
           "min": [
             -0.632,
             0,
             -0.03
           ],
-          "radius": 2.2988
+          "radius": 2.2991
         },
         "description": "Banner pole + crossbar + finial + tassels and the six BannerShape cloths (variants), cloth weights in COLOR_0.r.",
         "lodDistances": [
@@ -160,7 +160,7 @@
       "files": [
         {
           "path": "models/banner_cloth/banner_cloth.lod0.glb",
-          "bytes": 47148,
+          "bytes": 59476,
           "tiers": [
             "ultra",
             "high",
@@ -175,7 +175,7 @@
         {
           "lod": 0,
           "path": "models/banner_cloth/banner_cloth.lod0.glb",
-          "bytes": 47148,
+          "bytes": 59476,
           "triangles": 3958,
           "drawCalls": 12,
           "skinned": false,
@@ -185,9 +185,9 @@
       "sets": {},
       "footprint": null,
       "bytes": {
-        "ultra": 47148,
-        "high": 47148,
-        "mobile": 47148
+        "ultra": 59476,
+        "high": 59476,
+        "mobile": 59476
       }
     },
     "fx_dust": {
@@ -195,7 +195,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_dust.py",
-      "inputHash": "879007c8f7bead0c8bf46b6916fc221ec18cbc219664f84849d4853f84fee2d9",
+      "inputHash": "4a931a8bce89bd66d61d46ff020ac311774b4b12d8589230148f7341a589085d",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -206,7 +206,7 @@
         },
         "blend": "alpha",
         "cols": 8,
-        "description": "Dust: ground puffs (2), expanding ring (top view), hoof kick; neutral albedo + normals, tint by ground.",
+        "description": "Dust (Eulerian sims): rolling ground puffs (2), closed expanding ring (top view), hoof kick; neutral albedo + normals, tint by ground.",
         "emissiveIntensity": 1,
         "fps": 8,
         "frames": 64,
@@ -244,8 +244,8 @@
           }
         ],
         "sizeMeters": [
-          2,
-          1.5
+          2.2,
+          2.2
         ],
         "softFadeMeters": 0.5,
         "tint": "#b0956e"
@@ -253,7 +253,7 @@
       "files": [
         {
           "path": "fx/fx_dust/color_1024.webp",
-          "bytes": 232704,
+          "bytes": 70680,
           "tiers": [
             "ultra",
             "high"
@@ -264,7 +264,7 @@
         },
         {
           "path": "fx/fx_dust/color_512.webp",
-          "bytes": 74384,
+          "bytes": 37542,
           "tiers": [
             "mobile"
           ],
@@ -274,7 +274,7 @@
         },
         {
           "path": "fx/fx_dust/normal_512.webp",
-          "bytes": 18236,
+          "bytes": 24876,
           "tiers": [
             "ultra",
             "high"
@@ -285,7 +285,7 @@
         },
         {
           "path": "fx/fx_dust/normal_256.webp",
-          "bytes": 7588,
+          "bytes": 10336,
           "tiers": [
             "mobile"
           ],
@@ -299,19 +299,19 @@
           "color": {
             "ultra": {
               "path": "fx/fx_dust/color_1024.webp",
-              "bytes": 232704,
+              "bytes": 70680,
               "width": 1024,
               "height": 1024
             },
             "high": {
               "path": "fx/fx_dust/color_1024.webp",
-              "bytes": 232704,
+              "bytes": 70680,
               "width": 1024,
               "height": 1024
             },
             "mobile": {
               "path": "fx/fx_dust/color_512.webp",
-              "bytes": 74384,
+              "bytes": 37542,
               "width": 512,
               "height": 512
             }
@@ -319,19 +319,19 @@
           "normal": {
             "ultra": {
               "path": "fx/fx_dust/normal_512.webp",
-              "bytes": 18236,
+              "bytes": 24876,
               "width": 512,
               "height": 512
             },
             "high": {
               "path": "fx/fx_dust/normal_512.webp",
-              "bytes": 18236,
+              "bytes": 24876,
               "width": 512,
               "height": 512
             },
             "mobile": {
               "path": "fx/fx_dust/normal_256.webp",
-              "bytes": 7588,
+              "bytes": 10336,
               "width": 256,
               "height": 256
             }
@@ -339,9 +339,9 @@
         }
       },
       "bytes": {
-        "ultra": 250940,
-        "high": 250940,
-        "mobile": 81972
+        "ultra": 95556,
+        "high": 95556,
+        "mobile": 47878
       }
     },
     "fx_fire": {
@@ -349,18 +349,18 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_fire.py",
-      "inputHash": "7a24047d2eb9780cc2dae3e575222ec4463865d316959f9a45f95d13736318df",
+      "inputHash": "1466ccffa49d04acf810510dc7b86df574164a3f90a0742272df4555ad91b748",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
         "atlasPx": {
           "high": 1024,
           "mobile": 512,
-          "ultra": 1024
+          "ultra": 2048
         },
         "blend": "premultiplied",
         "cols": 8,
-        "description": "Looping flame, premultiplied emission (x8) + soot occlusion, 64 frames at 24 fps.",
+        "description": "Looping flame (Eulerian sim, licking tongues), premultiplied emission x8 + slight occlusion, no soot; 64 frames at 24 fps.",
         "emissiveIntensity": 8,
         "fps": 24,
         "frames": 64,
@@ -377,18 +377,27 @@
           }
         ],
         "sizeMeters": [
-          1.5,
-          2
+          1.9,
+          1.9
         ],
         "softFadeMeters": 0.3,
         "tint": "#ffffff"
       },
       "files": [
         {
-          "path": "fx/fx_fire/color_1024.webp",
-          "bytes": 305096,
+          "path": "fx/fx_fire/color_2048.webp",
+          "bytes": 274768,
           "tiers": [
-            "ultra",
+            "ultra"
+          ],
+          "kind": "flipbook",
+          "map": "color",
+          "size": 2048
+        },
+        {
+          "path": "fx/fx_fire/color_1024.webp",
+          "bytes": 144920,
+          "tiers": [
             "high"
           ],
           "kind": "flipbook",
@@ -397,7 +406,7 @@
         },
         {
           "path": "fx/fx_fire/color_512.webp",
-          "bytes": 89428,
+          "bytes": 62630,
           "tiers": [
             "mobile"
           ],
@@ -410,20 +419,20 @@
         "maps": {
           "color": {
             "ultra": {
-              "path": "fx/fx_fire/color_1024.webp",
-              "bytes": 305096,
-              "width": 1024,
-              "height": 1024
+              "path": "fx/fx_fire/color_2048.webp",
+              "bytes": 274768,
+              "width": 2048,
+              "height": 2048
             },
             "high": {
               "path": "fx/fx_fire/color_1024.webp",
-              "bytes": 305096,
+              "bytes": 144920,
               "width": 1024,
               "height": 1024
             },
             "mobile": {
               "path": "fx/fx_fire/color_512.webp",
-              "bytes": 89428,
+              "bytes": 62630,
               "width": 512,
               "height": 512
             }
@@ -431,9 +440,9 @@
         }
       },
       "bytes": {
-        "ultra": 305096,
-        "high": 305096,
-        "mobile": 89428
+        "ultra": 274768,
+        "high": 144920,
+        "mobile": 62630
       }
     },
     "fx_lightning": {
@@ -441,7 +450,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_lightning.py",
-      "inputHash": "30989f109c363cadd0d58a8350dc8d36931d24198a4fe7d1095d1e10eb372b3c",
+      "inputHash": "2b5652dc3c00e3f839e5e670c7b408df31e74b5ac17e467d7fe311a23f593049",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -498,7 +507,7 @@
       "files": [
         {
           "path": "fx/fx_lightning/color_512.webp",
-          "bytes": 12834,
+          "bytes": 12724,
           "tiers": [
             "ultra",
             "high"
@@ -519,13 +528,13 @@
           "color": {
             "ultra": {
               "path": "fx/fx_lightning/color_512.webp",
-              "bytes": 12834,
+              "bytes": 12724,
               "width": 512,
               "height": 512
             },
             "high": {
               "path": "fx/fx_lightning/color_512.webp",
-              "bytes": 12834,
+              "bytes": 12724,
               "width": 512,
               "height": 512
             }
@@ -533,8 +542,8 @@
         }
       },
       "bytes": {
-        "ultra": 12834,
-        "high": 12834,
+        "ultra": 12724,
+        "high": 12724,
         "mobile": 0
       }
     },
@@ -543,7 +552,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_mist.py",
-      "inputHash": "3164fe50d0540e4c5d9bedd7dc5b5b344fd19ecca118681f7dcc554c75e768f2",
+      "inputHash": "e5a253710bc2772a76ff1f99f8066aa030fd5f6c48592ada3c01a92c042ffb89",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -554,7 +563,7 @@
         },
         "blend": "alpha",
         "cols": 2,
-        "description": "Mist sprites: bank, wisp, puff, sheet; feathered to zero at the edges, lit via soft normals.",
+        "description": "Mist sprites: bank, wisp, puff, sheet - irregular, wide, noise-eroded clusters; zero at the edges, lit via soft normals.",
         "emissiveIntensity": 1,
         "fps": 1,
         "frames": 4,
@@ -592,8 +601,8 @@
           }
         ],
         "sizeMeters": [
-          12,
-          5
+          8,
+          6
         ],
         "softFadeMeters": 2,
         "tint": "#dfe3e6"
@@ -601,7 +610,7 @@
       "files": [
         {
           "path": "fx/fx_mist/color_512.webp",
-          "bytes": 34892,
+          "bytes": 14642,
           "tiers": [
             "ultra",
             "high",
@@ -613,7 +622,7 @@
         },
         {
           "path": "fx/fx_mist/normal_256.webp",
-          "bytes": 2342,
+          "bytes": 2048,
           "tiers": [
             "ultra",
             "high",
@@ -629,19 +638,19 @@
           "color": {
             "ultra": {
               "path": "fx/fx_mist/color_512.webp",
-              "bytes": 34892,
+              "bytes": 14642,
               "width": 512,
               "height": 512
             },
             "high": {
               "path": "fx/fx_mist/color_512.webp",
-              "bytes": 34892,
+              "bytes": 14642,
               "width": 512,
               "height": 512
             },
             "mobile": {
               "path": "fx/fx_mist/color_512.webp",
-              "bytes": 34892,
+              "bytes": 14642,
               "width": 512,
               "height": 512
             }
@@ -649,19 +658,19 @@
           "normal": {
             "ultra": {
               "path": "fx/fx_mist/normal_256.webp",
-              "bytes": 2342,
+              "bytes": 2048,
               "width": 256,
               "height": 256
             },
             "high": {
               "path": "fx/fx_mist/normal_256.webp",
-              "bytes": 2342,
+              "bytes": 2048,
               "width": 256,
               "height": 256
             },
             "mobile": {
               "path": "fx/fx_mist/normal_256.webp",
-              "bytes": 2342,
+              "bytes": 2048,
               "width": 256,
               "height": 256
             }
@@ -669,9 +678,9 @@
         }
       },
       "bytes": {
-        "ultra": 37234,
-        "high": 37234,
-        "mobile": 37234
+        "ultra": 16690,
+        "high": 16690,
+        "mobile": 16690
       }
     },
     "fx_nature": {
@@ -679,7 +688,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_nature.py",
-      "inputHash": "c014c330d3d06f2933ed87adf1b0fd5f822af69834a7738c1f53962139f0610d",
+      "inputHash": "d1a7ab8c29c1142f5176411161e222297b8570caf9ef51e8f6f783fcb7818872",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -755,7 +764,7 @@
       "files": [
         {
           "path": "fx/fx_nature/color_512.webp",
-          "bytes": 21372,
+          "bytes": 19302,
           "tiers": [
             "ultra",
             "high",
@@ -767,7 +776,7 @@
         },
         {
           "path": "fx/fx_nature/normal_256.webp",
-          "bytes": 2214,
+          "bytes": 1866,
           "tiers": [
             "ultra",
             "high",
@@ -783,19 +792,19 @@
           "color": {
             "ultra": {
               "path": "fx/fx_nature/color_512.webp",
-              "bytes": 21372,
+              "bytes": 19302,
               "width": 512,
               "height": 512
             },
             "high": {
               "path": "fx/fx_nature/color_512.webp",
-              "bytes": 21372,
+              "bytes": 19302,
               "width": 512,
               "height": 512
             },
             "mobile": {
               "path": "fx/fx_nature/color_512.webp",
-              "bytes": 21372,
+              "bytes": 19302,
               "width": 512,
               "height": 512
             }
@@ -803,19 +812,19 @@
           "normal": {
             "ultra": {
               "path": "fx/fx_nature/normal_256.webp",
-              "bytes": 2214,
+              "bytes": 1866,
               "width": 256,
               "height": 256
             },
             "high": {
               "path": "fx/fx_nature/normal_256.webp",
-              "bytes": 2214,
+              "bytes": 1866,
               "width": 256,
               "height": 256
             },
             "mobile": {
               "path": "fx/fx_nature/normal_256.webp",
-              "bytes": 2214,
+              "bytes": 1866,
               "width": 256,
               "height": 256
             }
@@ -823,9 +832,9 @@
         }
       },
       "bytes": {
-        "ultra": 23586,
-        "high": 23586,
-        "mobile": 23586
+        "ultra": 21168,
+        "high": 21168,
+        "mobile": 21168
       }
     },
     "fx_rain": {
@@ -833,7 +842,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_rain.py",
-      "inputHash": "e70cc0aff4703e193f2b8deb78be204e1ef1167a35e4ea01ffedf5a9d357a0c8",
+      "inputHash": "5a8437e2400c1be3c50c7bbcc1b1403c71637a45f6de59dbef752449425f7d69",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -891,7 +900,7 @@
       "files": [
         {
           "path": "fx/fx_rain/color_512.webp",
-          "bytes": 17710,
+          "bytes": 17122,
           "tiers": [
             "ultra",
             "high",
@@ -919,19 +928,19 @@
           "color": {
             "ultra": {
               "path": "fx/fx_rain/color_512.webp",
-              "bytes": 17710,
+              "bytes": 17122,
               "width": 512,
               "height": 512
             },
             "high": {
               "path": "fx/fx_rain/color_512.webp",
-              "bytes": 17710,
+              "bytes": 17122,
               "width": 512,
               "height": 512
             },
             "mobile": {
               "path": "fx/fx_rain/color_512.webp",
-              "bytes": 17710,
+              "bytes": 17122,
               "width": 512,
               "height": 512
             }
@@ -959,9 +968,9 @@
         }
       },
       "bytes": {
-        "ultra": 19894,
-        "high": 19894,
-        "mobile": 19894
+        "ultra": 19306,
+        "high": 19306,
+        "mobile": 19306
       }
     },
     "fx_smoke": {
@@ -969,18 +978,18 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_smoke.py",
-      "inputHash": "90bfe65af764d98ce2b0ded6b73b41c0d1b3df88a2077ced9b2dd592ca937f14",
+      "inputHash": "b3a1e52da45160f9b79ba9babc18cd4f7ffcb7256e4064b6ba64fbe433195556",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
         "atlasPx": {
           "high": 1024,
           "mobile": 512,
-          "ultra": 1024
+          "ultra": 2048
         },
         "blend": "alpha",
         "cols": 8,
-        "description": "Billowing smoke puff over life (64 frames, one-shot), lit via normals; tint #4a4038 for fires.",
+        "description": "Billowing smoke puff over life (Eulerian sim, 64 frames, one-shot), lit via density-gradient normals; tint #4a4038 for fires.",
         "emissiveIntensity": 1,
         "fps": 16,
         "frames": 64,
@@ -997,18 +1006,27 @@
           }
         ],
         "sizeMeters": [
-          4,
-          5
+          3,
+          3
         ],
         "softFadeMeters": 0.8,
         "tint": "#4a4038"
       },
       "files": [
         {
-          "path": "fx/fx_smoke/color_1024.webp",
-          "bytes": 294082,
+          "path": "fx/fx_smoke/color_2048.webp",
+          "bytes": 269856,
           "tiers": [
-            "ultra",
+            "ultra"
+          ],
+          "kind": "flipbook",
+          "map": "color",
+          "size": 2048
+        },
+        {
+          "path": "fx/fx_smoke/color_1024.webp",
+          "bytes": 130752,
+          "tiers": [
             "high"
           ],
           "kind": "flipbook",
@@ -1017,7 +1035,7 @@
         },
         {
           "path": "fx/fx_smoke/color_512.webp",
-          "bytes": 89732,
+          "bytes": 53998,
           "tiers": [
             "mobile"
           ],
@@ -1026,10 +1044,19 @@
           "size": 512
         },
         {
-          "path": "fx/fx_smoke/normal_512.webp",
-          "bytes": 19740,
+          "path": "fx/fx_smoke/normal_1024.webp",
+          "bytes": 85210,
           "tiers": [
-            "ultra",
+            "ultra"
+          ],
+          "kind": "flipbook",
+          "map": "normal",
+          "size": 1024
+        },
+        {
+          "path": "fx/fx_smoke/normal_512.webp",
+          "bytes": 36540,
+          "tiers": [
             "high"
           ],
           "kind": "flipbook",
@@ -1038,7 +1065,7 @@
         },
         {
           "path": "fx/fx_smoke/normal_256.webp",
-          "bytes": 8358,
+          "bytes": 15382,
           "tiers": [
             "mobile"
           ],
@@ -1051,40 +1078,40 @@
         "maps": {
           "color": {
             "ultra": {
-              "path": "fx/fx_smoke/color_1024.webp",
-              "bytes": 294082,
-              "width": 1024,
-              "height": 1024
+              "path": "fx/fx_smoke/color_2048.webp",
+              "bytes": 269856,
+              "width": 2048,
+              "height": 2048
             },
             "high": {
               "path": "fx/fx_smoke/color_1024.webp",
-              "bytes": 294082,
+              "bytes": 130752,
               "width": 1024,
               "height": 1024
             },
             "mobile": {
               "path": "fx/fx_smoke/color_512.webp",
-              "bytes": 89732,
+              "bytes": 53998,
               "width": 512,
               "height": 512
             }
           },
           "normal": {
             "ultra": {
-              "path": "fx/fx_smoke/normal_512.webp",
-              "bytes": 19740,
-              "width": 512,
-              "height": 512
+              "path": "fx/fx_smoke/normal_1024.webp",
+              "bytes": 85210,
+              "width": 1024,
+              "height": 1024
             },
             "high": {
               "path": "fx/fx_smoke/normal_512.webp",
-              "bytes": 19740,
+              "bytes": 36540,
               "width": 512,
               "height": 512
             },
             "mobile": {
               "path": "fx/fx_smoke/normal_256.webp",
-              "bytes": 8358,
+              "bytes": 15382,
               "width": 256,
               "height": 256
             }
@@ -1092,9 +1119,9 @@
         }
       },
       "bytes": {
-        "ultra": 313822,
-        "high": 313822,
-        "mobile": 98090
+        "ultra": 355066,
+        "high": 167292,
+        "mobile": 69380
       }
     },
     "fx_sparks_embers": {
@@ -1102,19 +1129,20 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_sparks_embers.py",
-      "inputHash": "9a9c561d14dea72e339397690565f93e6768e8634555ac17f95d6c72e69af07b",
+      "inputHash": "3dcec16842953b8b719b9e862f962721f1dceab49ab678d3f9c88fc199b55215",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
         "atlasPx": {
-          "high": 512,
+          "high": 1024,
           "mobile": 512,
-          "ultra": 512
+          "ultra": 1024
         },
         "blend": "additive",
         "cols": 8,
-        "description": "Additive sparks: spark, embers, slash spark, parry flash, finisher burst (premultiplied emission x6).",
+        "description": "Additive sparks (gold -> saffron): spark, embers, slash spark, parry flash, finisher burst with dust shockwave; premultiplied emission x6, lossless.",
         "emissiveIntensity": 6,
+        "encoding": "lossless",
         "fps": 30,
         "frames": 35,
         "lit": false,
@@ -1166,11 +1194,20 @@
       },
       "files": [
         {
-          "path": "fx/fx_sparks_embers/color_512.webp",
-          "bytes": 24694,
+          "path": "fx/fx_sparks_embers/color_1024.webp",
+          "bytes": 181652,
           "tiers": [
             "ultra",
-            "high",
+            "high"
+          ],
+          "kind": "flipbook",
+          "map": "color",
+          "size": 1024
+        },
+        {
+          "path": "fx/fx_sparks_embers/color_512.webp",
+          "bytes": 59682,
+          "tiers": [
             "mobile"
           ],
           "kind": "flipbook",
@@ -1182,20 +1219,20 @@
         "maps": {
           "color": {
             "ultra": {
-              "path": "fx/fx_sparks_embers/color_512.webp",
-              "bytes": 24694,
-              "width": 512,
-              "height": 512
+              "path": "fx/fx_sparks_embers/color_1024.webp",
+              "bytes": 181652,
+              "width": 1024,
+              "height": 1024
             },
             "high": {
-              "path": "fx/fx_sparks_embers/color_512.webp",
-              "bytes": 24694,
-              "width": 512,
-              "height": 512
+              "path": "fx/fx_sparks_embers/color_1024.webp",
+              "bytes": 181652,
+              "width": 1024,
+              "height": 1024
             },
             "mobile": {
               "path": "fx/fx_sparks_embers/color_512.webp",
-              "bytes": 24694,
+              "bytes": 59682,
               "width": 512,
               "height": 512
             }
@@ -1203,9 +1240,9 @@
         }
       },
       "bytes": {
-        "ultra": 24694,
-        "high": 24694,
-        "mobile": 24694
+        "ultra": 181652,
+        "high": 181652,
+        "mobile": 59682
       }
     },
     "fx_weapon_trail": {
@@ -1213,7 +1250,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_weapon_trail.py",
-      "inputHash": "463c4d90c520dc8e30623bbc3f74a51c139e9a42480286d0c58c73c36a660f1f",
+      "inputHash": "c9aa9d3da13fa7cb754e7ed0dbacfa7ac8fc8ef904e8517a4c8c1c711f34c22e",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -1275,7 +1312,7 @@
       "files": [
         {
           "path": "fx/fx_weapon_trail/color_256.webp",
-          "bytes": 8690,
+          "bytes": 8434,
           "tiers": [
             "ultra",
             "high",
@@ -1291,19 +1328,19 @@
           "color": {
             "ultra": {
               "path": "fx/fx_weapon_trail/color_256.webp",
-              "bytes": 8690,
+              "bytes": 8434,
               "width": 256,
               "height": 256
             },
             "high": {
               "path": "fx/fx_weapon_trail/color_256.webp",
-              "bytes": 8690,
+              "bytes": 8434,
               "width": 256,
               "height": 256
             },
             "mobile": {
               "path": "fx/fx_weapon_trail/color_256.webp",
-              "bytes": 8690,
+              "bytes": 8434,
               "width": 256,
               "height": 256
             }
@@ -1311,9 +1348,9 @@
         }
       },
       "bytes": {
-        "ultra": 8690,
-        "high": 8690,
-        "mobile": 8690
+        "ultra": 8434,
+        "high": 8434,
+        "mobile": 8434
       }
     },
     "ground_dry_earth": {
@@ -1635,13 +1672,13 @@
       "kind": "image",
       "category": "images",
       "script": "tools/blender/assets/images/lens_dirt.py",
-      "inputHash": "b5a61186f22593e743ca6ed56d177fb483f15c561ac067888c5fee5885345823",
+      "inputHash": "395f11ed872e24ffd1a17c0cfb1ff946b5845abe792a821936bdf587c3855c53",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
         "alpha": false,
         "colorSpace": "srgb",
-        "description": "Lens dirt: smudges, droplet rings, dust specks, faint hexagonal ghosts (low contrast).",
+        "description": "Lens dirt: soft smudges, fingerprints, a few irregular bokeh shapes, 40 soft specks (low contrast).",
         "hdrScale": 1,
         "tierPx": {
           "ultra": 1024
@@ -1651,7 +1688,7 @@
       "files": [
         {
           "path": "images/lens_dirt/lens_dirt_1024.webp",
-          "bytes": 20152,
+          "bytes": 12220,
           "tiers": [
             "ultra"
           ],
@@ -1669,14 +1706,14 @@
         "files": {
           "ultra": {
             "path": "images/lens_dirt/lens_dirt_1024.webp",
-            "bytes": 20152,
+            "bytes": 12220,
             "width": 1024,
             "height": 1024
           }
         }
       },
       "bytes": {
-        "ultra": 20152,
+        "ultra": 12220,
         "high": 0,
         "mobile": 0
       }
@@ -2716,25 +2753,30 @@
       "kind": "hdri",
       "category": "hdri",
       "script": "tools/blender/assets/hdri/sky_dawn.py",
-      "inputHash": "c8f84b18f8c455f18bc935dc1e58095d2378572552d70d5684764f343c533fce",
+      "inputHash": "d54ed1791b8e6b53070ed64ebffe9aa0b088a969ceff37c9258ceab8299e8fdc",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
         "ambientIrradiance": 0.38,
         "baked": {
-          "ambientIrradiance": 0.6746,
-          "calibration": 0.56334,
+          "ambientIrradiance": 0.5502,
+          "calibration": 0.5542,
           "sunIntensity": 5.8214
         },
         "clouds": 0.25,
         "description": "Dawn, sun 6 deg E, pink-gold haze, thin clouds.",
+        "ground": [
+          0.03761,
+          0.02751,
+          0.024
+        ],
         "groundAlbedo": [
           0.2,
           0.18,
           0.15
         ],
         "preset": "dawn",
-        "scale": 0.05786703738251029,
+        "scale": 0.05692758434586492,
         "sun": {
           "azimuthDeg": 95,
           "color": [
@@ -2769,7 +2811,7 @@
       "files": [
         {
           "path": "hdri/sky_dawn_2048.exr",
-          "bytes": 200675,
+          "bytes": 262933,
           "tiers": [
             "ultra"
           ],
@@ -2779,7 +2821,7 @@
         },
         {
           "path": "hdri/sky_dawn_1024.exr",
-          "bytes": 76545,
+          "bytes": 97979,
           "tiers": [
             "high"
           ],
@@ -2789,7 +2831,7 @@
         },
         {
           "path": "hdri/sky_dawn_512.exr",
-          "bytes": 27696,
+          "bytes": 33851,
           "tiers": [
             "mobile"
           ],
@@ -2802,28 +2844,28 @@
         "files": {
           "ultra": {
             "path": "hdri/sky_dawn_2048.exr",
-            "bytes": 200675,
+            "bytes": 262933,
             "width": 2048,
             "height": 1024
           },
           "high": {
             "path": "hdri/sky_dawn_1024.exr",
-            "bytes": 76545,
+            "bytes": 97979,
             "width": 1024,
             "height": 512
           },
           "mobile": {
             "path": "hdri/sky_dawn_512.exr",
-            "bytes": 27696,
+            "bytes": 33851,
             "width": 512,
             "height": 256
           }
         }
       },
       "bytes": {
-        "ultra": 200675,
-        "high": 76545,
-        "mobile": 27696
+        "ultra": 262933,
+        "high": 97979,
+        "mobile": 33851
       }
     },
     "sky_day": {

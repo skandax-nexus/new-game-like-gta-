@@ -2,12 +2,18 @@
 @asset fx_sparks_embers
 @kind flipbook
 
-Additive spark atlas (8 x 8 frames of 64 px = 512, ASSET_LIST WP7-11): `spark` (velocity-stretched streak,
-white-hot head, amber tail), `ember` x2 (irregular glowing coals that rise and swirl, `#ffb040`), `slash_spark`
-(8 frames: a fan of sparks thrown along the blade arc at the hit point), `parry_flash` (8 frames: gold radial
-flash, ~120 ms, plus sparks), `finisher_burst` (16 frames: saffron-gold burst with a dust-colored shockwave
-ring and flying sparks). ART_BIBLE §10 melee VFX; low-gore: hits read through sparks, never blood.
-Color is premultiplied emission (additive: rgb x emissiveIntensity added, alpha = coverage for tooling).
+Additive spark atlas (8 x 8 frames, ASSET_LIST WP7-11, ART_BIBLE §10 melee VFX; low-gore: hits read through sparks,
+never blood):
+  `spark`           velocity-stretched streak: gold head, saffron tail (aligned to velocity at runtime: +Y = forward)
+  `ember` x2        irregular glowing coals that rise and swirl (#ffb040 family)
+  `slash_spark`     8 frames: a fan of sparks thrown along the blade arc from the hit point, curving under gravity
+  `parry_flash`     8 frames (~130 ms): a gold radial flash - soft tapered rays, ring and core
+  `finisher_burst`  16 frames: saffron-gold bloom and ring, a dust-coloured shockwave, and curved flying sparks
+Colour: streaks run from gold `#e9b949` (bright) to saffron `#e8892b` (cooling); intensity is soft-saturated, and only
+the hottest few percent blend towards the warm-white core `#fff2c0` (logged per sequence) - no flat white, no spokes.
+Every sprite fades to exactly 0 before its frame border (frame window + flipbook border guard). Premultiplied
+emission (additive: rgb x emissiveIntensity 6 added; alpha = coverage for tooling only), published LOSSLESS so the
+thin streaks keep their colour (lossy 4:2:0 WebP put cyan fringes on them). Atlas 1024 / 1024 / 512.
 OWNER: Technical Artist G (TA-07).
 """
 import pathlib
@@ -19,76 +25,103 @@ import numpy as np  # noqa: E402
 
 import _fxkit as kit  # noqa: E402
 from lib import flipbook as fb  # noqa: E402
+from lib.core import log  # noqa: E402
 
 ctx = fb.begin(__file__)
-PX = 64 * 2  # supersampled, the publisher resamples to 64 px frames
+PX = 128 if not ctx.draft else 64
 x, y = kit.coords(PX)
+r = np.hypot(x, y)
+ang = np.arctan2(y, x)
+WIN = fb.frame_window(PX, 0.04, 0.10)
 rng = np.random.default_rng(7)
 frames: list = []
 seqs: list = []
+DUST = "#c9a77a"  # dust-coloured shockwave (emissive, dim)
 
 
 def seq(name: str, imgs: list, fps: float, loop: bool = False) -> None:
     seqs.append({"name": name, "start": len(frames), "count": len(imgs), "fps": fps, "loop": loop})
     frames.extend(imgs)
+    v = np.concatenate([f[..., 3].ravel() for f in imgs])
+    lit = v > 0.08
+    log(f"sparks {name}: warm-white core {100.0 * float((v > 0.9).sum()) / max(int(lit.sum()), 1):.1f} % of the lit area")
 
 
-# spark: head at the top-right, tail towards the bottom-left (aligned to velocity at runtime: +Y = forward)
-i = kit.streak(x, y, (0.0, -0.85), (0.0, 0.85), 0.05, 1.0) * 1.6 + kit.glow(x, y, 0.0, 0.85, 0.07) * 0.8
-seq("spark", [kit.emissive_frame(i, "#fff2c0", "#e2571e", 0.7)], 1)
-# embers: soft irregular coals
+def tapered(a: np.ndarray, b: np.ndarray, w0: float, w1: float) -> np.ndarray:
+    """Soft segment a -> b whose width tapers from w0 (at a) to w1 (at b); brightness grows towards b (the head)."""
+    d = b - a
+    L2 = max(float(d @ d), 1e-12)
+    t = np.clip(((x - a[0]) * d[0] + (y - a[1]) * d[1]) / L2, 0, 1)
+    dist = np.hypot(x - (a[0] + t * d[0]), y - (a[1] + t * d[1]))
+    w = w0 + (w1 - w0) * t
+    return (np.exp(-(dist / w) ** 2) * (0.2 + 0.8 * t ** 1.5)).astype(np.float32)
+
+
+# spark: head at the top, tail towards the bottom
+i = tapered(np.array([0.0, -0.62]), np.array([0.0, 0.58]), 0.012, 0.05) * 2.2 + kit.glow(x, y, 0.0, 0.58, 0.06) * 1.2
+seq("spark", [kit.spark_emission(i, gain=1.0, window=WIN)], 1)
+# embers: soft irregular coals, saffron rim, gold heart
 embers = []
 for k in range(2):
-    nz = kit.fbm2(x * 1.4, y * 1.4, 40 + k, 4, 2.2)
-    r = np.hypot(x * (1.0 + 0.2 * k), y)
-    i = np.clip(1.0 - r / (0.42 + 0.18 * nz), 0, 1) ** 1.4 * (0.75 + 0.5 * nz) + kit.glow(x, y, 0, 0, 0.25, 2.0) * 0.35
-    embers.append(kit.emissive_frame(i, "#ffd27a", "#c2412d", 0.9))
+    nz = kit.fbm2(x * 1.5, y * 1.5, 40 + k, 4, 2.2)
+    rr = np.hypot(x * (1.0 + 0.25 * k), y * (1.0 - 0.1 * k))
+    body = np.clip(1.0 - rr / (0.32 + 0.16 * nz), 0, 1) ** 1.3 * (0.6 + 0.6 * nz)
+    i = body * 1.6 + kit.glow(x, y, 0, 0, 0.22, 2.0) * 0.35
+    embers.append(kit.spark_emission(i, gold="#ffb040", saffron="#c2412d", gain=1.1, core=0.95, window=WIN))
 seq("ember", embers, 1)
-# slash spark: fan of sparks thrown along an arc from the impact point (left) to the right
-sparks = [(rng.uniform(-0.35, 0.35), rng.uniform(0.9, 1.9), rng.uniform(0.5, 1.0)) for _ in range(26)]
+# slash spark: a fan thrown to the right from the hit point (left), curving down under gravity
+fan = [(rng.uniform(-0.55, 0.45), rng.uniform(0.9, 1.6), rng.uniform(0.45, 1.0)) for _ in range(22)]
 imgs = []
+hit = np.array([-0.55, 0.05])
 for f in range(8):
     t = (f + 1) / 8.0
     acc = np.zeros_like(x)
-    for ang, speed, b in sparks:
-        dx, dy = np.cos(ang) * speed, np.sin(ang) * speed
-        p0 = np.array([-0.85, 0.0]) + np.array([dx, dy]) * max(0.0, t - 0.18) * 0.9
-        p1 = np.array([-0.85, 0.0]) + np.array([dx, dy - 0.25 * t]) * t * 0.9
-        acc += kit.streak(x, y, p0, p1, 0.022, 1.0) * b * (1.0 - t ** 2.2) * 1.8
-    acc += kit.glow(x, y, -0.85, 0.0, 0.18 * (1.0 - t) + 0.02, 2.0) * (1.0 - t) * 1.4
-    imgs.append(kit.emissive_frame(acc, "#ffe39a", "#e8892b", 0.8))
+    for a_, sp, b in fan:
+        v = np.array([np.cos(a_), np.sin(a_)]) * sp
+        head = hit + v * t * 0.62 + np.array([0.0, -0.35]) * t * t
+        tail = hit + v * max(0.0, t - 0.22) * 0.62 + np.array([0.0, -0.35]) * max(0.0, t - 0.22) ** 2
+        acc += tapered(tail, head, 0.008, 0.02) * b * (1.0 - t ** 2.0) * 2.4
+    acc += kit.glow(x, y, hit[0], hit[1], 0.13 * (1.0 - t) + 0.02, 2.0) * (1.0 - t) ** 1.5 * 1.6
+    imgs.append(kit.spark_emission(acc, gain=1.0, window=WIN))
 seq("slash_spark", imgs, 30)
-# parry flash: star burst + ring, very short
+# parry flash: soft tapered gold rays + ring + core, very short
 imgs = []
-ang = np.arctan2(y, x)
-r = np.hypot(x, y)
+rays_a = rng.uniform(0, 2 * np.pi)
 for f in range(8):
     t = f / 7.0
-    rays = (np.abs(np.cos(ang * 4.0)) ** 18 + 0.6 * np.abs(np.cos(ang * 4.0 + np.pi / 4)) ** 30) * np.exp(-r / (0.25 + 0.8 * t)) * 1.6
-    ring = np.exp(-((r - (0.15 + 0.75 * t)) / 0.05) ** 2) * 0.9
-    core = kit.glow(x, y, 0, 0, 0.12 + 0.1 * t, 2.0) * 1.5
-    i = (rays + ring + core) * (1.0 - t) ** 1.3
-    imgs.append(kit.emissive_frame(i, "#fff2c0", "#e9b949", 0.75))
+    rays = (np.cos(4.0 * (ang - rays_a)) * 0.5 + 0.5) ** 10 * np.exp(-r / (0.16 + 0.42 * t))
+    rays += 0.5 * (np.cos(4.0 * (ang - rays_a) + np.pi / 4 * 4) * 0.5 + 0.5) ** 16 * np.exp(-r / (0.1 + 0.3 * t))
+    ring = np.exp(-((r - (0.14 + 0.5 * t)) / (0.035 + 0.03 * t)) ** 2) * 0.8
+    core = kit.glow(x, y, 0, 0, 0.09 + 0.06 * t, 2.0)
+    i = (rays * 1.4 + ring + core * 1.5) * (1.0 - t) ** 1.4
+    imgs.append(kit.spark_emission(i, gain=1.0, core=0.92, window=WIN))
 seq("parry_flash", imgs, 60)
-# finisher burst: saffron-gold burst + shockwave + sparks
+# finisher burst: saffron-gold bloom + ring, dust shockwave, curved flying sparks (few, varied - no spokes)
 imgs = []
-bsparks = [(rng.uniform(0, 2 * np.pi), rng.uniform(0.6, 1.3), rng.uniform(0.4, 1.0)) for _ in range(40)]
+flyers = [(rng.uniform(0, 2 * np.pi), rng.uniform(0.8, 1.3), rng.uniform(0.45, 1.0), rng.uniform(-0.6, 0.6)) for _ in range(16)]
 for f in range(16):
     t = (f + 1) / 16.0
-    burst = np.exp(-r / (0.18 + 0.55 * t)) * (1.0 - t) ** 1.5 * 2.2
-    shock = np.exp(-((r - (0.1 + 0.85 * t)) / (0.04 + 0.05 * t)) ** 2) * (1.0 - t) * 1.1
-    acc = burst + shock
-    for a_, sp, b in bsparks:
-        d = np.array([np.cos(a_), np.sin(a_)]) * sp
-        acc += kit.streak(x, y, d * max(0.0, t - 0.12) * 0.8, d * t * 0.8, 0.018, 1.0) * b * (1.0 - t) * 1.6
-    imgs.append(kit.emissive_frame(acc, "#ffe9a8", "#e8892b", 0.8))
+    bloom = np.exp(-r / (0.12 + 0.3 * t)) * (1.0 - t) ** 2.0 * 2.0
+    ring = np.exp(-((r - (0.08 + 0.55 * t)) / (0.03 + 0.05 * t)) ** 2) * (1.0 - t) ** 1.2 * 1.3
+    acc = bloom + ring
+    for a_, sp, b, curl in flyers:
+        def pos(tt: float) -> np.ndarray:
+            a2 = a_ + curl * tt
+            return np.array([np.cos(a2), np.sin(a2)]) * sp * tt * 0.6
+        acc += tapered(pos(max(0.0, t - 0.28)), pos(t), 0.008, 0.024) * b * (1.0 - t) ** 0.8 * 3.6
+    fire = kit.spark_emission(acc, gold="#e9b949", saffron="#e8892b", gain=1.0, core=0.92, window=WIN)
+    shock = np.exp(-((r - (0.12 + 0.68 * t)) / (0.07 + 0.08 * t)) ** 2) * (1.0 - t) ** 1.3 * 0.95
+    dust = kit.spark_emission(shock, gold=DUST, saffron="#8c6a48", gain=1.0, core=2.0, window=WIN)
+    imgs.append(np.concatenate([fire[..., :3] + dust[..., :3], np.maximum(fire[..., 3:], dust[..., 3:])], axis=-1))
 seq("finisher_burst", imgs, 30)
 
 color = [f.astype(np.float32) for f in frames]
 meta = fb.write(ctx, color, 8, 8, fps=30, loop=False, sequences=seqs, blend="additive", lit=False, emissive_intensity=6.0,
-                soft_fade_m=0.1, size_m=(0.6, 0.6), atlas_px={"ultra": 512, "high": 512, "mobile": 512},
+                soft_fade_m=0.1, size_m=(0.6, 0.6), atlas_px={"ultra": 1024, "high": 1024, "mobile": 512},
                 labels=kit.label_sequences(seqs), srgb=True,
-                description="Additive sparks: spark, embers, slash spark, parry flash, finisher burst (premultiplied emission x6).")
+                description="Additive sparks (gold -> saffron): spark, embers, slash spark, parry flash, finisher burst "
+                            "with dust shockwave; premultiplied emission x6, lossless.")
 meta["tint"] = "#ffffff"
+meta["encoding"] = "lossless"
 ctx.meta.update(meta)
 ctx.finish()

@@ -27,6 +27,7 @@ color: list = []
 normals: list = []
 seqs: list = []
 FLAT = np.concatenate([np.full((PX, PX, 2), 0.5, np.float32), np.ones((PX, PX, 1), np.float32)], axis=-1)
+WIN = fb.frame_window(PX, 0.03, 0.06)  # nothing may touch a frame border (flipbook border guard)
 
 
 def seq(name: str, frames: list, nrm: list | None, fps: float, loop: bool = True, **extra: object) -> None:
@@ -35,20 +36,35 @@ def seq(name: str, frames: list, nrm: list | None, fps: float, loop: bool = True
     normals.extend(nrm if nrm is not None else [FLAT] * len(frames))
 
 
+def _peepal_outline() -> np.ndarray:
+    """Closed outline (u, v), petiole notch at the bottom, drip tip at the top: a classic heart curve (point up)
+    whose upper third is drawn out into a long tapering tail."""
+    s_ = np.linspace(0.0, 2 * np.pi, 181)[:-1]
+    hu = 16 * np.sin(s_) ** 3
+    hv = -(13 * np.cos(s_) - 5 * np.cos(2 * s_) - 2 * np.cos(3 * s_) - np.cos(4 * s_))
+    u_, v_ = hu / 17.0 * 0.7, hv / 17.0 * 0.62 - 0.12  # blade: notch at v ~ -0.5, point at v ~ +0.5
+    t = np.clip((v_ - 0.05) / 0.45, 0, 1)                # 0 below the shoulders, 1 at the point
+    u_ = u_ * (1.0 - 0.86 * t ** 0.7)                   # concave taper
+    v_ = v_ + 0.66 * t ** 2.0                            # draw the point out into a long drip tip
+    return np.stack([u_ * 0.82, v_ * 0.8 - 0.08], axis=1).astype(np.float32)
+
+
+_PEEPAL = _peepal_outline()
+
+
 def leaf_shape(u: np.ndarray, v: np.ndarray, kind: str) -> np.ndarray:
-    """Signed coverage of a leaf in its own frame (v along the midrib, tip at +v)."""
+    """Coverage of a leaf in its own frame (v along the midrib from the petiole at -v to the tip at +v)."""
     if kind == "peepal":
-        # heart shape with a long drip tip
-        body = (u / (0.62 * np.clip(1.0 - ((v + 0.15) / 0.75) ** 2, 0, 1) ** 0.5 + 1e-3)) ** 2 < 1.0
-        tip = (np.abs(u) < 0.06 * np.clip((0.95 - v) / 0.35, 0, 1)) & (v > 0.45) & (v < 0.95)
-        notch = (v < -0.72) & (np.abs(u) < 0.1)
-        return ((body | tip) & ~notch).astype(np.float32)
+        # Ficus religiosa: a broad heart-shaped (cordate) blade - two rounded basal lobes meeting at the petiole in a
+        # notch - tapering with concave sides into a long, narrow drip tip (~30 % of the length). ART_BIBLE §1.2.
+        return np.maximum((fb.polygon_sdf(u, v, _PEEPAL) < 0).astype(np.float32),
+                          ((np.abs(u) < 0.022) & (v > -0.86) & (v < -0.3)).astype(np.float32))
     # sal: broad ovate, blunt tip
     w = 0.48 * np.clip(1.0 - ((v - 0.0) / 0.85) ** 2, 0, 1) ** 0.6
     return (np.abs(u) < w).astype(np.float32)
 
 
-def tumble(shape, kind: str, base: str, edge: str, frames: int = 8, seed: int = 0) -> tuple[list, list]:
+def tumble(shape, kind: str, base: str, edge: str, frames: int = 8, seed: int = 0, colorize=None) -> tuple[list, list]:
     """Rotate the leaf about its midrib (squash u by cos) while it slowly spins in the image plane."""
     rng = np.random.default_rng(seed)
     spin0 = rng.uniform(0, np.pi)
@@ -63,9 +79,9 @@ def tumble(shape, kind: str, base: str, edge: str, frames: int = 8, seed: int = 
         sq = max(abs(c), 0.12)
         u = u0 / sq
         cov = shape(u, v0, kind)
-        cov = fb.blur2(cov, 0.8)
+        cov = fb.blur2(cov, 0.8) * WIN
         # front (upper surface) darker and glossier green, back paler; edge-on frames get the edge color
-        face = kit.srgb(base) if c >= 0 else kit.srgb(edge)
+        face = colorize(u, v0, c >= 0) if colorize else (kit.srgb(base) if c >= 0 else kit.srgb(edge))
         vein = np.exp(-(u * sq / 0.025) ** 2) * (np.abs(v0) < 0.8) * 0.25
         side_veins = np.exp(-((np.abs(u * sq) * 0.7 - (v0 - 0.0) * 0.25) % 0.16 - 0.08) ** 2 / 0.0006) * 0.08
         tint = (1.0 - vein - side_veins)[..., None] * face * (0.85 + 0.15 * abs(c))
@@ -86,14 +102,39 @@ c, n = tumble(leaf_shape, "peepal", "#57702c", "#9fae62", seed=2)
 seq("leaf_peepal", c, n, 8)
 
 
+# palash (Butea monosperma, flame of the forest): the keel petal is a curved, beak-like claw - broad and blunt at the
+# base (with the dark velvety calyx), sweeping round into a pointed tip.
+_ARC = [np.array([-0.05 + 0.52 * np.sin(a) ** 1.2 * 0.95, -0.72 + 1.45 * (1 - np.cos(a)) * 0.62]) for a in np.linspace(0.0, 1.45, 24)]
+
+
 def petal(u: np.ndarray, v: np.ndarray, kind: str) -> np.ndarray:
-    # palash: curved, claw-shaped petal (keel), wider at the base
-    w = 0.32 * np.clip(1.0 - ((v + 0.1) / 0.8) ** 2, 0, 1) ** 0.7
-    bend = 0.25 * (v + 0.8) ** 2
-    return (np.abs(u - bend + 0.2) < w).astype(np.float32)
+    d = np.full(u.shape, 9.0, np.float32)
+    tt = np.zeros(u.shape, np.float32)
+    n = len(_ARC) - 1
+    for i in range(n):
+        di = fb.segment_distance(u, v, _ARC[i], _ARC[i + 1])
+        closer = di < d
+        d = np.where(closer, di, d)
+        tt = np.where(closer, (i + 0.5) / n, tt)
+    w = 0.25 * (1.0 - tt) ** 0.85 + 0.012
+    return (d < w).astype(np.float32)
 
 
-c, n = tumble(petal, "palash", "#e2571e", "#f08a3c", seed=3)
+def palash_colour(u: np.ndarray, v: np.ndarray, front: bool) -> np.ndarray:
+    """Flame gradient along the petal: deep red-orange at the base -> bright saffron-orange at the tip, with the dark
+    velvety calyx at the base; the back is a little paler."""
+    g = np.clip((v + 0.72) / 1.3, 0, 1)[..., None]
+    col = kit.srgb("#c8361a") * (1 - g) + kit.srgb("#f7902e") * g
+    calyx = np.clip((-0.56 - v) / 0.16, 0, 1)[..., None]
+    col = col * (1 - calyx) + kit.srgb("#3a2a14") * calyx
+    return col if front else col * 0.85 + kit.srgb("#f5b070") * 0.15
+
+
+def palash_tumble() -> tuple[list, list]:
+    return tumble(petal, "palash", "#e2571e", "#f5822a", seed=3, colorize=palash_colour)
+
+
+c, n = palash_tumble()
 seq("palash", c, n, 10)
 
 # kash seed tuft: thin seed with radiating silky hairs

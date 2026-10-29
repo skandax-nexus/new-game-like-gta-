@@ -15,6 +15,8 @@ Cloth contract (render/fx/banners, cloth shader BANNER_DIMENSIONS.cloth):
     edge; COLOR_0.g = 1 on secondary hanging parts (fringe strips, tassel cords) that swing more loosely, else 0;
     COLOR_0.b = 0. Data, not albedo (`meta.vertexColors = 'data'`); pole / crossbar carry weight 0.
   - Tessellated on a ~5 cm lattice clipped to the outline (constrained Delaunay) so the wave deformation is smooth.
+  - Rest pose is gently draped (drape(): ~2.5 vertical folds up to 3 cm deep at the free edge, 1.5 cm catenary sag)
+    so the static low-tier banner never reads as a flat card; the runtime wave adds on top.
 Materials: `banner_cloth` (white, double-sided, roughness 0.85: the runtime binds the banner texture),
 `banner_wood` (pole) and `banner_brass` (finial, tassel caps), factor-only. OWNER: Technical Artist G (TA-07).
 """
@@ -120,6 +122,16 @@ def edge_dist(poly: list[tuple[float, float]], p: tuple[float, float]) -> float:
     return best
 
 
+def drape(vx: float, w: float) -> tuple[float, float, float]:
+    """Rest-pose drape (Art Director review: the low tier shows the static mesh, bible §13): ~2.5 soft vertical folds
+    whose depth grows from 0 at the crossbar to 3 cm at the free edge (cloth weight w), and a slight catenary sag of
+    the free edge (1.5 cm at the centre). UVs are untouched: the runtime emblem texture follows the fabric."""
+    xn = vx / 100.0
+    fold = 0.03 * w ** 1.3 * math.sin(2.0 * math.pi * (2.5 * xn + 0.15))
+    sag = -0.015 * w ** 3 * math.cos(math.pi * (xn - 0.5))
+    return 0.0, fold, sag
+
+
 def sheet(name: str, poly: list[tuple[float, float]], mat: bpy.types.Material, secondary: float = 0.0,
           weight_range: tuple[float, float] | None = None) -> bpy.types.Object:
     """Constrained-Delaunay cloth sheet inside `poly` (viewBox units) with UVs and cloth weights."""
@@ -148,7 +160,9 @@ def sheet(name: str, poly: list[tuple[float, float]], mat: bpy.types.Material, s
     verts, uvs, cols = [], [], []
     for v in vco:
         vx, vy = float(v[0]), float(v[1])
-        verts.append(((vx - 50.0) * SX, CLOTH_Y, CROSSBAR_Z - vy * SY))
+        w = min(1.0, max(0.0, (vy - lo) / max(hi - lo, 1e-6)))
+        dx, dy, dz = drape(vx, w)
+        verts.append(((vx - 50.0) * SX * (1.0 - 0.015 * w) + dx, CLOTH_Y + dy, CROSSBAR_Z - vy * SY + dz))
     loop_uv = []
     for f in faces:
         for vi in f:

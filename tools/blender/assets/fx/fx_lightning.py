@@ -7,7 +7,9 @@ Four lightning bolt sprites for monsoon storms (2 x 2 atlas of 256 px = 512, ASS
 midpoint-displacement bolts with forking branches, a white core and a cool violet glow (ART_BIBLE §6 varsha storm
 light). Drawn on tall quads (~1-2 km in the distance) for 2-4 flicker frames while the weather system flashes the
 sky. Additive (premultiplied emission x emissiveIntensity 10). High / ultra only: the mobile tier keeps the
-procedural sky flash. OWNER: Technical Artist G (TA-07).
+procedural sky flash. The main channel strikes the ground: it runs to the bottom edge of its frame (`open_edges: bottom`, the quad's
+bottom sits on the horizon / terrain); the top (cloud base) and the sides fade to 0 before the border.
+OWNER: Technical Artist G (TA-07).
 """
 import pathlib
 import sys
@@ -62,7 +64,7 @@ for k in range(4):
     rng = np.random.default_rng(100 + k)
     core = np.zeros_like(x)
     top = np.array([rng.uniform(-0.25, 0.25), 0.98])
-    bottom = np.array([rng.uniform(-0.35, 0.35), -0.98])
+    bottom = np.array([rng.uniform(-0.3, 0.3), -1.08])  # past the bottom edge: the strike reaches the ground
     main = bolt(rng, top, bottom, 0.16, 7)
     draw(main, 0.008, 1.0, core)
     for _ in range(int(rng.integers(3, 6))):
@@ -75,11 +77,11 @@ for k in range(4):
         draw(br, 0.005, rng.uniform(0.45, 0.75), core)
     glow = fb.blur2(core, 10.0) * 2.2 + fb.blur2(core, 3.0) * 0.8
     i = np.clip(core * 1.4 + glow, 0, 1.6)
-    # fade the very top / bottom so the sprite edges never show
-    i *= kit.smoothstep(1.0, 0.9, np.abs(y)) * kit.smoothstep(1.0, 0.85, np.abs(x))
+    # the top (cloud base) and the sides fade to exactly 0 before the border; the bottom stays open (ground strike)
+    i *= kit.smoothstep(0.96, 0.8, y) * kit.smoothstep(0.94, 0.78, np.abs(x))
     frames.append(kit.emissive_frame(i, "#ffffff", "#9a8cff", 0.6))
 
-seqs = [{"name": f"bolt{k}", "start": k, "count": 1, "fps": 1, "loop": True} for k in range(4)]
+seqs = [{"name": f"bolt{k}", "start": k, "count": 1, "fps": 1, "loop": True, "open_edges": ["bottom"]} for k in range(4)]
 meta = fb.write(ctx, frames, 2, 2, fps=1, loop=True, sequences=seqs, blend="additive", lit=False, emissive_intensity=10.0,
                 soft_fade_m=0.0, size_m=(600.0, 1200.0), atlas_px={"ultra": 512, "high": 512},
                 labels=kit.label_sequences(seqs), srgb=True,
