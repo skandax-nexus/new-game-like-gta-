@@ -202,7 +202,10 @@ export const UNITS: Readonly<Record<UnitClass, UnitDef>> = {
     constraint: 'Expensive.',
     description: 'Hereditary household warriors in scale coats with broad swords and round shields. They stand with the commander - and they cost as much as a village pays in a season.',
     category: 'infantry',
-    stats: S({ menPerFormation: 60, hp: 14, meleeAttack: 10, meleeDefense: 11, chargeBonus: 5, armor: 4, walkSpeed: 1.5, runSpeed: 3.6, turnRate: 0.7, mass: 1.2, baseMorale: 85, discipline: 0.9, fatigueRate: 0.009, spacingX: 1.1, spacingZ: 1.4, upkeepFood: 0.18, upkeepWealth: 1.0, recruitCost: { wealth: 900, food: 40, population: 60 }, recruitDays: 20 }),
+    // GP-01 rules co-review: hp 14 -> 18, meleeAttack 10 -> 12, meleeDefense 11 -> 12, armor 4 -> 5. With the old
+    // values 60 guards (900) lost to ONE 120-man spear block (360) 20/20 in the authoritative sim, against the 5.5
+    // counter "guards beat spears"; now they win that duel 20/20 and still lose to elephants (5.5 / 13.3).
+    stats: S({ menPerFormation: 60, hp: 18, meleeAttack: 12, meleeDefense: 12, chargeBonus: 5, armor: 5, walkSpeed: 1.5, runSpeed: 3.6, turnRate: 0.7, mass: 1.2, baseMorale: 85, discipline: 0.9, fatigueRate: 0.009, spacingX: 1.1, spacingZ: 1.4, upkeepFood: 0.18, upkeepWealth: 1.0, recruitCost: { wealth: 900, food: 40, population: 60 }, recruitDays: 20 }),
     terrain: checkTerrain(GUARD_TERRAIN),
     bonusVs: { spearmen: 1.25, archers: 1.3, engineers: 1.3, war_elephants: 1.1 },
     counters: { strongVs: ['spearmen', 'archers', 'engineers'], weakVs: ['war_elephants', 'cavalry'] },

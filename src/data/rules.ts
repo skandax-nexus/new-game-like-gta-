@@ -456,8 +456,13 @@ export const RULES = {
     experience: { attackPerExp: 0.25, defensePerExp: 0.15, moralePerExp: 15, winGain: 0.1, lossGain: 0.05 },
     /** p(panic) per volley = clamp(unruliness x base x (1 - morale/100) x hits / elephants, 0, maxChance). */
     elephantPanic: { base: 0.8, maxChance: 0.5, durationSec: 8, trampleShare: 0.5, trampleRadius: 6, moraleAfter: -20 },
-    /** Volleys into a melee: share of hits that land on the shooter's engaged friends (not with hold_fire). */
-    friendlyFireShare: 0.3,
+    /**
+     * Volleys into a melee: share of hits that land on the shooter's engaged friends (not with hold_fire).
+     * 0.1 since the GP-01 rules co-review (was 0.3): at 0.3 archers shooting over their own spear line were net
+     * harmful (4 spear + 2 archers beat 6 spearmen 0/20 instead of the DESIGN_SPEC 13.3 target >= 60%); at 0.1
+     * they help (12/20) and friendly fire is still a visible cost of shooting into a melee.
+     */
+    friendlyFireShare: 0.1,
     /** Missile damage taken by a formation standing in forest. */
     forestCover: 0.6,
     /** Defenders on walls: defense / ranged accuracy / range multipliers. */
