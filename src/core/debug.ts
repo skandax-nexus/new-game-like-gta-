@@ -1,5 +1,5 @@
 /**
- * QA / automation API exposed as `window.__SAMRAJYA__`. Owned by the CTO.
+ * QA / automation API exposed as `window.__SAMRAJYA__`. OWNER: CTO (call / showScreen / labs added by CORE-01).
  * Implemented by src/app (which knows the scenes/session); core only defines the contract so
  * smoke tests, Playwright scripts and developers share one stable surface.
  *
@@ -7,6 +7,12 @@
  *   __SAMRAJYA__.ready       app booted (renderer + UI up)
  *   __SAMRAJYA__.sceneReady  current scene finished loading AND rendered its first stable frames
  *   __SAMRAJYA__.scene       current SceneId
+ *
+ * Contracts v2 (Sprint 1):
+ *   __SAMRAJYA__.call(name, ...args)     forwards to the active scene's debugCommand(name, args) (GameScene, v2);
+ *                                        built-ins when the scene does not answer: 'noop', 'scene.info', 'ui.screens'
+ *   __SAMRAJYA__.showScreen(id, props)   show any ScreenId with raw props (UI captures; placeholders included)
+ *   __SAMRAJYA__.hideScreen(id) / screens() / labs()
  */
 import type {
   BattleCommand,
@@ -73,6 +79,20 @@ export interface SamrajyaDebugApi {
   /** Hash of the authoritative sim state of the current scene (determinism checks), or null. */
   hash(): string | null;
   toggleProfiler(): void;
+  // --- Contracts v2 ---
+  /**
+   * Run a debug command on the active scene (`GameScene.debugCommand`), e.g. call('world.select', 'settlement',
+   * 'rajapura'), call('bench.report'), call('noop'). Resolves with the command's (plain-data) result; rejects for
+   * unknown names.
+   */
+  call(name: string, ...args: unknown[]): Promise<unknown>;
+  /** Show a UI screen with raw props (throws for an unknown ScreenId). Placeholder screens print their props. */
+  showScreen(id: string, props?: Record<string, unknown>): void;
+  hideScreen(id: string): void;
+  /** Every ScreenId and how it resolves: a static screen, a discovered *.screen.ts module or the placeholder. */
+  screens(): { id: string; source: 'static' | 'discovered' | 'placeholder' }[];
+  /** Lab ids available to ?scene=lab&lab=<id> (empty in the single-file build). */
+  labs(): string[];
 }
 
 declare global {

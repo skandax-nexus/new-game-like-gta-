@@ -23,6 +23,7 @@ import { WorldScene } from './scenes/WorldScene';
 import { BattleScene } from './scenes/BattleScene';
 import { HeroScene } from './scenes/HeroScene';
 import { AssetViewerScene } from './scenes/AssetViewerScene';
+import { LabScene } from './scenes/LabScene';
 import { AssetManager, assetTierForQuality } from './assets/AssetManager';
 import { registerDefaultFallbacks } from './assets/fallbacks';
 import { GameSession, skirmishFromParams } from './app/session';
@@ -122,6 +123,7 @@ async function boot(): Promise<void> {
   scenes.register('battle', (c) => new BattleScene(c));
   scenes.register('hero', (c) => new HeroScene(c));
   scenes.register('assetviewer', (c) => new AssetViewerScene(c));
+  scenes.register('lab', (c) => new LabScene(c));
   assets.onProgress((p) => bus.emit('assets:progress', p));
   crash.setContextProvider(() => ({
     scene: scenes.currentId,
@@ -154,6 +156,9 @@ async function boot(): Promise<void> {
       break;
     case 'assetviewer':
       await scenes.go({ scene: 'assetviewer', assetId: params.asset });
+      break;
+    case 'lab':
+      await scenes.go({ scene: 'lab', labId: params.lab });
       break;
     default:
       await scenes.go({ scene: 'menu' });

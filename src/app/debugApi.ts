@@ -1,14 +1,17 @@
 /**
- * window.__SAMRAJYA__ implementation (QA / automation / smoke tests). Owned by the CTO.
- * Contract: src/core/debug.ts (SamrajyaDebugApi).
+ * window.__SAMRAJYA__ implementation (QA / automation / smoke tests). OWNER: CTO (call / showScreen / labs by
+ * CORE-01). Contract: src/core/debug.ts (SamrajyaDebugApi).
  */
 import type { GameMode, SceneId } from '../core/types';
 import type { SamrajyaDebugApi } from '../core/debug';
 import { BUILD_VERSION } from '../core/constants';
 import { DEFAULT_SCENARIO_ID, defaultSandbox } from '../data/campaign';
 import type { AppContext } from './contracts';
+import { DEBUG_UNHANDLED, isScreenId, SCREEN_IDS } from './contracts';
 import type { GameSession } from './session';
 import { skirmishFromParams } from './session';
+import { SCREEN_REGISTRY } from '../ui/screens/index';
+import { listLabs } from '../scenes/lab/registry';
 
 export function createDebugApi(ctx: AppContext, session: GameSession): SamrajyaDebugApi {
   const frameWaiters: { remaining: number; resolve: () => void }[] = [];
@@ -27,6 +30,13 @@ export function createDebugApi(ctx: AppContext, session: GameSession): SamrajyaD
   };
   const num = (v: unknown): number | undefined => (typeof v === 'number' && Number.isFinite(v) ? v : undefined);
   const str = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined);
+  /** Built-in commands answered by the API when the active scene does not (GameScene.debugCommand contract). */
+  const builtins: Record<string, (args: readonly unknown[]) => unknown> = {
+    noop: (args) => ({ scene: ctx.scenes.currentId, handledBy: 'api', args: [...args] }),
+    'scene.info': () => api.getState(),
+    'ui.screens': () => api.screens(),
+    labs: () => api.labs(),
+  };
 
   const api: SamrajyaDebugApi = {
     version: BUILD_VERSION,
@@ -61,6 +71,9 @@ export function createDebugApi(ctx: AppContext, session: GameSession): SamrajyaD
           break;
         case 'assetviewer':
           await ctx.scenes.go({ scene: 'assetviewer', assetId: str(params.asset) ?? ctx.params.asset });
+          break;
+        case 'lab':
+          await ctx.scenes.go({ scene: 'lab', labId: str(params.lab) ?? ctx.params.lab });
           break;
         default:
           await session.quitToMenu();
@@ -119,6 +132,25 @@ export function createDebugApi(ctx: AppContext, session: GameSession): SamrajyaD
     load: (slot = 'quick') => session.loadGame(slot),
     hash: () => ctx.scenes.current?.stateHash() ?? null,
     toggleProfiler: () => ctx.profiler.toggleOverlay(),
+    async call(name: string, ...args: unknown[]) {
+      const scene = ctx.scenes.current;
+      if (scene?.debugCommand) {
+        const result: unknown = await scene.debugCommand(name, args);
+        if (result !== DEBUG_UNHANDLED) return result;
+      }
+      const builtin = builtins[name];
+      if (builtin) return builtin(args);
+      throw new Error(`Unknown debug command '${name}' for scene '${ctx.scenes.currentId ?? 'none'}'`);
+    },
+    showScreen(id: string, props: Record<string, unknown> = {}) {
+      if (!isScreenId(id)) throw new Error(`Unknown screen id '${id}' (see SCREEN_IDS in src/app/contracts.ts)`);
+      ctx.ui.show(id, props as never);
+    },
+    hideScreen(id: string) {
+      if (isScreenId(id)) ctx.ui.hide(id);
+    },
+    screens: () => SCREEN_IDS.map((id) => ({ id, source: SCREEN_REGISTRY.source[id] })),
+    labs: () => listLabs(),
   };
   return api;
 }
