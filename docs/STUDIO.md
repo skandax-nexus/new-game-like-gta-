@@ -310,7 +310,7 @@ Each ticket below is self-contained: spec, acceptance criteria, owned paths and 
   - `src/main.ts (scene registration line only; CTO grant)`
 - **Read first:**
   - CLAUDE.md
-  - docs/STUDIO.md (§4 working agreements, §7 every ticket's interface section)
+  - docs/STUDIO.md (§4 working agreements, §8 every ticket's spec)
   - docs/ARCHITECTURE.md §2-§6, §9-§14
   - docs/DESIGN_SPEC.md §2.3, §6, §7, §8, §11.5-§11.9, §12, §14.2-§14.3
   - docs/ART_BIBLE.md §13 (quality matrix) and §17 (CTO requests)
@@ -1203,7 +1203,7 @@ Write the brains: same rules for player battles and autoresolve, readable intent
   - `tests/app/** (new), tests/scenes/world/** (new)`
   - `scripts/shots/gp-03.cjs (new), docs/sprint1/gp-03/** (new)`
 - **Read first:**
-  - CLAUDE.md, docs/STUDIO.md (§7 interface sections of GFX-01..06, UI-02, SIM-01)
+  - CLAUDE.md, docs/STUDIO.md (§8 specs of GFX-01..06, UI-02, SIM-01)
   - docs/DESIGN_SPEC.md §2 (loop, transitions, autosaves, engagement queue), §8 (AoE layer UX end to end), §9.3-§9.6 (acts, objectives, outcomes), §11.1, §11.9, §12.1, §12.4 (world hint triggers), §12.6 (notifications, auto-pause)
   - docs/ARCHITECTURE.md §3, §9, §13 and 'Contracts v2'
   - src/scenes/WorldScene.ts, src/scenes/common.ts, src/app/session.ts, src/app/contracts.ts
@@ -1291,7 +1291,7 @@ Accessibility/perf as UI-02 (contrast, 44 px, safe areas, scale, no hover-only i
   - `tests/scenes/battle/** (new)`
   - `scripts/shots/gp-04.cjs (new), docs/sprint1/gp-04/** (new)`
 - **Read first:**
-  - CLAUDE.md, docs/STUDIO.md (§7 interface sections of GP-01, SIM-02, GFX-01..06, UI-02)
+  - CLAUDE.md, docs/STUDIO.md (§8 specs of GP-01, SIM-02, GFX-01..06, UI-02)
   - docs/DESIGN_SPEC.md §6 (esp. §6.1 deployment, §6.3-§6.5 orders/intents/stances, §6.6.5 sieges, §6.13 readability), §8.7-§8.8 (battle minimap, card, groups, touch), §12.2 battle rows, §12.4 battle hint triggers, §12.6
   - docs/ART_BIBLE.md §2 (bands), §12.1, §15
   - src/scenes/BattleScene.ts, src/sim/tactical/battle.ts, src/app/contracts.ts
@@ -1336,7 +1336,7 @@ Budgets (ARCHITECTURE §15): 1,000 soldiers @high < 400 draw calls and < 2.5 M t
   - `tests/hero/** (new)`
   - `scripts/shots/gp-02.cjs (new), docs/sprint1/gp-02/** (new)`
 - **Read first:**
-  - CLAUDE.md, docs/STUDIO.md (§7 interfaces of TA-06, GFX-01, GFX-04, GFX-05, GFX-06, UI-01, UI-02, SIM-01)
+  - CLAUDE.md, docs/STUDIO.md (§8 specs of TA-06, GFX-01, GFX-04, GFX-05, GFX-06, UI-01, UI-02, SIM-01)
   - docs/DESIGN_SPEC.md §11 (all), §12.4 hero hints, §13.1 mission lengths, §10.3 hero difficulty columns, §1.2 Wukong table and scope guardrails
   - docs/ART_BIBLE.md §4.3 (hero moods), §9.5-§9.6, §12.2-§12.4 (hero camera, composition, opening cinematic)
   - src/data/hero.ts (HERO_DISTRICTS, HERO_CHARACTERS, DIALOGUES, NEGOTIATION_RULES, TACTIC_INFO, HERO_MISSIONS, HERO_COMBAT, HERO_ENEMIES, TRAINING_STEPS, MISSION_INSPECTABLES)
