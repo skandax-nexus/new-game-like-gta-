@@ -30,6 +30,7 @@ import {
 import { armyFoodNeed, supplyDays } from '../../../src/sim/strategic/supply';
 import { estimatedSoldiers, expireGhostsDaily, GHOST_DAYS, sees, updateVisibilityHourly } from '../../../src/sim/strategic/visibility';
 import { factionMod } from '../../../src/sim/strategic/modifiers';
+import { resolveEngagementNow } from '../../../src/sim/strategic/autoresolve';
 import { campaign, issue, runHours } from './helpers';
 
 const M = BALANCE.military;
@@ -373,6 +374,29 @@ describe('contacts and stances (DESIGN_SPEC §7.7)', () => {
     riders.stance = 'balanced';
     detectContacts(w2, []);
     expect(big.engagementId).not.toBeNull();
+  });
+
+  it('the army that holds the field takes up its march again instead of staying where the battle caught it', () => {
+    const w = campaign(5);
+    setWar(w, 'heartland', 'highland', true);
+    const hf = getRegionHeightfield(w);
+    const out: SimEvent[] = [];
+    const host = place(w, 'army_x', 'heartland', 0, 2000, [{ unitClass: 'spearmen', formations: 6 }]);
+    place(w, 'army_y', 'highland', M.contactRadius * 0.5, 2000, [{ unitClass: 'scouts', formations: 1 }]);
+    expect(orderArmy(w, host.id, { kind: 'move', x: 600, z: 2000 }, hf)).toBe(true);
+    detectContacts(w, out, hf);
+    const eid = host.engagementId;
+    expect(eid).not.toBeNull();
+    resolveEngagementNow(w, eid!, out);
+    const o = w.engagements[eid!]!.outcome!;
+    expect(o.winner).not.toBeNull();
+    expect(o.sides[o.winner!].factionId).toBe('heartland');
+    // Six spear formations against one scout troop: the host wins and marches on to its destination.
+    expect(host.engagementId).toBeNull();
+    expect(host.status).toBe('marching');
+    expect(host.order).toEqual({ kind: 'move', x: 600, z: 2000 });
+    const end = host.path[host.path.length - 1]!;
+    expect(Math.hypot(end.x - 600, end.z - 2000)).toBeLessThan(1);
   });
 });
 

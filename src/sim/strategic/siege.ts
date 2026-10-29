@@ -24,7 +24,15 @@ import { maxWallHp } from './construction';
 import { factionMod } from './modifiers';
 import { addChronicle, addStat, atWarWith, notifyPlayer, regionTerrain, stableKeys, today, worldRandom } from './state';
 import { relationOf } from './treaties';
-import { registerWritebackHooks } from './writeback';
+import { registerWritebackHooks, retreatDestination } from './writeback';
+
+/** Exit directions tried (E, W, S, N) when a garrison is evicted from a settlement that changed hands. */
+const EXIT_DIRECTIONS: readonly (readonly [number, number])[] = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+];
 
 const SG = RULES.siege;
 /** Days a player has to choose occupy / plunder / liberate before Occupy applies. */
@@ -315,8 +323,18 @@ export function transferOwnership(world: WorldState, s: SettlementState, to: Fac
     if (a.factionId !== from || a.status !== 'garrisoned' || a.order.kind !== 'garrison' || a.order.settlementId !== s.id) continue;
     a.status = 'camped';
     a.order = { kind: 'idle' };
-    a.x = s.x + s.radius + SIEGE_CAMP_OFFSET;
-    orderArmy(world, a.id, { kind: 'move', x: a.x + 200, z: a.z }, terrain);
+    // Out of the gates onto dry ground, then back to the realm: the nearest own walls, settlement or depot.
+    const r = s.radius + SIEGE_CAMP_OFFSET;
+    for (const [dx, dz] of EXIT_DIRECTIONS) {
+      if (terrain.inBounds(s.x + dx * r, s.z + dz * r) && !terrain.isWater(s.x + dx * r, s.z + dz * r)) {
+        a.x = s.x + dx * r;
+        a.z = s.z + dz * r;
+        break;
+      }
+    }
+    const to = retreatDestination(world, a);
+    if (to?.kind === 'garrison') orderArmy(world, a.id, { kind: 'garrison', settlementId: to.settlementId }, terrain);
+    else if (to) orderArmy(world, a.id, { kind: 'retreat', x: to.x, z: to.z }, terrain);
   }
   refreshProvinces(world);
   if (from && world.factions[from]) {

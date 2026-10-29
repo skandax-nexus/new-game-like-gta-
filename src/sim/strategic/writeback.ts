@@ -4,7 +4,8 @@
  * module stamps `day`, `placeName`, `warScore` and `chronicle` and applies:
  *   1 casualties by armyUnitId (units below 10% merge into a same-class unit of the same army);
  *   2 army morale winner +10 / loser -25 (5..100), fatigue +0.1 / +0.2;
- *   3 the loser retreats along roads to the nearest friendly settlement or depot, or disbands if it has none;
+ *   3 the loser retreats along roads to the nearest friendly settlement or depot, or disbands if it has none; the
+ *     armies holding the field resume their orders (resumeAfterBattle);
  *   4 captured supply: 50% of the grain carried by destroyed enemy supply trains;
  *   5 prisoners (AI winners decide at once: ransom if greedy / expansionist, else release), commander fate (killed /
  *     wounded -0.3 health / captured), experience (+0.1 won / +0.05 lost, +0.05 per enemy formation routed);
@@ -14,7 +15,7 @@
  * Idempotent per engagement + outcome. Statistics: battles_won / battles_fought / enemies_killed / soldiers_lost /
  * largest_battle / formations_routed.
  */
-import type { ArmyState, BattleOutcome, EngagementId, FactionId, SettlementState, SideIndex, SimEvent, Vec2, WorldState } from '../../core/types';
+import type { ArmyState, BattleOutcome, EngagementId, FactionId, SettlementState, SideIndex, SimEvent, TerrainQuery, Vec2, WorldState } from '../../core/types';
 import { isRebelFaction } from '../../core/types';
 import { FACTIONS } from '../../data/factions';
 import { REGION_FEATURES } from '../../data/region';
@@ -227,6 +228,8 @@ export function applyBattleOutcome(world: WorldState, engagementId: EngagementId
   pushBattleHistory(world, outcome);
   const engaged = outcome.sides[0].startSoldiers + outcome.sides[1].startSoldiers;
   const terrain = regionTerrain(world);
+  // Field armies that hold the field (winners, the defender of a draw, rebels) - they resume their orders at the end.
+  const holders: ArmyState[] = [];
   // Rebel settlements involved (read before armies are removed).
   const rebelSettlement: [string | null, string | null] = [null, null];
   for (const side of [0, 1] as const) {
@@ -304,6 +307,7 @@ export function applyBattleOutcome(world: WorldState, engagementId: EngagementId
       if (a.id.startsWith('garrison_')) continue;
       // 3 the loser (or, on a draw, the attacker) falls back.
       const fallsBack = outcome.winner === null ? side === 0 : lost;
+      if (!fallsBack || isRebelFaction(a.factionId)) holders.push(a);
       if (fallsBack && !isRebelFaction(a.factionId)) {
         const to = retreatDestination(world, a);
         if (!to) {
@@ -384,5 +388,24 @@ export function applyBattleOutcome(world: WorldState, engagementId: EngagementId
     }
     if (sid && hooks.rebelsDefeated) hooks.rebelsDefeated(world, sid, out);
   }
+  for (const a of holders) resumeAfterBattle(world, a, terrain);
   out.push({ kind: 'engagement_resolved', engagementId, winnerFactionId: wf });
+}
+
+/**
+ * An army that holds the field takes up its order again from where the battle caught it: a march, a siege camp, a
+ * garrison post, a patrol, an escort (`attack_army` pursuits re-plan on their own; idle / forage stay put). Without
+ * this the write-back's cleared path left it camped with a stale order - e.g. standing in the middle of a ford for
+ * the rest of the campaign while the enemy re-engaged it every week.
+ */
+export function resumeAfterBattle(world: WorldState, a: ArmyState, terrain: TerrainQuery): void {
+  if (world.armies[a.id] !== a || a.engagementId || a.status !== 'camped' || a.units.length === 0) return;
+  const o = a.order;
+  if (o.kind === 'idle' || o.kind === 'forage' || o.kind === 'attack_army') return;
+  // A won assault captured the town: the siege order is done.
+  if ((o.kind === 'besiege' || o.kind === 'assault' || o.kind === 'raid') && world.settlements[o.settlementId]?.ownerFactionId === a.factionId) {
+    a.order = { kind: 'idle' };
+    return;
+  }
+  orderArmy(world, a.id, o, terrain);
 }

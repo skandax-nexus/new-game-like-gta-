@@ -21,8 +21,6 @@ import type {
   WorldState,
 } from '../../core/types';
 import { BUILDING_TYPES, UNIT_CLASSES } from '../../core/types';
-
-const MARKET_RESOURCES: readonly MarketResource[] = ['grain', 'timber', 'stone'];
 import { BUILDINGS } from '../../data/buildings';
 import { ageChecklist, landmarkOptions, type AgeChecklist, type LandmarkOption } from './ages';
 import { validateCommand } from './commands';
@@ -38,6 +36,8 @@ import { villagerAllocation, type VillagerAllocation } from './villagers';
 import { victoryBreakdowns, type VictoryBreakdown } from './victory';
 import { totalDays } from './seasons';
 import { stableKeys } from './state';
+
+const MARKET_RESOURCES: readonly MarketResource[] = ['grain', 'timber', 'stone'];
 
 export { intelView, type IntelView } from './espionage';
 export { predictBattle } from './autoresolve';

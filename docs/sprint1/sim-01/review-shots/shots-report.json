@@ -1,0 +1,406 @@
+{
+ "port": 4455,
+ "dist": ".build/sim-01-review",
+ "checks": [
+  {
+   "name": "world: The Broken Crown loads paused with a state hash",
+   "ok": true,
+   "observed": {
+    "hash": "61739231",
+    "paused": true
+   }
+  },
+  {
+   "name": "world: the besiege order and six days change the authoritative state",
+   "ok": true,
+   "observed": {
+    "before": "61739231",
+    "after": "83dfc1e7"
+   }
+  },
+  {
+   "name": "world: 60 simulated days later the world has moved on",
+   "ok": true,
+   "observed": {
+    "hash": "363242f5",
+    "sceneState": {
+     "world": {
+      "day": 60,
+      "date": {
+       "year": -300,
+       "month": 8,
+       "day": 0,
+       "hour": 12
+      },
+      "season": "hemanta",
+      "weather": "light_rain",
+      "factions": [
+       {
+        "id": "forest",
+        "treasury": 2225,
+        "settlements": 2,
+        "soldiers": 478
+       },
+       {
+        "id": "frontier",
+        "treasury": 1519,
+        "settlements": 2,
+        "soldiers": 266
+       },
+       {
+        "id": "heartland",
+        "treasury": 5403,
+        "settlements": 5,
+        "soldiers": 1277
+       },
+       {
+        "id": "highland",
+        "treasury": 3235,
+        "settlements": 5,
+        "soldiers": 1172
+       }
+      ],
+      "armies": 7,
+      "engagements": 0,
+      "pendingEvents": 0,
+      "victory": "ongoing"
+     },
+     "selection": {
+      "kind": "none",
+      "id": null
+     },
+     "camera": {
+      "x": -534.3999999999999,
+      "z": -538.72,
+      "distance": 4200,
+      "yaw": 0.5,
+      "tilt": 0
+     },
+     "blocked": false
+    }
+   }
+  },
+  {
+   "name": "world: no console errors, page errors, failed requests or crash reports",
+   "ok": true,
+   "observed": []
+  },
+  {
+   "name": "world-mobile: 10 days at low quality",
+   "ok": true,
+   "observed": {
+    "hash": "e7474ffd",
+    "day": 10
+   }
+  },
+  {
+   "name": "world-mobile: no console errors, page errors, failed requests or crash reports",
+   "ok": true,
+   "observed": []
+  },
+  {
+   "name": "determinism-1: no console errors, page errors, failed requests or crash reports",
+   "ok": true,
+   "observed": []
+  },
+  {
+   "name": "determinism-2: no console errors, page errors, failed requests or crash reports",
+   "ok": true,
+   "observed": []
+  },
+  {
+   "name": "determinism: two browser runs with the same seed and commands hash alike",
+   "ok": true,
+   "observed": [
+    "89ff8297",
+    "89ff8297"
+   ]
+  }
+ ],
+ "shots": [
+  {
+   "name": "world-day0.png",
+   "note": "The Broken Crown, day 0, overview camera"
+  },
+  {
+   "name": "world-march.png",
+   "note": "army_royal ordered to besiege Giridurg (issueStrategicCommand), 6 days later"
+  },
+  {
+   "name": "world-day60.png",
+   "note": "60 days: harvest, prices, events and AI moves (HUD values changed)"
+  },
+  {
+   "name": "game-stats.png",
+   "note": "showScreen('game_stats', { world: '$world' }) after 60 days"
+  },
+  {
+   "name": "world-mobile.png",
+   "note": "390x844 low quality, 10 days in"
+  }
+ ],
+ "start": {
+  "scene": "world",
+  "paused": true,
+  "hash": "61739231",
+  "sceneState": {
+   "world": {
+    "day": 0,
+    "date": {
+     "year": -300,
+     "month": 6,
+     "day": 0,
+     "hour": 8
+    },
+    "season": "sharad",
+    "weather": "clear",
+    "factions": [
+     {
+      "id": "forest",
+      "treasury": 1800,
+      "settlements": 2,
+      "soldiers": 478
+     },
+     {
+      "id": "frontier",
+      "treasury": 1500,
+      "settlements": 2,
+      "soldiers": 266
+     },
+     {
+      "id": "heartland",
+      "treasury": 4000,
+      "settlements": 5,
+      "soldiers": 1650
+     },
+     {
+      "id": "highland",
+      "treasury": 2600,
+      "settlements": 5,
+      "soldiers": 1172
+     }
+    ],
+    "armies": 7,
+    "engagements": 0,
+    "pendingEvents": 0,
+    "victory": "ongoing"
+   },
+   "selection": {
+    "kind": "none",
+    "id": null
+   },
+   "camera": {
+    "x": -534.3999999999999,
+    "z": -538.72,
+    "distance": 4200,
+    "yaw": 0.5,
+    "tilt": 0
+   },
+   "blocked": false
+  }
+ },
+ "clicks": [
+  {
+   "day": 1,
+   "clicked": "Take up the regencyAct I begins: secure "
+  },
+  {
+   "day": 3,
+   "clicked": "Proclaim Kumara Aditya heir before the c"
+  },
+  {
+   "day": 3,
+   "clicked": "Repair what we canSetupur loses 20% of i"
+  },
+  {
+   "day": 14,
+   "clicked": "Grain first: fill the granaries before t"
+  },
+  {
+   "day": 32,
+   "clicked": "Send them home: the bridge is oursGiridu"
+  },
+  {
+   "day": 32,
+   "clicked": "Hear their grievancesUnrest -0.08; tax r"
+  },
+  {
+   "day": 46,
+   "clicked": "Trust the winter cropNo cost now. The le"
+  },
+  {
+   "day": 49,
+   "clicked": "Let the villages deal with itInfrastruct"
+  },
+  {
+   "day": 52,
+   "clicked": "Repair what we canSetupur loses 20% of i"
+  },
+  {
+   "day": 1,
+   "clicked": "Take up the regencyAct I begins: secure "
+  },
+  {
+   "day": 3,
+   "clicked": "Proclaim Kumara Aditya heir before the c"
+  },
+  {
+   "day": 3,
+   "clicked": "Repair what we canSetupur loses 20% of i"
+  },
+  {
+   "day": 9,
+   "clicked": "Let the Generals Decide"
+  }
+ ],
+ "march": {
+  "scene": "world",
+  "paused": false,
+  "hash": "83dfc1e7",
+  "sceneState": {
+   "world": {
+    "day": 6,
+    "date": {
+     "year": -300,
+     "month": 6,
+     "day": 6,
+     "hour": 6
+    },
+    "season": "sharad",
+    "weather": "clear",
+    "factions": [
+     {
+      "id": "forest",
+      "treasury": 1824,
+      "settlements": 2,
+      "soldiers": 478
+     },
+     {
+      "id": "frontier",
+      "treasury": 1500,
+      "settlements": 2,
+      "soldiers": 266
+     },
+     {
+      "id": "heartland",
+      "treasury": 4048,
+      "settlements": 5,
+      "soldiers": 1650
+     },
+     {
+      "id": "highland",
+      "treasury": 2696,
+      "settlements": 5,
+      "soldiers": 1172
+     }
+    ],
+    "armies": 7,
+    "engagements": 0,
+    "pendingEvents": 0,
+    "victory": "ongoing"
+   },
+   "selection": {
+    "kind": "none",
+    "id": null
+   },
+   "camera": {
+    "x": -534.3999999999999,
+    "z": -538.72,
+    "distance": 4200,
+    "yaw": 0.5,
+    "tilt": 0
+   },
+   "blocked": false
+  }
+ },
+ "day60": {
+  "scene": "world",
+  "paused": false,
+  "hash": "363242f5",
+  "sceneState": {
+   "world": {
+    "day": 60,
+    "date": {
+     "year": -300,
+     "month": 8,
+     "day": 0,
+     "hour": 12
+    },
+    "season": "hemanta",
+    "weather": "light_rain",
+    "factions": [
+     {
+      "id": "forest",
+      "treasury": 2225,
+      "settlements": 2,
+      "soldiers": 478
+     },
+     {
+      "id": "frontier",
+      "treasury": 1519,
+      "settlements": 2,
+      "soldiers": 266
+     },
+     {
+      "id": "heartland",
+      "treasury": 5403,
+      "settlements": 5,
+      "soldiers": 1277
+     },
+     {
+      "id": "highland",
+      "treasury": 3235,
+      "settlements": 5,
+      "soldiers": 1172
+     }
+    ],
+    "armies": 7,
+    "engagements": 0,
+    "pendingEvents": 0,
+    "victory": "ongoing"
+   },
+   "selection": {
+    "kind": "none",
+    "id": null
+   },
+   "camera": {
+    "x": -534.3999999999999,
+    "z": -538.72,
+    "distance": 4200,
+    "yaw": 0.5,
+    "tilt": 0
+   },
+   "blocked": false
+  }
+ },
+ "screens": [
+  "main_menu:static",
+  "mode_setup:static",
+  "world_hud:static",
+  "settlement_panel:static",
+  "army_panel:static",
+  "province_panel:static",
+  "diplomacy:static",
+  "council:static",
+  "event_modal:static",
+  "engagement_prompt:static",
+  "battle_hud:static",
+  "battle_results:static",
+  "hero_hud:static",
+  "pause_menu:static",
+  "settings:static",
+  "save_load:static",
+  "scenario_results:static",
+  "chronicle:static",
+  "build_placement:placeholder",
+  "market:placeholder",
+  "age_panel:placeholder",
+  "economy_panel:placeholder",
+  "mission_card:placeholder",
+  "hero_dialogue:placeholder",
+  "hero_negotiation:placeholder",
+  "mission_result:placeholder",
+  "game_stats:placeholder",
+  "hint_card:placeholder"
+ ]
+}

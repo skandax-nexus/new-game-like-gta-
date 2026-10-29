@@ -50,6 +50,7 @@ try {
   const econMod = await server.ssrLoadModule('/src/sim/strategic/economy.ts');
   const seasonsMod = await server.ssrLoadModule('/src/sim/strategic/seasons.ts');
   const statsMod = await server.ssrLoadModule('/src/sim/strategic/statistics.ts');
+  const eventsMod = await server.ssrLoadModule('/src/sim/strategic/events.ts');
   const { RULES } = await server.ssrLoadModule('/src/data/rules.ts');
   const { getEventDef } = await server.ssrLoadModule('/src/data/events.ts');
   const { defaultSandbox } = await server.ssrLoadModule('/src/data/campaign.ts');
@@ -85,8 +86,10 @@ try {
         if (inst.scope.factionId !== pid) continue;
         const def = getEventDef(inst.defId);
         if (!def || !def.choices[0]) continue;
+        // Placeholders ({settlement}, ...) filled the way the event modal shows them.
+        const text = eventsMod.formatEventText(w, inst);
         tickWorld(w, [issued(w, { kind: 'event_choice', eventInstanceId: inst.id, choiceId: def.choices[0].id })], out, hf);
-        events.push({ day: Math.floor(w.calendar.totalHours / 24), id: def.id, title: def.title, choice: def.choices[0].label });
+        events.push({ day: Math.floor(w.calendar.totalHours / 24), id: def.id, title: text.title, choice: text.choices[0]?.label ?? def.choices[0].label });
       }
       for (const eng of Object.values(w.engagements)) {
         if (eng.status === 'pending_player') tickWorld(w, [issued(w, { kind: 'engagement_decision', engagementId: eng.id, decision: 'autoresolve' })], out, hf);

@@ -33,7 +33,6 @@ import type {
 } from '../../core/types';
 import { BATTLE_DT, BATTLE_MAP_RESOLUTION, BATTLE_MAP_SIZE } from '../../core/constants';
 import { deriveSeed } from '../../core/rng';
-import { sortedKeys } from '../../core/ids';
 import { getHeightfield } from '../../core/terrain/cache';
 import { createLocalTerrainSpec } from '../../core/terrain/heightfield';
 import { FACTIONS } from '../../data/factions';
@@ -44,7 +43,7 @@ import { RULES } from '../../data/rules';
 import { loseShare } from './supply';
 import { retreatDestination } from './writeback';
 import { getEnvironmentState } from './seasons';
-import { regionTerrain } from './state';
+import { regionTerrain, stableKeys } from './state';
 
 /** Max simulated battle time for autoresolve (s). */
 export const AUTORESOLVE_MAX_SEC = 60 * 30;
@@ -327,13 +326,16 @@ export function resolveEngagementNow(world: WorldState, engagementId: Engagement
  */
 export function stepDistantBattles(world: WorldState, out: SimEvent[], terrain: TerrainQuery): void {
   void terrain;
-  for (const id of sortedKeys(world.engagements)) {
-    const e = world.engagements[id]!;
-    if (e.status === 'auto') resolveEngagementNow(world, id, out);
+  // Cached key list (no per-hour allocation); entries created or deleted meanwhile are picked up next hour.
+  const ids = stableKeys('engagements', world.engagements as Record<string, unknown>);
+  for (let i = 0; i < ids.length; i++) {
+    const e = world.engagements[ids[i] as string];
+    if (e && e.status === 'auto') resolveEngagementNow(world, e.id, out);
   }
   // Drop resolved engagements older than 30 days.
-  for (const id of sortedKeys(world.engagements)) {
-    const e = world.engagements[id]!;
-    if (e.status === 'resolved' && world.calendar.totalHours - e.startedHour > 24 * 30) delete world.engagements[id];
+  const keep = stableKeys('engagements', world.engagements as Record<string, unknown>);
+  for (let i = 0; i < keep.length; i++) {
+    const e = world.engagements[keep[i] as string];
+    if (e && e.status === 'resolved' && world.calendar.totalHours - e.startedHour > 24 * 30) delete world.engagements[keep[i] as string];
   }
 }
