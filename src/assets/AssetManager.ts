@@ -210,6 +210,22 @@ export class AssetManager {
     return this.has(id) ? (this.manifest.assets[id] ?? null) : null;
   }
 
+  /**
+   * Entry to load for `id` on the active tier: the asset itself when it ships on this tier, else its
+   * `@fallback` chain (same kind), else null (feature off / procedural fallback).
+   */
+  resolve<K extends AssetEntry['kind']>(id: string, kind: K): Extract<AssetEntry, { kind: K }> | null {
+    const tier = this.tierSetting;
+    let e = this.entry(id);
+    for (let guard = 0; e && guard < 8; guard++) {
+      if (e.kind !== kind) return null;
+      if (tier === 'off') return null;
+      if (e.tiers.includes(tier)) return e as Extract<AssetEntry, { kind: K }>;
+      e = e.fallback ? this.entry(e.fallback) : null;
+    }
+    return null;
+  }
+
   material(id: MaterialAssetId): MaterialAssetEntry {
     return this.manifest.assets[id] as MaterialAssetEntry;
   }
@@ -531,12 +547,13 @@ export class AssetManager {
 
   /** HDR sky: equirect texture + PMREM env map + sun description. null when unavailable. */
   async loadHdri(id: HdriAssetId | string): Promise<HdriHandle | null> {
-    const entry = this.entry(id);
-    if (!entry || entry.kind !== 'hdri' || this.tierSetting === 'off') {
+    const entry = this.resolve(id, 'hdri');
+    if (!entry || this.tierSetting === 'off') {
       if (this.tierSetting !== 'off') this.warnOnce(id, `hdri "${id}" not in the manifest`);
       return null;
     }
     const file = entry.files[this.tierSetting];
+    if (!file) return null;
     const url = this.url(file.url, entry.hash);
     try {
       const v = await this.acquire(
