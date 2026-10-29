@@ -1,0 +1,1799 @@
+{
+ "sampleRate": 48000,
+ "seed": 1,
+ "generated": "2026-10-29T17:51:41.784Z",
+ "items": [
+  {
+   "group": "music",
+   "id": "menu",
+   "peakDb": -8.74,
+   "rmsDb": -22.9,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 30,
+   "centroidHz": 2037,
+   "mood": "menu",
+   "arrangement": "menu",
+   "raga": "Yaman",
+   "tala": "Jhaptal (10)",
+   "section": "jor",
+   "bpm": 62,
+   "intensity": 0.3,
+   "performers": 1,
+   "cacheBytes": 9245752,
+   "agcDb": 2.1,
+   "renderMsPerSec": 56
+  },
+  {
+   "group": "music",
+   "id": "world",
+   "peakDb": -11.8,
+   "rmsDb": -22.97,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 30,
+   "centroidHz": 1597,
+   "mood": "world",
+   "arrangement": "world:yaman",
+   "raga": "Yaman",
+   "tala": "Rupak (7)",
+   "section": "jor",
+   "bpm": 68,
+   "intensity": 0.3,
+   "performers": 1,
+   "cacheBytes": 9245752,
+   "agcDb": -0.15,
+   "renderMsPerSec": 47
+  },
+  {
+   "group": "music",
+   "id": "city",
+   "peakDb": -9.98,
+   "rmsDb": -22.61,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 30,
+   "centroidHz": 2340,
+   "mood": "city",
+   "arrangement": "city",
+   "raga": "Kafi",
+   "tala": "Keherwa (8)",
+   "section": "gat",
+   "bpm": 98,
+   "intensity": 0.4,
+   "performers": 1,
+   "cacheBytes": 6542784,
+   "agcDb": 2.79,
+   "renderMsPerSec": 46
+  },
+  {
+   "group": "music",
+   "id": "hero_explore",
+   "peakDb": -11.59,
+   "rmsDb": -22.55,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 30,
+   "centroidHz": 1387,
+   "mood": "hero_explore",
+   "arrangement": "hero:bhairav:none",
+   "raga": "Bhairav",
+   "tala": "Rupak (7)",
+   "section": "jor",
+   "bpm": 65,
+   "intensity": 0.3,
+   "performers": 1,
+   "cacheBytes": 5597752,
+   "agcDb": -0.56,
+   "renderMsPerSec": 43
+  },
+  {
+   "group": "music",
+   "id": "hero_combat",
+   "peakDb": -4.52,
+   "rmsDb": -20.79,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 30,
+   "centroidHz": 2273,
+   "mood": "hero_combat",
+   "arrangement": "hero_combat",
+   "raga": "Kirwani",
+   "tala": "Tintal (16)",
+   "section": "gat",
+   "bpm": 206,
+   "intensity": 0.8,
+   "performers": 1,
+   "cacheBytes": 11899432,
+   "agcDb": 3.29,
+   "renderMsPerSec": 70
+  },
+  {
+   "group": "music",
+   "id": "duel",
+   "peakDb": -8.16,
+   "rmsDb": -21.84,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 30,
+   "centroidHz": 2232,
+   "mood": "duel",
+   "arrangement": "duel",
+   "raga": "Marwa",
+   "tala": "Tintal (16)",
+   "section": "gat",
+   "bpm": 134,
+   "intensity": 0.6,
+   "performers": 1,
+   "cacheBytes": 10964664,
+   "agcDb": 3.31,
+   "renderMsPerSec": 49
+  },
+  {
+   "group": "music",
+   "id": "battle",
+   "peakDb": -6.6,
+   "rmsDb": -20.1,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 30,
+   "centroidHz": 1104,
+   "mood": "battle",
+   "arrangement": "battle",
+   "raga": "Kirwani",
+   "tala": "War march (8, dhol / nagara)",
+   "section": "gat",
+   "bpm": 127,
+   "intensity": 0.7,
+   "performers": 1,
+   "cacheBytes": 10122980,
+   "agcDb": 2.04,
+   "renderMsPerSec": 58
+  },
+  {
+   "group": "music",
+   "id": "siege",
+   "peakDb": -6.6,
+   "rmsDb": -20.24,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 30,
+   "centroidHz": 1146,
+   "mood": "siege",
+   "arrangement": "siege",
+   "raga": "Darbari Kanada",
+   "tala": "War march (8, dhol / nagara)",
+   "section": "gat",
+   "bpm": 98,
+   "intensity": 0.7,
+   "performers": 1,
+   "cacheBytes": 10122956,
+   "agcDb": 2.27,
+   "renderMsPerSec": 51
+  },
+  {
+   "group": "music",
+   "id": "victory",
+   "peakDb": -8.62,
+   "rmsDb": -22.39,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 30,
+   "centroidHz": 2272,
+   "mood": "victory",
+   "arrangement": "victory",
+   "raga": "Bhupali",
+   "tala": "Dadra (6)",
+   "section": "gat",
+   "bpm": 110,
+   "intensity": 0.6,
+   "performers": 1,
+   "cacheBytes": 13963452,
+   "agcDb": 3.52,
+   "renderMsPerSec": 48
+  },
+  {
+   "group": "music",
+   "id": "defeat",
+   "peakDb": -11.47,
+   "rmsDb": -22.91,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 30,
+   "centroidHz": 1557,
+   "mood": "defeat",
+   "arrangement": "defeat",
+   "raga": "Bhairavi",
+   "tala": "Rupak (7)",
+   "section": "alap",
+   "bpm": 46,
+   "intensity": 0.3,
+   "performers": 1,
+   "cacheBytes": 8640000,
+   "agcDb": -2.36,
+   "renderMsPerSec": 50
+  },
+  {
+   "group": "stingers",
+   "id": "age_up",
+   "peakDb": -2,
+   "rmsDb": -16.34,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 6.741,
+   "centroidHz": 2412
+  },
+  {
+   "group": "stingers",
+   "id": "landmark_complete",
+   "peakDb": -2,
+   "rmsDb": -19.48,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 8.081,
+   "centroidHz": 4148
+  },
+  {
+   "group": "stingers",
+   "id": "construction_complete",
+   "peakDb": -2,
+   "rmsDb": -23.22,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 3.556,
+   "centroidHz": 3686
+  },
+  {
+   "group": "stingers",
+   "id": "harvest",
+   "peakDb": -2,
+   "rmsDb": -13.13,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 4.18,
+   "centroidHz": 2065
+  },
+  {
+   "group": "stingers",
+   "id": "battle_start",
+   "peakDb": -2,
+   "rmsDb": -17.76,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 6.359,
+   "centroidHz": 1424
+  },
+  {
+   "group": "stingers",
+   "id": "duel_phase",
+   "peakDb": -2,
+   "rmsDb": -21.95,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 7.773,
+   "centroidHz": 2562
+  },
+  {
+   "group": "stingers",
+   "id": "mission_success",
+   "peakDb": -2,
+   "rmsDb": -15.77,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 4.611,
+   "centroidHz": 1780
+  },
+  {
+   "group": "stingers",
+   "id": "mission_failure",
+   "peakDb": -2,
+   "rmsDb": -15.77,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 7.948,
+   "centroidHz": 1252
+  },
+  {
+   "group": "stingers",
+   "id": "victory",
+   "peakDb": -2,
+   "rmsDb": -17.63,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 6.921,
+   "centroidHz": 1487
+  },
+  {
+   "group": "stingers",
+   "id": "defeat",
+   "peakDb": -2,
+   "rmsDb": -17.89,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 7.864,
+   "centroidHz": 1419
+  },
+  {
+   "group": "sfx",
+   "id": "ui_click",
+   "peakDb": -3,
+   "rmsDb": -25.69,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 1.908,
+   "centroidHz": 2897,
+   "variants": 4,
+   "variantSeconds": [
+    0.18,
+    0.165,
+    0.198,
+    0.165
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "ui_hover",
+   "peakDb": -3,
+   "rmsDb": -32.81,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 1,
+   "centroidHz": 5956,
+   "variants": 3,
+   "variantSeconds": [
+    0.033,
+    0.031,
+    0.036
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "ui_open",
+   "peakDb": -3,
+   "rmsDb": -27.46,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 2.582,
+   "centroidHz": 7626,
+   "variants": 3,
+   "variantSeconds": [
+    0.538,
+    0.569,
+    0.575
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "ui_close",
+   "peakDb": -3,
+   "rmsDb": -27.83,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 2.396,
+   "centroidHz": 6943,
+   "variants": 3,
+   "variantSeconds": [
+    0.497,
+    0.479,
+    0.52
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "ui_confirm",
+   "peakDb": -3,
+   "rmsDb": -24.72,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 5.7,
+   "centroidHz": 4411,
+   "variants": 3,
+   "variantSeconds": [
+    1.6,
+    1.6,
+    1.6
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "ui_error",
+   "peakDb": -3,
+   "rmsDb": -23.25,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 0.97,
+   "centroidHz": 1715,
+   "variants": 2,
+   "variantSeconds": [
+    0.172,
+    0.198
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "notify",
+   "peakDb": -3,
+   "rmsDb": -23.52,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 7.5,
+   "centroidHz": 5350,
+   "variants": 3,
+   "variantSeconds": [
+    2.2,
+    2.2,
+    2.2
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "order_ack",
+   "peakDb": -3,
+   "rmsDb": -19.78,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 4.497,
+   "centroidHz": 1341,
+   "variants": 5,
+   "variantSeconds": [
+    0.598,
+    0.596,
+    0.597,
+    0.603,
+    0.604
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "march",
+   "peakDb": -3,
+   "rmsDb": -22.62,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 5.332,
+   "centroidHz": 2377,
+   "variants": 3,
+   "variantSeconds": [
+    1.484,
+    1.475,
+    1.473
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "charge_horn",
+   "peakDb": -3,
+   "rmsDb": -13.08,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 8.921,
+   "centroidHz": 1660,
+   "variants": 4,
+   "variantSeconds": [
+    1.767,
+    1.773,
+    2.206,
+    1.975
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "conch",
+   "peakDb": -3,
+   "rmsDb": -15.26,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 8.891,
+   "centroidHz": 1559,
+   "variants": 3,
+   "variantSeconds": [
+    2.92,
+    2.637,
+    2.434
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "drum_hit",
+   "peakDb": -3,
+   "rmsDb": -19.6,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 9.241,
+   "centroidHz": 193,
+   "variants": 4,
+   "variantSeconds": [
+    2.004,
+    1.915,
+    2.083,
+    2.039
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "arrow_volley",
+   "peakDb": -3,
+   "rmsDb": -20.16,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 7.897,
+   "centroidHz": 5647,
+   "variants": 4,
+   "variantSeconds": [
+    1.729,
+    1.627,
+    1.655,
+    1.686
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "arrow_impact",
+   "peakDb": -3,
+   "rmsDb": -21.1,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 3.596,
+   "centroidHz": 1946,
+   "variants": 4,
+   "variantSeconds": [
+    0.516,
+    0.73,
+    0.557,
+    0.593
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "clash",
+   "peakDb": -3,
+   "rmsDb": -21.94,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 9.631,
+   "centroidHz": 3616,
+   "variants": 6,
+   "variantSeconds": [
+    1.4,
+    1.4,
+    1.4,
+    1.093,
+    1.143,
+    1.395
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "elephant_trumpet",
+   "peakDb": -3,
+   "rmsDb": -18.49,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 5.328,
+   "centroidHz": 2064,
+   "variants": 2,
+   "variantSeconds": [
+    2.94,
+    1.788
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "horse_neigh",
+   "peakDb": -3,
+   "rmsDb": -17.6,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 8.086,
+   "centroidHz": 2555,
+   "variants": 4,
+   "variantSeconds": [
+    1.616,
+    1.683,
+    1.778,
+    1.809
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "cheer",
+   "peakDb": -3,
+   "rmsDb": -17.72,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 8.729,
+   "centroidHz": 2375,
+   "variants": 3,
+   "variantSeconds": [
+    2.609,
+    2.61,
+    2.61
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "rout_cry",
+   "peakDb": -3,
+   "rmsDb": -18.16,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 10.836,
+   "centroidHz": 2615,
+   "variants": 4,
+   "variantSeconds": [
+    2.407,
+    2.41,
+    2.41,
+    2.409
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "build",
+   "peakDb": -3,
+   "rmsDb": -24.63,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 5.367,
+   "centroidHz": 6181,
+   "variants": 5,
+   "variantSeconds": [
+    0.445,
+    0.39,
+    1.229,
+    1.109,
+    0.695
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "coins",
+   "peakDb": -3,
+   "rmsDb": -24.36,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 4.232,
+   "centroidHz": 7005,
+   "variants": 4,
+   "variantSeconds": [
+    0.632,
+    0.737,
+    0.848,
+    0.815
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "harvest",
+   "peakDb": -3,
+   "rmsDb": -24.15,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 4.229,
+   "centroidHz": 6406,
+   "variants": 4,
+   "variantSeconds": [
+    0.757,
+    0.758,
+    0.759,
+    0.755
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "thunder",
+   "peakDb": -3,
+   "rmsDb": -21.69,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 17.42,
+   "centroidHz": 6498,
+   "variants": 3,
+   "variantSeconds": [
+    5.477,
+    5.561,
+    5.482
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "bell",
+   "peakDb": -3,
+   "rmsDb": -24.58,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 8.089,
+   "centroidHz": 6408,
+   "variants": 3,
+   "variantSeconds": [
+    2.4,
+    2.4,
+    2.389
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "sword_light",
+   "peakDb": -3,
+   "rmsDb": -22.48,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 3.365,
+   "centroidHz": 5990,
+   "variants": 6,
+   "variantSeconds": [
+    0.285,
+    0.27,
+    0.287,
+    0.264,
+    0.208,
+    0.252
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "sword_heavy",
+   "peakDb": -3,
+   "rmsDb": -22.02,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 4.464,
+   "centroidHz": 4333,
+   "variants": 5,
+   "variantSeconds": [
+    0.617,
+    0.62,
+    0.556,
+    0.571,
+    0.6
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "parry_ring",
+   "peakDb": -3,
+   "rmsDb": -25.95,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 8.101,
+   "centroidHz": 4556,
+   "variants": 4,
+   "variantSeconds": [
+    1.655,
+    1.662,
+    2.051,
+    1.533
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "block_thud",
+   "peakDb": -3,
+   "rmsDb": -23.46,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 2.26,
+   "centroidHz": 1306,
+   "variants": 5,
+   "variantSeconds": [
+    0.152,
+    0.156,
+    0.142,
+    0.155,
+    0.155
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "roll_cloth",
+   "peakDb": -3,
+   "rmsDb": -20.34,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 3.213,
+   "centroidHz": 4770,
+   "variants": 4,
+   "variantSeconds": [
+    0.488,
+    0.536,
+    0.495,
+    0.494
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "body_hit",
+   "peakDb": -3,
+   "rmsDb": -22.32,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 2.757,
+   "centroidHz": 4223,
+   "variants": 6,
+   "variantSeconds": [
+    0.164,
+    0.158,
+    0.169,
+    0.155,
+    0.136,
+    0.176
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "stagger_grunt",
+   "peakDb": -3,
+   "rmsDb": -17.93,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 3.341,
+   "centroidHz": 3496,
+   "variants": 5,
+   "variantSeconds": [
+    0.346,
+    0.379,
+    0.349,
+    0.394,
+    0.373
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "salve",
+   "peakDb": -3,
+   "rmsDb": -21.14,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 7.5,
+   "centroidHz": 3617,
+   "variants": 3,
+   "variantSeconds": [
+    2.2,
+    2.2,
+    2.2
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "bell_temple",
+   "peakDb": -3,
+   "rmsDb": -24.13,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 27.9,
+   "centroidHz": 1177,
+   "variants": 3,
+   "variantSeconds": [
+    9,
+    9,
+    9
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "construction_complete",
+   "peakDb": -3,
+   "rmsDb": -20.82,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 9.9,
+   "centroidHz": 3349,
+   "variants": 3,
+   "variantSeconds": [
+    3,
+    3,
+    3
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "landmark_complete",
+   "peakDb": -3,
+   "rmsDb": -24.51,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 12.496,
+   "centroidHz": 1458,
+   "variants": 2,
+   "variantSeconds": [
+    5.896,
+    6
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "age_up_fanfare",
+   "peakDb": -3,
+   "rmsDb": -19.3,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 10.226,
+   "centroidHz": 1361,
+   "variants": 2,
+   "variantSeconds": [
+    4.81,
+    4.816
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "market_coins",
+   "peakDb": -3,
+   "rmsDb": -22.15,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 5.87,
+   "centroidHz": 5319,
+   "variants": 4,
+   "variantSeconds": [
+    1.136,
+    1.213,
+    1.21,
+    1.111
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "gate_break",
+   "peakDb": -3,
+   "rmsDb": -28.08,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 6.794,
+   "centroidHz": 2722,
+   "variants": 3,
+   "variantSeconds": [
+    1.991,
+    1.963,
+    1.94
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "wall_crumble",
+   "peakDb": -3,
+   "rmsDb": -20.88,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 8.2,
+   "centroidHz": 8043,
+   "variants": 2,
+   "variantSeconds": [
+    3.8,
+    3.8
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "ram_hit",
+   "peakDb": -3,
+   "rmsDb": -23.02,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 3.565,
+   "centroidHz": 1206,
+   "variants": 4,
+   "variantSeconds": [
+    0.582,
+    0.576,
+    0.546,
+    0.662
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "fire_crackle",
+   "peakDb": -3,
+   "rmsDb": -25.27,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 11.623,
+   "centroidHz": 4231,
+   "variants": 4,
+   "variantSeconds": [
+    2.605,
+    2.606,
+    2.605,
+    2.606
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "river_splash",
+   "peakDb": -3,
+   "rmsDb": -27.16,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 6.237,
+   "centroidHz": 8797,
+   "variants": 5,
+   "variantSeconds": [
+    1.082,
+    0.887,
+    0.896,
+    0.93,
+    0.943
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "footstep_stone",
+   "peakDb": -3,
+   "rmsDb": -25.4,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 3.067,
+   "centroidHz": 5097,
+   "variants": 8,
+   "variantSeconds": [
+    0.109,
+    0.108,
+    0.059,
+    0.095,
+    0.062,
+    0.111,
+    0.059,
+    0.065
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "footstep_dirt",
+   "peakDb": -3,
+   "rmsDb": -22.97,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 3.239,
+   "centroidHz": 3836,
+   "variants": 8,
+   "variantSeconds": [
+    0.112,
+    0.107,
+    0.111,
+    0.102,
+    0.1,
+    0.108,
+    0.1,
+    0.1
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "fx_perfect_dodge",
+   "peakDb": -3,
+   "rmsDb": -21.3,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 3.03,
+   "centroidHz": 3900,
+   "variants": 2,
+   "variantSeconds": [
+    1.215,
+    1.215
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "fx_finisher_boom",
+   "peakDb": -3,
+   "rmsDb": -21.32,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 3.043,
+   "centroidHz": 2794,
+   "variants": 3,
+   "variantSeconds": [
+    0.724,
+    0.709,
+    0.71
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "fx_hit_metal",
+   "peakDb": -3,
+   "rmsDb": -21.29,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 3.414,
+   "centroidHz": 4278,
+   "variants": 4,
+   "variantSeconds": [
+    0.53,
+    0.705,
+    0.541,
+    0.438
+   ]
+  },
+  {
+   "group": "sfx",
+   "id": "fx_thunder_far",
+   "peakDb": -3,
+   "rmsDb": -20.93,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 16.992,
+   "centroidHz": 176,
+   "variants": 2,
+   "variantSeconds": [
+    8.645,
+    7.747
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "river_lap",
+   "peakDb": -16.67,
+   "rmsDb": -33.3,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 2201,
+   "category": "district",
+   "spots": [
+    "lap_splash"
+   ],
+   "bedSeconds": 16,
+   "bedRate": 48000,
+   "seam": {
+    "jumpRatio": 1.323999140856193,
+    "levelDiffDb": 1.09258078491737,
+    "typicalDiffDb": 1.6256943118751472
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "temple_bells_far",
+   "peakDb": -16,
+   "rmsDb": -37.96,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 1174,
+   "category": "district",
+   "spots": [
+    "handbell_far",
+    "ghanta_far"
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "boatmen_calls",
+   "peakDb": -12.65,
+   "rmsDb": -32.9,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 1124,
+   "category": "district",
+   "spots": [
+    "boatman_call",
+    "oar"
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "crows",
+   "peakDb": -22.11,
+   "rmsDb": -49.45,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 1541,
+   "category": "district",
+   "spots": [
+    "crow"
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "threshing",
+   "peakDb": -11.68,
+   "rmsDb": -42.89,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 3536,
+   "category": "district",
+   "spots": [
+    "flail",
+    "winnow"
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "scribes_counting",
+   "peakDb": -17.67,
+   "rmsDb": -37.26,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 2592,
+   "category": "district",
+   "spots": [
+    "count_voice",
+    "stylus",
+    "weights"
+   ],
+   "bedSeconds": 14,
+   "bedRate": 24000,
+   "seam": {
+    "jumpRatio": 0.7770736968248609,
+    "levelDiffDb": 12.317080257233744,
+    "typicalDiffDb": 23.38141170085641
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "oxcarts",
+   "peakDb": -19.96,
+   "rmsDb": -49.08,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 1416,
+   "category": "district",
+   "spots": [
+    "oxcart"
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "bazaar_crowd",
+   "peakDb": -14.89,
+   "rmsDb": -30.95,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 1561,
+   "category": "district",
+   "spots": [
+    "laugh",
+    "bargain"
+   ],
+   "bedSeconds": 18,
+   "bedRate": 24000,
+   "seam": {
+    "jumpRatio": 0.014814552526360412,
+    "levelDiffDb": 0.4266033192351806,
+    "typicalDiffDb": 3.0130370473410792
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "hawkers",
+   "peakDb": -17.73,
+   "rmsDb": -40.52,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 1142,
+   "category": "district",
+   "spots": [
+    "hawker"
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "copper_beaten",
+   "peakDb": -19.2,
+   "rmsDb": -48.05,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 1411,
+   "category": "district",
+   "spots": [
+    "copper"
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "cart_bells",
+   "peakDb": -18.76,
+   "rmsDb": -48.22,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 6138,
+   "category": "district",
+   "spots": [
+    "cartbell"
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "temple_bells",
+   "peakDb": -12.94,
+   "rmsDb": -34.89,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 3282,
+   "category": "district",
+   "spots": [
+    "handbell",
+    "ghanta"
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "chanting_low",
+   "peakDb": -18.38,
+   "rmsDb": -32.22,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 1460,
+   "category": "district",
+   "spots": [],
+   "bedSeconds": 20,
+   "bedRate": 24000,
+   "seam": {
+    "jumpRatio": 2.128477026216515,
+    "levelDiffDb": 6.078285874847371,
+    "typicalDiffDb": 9.344421997640566
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "water_drip",
+   "peakDb": -16.71,
+   "rmsDb": -47.2,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 1490,
+   "category": "district",
+   "spots": [
+    "drip"
+   ],
+   "bedSeconds": 12,
+   "bedRate": 24000,
+   "seam": {
+    "jumpRatio": 0.6992652510908037,
+    "levelDiffDb": 0.9994123484989501,
+    "typicalDiffDb": 0.879100153986645
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "court_murmur",
+   "peakDb": -11.81,
+   "rmsDb": -31.79,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 1861,
+   "category": "district",
+   "spots": [
+    "bangles",
+    "herald"
+   ],
+   "bedSeconds": 18,
+   "bedRate": 24000,
+   "seam": {
+    "jumpRatio": 0.35665691514550335,
+    "levelDiffDb": 1.026279968542429,
+    "typicalDiffDb": 4.841629889027448
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "fountain",
+   "peakDb": -16.9,
+   "rmsDb": -34.27,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 4828,
+   "category": "district",
+   "spots": [],
+   "bedSeconds": 12,
+   "bedRate": 48000,
+   "seam": {
+    "jumpRatio": 1.7413174284416013,
+    "levelDiffDb": 0.7055621896275426,
+    "typicalDiffDb": 1.6070299740082028
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "conch_far",
+   "peakDb": -9.89,
+   "rmsDb": -31.97,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 679,
+   "category": "district",
+   "spots": [
+    "conch_far"
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "drill_drums",
+   "peakDb": -14.37,
+   "rmsDb": -41.94,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 612,
+   "category": "district",
+   "spots": [
+    "drill"
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "elephant_rumble",
+   "peakDb": -15.61,
+   "rmsDb": -39.18,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 1115,
+   "category": "district",
+   "spots": [
+    "rumble",
+    "trumpet_far",
+    "chains"
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "blades_clash",
+   "peakDb": -11.69,
+   "rmsDb": -43.84,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 2368,
+   "category": "district",
+   "spots": [
+    "sparring"
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "potters_wheel",
+   "peakDb": -19.78,
+   "rmsDb": -39.23,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 884,
+   "category": "district",
+   "spots": [
+    "clay_slap"
+   ],
+   "bedSeconds": 12,
+   "bedRate": 24000,
+   "seam": {
+    "jumpRatio": 0.43262827077911326,
+    "levelDiffDb": 0.5955037511709378,
+    "typicalDiffDb": 1.3757113016779599
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "looms",
+   "peakDb": -16.99,
+   "rmsDb": -47.26,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 3044,
+   "category": "district",
+   "spots": [
+    "loom"
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "children",
+   "peakDb": -14.57,
+   "rmsDb": -47.25,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 4024,
+   "category": "district",
+   "spots": [
+    "child"
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "river_wide",
+   "peakDb": -15.59,
+   "rmsDb": -31.07,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 1515,
+   "category": "district",
+   "spots": [
+    "fish_jump",
+    "kingfisher"
+   ],
+   "bedSeconds": 18,
+   "bedRate": 24000,
+   "seam": {
+    "jumpRatio": 0.4212291673679074,
+    "levelDiffDb": 0.4464431494603822,
+    "typicalDiffDb": 2.6930949895088183
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "conch",
+   "peakDb": -15.24,
+   "rmsDb": -35.71,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 1346,
+   "category": "district",
+   "spots": [
+    "conch_near"
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "chanting_far",
+   "peakDb": -21.97,
+   "rmsDb": -37.13,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 757,
+   "category": "district",
+   "spots": [],
+   "bedSeconds": 20,
+   "bedRate": 24000,
+   "seam": {
+    "jumpRatio": 1.3151730074991506,
+    "levelDiffDb": 5.255769014901237,
+    "typicalDiffDb": 8.29482298237063
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "wind",
+   "peakDb": -20.6,
+   "rmsDb": -33.27,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 2530,
+   "category": "world",
+   "spots": [],
+   "bedSeconds": 16,
+   "bedRate": 24000,
+   "seam": {
+    "jumpRatio": 0.06295118388379844,
+    "levelDiffDb": 0.2760871282321382,
+    "typicalDiffDb": 2.617819717657266
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "wind_storm",
+   "peakDb": -15.89,
+   "rmsDb": -29.24,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 1805,
+   "category": "world",
+   "spots": [],
+   "bedSeconds": 16,
+   "bedRate": 24000,
+   "seam": {
+    "jumpRatio": 1.1380653236382947,
+    "levelDiffDb": 0.32025347091533973,
+    "typicalDiffDb": 2.842529598391561
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "rain_light",
+   "peakDb": -15.39,
+   "rmsDb": -35.28,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 6439,
+   "category": "world",
+   "spots": [],
+   "bedSeconds": 12,
+   "bedRate": 48000,
+   "seam": {
+    "jumpRatio": 0.04284369471755606,
+    "levelDiffDb": 0.585128923874997,
+    "typicalDiffDb": 0.8816381574064494
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "rain_monsoon",
+   "peakDb": -12.16,
+   "rmsDb": -30.13,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 6392,
+   "category": "world",
+   "spots": [
+    "peacock"
+   ],
+   "bedSeconds": 14,
+   "bedRate": 48000,
+   "seam": {
+    "jumpRatio": 0.6000225708292067,
+    "levelDiffDb": 0.0708000467209331,
+    "typicalDiffDb": 0.3874478708272271
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "thunder_far",
+   "peakDb": -12.73,
+   "rmsDb": -35.14,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 104,
+   "category": "world",
+   "spots": [
+    "thunder"
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "dawn_birds",
+   "peakDb": -13.77,
+   "rmsDb": -31.58,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 2669,
+   "category": "world",
+   "spots": [
+    "koel",
+    "bulbul",
+    "sparrows",
+    "dove"
+   ],
+   "bedSeconds": 20,
+   "bedRate": 48000,
+   "seam": {
+    "jumpRatio": 0.29446603386878495,
+    "levelDiffDb": 1.3592691478201928,
+    "typicalDiffDb": 7.31270848592003
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "day_birds",
+   "peakDb": -12.17,
+   "rmsDb": -35.03,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 3941,
+   "category": "world",
+   "spots": [
+    "myna",
+    "sparrows",
+    "dove",
+    "kingfisher"
+   ]
+  },
+  {
+   "group": "ambience",
+   "id": "cicadas",
+   "peakDb": -22.82,
+   "rmsDb": -43.23,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 8187,
+   "category": "world",
+   "spots": [],
+   "bedSeconds": 14,
+   "bedRate": 48000,
+   "seam": {
+    "jumpRatio": 1.579660162026072,
+    "levelDiffDb": 1.1879775629730744,
+    "typicalDiffDb": 3.6221282080145514
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "night_crickets",
+   "peakDb": -17.73,
+   "rmsDb": -39.38,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 3320,
+   "category": "world",
+   "spots": [
+    "owl",
+    "jackals"
+   ],
+   "bedSeconds": 14,
+   "bedRate": 48000,
+   "seam": {
+    "jumpRatio": 0.0028220110331785894,
+    "levelDiffDb": 0.27474112863928113,
+    "typicalDiffDb": 2.3525056635130355
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "night_frogs",
+   "peakDb": -17.09,
+   "rmsDb": -37.34,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 1764,
+   "category": "world",
+   "spots": [],
+   "bedSeconds": 14,
+   "bedRate": 24000,
+   "seam": {
+    "jumpRatio": 2.773319984613755,
+    "levelDiffDb": 2.9437489469691265,
+    "typicalDiffDb": 11.49475841282305
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "battle_roar",
+   "peakDb": -9.45,
+   "rmsDb": -28.25,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 1752,
+   "category": "battle",
+   "spots": [
+    "war_cry",
+    "melee"
+   ],
+   "bedSeconds": 16,
+   "bedRate": 24000,
+   "seam": {
+    "jumpRatio": 1.2256110407025778,
+    "levelDiffDb": 1.036606488782322,
+    "typicalDiffDb": 1.6855671866110526
+   }
+  },
+  {
+   "group": "ambience",
+   "id": "battle_drums",
+   "peakDb": -12.44,
+   "rmsDb": -31.43,
+   "nan": 0,
+   "denormals": 0,
+   "seconds": 24,
+   "centroidHz": 493,
+   "category": "battle",
+   "spots": [
+    "horn_far"
+   ],
+   "bedSeconds": 17.778,
+   "bedRate": 24000,
+   "seam": {
+    "jumpRatio": 2.67066174673257,
+    "levelDiffDb": 1.8847923878067903,
+    "typicalDiffDb": 8.585283328301404
+   }
+  }
+ ]
+}

@@ -138,7 +138,9 @@ export function arrangementFor(mood: AudioMood, ctx: MusicContext = {}): Arrange
     case 'city':
       return arr('city', 'kafi', 'keherwa', { tempo: [84, 120], melody: 'both', kit: 'mridangam', drone: 0.7, bells: 0.25, jor: 0.05, gat: 0.15, reverb: { rt60: 2.4, damping: 5500, wet: 0.26 }, rms: [-25, -17] });
     case 'hero_explore': {
-      const raga = ctx.heroMood ? HERO_MOOD_RAGA[ctx.heroMood] : ragaForHour(ctx.hour ?? 7, ctx.season, ctx.rain ?? 0);
+      // Monsoon rain outranks the district's light mood: Megh while it pours.
+      const raining = ctx.season === 'varsha' && (ctx.rain ?? 0) > 0.2;
+      const raga = ctx.heroMood && !raining ? HERO_MOOD_RAGA[ctx.heroMood] : ragaForHour(ctx.hour ?? 7, ctx.season, ctx.rain ?? 0);
       const fl = districtFlavour(ctx.district);
       const tala: TalaId = fl === 'temple' ? 'chautal' : fl === 'bazaar' || fl === 'granary' ? 'keherwa' : fl === 'palace' ? 'jhaptal' : fl === 'arms' ? 'teental' : 'rupak';
       return arr(`hero:${raga}:${fl}`, raga, tala, {

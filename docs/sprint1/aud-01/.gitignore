@@ -1,0 +1,4 @@
+# Raw WAV renders and the contact sheets are large: regenerate with `node scripts/audio/render.mjs --ogg`.
+# The Opus .ogg previews and per-render spectrogram PNGs are committed.
+*.wav
+sheets/

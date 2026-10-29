@@ -47,6 +47,9 @@ if (OGG) {
   }
 }
 
+/** Opus preview bitrates (the committed listening copies; the WAVs are the masters). */
+const OGG_KBPS = { music: '96k', stingers: '80k', ambience: '56k', sfx: '64k' };
+
 const { mod: A, close } = await loadTs('src/audio/offline.ts');
 const { mod: AN } = await loadTs('src/audio/synth/analysis.ts');
 
@@ -101,11 +104,41 @@ function write(group, id, chans, subtitle, extra = {}) {
   if (WAV) {
     const wavPath = path.join(dir, `${id}.wav`);
     fs.writeFileSync(wavPath, encodeWav(chans, SR, 16));
-    if (OGG) execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', wavPath, '-c:a', 'libopus', '-b:a', group === 'music' ? '128k' : '96k', path.join(dir, `${id}.ogg`)]);
+    if (OGG) execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', wavPath, '-c:a', 'libopus', '-b:a', OGG_KBPS[group] ?? '64k', path.join(dir, `${id}.ogg`)]);
   }
   (sheets[group] ??= []).push(panel);
   report.items.push({ group, id, ...st, centroidHz: centroid, ...extra });
   console.log(`[render] ${group.padEnd(9)} ${id.padEnd(26)} ${String(st.seconds).padStart(7)}s  peak ${String(st.peakDb).padStart(7)} dB  rms ${String(st.rmsDb).padStart(7)} dB  centroid ${String(centroid).padStart(5)} Hz${st.nan || st.denormals ? `  NAN ${st.nan} DEN ${st.denormals}` : ''}`);
+}
+
+/** Reviewer listening page: every render with its player (Opus when encoded, else WAV) and spectrogram. */
+function listeningPage(rep) {
+  const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  const titles = { music: 'Score - 30 s per mood', stingers: 'Stingers', ambience: 'Ambience - district keys, world beds, battle bed', sfx: 'SFX - all variants back to back' };
+  const sections = ['music', 'stingers', 'ambience', 'sfx']
+    .map((g) => {
+      const items = rep.items.filter((it) => it.group === g).sort((a, b) => a.id.localeCompare(b.id));
+      if (items.length === 0) return '';
+      const cards = items
+        .map((it) => {
+          const base = `${g}/${it.id}`;
+          const src = fs.existsSync(path.join(OUT, `${base}.ogg`)) ? `${base}.ogg` : fs.existsSync(path.join(OUT, `${base}.wav`)) ? `${base}.wav` : null;
+          const facts = [it.raga && `${it.raga} / ${it.tala} / ${it.section}`, `${it.seconds}s`, `peak ${it.peakDb} dB`, `RMS ${it.rmsDb} dB`, `centroid ${it.centroidHz} Hz`, it.variants && `${it.variants} variants`, it.seam && `seam ${it.seam.levelDiffDb.toFixed(1)} dB`].filter(Boolean).join(' · ');
+          return `<article><h3>${esc(it.id)}</h3><p>${esc(facts)}</p>${src ? `<audio controls preload="none" src="${esc(src)}"></audio>` : '<p class="na">render with WAV / --ogg to listen</p>'}<img loading="lazy" src="${esc(base)}.png" alt="spectrogram of ${esc(it.id)}"></article>`;
+        })
+        .join('');
+      return `<section><h2>${esc(titles[g])} <small>${items.length}</small></h2>${cards}</section>`;
+    })
+    .join('');
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AUD-01 Renders</title>
+<style>:root{--bg:#f7f5f0;--fg:#1d1b18;--muted:#6b665d;--card:#fff;--line:#e2ddd3}@media (prefers-color-scheme:dark){:root{--bg:#16140f;--fg:#eee9df;--muted:#a59f93;--card:#211e18;--line:#38332a}}
+body{margin:0;padding:24px 16px;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1240px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:18px;margin:32px 0 12px;border-bottom:1px solid var(--line);padding-bottom:6px}h2 small{color:var(--muted);font-weight:400}
+section{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,560px),1fr));gap:12px}section h2{grid-column:1/-1}
+article{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}article h3{margin:0;font-size:15px}article p{margin:2px 0 8px;color:var(--muted);font-size:13px}
+audio{width:100%;height:36px}img{display:block;width:100%;height:auto;margin-top:8px;border-radius:4px}.na{font-style:italic}</style></head>
+<body><main><h1>AUD-01 procedural audio - offline renders</h1><p>${esc(rep.items.length)} renders at ${esc(rep.sampleRate)} Hz, seed ${esc(rep.seed)}. Regenerate: <code>node scripts/audio/render.mjs --ogg</code>. Spectrograms are log-frequency (30 Hz - Nyquist), magma scale.</p>${sections}</main></body></html>
+`;
 }
 
 const want = (group, id) => (!ONLY || ONLY.has(group)) && (!FILTER || FILTER.test(id));
@@ -185,6 +218,7 @@ if (prev && (ONLY || FILTER)) {
   report.items = [...prev.items.filter((it) => !fresh.has(key(it))), ...report.items];
 }
 fs.writeFileSync(path.join(OUT, 'render-report.json'), JSON.stringify(report, null, 1));
+fs.writeFileSync(path.join(OUT, 'index.html'), listeningPage(report));
 console.log(`[render] ${report.items.length} renders in ${((Date.now() - t0) / 1000).toFixed(1)} s -> ${path.relative(ROOT, OUT)}/`);
 await close();
 process.exit(0);

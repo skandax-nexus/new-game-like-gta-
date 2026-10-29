@@ -83,7 +83,7 @@ const UI_FIRST: readonly SfxSoundId[] = ['ui_click', 'ui_hover', 'ui_open', 'ui_
  */
 const STINGERS_FOR: Record<Mood, readonly AudioStinger[]> = {
   menu: ['construction_complete'],
-  world: ['construction_complete', 'harvest', 'age_up', 'landmark_complete', 'victory', 'defeat'],
+  world: ['construction_complete', 'harvest', 'age_up', 'landmark_complete'],
   city: ['construction_complete', 'harvest', 'age_up', 'landmark_complete'],
   battle: ['battle_start', 'victory', 'defeat', 'construction_complete'],
   siege: ['battle_start', 'victory', 'defeat', 'construction_complete'],
@@ -457,8 +457,9 @@ export class AudioManager {
     }
   }
 
+  /** Low / medium tiers (phones, small laptops) keep stingers at half rate: half the memory. */
   private stingerKey(id: AudioStinger): string {
-    return this.tier === 'low' ? `stinger:${id}:half` : `stinger:${id}`;
+    return this.tier === 'low' || this.tier === 'medium' ? `stinger:${id}:half` : `stinger:${id}`;
   }
 
   private playStinger(id: AudioStinger): boolean {
