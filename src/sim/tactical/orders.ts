@@ -33,11 +33,11 @@ import { RULES } from '../../data/rules';
 import { UNITS } from '../../data/units';
 import type { BattleContext, RulesContext } from './context';
 import { formationSpeed, moveFormation, runAlong, setFrontage, turnInPlace } from './formations';
-import { aspectOfPoint, standing } from './morale';
+import { standing } from './morale';
 import { effectiveRange } from './projectiles';
 import { buildRate, completeWork, gateNear, repairGate, segmentNear, WORK_HP, WORK_SECONDS, workNear } from './siege';
 import { angleFromCenter, ringPoint } from './fort';
-import { canCharge, isMountedOrBeast, isShooter } from './stats';
+import { canCharge, isMountedOrBeast, isShooter, shapeMods } from './stats';
 
 /** Default advance distance per key press (§6.3). */
 export const ADVANCE_DEFAULT = 30;
@@ -149,6 +149,14 @@ export function nextOrder(state: BattleState, f: FormationState): void {
 
 const HOLD: FormationOrder = { type: 'hold' };
 
+/** Speed (m/s) at which `e` approaches `f` (positive = closing in). */
+function closingSpeed(f: FormationState, e: FormationState): number {
+  const dx = f.x - e.x;
+  const dz = f.z - e.z;
+  const d = Math.sqrt(dx * dx + dz * dz) || 1;
+  return (e.vx * dx + e.vz * dz) / d;
+}
+
 function targetValid(ctx: BattleContext, t: FormationState | undefined): t is FormationState {
   return !!t && t.soldiers > 0 && t.activity !== 'surrendered' && t.activity !== 'destroyed' && !isOffField(ctx, t);
 }
@@ -160,10 +168,12 @@ function speedOf(f: FormationState): number {
 /** Face an enemy threatening a flank / the rear (hold, defend) - aggressive and defensive stances only. */
 function faceThreats(state: BattleState, ctx: BattleContext, f: FormationState, dt: number): void {
   if (f.stance !== 'aggressive' && f.stance !== 'defensive') return;
+  if (shapeMods(f.shape).allRound) return;
   const e = nearestEnemy(state, ctx, f, 60, true);
   if (!e) return;
-  if (aspectOfPoint(f, e.x, e.z) === 0) return;
-  turnInPlace(ctx, f, facingOf(e.x - f.x, e.z - f.z), dt);
+  const want = facingOf(e.x - f.x, e.z - f.z);
+  // Turn to face the nearest melee threat within 60 m.
+  if (Math.abs(angleDelta(f.facing, want)) > 0.05) turnInPlace(ctx, f, want, dt);
 }
 
 /** Skirmish-stance evasion: step back from melee threats within 0.4 x range. Returns true if it moved. */
@@ -226,7 +236,7 @@ export function executeFormation(state: BattleState, ctx: BattleContext, f: Form
     f.panicUntil = 0;
     f.morale = Math.max(0, f.morale + RULES.battle.elephantPanic.moraleAfter);
     f.queue.length = 0;
-    startOrder(state, f, { type: 'regroup' });
+    if (f.activity !== 'routing') startOrder(state, f, { type: 'regroup' });
   }
   // --- Routing: run for the own map edge (and off it).
   if (f.activity === 'routing') {
@@ -279,8 +289,10 @@ export function executeFormation(state: BattleState, ctx: BattleContext, f: Form
       faceThreats(state, ctx, f, dt);
       activity = o.type === 'regroup' ? 'regrouping' : 'idle';
       if (f.stance === 'aggressive' && f.unitClass !== 'supply_train' && f.unitClass !== 'engineers' && !isShooter(st)) {
+        // Engage enemies within 30 m - but receive an enemy that is already closing in (a holding spear line
+        // stays braced against a charge instead of stepping out to meet it).
         const e = nearestEnemy(state, ctx, f, AGGRESSIVE_ENGAGE);
-        if (e) startOrder(state, f, { type: 'attack_target', target: e.index, run: false });
+        if (e && closingSpeed(f, e) < 0.5) startOrder(state, f, { type: 'attack_target', target: e.index, run: false });
       }
       break;
     }
@@ -346,9 +358,11 @@ export function executeFormation(state: BattleState, ctx: BattleContext, f: Form
       const s = o.side === 'left' ? -1 : 1;
       const rx = -dcos(t.facing) * s;
       const rz = dsin(t.facing) * s;
+      // 35 m beyond the flank (from the target's flank edge to our front) and 10 m behind its front.
       const back = t.depth * 0.5 - 10;
-      const px = t.x + rx * (t.width * 0.5 + 35) + dsin(t.facing) * back;
-      const pz = t.z + rz * (t.width * 0.5 + 35) + dcos(t.facing) * back;
+      const off = t.width * 0.5 + 35 + f.depth * 0.5;
+      const px = t.x + rx * off + dsin(t.facing) * back;
+      const pz = t.z + rz * off + dcos(t.facing) * back;
       const rem = moveFormation(ctx, f, px, pz, true, null, false, 1, dt, state.formations);
       activity = 'moving';
       if (rem < 4) startOrder(state, f, { type: 'charge', target: t.index });
@@ -419,9 +433,11 @@ export function executeFormation(state: BattleState, ctx: BattleContext, f: Form
       }
       const dx = t.x - f.x;
       const dz = t.z - f.z;
-      const d = Math.sqrt(dx * dx + dz * dz);
-      if (d > 30) {
-        moveFormation(ctx, f, t.x - (dx / d) * 20, t.z - (dz / d) * 20, false, null, false, 1, dt);
+      const d = Math.sqrt(dx * dx + dz * dz) || 1;
+      const reach = f.depth * 0.5 + t.depth * 0.5;
+      if (d - reach > 30) {
+        // Close to ~15 m (edge to edge) of the ranged formation.
+        moveFormation(ctx, f, t.x - (dx / d) * (reach + 15), t.z - (dz / d) * (reach + 15), false, null, false, 1, dt, state.formations);
         f.workProgress = 0;
         activity = 'moving';
         break;
@@ -470,6 +486,13 @@ function executeConstruct(state: BattleState, ctx: BattleContext, f: FormationSt
     completeWork(state, ctx, w);
   }
   f.workProgress = 0;
+  if ((o.work === 'ladder' || o.work === 'bridge') && f.queue.length === 0) {
+    // Clear the foot of the ladder / the bridgehead for the troops: step back 25 m and face the work.
+    const bx = f.x - dsin(o.facing) * 25;
+    const bz = f.z - dcos(o.facing) * 25;
+    startOrder(state, f, { type: 'move_to', x: bx, z: bz, facing: o.facing, run: false });
+    return 'moving';
+  }
   if (o.work === 'ram') {
     w.formation = f.index;
     const g = ctx.fort;

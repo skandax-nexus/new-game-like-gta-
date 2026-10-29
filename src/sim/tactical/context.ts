@@ -38,6 +38,7 @@ export interface BattleContext {
   /** Positions at the start of the tick (trample / router pass-through entry detection). */
   readonly prevX: Float64Array;
   readonly prevZ: Float64Array;
+  readonly prevFacing: Float64Array;
   /** Per-tick geometry cache (computeDistances): footprint half-diagonal, sin / cos of the facing. */
   readonly radius: Float64Array;
   readonly sin: Float64Array;
@@ -70,6 +71,7 @@ function buildContext(state: BattleState, terrain: TerrainQuery): BattleContext 
     wasEngaged: new Uint8Array(Math.max(1, n)),
     prevX: new Float64Array(Math.max(1, n)),
     prevZ: new Float64Array(Math.max(1, n)),
+    prevFacing: new Float64Array(Math.max(1, n)),
     radius: new Float64Array(Math.max(1, n)),
     sin: new Float64Array(Math.max(1, n)),
     cos: new Float64Array(Math.max(1, n)),
@@ -254,8 +256,8 @@ function refreshOverlay(state: BattleState, ctx: BattleContext): void {
       if (w.work === 'palisade') grid.rasterSegment(ax, az, bx, bz, 1.5, (k) => (grid.block[k] = 3));
       else grid.rasterSegment(ax, az, bx, bz, 2, (k) => (grid.costMul[k] = Math.max(grid.costMul[k]!, DITCH_MUL)));
     } else if (w.work === 'bridge') {
-      // 40 m span along the facing, 8 m wide.
-      grid.rasterSegment(w.x - s * 20, w.z - c * 20, w.x + s * 20, w.z + c * 20, 3, (k) => {
+      // 40 m span from the site (the near bank) along the facing, ~8 m wide.
+      grid.rasterSegment(w.x - s * 4, w.z - c * 4, w.x + s * 40, w.z + c * 40, 3, (k) => {
         grid.road[k] = 1;
         grid.block[k] = 0;
       });

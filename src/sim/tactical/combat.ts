@@ -32,6 +32,7 @@ import { UNITS } from '../../data/units';
 import type { BattleContext } from './context';
 import { addMoraleEvent, aspectOfPoint, onWalls } from './morale';
 import { canBrace, shapeMods } from './stats';
+import { angleFromCenter, distFromCenter, segmentOfAngle, WALL_HALF_BAND } from './fort';
 
 /** K = damage scale x 10 (§6.6). */
 export const MELEE_K = BALANCE.combat.meleeDamageScale * 10;
@@ -87,13 +88,17 @@ export function fatigueGainMultiplier(state: BattleState, ctx: BattleContext, f:
   return m;
 }
 
-/** Attacker climbing assault ladders against defenders on the walls (escalade, §6.6.5). */
-export function isEscalade(ctx: BattleContext, att: FormationState, def: FormationState): boolean {
+/**
+ * Attacker fighting defenders on the walls across an intact wall (escalade, §6.6.5): it stands outside or up on the
+ * laddered wall band, not yet over the walk.
+ */
+export function isEscalade(state: BattleState, ctx: BattleContext, att: FormationState, def: FormationState): boolean {
   const g = ctx.fort;
-  if (!g || att.side !== g.attackerSide || !onWalls(ctx, def)) return false;
-  const dx = att.x - g.cx;
-  const dz = att.z - g.cz;
-  return dx * dx + dz * dz > g.radius * g.radius;
+  const s = state.siege;
+  if (!g || !s || att.side !== g.attackerSide || !onWalls(ctx, def)) return false;
+  if (distFromCenter(g, att.x, att.z) < g.radius - WALL_HALF_BAND - 6) return false;
+  const seg = s.segments[segmentOfAngle(angleFromCenter(g, att.x, att.z), g.segments)];
+  return !!seg && seg.hp > 0;
 }
 
 /** Expected melee attack value ATK of A against D (without the random factor). */
@@ -115,7 +120,7 @@ export function meleeAttackValue(state: BattleState, ctx: BattleContext, att: Fo
     (0.6 + 0.4 * att.cohesion) *
     (1 + xp.attackPerExp * att.experience) *
     shapeMods(att.shape).meleeAttack;
-  if (isEscalade(ctx, att, def)) atk *= 1 - RULES.siege.escaladePenalty;
+  if (isEscalade(state, ctx, att, def)) atk *= 1 - RULES.siege.escaladePenalty;
   return atk;
 }
 

@@ -99,11 +99,25 @@ export class BattleGrid {
     this.block = new Uint8Array(this.n);
     this.costMul = new Uint8Array(this.n).fill(10);
     this.road = new Uint8Array(this.n);
+    // Conservative sampling: a cell is deep water if its center or any of its four corners is, so a centroid kept on
+    // passable cells never stands in deep water, even at a ford's edge.
+    const inset = GRID_CELL * 0.5 - 0.25;
     for (let z = 0; z < this.rows; z++) {
       for (let x = 0; x < this.cols; x++) {
         const cx = Math.min(b.maxX - 0.5, this.minX + (x + 0.5) * GRID_CELL);
         const cz = Math.min(b.maxZ - 0.5, this.minZ + (z + 0.5) * GRID_CELL);
-        this.tclass[z * this.cols + x] = TERRAIN_CLASSES.indexOf(terrain.terrainClassAt(cx, cz));
+        let k = TERRAIN_CLASSES.indexOf(terrain.terrainClassAt(cx, cz));
+        if (k !== DEEP) {
+          for (let q = 0; q < 4; q++) {
+            const sx = Math.min(b.maxX - 0.01, Math.max(b.minX, cx + (q & 1 ? inset : -inset)));
+            const sz = Math.min(b.maxZ - 0.01, Math.max(b.minZ, cz + (q & 2 ? inset : -inset)));
+            if (terrain.terrainClassAt(sx, sz) === 'deep_water') {
+              k = DEEP;
+              break;
+            }
+          }
+        }
+        this.tclass[z * this.cols + x] = k;
       }
     }
     this.base = [];
@@ -119,9 +133,15 @@ export class BattleGrid {
       this.base.push(costs);
       this.roadCost.push(Math.max(1, Math.round(10 / t.road.speed)));
     }
-    this.poolNext = new Int32Array(this.n * 8 + 64);
-    this.poolCell = new Int32Array(this.n * 8 + 64);
+    const padded = (this.cols + 2) * (this.rows + 2);
+    this.poolNext = new Int32Array(padded * 8 + 64);
+    this.poolCell = new Int32Array(padded * 8 + 64);
+    this.padCost = new Int32Array(padded);
+    this.padDist = new Int32Array(padded);
   }
+
+  private readonly padCost: Int32Array;
+  private readonly padDist: Int32Array;
 
   // ------------------------------------------------------------------------------------------- cells
 
@@ -273,21 +293,35 @@ export class BattleGrid {
     dist.fill(FLOW_INF);
     const goal = this.nearestPassable(dest, profile, side);
     if (goal < 0) return;
+    // Work on a grid padded with an impassable border (no bounds checks in the relaxation loop). Entry costs for this
+    // (profile, side) are computed once per field.
+    const cols = this.cols;
+    const rows = this.rows;
+    const W = cols + 2;
+    const cost = this.padCost;
+    const pd = this.padDist;
+    pd.fill(FLOW_INF);
+    for (let z = 0; z < rows; z++) {
+      const row = (z + 1) * W + 1;
+      for (let x = 0; x < cols; x++) cost[row + x] = this.cost(z * cols + x, profile, side);
+    }
+    const off0 = 1;
+    const off1 = -1;
+    const off2 = W;
+    const off3 = -W;
     const head = this.head;
     head.fill(-1);
     const pNext = this.poolNext;
     const pCell = this.poolCell;
     const cap = pCell.length;
-    let used = 0;
-    dist[goal] = 0;
-    pCell[0] = goal;
+    const g = (Math.floor(goal / cols) + 1) * W + (goal % cols) + 1;
+    pd[g] = 0;
+    pCell[0] = g;
     pNext[0] = -1;
     head[0] = 0;
-    used = 1;
+    let used = 1;
     let pending = 1;
     let d = 0;
-    const cols = this.cols;
-    const rows = this.rows;
     while (pending > 0) {
       const bi = d & BUCKET_MASK;
       let e = head[bi]!;
@@ -295,30 +329,67 @@ export class BattleGrid {
       while (e >= 0) {
         pending--;
         const c = pCell[e]!;
-        const nextE = pNext[e]!;
-        e = nextE;
-        if (dist[c] !== d) continue;
-        const cc = this.cost(c, profile, side);
-        const x = c % cols;
-        const z = (c - x) / cols;
+        e = pNext[e]!;
+        if (pd[c] !== d) continue;
+        const cc = cost[c]!;
+        const cE = cost[c + off0]!;
+        const cW = cost[c + off1]!;
+        const cS = cost[c + off2]!;
+        const cN = cost[c + off3]!;
         for (let k = 0; k < 8; k++) {
-          const nx = x + NX[k]!;
-          const nz = z + NZ[k]!;
-          if (nx < 0 || nz < 0 || nx >= cols || nz >= rows) continue;
-          const nb = nz * cols + nx;
-          const cn = this.cost(nb, profile, side);
+          let nb: number;
+          let cn: number;
+          let diag = false;
+          switch (k) {
+            case 0:
+              nb = c + off0;
+              cn = cE;
+              break;
+            case 1:
+              nb = c + off1;
+              cn = cW;
+              break;
+            case 2:
+              nb = c + off2;
+              cn = cS;
+              break;
+            case 3:
+              nb = c + off3;
+              cn = cN;
+              break;
+            case 4:
+              // No corner cutting: both orthogonal cells must be passable.
+              if (cE === 0 || cS === 0) continue;
+              nb = c + off0 + off2;
+              cn = cost[nb]!;
+              diag = true;
+              break;
+            case 5:
+              if (cE === 0 || cN === 0) continue;
+              nb = c + off0 + off3;
+              cn = cost[nb]!;
+              diag = true;
+              break;
+            case 6:
+              if (cW === 0 || cS === 0) continue;
+              nb = c + off1 + off2;
+              cn = cost[nb]!;
+              diag = true;
+              break;
+            default:
+              if (cW === 0 || cN === 0) continue;
+              nb = c + off1 + off3;
+              cn = cost[nb]!;
+              diag = true;
+              break;
+          }
           if (cn === 0) continue;
-          let w: number;
-          if (k >= 4) {
-            // No corner cutting: both orthogonal cells must be passable.
-            if (this.cost(z * cols + nx, profile, side) === 0 || this.cost(nz * cols + x, profile, side) === 0) continue;
-            w = Math.round((cc + cn) * 0.7071);
-          } else w = Math.round((cc + cn) * 0.5);
+          let w = diag ? ((cc + cn) * 0.7071 + 0.5) | 0 : ((cc + cn) * 0.5 + 0.5) | 0;
           if (w < 1) w = 1;
           else if (w > BUCKETS - 2) w = BUCKETS - 2;
           const nd = d + w;
-          if (nd < dist[nb]!) {
-            dist[nb] = nd;
+          if (nd < pd[nb]!) {
+            pd[nb] = nd;
             if (used >= cap) continue;
             const bj = nd & BUCKET_MASK;
             pCell[used] = nb;
@@ -330,6 +401,11 @@ export class BattleGrid {
         }
       }
       d++;
+    }
+    for (let z = 0; z < rows; z++) {
+      const row = (z + 1) * W + 1;
+      const out = z * cols;
+      for (let x = 0; x < cols; x++) dist[out + x] = pd[row + x]!;
     }
   }
 

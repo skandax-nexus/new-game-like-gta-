@@ -33,16 +33,16 @@ import type {
 } from '../../core/types';
 import { BATTLE_EVENT_LOG_LIMIT, MAX_FORMATIONS_PER_SIDE } from '../../core/constants';
 import { Rng, rngStateFromSeed } from '../../core/rng';
+import { angleDelta } from '../../core/math';
 import { BALANCE } from '../../data/balance';
 import { RULES } from '../../data/rules';
 import { UNITS } from '../../data/units';
 import { runBattleAI, translateIntent } from './battleai';
 import { battleContext, computeDistances, rulesContext } from './context';
 import type { BattleContext } from './context';
-import { distFromCenter, insideRing } from './fort';
 import { footprintOverlap, movingCohesionLoss, pointInFootprint, refreshDims, resetDims, separateFormations } from './formations';
 import type { Mtv } from './formations';
-import { fatigueGainMultiplier, resolveChargeImpact, resolveMelee, resolveTrample } from './combat';
+import { fatigueGainMultiplier, isEscalade, resolveChargeImpact, resolveMelee, resolveTrample } from './combat';
 import { addMoraleEvent, aspectOfPoint, driftMorale, isNight, pruneMoraleEvents, standing, updateMoraleBreakdown } from './morale';
 import { effectiveRange, launchVolley, updateVolleys } from './projectiles';
 import { gapBetween, isOffField, MAX_QUEUE, nearestEnemy, executeFormation, retreatDirection, snapOrder, startOrder, validateOrder } from './orders';
@@ -437,6 +437,7 @@ export function stepBattle(state: BattleState, dt: number, terrain: TerrainQuery
     ctx.wasEngaged[i] = f.engagedWith.length > 0 ? 1 : 0;
     ctx.prevX[i] = f.x;
     ctx.prevZ[i] = f.z;
+    ctx.prevFacing[i] = f.facing;
   }
   updateLeadership(state, ctx);
 
@@ -619,8 +620,8 @@ function updateContacts(state: BattleState, ctx: BattleContext): void {
         tmpOut.push({ time: state.time, kind: 'contact', side: a.side, formation: a.index, other: b.index, x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, value: null, text: null });
         reinforce(state, ctx, a, b);
         reinforce(state, ctx, b, a);
-        escaladeShock(ctx, a, b);
-        escaladeShock(ctx, b, a);
+        escaladeShock(state, ctx, a, b);
+        escaladeShock(state, ctx, b, a);
       }
     }
   }
@@ -642,10 +643,8 @@ function reinforce(state: BattleState, ctx: BattleContext, joiner: FormationStat
 }
 
 /** Climbing the ladders against defenders on the walls: morale -0.15 on the climb (§6.6.5). */
-function escaladeShock(ctx: BattleContext, climber: FormationState, def: FormationState): void {
-  const g = ctx.fort;
-  if (!g || climber.side !== g.attackerSide || ctx.wasEngaged[climber.index]) return;
-  if (insideRing(g, climber.x, climber.z) || distFromCenter(g, def.x, def.z) > g.radius) return;
+function escaladeShock(state: BattleState, ctx: BattleContext, climber: FormationState, def: FormationState): void {
+  if (ctx.wasEngaged[climber.index] || !isEscalade(state, ctx, climber, def)) return;
   const st = ctx.stats[climber.index]!;
   climber.morale = Math.max(0, climber.morale - RULES.siege.escaladePenalty * 0.5 * 36 * (1 - 0.5 * st.discipline));
 }
@@ -853,9 +852,11 @@ function updateCondition(state: BattleState, ctx: BattleContext, f: FormationSta
   if (!running && !engaged && speed < 0.25) f.fatigue -= BALANCE.combat.fatigueRecoverPerSec * dt;
   f.fatigue = Math.min(1, Math.max(0, f.fatigue));
   if (f.activity === 'routing') return;
+  // Wheeling / turning in place is not standing still: no cohesion recovery while the facing changes.
+  const turning = Math.abs(angleDelta(ctx.prevFacing[f.index]!, f.facing)) > 1e-3;
   if (speed > 0.25 && f.order.type !== 'withdraw') {
     if (f.cohesion > 0.2) f.cohesion = Math.max(0.2, f.cohesion - movingCohesionLoss(f, running, UNITS[f.unitClass].terrain[ctx.grid.classAt(f.x, f.z)].fatigue) * dt);
-  } else if (!engaged && speed <= 0.25) {
+  } else if (!engaged && speed <= 0.25 && !turning) {
     const regroup = f.order.type === 'regroup' || f.activity === 'rallying';
     f.cohesion = Math.min(1, f.cohesion + BALANCE.combat.cohesionRecoverPerSec * (regroup ? RULES.battle.regroup.cohesionRecovery : 1) * dt);
   }
