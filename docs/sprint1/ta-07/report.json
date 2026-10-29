@@ -1,62 +1,6 @@
 {
   "shots": [
     {
-      "name": "vat_crowd",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=vat_test_dummy&count=500&hdri=sky_golden&camera=overview&t=1.37&noui=1",
-      "ms": 49445,
-      "errors": [],
-      "warnings": []
-    },
-    {
-      "name": "vat_crowd_hud",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=vat_test_dummy&count=500&hdri=sky_golden&camera=overview&t=1.37",
-      "ms": 42538,
-      "errors": [],
-      "warnings": []
-    },
-    {
-      "name": "vat_crowd_walk",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=vat_test_dummy&clip=walk&count=500&hdri=sky_day&camera=overview&t=0.61&noui=1",
-      "ms": 39649,
-      "errors": [],
-      "warnings": []
-    },
-    {
-      "name": "vat_crowd_close",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=vat_test_dummy&count=60&hdri=sky_golden&camera=hero&t=2.1&noui=1",
-      "ms": 46028,
-      "errors": [],
-      "warnings": []
-    },
-    {
-      "name": "impostor_ab_60m",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=ab&dist=60&hdri=sky_day",
-      "ms": 17958,
-      "errors": [],
-      "warnings": []
-    },
-    {
-      "name": "impostor_mesh_220m",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=mesh&dist=220&hdri=sky_day&noui=1",
-      "ms": 17572,
-      "errors": [],
-      "warnings": []
-    },
-    {
-      "name": "impostor_imp_220m",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=impostor&dist=220&hdri=sky_day&noui=1",
-      "ms": 23996,
-      "errors": [],
-      "warnings": []
-    },
-    {
-      "name": "impostor_none_220m",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=none&dist=220&hdri=sky_day&noui=1",
-      "ms": 49409,
-      "errors": [],
-      "warnings": []
-    },
-    {
       "name": "sky_dawn_stupa",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_dawn&camera=hero&noui=1",
       "ms": 57182,
@@ -239,51 +183,9 @@
       "warnings": []
     },
     {
-      "name": "skinned_clones",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=skin_test_character&clip=walk&hdri=sky_golden&camera=front&t=0.4",
-      "ms": 17546,
-      "errors": [],
-      "warnings": []
-    },
-    {
-      "name": "skinned_memtest",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=skin_test_character&clip=walk&hdri=sky_day&memtest=1&noui=1",
-      "ms": 20292,
-      "errors": [],
-      "warnings": []
-    },
-    {
-      "name": "banner_cloth_variants",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=banner_cloth&hdri=sky_golden&camera=front&noui=1",
-      "ms": 37855,
-      "errors": [],
-      "warnings": []
-    },
-    {
-      "name": "kit_grid",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&kit=stupa_sanchi,model_test_tree,skin_test_character&count=4&hdri=sky_day&camera=overview",
-      "ms": 14242,
-      "errors": [],
-      "warnings": []
-    },
-    {
       "name": "splat_lookdev",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&splat=ground_dry_earth,sandstone_carved_red&hdri=sky_golden&camera=hero",
       "ms": 10172,
-      "errors": [],
-      "warnings": []
-    },
-    {
-      "name": "lens_dirt_view",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=lens_dirt&hdri=sky_day&camera=front&noui=1",
-      "ms": 41543,
-      "errors": [],
-      "warnings": []
-    },
-    {
-      "name": "sun_sprite_view",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=sun_sprite&hdri=sky_day&camera=front&noui=1",
-      "ms": 42459,
       "errors": [],
       "warnings": []
     },
@@ -330,9 +232,184 @@
       "warnings": []
     },
     {
+      "name": "impostor_ab_60m",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=ab&dist=60&hdri=sky_day",
+      "ms": 21390,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "impostor_mesh_220m",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=mesh&dist=220&hdri=sky_day&noui=1",
+      "ms": 12723,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "impostor_imp_220m",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=impostor&dist=220&hdri=sky_day&noui=1",
+      "ms": 15572,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "impostor_none_220m",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=none&dist=220&hdri=sky_day&noui=1",
+      "ms": 15085,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "skinned_clones",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=skin_test_character&clip=walk&hdri=sky_golden&camera=front&t=0.4",
+      "ms": 36324,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "skinned_memtest",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=skin_test_character&clip=walk&hdri=sky_day&memtest=1&noui=1",
+      "ms": 18718,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "banner_cloth_variants",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=banner_cloth&hdri=sky_golden&camera=front&noui=1",
+      "ms": 43508,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "kit_grid",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&kit=stupa_sanchi,model_test_tree,skin_test_character&count=4&hdri=sky_day&camera=overview",
+      "ms": 16404,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "lens_dirt_view",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=lens_dirt&hdri=sky_day&camera=front&noui=1",
+      "ms": 26265,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "sun_sprite_view",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=sun_sprite&hdri=sky_day&camera=front&noui=1",
+      "ms": 26870,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "vat_crowd",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=vat_test_dummy&count=500&hdri=sky_golden&camera=overview&t=1.37&noui=1",
+      "ms": 46163,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "vat_crowd_hud",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=vat_test_dummy&count=500&hdri=sky_golden&camera=overview&t=1.37",
+      "ms": 21197,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "vat_crowd_walk",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=vat_test_dummy&clip=walk&count=500&hdri=sky_day&camera=overview&t=0.61&noui=1",
+      "ms": 16599,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "vat_crowd_close",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=vat_test_dummy&count=60&hdri=sky_golden&camera=hero&t=2.1&noui=1",
+      "ms": 47216,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_dust_playback",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_dust&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 37975,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_fire_playback",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_fire&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 43225,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_lightning_playback",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_lightning&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 44132,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_mist_playback",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_mist&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 38225,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_nature_playback",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_nature&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 16797,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_rain_playback",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_rain&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 16028,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_smoke_playback",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 25114,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_sparks_embers_playback",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_sparks_embers&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 29299,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_weapon_trail_playback",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_weapon_trail&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 28339,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_smoke_sun_east",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_day&camera=front&sun=90,25&frame=20&tint=none&noui=1",
+      "ms": 27526,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_smoke_sun_west",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_day&camera=front&sun=270,25&frame=20&tint=none&noui=1",
+      "ms": 31142,
+      "errors": [],
+      "warnings": []
+    },
+    {
       "name": "vat_crowd_mobile",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=low&noaudio=1&asset=vat_test_dummy&count=200&camera=overview&t=0.9",
-      "ms": 5705,
+      "ms": 8347,
       "errors": [],
       "warnings": []
     }
@@ -345,16 +422,13 @@
         "w": 67,
         "h": 72
       },
-      "cropMeshLum": 0.1127360550098023,
-      "cropImpostorLum": 0.11582076866038352,
-      "cropDiff": 0.027362263566105837,
-      "objectMeshLum": 0.11817803166683095,
-      "objectImpostorLum": 0.12946328830371423,
-      "objectPixels": [
-        1330,
-        1338
-      ],
-      "objectDiff": 0.09549369267461501
+      "cropMeshLum": 0.11269396060842235,
+      "cropImpostorLum": 0.11397587730837921,
+      "cropDiff": 0.011375203187783412,
+      "objectMeshLum": 0.11782663579399971,
+      "objectImpostorLum": 0.12246424304830393,
+      "objectPixels": 1367,
+      "objectDiff": 0.03935958302681496
     },
     "skies": [
       {
@@ -513,7 +587,7 @@
     },
     "skinnedMemory": {
       "phase": "done",
-      "frames": 8,
+      "frames": 5,
       "baseline": {
         "geometries": 14,
         "textures": 31
@@ -540,7 +614,7 @@
       },
       {
         "id": "skin_test_character",
-        "meshes": 0,
+        "meshes": 24,
         "triangles": 3968
       }
     ],
@@ -585,6 +659,10 @@
         "tier": "off",
         "notes": []
       }
+    },
+    "smokeLighting": {
+      "meanAbsDiff": 2.299887152777778,
+      "changedPixels": 223340
     }
   }
 }

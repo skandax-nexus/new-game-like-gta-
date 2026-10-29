@@ -132,6 +132,9 @@ export function createFlipbookMaterial(h: FlipbookHandle, opts: FlipbookMaterial
   const mat: THREE.MeshStandardMaterial | THREE.MeshBasicMaterial = lit
     ? new THREE.MeshStandardMaterial({ ...params, roughness: 1, metalness: 0 })
     : new THREE.MeshBasicMaterial(params);
+  // Scene fog mixes rgb towards the fog color, which ADDS that color wherever an additive / premultiplied quad is
+  // transparent (white boxes at distance): emissive books fade with distance in the particle system instead.
+  if (additive || premul) mat.fog = false;
   if (premul) {
     mat.blendSrc = THREE.OneFactor;
     mat.blendDst = THREE.OneMinusSrcAlphaFactor;

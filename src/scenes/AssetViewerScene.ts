@@ -2,18 +2,21 @@
  * Asset viewer / lookdev scene for content-pipeline assets. OWNER: Technical Artist G (TA-07, CTO grant for
  * Sprint 1) - CTO + Technical Art Director review.
  *
- *   ?scene=assetviewer&asset=stupa_sanchi&hdri=sky_golden&camera=hero|close|detail|top|overview|turntable&lod=1
+ *   ?scene=assetviewer&asset=stupa_sanchi&hdri=sky_golden&camera=hero|close|detail|top|overview|front|turntable&lod=1
+ *   ?scene=assetviewer&asset=banner_cloth[&variant=pennant]  model variants side by side (banners: runtime bannerSvg)
  *   ?scene=assetviewer&asset=sandstone_carved_red        material lookdev (wall corner, column, sphere)
  *   ?scene=assetviewer&asset=sky_dawn                    HDRI probes (chrome / grey / rough spheres)
  *   ?scene=assetviewer&asset=<vat>&clip=walk&count=500   VAT crowd grid (phase offsets, two team tints; no clip =
  *                                                        idle / walk / attack mix), one InstancedMesh per LOD
  *   ?scene=assetviewer&asset=<impostor>&dist=220&mode=ab|mesh|impostor   impostor vs source mesh (distance slider)
  *   ?scene=assetviewer&asset=<flipbook>&sun=az,el&frame=N        flipbook playback (every sequence), lit by the sun
+ *                                                        (&phase=0..1 still of every sequence, &tint=none|rrggbb)
  *   ?scene=assetviewer&asset=<lut>&split=0.5             LUT A/B split over the stupa (left ungraded)
  *   ?scene=assetviewer&asset=<image>                     image on a quad (sun sprite additive)
  *   ?scene=assetviewer&asset=<skinned model>&clip=attack two independent clones + clipEvents timeline (&memtest=1)
  *   ?scene=assetviewer&splat=a,b,c,d                     4-layer height-blended terrain lookdev (TA-01)
- *   ?scene=assetviewer&kit=id1,id2,...&count=N           instanced kit grid, draw calls per piece (TA-02 / TA-03)
+ *   ?scene=assetviewer&kit=id1,id2,...&count=N           instanced kit grid, draw calls per piece (TA-02 / TA-03;
+ *                                                        skinned models as independent clones)
  *   &assets=ultra|high|mobile|off  &hdri=<id>  &sun=az,el  &t=<seconds> (frozen animation time)  &crossfade=1
  *
  * Lighting = the HDRI (PMREM IBL + background) calibrated like the game (ART_BIBLE §4.4): the matching
@@ -85,6 +88,10 @@ interface ViewerOptions {
   crossfade: boolean;
   /** Model variant to show alone (default: all variants side by side). */
   variant: string | null;
+  /** Flipbooks: show every sequence at this fraction of its length (0..1) - stills of one-shots mid-effect. */
+  phase: number | null;
+  /** Flipbooks: particle tint override ('none' = white; default: the entry's tint). */
+  tint: string | null;
 }
 
 function viewerOptions(): ViewerOptions {
@@ -114,6 +121,8 @@ function viewerOptions(): ViewerOptions {
     memtest: q.get('memtest') === '1',
     crossfade: q.get('crossfade') === '1',
     variant: q.get('variant'),
+    phase: num('phase'),
+    tint: q.get('tint'),
   };
 }
 
@@ -686,7 +695,8 @@ export class AssetViewerScene implements GameScene {
     const h = w;
     const cols = Math.min(seqs.length, 4);
     seqs.forEach((s, i) => {
-      const mat = createFlipbookMaterial(fb, { sequence: s.name, tint: e.tint !== '#ffffff' ? e.tint : undefined });
+      const tint = this.opts.tint === 'none' ? undefined : this.opts.tint ? `#${this.opts.tint.replace(/^#/, '')}` : e.tint !== '#ffffff' ? e.tint : undefined;
+      const mat = createFlipbookMaterial(fb, { sequence: s.name, tint });
       const geo = new THREE.PlaneGeometry(w, h);
       const mesh = new THREE.Mesh(geo, mat);
       const c = i % cols;
@@ -701,7 +711,8 @@ export class AssetViewerScene implements GameScene {
     this.bounds.set(new THREE.Vector3((-cols / 2) * w * 1.15, 0, -0.5), new THREE.Vector3((cols / 2) * w * 1.15, rowsN * h * 1.15, 0.5));
     // Backdrop: a dark wall so additive / pale effects read.
     const wallGeo = new THREE.PlaneGeometry(cols * w * 1.6 + 4, rowsN * h * 1.4 + 4);
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x2a2622, roughness: 0.95 });
+    // dark for emissive (additive / premultiplied) books, a mid sky-grey for lit / alpha ones so their shading reads
+    const wallMat = new THREE.MeshStandardMaterial({ color: e.blend === 'alpha' ? 0x7d8994 : 0x2a2622, roughness: 0.95 });
     const wall = new THREE.Mesh(wallGeo, wallMat);
     wall.position.set(0, (rowsN * h * 1.4 + 4) / 2 - 0.2, -Math.max(w, h) * 0.9);
     wall.receiveShadow = true;
@@ -1211,7 +1222,7 @@ export class AssetViewerScene implements GameScene {
     const t = this.time;
     if (this.vatTime) this.vatTime.value = t;
     for (const f of this.flipMats) {
-      const frame = this.opts.frame ?? t * f.fps;
+      const frame = this.opts.phase !== null ? Math.max(0, Math.min(1, this.opts.phase)) * (f.count - 1) : this.opts.frame ?? t * f.fps;
       (f.mat.userData.flipbookFrame as { value: number }).value = f.loop ? frame : Math.min(frame % (f.count + f.fps * 0.75), f.count - 1);
     }
     for (const c of this.clones) {

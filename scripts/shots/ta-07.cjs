@@ -74,23 +74,30 @@ async function lumStats(file, rect) {
   return { mean: sum / (info.width * info.height), data, info };
 }
 
-/** Mean luminance over pixels where `file` differs from the empty background shot (the object mask). */
-async function maskedLum(file, bgFile, rect) {
-  const a = await lumStats(file, rect);
-  const b = await lumStats(bgFile, rect);
+/**
+ * Mean luminance of two shots over the SAME object mask: pixels where either shot differs from the empty
+ * background shot (union), so both means cover identical pixels.
+ */
+async function maskedLumAB(fileA, fileB, bgFile, rect) {
+  const a = await lumStats(fileA, rect);
+  const b = await lumStats(fileB, rect);
+  const g = await lumStats(bgFile, rect);
   const lin = (v) => {
     const c = v / 255;
     return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
   };
-  let sum = 0;
+  const lum = (d, i) => 0.2126 * lin(d[i * 3]) + 0.7152 * lin(d[i * 3 + 1]) + 0.0722 * lin(d[i * 3 + 2]);
+  const differs = (d, i) => Math.abs(d[i * 3] - g.data[i * 3]) + Math.abs(d[i * 3 + 1] - g.data[i * 3 + 1]) + Math.abs(d[i * 3 + 2] - g.data[i * 3 + 2]) >= 12;
+  let sa = 0;
+  let sb = 0;
   let n = 0;
   for (let i = 0; i < a.info.width * a.info.height; i++) {
-    const d = Math.abs(a.data[i * 3] - b.data[i * 3]) + Math.abs(a.data[i * 3 + 1] - b.data[i * 3 + 1]) + Math.abs(a.data[i * 3 + 2] - b.data[i * 3 + 2]);
-    if (d < 12) continue;
-    sum += 0.2126 * lin(a.data[i * 3]) + 0.7152 * lin(a.data[i * 3 + 1]) + 0.0722 * lin(a.data[i * 3 + 2]);
+    if (!differs(a.data, i) && !differs(b.data, i)) continue;
+    sa += lum(a.data, i);
+    sb += lum(b.data, i);
     n++;
   }
-  return { mean: n ? sum / n : 0, pixels: n };
+  return { meanA: n ? sa / n : 0, meanB: n ? sb / n : 0, pixels: n };
 }
 
 async function main() {
@@ -190,14 +197,13 @@ async function main() {
       if (rect) {
         const a = await lumStats(path.join(OUT, 'impostor_mesh_220m.png'), rect);
         const b = await lumStats(path.join(OUT, 'impostor_imp_220m.png'), rect);
-        const ma = await maskedLum(path.join(OUT, 'impostor_mesh_220m.png'), path.join(OUT, 'impostor_none_220m.png'), rect);
-        const mb = await maskedLum(path.join(OUT, 'impostor_imp_220m.png'), path.join(OUT, 'impostor_none_220m.png'), rect);
+        const m = await maskedLumAB(path.join(OUT, 'impostor_mesh_220m.png'), path.join(OUT, 'impostor_imp_220m.png'), path.join(OUT, 'impostor_none_220m.png'), rect);
         const crop = Math.abs(a.mean - b.mean) / a.mean;
-        const obj = Math.abs(ma.mean - mb.mean) / Math.max(ma.mean, 1e-9);
+        const obj = Math.abs(m.meanA - m.meanB) / Math.max(m.meanA, 1e-9);
         await sharp(path.join(OUT, 'impostor_mesh_220m.png')).extract({ left: rect.x, top: rect.y, width: rect.w, height: rect.h }).resize(rect.w * 4, rect.h * 4, { kernel: 'nearest' }).toFile(path.join(OUT, 'impostor_mesh_220m_crop.png'));
         await sharp(path.join(OUT, 'impostor_imp_220m.png')).extract({ left: rect.x, top: rect.y, width: rect.w, height: rect.h }).resize(rect.w * 4, rect.h * 4, { kernel: 'nearest' }).toFile(path.join(OUT, 'impostor_imp_220m_crop.png'));
-        report.numbers.impostor = { rect, cropMeshLum: a.mean, cropImpostorLum: b.mean, cropDiff: crop, objectMeshLum: ma.mean, objectImpostorLum: mb.mean, objectPixels: [ma.pixels, mb.pixels], objectDiff: obj };
-        console.log(`[ta-07] impostor A/B at 220 m: crop ${rect.w}x${rect.h} px, mean luminance mesh ${a.mean.toFixed(4)} vs impostor ${b.mean.toFixed(4)} -> ${(crop * 100).toFixed(2)} % (object pixels only: ${(obj * 100).toFixed(2)} %, ${ma.pixels}/${mb.pixels} px)`);
+        report.numbers.impostor = { rect, cropMeshLum: a.mean, cropImpostorLum: b.mean, cropDiff: crop, objectMeshLum: m.meanA, objectImpostorLum: m.meanB, objectPixels: m.pixels, objectDiff: obj };
+        console.log(`[ta-07] impostor A/B at 220 m: crop ${rect.w}x${rect.h} px, mean luminance mesh ${a.mean.toFixed(4)} vs impostor ${b.mean.toFixed(4)} -> ${(crop * 100).toFixed(2)} %; tree pixels only (shared mask, ${m.pixels} px): ${m.meanA.toFixed(4)} vs ${m.meanB.toFixed(4)} -> ${(obj * 100).toFixed(2)} %`);
       }
     }
 
@@ -216,10 +222,10 @@ async function main() {
 
     // ---------------------------------------------------------------- flipbooks
     if (run('fx')) {
-      for (const fx of idsOfKind('flipbook')) await shoot(`${fx}_playback`, `asset=${fx}&hdri=sky_day&camera=front&t=0.55`, { quality: 'ultra' });
+      for (const fx of idsOfKind('flipbook')) await shoot(`${fx}_playback`, `asset=${fx}&hdri=sky_day&camera=front&phase=0.35`, { quality: 'ultra' });
       if (idsOfKind('flipbook').includes('fx_smoke')) {
-        await shoot('fx_smoke_sun_east', 'asset=fx_smoke&hdri=sky_day&camera=front&sun=90,25&frame=20&noui=1', { quality: 'ultra' });
-        await shoot('fx_smoke_sun_west', 'asset=fx_smoke&hdri=sky_day&camera=front&sun=270,25&frame=20&noui=1', { quality: 'ultra' });
+        await shoot('fx_smoke_sun_east', 'asset=fx_smoke&hdri=sky_day&camera=front&sun=90,25&frame=20&tint=none&noui=1', { quality: 'ultra' });
+        await shoot('fx_smoke_sun_west', 'asset=fx_smoke&hdri=sky_day&camera=front&sun=270,25&frame=20&tint=none&noui=1', { quality: 'ultra' });
         const a = await sharp(path.join(OUT, 'fx_smoke_sun_east.png')).removeAlpha().raw().toBuffer({ resolveWithObject: true });
         const b = await sharp(path.join(OUT, 'fx_smoke_sun_west.png')).removeAlpha().raw().toBuffer({ resolveWithObject: true });
         let diff = 0;

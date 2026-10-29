@@ -248,6 +248,9 @@ export function cloneMaterial<T extends THREE.Material>(src: T): T {
 export function createVatMaterial(lod: VatLodData, opts: VatMaterialOptions = {}, base?: THREE.MeshStandardMaterial): THREE.MeshStandardMaterial {
   const src = base ?? lod.material;
   const mat = cloneMaterial(src);
+  // COLOR_0 is VAT data (R team mask, G cloth seed, B part id), read through `vatColor` - never albedo. (GLTFLoader
+  // enables vertexColors whenever COLOR_0 exists, which tinted every crowd cloth green.)
+  mat.vertexColors = false;
   const prev = src.onBeforeCompile;
   const prevKey = src.customProgramCacheKey();
   const time = opts.time ?? { value: 0 };

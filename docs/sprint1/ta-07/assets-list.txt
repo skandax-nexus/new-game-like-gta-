@@ -1,0 +1,42 @@
+id                           kind      category       pkg  tiers              KB ultra/high/mobile   state
+banner_cloth                 model     banners        wp7  ultra,high,mobile      46    46    46     published 89029a9e
+fx_dust                      flipbook  fx             wp7  ultra,high,mobile     245   245    80     published 879007c8
+fx_fire                      flipbook  fx             wp7  ultra,high,mobile     298   298    87     published 7a24047d
+fx_lightning                 flipbook  fx             wp7  ultra,high             13    13     -     published 30989f10
+fx_mist                      flipbook  fx             wp7  ultra,high,mobile      36    36    36     published 3164fe50
+fx_nature                    flipbook  fx             wp7  ultra,high,mobile      23    23    23     published c014c330
+fx_rain                      flipbook  fx             wp7  ultra,high,mobile      19    19    19     published e70cc0af
+fx_smoke                     flipbook  fx             wp7  ultra,high,mobile     306   306    96     published 90bfe65a
+fx_sparks_embers             flipbook  fx             wp7  ultra,high,mobile      24    24    24     published 9a9c561d
+fx_weapon_trail              flipbook  fx             wp7  ultra,high,mobile       8     8     8     published 463c4d90
+sky_dawn                     hdri      hdri           wp7  ultra,high,mobile     196    75    27     published c8f84b18
+sky_day                      hdri      hdri           wp7  ultra,high,mobile     255    98    36     published 3dad0790
+sky_dusk                     hdri      hdri           wp7  ultra,high,mobile     131    50    18     published 9641d630
+sky_fog                      hdri      hdri           wp7  ultra,high ->sky_overcast     25    11     -     published f1425769
+sky_golden                   hdri      hdri           wp7  ultra,high,mobile     264   102    37     published fa0c66e1
+sky_haze                     hdri      hdri           wp7  ultra,high,mobile      62    26    10     published 3cb21921
+sky_night                    hdri      hdri           wp7  ultra,high,mobile     114    41    12     published 2549b960
+sky_noon                     hdri      hdri           wp7  ultra,high,mobile     201    79    29     published 735fb4a9
+sky_overcast                 hdri      hdri           wp7  ultra,high,mobile      46    19     8     published cf26cbc1
+lens_dirt                    image     images         wp7  ultra                  20     -     -     published b5a61186
+sun_sprite                   image     images         wp7  ultra,high,mobile       2     2     1     published a46b8f7e
+lut_dawn                     lut       luts           wp7  ultra,high              7     7     -     published fd527a44
+lut_dusk                     lut       luts           wp7  ultra,high              0     0     -     published 31f5cdd5
+lut_fog                      lut       luts           wp7  ultra,high              7     7     -     published 4e4bcdde
+lut_golden                   lut       luts           wp7  ultra,high              7     7     -     published c9e24695
+lut_haze                     lut       luts           wp7  ultra,high              7     7     -     published 83e818e8
+lut_identity                 lut       luts           wp7  ultra,high              0     0     -     published cae320a2
+lut_monsoon                  lut       luts           wp7  ultra,high              7     7     -     published cde287f5
+lut_night                    lut       luts           wp7  ultra,high              6     6     -     published d307c160
+ground_dry_earth             material  materials      wp1  ultra,high,mobile    2969   872   263     published 9c0389ab
+sandstone_carved_red         material  materials      wp1  ultra,high,mobile    4496  1317   338     published 544c1d83
+stupa_sanchi                 model     models         wp3  ultra,high,mobile    1876  1529  1328     published 744157d5 deps=[sandstone_carved_red]
+impostor_test_tree           impostor  pipeline_test  test ultra,high,mobile     714   612   365     published 6ebab97a
+model_test_tree              model     pipeline_test  test ultra,high,mobile     197   197   197     published acfac43a
+skin_test_character          model     pipeline_test  test ultra,high,mobile     175   175   175     published 0641ba4f
+vat_test_dummy               vat       pipeline_test  test ultra,high,mobile     189   189   189     published 282a6857
+[assets] totals: ultra 12.69 MB, high 6.30 MB, mobile 3.37 MB (budget 80.00 / 40.00 / 15.00 MB)
+[assets]   wp1    7.29 /  2.14 /  0.59 MB  of 36.00 / 16.00 / 5.30  WP1 materials & terrain
+[assets]   wp3    1.83 /  1.49 /  1.30 MB  of 9.00 / 5.50 / 2.30  WP3 monuments & fortifications
+[assets]   wp7    2.32 /  1.53 /  0.58 MB  of 4.00 / 2.00 / 0.60  WP7 skies, LUTs, VFX, banners
+[assets]   test   1.25 /  1.15 /  0.90 MB  of 4.00 / 3.00 / 1.50  Pipeline test assets (viewer / QA)
