@@ -1,6 +1,6 @@
 {
   "port": 4452,
-  "dist": ".build/core-01-review",
+  "dist": ".build/core-01-review2",
   "checks": [
     {
       "name": "splash: title font Tiro Devanagari Sanskrit loaded",
@@ -176,8 +176,8 @@
     },
     {
       "name": "lab-unknown: themed error panel shown",
-      "ok": false,
-      "observed": null
+      "ok": true,
+      "observed": "Lab not foundNo lab named 'no-such-lab'. Returning to the main menu.exampleAvailable labs above. Add one as <id>.lab.ts exporting LAB (src/scenes/lab/types.ts).Dismiss"
     },
     {
       "name": "lab-unknown: fell back to the main menu",

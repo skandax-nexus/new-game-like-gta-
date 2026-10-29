@@ -1,0 +1,69 @@
+{
+  "reviewer": "CTO (CORE-01 first review)",
+  "builds": {
+    "normal": ".build/core-01-review2 (52a9b0c + reviewer fixes)",
+    "single": ".build/core-01-review2-single",
+    "baseline": ".build/core-01-review-base (04b6dbb, pre-CORE-01)"
+  },
+  "extraChecks": [
+    {
+      "check": "lab example ?assets=off renders (procedural ground), no console errors",
+      "ok": true,
+      "shot": "lab-example-assets-off.png",
+      "profile": "medium 1280x720: 72 draws, 55.4k tris"
+    },
+    {
+      "check": "lab exit -> menu: no errors / crash reports",
+      "ok": true
+    },
+    {
+      "check": "unknown lab: panel persists > 10 s over the ready menu, Dismiss removes it",
+      "ok": true,
+      "shot": "lab-unknown-persist.png"
+    },
+    {
+      "check": "single-file build: labs() = [], ?scene=lab&lab=example -> themed panel + menu, no console errors",
+      "ok": true,
+      "shot": "single-lab-fallback.png"
+    }
+  ],
+  "abVsBaseline": {
+    "method": "mean |pixel diff| (0-255) and % channels > 40, smoke PNGs of 04b6dbb (port 4455) vs CORE-01 review-smoke (port 4451)",
+    "noiseReference": "review-smoke vs developer smoke (same code): menu 0.50, world 0.62, battle 0.67, battle-close 5.73, menu-mobile 1.69",
+    "shots": {
+      "menu": [
+        0.34,
+        0.13
+      ],
+      "world": [
+        1.33,
+        0.04
+      ],
+      "world-overview": [
+        0.26,
+        0
+      ],
+      "battle": [
+        0.7,
+        0.25
+      ],
+      "battle-close": [
+        6.75,
+        5.86
+      ],
+      "battle-river-5000": [
+        1.03,
+        0.18
+      ],
+      "menu-mobile": [
+        1.75,
+        0.83
+      ],
+      "battle-mobile": [
+        0.3,
+        0.02
+      ]
+    },
+    "verdict": "within run-to-run SwiftShader noise; no visible difference (PNGs read)"
+  }
+}
