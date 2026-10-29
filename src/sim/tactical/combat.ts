@@ -7,8 +7,10 @@
  *
  * Melee (per tick, both directions, §6.6.1):
  *   frontage = face(A -> D) x (A routing ? 0.1 : 1) x spearReach / shares
- *     face: A's files toward an enemy on its front, ranks toward one on its flank, half the files toward its rear
- *     (all-round shapes: files); shares = enemies in contact on that same face (a front split between two foes).
+ *     face: the real aspect of D in A's frame (front / left / right / rear, `aspectOfPoint`); face size = files on
+ *     the front, ranks on the left and ranks on the right (each flank its own face), half the files on the rear;
+ *     all-round shapes (square, circle) present their files on every aspect. shares = enemies in contact on that
+ *     same aspect (a face split between two foes), so a surrounded square strikes each attacker with full files.
  *     spearReach = 1.25 for spearmen in line / square with >= 2 ranks against non-spear foes (two spear walls
  *     cancel out - this reproduces the §6.6.1 spear-vs-spear example of 4.7 HP/s).
  *   ATK = meleeAttack x bonusVs x terrain.attack x height x (0.5 + morale/200) x (1 - 0.4 F) x (0.6 + 0.4 C)
@@ -52,19 +54,20 @@ export function aspectMultiplier(aspect: 0 | 1 | 2): number {
   return aspect === 0 ? 1 : aspect === 1 ? BALANCE.combat.flankMultiplier : BALANCE.combat.rearMultiplier;
 }
 
-/** Soldiers of A that can strike at an enemy on face `face` (0 front, 1 flank, 2 rear) of A. */
-function faceSize(a: FormationState, face: 0 | 1 | 2): number {
-  const n = a.soldiers;
-  if (face === 0 || shapeMods(a.shape).allRound) return Math.min(n, Math.max(1, a.files));
-  if (face === 1) return Math.min(n, Math.max(1, a.ranks));
-  return Math.min(n, Math.max(1, a.files)) * 0.5;
+/**
+ * Soldiers of A that can strike at an enemy on aspect `face` of A (0 front, 1 left, 2 right, 3 rear): files on the
+ * front, ranks on each flank, half the files on the rear; all-round shapes present their files on every aspect.
+ */
+export function faceSize(a: FormationState, face: 0 | 1 | 2 | 3): number {
+  const files = Math.min(a.soldiers, Math.max(1, a.files));
+  if (face === 0 || shapeMods(a.shape).allRound) return files;
+  if (face === 3) return files * 0.5;
+  return Math.min(a.soldiers, Math.max(1, a.ranks));
 }
 
-/** A's face toward formation B. */
-function faceToward(a: FormationState, b: FormationState): 0 | 1 | 2 {
-  if (shapeMods(a.shape).allRound) return 0;
-  const p = aspectOfPoint(a, b.x, b.z);
-  return p === 0 ? 0 : p === 3 ? 2 : 1;
+/** A's real aspect toward formation B (0 front, 1 left, 2 right, 3 rear); shares are counted per aspect. */
+export function faceToward(a: FormationState, b: FormationState): 0 | 1 | 2 | 3 {
+  return aspectOfPoint(a, b.x, b.z);
 }
 
 /** Melee frontage of A against D (§6.6.1 with face / share refinements, see header). */
