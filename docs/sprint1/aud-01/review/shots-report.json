@@ -3,7 +3,7 @@
   "dist": ".build/aud-01-review",
   "checks": [
     {
-      "name": "audio-lab: AudioContext running, workers up, score streaming (worklet, 1.057s buffered)",
+      "name": "audio-lab: AudioContext running, workers up, score streaming (worklet, 0.981s buffered)",
       "ok": true,
       "observed": {
         "state": "running",
@@ -26,11 +26,11 @@
       }
     },
     {
-      "name": "audio-lab: audible master output (max RMS -24.5 dBFS, peak -16.14 dBFS)",
+      "name": "audio-lab: audible master output (max RMS -23.24 dBFS, peak -15.6 dBFS)",
       "ok": true,
       "observed": {
-        "rmsDb": -24.5,
-        "peakDb": -16.14
+        "rmsDb": -23.24,
+        "peakDb": -15.6
       }
     },
     {
@@ -45,24 +45,24 @@
       ]
     },
     {
-      "name": "audio-lab: 80-sound burst stays within the voice cap (25/48 live, 4 stolen, 69 merged/rejected)",
+      "name": "audio-lab: 80-sound burst stays within the voice cap (29/48 live, 10 stolen, 72 merged/rejected)",
       "ok": true,
       "observed": {
-        "sfx": 23,
-        "ambience": 2,
+        "sfx": 28,
+        "ambience": 1,
         "flat": 0,
         "cap": 48,
-        "stolen": 4,
-        "rejected": 69
+        "stolen": 10,
+        "rejected": 72
       }
     },
     {
-      "name": "audio-lab: main-thread audio update 0.474 ms avg (< 1 ms)",
+      "name": "audio-lab: main-thread audio update 0.884 ms avg (< 1 ms)",
       "ok": true,
       "observed": {
-        "last": 0,
-        "avg": 0.474,
-        "max": 5.685
+        "last": 0.1,
+        "avg": 0.884,
+        "max": 11.754
       }
     },
     {
@@ -76,7 +76,7 @@
       "observed": []
     },
     {
-      "name": "audio-lab-mobile: AudioContext running, workers up, score streaming (worklet, 1.109s buffered)",
+      "name": "audio-lab-mobile: AudioContext running, workers up, score streaming (worklet, 1.339s buffered)",
       "ok": true,
       "observed": {
         "state": "running",
@@ -94,11 +94,11 @@
       }
     },
     {
-      "name": "audio-lab-mobile: 40-sound burst within the 16-voice cap (7 live)",
+      "name": "audio-lab-mobile: 40-sound burst within the 16-voice cap (4 live)",
       "ok": true,
       "observed": {
-        "sfx": 5,
-        "ambience": 2,
+        "sfx": 4,
+        "ambience": 0,
         "flat": 0,
         "cap": 16,
         "stolen": 4,
@@ -126,7 +126,7 @@
       "observed": []
     },
     {
-      "name": "battle-audio (lab boot): AudioContext running, workers up, score streaming (worklet, 1.021s buffered)",
+      "name": "battle-audio (lab boot): AudioContext running, workers up, score streaming (worklet, 1.076s buffered)",
       "ok": true,
       "observed": {
         "state": "running",
@@ -144,12 +144,12 @@
       }
     },
     {
-      "name": "battle-audio: profiler 'audio' system < 1 ms per frame on the main thread (avg 0.084 ms)",
+      "name": "battle-audio: profiler 'audio' system < 1 ms per frame on the main thread (avg 0.174 ms)",
       "ok": true,
       "observed": {
-        "avg": 0.08385452712980186,
-        "max": 3.399999998509884,
-        "last": 0.10000000149011612
+        "avg": 0.1743631030908004,
+        "max": 7.200000002980232,
+        "last": 0
       }
     },
     {
@@ -168,19 +168,19 @@
           },
           {
             "key": "battle_roar",
-            "gain": 0.578
+            "gain": 0.593
           },
           {
             "key": "battle_drums",
-            "gain": 0.557
+            "gain": 0.554
           }
         ]
       }
     },
     {
-      "name": "battle-audio: battle SFX triggered (5)",
+      "name": "battle-audio: battle SFX triggered (4)",
       "ok": true,
-      "observed": 5
+      "observed": 4
     },
     {
       "name": "battle-audio: no console errors, page errors, failed requests or crash reports (audio enabled)",
@@ -193,7 +193,7 @@
       "observed": []
     },
     {
-      "name": "world-audio: AudioContext running, workers up, score streaming (worklet, 1.165s buffered)",
+      "name": "world-audio: AudioContext running, workers up, score streaming (worklet, 1.151s buffered)",
       "ok": true,
       "observed": {
         "state": "running",
@@ -203,13 +203,13 @@
       }
     },
     {
-      "name": "world-audio: score mood world (expected world / city), output -26.32 dBFS RMS",
+      "name": "world-audio: score mood world (expected world / city), output -24.13 dBFS RMS",
       "ok": true,
       "observed": {
         "mood": "world",
         "level": {
-          "rmsDb": -26.32,
-          "peakDb": -19.05
+          "rmsDb": -24.13,
+          "peakDb": -18.7
         },
         "ambience": [
           "wind",
@@ -228,7 +228,7 @@
       "observed": []
     },
     {
-      "name": "hero-audio: AudioContext running, workers up, score streaming (worklet, 1.065s buffered)",
+      "name": "hero-audio: AudioContext running, workers up, score streaming (worklet, 1.088s buffered)",
       "ok": true,
       "observed": {
         "state": "running",
@@ -238,13 +238,13 @@
       }
     },
     {
-      "name": "hero-audio: score mood city (expected hero_explore / city), output -27.16 dBFS RMS",
+      "name": "hero-audio: score mood city (expected hero_explore / city), output -24.7 dBFS RMS",
       "ok": true,
       "observed": {
         "mood": "city",
         "level": {
-          "rmsDb": -27.16,
-          "peakDb": -21.64
+          "rmsDb": -24.7,
+          "peakDb": -19.84
         },
         "ambience": []
       }
@@ -258,28 +258,80 @@
       "name": "hero-audio: no audio warnings (worker errors)",
       "ok": true,
       "observed": []
+    },
+    {
+      "name": "gesture-desktop: context suspended before any gesture, running after the first click on the menu UI (<div class=\"screen-main-menu\">), score streaming",
+      "ok": true,
+      "observed": {
+        "before": "suspended",
+        "after": "running",
+        "clicked": {
+          "x": 640,
+          "y": 708,
+          "tag": "DIV",
+          "cls": "screen-main-menu"
+        },
+        "stream": "worklet",
+        "bufferedSec": 0.997
+      }
+    },
+    {
+      "name": "gesture-desktop: no console errors, page errors, failed requests or crash reports (audio enabled)",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "gesture-desktop: no audio warnings (worker errors)",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "gesture-mobile: context suspended before any gesture, running after the first tap on the menu UI (<div class=\"muted\">), score streaming",
+      "ok": true,
+      "observed": {
+        "before": "suspended",
+        "after": "running",
+        "clicked": {
+          "x": 195,
+          "y": 832,
+          "tag": "DIV",
+          "cls": "muted"
+        },
+        "stream": "worklet",
+        "bufferedSec": 1.247
+      }
+    },
+    {
+      "name": "gesture-mobile: no console errors, page errors, failed requests or crash reports (audio enabled)",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "gesture-mobile: no audio warnings (worker errors)",
+      "ok": true,
+      "observed": []
     }
   ],
   "shots": [
     {
       "name": "audio-lab.png",
-      "note": "audio lab @high: world score (Bhairav / Chautal (12, pakhawaj) / jor), dawn + temple district ambience, 80-sound burst, age-up stinger; bank 51.21 MB, 0 underruns"
+      "note": "audio lab @high: world score (Bhairav / Chautal (12, pakhawaj) / jor), dawn + temple district ambience, 80-sound burst, age-up stinger; bank 51.27 MB, 0 underruns"
     },
     {
       "name": "audio-lab-mobile.png",
-      "note": "audio lab 390x844 @low: hero_explore score, monsoon environment; 16 voices, bank 23.32 MB"
+      "note": "audio lab 390x844 @low: hero_explore score, monsoon environment; 16 voices, bank 23.14 MB"
     },
     {
       "name": "battle-audio.png",
-      "note": "plains seed 2, 1,000 soldiers AI vs AI in the melee with audio enabled; profiler 'audio' 0.084 ms avg / 3.400 ms max per frame; Kirwani War march (8, dhol / nagara) gat; bank 32.41 MB; 0 underruns"
+      "note": "plains seed 2, 1,000 soldiers AI vs AI in the melee with audio enabled; profiler 'audio' 0.174 ms avg / 7.200 ms max per frame; Kirwani War march (8, dhol / nagara) gat; bank 32.5 MB; 0 underruns"
     },
     {
       "name": "world-audio.png",
-      "note": "scene=world&quality=medium with audio enabled: mood world, ambience wind, night_crickets, worklet stream, bank 23.21 MB"
+      "note": "scene=world&quality=medium with audio enabled: mood world, ambience wind, night_crickets, worklet stream, bank 25.71 MB"
     },
     {
       "name": "hero-audio.png",
-      "note": "scene=hero&quality=medium with audio enabled: mood city, ambience none, worklet stream, bank 19.8 MB"
+      "note": "scene=hero&quality=medium with audio enabled: mood city, ambience none, worklet stream, bank 19.82 MB"
     }
   ],
   "audio": {
@@ -290,30 +342,30 @@
       "tier": "high",
       "hrtf": true,
       "voices": {
-        "sfx": 20,
-        "ambience": 1,
+        "sfx": 17,
+        "ambience": 2,
         "flat": 0,
         "cap": 48,
-        "stolen": 4,
-        "rejected": 69
+        "stolen": 10,
+        "rejected": 72
       },
-      "triggers": 53,
+      "triggers": 50,
       "bank": {
         "keys": 65,
-        "mb": 51.21,
+        "mb": 51.27,
         "renders": 169,
-        "renderMs": 18793
+        "renderMs": 13967
       },
       "music": {
         "mood": "world",
         "intensity": 0.4,
         "stream": "worklet",
-        "bufferedSec": 1.013,
+        "bufferedSec": 1.007,
         "underruns": 0,
-        "chunks": 143,
-        "workerMsPerChunk": 32.07,
-        "latencyMs": 61,
-        "maxLatencyMs": 1169.7,
+        "chunks": 121,
+        "workerMsPerChunk": 24.93,
+        "latencyMs": 20.3,
+        "maxLatencyMs": 1100,
         "score": {
           "mood": "world",
           "arrangement": "world:bhairav",
@@ -323,8 +375,8 @@
           "bpm": 72,
           "intensity": 0.4,
           "performers": 1,
-          "cacheBytes": 26975376,
-          "agcDb": -0.87
+          "cacheBytes": 27093468,
+          "agcDb": 0.02
         }
       },
       "ambience": [
@@ -350,16 +402,16 @@
         }
       ],
       "mainMs": {
-        "last": 0,
-        "avg": 0.474,
-        "max": 5.685
+        "last": 0.1,
+        "avg": 0.884,
+        "max": 11.754
       },
       "messages": {
         "sound": 169,
         "chunk": 0,
-        "soundMs": 249.4,
+        "soundMs": 151.2,
         "chunkMs": 0,
-        "maxMs": 88.3
+        "maxMs": 80.4
       },
       "workers": "worker"
     },
@@ -370,8 +422,8 @@
       "tier": "low",
       "hrtf": false,
       "voices": {
-        "sfx": 5,
-        "ambience": 2,
+        "sfx": 4,
+        "ambience": 0,
         "flat": 0,
         "cap": 16,
         "stolen": 4,
@@ -380,31 +432,31 @@
       "triggers": 13,
       "bank": {
         "keys": 61,
-        "mb": 23.32,
+        "mb": 23.14,
         "renders": 95,
-        "renderMs": 6286
+        "renderMs": 5082
       },
       "music": {
         "mood": "hero_explore",
         "intensity": 0.3,
         "stream": "worklet",
-        "bufferedSec": 1.286,
+        "bufferedSec": 1.278,
         "underruns": 0,
-        "chunks": 37,
-        "workerMsPerChunk": 54.8,
-        "latencyMs": 40.6,
-        "maxLatencyMs": 1419.3,
+        "chunks": 33,
+        "workerMsPerChunk": 41.71,
+        "latencyMs": 23.2,
+        "maxLatencyMs": 1149.4,
         "score": {
           "mood": "hero_explore",
           "arrangement": "hero:megh:ghat",
           "raga": "Megh",
           "tala": "Rupak (7)",
-          "section": "alap",
-          "bpm": 59,
-          "intensity": 0.283,
+          "section": "jor",
+          "bpm": 61,
+          "intensity": 0.288,
           "performers": 1,
-          "cacheBytes": 17304912,
-          "agcDb": 0.15
+          "cacheBytes": 20368572,
+          "agcDb": 0.16
         }
       },
       "ambience": [
@@ -426,16 +478,16 @@
         }
       ],
       "mainMs": {
-        "last": 0.1,
-        "avg": 0.228,
-        "max": 3.152
+        "last": 0,
+        "avg": 0.222,
+        "max": 2.587
       },
       "messages": {
         "sound": 95,
         "chunk": 0,
-        "soundMs": 49.8,
+        "soundMs": 55.8,
         "chunkMs": 0,
-        "maxMs": 12.2
+        "maxMs": 31.1
       },
       "workers": "worker"
     },
@@ -447,29 +499,29 @@
       "hrtf": true,
       "voices": {
         "sfx": 0,
-        "ambience": 0,
+        "ambience": 1,
         "flat": 0,
         "cap": 48,
         "stolen": 0,
-        "rejected": 10
+        "rejected": 3
       },
-      "triggers": 5,
+      "triggers": 4,
       "bank": {
         "keys": 40,
-        "mb": 32.41,
+        "mb": 32.5,
         "renders": 114,
-        "renderMs": 11298
+        "renderMs": 13655
       },
       "music": {
         "mood": "battle",
         "intensity": 0.4666666666666667,
         "stream": "worklet",
-        "bufferedSec": 0.976,
+        "bufferedSec": 1.087,
         "underruns": 0,
-        "chunks": 153,
-        "workerMsPerChunk": 23.43,
-        "latencyMs": 23.2,
-        "maxLatencyMs": 1541.2,
+        "chunks": 123,
+        "workerMsPerChunk": 25.11,
+        "latencyMs": 11.6,
+        "maxLatencyMs": 940.4,
         "score": {
           "mood": "battle",
           "arrangement": "battle",
@@ -479,8 +531,8 @@
           "bpm": 117,
           "intensity": 0.467,
           "performers": 1,
-          "cacheBytes": 20114920,
-          "agcDb": 3.15
+          "cacheBytes": 20149016,
+          "agcDb": 3.16
         }
       },
       "ambience": [
@@ -494,38 +546,38 @@
         },
         {
           "key": "battle_roar",
-          "gain": 0.578
+          "gain": 0.593
         },
         {
           "key": "battle_drums",
-          "gain": 0.557
+          "gain": 0.554
         }
       ],
       "mainMs": {
-        "last": 0.1,
-        "avg": 0.105,
-        "max": 2.581
+        "last": 0,
+        "avg": 0.233,
+        "max": 6.072
       },
       "messages": {
         "sound": 114,
         "chunk": 0,
-        "soundMs": 66.6,
+        "soundMs": 64,
         "chunkMs": 0,
-        "maxMs": 26.5
+        "maxMs": 36.5
       },
       "workers": "worker"
     },
     "battleProfile": {
       "audio": {
-        "avg": 0.08385452712980186,
-        "max": 3.399999998509884,
-        "last": 0.10000000149011612
+        "avg": 0.1743631030908004,
+        "max": 7.200000002980232,
+        "last": 0
       },
       "frames": 51,
-      "fps": 1.5632663170082202,
-      "frameMs": 639.6862704198735,
+      "fps": 1.6677294167759469,
+      "frameMs": 599.6176537637617,
       "counters": {
-        "voices": 0,
+        "voices": 1,
         "underruns": 0
       }
     },
@@ -546,31 +598,31 @@
       "triggers": 1,
       "bank": {
         "keys": 42,
-        "mb": 23.21,
-        "renders": 79,
-        "renderMs": 9239
+        "mb": 25.71,
+        "renders": 93,
+        "renderMs": 7327
       },
       "music": {
         "mood": "world",
         "intensity": 0.3,
         "stream": "worklet",
-        "bufferedSec": 1.138,
+        "bufferedSec": 1.104,
         "underruns": 0,
-        "chunks": 30,
-        "workerMsPerChunk": 62.65,
+        "chunks": 32,
+        "workerMsPerChunk": 30.17,
         "latencyMs": 40.6,
-        "maxLatencyMs": 1010.1,
+        "maxLatencyMs": 780.8,
         "score": {
           "mood": "world",
           "arrangement": "world:malkauns",
           "raga": "Malkauns",
           "tala": "Chautal (12, pakhawaj)",
           "section": "alap",
-          "bpm": 65,
-          "intensity": 0.28,
+          "bpm": 64,
+          "intensity": 0.282,
           "performers": 1,
-          "cacheBytes": 29708772,
-          "agcDb": 0.8
+          "cacheBytes": 29599140,
+          "agcDb": 0.53
         }
       },
       "ambience": [
@@ -585,20 +637,20 @@
       ],
       "mainMs": {
         "last": 0,
-        "avg": 0.091,
-        "max": 0.873
+        "avg": 0.085,
+        "max": 0.742
       },
       "messages": {
-        "sound": 79,
+        "sound": 93,
         "chunk": 0,
-        "soundMs": 59.2,
+        "soundMs": 54.2,
         "chunkMs": 0,
-        "maxMs": 30.7
+        "maxMs": 32.9
       },
       "workers": "worker",
       "level": {
-        "rmsDb": -26.32,
-        "peakDb": -19.05
+        "rmsDb": -24.13,
+        "peakDb": -18.7
       }
     },
     "hero-audio": {
@@ -618,20 +670,20 @@
       "triggers": 0,
       "bank": {
         "keys": 33,
-        "mb": 19.8,
+        "mb": 19.82,
         "renders": 75,
-        "renderMs": 7278
+        "renderMs": 6543
       },
       "music": {
         "mood": "city",
         "intensity": 0.2,
         "stream": "worklet",
-        "bufferedSec": 1.025,
+        "bufferedSec": 1.053,
         "underruns": 0,
-        "chunks": 39,
-        "workerMsPerChunk": 43.02,
-        "latencyMs": 20.3,
-        "maxLatencyMs": 1541.2,
+        "chunks": 35,
+        "workerMsPerChunk": 40.33,
+        "latencyMs": 14.5,
+        "maxLatencyMs": 908.5,
         "score": {
           "mood": "city",
           "arrangement": "city",
@@ -639,30 +691,54 @@
           "tala": "Keherwa (8)",
           "section": "gat",
           "bpm": 91,
-          "intensity": 0.195,
+          "intensity": 0.194,
           "performers": 1,
-          "cacheBytes": 10969124,
-          "agcDb": 1.19
+          "cacheBytes": 14491828,
+          "agcDb": 0.99
         }
       },
       "ambience": [],
       "mainMs": {
         "last": 0,
-        "avg": 0.02,
-        "max": 0.413
+        "avg": 0.013,
+        "max": 0.415
       },
       "messages": {
         "sound": 75,
         "chunk": 0,
-        "soundMs": 77,
+        "soundMs": 40.5,
         "chunkMs": 0,
-        "maxMs": 59.2
+        "maxMs": 22.3
       },
       "workers": "worker",
       "level": {
-        "rmsDb": -27.16,
-        "peakDb": -21.64
+        "rmsDb": -24.7,
+        "peakDb": -19.84
       }
+    },
+    "gesture-desktop": {
+      "before": "suspended",
+      "after": "running",
+      "clicked": {
+        "x": 640,
+        "y": 708,
+        "tag": "DIV",
+        "cls": "screen-main-menu"
+      },
+      "stream": "worklet",
+      "bufferedSec": 0.997
+    },
+    "gesture-mobile": {
+      "before": "suspended",
+      "after": "running",
+      "clicked": {
+        "x": 195,
+        "y": 832,
+        "tag": "DIV",
+        "cls": "muted"
+      },
+      "stream": "worklet",
+      "bufferedSec": 1.247
     }
   }
 }

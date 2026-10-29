@@ -173,7 +173,19 @@ async function captureLab(browser, base) {
   check('audio-lab: district + dawn ambience layers active', s.ambience.some((l) => l.key === 'temple_bells') && s.ambience.some((l) => l.key === 'dawn_birds'), s.ambience.map((l) => l.key));
   // First burst requests every SFX kind on demand; the second (all rendered by then) has to steal voices.
   await call(page, 'audio.burst', 80);
-  await page.waitForFunction(() => window.__SAMRAJYA_AUDIO__.stats().bank.keys >= 60, null, { timeout: 120000, polling: 500 }).catch(() => undefined);
+  // Wait until every requested SFX is actually rendered (`bank.keys` counts requests, so under CPU contention the
+  // second burst could find most kinds still rendering and nothing to steal).
+  await page
+    .waitForFunction(
+      () => {
+        const b = window.__SAMRAJYA_AUDIO__.bank;
+        const keys = [...b.m.keys()].filter((k) => k.startsWith('sfx:'));
+        return keys.length >= 36 && keys.every((k) => b.has(k));
+      },
+      null,
+      { timeout: 180000, polling: 500 },
+    )
+    .catch(() => undefined);
   await sleep(1500);
   await call(page, 'audio.burst', 80);
   await sleep(300);
@@ -232,6 +244,9 @@ async function captureBattle(browser, base) {
   check(`battle-audio: the lines are in melee (t=${st.time}s, ${lost(st)} lost)`, lost(st) >= total(st) * 0.06 && !st.outcome, { tick: st.tick, lost: lost(st) });
   await page.evaluate(() => window.__SAMRAJYA__.resume());
   await sleep(12000);
+  // SwiftShader runs the battle at ~2 FPS, so 12 s of wall time can hold no audible event (BattleScene emits
+  // volleys / clashes only near the camera): keep running until the first battle SFX has played (max 60 s).
+  await page.waitForFunction(() => window.__SAMRAJYA_AUDIO__.stats().triggers > 0, null, { timeout: 60000, polling: 500 }).catch(() => undefined);
   const s = await stats(page);
   const prof = await page.evaluate(() => window.__SAMRAJYA__.getProfile());
   const a = prof.systems.audio;
