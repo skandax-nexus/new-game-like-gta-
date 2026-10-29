@@ -1,0 +1,164 @@
+{
+  "port": 4407,
+  "dist": ".build/gp-01",
+  "checks": [
+    {
+      "name": "tactical-river: no formation centroid sampled in a deep-water cell",
+      "ok": true,
+      "observed": 0
+    },
+    {
+      "name": "tactical-plains: the 1,000-soldier skirmish ends in 3-8 min (or near it)",
+      "ok": true,
+      "observed": {
+        "winner": 0,
+        "reason": "rout",
+        "minutes": 4.1
+      }
+    },
+    {
+      "name": "tactical-river: the 1,000-soldier skirmish ends in 3-8 min (or near it)",
+      "ok": true,
+      "observed": {
+        "winner": 1,
+        "reason": "rout",
+        "minutes": 2.98
+      }
+    },
+    {
+      "name": "tactical-siege: the main gate is broken, a ladder is up and the attacker wins by holding the breach",
+      "ok": true,
+      "observed": {
+        "gates": [
+          0,
+          251
+        ],
+        "ladders": [
+          3
+        ],
+        "outcome": "siege_breach"
+      }
+    },
+    {
+      "name": "tactical maps: no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "battle-melee: the lines are in melee (>= 8% losses) - t=75s phase=active soldiers 466/500 vs 433/500 morale 60/67",
+      "ok": true,
+      "observed": {
+        "tick": 1500,
+        "lost": 101
+      }
+    },
+    {
+      "name": "battle-melee-close: camera zoomed onto the melee (distance 45 m)",
+      "ok": true,
+      "observed": {
+        "x": -613.688604797203,
+        "z": -1032.7688041460783,
+        "distance": 44.96093663144529,
+        "yaw": 0.1559181424452462,
+        "tilt": 0
+      }
+    },
+    {
+      "name": "battle-result: the battle reaches an outcome - t=207.3s phase=ended soldiers 384/500 vs 240/500 morale 78/0 outcome 0 rout",
+      "ok": true,
+      "observed": {
+        "winner": 0,
+        "reason": "rout"
+      }
+    },
+    {
+      "name": "battle-melee: no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "battle-melee-overview: the lines are in melee (>= 8% losses) - t=75s phase=active soldiers 466/500 vs 433/500 morale 60/67",
+      "ok": true,
+      "observed": {
+        "tick": 1500,
+        "lost": 101
+      }
+    },
+    {
+      "name": "battle-melee-overview: no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "in-engine plains battle is deterministic across page loads (same tick => same state hash)",
+      "ok": true,
+      "observed": [
+        "0f98f4ba",
+        "0f98f4ba"
+      ]
+    },
+    {
+      "name": "battle-river-melee: first clash at the ford - t=90s phase=active soldiers 472/500 vs 471/500 morale 60/75",
+      "ok": true,
+      "observed": {
+        "tick": 1800,
+        "lost": 57
+      }
+    },
+    {
+      "name": "battle-river-melee: no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "battle-mobile-melee: melee at 390x844 low - t=115s phase=active soldiers 455/500 vs 410/500 morale 59/58",
+      "ok": true,
+      "observed": {
+        "tick": 2300
+      }
+    },
+    {
+      "name": "battle-mobile-melee: no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    }
+  ],
+  "shots": [
+    {
+      "name": "tactical-plains.png",
+      "note": "The Open Plain - 1,000-soldier balanced skirmish, AI vs AI (seed 2)"
+    },
+    {
+      "name": "tactical-river.png",
+      "note": "The Ford - 1,000 soldiers, AI vs AI (seed 11, 17:00)"
+    },
+    {
+      "name": "tactical-siege.png",
+      "note": "Siege assault - town walls (level 2), ram, ladders, elephants (scripted orders, seed 77)"
+    },
+    {
+      "name": "battle-melee.png",
+      "note": "plains seed 2, 1,000 soldiers AI vs AI, default camera (165 m behind the player line): t=75s phase=active soldiers 466/500 vs 433/500 morale 60/67"
+    },
+    {
+      "name": "battle-melee-close.png",
+      "note": "the same tick, wheel-zoomed onto the melee at 45 m: soldier layer in contact (attack / hit / die anims, gaps filled from behind)"
+    },
+    {
+      "name": "battle-result.png",
+      "note": "plains seed 2 stepped to the end: t=207.3s phase=ended soldiers 384/500 vs 240/500 morale 78/0 outcome 0 rout"
+    },
+    {
+      "name": "battle-melee-overview.png",
+      "note": "plains seed 2, 1,000 soldiers AI vs AI, overview camera (650 m): t=75s phase=active soldiers 466/500 vs 433/500 morale 60/67"
+    },
+    {
+      "name": "battle-river-melee.png",
+      "note": "the Ford seed 11, 17:00, overview camera at the first clash: t=90s phase=active soldiers 472/500 vs 471/500 morale 60/75"
+    },
+    {
+      "name": "battle-mobile-melee.png",
+      "note": "390x844 @low, default camera, plains seed 2 mid-melee: t=115s phase=active soldiers 455/500 vs 410/500 morale 59/58"
+    }
+  ]
+}

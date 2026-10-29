@@ -385,7 +385,8 @@ function commanderRally(state: BattleState, side: SideIndex, out: BattleEventRec
 
 function endDeployment(state: BattleState, out: BattleEventRecord[]): void {
   state.phase = 'active';
-  state.deploymentEndsAt = state.time;
+  // Early start (begin_battle) moves the mark; a timed-out deployment keeps setup.deploymentSec exactly (no tick drift).
+  state.deploymentEndsAt = Math.min(state.deploymentEndsAt, state.time);
   for (const f of state.formations) f.orderTime = state.time;
   out.push(ev(state, 'deployment_ended', null, null, null));
 }

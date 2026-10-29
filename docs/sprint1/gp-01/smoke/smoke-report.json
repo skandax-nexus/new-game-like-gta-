@@ -1,11 +1,11 @@
 {
-  "build": "0.1.0+ac3590a",
+  "build": "0.1.0+3140590",
   "quality": "high",
   "shots": [
     {
       "name": "battle",
       "url": "http://127.0.0.1:4407/?scene=battle&quality=high&noaudio=1&seed=7&soldiers=1000&preset=plains",
-      "ms": 38236,
+      "ms": 34103,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -16,7 +16,7 @@
         "sceneState": {
           "battleId": "skirmish_7",
           "time": 25.6,
-          "tick": 512,
+          "tick": 511,
           "phase": "deployment",
           "sides": [
             {
@@ -49,14 +49,14 @@
             "tilt": 0
           }
         },
-        "fps": 3.392212405210023,
+        "fps": 4.50882035878401,
         "errors": 0
       }
     },
     {
       "name": "battle-close",
       "url": "http://127.0.0.1:4407/?scene=battle&quality=high&noaudio=1&seed=7&soldiers=1000&preset=plains&camera=close",
-      "ms": 36228,
+      "ms": 20783,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -66,8 +66,8 @@
         "quality": "high",
         "sceneState": {
           "battleId": "skirmish_7",
-          "time": 35.8,
-          "tick": 715,
+          "time": 35.5,
+          "tick": 710,
           "phase": "active",
           "sides": [
             {
@@ -75,14 +75,14 @@
               "soldiers": 500,
               "initial": 500,
               "routed": 0,
-              "morale": 80
+              "morale": 79
             },
             {
               "faction": "highland",
               "soldiers": 500,
               "initial": 500,
               "routed": 0,
-              "morale": 82
+              "morale": 81
             }
           ],
           "formations": 14,
@@ -100,14 +100,14 @@
             "tilt": -0.05
           }
         },
-        "fps": 2.7764556943176135,
+        "fps": 3.075661238679647,
         "errors": 0
       }
     },
     {
       "name": "battle-river-5000",
       "url": "http://127.0.0.1:4407/?scene=battle&quality=high&noaudio=1&seed=11&soldiers=5000&preset=river_crossing&hour=17",
-      "ms": 55638,
+      "ms": 35132,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -118,7 +118,7 @@
         "sceneState": {
           "battleId": "skirmish_11",
           "time": 15.4,
-          "tick": 307,
+          "tick": 308,
           "phase": "deployment",
           "sides": [
             {
@@ -151,14 +151,14 @@
             "tilt": 0
           }
         },
-        "fps": 2.806623632772609,
+        "fps": 3.4366986073524806,
         "errors": 0
       }
     },
     {
       "name": "battle-mobile",
       "url": "http://127.0.0.1:4407/?scene=battle&quality=low&noaudio=1&seed=7&soldiers=600&preset=plains",
-      "ms": 10059,
+      "ms": 6429,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -202,7 +202,7 @@
             "tilt": 0
           }
         },
-        "fps": 2.9988465700837823,
+        "fps": 4.160932028679591,
         "errors": 0
       }
     }

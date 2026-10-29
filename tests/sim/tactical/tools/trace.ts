@@ -16,6 +16,8 @@ import { Heightfield } from '../../../../src/core/terrain/heightfield';
 import { createBattle, createSkirmishSetup, issueBattleCommand, stepBattle } from '../../../../src/sim/tactical/battle';
 import { battleContext } from '../../../../src/sim/tactical/context';
 import { createFortificationSpec } from '../../../../src/sim/tactical/fort';
+import { MORALE_WAVERING } from '../../../../src/sim/tactical/morale';
+import { FACTIONS } from '../../../../src/data/factions';
 import { testSetup, TestTerrain } from '../helpers';
 
 interface Frame {
@@ -65,6 +67,9 @@ function run(setup: BattleSetup, terrain: TerrainQuery, opts: { maxSec: number; 
     kind: setup.kind,
     preset: setup.terrain.preset,
     factions: [setup.sides[0].factionId, setup.sides[1].factionId],
+    factionNames: [FACTIONS[setup.sides[0].factionId].name, FACTIONS[setup.sides[1].factionId].name],
+    classes: TERRAIN_CLASSES,
+    wavering: MORALE_WAVERING,
     formations: state.formations.map((f) => ({ index: f.index, side: f.side, cls: f.unitClass, name: f.name, start: f.maxSoldiers, commander: f.hasCommander })),
     grid: grid(state, terrain),
     fort: setup.fortification ? { cx: setup.fortification.center.x, cz: setup.fortification.center.z, r: setup.fortification.radius } : null,
