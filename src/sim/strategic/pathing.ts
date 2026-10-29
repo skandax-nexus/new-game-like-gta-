@@ -2,8 +2,9 @@
  * Strategic route planning and march speed (DESIGN_SPEC §7.7, §3.4). OWNER: Simulation Engineer - Strategic World
  * Simulation (SIM-01).
  *
- * Route = optional off-road leg to a road node -> shortest road path (Dijkstra over world.roads; 16 nodes) -> optional
- * off-road leg to the target, or a direct off-road leg - whichever takes fewer hours.
+ * Route = optional off-road leg to a road node (or, within 400 m, to the nearest vertex of a road) -> shortest road path
+ * (Dijkstra over world.roads; 16 nodes) -> optional off-road leg to the target, or a direct off-road leg - whichever
+ * takes fewer hours. Bridge / ford crossings are off-road waypoints too.
  *   edge hours  = length x travelScale / (marchKmPerDay[q] x 1000 / 24) / roadCondition, roadCondition =
  *                 0.5 + 0.5 x condition (x0.25 below 0.3); excluded: edges held by a hostile army, fords while
  *                 flood > 0.5, bridges below 0.3 condition for armies with carts, elephants or chariots.
@@ -17,6 +18,7 @@
  * along which road edge (cached per path array; recomputed after a load).
  */
 import type { ArmyState, RoadEdge, RoadQuality, TerrainClass, TerrainQuery, UnitCategory, Vec2, WorldState } from '../../core/types';
+import { TERRAIN_CLASSES } from '../../core/types';
 import { sortedKeys } from '../../core/ids';
 import { BALANCE } from '../../data/balance';
 import { RULES } from '../../data/rules';
@@ -141,6 +143,63 @@ function nearUsableCrossing(world: WorldState, army: Pick<ArmyState, 'factionId'
   return false;
 }
 
+// ---------------------------------------------------------------------------------------------------
+// Terrain class lookup grid (route planning samples thousands of points per plan)
+// ---------------------------------------------------------------------------------------------------
+
+/** Cell size (map m) of the lazily filled terrain-class grid used by route planning. */
+export const CLASS_CELL = 20;
+interface ClassGrid {
+  minX: number;
+  minZ: number;
+  nx: number;
+  nz: number;
+  /** 0 = not yet sampled, else TERRAIN_CLASSES index + 1. */
+  codes: Uint8Array;
+}
+const classGrids = new WeakMap<TerrainQuery, ClassGrid>();
+
+/**
+ * Terrain class at the centre of the 20 m cell holding (x, z) - deterministic (each cell is a pure function of the
+ * terrain), filled on first use. A cell is deep water only when its centre and corners all are (river banks read as
+ * shallow water). Outside the region: deep water.
+ */
+export function plannerClassAt(terrain: TerrainQuery, x: number, z: number): TerrainClass {
+  let g = classGrids.get(terrain);
+  if (!g) {
+    const b = terrain.bounds;
+    const nx = Math.max(1, Math.ceil((b.maxX - b.minX) / CLASS_CELL));
+    const nz = Math.max(1, Math.ceil((b.maxZ - b.minZ) / CLASS_CELL));
+    g = { minX: b.minX, minZ: b.minZ, nx, nz, codes: new Uint8Array(nx * nz) };
+    classGrids.set(terrain, g);
+  }
+  const i = Math.floor((x - g.minX) / CLASS_CELL);
+  const j = Math.floor((z - g.minZ) / CLASS_CELL);
+  if (i < 0 || j < 0 || i >= g.nx || j >= g.nz) return 'deep_water';
+  const k = j * g.nx + i;
+  let c = g.codes[k] as number;
+  if (c === 0) {
+    const cx = g.minX + (i + 0.5) * CLASS_CELL;
+    const cz = g.minZ + (j + 0.5) * CLASS_CELL;
+    let tc: TerrainClass = terrain.inBounds(cx, cz) ? terrain.terrainClassAt(cx, cz) : 'deep_water';
+    // Deep water only when the whole cell is (banks read as shallow): a coarse cell must never invent a river.
+    if (tc === 'deep_water' && terrain.inBounds(cx, cz)) {
+      const h = CLASS_CELL / 2 - 1;
+      for (let q = 0; q < 4; q++) {
+        const qx = cx + (q & 1 ? h : -h);
+        const qz = cz + (q & 2 ? h : -h);
+        if (terrain.inBounds(qx, qz) && terrain.terrainClassAt(qx, qz) !== 'deep_water') {
+          tc = 'shallow_water';
+          break;
+        }
+      }
+    }
+    c = TERRAIN_CLASSES.indexOf(tc) + 1;
+    g.codes[k] = c;
+  }
+  return TERRAIN_CLASSES[c - 1] as TerrainClass;
+}
+
 /** Hours for an off-road leg (Infinity when it would cross deep water away from a usable crossing). */
 export function offRoadHours(world: WorldState, army: Pick<ArmyState, 'factionId' | 'units'>, terrain: TerrainQuery, ax: number, az: number, bx: number, bz: number): number {
   const dx = bx - ax;
@@ -150,20 +209,38 @@ export function offRoadHours(world: WorldState, army: Pick<ArmyState, 'factionId
   const n = Math.max(1, Math.ceil(d / OFFROAD_SAMPLE));
   const seg = d / n;
   const base = metersPerHourFromKmDay(M.marchKmPerDay.offroad) * weatherFactor(world, null);
-  let hours = 0;
+  // Terrain factors once per leg (factionMod is not free).
+  const fForest = terrainFactor(world, army.factionId, 'forest');
+  const fHill = terrainFactor(world, army.factionId, 'hills');
+  let inv = 0; // Σ 1 / factor
   for (let i = 0; i < n; i++) {
     const t = (i + 0.5) / n;
     const x = ax + dx * t;
     const z = az + dz * t;
-    const tc = terrain.inBounds(x, z) ? terrain.terrainClassAt(x, z) : 'deep_water';
-    let f = terrainFactor(world, army.factionId, tc);
-    if (f === 0) {
-      if (!terrain.inBounds(x, z) || !nearUsableCrossing(world, army, terrain, x, z)) return Infinity;
-      f = 0.4;
+    const tc = plannerClassAt(terrain, x, z);
+    let f: number;
+    switch (tc) {
+      case 'forest':
+      case 'marsh':
+        f = fForest;
+        break;
+      case 'hills':
+      case 'rough':
+        f = fHill;
+        break;
+      case 'shallow_water':
+        f = 0.4;
+        break;
+      case 'deep_water':
+        if (!terrain.inBounds(x, z) || !nearUsableCrossing(world, army, terrain, x, z)) return Infinity;
+        f = 0.4;
+        break;
+      default:
+        f = 1;
     }
-    hours += seg / (base * f);
+    inv += 1 / f;
   }
-  return hours;
+  return (seg * inv) / base;
 }
 
 /** Hours to march an edge end to end (Infinity when unusable). */
@@ -192,41 +269,153 @@ export interface RouteOptions {
   roads?: boolean;
 }
 
-function nodePos(world: WorldState, id: string): Vec2 {
-  const n = world.roads.nodes[id]!;
-  return { x: n.x, z: n.z };
+/** One waypoint per bridge / ford edge: its middle water point (cross-country routes ford or bridge rivers there). */
+const crossingWaypointCache = new WeakMap<WorldState['roads'], Crossing[]>();
+export function crossingWaypoints(world: WorldState, terrain: TerrainQuery): Crossing[] {
+  let w = crossingWaypointCache.get(world.roads);
+  if (w) return w;
+  w = [];
+  const all = crossingsOf(world, terrain);
+  let i = 0;
+  while (i < all.length) {
+    let j = i;
+    while (j < all.length && (all[j] as Crossing).edgeId === (all[i] as Crossing).edgeId) j++;
+    w.push(all[(i + j - 1) >> 1] as Crossing);
+    i = j;
+  }
+  crossingWaypointCache.set(world.roads, w);
+  return w;
+}
+
+/** Start / target points within this distance (map m) of a road join it at its nearest polyline vertex. */
+export const ROAD_JOIN_DISTANCE = 400;
+
+/** Cumulative polyline length at each vertex (cached per points array). */
+const cumCache = new WeakMap<Vec2[], Float64Array>();
+function cumulative(e: RoadEdge): Float64Array {
+  let c = cumCache.get(e.points);
+  if (c) return c;
+  c = new Float64Array(e.points.length);
+  for (let i = 1; i < e.points.length; i++) {
+    const a = e.points[i - 1] as Vec2;
+    const b = e.points[i] as Vec2;
+    c[i] = (c[i - 1] as number) + Math.sqrt((b.x - a.x) * (b.x - a.x) + (b.z - a.z) * (b.z - a.z));
+  }
+  cumCache.set(e.points, c);
+  return c;
+}
+
+/** Nearest polyline vertex of an edge to (x, z) and its distance. */
+function nearestVertex(e: RoadEdge, x: number, z: number): { k: number; d: number } {
+  let k = 0;
+  let bd = Infinity;
+  for (let i = 0; i < e.points.length; i++) {
+    const p = e.points[i] as Vec2;
+    const d = (p.x - x) * (p.x - x) + (p.z - z) * (p.z - z);
+    if (d < bd) {
+      bd = d;
+      k = i;
+    }
+  }
+  return { k, d: Math.sqrt(bd) };
+}
+
+/** Hours along an edge between two of its vertices (share of the full edge hours by length). */
+function partialHours(world: WorldState, army: Pick<ArmyState, 'factionId' | 'units'>, e: RoadEdge, from: number, to: number): number {
+  const full = edgeHours(world, army, e);
+  if (full === Infinity) return Infinity;
+  const c = cumulative(e);
+  const total = c[c.length - 1] as number;
+  return total > 0 ? (full * Math.abs((c[to] as number) - (c[from] as number))) / total : 0;
+}
+
+interface Join {
+  edgeId: string;
+  /** Vertex where the off-road leg meets the road. */
+  k: number;
+  /** Off-road hours between the point and that vertex. */
+  leg: number;
+}
+
+function roadJoins(world: WorldState, army: Pick<ArmyState, 'factionId' | 'units'>, terrain: TerrainQuery, x: number, z: number, toRoad: boolean, edgeIds: readonly string[]): Join[] {
+  const out: Join[] = [];
+  for (const id of edgeIds) {
+    const e = world.roads.edges[id] as RoadEdge;
+    const v = nearestVertex(e, x, z);
+    if (v.d > ROAD_JOIN_DISTANCE || v.k === 0 || v.k === e.points.length - 1) continue; // ends are the nodes themselves
+    const p = e.points[v.k] as Vec2;
+    const leg = toRoad ? offRoadHours(world, army, terrain, x, z, p.x, p.z) : offRoadHours(world, army, terrain, p.x, p.z, x, z);
+    if (leg !== Infinity) out.push({ edgeId: id, k: v.k, leg });
+  }
+  return out;
 }
 
 /**
  * Plan a route for `army` from (sx, sz) to (tx, tz). Dijkstra over road nodes with off-road legs from the start to
- * every node and from every node to the target; the direct off-road leg competes. With `roads: false` the graph's
- * nodes are still waypoints but only off-road legs connect them (cross-country estimate).
+ * every node and from every node to the target; the direct off-road leg competes. A start / target within 400 m of a
+ * road also joins it at the road's nearest vertex (and may run along part of that road). Usable bridge / ford
+ * crossings are extra off-road waypoints (start -> crossing -> target; cross-country also crossing -> crossing), so a river is crossed
+ * where it can be. With `roads: false` only off-road legs connect the waypoints (cross-country estimate).
  */
 export function planRoute(world: WorldState, army: Pick<ArmyState, 'factionId' | 'units'>, sx: number, sz: number, tx: number, tz: number, terrain: TerrainQuery, opts: RouteOptions = {}): RoutePlan {
   const useRoads = opts.roads !== false;
   const nodeIds = sortedKeys(world.roads.nodes);
+  const edgeIds = sortedKeys(world.roads.edges);
   const N = nodeIds.length;
   const index = new Map<string, number>();
   nodeIds.forEach((id, i) => index.set(id, i));
-  const START = N;
-  const GOAL = N + 1;
-  const dist = new Float64Array(N + 2).fill(Infinity);
-  const prev = new Int32Array(N + 2).fill(-1);
-  const prevEdge: (string | null)[] = new Array(N + 2).fill(null);
-  const done = new Uint8Array(N + 2);
-  dist[START] = 0;
-  const legToNode = new Float64Array(N);
-  const legFromNode = new Float64Array(N);
+  const crossings: Crossing[] = [];
+  for (const c of crossingWaypoints(world, terrain)) {
+    const e = world.roads.edges[c.edgeId];
+    if (e && edgeUsable(world, army, e)) crossings.push(c);
+  }
+  const C = crossings.length;
+  const W = N + C; // waypoints: road nodes then crossings
+  const START = W;
+  const GOAL = W + 1;
+  const px = new Float64Array(W);
+  const pz = new Float64Array(W);
   for (let i = 0; i < N; i++) {
-    const p = nodePos(world, nodeIds[i] as string);
-    legToNode[i] = offRoadHours(world, army, terrain, sx, sz, p.x, p.z);
-    legFromNode[i] = offRoadHours(world, army, terrain, p.x, p.z, tx, tz);
+    const n = world.roads.nodes[nodeIds[i] as string]!;
+    px[i] = n.x;
+    pz[i] = n.z;
+  }
+  for (let k = 0; k < C; k++) {
+    px[N + k] = (crossings[k] as Crossing).x;
+    pz[N + k] = (crossings[k] as Crossing).z;
+  }
+  const dist = new Float64Array(W + 2).fill(Infinity);
+  const prev = new Int32Array(W + 2).fill(-1);
+  // How each waypoint was reached: along a road edge from vertex viaFrom to vertex viaTo (null edge = off-road).
+  const viaEdge: (string | null)[] = new Array(W + 2).fill(null);
+  const viaFrom = new Int32Array(W + 2).fill(-1);
+  const viaTo = new Int32Array(W + 2).fill(-1);
+  const done = new Uint8Array(W + 2);
+  dist[START] = 0;
+  const legToNode = new Float64Array(W);
+  const legFromNode = new Float64Array(W);
+  for (let i = 0; i < W; i++) {
+    legToNode[i] = offRoadHours(world, army, terrain, sx, sz, px[i] as number, pz[i] as number);
+    legFromNode[i] = offRoadHours(world, army, terrain, px[i] as number, pz[i] as number, tx, tz);
   }
   const direct = offRoadHours(world, army, terrain, sx, sz, tx, tz);
+  const startJoins = useRoads ? roadJoins(world, army, terrain, sx, sz, true, edgeIds) : [];
+  const goalJoins = useRoads ? roadJoins(world, army, terrain, tx, tz, false, edgeIds) : [];
+  const relaxFrom = (u: number, v: number, cost: number, edge: string | null, from: number, to: number): void => {
+    if (cost === Infinity || done[v]) return;
+    const nd = (dist[u] as number) + cost;
+    if (nd < (dist[v] as number)) {
+      dist[v] = nd;
+      prev[v] = u;
+      viaEdge[v] = edge;
+      viaFrom[v] = from;
+      viaTo[v] = to;
+    }
+  };
   for (;;) {
     let u = -1;
     let best = Infinity;
-    for (let i = 0; i < N + 2; i++) {
+    for (let i = 0; i < W + 2; i++) {
       if (!done[i] && (dist[i] as number) < best) {
         best = dist[i] as number;
         u = i;
@@ -234,38 +423,52 @@ export function planRoute(world: WorldState, army: Pick<ArmyState, 'factionId' |
     }
     if (u < 0 || u === GOAL) break;
     done[u] = 1;
-    const relax = (v: number, cost: number, edge: string | null): void => {
-      if (cost === Infinity) return;
-      const nd = (dist[u] as number) + cost;
-      if (nd < (dist[v] as number)) {
-        dist[v] = nd;
-        prev[v] = u;
-        prevEdge[v] = edge;
-      }
-    };
     if (u === START) {
-      for (let i = 0; i < N; i++) relax(i, legToNode[i] as number, null);
-      relax(GOAL, direct, null);
+      for (let i = 0; i < W; i++) relaxFrom(u, i, legToNode[i] as number, null, -1, -1);
+      relaxFrom(u, GOAL, direct, null, -1, -1);
+      for (const j of startJoins) {
+        const e = world.roads.edges[j.edgeId] as RoadEdge;
+        const last = e.points.length - 1;
+        const ia = index.get(e.a);
+        const ib = index.get(e.b);
+        if (ia !== undefined) relaxFrom(u, ia, j.leg + partialHours(world, army, e, j.k, 0), e.id, j.k, 0);
+        if (ib !== undefined) relaxFrom(u, ib, j.leg + partialHours(world, army, e, j.k, last), e.id, j.k, last);
+        // Start and target beside the same road: along it between the two join vertices.
+        for (const g of goalJoins) {
+          if (g.edgeId !== j.edgeId) continue;
+          relaxFrom(u, GOAL, j.leg + partialHours(world, army, e, j.k, g.k) + g.leg, e.id, j.k, g.k);
+        }
+      }
       continue;
     }
-    relax(GOAL, legFromNode[u] as number, null);
+    relaxFrom(u, GOAL, legFromNode[u] as number, null, -1, -1);
+    const offRoad = (v: number): void => {
+      if (v === u || done[v]) return;
+      relaxFrom(u, v, offRoadHours(world, army, terrain, px[u] as number, pz[u] as number, px[v] as number, pz[v] as number), null, -1, -1);
+    };
+    if (u >= N) {
+      // Crossing waypoint: cross-country it links to every waypoint; with roads it only bridges start -> target (a
+      // road node reaches the far bank over the bridge / ford edge itself).
+      if (!useRoads) for (let v = 0; v < W; v++) offRoad(v);
+      continue;
+    }
     const nid = nodeIds[u] as string;
     if (useRoads) {
       for (const eid of world.roads.adjacency[nid] ?? []) {
         const e = world.roads.edges[eid];
         if (!e) continue;
+        const last = e.points.length - 1;
+        const fromK = e.a === nid ? 0 : last;
         const other = e.a === nid ? e.b : e.a;
         const v = index.get(other);
-        if (v === undefined) continue;
-        relax(v, edgeHours(world, army, e), eid);
+        if (v !== undefined) relaxFrom(u, v, edgeHours(world, army, e), eid, fromK, last - fromK);
+        for (const g of goalJoins) {
+          if (g.edgeId !== eid) continue;
+          relaxFrom(u, GOAL, partialHours(world, army, e, fromK, g.k) + g.leg, eid, fromK, g.k);
+        }
       }
     } else {
-      const p = nodePos(world, nid);
-      for (let v = 0; v < N; v++) {
-        if (v === u) continue;
-        const q = nodePos(world, nodeIds[v] as string);
-        relax(v, offRoadHours(world, army, terrain, p.x, p.z, q.x, q.z), null);
-      }
+      for (let v = 0; v < W; v++) offRoad(v);
     }
   }
   if ((dist[GOAL] as number) === Infinity) {
@@ -279,20 +482,21 @@ export function planRoute(world: WorldState, army: Pick<ArmyState, 'factionId' |
   const edges: string[] = [];
   for (let k = 1; k < chain.length; k++) {
     const v = chain[k] as number;
-    const eid = prevEdge[v];
-    if (v === GOAL) {
-      points.push({ x: tx, z: tz });
-      continue;
-    }
-    const nid = nodeIds[v] as string;
+    const eid = viaEdge[v];
     if (eid) {
       const e = world.roads.edges[eid]!;
       edges.push(eid);
-      const pts = e.b === nid ? e.points : e.points.slice().reverse();
-      for (let i = 1; i < pts.length; i++) points.push({ x: (pts[i] as Vec2).x, z: (pts[i] as Vec2).z });
-    } else {
-      points.push(nodePos(world, nid));
+      const f = viaFrom[v] as number;
+      const t = viaTo[v] as number;
+      const step = t >= f ? 1 : -1;
+      for (let i = f; ; i += step) {
+        const p = e.points[i] as Vec2;
+        points.push({ x: p.x, z: p.z });
+        if (i === t) break;
+      }
     }
+    if (v === GOAL) points.push({ x: tx, z: tz });
+    else if (!eid) points.push({ x: px[v] as number, z: pz[v] as number });
   }
   return { points: dedupe(points), hours: dist[GOAL] as number, edges, ok: true };
 }

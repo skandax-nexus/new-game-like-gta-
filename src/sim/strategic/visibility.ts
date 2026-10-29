@@ -5,14 +5,16 @@
  * An army is visible to faction F when it is within (350 + 250 if F's army has scouts) x F's scoutRange map m of any
  * of F's armies, within 350 x scoutRange of one of F's settlements (+ its radius), within 900 m of a settlement of F with
  * a Watchtower, or F's intel on its owner is >= 0.6, or F's gather_intel reveal is running. ArmyState.visibility[F] is
- * 1 / 0. When F loses sight of an army it keeps a ghost (last position, soldiers estimated by its intel tier) for 5
- * days; regaining sight clears it (`army_sighted` for the player). Updated every hour without allocations in the
- * steady state.
+ * 1 / 0. When F loses sight of an army it keeps a ghost (last seen position - an hour back along a marching army's
+ * heading - and soldiers estimated by its intel tier) for 5 days; regaining sight clears it (`army_sighted` for the
+ * player). Updated every hour without allocations in the steady state.
  */
 import type { ArmyGhost, ArmyState, FactionId, SimEvent, WorldState } from '../../core/types';
 import { isRebelFaction } from '../../core/types';
 import { deriveSeed, Rng } from '../../core/rng';
 import { sortedKeys } from '../../core/ids';
+import { dcos, dsin } from '../../core/math';
+import { BALANCE } from '../../data/balance';
 import { RULES } from '../../data/rules';
 import { factionMod } from './modifiers';
 import { stableKeys, today } from './state';
@@ -95,7 +97,9 @@ export function updateVisibilityHourly(world: WorldState, out: SimEvent[]): void
       if (prev !== now || a.visibility[fid] === undefined) a.visibility[fid] = now;
       if (a.factionId === fid) continue;
       if (prev > 0 && now === 0) {
-        const g: ArmyGhost = { armyId: a.id, factionId: a.factionId, x: a.x, z: a.z, facing: a.facing, soldiers: estimatedSoldiers(world, fid, a), day: d };
+        // Last seen an hour ago: step a marching army back along its heading by one hour of its march.
+        const back = a.status === 'marching' ? (a.speedKmh * 1000) / BALANCE.military.travelScale : 0;
+        const g: ArmyGhost = { armyId: a.id, factionId: a.factionId, x: a.x - dsin(a.facing) * back, z: a.z - dcos(a.facing) * back, facing: a.facing, soldiers: estimatedSoldiers(world, fid, a), day: d };
         f.ghosts[a.id] = g;
       } else if (prev === 0 && now > 0) {
         if (f.ghosts[a.id]) delete f.ghosts[a.id];
