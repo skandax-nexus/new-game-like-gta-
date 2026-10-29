@@ -1919,6 +1919,8 @@ export interface ObjectiveDef {
   failCondition: Condition | null;
   optional: boolean;
   reward: Effect[];
+  /** Optional (additive): act number (ScenarioDef.acts) the objective belongs to, for UI grouping. */
+  act?: number;
 }
 
 export interface ScenarioOutcomeDef {
@@ -1934,6 +1936,8 @@ export interface ScenarioOutcomeDef {
    * defeats do today); otherwise victory/mixed outcomes are evaluated only at the time limit.
    */
   immediate?: boolean;
+  /** Optional (additive): which victory path this outcome represents (results screen icon + statistics). */
+  victoryType?: VictoryType;
 }
 
 /** Optional act structure inside one scenario (DESIGN_SPEC §9). An act is active while its flag is set. */
@@ -2012,6 +2016,11 @@ export interface ScenarioDef extends Sourced {
   heroCharacterId?: CharacterId;
   /** Starting timber/stone stockpiles per faction (DESIGN_SPEC §6.4; requires the stockpile state). */
   materials?: Partial<Record<FactionId, { timber: number; stone: number }>>;
+  /**
+   * Strength of the monsoon that feeds the first kharif harvest (1 = normal, 0.4..1.4; DESIGN_SPEC §7.3).
+   * Requires the requested `WorldState.monsoon` state; ignored until the sim implements it.
+   */
+  monsoonStrength?: number;
 }
 
 export interface VictoryState {

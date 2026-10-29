@@ -12,6 +12,9 @@
  *  - mass is a compressed relative scale (infantry 1 .. elephant 9) used by charge shock.
  * Counter design (rock-paper-scissors): spears > horse/chariot > archers > spears;
  * elephants > melee & mounted but < archers/skirmishers & panic; guards > spears in melee.
+ * Missile bonusVs applies to volleys too (DESIGN_SPEC §6.6). War elephants also PANIC under missile fire
+ * (RULES.battle.elephantPanic, chance scales with `unruliness`) and trample whoever is in their way.
+ * Pace target (DESIGN_SPEC §13): two lines 200-300 m apart meet in ~60-90 s at a walk; battles 3-8 min.
  */
 import type { TerrainClass, TerrainEffect, UnitClass, UnitDef, UnitStats } from '../core/types';
 import { TERRAIN_CLASSES } from '../core/types';
@@ -124,8 +127,8 @@ const base: UnitStats = {
   reloadSec: 0,
   accuracy: 0,
   armor: 1,
-  walkSpeed: 1.3,
-  runSpeed: 3.0,
+  walkSpeed: 1.5,
+  runSpeed: 3.5,
   turnRate: 0.6,
   mass: 1,
   baseMorale: 60,
@@ -157,7 +160,7 @@ export const UNITS: Readonly<Record<UnitClass, UnitDef>> = {
     constraint: 'Morale and formation discipline matter.',
     description: 'Levies with tall shields and bamboo-shafted spears. Braced in line they stop horse and chariot; caught in the open by arrows or flanked, they break.',
     category: 'infantry',
-    stats: S({ menPerFormation: 120, hp: 10, meleeAttack: 6, meleeDefense: 9, chargeBonus: 3, armor: 2, walkSpeed: 1.3, runSpeed: 3.0, turnRate: 0.55, mass: 1, baseMorale: 60, discipline: 0.6, fatigueRate: 0.01, spacingX: 1.0, spacingZ: 1.4, upkeepFood: 0.15, upkeepWealth: 0.25, recruitCost: { wealth: 360, food: 60, population: 120 }, recruitDays: 10 }),
+    stats: S({ menPerFormation: 120, hp: 10, meleeAttack: 6, meleeDefense: 9, chargeBonus: 3, armor: 2, walkSpeed: 1.5, runSpeed: 3.5, turnRate: 0.55, mass: 1, baseMorale: 60, discipline: 0.6, fatigueRate: 0.01, spacingX: 1.0, spacingZ: 1.4, upkeepFood: 0.15, upkeepWealth: 0.25, recruitCost: { wealth: 360, food: 60, population: 120 }, recruitDays: 10 }),
     terrain: checkTerrain(SPEAR_TERRAIN),
     bonusVs: { cavalry: 1.8, chariots: 1.7, war_elephants: 1.35, scouts: 1.4 },
     counters: { strongVs: ['cavalry', 'chariots', 'scouts'], weakVs: ['archers', 'elite_guards', 'war_elephants'] },
@@ -178,7 +181,7 @@ export const UNITS: Readonly<Record<UnitClass, UnitDef>> = {
     constraint: 'Require protection, visibility and ammunition.',
     description: 'Bowmen with long bamboo bows. Murderous against elephants, carts and slow columns from behind a spear line; helpless if horsemen reach them.',
     category: 'ranged',
-    stats: S({ menPerFormation: 100, hp: 8, meleeAttack: 3, meleeDefense: 3, rangedAttack: 6, range: 160, ammo: 20, reloadSec: 6, accuracy: 0.3, armor: 0.5, walkSpeed: 1.4, runSpeed: 3.4, turnRate: 0.8, baseMorale: 50, discipline: 0.45, spacingX: 1.2, spacingZ: 1.6, upkeepFood: 0.15, upkeepWealth: 0.3, recruitCost: { wealth: 400, food: 50, population: 100 }, recruitDays: 12 }),
+    stats: S({ menPerFormation: 100, hp: 8, meleeAttack: 3, meleeDefense: 3, rangedAttack: 6, range: 160, ammo: 20, reloadSec: 6, accuracy: 0.3, armor: 0.5, walkSpeed: 1.6, runSpeed: 3.8, turnRate: 0.8, baseMorale: 50, discipline: 0.45, visionRange: 350, spacingX: 1.2, spacingZ: 1.6, upkeepFood: 0.15, upkeepWealth: 0.3, recruitCost: { wealth: 400, food: 50, population: 100 }, recruitDays: 12 }),
     terrain: checkTerrain(INFANTRY_TERRAIN),
     bonusVs: { war_elephants: 1.5, chariots: 1.4, engineers: 1.4, supply_train: 1.3, cavalry: 0.9 },
     counters: { strongVs: ['war_elephants', 'chariots', 'spearmen'], weakVs: ['cavalry', 'scouts', 'elite_guards'] },
@@ -199,7 +202,7 @@ export const UNITS: Readonly<Record<UnitClass, UnitDef>> = {
     constraint: 'Expensive.',
     description: 'Hereditary household warriors in scale coats with broad swords and round shields. They stand with the commander - and they cost as much as a village pays in a season.',
     category: 'infantry',
-    stats: S({ menPerFormation: 60, hp: 14, meleeAttack: 10, meleeDefense: 11, chargeBonus: 5, armor: 4, walkSpeed: 1.3, runSpeed: 3.1, turnRate: 0.7, mass: 1.2, baseMorale: 85, discipline: 0.9, fatigueRate: 0.009, spacingX: 1.1, spacingZ: 1.4, upkeepFood: 0.18, upkeepWealth: 1.0, recruitCost: { wealth: 900, food: 40, population: 60 }, recruitDays: 20 }),
+    stats: S({ menPerFormation: 60, hp: 14, meleeAttack: 10, meleeDefense: 11, chargeBonus: 5, armor: 4, walkSpeed: 1.5, runSpeed: 3.6, turnRate: 0.7, mass: 1.2, baseMorale: 85, discipline: 0.9, fatigueRate: 0.009, spacingX: 1.1, spacingZ: 1.4, upkeepFood: 0.18, upkeepWealth: 1.0, recruitCost: { wealth: 900, food: 40, population: 60 }, recruitDays: 20 }),
     terrain: checkTerrain(GUARD_TERRAIN),
     bonusVs: { spearmen: 1.25, archers: 1.3, engineers: 1.3, war_elephants: 1.1 },
     counters: { strongVs: ['spearmen', 'archers', 'engineers'], weakVs: ['war_elephants', 'cavalry'] },
@@ -241,7 +244,7 @@ export const UNITS: Readonly<Record<UnitClass, UnitDef>> = {
     constraint: 'Restricted by terrain and historical availability.',
     description: 'Two-horse cars carrying a driver and an archer. On a dry open plain they ride down archers and skirmishers; in woods, mud or broken ground they are firewood. No longer raised once an empire has its horse and elephant corps.',
     category: 'mounted',
-    stats: S({ menPerFormation: 16, hp: 45, meleeAttack: 9, meleeDefense: 4, chargeBonus: 18, rangedAttack: 5, range: 120, ammo: 12, reloadSec: 5, accuracy: 0.3, armor: 3, walkSpeed: 2.2, runSpeed: 7.0, turnRate: 0.5, mass: 4, baseMorale: 60, discipline: 0.5, fatigueRate: 0.012, visionRange: 400, spacingX: 4, spacingZ: 6, radius: 1.8, upkeepFood: 1.2, upkeepWealth: 3.0, recruitCost: { wealth: 640, food: 60, population: 32 }, recruitDays: 18 }),
+    stats: S({ menPerFormation: 16, hp: 45, meleeAttack: 9, meleeDefense: 4, chargeBonus: 18, rangedAttack: 5, range: 120, ammo: 12, reloadSec: 5, accuracy: 0.3, armor: 3, walkSpeed: 2.2, runSpeed: 8.0, turnRate: 0.5, mass: 4, baseMorale: 60, discipline: 0.5, fatigueRate: 0.012, visionRange: 400, spacingX: 4, spacingZ: 6, radius: 1.8, upkeepFood: 1.2, upkeepWealth: 3.0, recruitCost: { wealth: 640, food: 60, population: 32 }, recruitDays: 18 }),
     terrain: checkTerrain(CHARIOT_TERRAIN),
     bonusVs: { archers: 1.6, engineers: 1.5, scouts: 1.3, supply_train: 1.5, spearmen: 0.7, elite_guards: 0.8, war_elephants: 0.5 },
     counters: { strongVs: ['archers', 'scouts', 'engineers'], weakVs: ['spearmen', 'war_elephants', 'elite_guards'] },
@@ -263,7 +266,7 @@ export const UNITS: Readonly<Record<UnitClass, UnitDef>> = {
     constraint: 'Expensive to maintain and difficult to control.',
     description: 'Armored bulls with a mahout and two archers in the howdah. Their charge breaks lines and horses; arrows, javelins and panic can turn them back through their own ranks.',
     category: 'beast',
-    stats: S({ menPerFormation: 8, hp: 240, meleeAttack: 22, meleeDefense: 8, chargeBonus: 30, rangedAttack: 3, range: 80, ammo: 10, reloadSec: 6, accuracy: 0.3, armor: 6, walkSpeed: 1.6, runSpeed: 4.0, turnRate: 0.35, mass: 9, baseMorale: 70, discipline: 0.4, fatigueRate: 0.011, visionRange: 350, spacingX: 6, spacingZ: 8, radius: 2.5, upkeepFood: 6, upkeepWealth: 8, recruitCost: { wealth: 1600, food: 300, population: 40 }, recruitDays: 30, siege: 5, unruliness: 0.12 }),
+    stats: S({ menPerFormation: 8, hp: 160, meleeAttack: 20, meleeDefense: 8, chargeBonus: 30, rangedAttack: 3, range: 80, ammo: 10, reloadSec: 6, accuracy: 0.3, armor: 4, walkSpeed: 1.8, runSpeed: 4.5, turnRate: 0.35, mass: 9, baseMorale: 70, discipline: 0.4, fatigueRate: 0.011, visionRange: 350, spacingX: 6, spacingZ: 8, radius: 2.5, upkeepFood: 6, upkeepWealth: 8, recruitCost: { wealth: 1600, food: 300, population: 40 }, recruitDays: 30, siege: 5, unruliness: 0.12 }),
     terrain: checkTerrain(ELEPHANT_TERRAIN),
     bonusVs: { spearmen: 1.5, elite_guards: 1.3, cavalry: 1.7, chariots: 1.8, engineers: 1.5, supply_train: 1.8, archers: 1.2 },
     counters: { strongVs: ['cavalry', 'chariots', 'spearmen', 'elite_guards'], weakVs: ['archers', 'scouts'] },
@@ -284,7 +287,7 @@ export const UNITS: Readonly<Record<UnitClass, UnitDef>> = {
     constraint: 'Require time and protection.',
     description: 'Carpenters, diggers and rope-men who raise palisades, throw bridges over fords and swing the ram against a gate.',
     category: 'support',
-    stats: S({ menPerFormation: 40, hp: 9, meleeAttack: 3, meleeDefense: 3, armor: 1, walkSpeed: 1.3, runSpeed: 2.8, baseMorale: 45, discipline: 0.5, upkeepFood: 0.15, upkeepWealth: 0.6, recruitCost: { wealth: 300, food: 40, population: 40 }, recruitDays: 14, siege: 4 }),
+    stats: S({ menPerFormation: 40, hp: 9, meleeAttack: 3, meleeDefense: 3, armor: 1, walkSpeed: 1.5, runSpeed: 3.2, baseMorale: 45, discipline: 0.5, upkeepFood: 0.15, upkeepWealth: 0.6, recruitCost: { wealth: 300, food: 40, population: 40 }, recruitDays: 14, siege: 4 }),
     terrain: checkTerrain(INFANTRY_TERRAIN),
     bonusVs: {},
     counters: { strongVs: [], weakVs: ['cavalry', 'chariots', 'archers'] },
@@ -305,7 +308,7 @@ export const UNITS: Readonly<Record<UnitClass, UnitDef>> = {
     constraint: 'Vulnerable in direct combat.',
     description: 'Light riders and runners with javelins. They see the enemy first, harry carts and engineers and cut down men who run - and they die if they stand.',
     category: 'mounted',
-    stats: S({ menPerFormation: 30, hp: 12, meleeAttack: 4, meleeDefense: 3, chargeBonus: 4, rangedAttack: 3, range: 40, ammo: 6, reloadSec: 4, accuracy: 0.4, armor: 0.5, walkSpeed: 2.6, runSpeed: 9.0, turnRate: 1.2, mass: 2.2, baseMorale: 50, discipline: 0.45, fatigueRate: 0.011, visionRange: 750, spacingX: 2.5, spacingZ: 3.5, radius: 0.9, upkeepFood: 0.4, upkeepWealth: 0.5, stealth: 0.6, recruitCost: { wealth: 240, food: 40, population: 30 }, recruitDays: 8 }),
+    stats: S({ menPerFormation: 30, hp: 12, meleeAttack: 4, meleeDefense: 3, chargeBonus: 4, rangedAttack: 3, range: 40, ammo: 6, reloadSec: 4, accuracy: 0.4, armor: 0.5, walkSpeed: 2.8, runSpeed: 10.0, turnRate: 1.2, mass: 2.2, baseMorale: 50, discipline: 0.45, fatigueRate: 0.011, visionRange: 750, spacingX: 2.5, spacingZ: 3.5, radius: 0.9, upkeepFood: 0.4, upkeepWealth: 0.5, stealth: 0.6, recruitCost: { wealth: 240, food: 40, population: 30 }, recruitDays: 8 }),
     terrain: checkTerrain(SCOUT_TERRAIN),
     bonusVs: { supply_train: 1.8, engineers: 1.5, archers: 1.2, war_elephants: 1.3 },
     counters: { strongVs: ['supply_train', 'engineers', 'war_elephants'], weakVs: ['spearmen', 'cavalry', 'elite_guards'] },
@@ -325,7 +328,7 @@ export const UNITS: Readonly<Record<UnitClass, UnitDef>> = {
     constraint: 'Roads and escorts are strategic assets.',
     description: 'Twelve ox carts of grain, arrows and fodder with their drovers. An army without them lives off the land - and the land remembers.',
     category: 'support',
-    stats: S({ menPerFormation: 12, hp: 30, meleeAttack: 1, meleeDefense: 2, armor: 1, walkSpeed: 1.1, runSpeed: 1.6, turnRate: 0.3, mass: 5, baseMorale: 30, discipline: 0.3, spacingX: 4, spacingZ: 7, radius: 2, upkeepFood: 0.6, upkeepWealth: 0.5, supplyCapacity: 300, recruitCost: { wealth: 300, food: 200, population: 24 }, recruitDays: 6 }),
+    stats: S({ menPerFormation: 12, hp: 30, meleeAttack: 1, meleeDefense: 2, armor: 1, walkSpeed: 1.2, runSpeed: 1.8, turnRate: 0.3, mass: 5, baseMorale: 30, discipline: 0.3, spacingX: 4, spacingZ: 7, radius: 2, upkeepFood: 0.6, upkeepWealth: 0.5, supplyCapacity: 300, recruitCost: { wealth: 300, food: 100, population: 24 }, recruitDays: 6 }),
     terrain: checkTerrain(CART_TERRAIN),
     bonusVs: {},
     counters: { strongVs: [], weakVs: ['cavalry', 'scouts', 'chariots'] },

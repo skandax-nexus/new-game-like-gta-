@@ -2,12 +2,19 @@
  * Settlement building definitions (DESIGN_SPEC §6.5 construction, §7 AoE layer). OWNER: Creative Director.
  *
  * Units: cost.wealth = wealth; cost.timber / cost.stone = material units; cost.labor = PERSON-DAYS of
- * work. Nominal crew = labor / buildDays; construction runs at min(1.25, builders / crew) speed.
- * Costs are for level 1; level n costs x LEVEL_COST_MULTIPLIER^(n-1) and takes buildDays x
- * LEVEL_TIME_MULTIPLIER^(n-1) (data/rules.ts). `effects` are additive per level (SettlementModifiers:
- * foodCapacity/housing absolute, everything else as fractions). `commandSlot` = grid slot inside the
- * category tab (Q W E R T / A S D F G / Z X C V B). `footprint` = AoE-style placement on the 4 m grid.
- * `workers` = visible villagers per level when staffed (presentation only).
+ * work. Nominal crew = labor / buildDays; construction runs at min(1.25, builders / crew) speed
+ * (RULES.construction). Costs are for level 1; level n costs x levelCostMultiplier^(n-1) and takes
+ * buildDays x levelTimeMultiplier^(n-1). `effects` are additive per level (DESIGN_SPEC §7.1 table):
+ *   foodCapacity  = DAYS of grain storage (x the settlement's daily consumption), see RULES.storage
+ *   housing       = people housed (absolute)
+ *   fortLevel     = fort levels (absolute)
+ *   waterAvailability / irrigation / sanitation / publicOrder / loyalty / disasterResistance = absolute
+ *                   points on their 0..1 scales
+ *   foodProduction / wealth / taxEfficiency / recruitmentPotential = fractional bonus (+0.15 = +15%)
+ *   tradeIncome   = x RULES.trade.effectScale wealth per month (0.25 = +40/month)
+ *   culture       = cultural-legacy points per month x 10 (0.2 = 2 points/month)
+ * `commandSlot` = grid slot inside the category tab (Q W E R T / A S D F G / Z X C V B).
+ * `footprint` = AoE-style placement on the 4 m grid. `workers` = visible villagers per level (presentation).
  */
 import type { BuildingDef, BuildingType, SettlementKind } from '../core/types';
 
@@ -35,7 +42,7 @@ export const BUILDINGS: Readonly<Record<BuildingType, BuildingDef>> = {
   // ------------------------------------------------------------------ Economy tab (Q)
   farm_fields: B({ id: 'farm_fields', name: 'Farm Fields', description: 'Cleared and bunded fields for rice, millet, wheat and pulses. +15% food per level.', cost: { wealth: 80, timber: 20, labor: 1200 }, buildDays: 20, upkeepWealth: 0, effects: { foodProduction: 0.15 }, maxLevel: 5, architecture: ['field_plot'], category: 'economy', commandSlot: 0, footprint: { w: 24, d: 24, placement: 'outer' }, workers: 4 }),
   irrigation_canal: B({ id: 'irrigation_canal', name: 'Irrigation Canal', description: 'Channels river water to the fields; softens drought and lifts both harvests.', cost: { wealth: 300, timber: 40, stone: 60, labor: 6000 }, buildDays: 45, upkeepWealth: 2, effects: { irrigation: 0.25, foodProduction: 0.1, disasterResistance: 0.1 }, requires: ['farm_fields'], architecture: ['field_plot'], age: 'mahajanapada', category: 'economy', commandSlot: 1, footprint: { w: 8, d: 32, placement: 'outer' }, workers: 3 }),
-  granary: B({ id: 'granary', name: 'Granary', description: 'Raised storehouses that keep the harvest from damp and rats. +4,000 storage per level.', cost: { wealth: 200, timber: 120, stone: 40, labor: 2500 }, buildDays: 25, upkeepWealth: 1, effects: { foodCapacity: 4000 }, architecture: ['granary'], category: 'economy', commandSlot: 2, footprint: { w: 12, d: 16, placement: 'inner' }, workers: 3 }),
+  granary: B({ id: 'granary', name: 'Granary', description: 'Raised storehouses that keep the harvest from damp and rats: +45 days of grain storage per level and 40% less spoilage.', cost: { wealth: 200, timber: 120, stone: 40, labor: 2500 }, buildDays: 25, upkeepWealth: 1, effects: { foodCapacity: 45 }, architecture: ['granary'], category: 'economy', commandSlot: 2, footprint: { w: 12, d: 16, placement: 'inner' }, workers: 3 }),
   water_tank: B({ id: 'water_tank', name: 'Village Tank', description: 'An earthen embankment catching the monsoon rain for the dry months.', cost: { wealth: 150, stone: 20, labor: 4500 }, buildDays: 30, upkeepWealth: 0.5, effects: { waterAvailability: 0.2, irrigation: 0.1 }, architecture: ['well'], category: 'economy', commandSlot: 3, footprint: { w: 20, d: 20, placement: 'outer' }, workers: 2 }),
   stepwell: B({ id: 'stepwell', name: 'Stepwell', description: 'Terraced steps down to the water table - water through the hottest months.', cost: { wealth: 260, timber: 20, stone: 160, labor: 5000 }, buildDays: 40, upkeepWealth: 1, effects: { waterAvailability: 0.25, disasterResistance: 0.1, publicOrder: 0.02 }, maxLevel: 2, architecture: ['stepwell'], age: 'mahajanapada', category: 'economy', commandSlot: 4, footprint: { w: 12, d: 20, placement: 'inner' }, workers: 1, sourceNote: 'Monumental stepwells are mostly later; simple step-tanks are earlier. Stylized.' }),
   market: B({ id: 'market', name: 'Market', description: 'Stalls and caravan yards that draw traders and coin; lets the realm buy and sell grain, timber and stone.', cost: { wealth: 250, timber: 80, labor: 2000 }, buildDays: 25, upkeepWealth: 1, effects: { tradeIncome: 0.25, wealth: 0.1 }, allowedIn: URBAN, architecture: ['market_stall'], category: 'economy', commandSlot: 5, footprint: { w: 16, d: 20, placement: 'inner' }, workers: 4 }),

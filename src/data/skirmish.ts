@@ -1,10 +1,12 @@
 /**
- * Skirmish army composition presets (GDD §11; DESIGN_SPEC §10.1). OWNER: Creative Director.
- * `weights` are relative shares of the SOLDIER (model) budget per unit class. Beasts and vehicles are
- * worth many infantry each, so their shares are small: 0.016 of a 500-soldier side = 8 elephants =
- * one elephant formation. Weights are chosen so 500 / 1000 / 2500 per side produce mostly full formations.
+ * Skirmish setup data (GDD §11 skirmish mode; DESIGN_SPEC §10.1). OWNER: Creative Director.
+ * `SKIRMISH_COMPOSITIONS[].weights` are relative shares of the SOLDIER (model) budget per unit class.
+ * Beasts and vehicles are worth many infantry each, so their shares are small: 0.016 of a 500-soldier side
+ * = 8 elephants = one elephant formation. Weights are chosen so 300 / 500 / 1000 / 2500 per side produce
+ * mostly full formations (sim/tactical/battle.ts composeArmy drops classes below half a formation).
+ * Classes outside a faction's roster are skipped and the remaining weights renormalized.
  */
-import type { UnitClass } from '../core/types';
+import type { Season, TerrainPreset, UnitClass, WeatherKind } from '../core/types';
 
 export interface SkirmishComposition {
   id: string;
@@ -30,3 +32,41 @@ export const SKIRMISH_SIZES: readonly { id: string; name: string; totalSoldiers:
   { id: 'great_battle', name: 'Great Battle', totalSoldiers: 2000, minQuality: 'medium' },
   { id: 'epic', name: 'Field of Kings', totalSoldiers: 5000, minQuality: 'high' },
 ];
+
+/** Battlefield presets (TerrainPreset windows of the region terrain) with player-facing names. */
+export const SKIRMISH_MAPS: readonly { preset: TerrainPreset; name: string; description: string; recommended: string }[] = [
+  { preset: 'plains', name: 'The Open Plain', description: 'Farmland and grass: room for chariots, horse and long battle lines.', recommended: 'Mobile hosts; first battles.' },
+  { preset: 'river_crossing', name: 'The Ford', description: 'A river with one shallow ford between the armies. Whoever holds the crossing holds the battle.', recommended: 'Intent orders: Hold the crossing.' },
+  { preset: 'hills', name: 'Hill Country', description: 'Ridges and valleys: high ground for archers, broken ground for horse.', recommended: 'Defensive hosts; the Giridurga Confederacy.' },
+  { preset: 'forest_edge', name: 'The Forest Edge', description: 'Open fields against dense sal forest - ambush ground for light troops.', recommended: 'Scouts and archers; the Nilavana Kingdoms.' },
+  { preset: 'plateau_fort', name: 'The Plateau Edge', description: 'The escarpment and its approaches. The defender sits on top.', recommended: 'Hill Fort Garrison vs Elephant Shock.' },
+];
+
+export const SKIRMISH_TIMES: readonly { hour: number; label: string }[] = [
+  { hour: 6.2, label: 'Dawn (mist)' },
+  { hour: 9.5, label: 'Morning' },
+  { hour: 13, label: 'Noon' },
+  { hour: 17.6, label: 'Golden hour' },
+  { hour: 19.2, label: 'Dusk' },
+  { hour: 22.5, label: 'Night (torches)' },
+];
+
+/** Weather offered per season (first = default). Mirrors the sim's seasonal weather table. */
+export const SKIRMISH_WEATHER: Readonly<Record<Season, readonly WeatherKind[]>> = {
+  vasanta: ['clear', 'hazy', 'cloudy'],
+  grishma: ['clear', 'hazy', 'dust_storm'],
+  varsha: ['monsoon_rain', 'overcast', 'light_rain', 'storm'],
+  sharad: ['clear', 'cloudy', 'light_rain'],
+  hemanta: ['clear', 'hazy', 'fog'],
+  shishira: ['clear', 'fog', 'cloudy'],
+};
+
+/** Suggested composition per faction for the AI side and the "Random" button. */
+export const FACTION_DEFAULT_COMPOSITION: Readonly<Record<string, string>> = {
+  heartland: 'balanced',
+  highland: 'fortress',
+  forest: 'shock',
+  frontier: 'mobile',
+  maritime: 'balanced',
+  citystates: 'fortress',
+};

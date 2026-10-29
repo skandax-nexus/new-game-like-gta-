@@ -1,6 +1,11 @@
 /**
  * Global tuning values read by the simulation. OWNER: Creative Director (balance), in consultation with
  * the Lead AI & Simulation Engineer. These numbers are a tunable gameplay model (GDD §5), not history.
+ * Formulas that use them are in docs/DESIGN_SPEC.md (§6 battle, §7 strategic); further design constants
+ * live in data/rules.ts. Notable scale factors kept from the baseline:
+ *  - monthly tax per person at 100% rate = baseTaxPerCapitaPerMonth x RULES.tax.scale (10) = 0.2 wealth;
+ *  - melee/ranged damage constant K = damageScale x 10 = 0.45 HP per front soldier-second at odds 1;
+ *  - map meters x travelScale = real meters for march times (region 6,144 m -> ~184 km at 30).
  */
 import type { BalanceConfig } from '../core/types';
 
@@ -30,7 +35,7 @@ export const BALANCE: BalanceConfig = {
     starvationMoralePerDay: 6,
     fatiguePerMarchDay: 0.05,
     recoveryPerRestDay: 0.12,
-    travelScale: 8,
+    travelScale: 30,
     contactRadius: 140,
     siegeAttritionPerDay: 0.004,
   },

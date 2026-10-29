@@ -35,16 +35,17 @@ export const FACTIONS: Readonly<Record<FactionId, FactionDef>> = {
   heartland: {
     id: 'heartland',
     archetype: 'imperial_heartland',
-    name: 'Suvarna Empire',
+    name: 'Suvarna Kingdom',
     shortName: 'Suvarna',
     adjective: 'Suvarnan',
     description:
-      'A river-plain realm of granaries, royal roads and mass levies, ruled from Rajapura at the meeting of two rivers. Its strength is administration and numbers; its burden is the cost of feeding, paying and governing them - and a crown that has just lost its wearer.',
+      'A river-plain kingdom of granaries, royal roads and mass levies, ruled from Rajapura near the meeting of two rivers. Its strength is administration and numbers; its burden is the cost of feeding, paying and governing them - and a crown that has just lost its wearer. Its kings have long dreamed of empire.',
     strengths: ['Largest recruitment pool and fastest levies', 'Efficient taxation, royal roads and granaries', 'The only realm fielding elephants, chariots and horse together'],
     weaknesses: ['Governing costs rise with every province', 'Hunger turns into unrest quickly in its crowded plains', 'Elephants must be bought from the forest kingdoms'],
     colors: { primary: '#e0801f', secondary: '#f2cf63', accent: '#7a1f1f' },
     banner: 'sun',
     heraldry: { name: 'The Risen Sun of Suvarna', blazon: 'Saffron field, a golden twelve-rayed sun above a maroon river-wave base.' },
+    // Team-color readability (DESIGN_SPEC §5.6): saffron/gold vs indigo/sky are the two playable pairs.
     motto: 'The granary is the root of the kingdom.',
     playstyle: ['Out-produce and out-recruit: many cheap levies, strong supply lines.', 'Watch stability: every new province raises governing costs.', 'Win by conquest, by grain, or by marriage - the court is your second battlefield.'],
     playable: true,
