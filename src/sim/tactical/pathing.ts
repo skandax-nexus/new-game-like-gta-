@@ -518,7 +518,9 @@ export class BattleGrid {
    */
   directClear(from: number, to: number, profile: number, side: number): boolean {
     if (from === to) return true;
-    const key = ((from * 31 + to) * 16 + profile) * 2 + side;
+    // Exact key (unique per (from, to, profile, side); < 2^34 on a 128 x 128 grid, exact in the Float64 memo): an
+    // aliasing key such as from * 31 + to would return another pair's answer and make paths depend on cache history.
+    const key = ((from * this.n + to) * 16 + profile) * 2 + side;
     const slot = (Math.imul(key, 2654435761) >>> 0) & MEMO_MASK;
     if (this.memoKey[slot] === key) return this.memoVal[slot] === 1;
     const v = this.lineClear(this.centerX(from), this.centerZ(from), this.centerX(to), this.centerZ(to), profile, side);

@@ -498,6 +498,30 @@ describe('rout, rally limits, surrender, pursuit (§6.8)', () => {
   });
 });
 
+describe('side surrender', () => {
+  it('takes every formation still on the field; routers that already fled off the map are not captured', () => {
+    const b = testBattle({
+      sides: [
+        [{ cls: 'spearmen', x: 0, z: 0, facing: 0 }, { cls: 'archers', x: 0, z: 600, facing: 0 }],
+        [{ cls: 'spearmen', x: 0, z: -200, facing: 0 }],
+      ],
+    });
+    const fled = b.state.formations[1]!;
+    fled.activity = 'routing';
+    fled.morale = 10;
+    expect(issueBattleCommand(b.state, 0, { kind: 'surrender' })).toBeNull();
+    expect(b.state.formations[0]!.activity).toBe('surrendered');
+    expect(fled.activity).toBe('routing');
+    runFor(b, 0.1);
+    const o = b.state.outcome!;
+    expect(o.winner).toBe(1);
+    expect(o.reason).toBe('surrender');
+    expect(o.sides[0].captured).toBe(120);
+    expect(o.sides[0].survivors).toBe(100);
+    expect(o.sides[0].pursuitLosses).toBe(0);
+  });
+});
+
 describe('within helper', () => {
   it('sanity', () => {
     expect(within(105, 100)).toBe(true);

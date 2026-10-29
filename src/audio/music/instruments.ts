@@ -126,13 +126,15 @@ export function renderHornCall(raga: RagaDef, sr: number, seed: number, leapTo =
  */
 export function renderChoir(raga: RagaDef, swaras: readonly number[], durSec: number, sr: number, seed: number, vowel: 'a' | 'o' | 'u' = 'a'): Float32Array {
   const rng = new Rand(hashSeed('choir', swaras.join(','), seed, vowel));
-  const b = mono(durSec + 0.5, sr);
-  const per = 3;
+  // Voices live below ~5 kHz: synthesize at half rate (half the cost) and upsample.
+  const hr = Math.round(sr / 2);
+  const half = mono(durSec + 0.5, hr);
+  const per = 2;
   for (const s of swaras) {
     for (let k = 0; k < per; k++) {
       const f0 = swaraHz(raga, s) * (1 + rng.bi() * 0.004);
       const att = 0.8 + rng.next() * 0.6;
-      voice(b, 0, {
+      voice(half, 0, {
         duration: durSec,
         f0: [[0, f0], [durSec, f0 * (1 + rng.bi() * 0.003)]],
         amp: [[0, 0], [att, 0.9], [durSec - 1.2, 0.8], [durSec, 0]],
@@ -143,9 +145,19 @@ export function renderChoir(raga: RagaDef, swaras: readonly number[], durSec: nu
         shimmer: 0.03,
         vibrato: [4.6 + rng.next(), 12],
         glide: 0.8,
-        presence: 0.5,
-      }, rng, sr, 1 / Math.sqrt(per * swaras.length));
+        presence: 0.3,
+      }, rng, hr, 1 / Math.sqrt(per * swaras.length));
     }
+  }
+  const b = new Float32Array(Math.round((half.length * sr) / hr));
+  const k = hr / sr;
+  for (let i = 0; i < b.length; i++) {
+    const p = i * k;
+    const j = Math.floor(p);
+    const f = p - j;
+    const a0 = half[j] ?? 0;
+    const a1 = half[j + 1] ?? a0;
+    b[i] = a0 + (a1 - a0) * f;
   }
   removeDc(b, sr, 30);
   return scaleTo(b, 0.5);

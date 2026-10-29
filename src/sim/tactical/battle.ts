@@ -48,7 +48,7 @@ import { effectiveRange, launchVolley, updateVolleys } from './projectiles';
 import { gapBetween, isOffField, MAX_QUEUE, nearestEnemy, executeFormation, retreatDirection, snapOrder, startOrder, validateOrder } from './orders';
 import { autoDeploy, makeFormation } from './setup';
 import { breachHeld, createSiegeState, updateSiegeWorks, wallBetween } from './siege';
-import { buildOutcome, forceOutcome, sideBroken } from './outcome';
+import { buildOutcome, forceOutcome, offField, sideBroken } from './outcome';
 import { canCharge, isCombatClass, isMounted, isShooter, shootsOnTheMove } from './stats';
 
 export { deployAxis, deployZoneFor, createSkirmishSetup, composeArmy, battleKindFor } from './setup';
@@ -342,7 +342,8 @@ export function issueBattleCommand(state: BattleState, side: SideIndex, cmd: Bat
     }
     case 'surrender':
       state.sides[side].surrendered = true;
-      for (const f of state.formations) if (f.side === side && f.soldiers > 0) surrenderFormation(state, f, tmpOut);
+      // Routers that already fled off the map have left the battle (§6.8): they are not taken.
+      for (const f of state.formations) if (f.side === side && f.soldiers > 0 && !offField(state, f.x, f.z)) surrenderFormation(state, f, tmpOut);
       for (const e of tmpOut) pushEvent(state, e);
       tmpOut.length = 0;
       break;

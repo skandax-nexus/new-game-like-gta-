@@ -14,7 +14,7 @@ never change results - proven by the resume tests below).
 | What | Command |
 |---|---|
 | Typecheck | `npm run typecheck` |
-| Tactical suites (69 tests) | `npx vitest run tests/sim/tactical` |
+| Tactical suites (72 tests) | `npx vitest run tests/sim/tactical` |
 | Pacing table (printed) | `npx vitest run tests/sim/tactical/pacing.test.ts` |
 | Perf numbers (printed) | `npx vitest run tests/sim/tactical/perf.test.ts` |
 | Headless traces only | `node_modules/.bin/vite-node tests/sim/tactical/tools/trace.ts out.json` |
@@ -137,9 +137,25 @@ two page loads of the same seed stepped to the same tick give the same `__SAMRAJ
   engineers / 10 x siege / 4; elephants batter gates at siege x soldiers HP/s; engineers repair 10 HP/s; a routing,
   surrendered or dead ram crew abandons the ram where it stands (a construct 'ram' order at it re-crews it); ladder
   crews step back 25 m when the ladder is up; breach hold radius 30 m, contested within 40 m.
-- Outcome: pursuit kills 70 % / captures 30 %; commander fate of the loser 50 % safe / 30 % captured / 20 % killed;
+- Outcome: pursuit kills 70 % / captures 30 %; commander fate (§6.11): `safe` while the commander stands, `captured`
+  if his formation (or side) surrendered, otherwise a fallen commander is killed 50 % / wounded 30 % / captured 20 %;
   war score +-20 scaled by the loss ratio; `durationSec` counts fighting time only (deployment excluded).
 - Skirmish setup: 30 s deployment, 40 min time limit; world battles should pass 60 s / 30 min (request to SIM-01).
+
+## Lead review fixes (first review, Lead Gameplay Engineer)
+
+- `pathing.ts` `directClear`: the straight-line memo key `from * 31 + to` aliased different cell pairs, so a cached
+  "clear" answer could be returned for a pair whose line crosses deep water (formation aimed straight at the river
+  instead of routing to the ford) and paths depended on cache history (a resumed battle could diverge). The key is
+  now exact; regression test in `pathing.test.ts`.
+- `soldiers.ts`: once the commander has fallen (§6.11) his figure is the next casualty realized and the commander
+  role is never handed to an heir (before, a bodyguard inherited the flag and the fallen commander stayed on screen);
+  test in `soldiers.test.ts`.
+- `battle.ts` `surrender`: routers that already fled off the map have left the battle (§6.8) and are no longer
+  captured by a later side surrender; test in `orders.test.ts`.
+- This README: commander-fate line corrected to match `outcome.ts`.
+- Review evidence: `review-smoke/` (`SMOKE_PORT=4457`, `.build/gp-01-review`); the images and `traces.json` /
+  `shots-report.json` above were re-captured with the fixed code.
 
 ## Known issues
 

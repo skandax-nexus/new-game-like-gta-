@@ -77,7 +77,8 @@ export function pursuitRate(winnerMountedShare: number, loserMountedShare: numbe
   return (p.base + p.perWinnerMountedShare * winnerMountedShare) * (1 - p.loserMountedShield * loserMountedShare);
 }
 
-function offField(state: BattleState, x: number, z: number): boolean {
+/** (x, z) lies outside the battle map: a router there has left the battle (§6.8; survivors return to the army). */
+export function offField(state: BattleState, x: number, z: number): boolean {
   const t = state.setup.terrain;
   const h = t.sizeMeters / 2;
   return x < t.centerX - h || x > t.centerX + h || z < t.centerZ - h || z > t.centerZ + h;

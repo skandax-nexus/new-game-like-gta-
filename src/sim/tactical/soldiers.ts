@@ -8,8 +8,9 @@
  *    ends), the commander (second rank middle of the commander's formation) and `mounted` for riders / crews.
  *  - Casualties decided by combat.ts are realized here: in melee the soldiers nearest the enemy fall (front ranks),
  *    under arrows a random soldier; the soldier behind steps forward into the gap (files stay full, the rear rank
- *    thins). Roles pass to a neighbour when their holder dies; a routing formation drops its standard (flag cleared)
- *    and raises it again when it rallies. A shape / frontage change re-slots everyone front-first (they walk to it).
+ *    thins). Roles pass to a neighbour when their holder dies; once the commander has fallen (§6.11) his figure is the
+ *    next casualty and the role is not passed on; a routing formation drops its standard (flag cleared) and raises it
+ *    again when it rallies. A shape / frontage change re-slots everyone front-first (they walk to it).
  *  - Animation (SOLDIER_ANIM + animVariant + animStart; animTime kept for the procedural renderer): idle / walk / run
  *    by speed, charge while the formation charges, attack (3 variants, staggered) in the contact ranks, brace for
  *    spears and guards facing a charge and for the rear ranks of a spear wall, shoot synced to the formation's volley
@@ -542,8 +543,9 @@ export class SoldierSim {
     const enemy = engaged ? state.formations[f.engagedWith[0]!] : undefined;
     let guard = 0;
     while (excess > 0 && guard++ < 4096) {
-      let victim = -1;
-      if (enemy) {
+      // The commander has fallen (§6.11): the first casualty realized is his figure (no heir takes the role).
+      let victim = f.hasCommander && !f.commanderAlive ? this.roleHolder(f, SOLDIER_FLAG.commander) : -1;
+      if (victim < 0 && enemy) {
         // Melee: one of the few soldiers nearest the enemy (front ranks fall first).
         let best = Infinity;
         for (let i = start; i < end; i++) {
@@ -556,7 +558,7 @@ export class SoldierSim {
             victim = i;
           }
         }
-      } else {
+      } else if (victim < 0) {
         // Missiles / pursuit: a random soldier.
         const alive = this.fAlive[fi]!;
         const n = this.rng.int(0, Math.max(0, alive - 1));
@@ -609,7 +611,9 @@ export class SoldierSim {
     if (roles) {
       const heir = this.nearestAlive(f, b.posX[i]!, b.posZ[i]!);
       if (heir >= 0) {
-        const keep = f.activity === 'routing' ? roles & ~SOLDIER_FLAG.standardBearer : roles;
+        let keep = f.activity === 'routing' ? roles & ~SOLDIER_FLAG.standardBearer : roles;
+        // A fallen commander is gone for good; while he lives, a bodyguard's death does not take him.
+        if (!f.commanderAlive) keep &= ~SOLDIER_FLAG.commander;
         b.flags[heir] = b.flags[heir]! | keep;
         if (keep !== roles) this.fDropped[fi] = 1;
       }
@@ -622,6 +626,15 @@ export class SoldierSim {
         if (j !== i && b.alive[j] && b.formation[j] === fi && b.anim[j] !== SOLDIER_ANIM.hit) this.setAnim(j, SOLDIER_ANIM.hit, 0, state.time, state.time);
       }
     }
+  }
+
+  /** Living soldier of f carrying `flag`, or -1. */
+  private roleHolder(f: FormationState, flag: number): number {
+    const b = this.buffers;
+    const start = this.fStart[f.index]!;
+    const end = start + this.fCount[f.index]!;
+    for (let i = start; i < end; i++) if (b.alive[i] && b.flags[i]! & flag) return i;
+    return -1;
   }
 
   private nearestAlive(f: FormationState, x: number, z: number): number {

@@ -85,6 +85,26 @@ describe('battle pathing: rivers, fords, bridges', () => {
     expect(de[grid.cellAt(0, 0)]!).toBe(FLOW_INF);
   });
 
+  it('the straight-line memo never answers for another cell pair (cache history cannot change a route)', () => {
+    // Reviewer regression: pairs (from, to) and (from - 2, to + 62) shared the memo key from * 31 + to. A clear pair
+    // on the west bank was cached first and the river crossing then read "clear" - the formation would aim straight
+    // across deep water, and a resumed battle (cold memo) could path differently from the uninterrupted run.
+    const terrain = new TestTerrain({ classAt: (x) => (x >= 0 && x < 8 ? 'deep_water' : 'open') });
+    const p = moveProfile('spearmen');
+    const cols = new BattleGrid(terrain, false).cols;
+    const cell = (x: number, z: number): number => z * cols + x;
+    const clear = [cell(10, 10), cell(50, 10)] as const;
+    const across = [cell(8, 10), cell(112, 10)] as const;
+    const cold = new BattleGrid(terrain, false);
+    expect(cold.directClear(across[0], across[1], p, 0)).toBe(false);
+    const warm = new BattleGrid(terrain, false);
+    expect(warm.directClear(clear[0], clear[1], p, 0)).toBe(true);
+    expect(warm.directClear(across[0], across[1], p, 0)).toBe(false);
+    // And the waypoint from the west bank to the east bank never goes direct.
+    const wp = { x: 0, z: 0 };
+    expect(warm.waypoint(p, 0, warm.centerX(across[0]), warm.centerZ(across[0]), warm.centerX(across[1]), warm.centerZ(across[1]), wp)).not.toBe(0);
+  });
+
   it('engineers bridge an unfordable river (90 s) and the waiting column then crosses on it', () => {
     const terrain = new TestTerrain({ classAt: (_x, z) => (Math.abs(z) < 14 ? 'deep_water' : 'open') });
     const setup = testSetup({

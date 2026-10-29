@@ -115,6 +115,24 @@ describe('casualty realization', () => {
     expect(rear.length).toBeGreaterThan(0);
   });
 
+  it('a fallen commander (§6.11) is the first figure to fall, and nobody inherits the commander role', () => {
+    const b = withSoldiers({ sides: [[{ cls: 'elite_guards', x: 0, z: 0, facing: 0, commander: true }], [{ cls: 'spearmen', x: 0, z: 400, facing: PI }]] });
+    const buf = b.sim.buffers;
+    const holders = (): number[] => soldiersOf(b, 0).filter((i) => buf.alive[i] && (buf.flags[i]! & SOLDIER_FLAG.commander) !== 0);
+    const cmd = holders();
+    expect(cmd.length).toBe(1);
+    // Strength drops below 35% of the start: the commander falls on this step and 40 figures must die.
+    const f = b.state.formations[0]!;
+    f.soldiers = 20;
+    f.killed = 40;
+    run(b, BATTLE_DT);
+    expect(b.events.some((e) => e.kind === 'commander_fallen' && e.formation === 0)).toBe(true);
+    expect(buf.alive[cmd[0]!]).toBe(0);
+    expect(buf.anim[cmd[0]!]).toBe(SOLDIER_ANIM.die);
+    expect(holders().length).toBe(0);
+    expect(soldiersOf(b, 0).filter((i) => buf.alive[i]).length).toBe(20);
+  });
+
   it('surrendered men stay standing (captured, not killed) and the layer never writes BattleState', () => {
     const b = withSoldiers({ sides: [[{ cls: 'spearmen', x: 0, z: 0, facing: 0 }, { cls: 'spearmen', x: -200, z: 0, facing: 0 }], [{ cls: 'spearmen', x: 0, z: 300, facing: PI }]] });
     issueBattleCommand(b.state, 0, { kind: 'surrender' });

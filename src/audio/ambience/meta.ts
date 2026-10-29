@@ -32,6 +32,8 @@ export interface SpotSpec {
   distance: readonly [number, number];
   /** Elevation range (m above listener) - birds, bells on towers. */
   height?: readonly [number, number];
+  /** Bright spots (bells, jingles, small birds, metal) render at the full rate; the rest at half. */
+  full?: boolean;
 }
 
 export interface AmbienceDef {
@@ -44,7 +46,13 @@ export interface AmbienceDef {
 
 const D = (key: string, label: string, bed: BedSpec | undefined, spots: SpotSpec[]): AmbienceDef => ({ key, category: 'district', label, bed, spots });
 const W = (key: string, label: string, bed: BedSpec | undefined, spots: SpotSpec[]): AmbienceDef => ({ key, category: 'world', label, bed, spots });
-const S = (name: string, variants: number, perMinute: number, gainDb: readonly [number, number], distance: readonly [number, number], height?: readonly [number, number]): SpotSpec => ({ name, variants, perMinute, gainDb, distance, height });
+const BRIGHT = new Set(['handbell_far', 'ghanta_far', 'handbell', 'ghanta', 'copper', 'cartbell', 'bangles', 'stylus', 'weights', 'chains', 'sparring', 'melee', 'sparrows', 'kingfisher', 'bulbul', 'myna', 'drip', 'lap_splash', 'fish_jump']);
+const S = (name: string, variants: number, perMinute: number, gainDb: readonly [number, number], distance: readonly [number, number], height?: readonly [number, number]): SpotSpec => ({ name, variants, perMinute, gainDb, distance, height, full: BRIGHT.has(name) });
+
+/** Sample rate a spot renders at for a context rate `sr`. */
+export function spotRenderRate(spot: SpotSpec, sr: number): number {
+  return spot.full ? sr : Math.round(sr / 2);
+}
 
 export const AMBIENCE_DEFS: readonly AmbienceDef[] = [
   // --- Rajaghat: the royal ghats ---

@@ -47,25 +47,51 @@ interface Voice {
   bus: number;
 }
 
-/** Shared caches of rendered notes (per engine). */
+/** A vina note waiting to be rendered just in time (spreads the Karplus-Strong cost over the phrase). */
+interface PendingVina {
+  at: number;
+  hz: number;
+  from: number;
+  glideSec: number;
+  andolan: boolean;
+  vel: number;
+  sec: number;
+}
+
+/** Shared caches of rendered notes (per engine), LRU-capped by bytes. */
 class Cache {
   private readonly m = new Map<string, Float32Array>();
+  private total = 0;
   constructor(
     readonly sr: number,
     readonly seed: number,
+    private readonly capBytes = 40 * 1048576,
   ) {}
+  has(key: string): boolean {
+    return this.m.has(key);
+  }
   get(key: string, make: () => Float32Array): Float32Array {
     let v = this.m.get(key);
-    if (!v) {
-      v = make();
+    if (v) {
+      // Most recently used goes to the end (Map keeps insertion order).
+      this.m.delete(key);
       this.m.set(key, v);
+      return v;
+    }
+    v = make();
+    this.m.set(key, v);
+    this.total += v.byteLength;
+    if (this.total > this.capBytes) {
+      for (const [k, old] of this.m) {
+        if (this.total <= this.capBytes * 0.8 || k === key) break;
+        this.m.delete(k);
+        this.total -= old.byteLength;
+      }
     }
     return v;
   }
   get bytes(): number {
-    let b = 0;
-    for (const v of this.m.values()) b += v.byteLength;
-    return b;
+    return this.total;
   }
 }
 
@@ -111,6 +137,7 @@ class Performer {
   private readonly composer: Composer;
   private melodyFree: number;
   private lastVinaHz = 0;
+  private readonly pendingVina: PendingVina[] = [];
   private readonly sym: SympatheticBank;
   private nextChoir: number;
   private choirFlip = 0;
@@ -211,6 +238,84 @@ class Performer {
     return this.cache.get(`bell:${kind}:${this.raga.id}:${semis}:${v}`, () => renderBell(kind, semis, this.raga, this.sr, this.cache.seed + v));
   }
 
+  private tanpura(k: number): Float32Array {
+    const semis = k === 0 ? this.raga.tanpura - 12 : k === 3 ? -12 : 0;
+    const hz = swaraHz(this.raga, semis);
+    const variant = k === 2 ? 1 : 0;
+    return this.cache.get(`tan:${Math.round(hz * 100)}:${variant}`, () => renderTanpuraString(hz, this.sr, this.cache.seed + variant));
+  }
+
+  private chikari(pa: boolean): Float32Array {
+    const semis = pa ? this.raga.tanpura + 12 : 24;
+    return this.cache.get(`chikari:${this.raga.id}:${semis}`, () => renderVinaNote(swaraHz(this.raga, semis), 0.2, this.sr, new Rand(hashSeed('chik', this.cache.seed, semis)), { bright: 0.78, vel: 1, hardness: 0.35 }));
+  }
+
+  private choirSwaras(flip: number): number[] {
+    return this.raga.notes.includes(7) ? (flip % 3 === 2 ? [0, 5] : [0, 7]) : [0, 12];
+  }
+
+  private choir(swaras: readonly number[]): Float32Array {
+    const vowel = this.arr.id.startsWith('hero') ? 'o' : 'a';
+    return this.cache.get(`choir:${this.raga.id}:${swaras.join(',')}:${vowel}`, () => renderChoir(this.raga, swaras.map((x) => x - 12), 9, this.sr, this.cache.seed, vowel));
+  }
+
+  private horn(leap: number): Float32Array {
+    const l = this.raga.notes.includes(leap % 12) ? leap : 12;
+    return this.cache.get(`horn:${this.raga.id}:${l}`, () => renderHornCall(this.raga, this.sr, this.cache.seed, l));
+  }
+
+  /**
+   * Render the next missing cache item this arrangement will need (tanpura strings, strokes, chikari,
+   * choir pads, bells, horns, conch). Returns false when everything is cached.
+   */
+  warmOne(): boolean {
+    const a = this.arr;
+    const tasks: (() => unknown)[] = [];
+    const need = (key: string, make: () => unknown): void => {
+      if (!this.cache.has(key)) tasks.push(make);
+    };
+    for (let k = 0; k < 4; k++) {
+      const semis = k === 0 ? this.raga.tanpura - 12 : k === 3 ? -12 : 0;
+      need(`tan:${Math.round(swaraHz(this.raga, semis) * 100)}:${k === 2 ? 1 : 0}`, () => this.tanpura(k));
+    }
+    need(`chikari:${this.raga.id}:24`, () => this.chikari(false));
+    need(`chikari:${this.raga.id}:${this.raga.tanpura + 12}`, () => this.chikari(true));
+    const strokes = new Set<string>();
+    if (a.kit) for (const bol of [...this.tala.theka, ...FILLS.flat()]) for (const p of bol.split(' ')) for (const s of BOL[p] ?? []) strokes.add(`${a.kit}:${s}`);
+    if (a.war) for (const s of ['nagara:boom', 'nagara:flam', 'dhol:boom', 'dhol:rim']) strokes.add(s);
+    for (const ks of strokes) {
+      const [kit, s] = ks.split(':') as [DrumKit, DrumStroke];
+      for (let v = 0; v < 2; v++) need(`stroke:${kit}:${s}:${v}`, () => this.cache.get(`stroke:${kit}:${s}:${v}`, () => renderStroke(kit, s, v, this.sr, this.cache.seed)));
+    }
+    if (a.choir > 0) {
+      for (const f of [0, 2]) {
+        const sw = this.choirSwaras(f);
+        const vowel = a.id.startsWith('hero') ? 'o' : 'a';
+        need(`choir:${this.raga.id}:${sw.join(',')}:${vowel}`, () => this.choir(sw));
+      }
+    }
+    if (a.bells > 0) {
+      for (const semis of [24, 31, 36]) for (let v = 0; v < 2; v++) need(`bell:chime:${this.raga.id}:${semis}:${v}`, () => this.cache.get(`bell:chime:${this.raga.id}:${semis}:${v}`, () => renderBell('chime', semis, this.raga, this.sr, this.cache.seed + v)));
+      if (a.bells >= 0.3) {
+        for (let v = 0; v < 2; v++) {
+          need(`bell:ghanta:${this.raga.id}:12:${v}`, () => this.cache.get(`bell:ghanta:${this.raga.id}:12:${v}`, () => renderBell('ghanta', 12, this.raga, this.sr, this.cache.seed + v)));
+          need(`bell:ghanti_ring:${this.raga.id}:36:${v}`, () => this.cache.get(`bell:ghanti_ring:${this.raga.id}:36:${v}`, () => renderBell('ghanti_ring', 36, this.raga, this.sr, this.cache.seed + v)));
+        }
+      }
+    }
+    if (a.war) {
+      for (const leap of [7, 12]) {
+        const l = this.raga.notes.includes(leap % 12) ? leap : 12;
+        need(`horn:${this.raga.id}:${l}`, () => this.horn(leap));
+      }
+      need(`conch:${this.raga.id}`, () => this.cache.get(`conch:${this.raga.id}`, () => renderConchCall(this.raga, this.sr, this.cache.seed)));
+    }
+    const first = tasks[0];
+    if (!first) return false;
+    first();
+    return true;
+  }
+
   // --------------------------------------------------------------------------------------- schedule
 
   private schedule(horizon: number, i: number): void {
@@ -219,11 +324,7 @@ class Performer {
     if (this.fadeTarget > 0) {
       while (this.tanFrame < horizon) {
         const k = this.tanIdx % 4;
-        const semis = k === 0 ? this.raga.tanpura - 12 : k === 3 ? -12 : 0;
-        const hz = swaraHz(this.raga, semis);
-        const variant = k === 2 ? 1 : 0;
-        const data = this.cache.get(`tan:${Math.round(hz * 100)}:${variant}`, () => renderTanpuraString(hz, sr, this.cache.seed + variant));
-        this.addVoice(data, this.tanFrame, B_DRONE, [0.8, 0.7, 0.7, 0.95][k] as number, [-0.3, 0.12, 0.3, -0.12][k] as number);
+        this.addVoice(this.tanpura(k), this.tanFrame, B_DRONE, [0.8, 0.7, 0.7, 0.95][k] as number, [-0.3, 0.12, 0.3, -0.12][k] as number);
         this.tanFrame += Math.round((k === 3 ? 1.65 : 1.18) * (1 + this.rng.bi() * 0.04) * sr);
         this.tanIdx++;
       }
@@ -235,11 +336,15 @@ class Performer {
     }
     // Melody.
     if (this.fadeTarget > 0 && this.melodyFree < horizon + 0.3 * sr) this.melody(i);
+    // Vina notes are rendered just in time (onset inside this quantum).
+    while (this.pendingVina.length && (this.pendingVina[0] as PendingVina).at < horizon) {
+      const v = this.pendingVina.shift() as PendingVina;
+      const data = renderVinaNote(v.hz, v.sec, sr, this.rng, { fromHz: v.from, glideSec: v.glideSec, andolan: v.andolan, vel: v.vel });
+      this.addVoice(data, v.at, B_VINA, 0.9, -0.25 + this.rng.bi() * 0.1);
+    }
     // Choir pads.
     if (this.arr.choir > 0 && this.fadeTarget > 0 && this.nextChoir < horizon) {
-      const swaras = this.raga.notes.includes(7) ? (this.choirFlip++ % 3 === 2 ? [0, 5] : [0, 7]) : [0, 12];
-      const vowel = this.arr.id.startsWith('hero') ? 'o' : 'a';
-      const data = this.cache.get(`choir:${this.raga.id}:${swaras.join(',')}:${vowel}`, () => renderChoir(this.raga, swaras.map((s) => s - 12), 9, sr, this.cache.seed, vowel));
+      const data = this.choir(this.choirSwaras(this.choirFlip++));
       this.addVoice(data, this.nextChoir, B_CHOIR, 0.75, -0.45);
       this.addVoice(data, this.nextChoir + Math.round(0.013 * sr), B_CHOIR, 0.75, 0.45);
       this.nextChoir += Math.round(7.4 * sr);
@@ -296,8 +401,8 @@ class Performer {
     // Vina jor pulse / jhala on the chikari (high Sa).
     if ((sec === 'jor' || (sec === 'gat' && i > 0.7)) && this.fadeTarget > 0) {
       const sub = sec === 'jor' ? 1 : i > 0.85 ? 4 : 2;
-      const chik = this.cache.get(`chikari:${this.raga.id}`, () => renderVinaNote(swaraHz(this.raga, 24), 0.2, sr, new Rand(hashSeed('chik', this.cache.seed)), { bright: 0.78, vel: 1, hardness: 0.35 }));
-      const chikP = this.cache.get(`chikariP:${this.raga.id}`, () => renderVinaNote(swaraHz(this.raga, this.raga.tanpura + 12), 0.2, sr, new Rand(hashSeed('chikP', this.cache.seed)), { bright: 0.78, vel: 1, hardness: 0.35 }));
+      const chik = this.chikari(false);
+      const chikP = this.chikari(true);
       for (let k = 0; k < sub; k++) {
         const data = k === 0 && this.matra % 2 === 1 ? chikP : chik;
         this.addVoice(data, at + (k * beatLen) / sub, B_VINA, (sec === 'jor' ? 0.2 : 0.15) * (k === 0 ? 1 : 0.7), 0.35);
@@ -321,9 +426,7 @@ class Performer {
     if (a.bells > 0 && this.rng.chance(a.bells * 0.35)) this.addVoice(this.bell('chime', this.rng.pick([24, 31, 36])), at, B_BELLS, 0.45, this.rng.bi() * 0.6);
     if (a.war && i > 0.55 && this.cycle >= this.nextHornCycle && this.fadeTarget > 0) {
       this.nextHornCycle = this.cycle + 3 + this.rng.int(4);
-      const leap = this.rng.chance(0.6) ? 7 : 12;
-      const data = this.cache.get(`horn:${this.raga.id}:${leap}`, () => renderHornCall(this.raga, this.sr, this.cache.seed, this.raga.notes.includes(leap % 12) ? leap : 12));
-      this.addVoice(data, at, B_WAR, 0.75, this.rng.bi() * 0.4);
+      this.addVoice(this.horn(this.rng.chance(0.6) ? 7 : 12), at, B_WAR, 0.75, this.rng.bi() * 0.4);
     }
   }
 
@@ -370,8 +473,7 @@ class Performer {
       } else {
         const vhz = swaraHz(this.raga, n.semis - 12);
         const from = n.meend && this.lastVinaHz > 0 ? this.lastVinaHz : vhz;
-        const data = renderVinaNote(vhz, (frames / sr) * 1.2, sr, this.rng, { fromHz: from, glideSec: n.meend ? Math.min(0.3, (frames / sr) * 0.4) : 0, andolan: n.andolan, vel: n.vel });
-        this.addVoice(data, at, B_VINA, 0.9, -0.25 + this.rng.bi() * 0.1);
+        this.pendingVina.push({ at, hz: vhz, from, glideSec: n.meend ? Math.min(0.3, (frames / sr) * 0.4) : 0, andolan: n.andolan, vel: n.vel, sec: (frames / sr) * 1.2 });
         this.lastVinaHz = vhz;
       }
     });
@@ -536,6 +638,19 @@ export class ScoreEngine {
       cacheBytes: this.cache.bytes,
       agcDb: +(20 * Math.log10(this.agc)).toFixed(2),
     };
+  }
+
+  /**
+   * Render missing cache items for the active arrangement for up to `budgetMs` (the music worker calls it
+   * in idle time so mood changes and first notes never stall a chunk). Returns true when fully warm.
+   */
+  prewarm(budgetMs: number, now: () => number): boolean {
+    if (!this.started) this.rearrange();
+    const p = this.active;
+    if (!p) return true;
+    const t0 = now();
+    while (now() - t0 < budgetMs) if (!p.warmOne()) return true;
+    return false;
   }
 
   /** The arrangement currently leading the mix. */
