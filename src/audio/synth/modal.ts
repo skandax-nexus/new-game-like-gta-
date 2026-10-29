@@ -44,7 +44,11 @@ export function addModes(out: Float32Array, offset: number, modes: readonly Mode
   }
 }
 
-/** Driven resonator bank (each mode: y = b0 x + c y1 - r2 y2 with b0 = a sin w, so an impulse rings at amplitude a). */
+/**
+ * Driven resonator bank. Each mode is a two-pole band-pass resonator with zeros at DC and Nyquist,
+ * y = b0 (x - x2) + c y1 - r2 y2 with b0 = a / 2, so an impulse rings at amplitude ~a and a mallet
+ * pulse leaks no DC "thump" (an all-pole resonator's DC gain grows as 1 / w for low modes).
+ */
 export class ResonatorBank {
   private readonly n: number;
   private readonly c: Float64Array;
@@ -52,6 +56,8 @@ export class ResonatorBank {
   private readonly b0: Float64Array;
   private readonly y1: Float64Array;
   private readonly y2: Float64Array;
+  private x1 = 0;
+  private x2 = 0;
   private readonly baseW: Float64Array;
   private readonly r: Float64Array;
   private readonly amp: Float64Array;
@@ -82,14 +88,17 @@ export class ResonatorBank {
       const r = this.r[i];
       this.c[i] = 2 * r * Math.cos(w);
       this.r2[i] = r * r;
-      this.b0[i] = this.amp[i] * Math.sin(w);
+      this.b0[i] = this.amp[i] * 0.5;
     }
   }
 
   process(x: number): number {
     let s = 0;
+    const dx = x - this.x2;
+    this.x2 = this.x1;
+    this.x1 = x;
     for (let i = 0; i < this.n; i++) {
-      const y = this.b0[i] * x + this.c[i] * this.y1[i] - this.r2[i] * this.y2[i];
+      const y = this.b0[i] * dx + this.c[i] * this.y1[i] - this.r2[i] * this.y2[i];
       this.y2[i] = this.y1[i];
       this.y1[i] = y;
       s += y;

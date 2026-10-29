@@ -53,7 +53,7 @@ export function kitHeads(kit: DrumKit, tonic: number): { treble: HeadSpec; bass:
     case 'dhol':
       return {
         treble: { f0: 330, ratios: MEMBRANE_RATIOS, t60: 0.28, ampTilt: 0.85, decayTilt: 0.6 },
-        bass: { f0: 72, ratios: MEMBRANE_RATIOS.slice(0, 8), t60: 0.8, ampTilt: 0.6, decayTilt: 0.9 },
+        bass: { f0: 72, ratios: MEMBRANE_RATIOS.slice(0, 8), t60: 0.5, ampTilt: 0.6, decayTilt: 0.9 },
       };
     case 'nagara':
       return {
@@ -130,7 +130,9 @@ export function drumStroke(out: Float32Array, offset: number, rng: Rand, sr: num
       const m = headModes(bass, rng);
       hit(out, offset, rng, sr, m, war ? 0.007 : 0.006, bass.t60 * 1.8, 7 * v, (t) => 1 + 0.06 * Math.exp(-t / 0.05));
       thud(out, offset, rng, sr, { f: bass.f0 * 1.25, dur: 0.12, gain: 0.55 * v, noise: 0.5, drop: 0.3 });
-      noiseBurst(out, offset, rng, sr, { dur: 0.015, f: 1200, q: 0.7, gain: 0.25 * v });
+      // Skin slap and the upper head: the presence that lets a war drum read on small speakers.
+      noiseBurst(out, offset, rng, sr, { dur: 0.025, f: 1100, q: 0.8, gain: 0.55 * v });
+      hit(out, offset, rng, sr, headModes(treble, rng, (k) => (k < 3 ? 0.6 : 0.3), 0.35), 0.004, 0.4, 1.6 * v);
       break;
     }
     case 'rim': {

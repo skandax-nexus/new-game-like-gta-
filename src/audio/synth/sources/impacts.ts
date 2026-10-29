@@ -23,17 +23,24 @@ export function noiseBurst(out: Float32Array, offset: number, rng: Rand, sr: num
   }
 }
 
-/** Wooden knock: plank / shield / clapper. `size` 0..1 lowers pitch and lengthens decay. */
-export function woodKnock(out: Float32Array, offset: number, rng: Rand, sr: number, opts: { f0?: number; size?: number; hardness?: number; gain?: number; damp?: number } = {}): void {
+/**
+ * Wooden knock: plank / shield / clapper / log. `size` 0..1 lowers pitch and lengthens decay; `tone`
+ * 0..1 from dull (heavily damped, mostly contact noise: shields, crates) to resonant (clappers, beams).
+ */
+export function woodKnock(out: Float32Array, offset: number, rng: Rand, sr: number, opts: { f0?: number; size?: number; hardness?: number; gain?: number; damp?: number; tone?: number } = {}): void {
   const size = clamp(opts.size ?? 0.5, 0, 1);
-  const f0 = opts.f0 ?? 900 - 700 * size + rng.bi() * 60;
-  const t60 = (0.05 + 0.35 * size) * (opts.damp ?? 1);
-  const modes: Mode[] = WOOD_RATIOS.map((r, k) => ({ f: f0 * r * (1 + rng.bi() * 0.03), t60: t60 * Math.pow(r, -0.8), a: Math.pow(0.62, k) * (0.7 + 0.6 * rng.next()) }));
+  const tone = clamp(opts.tone ?? 0.5, 0, 1);
+  const f0 = opts.f0 ?? (900 - 700 * size) * (0.8 + 0.4 * rng.next());
+  const t60 = (0.025 + (0.08 + 0.3 * size) * tone) * (opts.damp ?? 1);
+  const modes: Mode[] = WOOD_RATIOS.map((r, k) => ({ f: f0 * r * (1 + rng.bi() * 0.06), t60: t60 * Math.pow(r, -0.8) * (0.7 + 0.6 * rng.next()), a: Math.pow(0.62, k) * (0.6 + 0.8 * rng.next()) }));
   const bank = new ResonatorBank(modes, sr);
   const hard = clamp(opts.hardness ?? 0.6, 0, 1);
+  const g = opts.gain ?? 1;
   const exc = malletPulse(sr, 0.0045 - 0.0035 * hard, rng, 0.3);
-  strike(out, offset, bank, exc, t60 * 1.6 + 0.02, sr, (opts.gain ?? 1) * 6);
-  noiseBurst(out, offset, rng, sr, { dur: 0.006 + 0.01 * size, f: 2500 + 2500 * hard, q: 0.7, gain: 0.25 * (opts.gain ?? 1) });
+  strike(out, offset, bank, exc, t60 * 1.6 + 0.02, sr, g * 6 * (0.5 + 0.5 * tone));
+  // Contact: woody "thock" band + fibre crackle; dominant when the tone is dull.
+  noiseBurst(out, offset, rng, sr, { dur: 0.008 + 0.03 * size, f: (900 + 1600 * hard) * (1.2 - 0.5 * size), q: 1.1, gain: g * (0.35 + 0.6 * (1 - tone)) });
+  noiseBurst(out, offset, rng, sr, { dur: 0.005 + 0.01 * size, f: 2500 + 2500 * hard, q: 0.7, gain: 0.2 * g });
 }
 
 /** Metal clang (armour, copper vessel, blade-on-metal). `ring` lengthens decay. */
@@ -124,6 +131,7 @@ export function clothRustle(out: Float32Array, offset: number, rng: Rand, sr: nu
   const g = opts.gain ?? 1;
   const bp = new Biquad('bandpass', opts.f ?? 3200, 0.6, sr);
   const hp = new Biquad('highpass', 700, 0.7, sr);
+  const lp = new Biquad('lowpass', 7500, 0.6, sr);
   const grainRate = opts.grain ?? 0.02;
   let grainAmp = 0;
   for (let i = 0; i < n && o + i < out.length; i++) {
@@ -132,7 +140,7 @@ export function clothRustle(out: Float32Array, offset: number, rng: Rand, sr: nu
     const shape = Math.sin(Math.PI * Math.pow(u, 0.6));
     if (rng.next() < grainRate) grainAmp = 0.3 + rng.next() * 1.4;
     grainAmp *= 0.996;
-    const x = hp.process(bp.process(rng.bi()));
+    const x = lp.process(hp.process(bp.process(rng.bi())));
     out[o + i] += x * shape * (0.35 + grainAmp) * g;
   }
 }
@@ -156,7 +164,7 @@ export function debris(
         stoneHit(out, at, rng, sr, { size: sz * 0.6, gain: amp });
         break;
       case 'wood':
-        woodKnock(out, at, rng, sr, { size: sz * 0.5, hardness: 0.7, gain: amp * 0.7 });
+        woodKnock(out, at, rng, sr, { size: sz * 0.5, hardness: 0.7, gain: amp * 0.7, tone: 0.15 + 0.3 * rng.next() });
         break;
       case 'metal':
         metalClang(out, at, rng, sr, { f0: 1800 + rng.next() * 2500, ring: 0.15, gain: amp * 0.4, count: 8 });

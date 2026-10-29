@@ -8,6 +8,7 @@
  */
 import { clamp, type Rand } from './core';
 import { CombResonator, DelayLine } from './delay';
+import { Svf } from './filters';
 
 export interface PluckParams {
   /** Starting frequency (Hz). */
@@ -89,8 +90,11 @@ export function pluck(out: Float32Array, offset: number, p: PluckParams, rng: Ra
   const envRel = Math.exp(-1 / (0.05 * sr));
   let slapHp = 0;
   let slapLp = 0;
-  const hpA = 1 - Math.exp((-2 * Math.PI * 900) / sr);
-  const lpA = 1 - Math.exp((-2 * Math.PI * 7000) / sr);
+  const hpA = 1 - Math.exp((-2 * Math.PI * 700) / sr);
+  const lpA = 1 - Math.exp((-2 * Math.PI * 9000) / sr);
+  // The buzz carries a slowly sweeping formant (the tanpura's "jiva" bloom: up over ~1.5 s, then back).
+  const form = new Svf(sr, 1500, 2.2);
+  const sweepT = 1.2 + rng.next() * 0.8;
   let dc = 0;
   for (let i = 0; i < len; i++) {
     if (pitchFn && (i & 15) === 0) {
@@ -115,11 +119,18 @@ export function pluck(out: Float32Array, offset: number, p: PluckParams, rng: Ra
     if (jaw > 0) {
       const av = Math.abs(s);
       envAmp = av > envAmp ? av : envAmp * envRel;
-      const thr = envAmp * 0.55;
+      const thr = envAmp * 0.35;
       const slap = s > thr ? s - thr : 0;
       slapLp += lpA * (slap - slapLp);
       slapHp += hpA * (slapLp - slapHp);
-      s += jaw * 2.2 * (slapLp - slapHp);
+      if ((i & 31) === 0) {
+        const t = i / sr;
+        const u = t < sweepT ? t / sweepT : Math.max(0, 1 - (t - sweepT) / (sweepT * 3));
+        form.setFreq(1300 + 2600 * u * u * (3 - 2 * u), 2.2);
+      }
+      const b = slapLp - slapHp;
+      form.process(b);
+      s += jaw * (1.6 * b + 5 * form.band);
     }
     out[o + i] += s * vel;
   }

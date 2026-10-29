@@ -73,6 +73,23 @@ export function softClip(x: number): number {
 }
 
 /**
+ * Parallel saturation for small-speaker translation: adds 2nd/3rd harmonics of low fundamentals so a war
+ * drum or a ram still reads on a phone speaker (the ear infers the missing fundamental). `mix` 0..1.
+ */
+export function saturate(buf: Float32Array, drive: number, mix: number, asym = 0.25): Float32Array {
+  let peak = 0;
+  for (let i = 0; i < buf.length; i++) peak = Math.max(peak, Math.abs(buf[i]));
+  if (peak <= 0) return buf;
+  const pre = drive / peak;
+  for (let i = 0; i < buf.length; i++) {
+    const x = buf[i] * pre;
+    const y = softClip(x + asym * x * x * 0.3) / drive;
+    buf[i] = buf[i] * (1 - mix) + y * peak * mix * 1.4;
+  }
+  return buf;
+}
+
+/**
  * Seamless loop: `src` holds loopFrames + xfadeFrames samples; the extra tail is crossfaded (equal-power)
  * over the head, so out[loopFrames - 1] -> out[0] continues exactly like src[loopFrames - 1] -> src[loopFrames].
  */

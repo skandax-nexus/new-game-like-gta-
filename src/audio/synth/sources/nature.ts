@@ -95,7 +95,9 @@ export function thunder(out: Float32Array, offset: number, rng: Rand, sr: number
     let env = 0;
     for (const r of rolls) {
       const x = t - r.t;
-      if (x > 0) env += r.a * (x < 0.08 ? x / 0.08 : Math.exp(-(x - 0.08) / r.w));
+      // Distance smears the onsets of each roll.
+      const att = 0.08 + d * 0.06;
+      if (x > 0) env += r.a * (x < att ? x / att : Math.exp(-(x - att) / r.w));
     }
     env *= Math.exp(-t / (dur * 0.55)) * Math.min(1, t / (0.02 + d * 0.06));
     lp.process(brown.process(rng.bi()));

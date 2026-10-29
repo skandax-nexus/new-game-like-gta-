@@ -56,7 +56,23 @@ export type CrowdMood = 'murmur' | 'cheer' | 'panic' | 'roar' | 'court';
  * with pauses; cheer = sustained rising "aa"/"ee"; panic = high falling wails; roar = low sustained
  * shouting with breath. `excite` 0..1 raises pitch, effort and density.
  */
-export function crowd(out: Float32Array, offset: number, rng: Rand, sr: number, opts: { dur: number; voices: number; mood: CrowdMood; excite?: number; gain?: number; women?: number }): void {
+export function crowd(out: Float32Array, offset: number, rng: Rand, sr: number, opts: { dur: number; voices: number; mood: CrowdMood; excite?: number; gain?: number; women?: number; swell?: boolean }): void {
+  // Render into a scratch buffer so the group can swell in and die away together (no hard group cut).
+  const tmp = new Float32Array(Math.round((opts.dur + 0.3) * sr));
+  crowdInto(tmp, rng, sr, opts);
+  const n = tmp.length;
+  const fadeIn = Math.round(0.12 * sr);
+  const fadeOutStart = opts.swell === false ? n - Math.round(0.1 * sr) : Math.round(n * 0.55);
+  const o = Math.round(offset);
+  for (let i = 0; i < n && o + i < out.length; i++) {
+    let e = i < fadeIn ? i / fadeIn : 1;
+    if (i > fadeOutStart) e *= Math.pow(1 - (i - fadeOutStart) / (n - fadeOutStart), 1.6);
+    if (o + i >= 0) out[o + i] += tmp[i] * e;
+  }
+}
+
+function crowdInto(out: Float32Array, rng: Rand, sr: number, opts: { dur: number; voices: number; mood: CrowdMood; excite?: number; gain?: number; women?: number }): void {
+  const offset = 0;
   const ex = clamp(opts.excite ?? 0.5, 0, 1);
   const g = opts.gain ?? 1;
   for (let v = 0; v < opts.voices; v++) {
