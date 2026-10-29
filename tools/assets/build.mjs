@@ -225,14 +225,20 @@ function topoOrder(assets, roots) {
   return order;
 }
 
-/** Library modules imported by `src` ("from lib import a, b" / "from lib.x import" / "from . import"). */
+/**
+ * Library modules imported by `src`: "from lib import a, b as c", the parenthesized multi-line form
+ * "from lib import (\n a,\n b,\n)", "from lib.x import ..." and (inside lib) "from . import" / "from .x import".
+ */
 function importedLibModules(src) {
   const mods = new Set();
-  for (const m of src.matchAll(/^\s*from\s+(?:lib|\.)\s+import\s+([^\n#]+)/gm))
-    for (const part of m[1].replace(/[()]/g, '').split(',')) {
+  const addNames = (list) => {
+    for (const part of list.replace(/#[^\n]*/g, '').replace(/[()\\]/g, ' ').split(/[,\n]/)) {
       const name = part.trim().split(/\s+as\s+/)[0]?.trim();
-      if (name) mods.add(name);
+      if (name && /^\w+$/.test(name)) mods.add(name);
     }
+  };
+  for (const m of src.matchAll(/^[ \t]*from[ \t]+(?:lib|\.)[ \t]+import[ \t]*\(([^)]*)\)/gm)) addNames(m[1]);
+  for (const m of src.matchAll(/^[ \t]*from[ \t]+(?:lib|\.)[ \t]+import[ \t]+([^\n(#]+)/gm)) addNames(m[1]);
   for (const m of src.matchAll(/^\s*from\s+(?:lib)?\.(\w+)\s+import/gm)) mods.add(m[1]);
   return mods;
 }
@@ -335,15 +341,47 @@ function savePublished(rec) {
 /**
  * Exclusive publish lock (A1). The lock file `.asset-cache/.publish.lock` holds a JSON owner record
  * {pid, host, startedAt, nonce, ids}; it is held iff it contains a live, non-stale record.
- *   - free path          -> O_CREAT|O_EXCL create with our record (mode "excl"); release = unlink.
- *   - owner record       -> wait (poll); stale after 30 min or when the owner pid is gone (same host).
+ *   - free path          -> mode "excl": the record is written to a private temp file and hard-linked into
+ *                           place (link(2) fails with EEXIST when the lock exists), so the lock path is NEVER
+ *                           visible empty - an empty file always means a flock(1) sentinel. Release = rename the
+ *                           lock aside, verify it is still our record, delete it.
+ *   - owner record       -> wait (poll); stale after 30 min or when the owner pid is gone (same host). Breaking a
+ *                           stale record is serialized by a second, short-lived lock (`.publish.lock.break`,
+ *                           created the same atomic way): the breaker re-reads the record under it, renames the
+ *                           stale file aside (atomic), verifies the renamed content is still the stale record and
+ *                           only then deletes it (else it links it back). Two waiters can never both break the
+ *                           same record, nor delete a fresh lock created in between.
  *   - empty file         -> a flock(1) sentinel (STUDIO W3: `flock .publish.lock npm run assets ...`). If the
  *                           flock holder is one of our ancestors we already own it (mode "flock-outer");
  *                           if another process holds it we wait; if nobody does we take the OS lock with a
  *                           helper `flock -n` process for the critical section (mode "flock-helper").
  *                           In both flock modes the record is written in place and truncated on release, so
  *                           the inode flock(1) users lock stays the same.
+ * Test-only hooks (tests/assets/publish-lock.test.ts): SAMRAJYA_PUBLISH_LOCK_TRACE=<file> appends
+ * "enter <pid>" / "exit <pid>" around every critical section; SAMRAJYA_PUBLISH_LOCK_TEST_PAUSE_MS="create:300,
+ * break:300" stalls right after the lock path appears / right before a stale record is broken, to widen the
+ * windows the races lived in.
  */
+const LOCK_BREAK = `${PUBLISH_LOCK}.break`;
+const LOCK_BREAK_STALE_MS = 60 * 1000;
+const TEST_PAUSES = Object.fromEntries(
+  String(process.env.SAMRAJYA_PUBLISH_LOCK_TEST_PAUSE_MS || '')
+    .split(',')
+    .map((p) => p.split(':'))
+    .filter(([k, v]) => k && Number(v) > 0)
+    .map(([k, v]) => [k.trim(), Number(v)]),
+);
+const pauseSab = new Int32Array(new SharedArrayBuffer(4));
+function testPause(point) {
+  const ms = TEST_PAUSES[point];
+  if (ms) Atomics.wait(pauseSab, 0, 0, ms);
+}
+function trace(line) {
+  const f = process.env.SAMRAJYA_PUBLISH_LOCK_TRACE;
+  if (f) fs.appendFileSync(f, `${line} ${process.pid}\n`);
+}
+const uniqueName = (file, tag) => `${file}.${tag}.${process.pid}.${randomBytes(5).toString('hex')}`;
+
 function procAncestors() {
   const out = new Set();
   let pid = process.ppid;
@@ -386,10 +424,10 @@ function pidAlive(pid) {
   }
 }
 
-function readLock() {
+function readRecord(file) {
   try {
-    const st = fs.statSync(PUBLISH_LOCK);
-    const text = fs.readFileSync(PUBLISH_LOCK, 'utf8');
+    const st = fs.statSync(file);
+    const text = fs.readFileSync(file, 'utf8');
     let owner = null;
     try {
       const j = JSON.parse(text);
@@ -404,9 +442,62 @@ function readLock() {
   }
 }
 
-function lockStale(owner) {
-  if (Date.now() - owner.startedAt > PUBLISH_LOCK_STALE_MS) return true;
+const readLock = () => readRecord(PUBLISH_LOCK);
+
+function lockStale(owner, staleMs = PUBLISH_LOCK_STALE_MS) {
+  if (Date.now() - owner.startedAt > staleMs) return true;
   return owner.host === os.hostname() && !pidAlive(owner.pid);
+}
+
+/**
+ * Atomically create `file` holding `body`: write a private temp file, hard-link it into place (EEXIST = taken),
+ * drop the temp name. The path never exists with partial content. Returns false when the file already exists.
+ */
+function createAtomic(file, body) {
+  const tmp = uniqueName(file, 'new');
+  fs.writeFileSync(tmp, body, { flag: 'wx' });
+  try {
+    fs.linkSync(tmp, file);
+  } catch (e) {
+    if (e.code === 'EEXIST') return false;
+    throw e;
+  } finally {
+    fs.rmSync(tmp, { force: true });
+  }
+  return true;
+}
+
+/**
+ * Remove `file` only if it still holds exactly `expected`: rename it aside (atomic), compare the renamed content,
+ * delete it on a match, else link it back (a newer lock that appeared meanwhile is never touched). True = removed.
+ */
+function removeIfUnchanged(file, expected) {
+  const aside = uniqueName(file, 'aside');
+  try {
+    fs.renameSync(file, aside);
+  } catch (e) {
+    if (e.code === 'ENOENT') return false;
+    throw e;
+  }
+  let got = null;
+  try {
+    got = fs.readFileSync(aside, 'utf8');
+  } catch {
+    got = null;
+  }
+  if (got === expected) {
+    fs.rmSync(aside, { force: true });
+    return true;
+  }
+  try {
+    fs.linkSync(aside, file);
+  } catch (e) {
+    if (e.code !== 'EEXIST') throw e;
+    console.warn(`[assets] ${rel(file)} changed while it was being removed and a new one exists - leaving the new one`);
+  } finally {
+    fs.rmSync(aside, { force: true });
+  }
+  return false;
 }
 
 /** Start `flock -n <lock>` holding the OS lock until we close its stdin. Resolves to the child or null. */
@@ -448,27 +539,22 @@ async function acquirePublishLock(label) {
   const ancestors = procAncestors();
   for (;;) {
     if (Date.now() - t0 > timeoutMs) throw new Error(`timed out waiting for ${rel(PUBLISH_LOCK)}`);
-    try {
-      const fd = fs.openSync(PUBLISH_LOCK, 'wx');
-      fs.writeSync(fd, body);
-      fs.closeSync(fd);
+    if (createAtomic(PUBLISH_LOCK, body)) {
+      testPause('create');
       return { mode: 'excl', body, release: () => releaseIfOurs(body, 'unlink') };
-    } catch (e) {
-      if (e.code !== 'EEXIST') throw e;
     }
     const cur = readLock();
     if (!cur) continue;
     if (cur.owner) {
       if (lockStale(cur.owner)) {
-        console.warn(`[assets] removing stale publish lock of pid ${cur.owner.pid} (${new Date(cur.owner.startedAt).toISOString()})`);
-        removeStale(cur);
+        if (!breakStale(cur)) await sleep(50 + Math.random() * 50);
         continue;
       }
       note(`held by pid ${cur.owner.pid} on ${cur.owner.host} since ${new Date(cur.owner.startedAt).toISOString()} (${cur.owner.ids})`);
       await sleep(150 + Math.random() * 100);
       continue;
     }
-    // Empty / foreign content: a flock(1) sentinel.
+    // Empty / foreign content: a flock(1) sentinel (excl locks are never empty, see createAtomic).
     const holders = flockHolders(cur.st);
     if (holders && holders.some((p) => ancestors.has(p))) {
       fs.writeFileSync(PUBLISH_LOCK, body);
@@ -484,9 +570,10 @@ async function acquirePublishLock(label) {
       await sleep(100 + Math.random() * 100);
       continue;
     }
-    // We hold the OS lock (or the platform has no /proc/locks): claim the sentinel in place.
+    // We hold the OS lock (or the platform has no /proc/locks): claim the sentinel in place - unless it changed
+    // (an excl owner replaced it, or it was removed) while we were taking the OS lock.
     const again = readLock();
-    if (again && again.owner) {
+    if (!again || again.owner || again.st.ino !== cur.st.ino) {
       helper?.stdin.end();
       continue;
     }
@@ -503,25 +590,48 @@ async function acquirePublishLock(label) {
 }
 
 function releaseIfOurs(body, how) {
+  if (how === 'unlink') {
+    if (!removeIfUnchanged(PUBLISH_LOCK, body)) console.warn('[assets] publish lock was taken over while held (stale?) - not releasing it');
+    return;
+  }
+  // flock modes: we hold the OS lock on this inode, nobody else writes it; truncate keeps the inode.
   const cur = readLock();
   if (!cur || cur.text !== body) {
     console.warn('[assets] publish lock was taken over while held (stale?) - not releasing it');
     return;
   }
-  if (how === 'unlink') fs.rmSync(PUBLISH_LOCK, { force: true });
-  else fs.truncateSync(PUBLISH_LOCK, 0);
+  fs.truncateSync(PUBLISH_LOCK, 0);
 }
 
-function removeStale(cur) {
-  // Excl-mode records are removed; records written into a flock sentinel are truncated (keep the inode).
+/**
+ * Break the stale record `seen` (A1 hardening). Serialized by the `.break` lock; returns true when this process
+ * performed the break, false when another waiter is breaking (or already broke) it - the caller re-polls.
+ */
+function breakStale(seen) {
+  const mine = JSON.stringify({ pid: process.pid, host: os.hostname(), startedAt: Date.now(), nonce: randomBytes(6).toString('hex') });
+  if (!createAtomic(LOCK_BREAK, mine)) {
+    // Another waiter is breaking. Its break lock is only held for milliseconds: clear it if its owner died.
+    const b = readRecord(LOCK_BREAK);
+    if (b && (!b.owner || lockStale(b.owner, LOCK_BREAK_STALE_MS))) removeIfUnchanged(LOCK_BREAK, b.text);
+    return false;
+  }
   try {
-    const now = fs.readFileSync(PUBLISH_LOCK, 'utf8');
-    if (now !== cur.text) return;
-    const holders = flockHolders(cur.st);
-    if (holders && holders.length) fs.truncateSync(PUBLISH_LOCK, 0);
-    else fs.rmSync(PUBLISH_LOCK, { force: true });
-  } catch {
-    /* raced with another remover */
+    const now = readLock();
+    // Re-validate under the break lock: same file (inode), same record, still stale.
+    if (!now || now.text !== seen.text || now.st.ino !== seen.st.ino || !now.owner || !lockStale(now.owner)) return false;
+    testPause('break');
+    console.warn(`[assets] removing stale publish lock of pid ${now.owner.pid} (${new Date(now.owner.startedAt).toISOString()})`);
+    const holders = flockHolders(now.st);
+    if (holders && holders.length) {
+      // A record written into a flock(1) sentinel whose writer died while a flock(1) wrapper still holds the inode:
+      // truncate in place (keep the inode flock(1) users lock). Only flock holders write this inode.
+      if (fs.readFileSync(PUBLISH_LOCK, 'utf8') === now.text) fs.truncateSync(PUBLISH_LOCK, 0);
+      return true;
+    }
+    removeIfUnchanged(PUBLISH_LOCK, now.text);
+    return true;
+  } finally {
+    removeIfUnchanged(LOCK_BREAK, mine);
   }
 }
 
@@ -529,11 +639,13 @@ async function withPublishLock(label, fn) {
   const t0 = Date.now();
   const lock = await acquirePublishLock(label);
   console.log(`[assets] publish lock acquired (${lock.mode}${Date.now() - t0 > 50 ? `, waited ${((Date.now() - t0) / 1000).toFixed(1)} s` : ''})`);
+  trace('enter');
   try {
     const hold = Number(process.env.SAMRAJYA_PUBLISH_LOCK_HOLD_MS || 0);
     if (hold > 0) await sleep(hold); // tests: widen the critical section to force overlap
     return await fn();
   } finally {
+    trace('exit');
     lock.release();
     console.log('[assets] publish lock released');
   }
@@ -714,6 +826,14 @@ async function main() {
   if (flags.has('--check')) {
     const { errors, totals, pkgs } = checkBudgets(rec);
     for (const id of Object.keys(rec.assets)) if (!assets.has(id)) errors.push(`${id}: published but its script no longer exists`);
+    // Out-of-date (DIRTY) assets are a warning, not an error: a teammate may be mid-bake in the shared tree.
+    const hashes = new Map();
+    for (const id of topoOrder(assets, [...assets.keys()])) hashes.set(id, inputHashFor(assets.get(id), (d) => hashes.get(d) ?? ''));
+    for (const a of assets.values()) {
+      const pub = rec.assets[a.id];
+      if (pub && (pub.inputHash !== hashes.get(a.id) || (pub.publishKey ?? '') !== publishKeyFor(a)))
+        console.warn(`[assets] WARN ${a.id}: DIRTY - inputs changed since it was published (npm run assets -- ${a.id})`);
+    }
     const fresh = writeManifest(rec, { dryRun: true });
     if (!fresh.upToDate) errors.push('src/assets/manifest.ts is out of date (run npm run assets -- --republish <ids>)');
     printTotals(totals, pkgs);
@@ -822,6 +942,9 @@ async function buildAll(assets, rec, order, built) {
     if ((!cached || FORCE) && !flags.has('--republish')) {
       console.log(`[assets] ${id}: blender ${rel(a.file)}${DRAFT ? ' (draft)' : ''}`);
       const styleEnv = a.style.length ? { SAMRAJYA_STYLE: JSON.stringify(styleValues(a.style)) } : {};
+      // Invalidate the cache stamp first: an interrupted bake followed by reverted inputs must never reuse a
+      // half-written cache directory under the old (matching) hash.
+      fs.rmSync(stampPath, { force: true });
       const secs = await runBlender(a, outDir, styleEnv);
       fs.writeFileSync(stampPath, inputHash);
       console.log(`[assets] ${id}: blender done in ${secs.toFixed(1)} s`);

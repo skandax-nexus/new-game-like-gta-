@@ -7,10 +7,14 @@
  *   const lod = makeCrossFadeLod(existingLod, { band: 0.12 });
  *
  * Contract: around each switch distance D the two adjacent levels are both visible over [D - w/2, D + w/2]
- * (w = band x D). Each level's materials get `LOD_DITHER_GLSL`: the fragment computes the object distance
- * from cameraPosition and modelMatrix (per object, so instanced / shared materials still fade per object)
- * and discards with an ordered 4x4 Bayer pattern - the outgoing level keeps pixels where dither >= fade, the
+ * (w = band x D). Each level's materials get `LOD_DITHER_GLSL`: the fragment computes the LOD distance and
+ * discards with an ordered 4x4 Bayer pattern - the outgoing level keeps pixels where dither >= fade, the
  * incoming one where dither < fade - so every pixel is covered exactly once (no double blending, no holes).
+ * The distance is the SAME one CrossFadeLOD.update() uses on the CPU (LOD root origin, divided by camera zoom),
+ * passed in the `lodFadeOrigin` uniform (xyz world origin, w = 1 / zoom) so the GPU fade bands line up with the
+ * CPU visibility bands; with w <= 0 (installLodDither on shared / instanced materials outside a CrossFadeLOD) the
+ * shader falls back to each mesh's own origin. Shadows are not dithered: inside a band only the level that is
+ * current on the CPU casts a shadow (no double shadow).
  * GFX-01 may move the chunk into src/render/materials/chunks/ (keep the define SAMRAJYA_LOD_DITHER and the
  * uniform names); materials are cloned per level (textures shared) because the fade bands differ per level.
  */
@@ -21,6 +25,7 @@ import { cloneMaterial } from './vat';
 export const LOD_DITHER_GLSL = /* glsl */ `
 #ifdef SAMRAJYA_LOD_DITHER
 uniform vec4 lodFadeBand;
+uniform vec4 lodFadeOrigin;
 float samrajyaBayer4( vec2 p ) {
   ivec2 i = ivec2( mod( p, 4.0 ) );
   int idx = i.x + i.y * 4;
@@ -28,7 +33,7 @@ float samrajyaBayer4( vec2 p ) {
   return ( m[ idx ] + 0.5 ) / 16.0;
 }
 void samrajyaLodDither() {
-  float d = distance( cameraPosition, vec3( lodFadeCenter ) );
+  float d = lodFadeOrigin.w > 0.0 ? distance( cameraPosition, lodFadeOrigin.xyz ) * lodFadeOrigin.w : distance( cameraPosition, lodFadeCenter );
   float b = samrajyaBayer4( gl_FragCoord.xy );
   if ( lodFadeBand.y > lodFadeBand.x ) {
     float fin = clamp( ( d - lodFadeBand.x ) / ( lodFadeBand.y - lodFadeBand.x ), 0.0, 1.0 );
@@ -45,11 +50,14 @@ void samrajyaLodDither() {
 const VERTEX_DECL = '#ifdef SAMRAJYA_LOD_DITHER\nvarying vec3 lodFadeCenter;\n#endif';
 const VERTEX_BODY = '#ifdef SAMRAJYA_LOD_DITHER\nlodFadeCenter = ( modelMatrix * vec4( 0.0, 0.0, 0.0, 1.0 ) ).xyz;\n#endif';
 
-/** Patch a material (chaining its onBeforeCompile) with the dither for one LOD level's fade band. */
-export function installLodDither(mat: THREE.Material, band: THREE.Vector4): void {
+/**
+ * Patch a material (chaining its onBeforeCompile) with the dither for one LOD level's fade band. `origin`
+ * (xyz = LOD world origin, w = 1 / camera zoom) is updated by CrossFadeLOD; omit it to fade per mesh origin.
+ */
+export function installLodDither(mat: THREE.Material, band: THREE.Vector4, origin: THREE.Vector4 = new THREE.Vector4(0, 0, 0, 0)): void {
   const prev = mat.onBeforeCompile;
   const prevKey = mat.customProgramCacheKey();
-  const uniforms = { lodFadeBand: { value: band } };
+  const uniforms = { lodFadeBand: { value: band }, lodFadeOrigin: { value: origin } };
   mat.onBeforeCompile = (shader, renderer) => {
     prev.call(mat, shader, renderer);
     Object.assign(shader.uniforms, uniforms);
@@ -63,6 +71,7 @@ export function installLodDither(mat: THREE.Material, band: THREE.Vector4): void
   };
   mat.customProgramCacheKey = () => `${prevKey}|lod-dither`;
   mat.userData.lodFadeBand = band;
+  mat.userData.lodFadeOrigin = origin;
 }
 
 export interface CrossFadeOptions {
@@ -73,15 +82,32 @@ export interface CrossFadeOptions {
 /** THREE.LOD that keeps both adjacent levels visible inside the fade band (materials do the dithering). */
 export class CrossFadeLOD extends THREE.LOD {
   band = 0.12;
+  /** Shared by every dithered material of this LOD: xyz = world origin, w = 1 / camera zoom (set in update). */
+  readonly fadeOrigin = new THREE.Vector4(0, 0, 0, 1);
+  /** Per level: its meshes and whether they cast shadows when the level is current. */
+  private shadowCasters: { mesh: THREE.Mesh; cast: boolean }[][] = [];
   private readonly cam = new THREE.Vector3();
   private readonly me = new THREE.Vector3();
+
+  /** Record each level's shadow casters (makeCrossFadeLod calls this once the levels are added). */
+  captureShadowCasters(): void {
+    this.shadowCasters = this.levels.map((lv) => {
+      const list: { mesh: THREE.Mesh; cast: boolean }[] = [];
+      lv.object.traverse((o) => {
+        if ((o as THREE.Mesh).isMesh) list.push({ mesh: o as THREE.Mesh, cast: o.castShadow });
+      });
+      return list;
+    });
+  }
 
   override update(camera: THREE.Camera): void {
     const levels = this.levels;
     if (levels.length <= 1) return;
     this.cam.setFromMatrixPosition(camera.matrixWorld);
     this.me.setFromMatrixPosition(this.matrixWorld);
-    const d = this.cam.distanceTo(this.me) / ((camera as THREE.PerspectiveCamera).zoom ?? 1);
+    const zoom = (camera as THREE.PerspectiveCamera).zoom ?? 1;
+    const d = this.cam.distanceTo(this.me) / zoom;
+    this.fadeOrigin.set(this.me.x, this.me.y, this.me.z, 1 / zoom);
     let current = 0;
     for (let i = 0; i < levels.length; i++) {
       const lo = i === 0 ? -Infinity : levels[i]!.distance * (1 - this.band * 0.5);
@@ -90,6 +116,9 @@ export class CrossFadeLOD extends THREE.LOD {
       levels[i]!.object.visible = visible;
       if (visible && d >= (i === 0 ? 0 : levels[i]!.distance)) current = i;
     }
+    // Inside a fade band both levels draw (dithered), but only the current one casts a shadow.
+    for (let i = 0; i < this.shadowCasters.length; i++)
+      for (const c of this.shadowCasters[i]!) c.mesh.castShadow = c.cast && i === current;
     (this as unknown as { _currentLevel: number })._currentLevel = current;
   }
 }
@@ -125,7 +154,7 @@ export function makeCrossFadeLod(src: THREE.LOD, opts: CrossFadeOptions = {}): {
         let c = cache.get(mat);
         if (!c) {
           c = cloneMaterial(mat);
-          installLodDither(c, v);
+          installLodDither(c, v, out.fadeOrigin);
           cache.set(mat, c);
           clones.push(c);
         }
@@ -135,5 +164,6 @@ export function makeCrossFadeLod(src: THREE.LOD, opts: CrossFadeOptions = {}): {
     });
     out.addLevel(lv.object, lv.distance, lv.hysteresis);
   });
+  out.captureShadowCasters();
   return { lod: out, dispose: () => clones.forEach((m) => m.dispose()) };
 }

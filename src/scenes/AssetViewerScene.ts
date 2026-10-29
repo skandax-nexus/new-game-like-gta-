@@ -42,6 +42,7 @@ import type { AssetEntry, ModelAssetEntry } from '../assets/types';
 import { createVatDepthMaterial, createVatInstancedMesh, createVatMaterial, setVatInstance } from '../assets/loaders/vat';
 import { createImpostorMesh } from '../assets/loaders/impostor';
 import { createFlipbookMaterial } from '../assets/loaders/flipbook';
+import { installPrepassGuard } from '../assets/loaders/prepass';
 import { createLutPassMaterial } from '../assets/loaders/lut';
 import { instanceObject, type InstancedKit } from '../assets/loaders/instancing';
 import { createDetailTexture, createNoiseNormalMap } from '../render/environment/textures';
@@ -92,6 +93,13 @@ interface ViewerOptions {
   phase: number | null;
   /** Flipbooks: particle tint override ('none' = white; default: the entry's tint). */
   tint: string | null;
+  /**
+   * Override-material pass handling (prepass tag, loaders/prepass.ts): default = the helpers' tags; 'skip' =
+   * crowds left out of the AO pre-pass; 'off' = flipbook quads untagged (pre-rework A/B: cards in GTAO).
+   */
+  prepass: 'skip' | 'off' | null;
+  /** Flipbooks: build the quads but hide them (backdrop-only reference shot for the GTAO card A/B). */
+  hidefx: boolean;
 }
 
 function viewerOptions(): ViewerOptions {
@@ -123,6 +131,8 @@ function viewerOptions(): ViewerOptions {
     variant: q.get('variant'),
     phase: num('phase'),
     tint: q.get('tint'),
+    prepass: q.get('prepass') === 'skip' ? 'skip' : q.get('prepass') === 'off' ? 'off' : null,
+    hidefx: q.get('hidefx') === '1',
   };
 }
 
@@ -188,7 +198,8 @@ interface CrowdLod {
   mesh: THREE.InstancedMesh;
   material: THREE.Material;
   depth: THREE.Material;
-  draws: { main: number; shadow: number };
+  /** Per frame: color draws (no override), AO pre-pass draws (VAT-posed replacement), shadow-map draws. */
+  draws: { main: number; prepass: number; shadow: number };
 }
 
 interface SkinnedClone {
@@ -229,7 +240,7 @@ export class AssetViewerScene implements GameScene {
   /** renderer.render(scene) calls in the last frame (main pass + e.g. the GTAO normal pre-pass on high+). */
   private scenePasses = { count: 0 };
   private vatTime: { value: number } | null = null;
-  private flipMats: { mat: THREE.Material; fps: number; count: number; loop: boolean }[] = [];
+  private flipMats: { mat: THREE.Material; fps: number; count: number; loop: boolean; mesh: THREE.Mesh }[] = [];
   private impostorRadius = 1;
   private impostorCenter = new THREE.Vector3();
   private impostorDist = 60;
@@ -574,12 +585,16 @@ export class AssetViewerScene implements GameScene {
       const lod = lods[li]!;
       const material = createVatMaterial(lod, { partColors: partColors.length ? partColors : undefined, time, clothVariation: 0.18 });
       const depth = createVatDepthMaterial(lod, time);
-      const mesh = createVatInstancedMesh(lod, n, material, depth);
+      const mesh = createVatInstancedMesh(lod, n, material, { depth, prepass: this.opts.prepass === 'skip' ? 'skip' : 'replace' });
       mesh.castShadow = true;
       mesh.receiveShadow = true;
-      const draws = { main: 0, shadow: 0 };
-      mesh.onBeforeRender = () => {
-        draws.main++;
+      const draws = { main: 0, prepass: 0, shadow: 0 };
+      // Chain the prepass guard installed by createVatInstancedMesh (never replace it).
+      const guard = mesh.onBeforeRender;
+      mesh.onBeforeRender = function (renderer, scene, camera, geometry, mat, group) {
+        if ((scene as THREE.Scene).overrideMaterial) draws.prepass++;
+        else draws.main++;
+        guard.call(this, renderer, scene, camera, geometry, mat, group);
       };
       mesh.onBeforeShadow = () => {
         draws.shadow++;
@@ -601,7 +616,7 @@ export class AssetViewerScene implements GameScene {
       mesh.computeBoundingSphere();
       this.scene.add(mesh);
       this.crowd.push({ mesh, material, depth, draws });
-      this.owned.push({ dispose: () => (mesh.dispose(), mesh.geometry.dispose(), material.dispose(), depth.dispose()) });
+      this.owned.push({ dispose: () => ((mesh.userData.dispose as () => void)(), mesh.dispose(), material.dispose(), depth.dispose()) });
     }
     const w = cols * spacing;
     const d = rows * spacing * 1.1;
@@ -656,6 +671,33 @@ export class AssetViewerScene implements GameScene {
     }
   }
 
+  /** Screen rectangles (CSS pixels, top-left origin) of every flipbook quad (GTAO card A/B measurements). */
+  private fxQuadRects(): { x: number; y: number; w: number; h: number }[] {
+    const box = this.ctx.render.renderer.domElement.getBoundingClientRect();
+    const out: { x: number; y: number; w: number; h: number }[] = [];
+    for (const f of this.flipMats) {
+      const geo = f.mesh.geometry;
+      if (!geo.boundingBox) geo.computeBoundingBox();
+      const b = geo.boundingBox!;
+      f.mesh.updateMatrixWorld(true);
+      let x0 = Infinity;
+      let y0 = Infinity;
+      let x1 = -Infinity;
+      let y1 = -Infinity;
+      for (const [px, py] of [[b.min.x, b.min.y], [b.max.x, b.min.y], [b.min.x, b.max.y], [b.max.x, b.max.y]] as const) {
+        const p = new THREE.Vector3(px, py, 0).applyMatrix4(f.mesh.matrixWorld).project(this.camera);
+        const x = box.left + (p.x * 0.5 + 0.5) * box.width;
+        const y = box.top + (1 - (p.y * 0.5 + 0.5)) * box.height;
+        x0 = Math.min(x0, x);
+        y0 = Math.min(y0, y);
+        x1 = Math.max(x1, x);
+        y1 = Math.max(y1, y);
+      }
+      out.push({ x: Math.round(x0), y: Math.round(y0), w: Math.round(x1 - x0), h: Math.round(y1 - y0) });
+    }
+    return out;
+  }
+
   /** Screen rectangle (pixels, top-left origin) of the impostor subject's bounding sphere. */
   private subjectRect(): { x: number; y: number; w: number; h: number } | null {
     if (this.mode !== 'impostor') return null;
@@ -705,12 +747,16 @@ export class AssetViewerScene implements GameScene {
       const mat = createFlipbookMaterial(fb, { sequence: s.name, tint });
       const geo = new THREE.PlaneGeometry(w, h);
       const mesh = new THREE.Mesh(geo, mat);
+      // Particles never reach the GTAO / SSAO normal pre-pass (they were drawn as opaque cards there).
+      // ?prepass=off shows the pre-rework behaviour for A/B evidence.
+      if (this.opts.prepass !== 'off') installPrepassGuard(mesh, 'skip');
       const c = i % cols;
       const r = Math.floor(i / cols);
       mesh.position.set((c - (cols - 1) / 2) * w * 1.15, h / 2 + 0.05 + r * h * 1.15, 0);
       mesh.renderOrder = 10;
+      mesh.visible = !this.opts.hidefx;
       this.scene.add(mesh);
-      this.flipMats.push({ mat, fps: s.fps, count: s.count, loop: s.loop });
+      this.flipMats.push({ mat, fps: s.fps, count: s.count, loop: s.loop, mesh });
       this.owned.push(geo, mat);
     });
     const rowsN = Math.ceil(seqs.length / cols);
@@ -1189,16 +1235,17 @@ export class AssetViewerScene implements GameScene {
     this.applyGrade();
   }
 
-  private crowdDraws(): { lod: number; main: number; shadow: number; instances: number; scenePasses: number; perPass: number }[] {
+  private crowdDraws(): { lod: number; main: number; prepass: number; shadow: number; instances: number; scenePasses: number; perPass: number }[] {
     const passes = Math.max(1, this.scenePasses.count);
     return this.crowd.map((c, i) => ({
       lod: i,
       main: c.draws.main,
+      prepass: c.draws.prepass,
       shadow: c.draws.shadow,
       instances: c.mesh.count,
       scenePasses: passes,
-      // one InstancedMesh per LOD: draws per scene pass = color draw + its shadow draw
-      perPass: (c.draws.main + c.draws.shadow) / passes,
+      // one InstancedMesh per LOD: color draw + its shadow draw (the AO pre-pass, when present, adds one posed draw)
+      perPass: (c.draws.main + c.draws.shadow) / Math.max(1, c.draws.main),
     }));
   }
 
@@ -1211,7 +1258,8 @@ export class AssetViewerScene implements GameScene {
     let extra = '';
     if (this.model?.object instanceof THREE.LOD) extra += `\nlod ${this.model.object.getCurrentLevel()} (auto${this.opts.crossfade ? ', cross-fade' : ''})`;
     else if (this.ctx.params.lod !== null) extra += `\nlod ${this.ctx.params.lod}`;
-    if (this.mode === 'vat') extra += `\n${this.crowdDraws().map((d) => `LOD${d.lod}: ${d.instances} inst, ${d.perPass} draws/pass (${d.main}+${d.shadow} in ${d.scenePasses} passes)`).join('  ')}`;
+    if (this.mode === 'vat')
+      extra += `\n${this.crowdDraws().map((d) => `LOD${d.lod}: ${d.instances} inst, color ${d.main} + shadow ${d.shadow} + AO pre-pass ${d.prepass} (posed)`).join('  ')}`;
     if (this.mode === 'impostor') extra += `\ndistance ${this.impostorDist.toFixed(0)} m  mode ${this.opts.mode ?? 'ab'}`;
     if (this.mode === 'skinned') extra += `\n${this.clones.map((c) => `${c.clip}: ${c.fired.slice(-3).join(' ')}`).join('\n')}`;
     if (this.mode === 'kit') extra += `\n${this.kitDraws.map((k) => `${k.id}: ${k.meshes} draws`).join('  ')}`;
@@ -1252,6 +1300,7 @@ export class AssetViewerScene implements GameScene {
     }
     for (const c of this.crowd) {
       c.draws.main = 0;
+      c.draws.prepass = 0;
       c.draws.shadow = 0;
     }
     this.scenePasses.count = 0;
@@ -1312,6 +1361,8 @@ export class AssetViewerScene implements GameScene {
       kit: this.mode === 'kit' ? this.kitDraws : null,
       lut: this.mode === 'lut' ? { split: this.opts.split ?? 0.5, installed: !!this.lutPass } : null,
       flipbooks: this.flipMats.length,
+      fxQuads: this.flipMats.length ? this.fxQuadRects() : null,
+      prepass: this.opts.prepass ?? 'tagged',
       notes: this.notes,
     };
   }

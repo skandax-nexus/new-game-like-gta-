@@ -10,9 +10,15 @@
  * Frame k (row-major from the top-left) covers u in [(k % cols) / cols, ...], v in [floor(k / cols) / rows, ...]
  * with flipY = false (v = 0 is the top row). The particle system (GFX-04 FxSystem) drives the frame per particle
  * (instanced attribute) - the frame / uv math below is the contract; soft particles fade over softFadeMeters.
+ *
+ * Particles are transparent and write no depth: they must never reach an override-material pass (the GTAO / SSAO
+ * normal + depth pre-pass draws every mesh opaque - each quad became a visible card with an AO halo).
+ * createFlipbookMaterial tags the material `userData.samrajyaPrepass = 'skip'`; createFlipbookMesh (or
+ * installPrepassGuard(mesh, 'skip') on the particle system's own InstancedMesh) enforces it - loaders/prepass.ts.
  */
 import * as THREE from 'three';
 import type { FlipbookAssetEntry, FlipbookSequenceEntry } from '../types';
+import { installPrepassGuard, PREPASS_TAG } from './prepass';
 
 export interface FlipbookHandle {
   readonly entry: FlipbookAssetEntry;
@@ -76,7 +82,8 @@ const FLIP_COLOR = /* glsl */ `
   float flipK0; float flipK1; float flipA;
   flipFrames( flipK0, flipK1, flipA );
   vec4 flipC = mix( texture2D( flipColor, flipUv( flipK0, vUv ) ), texture2D( flipColor, flipUv( flipK1, vUv ) ), flipA );
-  #ifdef FLIP_PREMULTIPLIED
+  #if defined( FLIP_PREMULTIPLIED ) || defined( FLIP_ADDITIVE )
+    // premultiplied / additive books store emission: x emissiveIntensity (fire 8, sparks 6, trails 3, lightning 10)
     diffuseColor.rgb *= flipC.rgb * flipEmissive;
     diffuseColor.a *= flipC.a;
   #else
@@ -143,7 +150,13 @@ export function createFlipbookMaterial(h: FlipbookHandle, opts: FlipbookMaterial
   mat.name = `${e.id}:${seq.name}`;
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
-    shader.defines = { ...(shader.defines ?? {}), USE_UV: '', ...(lit ? { FLIP_NORMAL: '' } : {}), ...(premul ? { FLIP_PREMULTIPLIED: '' } : {}) };
+    shader.defines = {
+      ...(shader.defines ?? {}),
+      USE_UV: '',
+      ...(lit ? { FLIP_NORMAL: '' } : {}),
+      ...(premul ? { FLIP_PREMULTIPLIED: '' } : {}),
+      ...(additive ? { FLIP_ADDITIVE: '' } : {}),
+    };
     shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\n#ifndef USE_UV\n#define USE_UV\n#endif');
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>\n${FLIP_HEADER}`)
@@ -153,5 +166,23 @@ export function createFlipbookMaterial(h: FlipbookHandle, opts: FlipbookMaterial
   mat.customProgramCacheKey = () => `samrajya-flipbook|${lit ? 'l' : ''}${premul ? 'p' : ''}${additive ? 'a' : ''}`;
   mat.userData.flipbookFrame = frame;
   mat.userData.flipbookUniforms = uniforms;
+  mat.userData[PREPASS_TAG] = 'skip';
   return mat;
+}
+
+/**
+ * A particle quad (or the caller's geometry) with a flipbook material, guarded against override-material passes
+ * (prepass 'skip'). Geometry ownership: a geometry passed in stays the caller's; the default 1 x 1 quad is freed by
+ * `mesh.userData.dispose()` together with the material.
+ */
+export function createFlipbookMesh(h: FlipbookHandle, opts: FlipbookMaterialOptions = {}, geometry?: THREE.BufferGeometry): THREE.Mesh {
+  const mat = createFlipbookMaterial(h, opts);
+  const geo = geometry ?? new THREE.PlaneGeometry(1, 1);
+  const mesh = installPrepassGuard(new THREE.Mesh(geo, mat), 'skip');
+  mesh.name = mat.name;
+  mesh.userData.dispose = (): void => {
+    mat.dispose();
+    if (!geometry) geo.dispose();
+  };
+  return mesh;
 }

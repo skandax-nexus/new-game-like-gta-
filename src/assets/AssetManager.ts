@@ -28,6 +28,9 @@
  * - Fallbacks: a missing/failed asset never breaks the game - models fall back to a registered procedural
  *   factory (registerModelFallback) or a bounds-sized block; materials to factor-only PBR; every other loader
  *   resolves to null (the caller keeps its procedural sky / particles / grade). Failures are console.warn'ed.
+ * - Multi-part loads track every cache acquisition in an AcquireScope (loaders/scope.ts) from the moment it
+ *   starts: when one part fails, every part that resolved - and every part that resolves later - is released,
+ *   so a flaky network never leaves refs (and GPU memory) behind (tests/assets/asset-manager.test.ts).
  */
 import * as THREE from 'three';
 import type { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -67,6 +70,7 @@ import type { ImpostorHandle } from './loaders/impostor';
 import type { FlipbookHandle } from './loaders/flipbook';
 import { createLutTexture, stripToVolume, type LutHandle } from './loaders/lut';
 import { makeCrossFadeLod, type CrossFadeOptions } from './loaders/lodFade';
+import { AcquireScope } from './loaders/scope';
 
 export type { VatHandle, VatLodData } from './loaders/vat';
 export type { ImpostorHandle } from './loaders/impostor';
@@ -428,14 +432,12 @@ export class AssetManager {
     const tier = this.tierSetting;
     const minLod = Math.min(entry.minLod[tier] ?? 0, entry.lods.length - 1);
     const levels = opts.lod !== undefined ? [entry.lods[Math.min(opts.lod, entry.lods.length - 1)]!] : entry.lods.slice(minLod);
-    const acquiredGltf: string[] = [];
-    const acquiredMats: Releasable[] = [];
+    const scope = new AcquireScope();
     try {
       const loaded = await Promise.all(
         levels.map(async (lod) => {
           const url = this.url(lod.url, entry.hash);
-          const gltf = await this.acquire(this.gltfs, url, () => this.fetchGltf(url, lod.bytes), (g) => disposeGltf(g));
-          acquiredGltf.push(url);
+          const gltf = await this.trackGltf(scope, url, lod.bytes);
           return { lod, gltf };
         }),
       );
@@ -450,7 +452,7 @@ export class AssetManager {
         const { lod, gltf } = loaded[i]!;
         const scene = (skinned ? SkeletonUtils.clone(gltf.scene) : gltf.scene.clone(true)) as THREE.Group;
         scene.name = `${entry.id}_lod${lod.lod}`;
-        await this.bindMaterials(entry.id, scene, acquiredMats);
+        await this.bindMaterials(entry.id, scene, scope);
         // meta.vertexColors === 'data': COLOR_0 carries data (e.g. banner cloth weights), not albedo.
         const colorIsData = entry.meta.vertexColors === 'data';
         scene.traverse((o) => {
@@ -498,16 +500,27 @@ export class AssetManager {
             if (sm.isSkinnedMesh) sm.skeleton.dispose();
           });
           disposeFade?.();
-          for (const m of acquiredMats) m.release();
-          for (const u of acquiredGltf) this.releaseFrom(this.gltfs, u);
+          scope.release();
         },
       };
     } catch (err) {
-      for (const m of acquiredMats) m.release();
-      for (const u of acquiredGltf) this.releaseFrom(this.gltfs, u);
+      scope.release();
       this.warnOnce(id, `model "${id}" failed to load: ${String(err)}`);
       return this.fallbackModel(id, entry);
     }
+  }
+
+  /** Acquire a cached GLB inside a scope (released with the scope, or on arrival after a failure). */
+  private trackGltf(scope: AcquireScope, url: string, bytes: number): Promise<LoadedGltf> {
+    return scope.track(
+      this.acquire(this.gltfs, url, () => this.fetchGltf(url, bytes), (g) => disposeGltf(g)),
+      () => this.releaseFrom(this.gltfs, url),
+    );
+  }
+
+  /** Acquire a cached atlas / image texture inside a scope. */
+  private trackAtlas(scope: AcquireScope, url: string, bytes: number, cfg: AtlasConfig): Promise<THREE.Texture> {
+    return scope.track(this.acquireAtlas(url, bytes, cfg), () => this.releaseFrom(this.textures, url));
   }
 
   private async fetchGltf(url: string, bytes: number): Promise<LoadedGltf> {
@@ -522,7 +535,7 @@ export class AssetManager {
   }
 
   /** Replace proxy materials (extras.samrajya_set) with runtime PBR materials. */
-  private async bindMaterials(modelId: string, scene: THREE.Object3D, acquired: Releasable[]): Promise<void> {
+  private async bindMaterials(modelId: string, scene: THREE.Object3D, scope: AcquireScope): Promise<void> {
     const meshes: THREE.Mesh[] = [];
     scene.traverse((o) => {
       if ((o as THREE.Mesh).isMesh) meshes.push(o as THREE.Mesh);
@@ -547,7 +560,7 @@ export class AssetManager {
       const key = `${set}|${macroRef ?? ''}|${JSON.stringify(opts)}`;
       let p = cache.get(key);
       if (!p) {
-        p = this.modelMaterial(modelId, set, macroRef, opts, src, acquired);
+        p = this.modelMaterial(modelId, set, macroRef, opts, src, scope);
         cache.set(key, p);
       }
       mesh.material = await p;
@@ -560,10 +573,10 @@ export class AssetManager {
     macroRef: string | null,
     opts: MaterialLoadOptions,
     proxy: THREE.MeshStandardMaterial,
-    acquired: Releasable[],
+    scope: AcquireScope,
   ): Promise<THREE.Material> {
     const key = `model:${modelId}|${setRef}|${macroRef ?? ''}|${JSON.stringify(opts)}|${this.tierSetting}`;
-    const mat = await this.acquire(this.materials, key, async () => {
+    const acquisition = this.acquire(this.materials, key, async () => {
       const set = await this.loadTextureSet(setRef);
       const macro = macroRef ? await this.loadTextureSet(macroRef) : null;
       const matEntry = this.entry(setRef);
@@ -585,15 +598,7 @@ export class AssetManager {
       for (const h of (m.userData.setHandles as (TextureSetHandle | null)[]) ?? []) h?.release();
       disposePbrMaterial(m);
     });
-    let released = false;
-    acquired.push({
-      release: () => {
-        if (released) return;
-        released = true;
-        this.releaseFrom(this.materials, key);
-      },
-    });
-    return mat;
+    return scope.track(acquisition, () => this.releaseFrom(this.materials, key));
   }
 
   private fallbackModel(id: string, entry: ModelAssetEntry | null): ModelInstance {
@@ -712,25 +717,15 @@ export class AssetManager {
     const tier = this.tierSetting;
     const minLod = Math.min(entry.minLod[tier] ?? 0, entry.lods.length - 1);
     const wanted = opts.lods ? entry.lods.filter((l) => opts.lods!.includes(l.lod)) : entry.lods.slice(minLod);
-    const gltfUrls: string[] = [];
-    const dataUrls: string[] = [];
-    const mats: Releasable[] = [];
-    const releaseAll = (): void => {
-      for (const m of mats) m.release();
-      for (const u of gltfUrls) this.releaseFrom(this.gltfs, u);
-      for (const u of dataUrls) this.releaseFrom(this.vatData, u);
-    };
+    const scope = new AcquireScope();
     try {
       const lods = await Promise.all(
         wanted.map(async (lod): Promise<VatLodData> => {
           const gurl = this.url(lod.url, entry.hash);
           const durl = this.url(lod.vat.url, entry.hash);
           const [gltf, data] = await Promise.all([
-            this.acquire(this.gltfs, gurl, () => this.fetchGltf(gurl, lod.bytes), (g) => disposeGltf(g)).then((g) => {
-              gltfUrls.push(gurl);
-              return g;
-            }),
-            this.acquire(
+            this.trackGltf(scope, gurl, lod.bytes),
+            scope.track(this.acquire(
               this.vatData,
               durl,
               async () => {
@@ -749,10 +744,7 @@ export class AssetManager {
                 t.positions.dispose();
                 t.normals.dispose();
               },
-            ).then((d) => {
-              dataUrls.push(durl);
-              return d;
-            }),
+            ), () => this.releaseFrom(this.vatData, durl)),
           ]);
           let mesh: THREE.Mesh | null = null;
           gltf.scene.traverse((o) => {
@@ -770,7 +762,7 @@ export class AssetManager {
           const holder = new THREE.Group();
           const proxy = new THREE.Mesh(geo, m.material);
           holder.add(proxy);
-          await this.bindMaterials(entry.id, holder, mats);
+          await this.bindMaterials(entry.id, holder, scope);
           const material = proxy.material as THREE.MeshStandardMaterial;
           return { lod: lod.lod, entry: lod, geometry: geo, material, positions: data.positions, normals: data.normals };
         }),
@@ -783,11 +775,11 @@ export class AssetManager {
         release: () => {
           if (released) return;
           released = true;
-          releaseAll();
+          scope.release();
         },
       };
     } catch (err) {
-      releaseAll();
+      scope.release();
       this.warnOnce(id, `vat "${id}" failed to load: ${String(err)}`);
       return null;
     }
@@ -806,15 +798,15 @@ export class AssetManager {
     const a = entry.maps.albedo[tier];
     const n = entry.maps.normal[tier];
     if (!a || !n) return null;
-    const got: string[] = [];
+    const scope = new AcquireScope();
     try {
       const [albedo, normal] = await Promise.all([
-        this.acquireAtlas(this.url(a.url, entry.hash), a.bytes, { srgb: true }).then((t) => (got.push(this.url(a.url, entry.hash)), t)),
-        this.acquireAtlas(this.url(n.url, entry.hash), n.bytes, { srgb: false }).then((t) => (got.push(this.url(n.url, entry.hash)), t)),
+        this.trackAtlas(scope, this.url(a.url, entry.hash), a.bytes, { srgb: true }),
+        this.trackAtlas(scope, this.url(n.url, entry.hash), n.bytes, { srgb: false }),
       ]);
-      return { entry, albedo, normal, framePx: a.framePx, release: this.releaser(this.textures, got) };
+      return { entry, albedo, normal, framePx: a.framePx, release: () => scope.release() };
     } catch (err) {
-      for (const u of got) this.releaseFrom(this.textures, u);
+      scope.release();
       this.warnOnce(id, `impostor "${id}" failed to load: ${String(err)}`);
       return null;
     }
@@ -828,14 +820,9 @@ export class AssetManager {
       if (tier !== 'off' && !this.entry(id)) this.warnOnce(id, `flipbook "${id}" not in the manifest`);
       return null;
     }
-    const got: string[] = [];
-    const load = async (f: { url: string; bytes: number } | undefined, srgb: boolean): Promise<THREE.Texture | null> => {
-      if (!f) return null;
-      const url = this.url(f.url, entry.hash);
-      const t = await this.acquireAtlas(url, f.bytes, { srgb });
-      got.push(url);
-      return t;
-    };
+    const scope = new AcquireScope();
+    const load = (f: { url: string; bytes: number } | undefined, srgb: boolean): Promise<THREE.Texture | null> =>
+      f ? this.trackAtlas(scope, this.url(f.url, entry.hash), f.bytes, { srgb }) : Promise.resolve(null);
     try {
       const [color, normal, emissive] = await Promise.all([
         load(entry.maps.color[tier], true),
@@ -849,10 +836,10 @@ export class AssetManager {
         normal,
         emissive,
         sequence: (name: string) => entry.sequences.find((s) => s.name === name) ?? null,
-        release: this.releaser(this.textures, got),
+        release: () => scope.release(),
       };
     } catch (err) {
-      for (const u of got) this.releaseFrom(this.textures, u);
+      scope.release();
       this.warnOnce(id, `flipbook "${id}" failed to load: ${String(err)}`);
       return null;
     }

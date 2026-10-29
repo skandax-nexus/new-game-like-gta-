@@ -5,10 +5,14 @@
  *   const vat = await ctx.assets.loadVat('crowd_spearmen');          // null when assets are off / failed
  *   const lod = vat.lods[0];
  *   const mat = createVatMaterial(lod, { partColors });               // MeshStandardMaterial + VAT patch
- *   const crowd = createVatInstancedMesh(lod, 500, mat);              // InstancedMesh + depth material
+ *   const crowd = createVatInstancedMesh(lod, 500, mat);              // InstancedMesh + shadow / prepass materials
  *   setVatInstance(crowd, i, vat.clip('walk')!, phaseSeconds, rate, teamColor);
  *   mat.userData.vatTime.value = timeSeconds;                         // every frame (shared by both LODs)
- *   ... crowd.dispose(); mat.dispose(); vat.release();
+ *   ... crowd.userData.dispose(); crowd.dispose(); mat.dispose(); vat.release();
+ *
+ * Every pass sees the animated pose: the shadow map (customDepthMaterial), point-light shadows
+ * (customDistanceMaterial) and override-material passes such as the GTAO / SSAO normal + depth pre-pass
+ * (prepass tag 'replace' with a VAT-patched MeshNormalMaterial, loaders/prepass.ts) - never the rest pose.
  *
  * The GPU crowd renderer (GFX-04) may replace the reference material, but must keep this sampling:
  *   frame f of clip c: row = (c.startFrame + f) * rowsPerFrame + vertex / width, column = vertex % width,
@@ -18,6 +22,7 @@
 import * as THREE from 'three';
 import type { VatAssetEntry, VatClipEntry, VatLodEntry } from '../types';
 import { gunzip, unshuffle16 } from './decode';
+import { createPrepassNormalMaterial, installPrepassGuard, type PrepassMode } from './prepass';
 
 /** Half float 1.0. */
 const HALF_ONE = 0x3c00;
@@ -291,18 +296,87 @@ export function createVatDepthMaterial(lod: VatLodData, time: { value: number })
   return mat;
 }
 
+/** Point-light shadow material running the VAT vertex code (assign to mesh.customDistanceMaterial). */
+export function createVatDistanceMaterial(lod: VatLodData, time: { value: number }): THREE.MeshDistanceMaterial {
+  const mat = new THREE.MeshDistanceMaterial();
+  const uniforms = vatUniforms(lod, time);
+  mat.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, uniforms);
+    shader.vertexShader = patchVertex(shader.vertexShader, false);
+  };
+  mat.customProgramCacheKey = () => 'vat-distance';
+  mat.name = 'vat_distance';
+  return mat;
+}
+
 /**
- * Reference crowd: one InstancedMesh per LOD (1 draw call + 1 shadow draw), instanced attributes
- * vatClip (startFrame, frames, fps, loop), vatPlay (phase s, rate) and vatTeam (linear rgb).
+ * Normal + depth material for override-material passes (GTAO / SSAO pre-pass): MeshNormalMaterial with the VAT
+ * vertex patch (animated position AND normal), so ambient occlusion sees the posed crowd.
  */
-export function createVatInstancedMesh(lod: VatLodData, count: number, material: THREE.Material, depth?: THREE.Material): THREE.InstancedMesh {
+export function createVatNormalMaterial(lod: VatLodData, time: { value: number }): THREE.MeshNormalMaterial {
+  const uniforms = vatUniforms(lod, time);
+  return createPrepassNormalMaterial(
+    'vat_prepass_normal',
+    (shader) => {
+      Object.assign(shader.uniforms, uniforms);
+      shader.vertexShader = patchVertex(shader.vertexShader, true);
+    },
+    'vat-prepass-normal',
+  );
+}
+
+export interface VatMeshOptions {
+  /** Shadow depth material (default: createVatDepthMaterial with the material's `userData.vatTime`). */
+  depth?: THREE.Material;
+  /**
+   * Override-material passes (GTAO / SSAO normal pre-pass): 'replace' (default) draws the VAT-posed normals and
+   * depth so crowds receive / cast contact AO; 'skip' leaves the crowd out of AO (one draw fewer per frame - far
+   * LODs on high). Never the rest pose.
+   */
+  prepass?: PrepassMode;
+}
+
+/**
+ * Reference crowd: one InstancedMesh per LOD (1 color draw + 1 shadow draw, + 1 AO pre-pass draw on high / ultra
+ * with prepass 'replace'), instanced attributes vatClip (startFrame, frames, fps, loop), vatPlay (phase s, rate)
+ * and vatTeam (linear rgb). `mesh.userData.dispose()` frees what this helper created (geometry clone, shadow /
+ * distance / prepass materials); the caller still owns `material` (and a `depth` it passed in).
+ * The 4th argument may also be a depth material (pre-rework signature).
+ */
+export function createVatInstancedMesh(
+  lod: VatLodData,
+  count: number,
+  material: THREE.Material,
+  options?: THREE.Material | VatMeshOptions,
+): THREE.InstancedMesh {
+  const opts: VatMeshOptions = options instanceof THREE.Material ? { depth: options } : (options ?? {});
   const geo = lod.geometry.clone();
   geo.setAttribute('vatClip', new THREE.InstancedBufferAttribute(new Float32Array(count * 4), 4));
   geo.setAttribute('vatPlay', new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2));
   geo.setAttribute('vatTeam', new THREE.InstancedBufferAttribute(new Float32Array(count * 3).fill(1), 3));
   const mesh = new THREE.InstancedMesh(geo, material, count);
-  if (depth) mesh.customDepthMaterial = depth;
+  const time = (material.userData.vatTime as { value: number } | undefined) ?? { value: 0 };
+  const own: THREE.Material[] = [];
+  let depth = opts.depth;
+  if (!depth) {
+    depth = createVatDepthMaterial(lod, time);
+    own.push(depth);
+  }
+  mesh.customDepthMaterial = depth;
+  const distance = createVatDistanceMaterial(lod, time);
+  mesh.customDistanceMaterial = distance;
+  own.push(distance);
+  const mode = opts.prepass ?? 'replace';
+  if (mode === 'replace') {
+    const normal = createVatNormalMaterial(lod, time);
+    own.push(normal);
+    installPrepassGuard(mesh, 'replace', { normal });
+  } else installPrepassGuard(mesh, 'skip');
   mesh.name = `vat_lod${lod.lod}`;
+  mesh.userData.dispose = (): void => {
+    geo.dispose();
+    for (const m of own) m.dispose();
+  };
   return mesh;
 }
 

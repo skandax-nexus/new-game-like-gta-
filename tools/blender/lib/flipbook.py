@@ -20,6 +20,10 @@ Normals (lit smoke / dust): tangent-space (OpenGL +Y) from the blurred optical d
 the runtime re-lights the sprites with the sun (ART_BIBLE §10: no unlit white puffs).
 Atlas layout: row-major frames, frame 0 at the top-left; color = sRGB rgb + linear alpha (straight, or
 premultiplied for emissive fire), normal = xyz * 0.5 + 0.5.
+Border guard (write() fails the bake): every frame's outer 2 px must carry no coverage / emission above 2/255 in
+the encoded atlas, at the source resolution AND after downsampling to the smallest shipped frame size - content
+touching a frame edge shows as a hard straight cut on the particle quad. Sequences that legitimately reach an
+edge opt out per edge: {"name": "trail", ..., "open_edges": ["left"]} (weapon-trail ribbons, ground-hitting bolts).
 """
 from __future__ import annotations
 
@@ -473,6 +477,75 @@ def normal_from_alpha(alpha: np.ndarray, strength: float = 2.0, blur_px: float =
     return (n * 0.5 + 0.5).astype(F)
 
 
+# =========================================================================================== border guard
+EDGES = ("top", "bottom", "left", "right")
+BORDER_PX = 2
+BORDER_LIMIT = 2.0 / 255.0
+
+
+def border_signal(frame: np.ndarray, blend: str, srgb: bool = True) -> np.ndarray:
+    """Per-pixel value that must vanish at the frame border, in the encoded 8-bit domain [0, 1]: coverage alpha for
+    'alpha' books, encoded emission for 'additive' (its alpha is dropped at publish), both for 'premultiplied'."""
+    a = np.clip(frame[..., 3], 0, 1) if frame.ndim == 3 and frame.shape[-1] > 3 else np.zeros(frame.shape[:2], F)
+    if blend == "alpha":
+        return a.astype(F)
+    rgb = np.clip(frame[..., :3], 0, 1)
+    e = (tg.linear_to_srgb(rgb) if srgb else rgb).max(axis=-1)
+    return (e if blend == "additive" else np.maximum(a, e)).astype(F)
+
+
+def border_levels(sig: np.ndarray, px: int = BORDER_PX) -> dict[str, float]:
+    """Max of `sig` over the outer `px` rows / columns of each edge."""
+    return {"top": float(sig[:px].max()), "bottom": float(sig[-px:].max()),
+            "left": float(sig[:, :px].max()), "right": float(sig[:, -px:].max())}
+
+
+def _open_edges(seq: dict[str, Any]) -> set[str]:
+    oe = seq.get("open_edges") or []
+    if isinstance(oe, str):
+        oe = [oe]
+    out = set(EDGES) if "all" in oe else {str(e) for e in oe}
+    bad = out - set(EDGES)
+    if bad:
+        raise ValueError(f"sequence {seq.get('name')}: unknown open_edges {sorted(bad)} (use {', '.join(EDGES)} or all)")
+    return out
+
+
+def check_borders(color: Sequence[np.ndarray], sequences: Sequence[dict[str, Any]] | None, *, blend: str,
+                  emissive: Sequence[np.ndarray] | None = None, srgb: bool = True, px: int = BORDER_PX,
+                  limit: float = BORDER_LIMIT, published_frame_px: int | None = None) -> tuple[list[str], float]:
+    """Frames whose outer `px` pixels exceed `limit` on an edge their sequence does not open. Checked at the
+    source resolution and, when `published_frame_px` is smaller, on an area / bilinear downsample to it (the
+    smallest shipped tier). Returns (problems, worst closed-edge level)."""
+    seqs = list(sequences) if sequences else [{"name": "all", "start": 0, "count": len(color)}]
+    owner: dict[int, dict[str, Any]] = {}
+    for sq in seqs:
+        for k in range(int(sq["start"]), int(sq["start"]) + int(sq["count"])):
+            owner[k] = sq
+    problems: list[str] = []
+    worst = 0.0
+    for k, f in enumerate(color):
+        sq = owner.get(k, {"name": "?"})
+        closed = [e for e in EDGES if e not in _open_edges(sq)]
+        if not closed:
+            continue
+        sigs = [("color", border_signal(f, blend, srgb))]
+        if emissive is not None and k < len(emissive):
+            sigs.append(("emissive", border_signal(emissive[k], "additive", True)))
+        for name, sig in sigs:
+            views = [(sig.shape[1], sig)]
+            if published_frame_px and published_frame_px < sig.shape[1]:
+                ph = max(1, round(published_frame_px * sig.shape[0] / sig.shape[1]))
+                views.append((published_frame_px, tg.resize(sig, ph, published_frame_px)))
+            for size, v in views:
+                lv = border_levels(v, px)
+                for e in closed:
+                    worst = max(worst, lv[e])
+                    if lv[e] > limit:
+                        problems.append(f"frame {k} ({sq.get('name')}) {name} {e} edge {lv[e] * 255:.1f}/255 at {size} px")
+    return problems, worst
+
+
 # =========================================================================================== packing / output
 def to_straight(rgba: np.ndarray) -> np.ndarray:
     a = np.clip(rgba[..., 3:4], 0, 1)
@@ -554,9 +627,25 @@ def write(ctx: AssetContext, color: Sequence[np.ndarray], cols: int, rows: int, 
           atlas_px: dict[str, int] | None = None, description: str = "", labels: Sequence[str] | None = None,
           srgb: bool = True) -> dict[str, Any]:
     """Pack and write the flipbook maps (+ contact sheet preview); returns the manifest metadata.
-    `color` frames: linear rgb + alpha (straight, or premultiplied when blend == 'premultiplied')."""
+    `color` frames: linear rgb + alpha (straight, or premultiplied when blend == 'premultiplied').
+    Fails (ValueError) when a frame's border carries coverage / emission (see the module doc: border guard);
+    sequences opt out per edge with "open_edges"."""
     if len(color) > cols * rows:
         raise ValueError(f"{len(color)} frames do not fit {cols}x{rows}")
+    seqs_in = list(sequences) if sequences else None
+    min_frame = None
+    if atlas_px:
+        min_frame = max(1, int(min(atlas_px.values())) // cols)
+    problems, worst = check_borders(color, seqs_in, blend=blend, emissive=emissive, srgb=srgb, published_frame_px=min_frame)
+    if problems:
+        head = "\n  ".join(problems[:16])
+        more = f"\n  ... and {len(problems) - 16} more" if len(problems) > 16 else ""
+        raise ValueError(f"{ctx.id}: flipbook border guard - {len(problems)} frame edges carry content "
+                         f"(> {BORDER_LIMIT * 255:.0f}/255 in the outer {BORDER_PX} px):\n  {head}{more}\n"
+                         "Keep the effect inside its frame (fade to 0 before the border) or open the edge on the "
+                         "sequence (open_edges) if it must touch it.")
+    log(f"flipbook: border guard ok - worst closed edge {worst * 255:.2f}/255 (limit {BORDER_LIMIT * 255:.0f}/255, "
+        f"{BORDER_PX} px, checked at {color[0].shape[1]} px{f' and {min_frame} px' if min_frame and min_frame < color[0].shape[1] else ''})")
     atlas = pack(color, cols, rows)
     enc = atlas.copy()
     if srgb:
@@ -580,9 +669,10 @@ def write(ctx: AssetContext, color: Sequence[np.ndarray], cols: int, rows: int, 
         sheet = contact_sheet(disp, min(cols, 8), labels=labels, normals=normals, premultiplied=blend == "premultiplied",
                               cell=min(128, max(64, color[0].shape[0])), title=f"{ctx.id}  {len(color)} FRAMES  {cols}X{rows}")
         ctx.add_file("preview_contact", tg.write_png(ctx.path("preview_contact.png"), sheet, 8))
+    pub_seqs = [{k: v for k, v in sq.items() if k != "open_edges"} for sq in seqs_in] if seqs_in else None
     meta = {
         "cols": cols, "rows": rows, "frames": len(color), "fps": fps, "loop": loop,
-        "sequences": list(sequences) if sequences else [{"name": "all", "start": 0, "count": len(color), "fps": fps, "loop": loop}],
+        "sequences": pub_seqs or [{"name": "all", "start": 0, "count": len(color), "fps": fps, "loop": loop}],
         "blend": blend, "lit": lit, "emissiveIntensity": emissive_intensity, "softFadeMeters": soft_fade_m,
         "sizeMeters": list(size_m) if size_m else None, "description": description,
     }
@@ -592,6 +682,7 @@ def write(ctx: AssetContext, color: Sequence[np.ndarray], cols: int, rows: int, 
     return meta
 
 
-__all__ = ["CurlNoise", "ParticleVolume", "VolumeRenderer", "begin", "blackbody_ramp", "blur2", "blur3", "contact_sheet",
+__all__ = ["BORDER_LIMIT", "BORDER_PX", "CurlNoise", "EDGES", "ParticleVolume", "VolumeRenderer", "begin", "blackbody_ramp",
+           "blur2", "blur3", "border_levels", "border_signal", "check_borders", "contact_sheet",
            "draw_text", "gaussian", "grid2", "light_volume", "loop_blend", "normal_from_alpha", "pack", "polygon_sdf",
            "render_volumes", "segment_distance", "to_straight", "write"]

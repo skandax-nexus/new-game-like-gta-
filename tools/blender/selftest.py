@@ -6,8 +6,9 @@ Self-test of the tools/blender/lib helpers (run after changing the library or up
 Builds a tiny skinned mannequin with standard clips, exports it, re-reads the GLB and checks skins,
 animations, UV sets, tangents and binding extras; checks decimation, a high->low normal bake and a
 procedural texture-set bake. TA-07 cases: VAT bake (reconstruction error, texture layout, GLB vertex order,
-octahedral normals, stride), impostor capture (hemi-octahedral math, coverage, normals, depth) and flipbook
-volumes (curl-noise divergence, Cycles volume render, loop blend, normals from density, packing).
+octahedral normals, stride), impostor capture (hemi-octahedral math, coverage, normals, depth), flipbook
+volumes (curl-noise divergence, Cycles volume render, loop blend, normals from density, packing) and the
+flipbook border guard (frames touching their border fail the bake unless the sequence opens that edge).
 Writes to .asset-cache/_selftest/. Exit code 1 on failure.
 OWNER: Technical Art Director (TA-07 adds the vat / impostor / flipbook cases).
 """
@@ -304,7 +305,8 @@ def test_flipbook() -> None:
         del os.environ["SAMRAJYA_ASSET_ID"]
     sim = flipbook.ParticleVolume(24, (2, 2, 2), 5)
     rng = np.random.default_rng(5)
-    sim.emit(rng.normal(0, 0.15, (400, 3)) + [0, 0, 0.6], rng.normal(0, 0.2, (400, 3)), np.full(400, 2.0), np.ones(400))
+    # centred in the 2 m box (the border guard rejects a puff cut by the frame edge)
+    sim.emit(rng.normal(0, 0.15, (400, 3)) + [0, 0, 1.0], rng.normal(0, 0.2, (400, 3)), np.full(400, 2.0), np.ones(400))
     frames = []
     for _ in range(3):
         sim.step(0.1)
@@ -334,7 +336,60 @@ def test_flipbook() -> None:
           and meta["cols"] == 2 and meta["frames"] == 3)
 
 
-for t in (test_skinned_export, test_lod, test_normal_bake, test_texture_set_bake, test_vat, test_impostor, test_flipbook):
+def test_flipbook_border_guard() -> None:
+    """lib/flipbook.write() fails the bake when content touches a frame border (TA-07 rework: fx_smoke / sparks)."""
+    import os
+    core.reset_scene()
+    os.environ["SAMRAJYA_ASSET_OUT"] = str(OUT / "flipbook_border")
+    os.environ["SAMRAJYA_ASSET_ID"] = "selftest_flipbook_border"
+    try:
+        ctx = flipbook.begin(__file__)
+    finally:
+        del os.environ["SAMRAJYA_ASSET_OUT"]
+        del os.environ["SAMRAJYA_ASSET_ID"]
+    ctx.preview = False
+    x, y = flipbook.grid2(128)
+
+    def blob(cx: float, cy: float, r: float) -> np.ndarray:
+        a = flipbook.gaussian(x, y, cx, cy, r)
+        return np.stack([np.full_like(a, 0.6), np.full_like(a, 0.6), np.full_like(a, 0.6), a], axis=-1).astype(np.float32)
+
+    good = blob(0.0, 0.0, 0.2)
+    bad = blob(0.92, 0.0, 0.18)  # bleeds over the right edge
+    probs, worst = flipbook.check_borders([good], None, blend="alpha")
+    check("flipbook border guard: centred puff passes", not probs and worst < flipbook.BORDER_LIMIT, f"worst {worst * 255:.3f}/255")
+    probs, _ = flipbook.check_borders([good, bad], None, blend="alpha")
+    check("flipbook border guard: puff cut by the right edge fails", len(probs) == 1 and "frame 1" in probs[0] and "right" in probs[0],
+          "; ".join(probs))
+    seqs = [{"name": "ok", "start": 0, "count": 1, "fps": 1, "loop": False},
+            {"name": "ribbon", "start": 1, "count": 1, "fps": 1, "loop": False, "open_edges": ["right"]}]
+    probs, _ = flipbook.check_borders([good, bad], seqs, blend="alpha")
+    check("flipbook border guard: open_edges opts a sequence out per edge", not probs, "; ".join(probs))
+    # additive books are judged on their (encoded) emission, not alpha
+    hot = bad.copy()
+    hot[..., 3] = 0.0
+    hot[..., :3] *= bad[..., 3:4]
+    probs, _ = flipbook.check_borders([hot], None, blend="additive")
+    check("flipbook border guard: additive emission at the edge fails", len(probs) >= 1, "; ".join(probs[:2]))
+    # a thin line 4 px inside the border is clean at 128 px but reaches the border once shipped at 32 px frames
+    line = np.zeros((128, 128, 4), np.float32)
+    line[24:104, 4:6] = (0.5, 0.5, 0.5, 1.0)
+    probs_src, _ = flipbook.check_borders([line], None, blend="alpha")
+    probs_pub, _ = flipbook.check_borders([line], None, blend="alpha", published_frame_px=32)
+    check("flipbook border guard: also checked at the smallest shipped frame size", not probs_src and any("32 px" in p for p in probs_pub),
+          f"source {len(probs_src)} / 32 px {len(probs_pub)}")
+    try:
+        flipbook.write(ctx, [good, bad], 2, 1, fps=8, loop=False)
+        raised = ""
+    except ValueError as e:
+        raised = str(e)
+    check("flipbook border guard: write() fails the bake", "border guard" in raised and "frame 1" in raised, raised.splitlines()[0] if raised else "no error")
+    meta = flipbook.write(ctx, [good, bad], 2, 1, fps=8, loop=False, sequences=seqs)
+    check("flipbook border guard: open_edges is bake-time only (not published)", all("open_edges" not in sq for sq in meta["sequences"]))
+
+
+for t in (test_skinned_export, test_lod, test_normal_bake, test_texture_set_bake, test_vat, test_impostor, test_flipbook,
+          test_flipbook_border_guard):
     try:
         t()
     except Exception as e:  # noqa: BLE001

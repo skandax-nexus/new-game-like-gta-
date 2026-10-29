@@ -409,7 +409,9 @@ async function publishImpostor(asset, srcDir, meta, outFiles, tiers) {
     const framePx = m.framePx ?? IMPOSTOR_FRAME_PX;
     const scale = map === 'normal' ? (m.normalScale ?? IMPOSTOR_NORMAL_SCALE) : 1;
     for (const [px, ts] of bySize(tiers, (t) => Math.max(16, Math.round((framePx[t] ?? IMPOSTOR_FRAME_PX[t]) * scale)))) {
-      if (px * grid > IMPOSTOR_MAX_TEXTURE[ts[0]]) throw new Error(`${asset.id}: ${map} ${px * grid}px exceeds the ${ts[0]} impostor limit`);
+      // A size shared by several tiers must fit the STRICTEST of them.
+      const strict = ts.reduce((a, t) => (IMPOSTOR_MAX_TEXTURE[t] < IMPOSTOR_MAX_TEXTURE[a] ? t : a), ts[0]);
+      if (px * grid > IMPOSTOR_MAX_TEXTURE[strict]) throw new Error(`${asset.id}: ${map} ${px * grid}px exceeds the ${strict} impostor limit`);
       const raw = await resampleAtlas(path.join(srcDir, f.path), grid, grid, px, px);
       const relPath = `impostors/${asset.id}/${map}_${raw.width}.webp`;
       await writeWebpRaw(raw, relPath, map === 'albedo' ? TEXTURE_ENCODING.color_alpha : TEXTURE_ENCODING.impostor_normal);
@@ -497,7 +499,8 @@ async function publishImage(asset, srcDir, meta, outFiles, tiers) {
   const files = {};
   for (const [width, ts] of bySize(tiers, (t) => Math.min(w0, tierPx[t] ?? TIER_MAX_TEXTURE[t]))) {
     const height = Math.round((h0 * width) / w0);
-    if (Math.max(width, height) > TIER_MAX_TEXTURE[ts[0]] && !m.allowLarge) throw new Error(`${asset.id}: ${width}x${height} exceeds the ${ts[0]} texture limit`);
+    const strict = ts.reduce((a, t) => (TIER_MAX_TEXTURE[t] < TIER_MAX_TEXTURE[a] ? t : a), ts[0]);
+    if (Math.max(width, height) > TIER_MAX_TEXTURE[strict] && !m.allowLarge) throw new Error(`${asset.id}: ${width}x${height} exceeds the ${strict} texture limit`);
     let raw;
     if (alpha) {
       const { data } = await sharp(src).ensureAlpha().resize(width, height, { kernel: 'lanczos3', fit: 'fill' }).raw().toBuffer({ resolveWithObject: true });

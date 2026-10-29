@@ -26,18 +26,38 @@ Models gained metadata in the same change: `skinned`, `clipEvents` (`{clip: [{ty
 `sockets` (bone-relative), `variants` (named node sets; published with `keepNodes`) and free `meta`
 (<= 16 KB JSON). Skinned models load as independent `SkeletonUtils` clones (LOD levels share LOD0's skeleton,
 `skeleton.dispose()` on release) and `loadModel(id, { crossFade: true })` returns a dithered `CrossFadeLOD`
-(`loaders/lodFade.ts`: Bayer 4x4 discard in a 12 % band, `LOD_DITHER_GLSL` for custom shaders).
+(`loaders/lodFade.ts`: Bayer 4x4 discard in a 12 % band, `LOD_DITHER_GLSL` for custom shaders). The shader
+measures the same distance as the CPU (LOD root origin / camera zoom, `lodFadeOrigin` uniform kept up to date by
+`CrossFadeLOD.update`), so the GPU fade bands line up with the CPU visibility bands; inside a band only the
+current level casts a shadow (no double shadow).
 
 ### Runner (A1-A3)
 
-- **Publish lock.** `.asset-cache/.publish.lock` (O_EXCL file with pid + timestamp, stale after 30 min,
-  `flock`-compatible: an ancestor holding `flock` on the same path is detected through `/proc/locks`).
-  Blender runs outside the lock; only "re-read published.json -> merge this run's records -> write ->
-  manifest -> budgets" is serialized, so concurrent runs by different artists never lose each other's
-  entries. `--check` is lock-free.
-- **Hashing.** An asset's input hash covers its script, the shared `lib/` modules, sibling `_*.py` helpers it
-  imports (transitively), `@style` values (resolved from `src/render/style/*.ts` and passed to Blender as
-  `SAMRAJYA_STYLE`) and `@inputs` files; legacy hashes are unchanged when none of those exist.
+- **Publish lock.** `.asset-cache/.publish.lock` holds a JSON owner record (pid, host, start time, nonce, ids),
+  stale after 30 min or when the owner pid is gone. Blender runs outside the lock; only "re-read
+  published.json -> merge this run's records -> write -> manifest -> budgets" is serialized, so concurrent runs
+  by different artists never lose each other's entries. `--check` is lock-free (it warns about DIRTY assets).
+  - *Atomic create:* the record is written to a private temp file and **hard-linked** into place (`link(2)`
+    fails with EEXIST when the lock exists), so the lock path is never visible empty. (The first version
+    opened with O_EXCL and wrote afterwards; an empty file with no flock holder reads as a free flock(1)
+    sentinel, so a second runner could take the lock in that window - CTO review, reproduced.)
+  - *Stale break:* serialized by a second short-lived lock `.publish.lock.break` (created the same way). Under
+    it the breaker re-reads the record (same inode, same text, still stale), renames the file aside (atomic),
+    verifies the renamed content is still the stale record and only then deletes it, else links it back. Two
+    waiters never break the same record twice or delete a fresh lock created in between.
+  - *Release:* rename aside + verify + delete (excl); truncate in place (flock modes).
+  - *flock compatibility* (STUDIO W3): an empty lock file is a flock(1) sentinel. An ancestor holding `flock` on
+    it (found through `/proc/locks`) means we already own it; otherwise the runner waits for the holder or takes
+    the OS lock with a helper `flock -n` process and writes its record in place.
+  - *Tests* (`tests/assets/publish-lock.test.ts`): concurrent runs, flock(1)-wrapped runs mixed with plain runs,
+    stale recovery, lock-free `--check`, a stall injected right after the lock path appears (3 runners) and two
+    waiters breaking the same stale lock; every critical section is traced (`SAMRAJYA_PUBLISH_LOCK_TRACE`) and must
+    strictly alternate. The two race tests fail on the first version of the lock and pass on this one.
+- **Hashing.** An asset's input hash covers its script, the shared `lib/` modules (`from lib import a, b`, the
+  parenthesized multi-line form, `from lib.x import`), sibling `_*.py` helpers it imports (transitively), `@style`
+  values (resolved from `src/render/style/*.ts` and passed to Blender as `SAMRAJYA_STYLE`) and `@inputs` files;
+  legacy hashes are unchanged when none of those exist. The cache stamp (`.inputhash`) is deleted before Blender
+  starts, so an interrupted bake can never be reused under the old hash.
 - **Tags.** `@tiers ultra,high` restricts shipping tiers; `@fallback <id>` names the asset the runtime resolves
   instead on other tiers (e.g. `sky_fog` -> `sky_overcast` on mobile). `--previews-dir <dir>` copies the Cycles
   previews of every asset just baked.
@@ -62,11 +82,14 @@ Models gained metadata in the same change: `skinned`, `clipEvents` (`{clip: [{ty
   gzip gets 2-3x on smooth animation data; the browser decodes it off the main thread with
   `DecompressionStream`, no library needed.
 - **Runtime:** `createVatMaterial(lod, { partColors, teamColor | instanced team, clothVariation, time })` patches a
-  `MeshStandardMaterial` (`texelFetch` by `gl_VertexID`, two-frame lerp, loop / clamp), `createVatDepthMaterial`
-  for shadows, `createVatInstancedMesh(lod, count, ...)` with per-instance `vatClip` (start, frames, fps, loop),
-  `vatPlay` (phase, rate) and `vatTeam`; `setVatInstance(mesh, i, vat.clip('walk'), phase, rate, team)`.
-  **One InstancedMesh per LOD = 1 color draw + 1 shadow draw per scene pass** regardless of count
-  (500-soldier test crowd: 2 LODs -> 2 + 2 draws per pass; see docs/sprint1/ta-07/).
+  `MeshStandardMaterial` (`texelFetch` by `gl_VertexID`, two-frame lerp, loop / clamp);
+  `createVatInstancedMesh(lod, count, material, { depth?, prepass? })` builds the InstancedMesh with per-instance
+  `vatClip` (start, frames, fps, loop), `vatPlay` (phase, rate) and `vatTeam`, and gives every pass the animated
+  pose: `customDepthMaterial` (shadow map), `customDistanceMaterial` (point-light shadows) and the prepass tag
+  (below: `'replace'` with a VAT-patched `MeshNormalMaterial` by default, `'skip'` for far LODs).
+  `setVatInstance(mesh, i, vat.clip('walk'), phase, rate, team)`; `mesh.userData.dispose()` frees what the helper
+  created. **One InstancedMesh per LOD = 1 color draw + 1 shadow draw** regardless of count, + 1 posed draw in
+  the GTAO / SSAO pre-pass on high / ultra (500-soldier test crowd, 2 LODs: see docs/sprint1/ta-07/).
 
 ### Impostors - distant vegetation and monuments
 
@@ -76,10 +99,12 @@ Models gained metadata in the same change: `skinned`, `clipEvents` (`{clip: [{ty
 - **Publish:** albedo at 256 / 192 / 128 px per frame (2048 / 1536 / 1024 atlases), normal + depth at half
   resolution (lossy WebP q92 + alpha q95 - normals at full res were 2.8 MB).
 - **Runtime:** `createImpostorMesh(handle)` = camera-facing quad whose shader blends the 3 nearest frames
-  (barycentric), reprojects the quad into each frame's capture plane (no per-pixel depth parallax yet: the
-  depth in normal.a is reserved for a parallax / depth-offset pass), lights with the stored normals
-  (`MeshStandardMaterial`, alpha-test 0.5, depth material for shadows). Switch distance comes from the
-  manifest (`switchDistance`, 90 m for the test tree). A/B at 220 m: see the TA-07 report.
+  (barycentric), reprojects the quad into each frame's capture plane, lights with the stored normals
+  (`MeshStandardMaterial`, alpha-test 0.5) and carries depth / distance materials for shadows. In the AO
+  pre-pass (prepass `'replace'`) it draws the same billboard with its coverage cut-out, the atlas normals and a
+  per-pixel **depth relief** from normal.a (`gl_FragDepth`), so GTAO sees the canopy's shape instead of a flat
+  card (the main color pass does not offset depth). Switch distance comes from the manifest (`switchDistance`,
+  90 m for the test tree). A/B at 220 m: see the TA-07 report.
 
 ### Flipbooks - VFX
 
@@ -100,9 +125,47 @@ Models gained metadata in the same change: `skinned`, `clipEvents` (`{clip: [{ty
 - **Publish:** color atlas at `atlasPx` per tier (lossy WebP q86 + alpha q90; additive-only books drop the
   redundant alpha), normal atlas at half resolution, lossy q90 (`FLIPBOOK_NORMAL_SCALE`: soft volume normals
   lose nothing visible and the payload halves), same grid so the UVs are shared.
+- **Border guard:** `flipbook.write()` fails the bake when any frame's outer 2 px carry coverage / emission above
+  2/255 in the encoded atlas, checked at the source resolution and after downsampling to the smallest shipped
+  frame size (a puff cut by its frame edge shows as a hard straight line on the particle quad). Sequences that
+  must touch an edge opt out per edge with `"open_edges": ["left", ...]` (weapon-trail ribbons, ground-hitting
+  bolts); the flag is bake-time only. Covered by the Blender selftest.
 - **Runtime:** `frameAt(seq, t)`, `frameRect(entry, k)` are the contract for the particle system;
   `createFlipbookMaterial(handle, { sequence, lit, tint })` is the reference quad material (two-frame
-  cross-fade, derivative-TBN normals, premultiplied blending via `CustomBlending` ONE / ONE_MINUS_SRC_ALPHA).
+  cross-fade, derivative-TBN normals, premultiplied blending via `CustomBlending` ONE / ONE_MINUS_SRC_ALPHA,
+  additive and premultiplied books multiplied by `emissiveIntensity`). It tags the material prepass `'skip'`;
+  `createFlipbookMesh(handle, opts, geometry?)` (or `installPrepassGuard(mesh, 'skip')` on the particle system's own
+  mesh) enforces it.
+
+### Override-material passes (prepass tag)
+
+Passes that render the scene with `scene.overrideMaterial` - in three r170 the `GTAOPass` / `SSAOPass` normal +
+depth pre-pass that `src/render/post.ts` runs on high / ultra - draw every mesh with one `MeshNormalMaterial` and
+hide only Points and Lines. Without care, VAT crowds land in that buffer in their **rest pose**, impostors as
+their raw 1 x 1 m quad at the object origin, and transparent particle quads as **opaque cards** (each flipbook quad
+showed a rectangle with a dark AO halo - Art Director review).
+
+- **Contract** (`src/assets/loaders/prepass.ts`): `object.userData.samrajyaPrepass` (or the material's userData) is
+  - `'skip'` - never drawn in an override-material pass (transparent particles own no depth / normal);
+  - `'replace'` - drawn with `userData.samrajyaPrepassMaterials.normal` when the override is a
+    `MeshNormalMaterial` (the AO pre-passes): a normal material running the same vertex patch (VAT pose, impostor
+    billboard + coverage cut-out + depth relief); skipped for any other override.
+- **Enforcement is self-contained:** `installPrepassGuard(mesh, mode, materials?)` hooks `onBeforeRender` /
+  `onAfterRender`; while an override is active it draws the replacement itself (`renderer.renderBufferDirect`) and
+  suppresses the override draw (`geometry.drawRange.count = -1` makes three return before any GL call; restored
+  in `onAfterRender`). The stock GTAOPass / SSAOPass therefore honour the tag today with no change to post.ts.
+  Shadow passes use `customDepthMaterial` / `customDistanceMaterial` and never call `onBeforeRender`.
+  Callers that need their own `onBeforeRender` must chain the existing handler.
+- **Applied by:** `createVatInstancedMesh` (`'replace'`, or `'skip'` via options), `createImpostorMesh`
+  (`'replace'`), `createFlipbookMaterial` (material tag `'skip'`) and `createFlipbookMesh` (guard installed).
+- **Measured** (`scripts/shots/ta-07.cjs --only=gtao`, quality=ultra, GTAO on): in the empty corners of every
+  flipbook quad the tagged shot matches the backdrop-only shot within 0.5/255; untagged quads (`?prepass=off`, the
+  pre-rework behaviour) differ by 1.7-7.2/255 (visible cards).
+- **Change request to Lead Graphics (src/render/post.ts, optional but cheaper):** before
+  `gtao.render()` / `ssao.render()`, hide (and restore after) every object for which
+  `prepassModeOf(o) === 'skip'`, and every other transparent mesh with `depthWrite === false` that does not carry
+  the tag (procedural particles, water sheets, decals created outside the TA-07 helpers). Tagged objects already
+  work without it; the up-front hide saves a program switch per particle mesh. Do not hide `'replace'` objects.
 
 ### LUTs and images
 
@@ -142,14 +205,14 @@ Measured totals are printed by `npm run assets -- --list` (see the TA-07 report)
 const vat = await ctx.assets.loadVat('vat_test_dummy');            // VatHandle | null
 const lod = vat!.lods[0]!;
 const mat = createVatMaterial(lod, { partColors: vat!.entry.partColors.map((h) => new THREE.Color(h)) });
-const crowd = createVatInstancedMesh(lod, 500, mat, createVatDepthMaterial(lod, time));
+const crowd = createVatInstancedMesh(lod, 500, mat);              // shadow / distance / AO-prepass materials included
 setVatInstance(crowd, i, vat!.clip('walk')!, phase, 1, teamColor);
 
 const imp = await ctx.assets.loadImpostor('impostor_test_tree');   // ImpostorHandle | null
 scene.add(createImpostorMesh(imp!));
 
 const fb = await ctx.assets.loadFlipbook('fx_smoke');              // FlipbookHandle | null
-const smoke = createFlipbookMaterial(fb!, { sequence: 'all' });
+const smoke = createFlipbookMaterial(fb!, { sequence: 'all' });   // or createFlipbookMesh(fb!, { sequence: 'all' })
 smoke.userData.flipbookFrame.value = t * fb!.sequence('all')!.fps;   // sequence-relative, fractional (cross-faded)
 // particle systems: frameAt(seq, t) -> atlas frame, frameRect(entry, k) -> uv rect
 
@@ -166,5 +229,9 @@ const hero = await ctx.assets.loadModel('skin_test_character');    // independen
   access or console errors (verified by `scripts/shots/ta-07.cjs`).
 - `lib/core.py` `KINDS` still lists only material | model | hdri: the new kinds start a model context and
   retag (`ctx.kind = ...`) until the CTO extends it.
-- Engines that render the scene with an override material (e.g. the GTAO normal pre-pass) see VAT meshes in
-  their rest pose; graphics should render VAT meshes with their own normal / depth materials in such passes.
+- Override-material passes see the correct shapes (prepass tag above); renderers that add their own override
+  passes get it for free as long as their override is a `MeshNormalMaterial` (else tagged objects are skipped).
+- Multi-part loads (`loadModel`, `loadVat`, `loadImpostor`, `loadFlipbook`) track every cache acquisition in an
+  `AcquireScope` (`loaders/scope.ts`) from the moment it starts: when one part fails, the parts that resolved -
+  and those that resolve later - are released, so refs and GPU memory never leak on a flaky network
+  (`tests/assets/asset-manager.test.ts`, real loaders against the published test assets with a mocked fetch).

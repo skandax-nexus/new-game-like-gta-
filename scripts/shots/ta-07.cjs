@@ -3,14 +3,16 @@
  * TA-07 evidence capture (pipeline extensions + WP7 content). OWNER: Technical Artist G (TA-07).
  *
  *   npx vite build --outDir .build/ta-07 --emptyOutDir
- *   NODE_PATH=$(npm root -g) node scripts/shots/ta-07.cjs [--only=crowd,impostor,skies,fx,lut,skinned,banners,kit,splat,images,off,mobile]
+ *   NODE_PATH=$(npm root -g) node scripts/shots/ta-07.cjs [--only=crowd,impostor,skies,fx,gtao,lut,skinned,banners,kit,splat,images,off,mobile]
  *
  * Env: SHOTS_PORT (default 4402), SHOTS_DIST (default .build/ta-07), SHOTS_OUT (default docs/sprint1/ta-07).
  * Starts `vite preview` on the ticket port, opens asset-viewer deep links in headless Chromium (SwiftShader),
  * waits for sceneReady, saves PNGs and prints / writes the measured numbers (docs/sprint1/ta-07/report.json):
- * crowd draw calls per LOD, impostor A/B luminance difference at 220 m, sky sun / irradiance table, smoke
- * shading under two sun directions, skinned clone memory (renderer.info.memory) before / after release, kit
- * draw calls, assets=off null checks. Fails (exit 1) on console errors, page errors or failed requests.
+ * crowd draw calls per LOD (color / shadow / AO pre-pass), impostor A/B luminance difference at 220 m, sky sun /
+ * irradiance table, sky horizon-seam rows, smoke shading under two sun directions, flipbook quads vs the GTAO
+ * pre-pass (empty quad area vs the backdrop, prepass tag on vs off), skinned clone memory (renderer.info.memory)
+ * before / after release, kit draw calls, assets=off null checks. Fails (exit 1) on console errors, page errors
+ * or failed requests.
  */
 'use strict';
 const { spawn, execSync } = require('node:child_process');
@@ -182,8 +184,8 @@ async function main() {
       if (crowd)
         for (const l of crowd.lods)
           console.log(
-            `[ta-07] crowd LOD${l.lod}: ${l.instances} instances, ${l.perPass} draw calls per scene pass (1 InstancedMesh color + 1 shadow); ` +
-              `frame total ${l.main} main + ${l.shadow} shadow over ${l.scenePasses} scene passes (RenderPass + GTAO normal pre-pass at high)`,
+            `[ta-07] crowd LOD${l.lod}: ${l.instances} instances, ${l.main + l.shadow} draw calls for color + shadow (1 InstancedMesh color + 1 shadow); ` +
+              `GTAO normal pre-pass at high: ${l.prepass} posed draw (prepass 'replace' - VAT pose, not the rest pose); ${l.scenePasses} scene passes`,
           );
     }
 
@@ -238,6 +240,53 @@ async function main() {
         report.numbers.smokeLighting = { meanAbsDiff: diff / (a.data.length), changedPixels: n };
         console.log(`[ta-07] fx_smoke lit from east vs west: mean |diff| ${(diff / a.data.length).toFixed(2)} / 255, ${n} pixels changed > 6`);
       }
+    }
+
+    // ---------------------------------------------------------------- flipbook quads vs the GTAO pre-pass (ultra)
+    // Three shots per effect at quality=ultra (GTAO on): quads tagged 'skip' (default), quads hidden (backdrop
+    // reference) and untagged quads (?prepass=off, the pre-rework behaviour). In the outer corners of every quad
+    // (no effect content there - the border guard keeps frames empty at their edges) the tagged shot must match
+    // the backdrop within 1/255; the untagged one shows the card.
+    if (run('gtao')) {
+      const rows = [];
+      for (const fx of ['fx_rain', 'fx_nature', 'fx_dust', 'fx_smoke', 'fx_mist'].filter((f) => idsOfKind('flipbook').includes(f))) {
+        const q = `asset=${fx}&hdri=sky_golden&camera=front&phase=0.35&noui=1`;
+        const st = await shoot(`gtao_${fx}_tagged`, q, { quality: 'ultra' });
+        await shoot(`gtao_${fx}_backdrop`, `${q}&hidefx=1`, { quality: 'ultra' });
+        await shoot(`gtao_${fx}_untagged`, `${q}&prepass=off`, { quality: 'ultra' });
+        const quads = st?.fxQuads ?? [];
+        const img = async (n) => sharp(path.join(OUT, `${n}.png`)).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+        const [A, B, C] = await Promise.all([img(`gtao_${fx}_tagged`), img(`gtao_${fx}_backdrop`), img(`gtao_${fx}_untagged`)]);
+        const W = A.info.width;
+        const H = A.info.height;
+        let worstTagged = 0;
+        let worstUntagged = 0;
+        for (const r of quads) {
+          const c = Math.max(3, Math.round(Math.min(r.w, r.h) * 0.05));
+          for (const [cx, cy] of [[r.x + 2, r.y + 2], [r.x + r.w - 2 - c, r.y + 2], [r.x + 2, r.y + r.h - 2 - c], [r.x + r.w - 2 - c, r.y + r.h - 2 - c]]) {
+            let da = 0;
+            let dc = 0;
+            let n = 0;
+            for (let y = cy; y < cy + c; y++)
+              for (let x = cx; x < cx + c; x++) {
+                if (x < 0 || y < 0 || x >= W || y >= H) continue;
+                const i = (y * W + x) * 3;
+                for (let k = 0; k < 3; k++) {
+                  da += Math.abs(A.data[i + k] - B.data[i + k]);
+                  dc += Math.abs(C.data[i + k] - B.data[i + k]);
+                }
+                n += 3;
+              }
+            if (n) {
+              worstTagged = Math.max(worstTagged, da / n);
+              worstUntagged = Math.max(worstUntagged, dc / n);
+            }
+          }
+        }
+        rows.push({ fx, quads: quads.length, worstCornerDiffTagged: worstTagged, worstCornerDiffUntagged: worstUntagged });
+        console.log(`[ta-07] GTAO card check ${fx.padEnd(14)} ${quads.length} quads: empty-corner |diff| vs backdrop tagged ${worstTagged.toFixed(2)}/255 (target <= 1), untagged ${worstUntagged.toFixed(2)}/255`);
+      }
+      report.numbers.gtaoCards = rows;
     }
 
     // ---------------------------------------------------------------- LUT A/B

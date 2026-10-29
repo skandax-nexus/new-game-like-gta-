@@ -5,16 +5,19 @@
  *   const imp = await ctx.assets.loadImpostor('tree_banyan_impostor');      // null when off / failed
  *   const mesh = createImpostorMesh(imp);                                   // camera-facing quad, 1 draw call
  *   mesh.position.copy(treePosition); scene.add(mesh);
- *   ... mesh.geometry.dispose(); (mesh.material as THREE.Material).dispose(); imp.release();
+ *   ... mesh.userData.dispose(); imp.release();
  *
  * The vertex shader picks the three atlas frames around the camera direction (barycentric weights on the
  * hemi-octahedral grid), reprojects the quad into each frame's plane, and the fragment shader blends albedo,
  * coverage and the object-space normal, so the impostor is lit by the same sun / IBL / fog as meshes and
  * casts a shadow (the shadow pass faces the billboard to the light). Vegetation (GFX-03) and crowds
  * (GFX-04) may instance it; the per-frame math below is the contract.
+ * Override-material passes (GTAO / SSAO normal pre-pass) draw the same billboard with its coverage cut-out and
+ * atlas normals (prepass tag 'replace', loaders/prepass.ts) - never the raw 1 x 1 m quad at the origin.
  */
 import * as THREE from 'three';
 import type { ImpostorAssetEntry } from '../types';
+import { createPrepassNormalMaterial, installPrepassGuard } from './prepass';
 
 /** Unit direction (three axes, object center -> camera) of hemi-octahedral grid coordinates (u, v) in [0, 1]. */
 export function hemiOctaDecode(u: number, v: number): [number, number, number] {
@@ -174,6 +177,34 @@ const IMP_NORMAL = /* glsl */ `
   }
 `;
 
+// AO pre-pass only: per-pixel depth relief from normal.a (depth = 0.5 + dot(P - C, d) / (2 r), 1 = towards the
+// camera) - the billboard fragment moves along the view axis so GTAO / SSAO see the object's shape.
+const IMP_PREPASS_VERTEX_HEADER = /* glsl */ `
+varying vec3 vImpViewPos;
+varying float vImpScale;
+`;
+const IMP_PREPASS_VERTEX_BODY = /* glsl */ `
+  vImpViewPos = mvPosition.xyz;
+  vImpScale = length( modelMatrix[ 0 ].xyz );
+`;
+const IMP_PREPASS_FRAGMENT_HEADER = /* glsl */ `
+uniform float impAlphaTest;
+uniform float impRadius;
+uniform mat4 projectionMatrix;
+varying vec3 vImpViewPos;
+varying float vImpScale;
+`;
+const IMP_PREPASS_DEPTH = /* glsl */ `
+  {
+    float impD = ( texture2D( impNormal, vImpUv0 ).a * impWa.x + texture2D( impNormal, vImpUv1 ).a * impWa.y
+                 + texture2D( impNormal, vImpUv2 ).a * impWa.z ) / max( impCov, 1e-4 );
+    vec3 impVp = vImpViewPos;
+    impVp.z += ( impD - 0.5 ) * 2.0 * impRadius * vImpScale;
+    vec4 impClip = projectionMatrix * vec4( impVp, 1.0 );
+    gl_FragDepth = clamp( impClip.z / impClip.w * 0.5 + 0.5, 0.0, 1.0 );
+  }
+`;
+
 function patch(shader: THREE.WebGLProgramParametersWithUniforms, uniforms: Record<string, THREE.IUniform>, depth: boolean): void {
   Object.assign(shader.uniforms, uniforms);
   shader.vertexShader = shader.vertexShader
@@ -203,9 +234,20 @@ function impUniforms(h: ImpostorHandle): Record<string, THREE.IUniform> {
   };
 }
 
-/** Lit impostor material (MeshStandardMaterial + patch) and its shadow depth material. */
-export function createImpostorMaterials(h: ImpostorHandle, opts: ImpostorMaterialOptions = {}): { material: THREE.MeshStandardMaterial; depth: THREE.MeshDepthMaterial } {
-  const uniforms = impUniforms(h);
+export interface ImpostorMaterials {
+  /** Lit billboard (MeshStandardMaterial + patch). */
+  material: THREE.MeshStandardMaterial;
+  /** Directional / spot shadow depth (customDepthMaterial). */
+  depth: THREE.MeshDepthMaterial;
+  /** Point-light shadow distance (customDistanceMaterial). */
+  distance: THREE.MeshDistanceMaterial;
+  /** AO pre-pass normal + depth (prepass 'replace'). */
+  prepass: THREE.MeshNormalMaterial;
+}
+
+/** Lit impostor material (MeshStandardMaterial + patch) and its shadow / distance / AO-prepass variants. */
+export function createImpostorMaterials(h: ImpostorHandle, opts: ImpostorMaterialOptions = {}): ImpostorMaterials {
+  const uniforms = { ...impUniforms(h), impAlphaTest: { value: opts.alphaTest ?? 0.5 } };
   const material = new THREE.MeshStandardMaterial({
     name: `${h.entry.id}_impostor`,
     roughness: opts.roughness ?? 0.85,
@@ -219,8 +261,28 @@ export function createImpostorMaterials(h: ImpostorHandle, opts: ImpostorMateria
   const depth = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, alphaTest: opts.alphaTest ?? 0.5 });
   depth.onBeforeCompile = (shader) => patch(shader, uniforms, true);
   depth.customProgramCacheKey = () => 'samrajya-impostor-depth';
+  const distance = new THREE.MeshDistanceMaterial({ alphaTest: opts.alphaTest ?? 0.5 });
+  distance.onBeforeCompile = (shader) => patch(shader, uniforms, true);
+  distance.customProgramCacheKey = () => 'samrajya-impostor-distance';
+  const prepass = createPrepassNormalMaterial(
+    `${h.entry.id}_impostor_prepass`,
+    (shader) => {
+      Object.assign(shader.uniforms, uniforms);
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', `#include <common>\n${IMP_VERTEX_HEADER}\n${IMP_PREPASS_VERTEX_HEADER}`)
+        .replace('#include <begin_vertex>', IMP_VERTEX_BODY)
+        .replace('#include <project_vertex>', `#include <project_vertex>\n${IMP_PREPASS_VERTEX_BODY}`);
+      // MeshNormalMaterial has no map / alphatest chunks: blend the coverage, cut out, then the atlas normal, then
+      // the per-pixel depth relief (normal.a) so the AO pass sees the canopy's shape, not a flat card.
+      shader.fragmentShader = shader.fragmentShader
+        .replace('#include <packing>', `#include <packing>\n${IMP_FRAGMENT_HEADER}\n${IMP_PREPASS_FRAGMENT_HEADER}`)
+        .replace('#include <normal_fragment_maps>', `${IMP_ALBEDO}\n  if ( diffuseColor.a < impAlphaTest ) discard;\n${IMP_NORMAL}\n${IMP_PREPASS_DEPTH}`);
+    },
+    'samrajya-impostor-prepass',
+    { side: THREE.DoubleSide },
+  );
   material.userData.impostorUniforms = uniforms;
-  return { material, depth };
+  return { material, depth, distance, prepass };
 }
 
 /** A camera-facing impostor quad (geometry owned by the mesh; dispose geometry + materials when done). */
@@ -229,17 +291,21 @@ export function createImpostorMesh(h: ImpostorHandle, opts: ImpostorMaterialOpti
   const r = h.entry.radius;
   const c = h.entry.center;
   geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(c[0], c[1], c[2]), r * 1.5);
-  const { material, depth } = createImpostorMaterials(h, opts);
+  const { material, depth, distance, prepass } = createImpostorMaterials(h, opts);
   const mesh = new THREE.Mesh(geo, material);
   mesh.customDepthMaterial = depth;
+  mesh.customDistanceMaterial = distance;
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   mesh.frustumCulled = true;
   mesh.name = `${h.entry.id}_impostor`;
+  installPrepassGuard(mesh, 'replace', { normal: prepass });
   mesh.userData.dispose = () => {
     geo.dispose();
     material.dispose();
     depth.dispose();
+    distance.dispose();
+    prepass.dispose();
   };
   return mesh;
 }
