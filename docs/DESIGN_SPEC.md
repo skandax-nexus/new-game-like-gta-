@@ -1038,7 +1038,7 @@ net               = tax + trade + tribute in - army - buildings - administration
 | emergency | x1.7 | +0.017 | -0.12 | -0.015 |
 
 *Worked example (Suvarna, month 1):* 38,600 people at 15% tax, loyalty 0.65 -> **≈1,050 wealth/month** tax +
-≈250 trade; armies (1,650 soldiers) cost **≈670/month**, buildings ≈70, administration ≈26 -> net ≈ +530/month.
+≈200 trade; armies (1,650 soldiers) cost **≈670/month**, buildings ≈85, administration ≈26 -> net ≈ +470/month.
 A new spear formation (360) or a granary (200 + materials) per month is the intended starting cadence.
 
 **Debt** (treasury < 0): unpaid armies lose 2 morale/day and 0.5% of soldiers/day; construction pauses; stability
@@ -1847,7 +1847,7 @@ palace gate" completes at the Rajaprasada anchor; "Speak with the regent" ends t
 
 ### 11.4 Characters (`HERO_CHARACTERS`)
 
-23 characters. Each has an appearance (silhouette, garment/accent colors, headgear, prop, scale), traits,
+22 characters. Each has an appearance (silhouette, garment/accent colors, headgear, prop, scale), traits,
 interest, an optional dialogue tree, optional negotiation profile and ambient barks.
 
 | Group | Characters (district) |
@@ -2163,3 +2163,179 @@ hero missions, the army, and recruitment.
 
 Per run: day of each objective, outcome, battles (kind, sizes, duration, winner, losses), monthly ledger, grain
 reserve days per settlement, unrest per settlement, events fired and choices, hero mission results and retries.
+
+---
+
+## 14. Implementation handoff
+
+### 14.1 Data delivered (`src/data/**`)
+
+| File | Contents | Consumers |
+|---|---|---|
+| `factions.ts` | 6 factions: modifiers, rosters, heraldry, mottos, playstyle, variants, starting ages | sim, render, UI |
+| `units.ts` | 9 classes: stats, terrain tables, counters, visuals, ages, card slots | sim, render, UI |
+| `buildings.ts` | 21 buildings: costs (wealth/timber/stone/labor), effects, footprints, categories, card slots, production, workers | sim, render, UI |
+| `ages.ts` | 3 ages, 16 landmarks, helpers `landmarksFor`, `nextAge` | sim, UI |
+| `region.ts` | Region (8 provinces, 16 settlements, 22 roads), `SETTLEMENT_LORE`, `REGION_FEATURES`, river names | sim, render, UI, hero |
+| `campaign.ts` | `broken_crown`, `seven_hills`, shared cast/armies, sandbox defaults, `SANDBOX_RANGES/PRESETS/START_MONTHS` | sim, UI |
+| `events.ts` | 51 events (26 Broken Crown, 8 Seven Hills, 1 shared, 16 systemic) | sim, UI |
+| `hero.ts` | 9 districts, 22 characters, 19 dialogue trees (4 of them negotiations), 5 missions, 6 enemies, `HERO_COMBAT`, `NEGOTIATION_RULES`, `TACTIC_INFO`, `HERO_GROUPS`, `HERO_AVATARS`, `TRAINING_STEPS`, `MISSION_INSPECTABLES` | hero scene, UI |
+| `rules.ts` | `RULES`: all design constants used by the formulas in §6-§8 and §10 | sim, gameplay, UI |
+| `balance.ts` | `BALANCE` (travel scale now 30) | sim |
+| `difficulty.ts` | `DIFFICULTY_DEFS`, `AI_PERSONALITY_DEFS` | sim, AI, hero |
+| `tutorial.ts` | 36 hints with trigger keys | UI |
+| `skirmish.ts` | compositions, sizes, maps, times, weather per season, faction default compositions | sim, UI |
+| `resources.ts` | AoE resource bar presentation | UI |
+| `statistics.ts` | end-game stat definitions and timeline series | UI |
+| `names.ts` | name pools (shared + per archetype), titles, dynasties, army/formation/place name patterns | sim |
+| `dsl.ts` | builders for conditions/effects | data |
+
+`tests/data.test.ts` (42 tests) guards all of it; `npm test` runs it.
+
+### 14.2 Contract changes made to `src/core/types.ts` (all additive and optional)
+
+| Type | Added | Why |
+|---|---|---|
+| `FactionDef` | `heraldry?`, `motto?`, `startingAge?`, `playstyle?`, `unitVariants?` (+ `FactionUnitVariant`, `HeraldryDef`) | §4 |
+| `UnitDef` | `age?`, `retiredInAge?`, `commandSlot?`, `shortName?`, `counters?` | §5, §8.8 |
+| `BuildingDef` | `age?`, `category?`, `footprint?`, `commandSlot?`, `produces?`, `workers?` (+ `BuildingCategory`, `BuildingFootprint`) | §8.2, §8.3 |
+| `ObjectiveDef` | `act?` | §9.3 |
+| `ScenarioOutcomeDef` | `immediate?`, `victoryType?` | §9.6 |
+| `ScenarioDef` | `acts?`, `startingAges?`, `heroCharacterId?`, `materials?`, `monsoonStrength?` (+ `ScenarioActDef`) | §9 |
+| New types | `AGE_IDS`/`AgeId`, `MaterialCost`, `AgeRequirements`, `AgeDef`, `LandmarkDef`, `ECONOMY_RESOURCES`/`EconomyResource`, `ResourceDisplayDef`, `DifficultyDef`, `AiPersonalityDef`, `TutorialHintDef`, `NEGOTIATION_TACTICS`/`NegotiationTactic`, `HeroMood`, `HeroDistrictDef`, `HeroInspectableDef`, `NegotiationProfile`, `HeroAppearanceDef`, `HeroCharacterDef`, `DialogueChoiceDef`, `DialogueNodeDef`, `DialogueTreeDef`, `HeroObjectiveKind`, `HeroObjectiveDef`, `HeroEnemyDef`, `HeroWaveDef`, `CinematicShotDef`, `HeroMissionDef`, `HeroMoveDef`, `HeroCombatConfig` | §8, §10, §11, §12 |
+
+Nothing existing was renamed or removed; no runtime state shape changed (no save migration needed for these).
+
+### 14.3 Requests (exact changes, by owner)
+
+**CTO (contracts, state, save):**
+1. Additive state (bump `WORLD_SCHEMA_VERSION`/`SAVE_VERSION` + migration with defaults):
+   `FactionState.age: AgeId` (default from `startingAges`/`FactionDef.startingAge`, else 'janapada');
+   `FactionState.landmarks: string[]`; `FactionState.materials: { timber: number; stone: number }`;
+   `FactionState.policies: { holdReserve: boolean; rationingUntilDay: number | null; forcedMarch?: never }`;
+   `FactionState.marketPrices: { grain: number; timber: number; stone: number }` (factors, default 1);
+   `WorldState.monsoon: { strength: number; year: number }`;
+   `WorldState.statistics: Record<FactionId, Record<string, number>>` (counters named by `END_GAME_STATS` ids);
+   `BuildingInstance.cell?: [number, number]; rot?: 0|1|2|3` and the same on `ConstructionJob`;
+   `ArmyState.forcedMarch?: boolean`; `SkirmishSetup.compositions?: [string, string]`.
+2. Reserved faction id **`rebels`** (not in `FACTIONS`): hostile only to the owner of the revolting settlement;
+   allowed as `ArmyState.factionId`; never a `WorldState.factions` entry (UI shows "Rebels of {settlement}").
+3. New `StrategicCommand` kinds: `market_trade { resource: 'grain'|'timber'|'stone'; lots: number; buy: boolean }`,
+   `start_landmark { landmarkId; settlementId; cell }`, `set_policy { policy: 'hold_reserve'|'rationing'; on: boolean }`,
+   `forced_march { armyId; on }`, `prisoners { engagementId; decision: 'ransom'|'release' }`,
+   `capture_decision { settlementId; decision: 'occupy'|'plunder'|'liberate' }`;
+   `build` gains optional `cell`/`rot`.
+4. New `BattleCommand`: `{ kind: 'rally' }` (commander ability, §6.11).
+5. New screen ids in `ScreenPropsMap`: `build_placement`, `market`, `age_panel`, `economy_panel`, `mission_card`,
+   `hero_dialogue`, `hero_negotiation`, `mission_result`, `game_stats`; bus events `ui:hint { key: string }` and
+   `hero:mission_end { missionId; success: boolean }`.
+6. [STRETCH] Condition kinds `age_at_least { faction, age }` and `landmark_built { faction, landmarkId }`.
+
+**Lead AI & Simulation (strategic sim, battle AI):**
+1. Economy §7.2-§7.5: storage capacity in **days** (`foodCapacity` effects are days), harvest pulses (trickle
+   40% / kharif 35% / rabi 25%), monsoon roll + `monsoon_failed`/`monsoon_flood` flags, internal grain
+   distribution, grain tax, relief draws, rationing, price formula and effects, tax/trade formulas, market,
+   materials production, debt. **Baseline issues found by autoplay:** (a) settlement capacity
+   `3,000 + 0.6·pop + 4,000·granary` is ≈10 days for Rajapura, so the capital starves by ~day 90 in every long
+   run (unrest reaches "secession" with no other effect); (b) `armyUpkeep` multiplies `upkeepWealth` by 0.1 - the
+   contract says per model per month; drop the factor once the economy is rebalanced.
+2. Construction (§7.6): costs (incl. timber/stone) paid at queue, crew-ratio speed, 3 parallel jobs, level cost
+   x1.6 / time x1.3, refunds, age/level caps; recruitment requirements (age, retired classes, elephant source,
+   horses discount, pool), variants (§5.7), experience bonuses, supply-train loading.
+3. Ages and landmarks (§8.4): requirement checks, exclusivity, age switch, landmark effects (settlement/realm/
+   faction), AI landmark choice.
+4. Armies (§7.7): road A*, pace by category, forced march, visibility/ghosts, evade, split/merge/disband.
+5. Supply and sieges (§7.8): resupply order, depots, foraging/plunder, attrition, starvation desertion,
+   requisition memory, siege damage/assault/starve-out, capture decisions.
+6. Politics (§7.9): loyalty target, unrest terms, stage multipliers (`RULES.politics.stageEffects`) with
+   hysteresis, rebel armies, secession, `negotiate_rebels` offers, governors (interests, demands, secession),
+   stability and legitimacy drift.
+7. Diplomacy (§7.10): `sign_treaty` type peace ends the war; tributary direction (a overlord, b payer); utility
+   with reason lines; truce; treaty effects; war score; marriages.
+8. Espionage and dynasty/council (§7.11-§7.12).
+9. Events: honor `ScenarioOutcomeDef.immediate` for victories; implement `spawn_army` and `damage_road`; scale
+   negative numeric effects by `DIFFICULTY_DEFS[d].eventSeverity`; apply hero mission/dialogue effects with the
+   player scope (API for the hero scene).
+10. Campaign AI and battle AI per §7.14/§10.4 (`AI_PERSONALITY_DEFS`, `DIFFICULTY_DEFS`); intent translation
+    rules §6.4.
+
+**Lead Gameplay (battle, hero, session):**
+1. Battle §6.2-§6.12: shape modifiers and shape-change time; charge preconditions; missiles with `bonusVs`,
+   friendly fire, forest cover, wet reload, night; elephant panic + trample; siege works, walls, gates, towers,
+   escalade; morale additions (T and P terms, new event kinds); rally limits; surrender; pursuit formula;
+   prisoners; fatigue tiers + `prolongedEngagement`; weather/mud; commander fall/fate and Rally; experience;
+   outcome write-back items 1-8; deployment phase 60 s (world) / 30 s (skirmish); flow-field pathing.
+2. Hero §11: district anchors -> layout (with Lead Graphics), dialogue runtime (clue flags, one-shot choices,
+   `startsMission`), negotiation runtime (`NEGOTIATION_RULES`), missions (objectives by kind, waves, cinematic
+   shot playback, retry/accept, effects at the end), melee (`HERO_COMBAT` frame data, poise, attack tokens,
+   telegraphs, phases), avatar by faction (`HERO_AVATARS`), free "Walk Rajapura" from the menu.
+3. Session: engagement queue, prisoners and capture decisions, mission flow, autosaves (§2.3).
+
+**Lead UI/UX (UI, input, audio):**
+1. Screens and layouts §12.2-§12.3 (new screens listed in CTO item 5), objectives tracker by act, event modal
+   with advisor portraits and auto-resolve countdown, resource bar §8.1, minimap §8.7, command card §8.8.
+2. Input: **Classic** and **Grid** presets (§8.8); move speed keys off `,` and `.` (they become idle cycling);
+   hero context must override the RTS held keys Q/E/R (guard, interact, salve); touch radial wheel and group slots.
+3. Tutorial hints (`TUTORIAL_HINTS`) on `ui:hint`; accessibility §12.5; notifications/auto-pause §12.6.
+4. Statistics screen (§8.9) and scenario results; chronicle.
+5. Audio: district ambience keys (`HeroDistrictDef.ambience`), stingers (age-up, landmark complete, harvest,
+   construction complete, battle start conch, duel phase bells), hit/parry/roll sounds for the melee set.
+
+**Lead Graphics:** construction stages and scaffolds (§8.2), villagers by allocation (§8.3), landmarks from
+`architecture` pieces with heights, wall levels and damage states (§8.6), placement ghost + grid overlay, battle
+readability (footprint rings, formation cards, waypoint pins, routing arrows; §6.13), hero mood presets and
+district blending, melee VFX keys (`slash_spark`, `heavy_dust`, `parry_flash`, `finisher_burst`), hit-stop/shake
+support in the hero camera.
+
+**Art Director:** faction emblems from blazons (6), colorblind palette + ring styles (§4.6), mood presets
+(§11.2), appearance references for the 22 hero characters, resource and tactic icons (`RESOURCE_DISPLAY.icon`,
+`TACTIC_INFO.icon`).
+
+**QA Lead:** battle matchup scripts (§13.3), campaign autoplay per victory path and default run (§13.4), keep
+`tests/data.test.ts` green when content changes.
+
+### 14.4 Known design debts
+
+- All economy targets are calibrated against the §7.3 reference formula (tested); re-tune `BALANCE`/`RULES` after
+  the sim implements it, keeping the §13 targets.
+- GDD §8 chapters 3-5 (*The River of Kings*, *The Price of Victory*, *The Heir's Burden*) and the southern
+  peninsula are post-MVP.
+- *The Seven Hills* has no hero missions in the MVP (Meghavati explores only).
+- Province borders are Voronoi-ish circles [BASE]; authored borders would read better.
+
+---
+
+## Appendix A - Glossary
+
+| Term | Meaning in the game |
+|---|---|
+| Janapada / Mahajanapada / Samrajya | "Realm of a people" / "great realm" / "empire" - the three ages |
+| Padati, Dhanvin, Maula, Ashvaroha, Ratha, Gaja, Vishti, Charaka, Shakata | Local terms for spearmen, archers, household guards, horsemen, chariots, war elephants, labor corps (engineers), scouts/runners, carts |
+| Kharif / rabi | Monsoon-sown crop harvested in autumn / winter-sown crop harvested in spring |
+| Varsha, sharad, hemanta, shishira, vasanta, grishma | The six seasons (ritus): monsoon, autumn, pre-winter, winter, spring, summer |
+| Chaitra ... Phalguna | The twelve months, Chaitra (≈ March-April) first |
+| Ghat | Stone steps down to a river |
+| Stepwell | Terraced well down to the water table |
+| Shikhara / stupa / vihara / chhatri | Temple tower / domed reliquary mound / monastery / domed pavilion |
+| Sangam | Confluence of rivers |
+| Tirtha | Ford; a sacred crossing place |
+| Setu | Bridge |
+| Senapati / Mantri / Rajuka / Amatya | General / minister / provincial officer / official |
+| Raja, Rani, Kumara, Kumari, Samraj | King, queen, prince, princess, emperor |
+| Dharma | Duty, right conduct (a negotiation tactic, "Duty") |
+
+## Appendix B - Historical care
+
+- Every authored record carries `historicity`: **documented** (attested for the broad period: war elephants,
+  urban drainage, stupas, punch-marked coinage, royal control of elephant forests), **reconstruction** (plausible
+  composites from texts and archaeology: troop types named in statecraft texts, bamboo bows, ghats, raised
+  granaries, pillared halls), **fictional** (every realm, person, place, event and the three-age ladder as a game
+  system). `sourceNote` explains the basis for reviewers. Nothing fictional is presented in-game as fact.
+- Stylizations are flagged: shikhara temples and monumental stepwells are later architectural forms used for
+  visual identity; chariot retirement by age is a game simplification of a gradual decline.
+- No real dynasty, ruler, city or epic hero is depicted or named; generated names avoid famous figures.
+- No culture is reduced to good-versus-evil; every faction has a legitimate grievance and a cost; forest and
+  frontier peoples are settled polities with councils, trade and law.
+- Religious sites are places of peace in the design (Tirthaghat is neutral sacred ground); no mechanic rewards
+  desecration; plundering a captured settlement costs legitimacy and opinion everywhere.
+- Specialist historical review is still required before release (GDD §14).
