@@ -1,0 +1,439 @@
+{
+  "pipelineVersion": 1,
+  "assets": {
+    "sandstone_carved_red": {
+      "id": "sandstone_carved_red",
+      "kind": "material",
+      "category": "materials",
+      "script": "tools/blender/assets/materials/sandstone_carved_red.py",
+      "inputHash": "9d0c8313520e5ab3b8bfa31bc776f1266806389e80f2d8738f596adddec60d17",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "averageColor": "#773e2e",
+        "description": "Weathered carved red sandstone trim sheet: ashlar, creeper scroll, dentils, padma, bead-and-reel, lotus medallion frieze.",
+        "heightRangeMeters": [
+          -0.02245,
+          0.02222
+        ],
+        "metalness": 0,
+        "normalScale": 1,
+        "roughness": 0.866,
+        "tileSizeMeters": [
+          2,
+          2
+        ],
+        "trims": [
+          {
+            "heightMeters": 0.32,
+            "name": "ashlar_base",
+            "v0": 0,
+            "v1": 0.16
+          },
+          {
+            "heightMeters": 0.24,
+            "name": "vine_scroll",
+            "v0": 0.16,
+            "v1": 0.28
+          },
+          {
+            "heightMeters": 0.12,
+            "name": "dentil",
+            "v0": 0.28,
+            "v1": 0.34
+          },
+          {
+            "heightMeters": 0.2,
+            "name": "padma",
+            "v0": 0.34,
+            "v1": 0.44
+          },
+          {
+            "heightMeters": 0.08,
+            "name": "bead_reel",
+            "v0": 0.44,
+            "v1": 0.48
+          },
+          {
+            "heightMeters": 0.4,
+            "name": "medallion_frieze",
+            "v0": 0.48,
+            "v1": 0.68
+          },
+          {
+            "heightMeters": 0.64,
+            "name": "ashlar",
+            "v0": 0.68,
+            "v1": 1
+          }
+        ]
+      },
+      "files": [
+        {
+          "path": "textures/sandstone_carved_red/baseColor_2048.webp",
+          "bytes": 442166,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "texture",
+          "map": "baseColor",
+          "size": 2048
+        },
+        {
+          "path": "textures/sandstone_carved_red/baseColor_1024.webp",
+          "bytes": 147418,
+          "tiers": [
+            "high"
+          ],
+          "kind": "texture",
+          "map": "baseColor",
+          "size": 1024
+        },
+        {
+          "path": "textures/sandstone_carved_red/baseColor_512.webp",
+          "bytes": 39718,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "texture",
+          "map": "baseColor",
+          "size": 512
+        },
+        {
+          "path": "textures/sandstone_carved_red/normal_2048.webp",
+          "bytes": 3056126,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "texture",
+          "map": "normal",
+          "size": 2048
+        },
+        {
+          "path": "textures/sandstone_carved_red/normal_1024.webp",
+          "bytes": 960908,
+          "tiers": [
+            "high"
+          ],
+          "kind": "texture",
+          "map": "normal",
+          "size": 1024
+        },
+        {
+          "path": "textures/sandstone_carved_red/normal_512.webp",
+          "bytes": 272158,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "texture",
+          "map": "normal",
+          "size": 512
+        },
+        {
+          "path": "textures/sandstone_carved_red/orm_2048.webp",
+          "bytes": 772462,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "texture",
+          "map": "orm",
+          "size": 2048
+        },
+        {
+          "path": "textures/sandstone_carved_red/orm_1024.webp",
+          "bytes": 217332,
+          "tiers": [
+            "high"
+          ],
+          "kind": "texture",
+          "map": "orm",
+          "size": 1024
+        },
+        {
+          "path": "textures/sandstone_carved_red/orm_512.webp",
+          "bytes": 55424,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "texture",
+          "map": "orm",
+          "size": 512
+        }
+      ],
+      "set": {
+        "maps": {
+          "baseColor": {
+            "ultra": {
+              "path": "textures/sandstone_carved_red/baseColor_2048.webp",
+              "bytes": 442166,
+              "size": 2048
+            },
+            "high": {
+              "path": "textures/sandstone_carved_red/baseColor_1024.webp",
+              "bytes": 147418,
+              "size": 1024
+            },
+            "mobile": {
+              "path": "textures/sandstone_carved_red/baseColor_512.webp",
+              "bytes": 39718,
+              "size": 512
+            }
+          },
+          "normal": {
+            "ultra": {
+              "path": "textures/sandstone_carved_red/normal_2048.webp",
+              "bytes": 3056126,
+              "size": 2048
+            },
+            "high": {
+              "path": "textures/sandstone_carved_red/normal_1024.webp",
+              "bytes": 960908,
+              "size": 1024
+            },
+            "mobile": {
+              "path": "textures/sandstone_carved_red/normal_512.webp",
+              "bytes": 272158,
+              "size": 512
+            }
+          },
+          "orm": {
+            "ultra": {
+              "path": "textures/sandstone_carved_red/orm_2048.webp",
+              "bytes": 772462,
+              "size": 2048
+            },
+            "high": {
+              "path": "textures/sandstone_carved_red/orm_1024.webp",
+              "bytes": 217332,
+              "size": 1024
+            },
+            "mobile": {
+              "path": "textures/sandstone_carved_red/orm_512.webp",
+              "bytes": 55424,
+              "size": 512
+            }
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 4270754,
+        "high": 1325658,
+        "mobile": 367300
+      }
+    },
+    "sky_day": {
+      "id": "sky_day",
+      "kind": "hdri",
+      "category": "hdri",
+      "script": "tools/blender/assets/hdri/sky_day.py",
+      "inputHash": "be539af11dad8b5003b5a1cd9be515f30e87a79483d116f096ed05c138c12443",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "ambientIrradiance": 0.3354,
+        "description": "Clear late-morning sky, sun 42 deg SE, light haze (lookdev / daytime IBL).",
+        "groundAlbedo": [
+          0.24,
+          0.19,
+          0.14
+        ],
+        "scale": 0.025278991083925187,
+        "sun": {
+          "azimuthDeg": 128,
+          "color": [
+            1,
+            0.8442,
+            0.6412
+          ],
+          "direction": [
+            0.58561,
+            0.66913,
+            0.45753
+          ],
+          "elevationDeg": 42,
+          "intensity": 3.9414
+        },
+        "tiers": {
+          "high": {
+            "height": 512,
+            "width": 1024
+          },
+          "mobile": {
+            "height": 256,
+            "width": 512
+          },
+          "ultra": {
+            "height": 1024,
+            "width": 2048
+          }
+        }
+      },
+      "files": [
+        {
+          "path": "hdri/sky_day_2048.exr",
+          "bytes": 123046,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "hdri",
+          "width": 2048,
+          "height": 1024
+        },
+        {
+          "path": "hdri/sky_day_1024.exr",
+          "bytes": 45936,
+          "tiers": [
+            "high"
+          ],
+          "kind": "hdri",
+          "width": 1024,
+          "height": 512
+        },
+        {
+          "path": "hdri/sky_day_512.exr",
+          "bytes": 17886,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "hdri",
+          "width": 512,
+          "height": 256
+        }
+      ],
+      "hdri": {
+        "files": {
+          "ultra": {
+            "path": "hdri/sky_day_2048.exr",
+            "bytes": 123046,
+            "width": 2048,
+            "height": 1024
+          },
+          "high": {
+            "path": "hdri/sky_day_1024.exr",
+            "bytes": 45936,
+            "width": 1024,
+            "height": 512
+          },
+          "mobile": {
+            "path": "hdri/sky_day_512.exr",
+            "bytes": 17886,
+            "width": 512,
+            "height": 256
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 123046,
+        "high": 45936,
+        "mobile": 17886
+      }
+    },
+    "sky_golden": {
+      "id": "sky_golden",
+      "kind": "hdri",
+      "category": "hdri",
+      "script": "tools/blender/assets/hdri/sky_golden.py",
+      "inputHash": "002bf07d1014cd12a900c7ecd3651f4b6626e5a4cef73a85c612562d693ff4a4",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "ambientIrradiance": 0.5491,
+        "description": "Golden hour, sun 7 deg W, warm dusty haze (cinematic / hero mode).",
+        "groundAlbedo": [
+          0.26,
+          0.19,
+          0.12
+        ],
+        "scale": 0.0868358594098074,
+        "sun": {
+          "azimuthDeg": 258,
+          "color": [
+            1,
+            0.5116,
+            0.1196
+          ],
+          "direction": [
+            -0.97086,
+            0.12187,
+            0.20636
+          ],
+          "elevationDeg": 7,
+          "intensity": 5.791
+        },
+        "tiers": {
+          "high": {
+            "height": 512,
+            "width": 1024
+          },
+          "mobile": {
+            "height": 256,
+            "width": 512
+          },
+          "ultra": {
+            "height": 1024,
+            "width": 2048
+          }
+        }
+      },
+      "files": [
+        {
+          "path": "hdri/sky_golden_2048.exr",
+          "bytes": 140674,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "hdri",
+          "width": 2048,
+          "height": 1024
+        },
+        {
+          "path": "hdri/sky_golden_1024.exr",
+          "bytes": 55145,
+          "tiers": [
+            "high"
+          ],
+          "kind": "hdri",
+          "width": 1024,
+          "height": 512
+        },
+        {
+          "path": "hdri/sky_golden_512.exr",
+          "bytes": 21183,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "hdri",
+          "width": 512,
+          "height": 256
+        }
+      ],
+      "hdri": {
+        "files": {
+          "ultra": {
+            "path": "hdri/sky_golden_2048.exr",
+            "bytes": 140674,
+            "width": 2048,
+            "height": 1024
+          },
+          "high": {
+            "path": "hdri/sky_golden_1024.exr",
+            "bytes": 55145,
+            "width": 1024,
+            "height": 512
+          },
+          "mobile": {
+            "path": "hdri/sky_golden_512.exr",
+            "bytes": 21183,
+            "width": 512,
+            "height": 256
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 140674,
+        "high": 55145,
+        "mobile": 21183
+      }
+    }
+  }
+}

@@ -24,7 +24,11 @@ export default defineConfig(({ mode }) => {
     define: {
       __BUILD_VERSION__: JSON.stringify(`${pkg.version}+${gitHash()}`),
       __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+      // The single-file build cannot inline public/assets (models, textures, HDRIs): it ships without
+      // them and the AssetManager uses procedural fallbacks. dist/ (index.html + assets/) is the product.
+      __ASSETS_ENABLED__: JSON.stringify(!single),
     },
+    publicDir: single ? false : 'public',
     plugins: single ? [viteSingleFile()] : [],
     build: {
       outDir: single ? 'dist-single' : 'dist',

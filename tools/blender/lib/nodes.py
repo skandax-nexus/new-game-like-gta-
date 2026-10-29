@@ -38,9 +38,12 @@ class NodeBuilder:
             self.nodes.clear()
         self._x = -1600
         self._col = 0
-        self.output = self.nodes.new("ShaderNodeOutputMaterial")
+        existing = next((n for n in self.nodes if n.type == "OUTPUT_MATERIAL"), None)
+        self.output = existing or self.nodes.new("ShaderNodeOutputMaterial")
         self.output.location = (600, 0)
-        self.bsdf = None
+        self.bsdf = next((n for n in self.nodes if n.type == "BSDF_PRINCIPLED"), None)
+        if not clear:
+            self._x = -2600  # keep added nodes left of the existing graph
 
     # ------------------------------------------------------------------ plumbing
     def node(self, kind: str, **props: Any) -> bpy.types.Node:

@@ -15,7 +15,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "smoke": "node scripts/smoke.cjs",
-    "build:single": "vite build --mode single"
+    "build:single": "vite build --mode single",
+    "assets": "node tools/assets/build.mjs",
+    "assets:check": "node tools/assets/build.mjs --check"
   },
   "dependencies": {
     "three": "0.170.0"

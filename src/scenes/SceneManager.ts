@@ -79,7 +79,7 @@ export class SceneManager implements LoopTarget {
     ctx.loop.setTarget(this);
     const scene = factory(ctx);
     try {
-      ctx.input.setContext(params.scene);
+      ctx.input.setContext(params.scene === 'assetviewer' ? 'menu' : params.scene);
       await scene.enter(params);
       this._current = scene;
       ctx.loop.setTarget(this, scene.fixedStep);

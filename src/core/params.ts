@@ -17,6 +17,9 @@
  *   &aivsai=1                         skirmish spectator mode
  *   &debug=1  &profiler=1             debug helpers / profiler overlay
  *   &noaudio=1  &noui=1               disable audio / hide HUD (clean screenshots)
+ *   &asset=<id>                       asset viewer subject (content-pipeline manifest id, ?scene=assetviewer)
+ *   &assets=ultra|high|mobile|off     force the content-pipeline asset tier (off = procedural fallbacks)
+ *   &hdri=<id>  &lod=N                asset viewer environment (HDRI asset id) / forced model LOD
  */
 import type { GameMode, QualityTier, SceneId, Season, TerrainPreset, WeatherKind } from './types';
 import { GAME_MODES, QUALITY_TIERS, SCENE_IDS, SEASONS, TERRAIN_PRESETS, WEATHER_KINDS } from './types';
@@ -45,6 +48,10 @@ export interface UrlParams {
   profiler: boolean;
   noAudio: boolean;
   noUi: boolean;
+  asset: string | null;
+  assetTier: 'ultra' | 'high' | 'mobile' | 'off' | null;
+  hdri: string | null;
+  lod: number | null;
 }
 
 function oneOf<T extends string>(v: string | null, allowed: readonly T[]): T | null {
@@ -66,6 +73,7 @@ export function parseUrlParams(search: string): UrlParams {
   const q = new URLSearchParams(search);
   const seed = num(q.get('seed'), 0, 4294967295);
   const soldiers = num(q.get('soldiers'), 2, MAX_SOLDIERS);
+  const lod = num(q.get('lod'), 0, 8);
   return {
     scene: oneOf(q.get('scene'), SCENE_IDS),
     mode: oneOf(q.get('mode'), GAME_MODES),
@@ -89,6 +97,10 @@ export function parseUrlParams(search: string): UrlParams {
     profiler: flag(q.get('profiler')),
     noAudio: flag(q.get('noaudio')),
     noUi: flag(q.get('noui')),
+    asset: q.get('asset'),
+    assetTier: oneOf(q.get('assets'), ['ultra', 'high', 'mobile', 'off'] as const),
+    hdri: q.get('hdri'),
+    lod: lod === null ? null : Math.floor(lod),
   };
 }
 

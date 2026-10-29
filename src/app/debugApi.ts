@@ -59,6 +59,9 @@ export function createDebugApi(ctx: AppContext, session: GameSession): SamrajyaD
         case 'hero':
           await session.visitSettlement(str(params.settlement) ?? null);
           break;
+        case 'assetviewer':
+          await ctx.scenes.go({ scene: 'assetviewer', assetId: str(params.asset) ?? ctx.params.asset });
+          break;
         default:
           await session.quitToMenu();
       }

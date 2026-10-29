@@ -22,6 +22,9 @@ import { MenuScene } from './scenes/MenuScene';
 import { WorldScene } from './scenes/WorldScene';
 import { BattleScene } from './scenes/BattleScene';
 import { HeroScene } from './scenes/HeroScene';
+import { AssetViewerScene } from './scenes/AssetViewerScene';
+import { AssetManager, assetTierForQuality } from './assets/AssetManager';
+import { registerDefaultFallbacks } from './assets/fallbacks';
 import { GameSession, skirmishFromParams } from './app/session';
 import { createDebugApi } from './app/debugApi';
 import type { AppContext } from './app/contracts';
@@ -73,7 +76,16 @@ async function boot(): Promise<void> {
   const canvas = el<HTMLCanvasElement>('game');
   const render = new RenderContext(canvas, quality.settings, profiler);
   render.onContextLost = () => crash.report(new Error('The graphics context was lost (GPU reset or memory pressure).'), 'webglcontextlost');
-  quality.onChange((q) => render.setQuality(q));
+  const assets = new AssetManager({
+    renderer: render.renderer,
+    tier: params.assetTier ?? assetTierForQuality(quality.tier),
+    anisotropy: quality.settings.anisotropy,
+  });
+  registerDefaultFallbacks(assets);
+  quality.onChange((q) => {
+    render.setQuality(q);
+    if (!params.assetTier) assets.setTier(assetTierForQuality(q.tier), q.anisotropy);
+  });
   const ui = new UIManager(el<HTMLElement>('ui-root'));
   ui.setScale(settings.uiScale);
   const input = new InputManager(canvas, bus, settings);
@@ -98,6 +110,7 @@ async function boot(): Promise<void> {
     audio,
     ui,
     scenes,
+    assets,
     actions: session,
     session,
   };
@@ -108,6 +121,8 @@ async function boot(): Promise<void> {
   scenes.register('world', (c) => new WorldScene(c));
   scenes.register('battle', (c) => new BattleScene(c));
   scenes.register('hero', (c) => new HeroScene(c));
+  scenes.register('assetviewer', (c) => new AssetViewerScene(c));
+  assets.onProgress((p) => bus.emit('assets:progress', p));
   crash.setContextProvider(() => ({
     scene: scenes.currentId,
     mode: session.mode,
@@ -136,6 +151,9 @@ async function boot(): Promise<void> {
       break;
     case 'hero':
       await session.visitSettlement(params.settlement);
+      break;
+    case 'assetviewer':
+      await scenes.go({ scene: 'assetviewer', assetId: params.asset });
       break;
     default:
       await scenes.go({ scene: 'menu' });

@@ -135,6 +135,8 @@ export type NotifySeverity = 'info' | 'warning' | 'danger' | 'success';
 export interface GameEventMap {
   'app:ready': { version: string };
   'scene:loading': { scene: SceneId; progress: number; label: string };
+  /** Content-pipeline downloads (src/assets/AssetManager.ts): items, bytes, 0..1 progress. */
+  'assets:progress': { loaded: number; total: number; bytesLoaded: number; bytesTotal: number; progress: number; label: string };
   'scene:entered': { scene: SceneId };
   /** Scene has rendered its first stable frames (screenshot tests wait for this). */
   'scene:ready': { scene: SceneId };

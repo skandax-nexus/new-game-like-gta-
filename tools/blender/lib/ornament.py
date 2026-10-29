@@ -117,10 +117,13 @@ class BandResult:
     carve: np.ndarray  # 1 = carved ornament, 0 = plain dressed face
     joint: np.ndarray  # distance to the nearest stone joint (m), for grime/mortar masks
     tool: np.ndarray | None = None  # 1 = pitched/tooled centre field of dressed blocks
+    # single motifs usable as decals: (name, u_m, v_m, radius_m) in band-local meters
+    decals: list | None = None
 
 
-def _stones_along(u: np.ndarray, length: float, cuts: list[float], rng: np.random.Generator):
-    """Stone index and distance to the nearest vertical joint for joints at `cuts` (periodic)."""
+def _stones_along(u: np.ndarray, length: float, cuts: list[float], rng: np.random.Generator, extent: bool = False):
+    """Stone random id and distance to the nearest vertical joint for joints at `cuts` (periodic).
+    extent=True also returns the signed position relative to the block centre, normalized to [-1, 1]."""
     cuts_arr = np.sort(np.array(cuts, F) % length)
     ext = np.concatenate([cuts_arr - length, cuts_arr, cuts_arr + length])
     idx = np.searchsorted(ext, u, side="right") - 1
@@ -129,6 +132,9 @@ def _stones_along(u: np.ndarray, length: float, cuts: list[float], rng: np.rando
     dist = np.minimum(u - left, right - u)
     sid = idx % len(cuts_arr)
     ids = rng.uniform(0.0, 1.0, len(cuts_arr)).astype(F)
+    if extent:
+        rel = ((u - left) / np.maximum(right - left, 1e-6)) * 2.0 - 1.0
+        return ids[sid], dist.astype(F), rel.astype(F)
     return ids[sid], dist.astype(F)
 
 
@@ -136,6 +142,7 @@ def ashlar(
     u: np.ndarray, v: np.ndarray, length: float, height: float, courses: int, rng: np.random.Generator,
     min_len: float = 0.45, max_len: float = 0.95, gap: float = 0.004, arris: float = 0.012,
     joint_depth: float = 0.012, pillow: float = 0.003, tooling: float = 0.0006, margin: float = 0.03,
+    tilt_amp: float = 0.0022,
 ) -> BandResult:
     """Coursed dressed ashlar: random block lengths per course (wrapping), drafted margins, pitched
     centre field, rounded/chipped arrises."""
@@ -156,8 +163,9 @@ def ashlar(
             continue
         uu = u[sel] % length
         vv = v[sel] - c * ch
-        sid, dx = _stones_along(uu, length, cuts, rng)
+        sid, dx, relu = _stones_along(uu, length, cuts, rng, extent=True)
         dy = np.minimum(vv, ch - vv)
+        relv = vv / ch * 2.0 - 1.0
         rc = arris * 1.2
         qx = np.maximum(rc - dx, 0.0)
         qy = np.maximum(rc - dy, 0.0)
@@ -173,7 +181,11 @@ def ashlar(
         jitter = np.sin(along_edge * 37.0 + sid * 11.0) * 0.6
         strokes = np.sin(along_edge * (2 * np.pi / 0.0045) + jitter) * tooling * 0.35
         strokes *= (1.0 - field_mask) * tg.smoothstep(gap, gap + arris, d)
-        H[sel] = prof + pil + strokes - 0.0007 * field_mask
+        # every block is set slightly out of plane (tilt + twist): breaks up the wall in raking light
+        ta = ((sid * 7.31) % 1.0 - 0.5) * 2.0
+        tb = ((sid * 3.17 + 0.37) % 1.0 - 0.5) * 2.0
+        tilt = (ta * relu * 0.6 + tb * relv * 0.45 + 0.35 * ta * tb * relu * relv) * tilt_amp
+        H[sel] = prof + pil + strokes - 0.0007 * field_mask + tilt * tg.smoothstep(gap, gap + arris * 2, d)
         S[sel] = (sid + c * 0.618) % 1.0
         J[sel] = d
         T[sel] = field_mask
@@ -241,7 +253,8 @@ def medallion_frieze(u: np.ndarray, v: np.ndarray, length: float, height: float,
     sid, jd = _stones_along(u % length, length, list(joints), rng)
     h = cut_joint(h, jd, 0.003, 0.006, 0.02)
     carve = (inside > 0.004).astype(F)
-    return BandResult(h.astype(F), sid, carve, jd)
+    decals = [("lotus_medallion", pw * (k + 0.5), cv, R) for k in range(int(round(length / pw)))]
+    return BandResult(h.astype(F), sid, carve, jd, decals=decals)
 
 
 def bead_reel(u: np.ndarray, v: np.ndarray, length: float, height: float, period: float, rng: np.random.Generator,
@@ -304,91 +317,222 @@ def dentil(u: np.ndarray, v: np.ndarray, length: float, height: float, period: f
     return BandResult(h.astype(F), sid, (inside > 0).astype(F), jd)
 
 
-def _spiral(dx: np.ndarray, dy: np.ndarray, r0: float, r1: float, turns: float, chirality: float, start: float = 0.0):
-    """Distance to an Archimedean spiral arm from r0 (centre) to r1 (outer end) and arm parameter 0..1.
-    The arm starts at angle `start` (radians) at the centre and winds `turns` times."""
-    r = np.hypot(dx, dy)
-    th = ((np.arctan2(dy, dx) - start) * chirality) % (2 * np.pi)
+class Canvas:
+    """Windowed stamping onto a regular band grid (u right, v up, meters), periodic in u.
+
+    Stroke and shape primitives only evaluate the pixels inside their bounding box, so hundreds of
+    segments cost milliseconds. Heights composite with max() (carving raised from the field)."""
+
+    def __init__(self, u: np.ndarray, v: np.ndarray, length: float, field: float) -> None:
+        self.u, self.v = u, v
+        self.length = length
+        self.texel = float(u[0, 1] - u[0, 0]) if u.shape[1] > 1 else 1.0
+        self.u0 = float(u[0, 0])
+        self.v0 = float(v[0, 0])  # top row (largest v)
+        self.h = np.full(u.shape, field, F)
+        self.mask = np.zeros(u.shape, F)
+        self.field = field
+
+    def _windows(self, umin: float, umax: float, vmin: float, vmax: float):
+        t = self.texel
+        r0 = int(np.floor((self.v0 - vmax) / t)) - 1
+        r1 = int(np.ceil((self.v0 - vmin) / t)) + 2
+        r0, r1 = max(0, r0), min(self.u.shape[0], r1)
+        if r0 >= r1:
+            return
+        for off in (-self.length, 0.0, self.length):
+            c0 = int(np.floor((umin + off - self.u0) / t)) - 1
+            c1 = int(np.ceil((umax + off - self.u0) / t)) + 2
+            c0, c1 = max(0, c0), min(self.u.shape[1], c1)
+            if c0 < c1:
+                yield (slice(r0, r1), slice(c0, c1)), off
+
+    def stroke(self, pts: np.ndarray, widths: np.ndarray, heights: np.ndarray, groove: float = 0.0) -> None:
+        """Round-profile tube along a polyline. widths = half-widths per point, heights above field.
+        groove > 0 cuts a shallow incised line along the stroke centre (carved stems). The distance field
+        of the whole polyline is resolved first (min over segments), so joints are seamless."""
+        pts = np.asarray(pts, F)
+        widths = np.asarray(widths, F)
+        heights = np.asarray(heights, F)
+        rel_buf = np.full(self.u.shape, np.inf, F)
+        hh_buf = np.zeros(self.u.shape, F)
+        touched = np.zeros(self.u.shape, bool)
+        for i in range(len(pts) - 1):
+            a, b = pts[i], pts[i + 1]
+            wmax = float(max(widths[i], widths[i + 1]))
+            for (rs, cs), off in self._windows(min(a[0], b[0]) - wmax, max(a[0], b[0]) + wmax,
+                                               min(a[1], b[1]) - wmax, max(a[1], b[1]) + wmax):
+                qu = self.u[rs, cs] - off
+                qv = self.v[rs, cs]
+                ab = b - a
+                L2 = float(ab @ ab) or 1e-12
+                t = np.clip(((qu - a[0]) * ab[0] + (qv - a[1]) * ab[1]) / L2, 0.0, 1.0)
+                d = np.hypot(qu - (a[0] + t * ab[0]), qv - (a[1] + t * ab[1]))
+                w = widths[i] + (widths[i + 1] - widths[i]) * t
+                rel = d / np.maximum(w, 1e-6)
+                better = rel < rel_buf[rs, cs]
+                rel_buf[rs, cs] = np.where(better, rel, rel_buf[rs, cs])
+                hh_buf[rs, cs] = np.where(better, heights[i] + (heights[i + 1] - heights[i]) * t, hh_buf[rs, cs])
+                touched[rs, cs] = True
+        rows = np.where(touched.any(axis=1))[0]
+        cols = np.where(touched.any(axis=0))[0]
+        if not len(rows):
+            return
+        rs, cs = slice(rows[0], rows[-1] + 1), slice(cols[0], cols[-1] + 1)
+        rel = rel_buf[rs, cs]
+        prof = np.sqrt(np.clip(1.0 - rel * rel, 0.0, 1.0)) ** 0.8
+        if groove > 0:
+            prof = prof - groove * np.exp(-((rel / 0.16) ** 2))
+        inside = rel < 1.0
+        val = np.where(inside, self.field + hh_buf[rs, cs] * prof, -1e3)
+        self.h[rs, cs] = np.maximum(self.h[rs, cs], val)
+        self.mask[rs, cs] = np.maximum(self.mask[rs, cs], inside.astype(F))
+
+    def shape(self, cx: float, cy: float, radius: float, fn) -> None:
+        """Stamp fn(dx, dy) -> height (absolute, -1e3 outside) inside a square window around (cx, cy)."""
+        for (rs, cs), off in self._windows(cx - radius, cx + radius, cy - radius, cy + radius):
+            dx = self.u[rs, cs] - off - cx
+            dy = self.v[rs, cs] - cy
+            val = fn(dx, dy)
+            self.h[rs, cs] = np.maximum(self.h[rs, cs], val)
+            self.mask[rs, cs] = np.maximum(self.mask[rs, cs], (val > self.field + 1e-5).astype(F))
+
+
+def log_spiral(center: tuple[float, float], start: tuple[float, float], turns: float, r_end: float,
+               clockwise: bool, n: int = 120) -> np.ndarray:
+    """Points of a logarithmic spiral from `start` (outer end) winding `turns` times into radius r_end."""
+    cx, cy = center
+    r0 = float(np.hypot(start[0] - cx, start[1] - cy))
+    phi0 = float(np.arctan2(start[1] - cy, start[0] - cx))
     total = turns * 2 * np.pi
-    b = (r1 - r0) / total
-    best = np.full_like(r, 9.0)
-    tpar = np.zeros_like(r)
-    for k in range(int(np.ceil(turns)) + 1):
-        ang = th + 2 * np.pi * k
-        ok = ang <= total
-        arm = r0 + b * ang
-        d = np.abs(r - arm)
-        upd = ok & (d < best)
-        best = np.where(upd, d, best)
-        tpar = np.where(upd, ang / total, tpar)
-    return best.astype(F), tpar.astype(F)
+    k = np.log(max(r0, 1e-6) / max(r_end, 1e-6)) / total
+    th = np.linspace(0.0, total, n)
+    r = r0 * np.exp(-k * th)
+    ang = phi0 - th if clockwise else phi0 + th
+    return np.stack([cx + r * np.cos(ang), cy + r * np.sin(ang)], axis=1).astype(F)
 
 
 def leaf(dx: np.ndarray, dy: np.ndarray, angle: float, length: float, width: float, field: float,
-         height: float = 0.011, veins: int = 5) -> np.ndarray:
-    """Pointed leaf from (0,0) along `angle` with midrib groove and side veins. -1e3 outside."""
+         height: float = 0.011, veins: int = 5, bend: float = 0.0, lobes: int = 0) -> np.ndarray:
+    """Pointed leaf from (0,0) along `angle` with midrib groove, side veins, optional bend (curl of the
+    tip, +-1) and serrated lobes. Returns absolute height, -1e3 outside."""
     ca, sa = np.cos(angle), np.sin(angle)
     px = (dx * ca + dy * sa) / length
     py = (-dx * sa + dy * ca) / width
+    py = py - bend * 1.6 * px * px
+    if lobes:
+        py = py * (1.0 + 0.18 * np.abs(np.sin(px * np.pi * lobes)))
     m, c = petal(py, px, 0.95, 1.6, 0.9, 0.25)
-    h = field + (0.003 + height * c**0.6) * m
-    h -= 0.0016 * np.exp(-((py / 0.08) ** 2)) * m
+    h = field + (0.003 + height * c**0.6 * (0.7 + 0.3 * np.sin(np.clip(px, 0, 1) * np.pi))) * m
+    h -= 0.0016 * np.exp(-((py / 0.08) ** 2)) * m * tg.smoothstep(0.05, 0.2, px)
     h -= 0.0009 * np.clip(np.sin((px * veins + np.abs(py) * 1.6) * np.pi * 2), 0, 1) ** 4 * m * (np.abs(py) > 0.12)
     return np.where(m > 0.01, h, -1e3).astype(F)
 
 
+def rosette(dx: np.ndarray, dy: np.ndarray, R: float, field: float, petals: int = 10, height: float = 0.016
+            ) -> np.ndarray:
+    """Round open flower (8-12 petals) with a domed, dotted centre boss. -1e3 outside."""
+    r = np.hypot(dx, dy)
+    th = np.arctan2(dy, dx)
+    h = petal_ring(r, th, petals, 0.32 * R, R, field + 0.002, field + height, width=1.0, base=0.55,
+                   p=1.4, q=0.6, outline=0.0012, curl=0.15)
+    h = np.maximum(h, petal_ring(r, th, petals, 0.28 * R, 0.72 * R, field + 0.004, field + height * 1.05,
+                                 phase=np.pi / petals, width=0.9, base=0.5, p=1.4, q=0.6, outline=0.0))
+    boss = field + height * 0.85 + dome(r, 0.34 * R, height * 0.45, 0.7)
+    boss -= 0.0012 * (np.cos(th * 12) > 0.6) * tg.smoothstep(0.15 * R, 0.25 * R, r)
+    h = np.where(r < 0.34 * R, np.maximum(h, boss), h)
+    return np.where(r < R, h, -1e3).astype(F)
+
+
 def vine_scroll(u: np.ndarray, v: np.ndarray, length: float, height: float, period: float, rng: np.random.Generator,
                 joints: tuple[float, ...] = (0.125, 1.125)) -> BandResult:
-    """Patra-lata creeper: undulating stem; each hollow holds a spiral tendril ending in a rosette bud,
-    flanked by veined leaves. Framed by fillets with incised grooves."""
+    """Patra-lata running scroll (Sanchi / Bharhut coping style): an undulating, grooved main stem; in
+    every hollow a tendril leaves the stem tangentially and curls into a log spiral ending in an open
+    rosette; lush curled leaves fill the spaces (horror vacui). Framed by grooved fillets."""
     s = height / 0.24
     field = -0.011
-    h = np.full_like(u, field)
+    cv = Canvas(u, v, length, field)
     bw = 0.017 * s
+    h = cv.h
     border = (v < bw) | (v > height - bw)
-    h = np.where(border, 0.003, h)
     groove = (np.abs(v - bw * 0.55) < 0.0022 * s) | (np.abs(v - (height - bw * 0.55)) < 0.0022 * s)
-    h = np.where(groove, -0.003, h)
     mid = height * 0.5
-    amp = 0.052 * s
+    A = 0.048 * s
     w = 2 * np.pi / period
-    vs = mid + amp * np.sin(w * u)
-    slope = amp * w * np.cos(w * u)
-    d = np.abs(v - vs) / np.sqrt(1.0 + slope**2)
-    stem = field + dome(d, 0.0085 * s, 0.023)
-    h = np.maximum(h, stem)
-    carve = (d < 0.0085 * s).astype(F)
+    n_per = 96
+    # main stem: one polyline per period copy (Canvas wraps periodically)
+    us = np.linspace(0.0, length, int(n_per * length / period) + 1, dtype=F)
+    stem = np.stack([us, mid + A * np.sin(w * us)], axis=1)
+    cv.stroke(stem, np.full(len(us), 0.0072 * s), np.full(len(us), 0.021), groove=0.22)
+    nper = int(round(length / period))
+    decals: list = []
+
+    def stem_pt(uu: float) -> tuple[float, float]:
+        return (uu, mid + A * np.sin(w * uu))
+
+    def put_leaf(q, ang, L, W, bend, lobes=3, hgt=0.013):
+        cv.shape(float(q[0]), float(q[1]), L * 1.05,
+                 lambda dx, dy: leaf(dx, dy, ang, L, W, field, hgt, 6, bend, lobes))
+
+    for k in range(nper):
+        base_u = k * period
+        for crest in (True, False):
+            uc = base_u + (0.25 if crest else 0.75) * period
+            sgn = -1.0 if crest else 1.0  # hollow below the crest, above the trough
+            us0 = uc + 0.07 * s
+            p0 = stem_pt(us0)
+            slope = A * w * np.cos(w * us0)
+            t = np.array([1.0, slope], F)
+            t /= np.linalg.norm(t)
+            r0 = 0.05 * s
+            # tangent-continuous branch: clockwise at crests, counter-clockwise at troughs
+            if crest:
+                phi0 = np.arctan2(t[0], -t[1])
+            else:
+                phi0 = np.arctan2(-t[0], t[1])
+            centre = (p0[0] - r0 * np.cos(phi0), p0[1] - r0 * np.sin(phi0))
+            sp = log_spiral(centre, p0, 1.2, 0.021 * s, clockwise=crest, n=150)
+            tpar = np.linspace(0, 1, len(sp))
+            cv.stroke(sp, (0.0064 - 0.0024 * tpar) * s, 0.020 - 0.003 * tpar, groove=0.18)
+            R = 0.02 * s
+            cv.shape(centre[0], centre[1], R * 1.05, lambda dx, dy, R=R: rosette(dx, dy, R, field, 10, 0.018))
+            decals.append(("spiral_rosette", float(centre[0] % length), float(centre[1]), float(r0 * 1.15)))
+            # lush leaves curling around the outside of the spiral
+            for tt, ln, wd, bend in ((0.16, 0.085, 0.30, 0.55), (0.40, 0.07, 0.30, 0.5), (0.62, 0.05, 0.32, 0.45)):
+                i = int(tt * (len(sp) - 1))
+                q = sp[i]
+                tan = sp[min(i + 2, len(sp) - 1)] - sp[max(i - 2, 0)]
+                nrm = np.array([q[0] - centre[0], q[1] - centre[1]], F)
+                nrm /= np.linalg.norm(nrm) + 1e-9
+                tan /= np.linalg.norm(tan) + 1e-9
+                d = nrm * 0.55 + tan * 0.85
+                put_leaf(q, float(np.arctan2(d[1], d[0])), ln * s, ln * wd * s, bend if crest else -bend, 4)
+            # leaf pair on the main stem before the crest/trough, reaching into the opposite hollow
+            ul = uc - 0.06 * s
+            q = stem_pt(ul)
+            put_leaf(q, float(np.arctan2(-sgn * 0.95, -0.3)), 0.075 * s, 0.026 * s, 0.5 * sgn, 4, 0.014)
+            put_leaf(q, float(np.arctan2(-sgn * 0.6, 0.8)), 0.055 * s, 0.02 * s, -0.4 * sgn, 3, 0.012)
+            # lotus bud on a curved stalk rising from the stem between the spirals
+            ub = uc + 0.17 * period
+            vb = stem_pt(ub)[1]
+            stalk = np.array([[ub, vb], [ub + 0.006 * s, vb - sgn * 0.022 * s], [ub - 0.004 * s, vb - sgn * 0.042 * s]], F)
+            cv.stroke(stalk, np.array([0.004, 0.0034, 0.003]) * s, np.array([0.017, 0.016, 0.015]))
+            bx, by = float(stalk[-1, 0]), float(stalk[-1, 1] - sgn * 0.012 * s)
+
+            def bud(dx, dy, sg=sgn):
+                yy = -sg * dy / (0.026 * s) + 0.5
+                m, c = petal(dx / (0.013 * s), yy, 0.95, 1.5, 0.75, 0.75)
+                hb = field + (0.004 + 0.016 * c**0.5) * m
+                hb -= 0.0014 * np.exp(-(((np.abs(dx) / (0.013 * s)) - 0.45) / 0.08) ** 2) * m * (yy < 0.75)
+                return np.where(m > 0.02, hb, -1e3)
+
+            cv.shape(bx, by, 0.03 * s, bud)
     inner = (v > bw) & (v < height - bw)
-    for uc, chir in ((0.25, 1.0), (0.75, -1.0)):
-        cu = uc * period
-        cvv = mid - 0.024 * s * chir
-        dx = wrap_delta(u - cu, period)
-        dy = v - cvv
-        start = 0.5 * np.pi * chir
-        # the outer end of the spiral meets the stem tangentially at the crest / trough
-        dist, t = _spiral(dx, dy, 0.02 * s, 0.064 * s, 1.35, chir, start=-np.pi * 0.2 * chir)
-        width = (0.0035 + 0.0065 * t) * s
-        rr = np.hypot(dx, dy)
-        arm = np.where(rr < 0.072 * s, field + dome(dist, width, 0.022), -1e3)
-        h = np.maximum(h, arm)
-        carve = np.maximum(carve, (dist < width).astype(F) * (rr < 0.072 * s))
-        # rosette bud at the spiral eye
-        th = np.arctan2(dy, dx)
-        ros = petal_ring(rr, th, 6, 0.004 * s, 0.021 * s, field, field + 0.017, width=0.95, base=0.4, outline=0.0)
-        h = np.maximum(h, ros)
-        h = np.maximum(h, field + dome(rr, 0.0055 * s, 0.021))
-        # leaves sprouting from the stem into the corners of the hollow
-        for du, spread in ((-0.082, -1.0), (0.082, 1.0)):
-            ub = cu + du * s
-            vb = mid + amp * np.sin(w * ub)
-            ang = (-0.5 * np.pi + 0.42 * spread) * chir
-            ex = wrap_delta(u - ub, period)
-            ey = v - vb
-            h = np.maximum(h, np.where(inner, leaf(ex, ey, ang, 0.062 * s, 0.021 * s, field, 0.013, veins=6), -1e3))
-    h = np.where(inner, h, np.where(border, 0.003, h))
+    h = np.where(inner, cv.h, np.where(groove, -0.003, 0.003))
+    carve = cv.mask * inner
     sid, jd = _stones_along(u % length, length, list(joints), rng)
     h = cut_joint(h, jd, 0.003, 0.005, 0.02)
-    return BandResult(h.astype(F), sid, carve, jd)
+    return BandResult(h.astype(F), sid, carve.astype(F), jd, decals=decals)
 
 
 # ----------------------------------------------------------------------------------- sheet layout
@@ -411,6 +555,15 @@ class Sheet:
     tool: np.ndarray  # pitched/tooled centre fields of plain blocks
     size_m: tuple[float, float]
     bands: list[Band]
+    decal_list: list = field(default_factory=list)  # (name, u_m, v_m sheet, r_m)
+
+    def decals(self) -> list[dict]:
+        """Decal regions in sheet UV space (u right, v up): centre + radii, for single-motif mapping."""
+        W, H = self.size_m
+        return [
+            {"name": n, "u": round(u / W, 6), "v": round(v / H, 6), "r": round(r / W, 6), "r_v": round(r / H, 6)}
+            for n, u, v, r in self.decal_list
+        ]
 
     def trims(self) -> list[dict]:
         """Trim regions in UV space (v up, 0..1) for modelers / manifest."""
@@ -431,6 +584,7 @@ def compose_sheet(w: int, h: int, size_m: tuple[float, float], bands: list[Band]
     out_j = np.full((h, w), 9.0, F)
     out_b = np.zeros((h, w), F)
     out_t = np.zeros((h, w), F)
+    decal_list: list = []
     for i, b in enumerate(bands):
         rows = np.where((v_all[:, 0] >= b.v0) & (v_all[:, 0] < b.v1))[0]
         if rows.size == 0:
@@ -447,11 +601,14 @@ def compose_sheet(w: int, h: int, size_m: tuple[float, float], bands: list[Band]
         out_b[rows] = i
         if res.tool is not None:
             out_t[rows] = res.tool
-    return Sheet(out_h, out_s, out_c, out_j, out_b, out_t, size_m, bands)
+        for name, du, dv, dr in res.decals or []:
+            decal_list.append((name, du % W, b.v0 + dv, dr))
+    return Sheet(out_h, out_s, out_c, out_j, out_b, out_t, size_m, bands, decal_list)
 
 
 __all__ = [
     "Band",
+    "Canvas",
     "BandResult",
     "Sheet",
     "arris_profile",
@@ -462,11 +619,13 @@ __all__ = [
     "dentil",
     "dome",
     "leaf",
+    "log_spiral",
     "lotus_medallion",
     "medallion_frieze",
     "padma",
     "petal",
     "petal_ring",
+    "rosette",
     "rounded_rect_inside",
     "smax",
     "vine_scroll",

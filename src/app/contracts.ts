@@ -41,6 +41,7 @@ import type { InputManager } from '../input/input';
 import type { AudioManager } from '../audio/audio';
 import type { UIManager } from '../ui/ui';
 import type { SceneManager } from '../scenes/SceneManager';
+import type { AssetManager } from '../assets/AssetManager';
 
 // ---------------------------------------------------------------------------------------------------
 // Scenes
@@ -55,7 +56,9 @@ export type SceneParams =
    * loaded save); otherwise a new battle is created from `setup`.
    */
   | { scene: 'battle'; setup: BattleSetup; state: BattleState | null; returnTo: 'world' | 'menu' }
-  | { scene: 'hero'; settlementId: SettlementId | null; returnTo: 'world' | 'menu' };
+  | { scene: 'hero'; settlementId: SettlementId | null; returnTo: 'world' | 'menu' }
+  /** Debug / lookdev view of one content-pipeline asset (src/assets/manifest.ts id; null = first model). */
+  | { scene: 'assetviewer'; assetId: string | null };
 
 export interface EnvironmentOverride {
   hour?: number;
@@ -171,6 +174,8 @@ export interface AppContext {
   readonly audio: AudioManager;
   readonly ui: UIManager;
   readonly scenes: SceneManager;
+  /** Content-pipeline assets (GLB models, PBR texture sets, HDR skies) for the active quality tier. */
+  readonly assets: AssetManager;
   /** Game session / actions (app/session.ts). */
   readonly actions: GameActions;
   readonly session: SessionView;

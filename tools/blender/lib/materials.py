@@ -59,9 +59,12 @@ def texture_set_material(
     uv_map: str = "",
     vertex_color: str | None = None,
     roughness_scale: float = 1.0,
+    ao_strength: float = 0.6,
 ) -> bpy.types.Material:
     """Principled material from texture files (PNG). `vertex_color` multiplies base colour by a colour
-    attribute (macro AO / grime baked per vertex), matching three.js vertexColors."""
+    attribute (macro AO / grime baked per vertex), matching three.js vertexColors. `ao_strength`
+    multiplies the ORM occlusion into the base colour: Cycles ignores baked AO, while the engine applies
+    it to ambient/IBL light - without this the preview of a normal-mapped plane looks flat."""
     mat = bpy.data.materials.new(name)
     nb = NodeBuilder(mat)
     uv = nb.uv(uv_map)
@@ -78,6 +81,9 @@ def texture_set_material(
         sep = nb.separate(nb.image(_load(orm, True), uv).outputs["Color"])
         rough = sep.outputs[1] if roughness_scale == 1.0 else nb.math("MULTIPLY", sep.outputs[1], roughness_scale)
         metal = sep.outputs[2]
+        if bc is not None and ao_strength > 0:
+            ao = nb.map_range(sep.outputs[0], 0.0, 1.0, 1.0 - ao_strength, 1.0)
+            bc = nb.mix(bc, ao, 1.0, blend="MULTIPLY")
     nrm = None
     if normal:
         nrm = nb.normal_map(nb.image(_load(normal, True), uv).outputs["Color"], normal_strength, uv_map)
@@ -86,9 +92,13 @@ def texture_set_material(
 
 
 def from_material_set(dep: Dependency, name: str | None = None, uv_scale: tuple[float, float] = (1.0, 1.0),
-                      uv_map: str = "", vertex_color: str | None = None) -> bpy.types.Material:
+                      uv_map: str = "", vertex_color: str | None = None, tint: str = "#ffffff",
+                      macro: Path | str | None = None, macro_ref: str | None = None,
+                      macro_uv: str = "UVLightmap") -> bpy.types.Material:
     """Material from another asset's baked texture set (roles baseColor / normal / orm), tagged for
-    runtime binding (see module doc)."""
+    runtime binding (see module doc). `tint` multiplies the base colour (runtime: samrajya_tint).
+    `macro` (preview file) + `macro_ref` ("<model>:<set>", runtime) add the model's macro map on UV2:
+    R = AO, G = albedo multiplier - previewed here like the engine does."""
     mat = texture_set_material(
         name or dep.id,
         base_color=dep.file("baseColor") if dep.has("baseColor") else None,
@@ -98,7 +108,25 @@ def from_material_set(dep: Dependency, name: str | None = None, uv_scale: tuple[
         uv_map=uv_map,
         vertex_color=vertex_color,
     )
+    nt = mat.node_tree
+    bsdf = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
+    link = bsdf.inputs["Base Color"].links[0] if bsdf.inputs["Base Color"].links else None
+    if link is not None and (tint.lower() != "#ffffff" or macro):
+        nb = NodeBuilder(mat, clear=False)
+        col = link.from_socket
+        if tint.lower() != "#ffffff":
+            col = nb.mix(col, tint, 1.0, blend="MULTIPLY")
+        if macro:
+            img = _load(macro, True)
+            sep = nb.separate(nb.image(img, nb.uv(macro_uv)).outputs["Color"])
+            ao = nb.map_range(sep.outputs[0], 0.0, 1.0, 0.45, 1.0)
+            col = nb.mix(col, sep.outputs[1], 1.0, blend="MULTIPLY")
+            col = nb.mix(col, ao, 1.0, blend="MULTIPLY")
+        nt.links.new(col, bsdf.inputs["Base Color"])
     mat[SET_PROP] = dep.id
+    mat["samrajya_tint"] = tint
+    if macro_ref:
+        mat["samrajya_macro"] = macro_ref
     meta = dep.meta.get("material", {})
     mat["samrajya_fallback_color"] = meta.get("averageColor", "#808080")
     mat["samrajya_fallback_roughness"] = float(meta.get("roughness", 0.8))

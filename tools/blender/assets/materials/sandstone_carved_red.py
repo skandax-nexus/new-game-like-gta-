@@ -2,16 +2,20 @@
 @asset sandstone_carved_red
 @kind material
 
-Carved red sandstone TRIM SHEET (tiling PBR set). 2 m x 2 m per tile, horizontally and vertically
-seamless. Bands (bottom -> top, see metadata.trims for UV ranges):
+Carved red sandstone TRIM SHEET (tiling PBR set), 2 m x 2 m per tile, seamless in U and V.
+Bands (bottom -> top; UV v ranges are written to metadata.trims and the generated manifest):
     ashlar_base 0.32 m | vine_scroll 0.24 | dentil 0.12 | padma 0.20 | bead_reel 0.08 |
-    medallion_frieze 0.40 | ashlar 0.64 (two courses)
-Map a face's V range onto a band to "trim" it (cornices, plinths, railing bars); use the whole sheet
-as a richly carved wall. OWNER: Technical Art Director.
+    medallion_frieze 0.40 | ashlar 0.64 (two 0.32 m courses)
+Map a face's V range onto a band to "trim" it (plinths, cornices, railing bars, copings); map whole
+faces to the sheet for a richly carved wall; map courses of a dome / floor to the ashlar band.
+Look: Fatehpur Sikri / Mathura red sandstone - brick-red to purple-brown, buff beds, reduction spots,
+weathered (eroded relief, spalls, honeycomb, chipped arrises, hairline cracks, grime, dust, streaks).
+OWNER: Technical Art Director.
 
-Pipeline: numpy ornament height fields (lib/ornament) -> weathering (lib/stone) -> Cycles ray-traced
-AO of the displaced heightfield (lib/bake) -> albedo/roughness synthesis -> normal from height ->
-PNG set (baseColor sRGB, normal 16-bit, ORM, height 16-bit) -> Cycles preview of the shipped maps.
+Pipeline: numpy ornament height fields (lib/ornament) -> weathering (lib/stone) -> Cycles ray-traced AO
+of the displaced heightfield (lib/bake) -> albedo/roughness synthesis -> normal from height ->
+PNG set (baseColor sRGB 8-bit, normal 16-bit, ORM 8-bit, height 16-bit) -> Cycles lookdev previews of
+the shipped maps (wall corner + column + paved floor, raking light; close-up with depth of field).
 """
 import pathlib
 import sys
@@ -20,7 +24,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 
 import numpy as np  # noqa: E402
 
-from lib import bake, core, materials, ornament as orn, render, stone, texgen as tg  # noqa: E402
+from lib import bake, core, ornament as orn, render, stone, texgen as tg  # noqa: E402
 
 ctx = core.begin(__file__, kind="material")
 SIZE = (2.0, 2.0)
@@ -44,7 +48,7 @@ masks = {"stone": sheet.stone, "tool": sheet.tool, "carve": sheet.carve, "joint"
 with core.timer("weathering"):
     height, wm = stone.weather_height(sheet.height, masks, SIZE, rng, amount=1.0)
 
-ao = bake.bake_heightfield_ao(height, SIZE, N, samples=ctx.samples(96, 16), distance=0.06,
+ao = bake.bake_heightfield_ao(height, SIZE, N, samples=ctx.samples(64, 16), distance=0.06,
                               mesh_verts=min(N, 1280))
 ao = tg.blur(ao, 0.6)
 normal = tg.normal_from_height(height, TEXEL)
@@ -62,7 +66,7 @@ files = {
 ctx.add_file("baseColor", files["baseColor"], colorSpace="srgb")
 ctx.add_file("normal", files["normal"], colorSpace="linear")
 ctx.add_file("orm", files["orm"], colorSpace="linear")
-ctx.add_file("height", files["height"], colorSpace="linear")
+ctx.add_file("height", files["height"], colorSpace="linear", ship=False)
 ctx.meta.update(
     tileSizeMeters=list(SIZE),
     averageColor=tg.linear_to_hex(albedo.reshape(-1, 3).mean(axis=0)),
@@ -71,51 +75,22 @@ ctx.meta.update(
     normalScale=1.0,
     heightRangeMeters=[round(hmin, 5), round(hmax, 5)],
     trims=sheet.trims(),
-    description="Weathered carved red sandstone trim sheet: ashlar, creeper scroll, dentils, padma, bead-and-reel, lotus medallion frieze.",
+    decals=sheet.decals(),
+    description="Weathered carved red sandstone trim sheet: ashlar, creeper scroll, dentils, padma, "
+                "bead-and-reel, lotus medallion frieze.",
 )
 
-# ------------------------------------------------------------------ preview of the SHIPPED maps
+# ------------------------------------------------------------------ previews of the SHIPPED maps
 if ctx.preview:
-    import bpy
-
     core.reset_scene()
-    mat_wall = materials.texture_set_material("wall", files["baseColor"], files["normal"], files["orm"], uv_scale=(2.0, 1.0))
-    mat_col = materials.texture_set_material("column", files["baseColor"], files["normal"], files["orm"])
-    bpy.ops.mesh.primitive_plane_add(size=1.0)
-    wall = bpy.context.active_object
-    wall.scale = (4.0, 2.0, 1.0)
-    wall.rotation_euler = (core.deg(90), 0, 0)
-    wall.location = (0, 0.0, 1.0)
-    bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
-    materials.assign(wall, mat_wall)
-    r = SIZE[0] / (2 * np.pi)
-    bpy.ops.mesh.primitive_cylinder_add(vertices=96, radius=r, depth=2.0, location=(1.15, -1.0, 1.0))
-    col = bpy.context.active_object
-    bpy.ops.object.shade_smooth()
-    # cylinder UVs: u around (one tile), v up
-    me = col.data
-    uv = me.uv_layers.active.data
-    for poly in me.polygons:
-        for li in poly.loop_indices:
-            co = me.vertices[me.loops[li].vertex_index].co
-            ang = (np.arctan2(co.y, co.x) / (2 * np.pi)) % 1.0
-            uv[li].uv = (ang, (co.z + 1.0) / 2.0)
-    # fix the seam wrap on side faces
-    for poly in me.polygons:
-        us = [uv[li].uv[0] for li in poly.loop_indices]
-        if max(us) - min(us) > 0.5:
-            for li in poly.loop_indices:
-                if uv[li].uv[0] < 0.5:
-                    uv[li].uv = (uv[li].uv[0] + 1.0, uv[li].uv[1])
-    materials.assign(col, mat_col)
-    render.setup_world(sun_elevation=24, sun_azimuth=235, strength=0.3)
-    render.add_sun(24, 235, 4.2)
-    render.add_ground(color="#5c4b3b")
-    render.look_at_camera((-0.6, -4.6, 1.55), (0.25, 0.0, 1.0), lens=32)
-    prev = render.render(ctx.path("preview.png"), (1280, 720) if not ctx.draft else (640, 360), ctx.samples(96, 16))
-    ctx.add_file("preview", prev)
-    render.look_at_camera((0.9, -1.25, 1.25), (0.55, 0.0, 1.1), lens=50)
-    prev2 = render.render(ctx.path("preview_closeup.png"), (1280, 720) if not ctx.draft else (640, 360), ctx.samples(96, 16))
-    ctx.add_file("preview_closeup", prev2)
+    render.lookdev_trim_scene(files["baseColor"], files["normal"], files["orm"], SIZE, floor_band=(0.68, 1.0))
+    render.setup_world(sun_elevation=22, sun_azimuth=245, strength=0.55, aerosol=2.0)
+    render.add_sun(22, 245, 4.6, angle_deg=0.6, color="#ffe2bf")
+    res = (1280, 720) if not ctx.draft else (640, 360)
+    render.look_at_camera((-5.3, -6.4, 1.75), (-1.2, 0.4, 0.95), lens=30)
+    ctx.add_file("preview", render.render(ctx.path("preview.png"), res, ctx.samples(128, 16)))
+    # close-up: medallion frieze + padma at grazing light with shallow depth of field
+    render.look_at_camera((-0.3, -1.05, 1.3), (-0.95, 0.0, 1.12), lens=55, fstop=4.0)
+    ctx.add_file("preview_closeup", render.render(ctx.path("preview_closeup.png"), res, ctx.samples(128, 16)))
 
 ctx.finish()

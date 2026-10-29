@@ -127,7 +127,8 @@ def frame_camera(objects: Sequence[bpy.types.Object] | None = None, bounds: tupl
     return cam
 
 
-def look_at_camera(location: Sequence[float], target: Sequence[float], lens: float = 35.0) -> bpy.types.Object:
+def look_at_camera(location: Sequence[float], target: Sequence[float], lens: float = 35.0,
+                   fstop: float | None = None) -> bpy.types.Object:
     scn = bpy.context.scene
     cam_data = bpy.data.cameras.new("preview_cam")
     cam_data.lens = lens
@@ -138,6 +139,10 @@ def look_at_camera(location: Sequence[float], target: Sequence[float], lens: flo
     cam.rotation_euler = (Vector(target) - cam.location).to_track_quat("-Z", "Y").to_euler()
     cam_data.clip_start = 0.05
     cam_data.clip_end = 5000.0
+    if fstop is not None:
+        cam_data.dof.use_dof = True
+        cam_data.dof.focus_distance = (Vector(target) - Vector(location)).length
+        cam_data.dof.aperture_fstop = fstop
     return cam
 
 
@@ -189,12 +194,63 @@ def preview(path: Path | str, objects: Sequence[bpy.types.Object], azimuth: floa
     return render(path, res, samples, exposure)
 
 
+def lookdev_trim_scene(base_color, normal, orm, tile_m: tuple[float, float] = (2.0, 2.0),
+                       floor_band: tuple[float, float] | None = (0.68, 1.0), column: bool = True) -> list:
+    """Material lookdev set for tiling / trim-sheet materials: an L-shaped wall corner (one full tile
+    high), a free-standing column (circumference = one tile) and a floor paved with `floor_band` of the
+    sheet (v range, e.g. an ashlar band). Returns the created objects."""
+    from . import materials, mesh as M
+
+    tw, th = tile_m
+    mat = materials.texture_set_material("lookdev", base_color, normal, orm)
+    objs = []
+    # wall A along X facing -Y (camera side), wall B along Y facing -X... both 2 tiles long
+    for name, verts in (
+        ("wall_a", [(-2 * tw, 0, 0), (0, 0, 0), (0, 0, th), (-2 * tw, 0, th)]),
+        ("wall_b", [(0, 0, 0), (0, 2 * tw, 0), (0, 2 * tw, th), (0, 0, th)]),
+    ):
+        o = M.from_pydata(name, verts, [(0, 1, 2, 3)], smooth=False, material=mat)
+        objs.append(o)
+    # flip wall_b so it faces -X (towards the camera)
+    objs[1].data.flip_normals()
+    for o in objs:
+        M.box_uv(o, (tw, th))
+    if column:
+        r = tw / (2 * math.pi)
+        bpy.ops.mesh.primitive_cylinder_add(vertices=96, radius=r, depth=th, location=(0, 0, th / 2))
+        col = bpy.context.active_object
+        col.name = "column"
+        M.apply_transform(col)  # local z in [0, th], axis at the origin
+        bpy.ops.object.shade_smooth()
+        M.cylinder_uv(col, (tw, th), radius=r)
+        col.location = (-1.1 * tw, -1.0, 0.0)
+        col.data.materials.append(mat)
+        objs.append(col)
+    if floor_band is not None:
+        v0, v1 = floor_band
+        strip = (v1 - v0) * th
+        verts, faces, uvs = [], [], []
+        n_strips = int(math.ceil(3.0 * tw / strip))
+        for i in range(n_strips):
+            y0 = -i * strip
+            k = len(verts)
+            verts += [(-3 * tw, y0 - strip, 0), (tw, y0 - strip, 0), (tw, y0, 0), (-3 * tw, y0, 0)]
+            faces.append((k, k + 1, k + 2, k + 3))
+            off = (i * 0.37) % 1.0
+            uvs += [(off, v0), (off + 4.0, v0), (off + 4.0, v1), (off, v1)]  # 4 tiles along x
+        fl = M.from_pydata("floor", verts, faces, uvs, smooth=False, material=mat)
+        objs.append(fl)
+    objs.append(add_ground(400.0, "#7a6550", 0.95, z=-0.01))
+    return objs
+
+
 __all__ = [
     "add_ground",
     "add_sun",
     "bounds_of",
     "frame_camera",
     "look_at_camera",
+    "lookdev_trim_scene",
     "preview",
     "render",
     "setup_world",

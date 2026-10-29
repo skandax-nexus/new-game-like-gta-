@@ -6,6 +6,7 @@
  *   npm run smoke -- --scenes=menu,battle --quality=medium
  *
  * Env: SMOKE_PORT (default 4317), SMOKE_SKIP_BUILD=1, SMOKE_OUT (default docs/screenshots),
+ *      (asset-viewer shots need the published content in public/assets - see `npm run assets`)
  *      SMOKE_TIMEOUT_MS (per scene, default 240000), SMOKE_HEADED=1.
  *
  * Steps: vite build -> vite preview on a fixed port -> headless Chromium (SwiftShader WebGL2) ->
@@ -54,6 +55,12 @@ const SHOTS = [
   { name: 'hero', scene: 'hero', query: '', viewport: [1280, 720] },
   { name: 'menu-mobile', scene: 'menu', query: '', viewport: [390, 844], quality: 'low', mobile: true },
   { name: 'battle-mobile', scene: 'battle', query: 'seed=7&soldiers=600&preset=plains', viewport: [844, 390], quality: 'low', mobile: true, advance: 400 },
+  // Content pipeline (tools/assets -> public/assets): in-engine lookdev of the reference assets.
+  { name: 'assetviewer-stupa', scene: 'assetviewer', query: 'asset=stupa_sanchi&hdri=sky_golden&camera=hero&noui=1', viewport: [1280, 720], quality: 'ultra' },
+  { name: 'assetviewer-torana', scene: 'assetviewer', query: 'asset=stupa_sanchi&hdri=sky_golden&camera=close&noui=1', viewport: [1280, 720], quality: 'ultra' },
+  { name: 'assetviewer-sandstone', scene: 'assetviewer', query: 'asset=sandstone_carved_red&hdri=sky_day&noui=1', viewport: [1280, 720], quality: 'ultra' },
+  { name: 'assetviewer-mobile', scene: 'assetviewer', query: 'asset=stupa_sanchi&hdri=sky_day&camera=overview', viewport: [390, 844], quality: 'low', mobile: true },
+  { name: 'assetviewer-fallback', scene: 'assetviewer', query: 'asset=stupa_sanchi&assets=off', viewport: [1280, 720] },
 ];
 
 function waitForServer(url, ms) {

@@ -269,6 +269,21 @@ def resize(img: np.ndarray, h: int, w: int) -> np.ndarray:
     return (lerp(lerp(a, b, tx), lerp(c, d, tx), ty)).astype(F)
 
 
+def shade(h: np.ndarray, texel_m: float, albedo: np.ndarray | None = None, light_deg: tuple[float, float] = (35.0, 135.0),
+          ambient: float = 0.35, ao: np.ndarray | None = None) -> np.ndarray:
+    """Quick numpy relief render (Lambert, raking light) of a height map for the fast critique loop
+    (seconds instead of a Cycles render). light_deg = (elevation, azimuth from +V clockwise). Returns
+    display-referred sRGB [0,1] (h,w,3)."""
+    n = normal_from_height(h, texel_m)
+    el, az = np.radians(light_deg[0]), np.radians(light_deg[1])
+    L = np.array([np.sin(az) * np.cos(el), np.cos(az) * np.cos(el), np.sin(el)], F)
+    lam = np.clip(np.sum(n * L, axis=-1), 0.0, 1.0)
+    base = albedo if albedo is not None else np.full(h.shape + (3,), 0.45, F)
+    occ = ao if ao is not None else np.clip(1.0 + cavity(h, 6.0) * 40.0, 0.4, 1.0)
+    lin = base * (lam[..., None] * 1.6 + ambient * occ[..., None])
+    return linear_to_srgb(lin / (1.0 + lin))
+
+
 # ------------------------------------------------------------------------------------ color
 def srgb_to_linear(c: np.ndarray) -> np.ndarray:
     c = np.asarray(c, dtype=F)
@@ -405,6 +420,7 @@ __all__ = [
     "remap",
     "resize",
     "saturate",
+    "shade",
     "smoothstep",
     "srgb_to_linear",
     "to_blender",

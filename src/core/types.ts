@@ -81,7 +81,8 @@ export type NumericKeys<T> = { [K in keyof T]-?: T[K] extends number ? K : never
 export const GAME_MODES = ['campaign', 'sandbox', 'skirmish'] as const;
 export type GameMode = (typeof GAME_MODES)[number];
 
-export const SCENE_IDS = ['boot', 'menu', 'world', 'battle', 'hero'] as const;
+/** `assetviewer` = debug/lookdev view of a content-pipeline asset (?scene=assetviewer&asset=<id>). */
+export const SCENE_IDS = ['boot', 'menu', 'world', 'battle', 'hero', 'assetviewer'] as const;
 export type SceneId = (typeof SCENE_IDS)[number];
 
 export const DIFFICULTIES = ['easy', 'normal', 'hard', 'very_hard'] as const;
