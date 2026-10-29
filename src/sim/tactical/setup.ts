@@ -344,26 +344,62 @@ function deployDefenders(state: BattleState, ctx: BattleContext, own: FormationS
 // Skirmish setup
 // ---------------------------------------------------------------------------------------------------
 
-/** Formations for a skirmish army from a composition (baseline: classes below half a formation are dropped). */
+/**
+ * Split one class budget into formations (§10.1): k = max(1, round(budget / per)), raised to ceil(budget / per) when
+ * budget / k would overfill a formation; the budget is spread evenly over the k formations (sizes differ by at most
+ * one man, each <= per). There is never a separate remainder formation, so with k >= 2 every formation holds at
+ * least half of `per`; `room` caps k at the formations left under MAX_FORMATIONS_PER_SIDE and the rest is dropped.
+ */
+function splitClassBudget(cls: UnitClass, budget: number, room: number, out: { unitClass: UnitClass; soldiers: number }[]): void {
+  if (budget <= 0 || room <= 0) return;
+  const per = UNITS[cls].stats.menPerFormation;
+  let k = Math.max(1, Math.round(budget / per));
+  if (budget / k > per) k = Math.ceil(budget / per);
+  k = Math.min(k, room);
+  const used = Math.min(budget, k * per);
+  const base = Math.floor(used / k);
+  const extra = used - base * k;
+  for (let i = 0; i < k; i++) out.push({ unitClass: cls, soldiers: base + (i < extra ? 1 : 0) });
+}
+
+/**
+ * Formations for a skirmish army from a composition (DESIGN_SPEC §10.1). Classes outside the faction roster are
+ * skipped and the weights renormalized; the side budget is apportioned to classes by largest remainder (the class
+ * budgets sum to exactly `total`); a class whose budget is below half a formation is dropped unless it is spearmen
+ * or archers (which may field one sole small formation); each class is split by `splitClassBudget`, so no formation
+ * is created below half strength. The total never exceeds `total`.
+ */
 export function composeArmy(total: number, factionId: string, compositionId: string): { unitClass: UnitClass; soldiers: number }[] {
   const comp = SKIRMISH_COMPOSITIONS.find((c) => c.id === compositionId) ?? SKIRMISH_COMPOSITIONS[0]!;
   const roster = new Set(FACTIONS[factionId]?.roster ?? UNIT_CLASSES);
+  const budgetTotal = Math.max(0, Math.floor(total));
   const out: { unitClass: UnitClass; soldiers: number }[] = [];
+  const classes: UnitClass[] = [];
+  const weights: number[] = [];
   let sumW = 0;
-  for (const cls of UNIT_CLASSES) if (roster.has(cls)) sumW += comp.weights[cls] ?? 0;
   for (const cls of UNIT_CLASSES) {
     const w = roster.has(cls) ? (comp.weights[cls] ?? 0) : 0;
     if (w <= 0) continue;
-    const per = UNITS[cls].stats.menPerFormation;
-    let budget = Math.round((total * w) / sumW);
-    if (budget < per * 0.5 && cls !== 'spearmen' && cls !== 'archers') continue;
-    while (budget > 0 && out.length < MAX_FORMATIONS_PER_SIDE) {
-      const n = Math.min(per, Math.max(Math.min(per, 4), budget));
-      out.push({ unitClass: cls, soldiers: n });
-      budget -= n;
-    }
+    classes.push(cls);
+    weights.push(w);
+    sumW += w;
   }
-  if (out.length === 0) out.push({ unitClass: 'spearmen', soldiers: Math.max(10, total) });
+  // Largest-remainder apportionment (ties: earlier class in UNIT_CLASSES order).
+  const budgets = weights.map((w) => Math.floor((budgetTotal * w) / sumW));
+  let left = budgetTotal - budgets.reduce((a, b) => a + b, 0);
+  const byRemainder = classes.map((_, i) => i).sort((a, b) => {
+    const ra = (budgetTotal * weights[a]!) / sumW - budgets[a]!;
+    const rb = (budgetTotal * weights[b]!) / sumW - budgets[b]!;
+    return rb - ra || a - b;
+  });
+  for (let j = 0; left > 0 && j < byRemainder.length; j++, left--) budgets[byRemainder[j]!]!++;
+  for (let i = 0; i < classes.length; i++) {
+    const cls = classes[i]!;
+    const budget = budgets[i]!;
+    if (budget < UNITS[cls].stats.menPerFormation * 0.5 && cls !== 'spearmen' && cls !== 'archers') continue;
+    splitClassBudget(cls, budget, MAX_FORMATIONS_PER_SIDE - out.length, out);
+  }
+  if (out.length === 0) splitClassBudget('spearmen', Math.max(1, budgetTotal), MAX_FORMATIONS_PER_SIDE, out);
   return out;
 }
 
