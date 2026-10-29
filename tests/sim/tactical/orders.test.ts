@@ -143,9 +143,10 @@ describe('attack, charge, flank', () => {
   });
 
   it('attack_target / skirmish with archers: close to range, shoot, keep 0.4-0.9 x range; out of ammo -> hold ("No arrows")', () => {
-    const b = testBattle({ sides: [[{ cls: 'archers', x: 0, z: 0, facing: 0 }], [{ cls: 'spearmen', x: 0, z: 300, facing: PI }]] });
-    cmd(b, 1, { kind: 'set_stance', formations: [1], stance: 'defensive' });
-    order(b, 0, 0, { type: 'skirmish', target: 1 });
+    // (Side 0 keeps a spear block far back: archers out of arrows alone are a broken side, CD amendment to §6.8.)
+    const b = testBattle({ sides: [[{ cls: 'archers', x: 0, z: 0, facing: 0 }, { cls: 'spearmen', x: -300, z: -200, facing: 0 }], [{ cls: 'spearmen', x: 0, z: 300, facing: PI }]] });
+    cmd(b, 1, { kind: 'set_stance', formations: [2], stance: 'defensive' });
+    order(b, 0, 0, { type: 'skirmish', target: 2 });
     runFor(b, 150, (s) => s.formations[0]!.ammo < 15);
     const f = b.state.formations[0]!;
     const d = Math.hypot(f.x, f.z - 300);

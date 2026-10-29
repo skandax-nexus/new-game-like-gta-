@@ -1027,12 +1027,15 @@ function checkOutcome(state: BattleState, ctx: BattleContext): BattleOutcome | n
     let reason: BattleOutcome['reason'] = state.sides[loser].surrendered ? 'surrender' : 'rout';
     let anyRouting = false;
     let anyCaptured = false;
+    let anyStanding = false;
     for (const f of state.formations) {
       if (f.side !== loser || !isCombatClass(f.unitClass)) continue;
       if (f.activity === 'routing') anyRouting = true;
-      if (f.activity === 'surrendered') anyCaptured = true;
+      else if (f.activity === 'surrendered') anyCaptured = true;
+      else if (f.soldiers > 0 && f.activity !== 'destroyed') anyStanding = true;
     }
-    if (!state.sides[loser].surrendered && !anyRouting) reason = anyCaptured ? 'surrender' : 'annihilation';
+    // Arrowless archers still standing (they no longer hold the field, §6.8 amendment) mean a broken host, not a destroyed one.
+    if (!state.sides[loser].surrendered && !anyRouting) reason = anyStanding ? 'rout' : anyCaptured ? 'surrender' : 'annihilation';
     if (state.siege && fort && loser !== fort.defenderSide) reason = 'siege_held';
     return buildOutcome(state, winner, reason);
   }
