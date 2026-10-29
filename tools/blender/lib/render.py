@@ -44,8 +44,8 @@ def setup_world(sun_elevation: float = 28.0, sun_azimuth: float = 225.0, strengt
     sky.sky_type = sky_type
     sky.sun_disc = False
     sky.sun_elevation = math.radians(sun_elevation)
-    # Blender's sky rotation is measured from +X counter-clockwise; convert from compass bearing.
-    sky.sun_rotation = math.radians(90.0 - sun_azimuth)
+    # Calibrated: Blender's sky sun_rotation equals the compass bearing (0 = +Y north, 90 = +X east).
+    sky.sun_rotation = math.radians(sun_azimuth)
     if hasattr(sky, "aerosol_density"):
         sky.aerosol_density = aerosol
     if hasattr(sky, "ground_albedo"):
