@@ -22,12 +22,16 @@ import {
   CAPTURE_DECISION_DAYS,
   captureSettlement,
   decideCapture,
+  FIELD_ARMY_FALLBACK_RANGE,
   SIEGE_REASONS,
   surrenderChance,
   updateSiegesDaily,
   wallDamagePerDay,
 } from '../../../src/sim/strategic/siege';
+import { applyEffect } from '../../../src/sim/strategic/events';
 import { campaign, issue } from './helpers';
+
+const scope = (fid = 'heartland') => ({ factionId: fid, settlementId: null, provinceId: null, characterId: null, armyId: null });
 
 function place(w: WorldState, id: string, factionId: string, x: number, z: number, units: { unitClass: Parameters<typeof makeArmy>[6][number]['unitClass']; formations: number }[]): ArmyState {
   const a = makeArmy(w, id, id, factionId, x, z, units, null);
@@ -296,6 +300,55 @@ describe('capture: occupy / plunder / liberate (DESIGN_SPEC §7.8)', () => {
     expect(w.factions.heartland!.prestige).toBe(prestige + 10);
     const after = Object.values(w.diplomacy.relations).filter((r) => r.a === 'heartland' || r.b === 'heartland').map((r) => r.opinion);
     after.forEach((o, i) => expect(o).toBe(Math.min(100, opinions[i]! + 10)));
+  });
+
+  it("a town that changes hands sends the old owner's garrison and nearby field armies home (review B3)", () => {
+    const w = campaign(1);
+    const r = w.settlements.ratnapura!;
+    const hh = w.armies.army_ratna!; // Household of Devavarman, camped beside Ratnapura at the start
+    const royal = w.armies.army_royal!;
+    const d0 = Math.hypot(hh.x - r.x, hh.z - r.z);
+    expect(hh.status).toBe('camped');
+    expect(d0).toBeLessThanOrEqual(r.radius + FIELD_ARMY_FALLBACK_RANGE);
+    // A heartland army marching in to garrison the town and one camped just out of range.
+    const inbound = place(w, 'inbound', 'heartland', r.x - 3000, r.z, [{ unitClass: 'spearmen', formations: 1 }]);
+    orderArmy(w, inbound.id, { kind: 'garrison', settlementId: r.id }, getRegionHeightfield(w));
+    expect(inbound.status).toBe('marching');
+    const far = place(w, 'far', 'heartland', r.x, r.z + r.radius + FIELD_ARMY_FALLBACK_RANGE + 200, [{ unitClass: 'spearmen', formations: 1 }]);
+    const royalOrder = JSON.stringify(royal.order);
+    const out: SimEvent[] = [];
+    // 'Let him go': the event transfer that stranded the Household (transfer_settlement -> transferOwnership).
+    applyEffect(w, { kind: 'transfer_settlement', settlement: { kind: 'settlement', id: 'ratnapura' }, to: { kind: 'faction', id: 'forest' } }, scope(), out);
+    expect(r.ownerFactionId).toBe('forest');
+    for (const a of [hh, inbound]) {
+      expect(a.status, a.id).toBe('marching');
+      expect(['retreat', 'garrison']).toContain(a.order.kind);
+      if (a.order.kind === 'garrison') expect(w.settlements[a.order.settlementId]!.ownerFactionId).toBe('heartland');
+      expect(a.path.length, a.id).toBeGreaterThan(0);
+    }
+    expect(out.some((e) => e.kind === 'notification' && e.text === `${hh.name} falls back from ${r.name}.`)).toBe(true);
+    expect(far.status).toBe('camped');
+    expect(far.order.kind).toBe('idle');
+    expect(JSON.stringify(royal.order)).toBe(royalOrder);
+    // The Household marches home instead of starving beside a foreign town (the reviewer saw 403 -> 1 by day 255).
+    for (let h = 0; h < 24 * 12 && hh.status === 'marching'; h++) updateArmiesHourly(w, [], getRegionHeightfield(w));
+    expect(hh.status).not.toBe('marching');
+    expect(Math.hypot(hh.x - r.x, hh.z - r.z)).toBeGreaterThan(r.radius + FIELD_ARMY_FALLBACK_RANGE);
+    // Home: inside or beside an own settlement (supply rule 1: within 400 m + its radius).
+    const home = Object.values(w.settlements).filter((t) => t.ownerFactionId === 'heartland' && Math.hypot(hh.x - t.x, hh.z - t.z) <= t.radius + 400);
+    expect(home.length, `${hh.status} at ${hh.x.toFixed(0)},${hh.z.toFixed(0)}`).toBeGreaterThan(0);
+  });
+
+  it('the army that liberates a town keeps its position and orders', () => {
+    const w = campaign(5);
+    const s = w.settlements.naukapattana!;
+    const a = place(w, 'liberators', 'heartland', s.x + s.radius + 100, s.z, [{ unitClass: 'spearmen', formations: 2 }]);
+    captureSettlement(w, s, 'heartland', [], 'assault');
+    issue(w, { kind: 'capture_decision', settlementId: s.id, decision: 'liberate' });
+    expect(s.ownerFactionId).toBeNull();
+    expect(a.status).toBe('camped');
+    expect(a.order.kind).toBe('idle');
+    expect(a.x).toBeCloseTo(s.x + s.radius + 100, 6);
   });
 
   it('a raider AI plunders what it takes; losing the last settlement ends a faction', () => {

@@ -303,8 +303,13 @@ export function refreshProvinces(world: WorldState): void {
   }
 }
 
-/** Change of owner for any reason (capture, treaty, event, secession): capitals, provinces, extinction. */
-export function transferOwnership(world: WorldState, s: SettlementState, to: FactionId | null, out: SimEvent[]): void {
+/**
+ * Change a settlement's owner (capture, surrender, secession, event transfers, liberation): jobs, queues, rally point,
+ * relief and capture choice reset; the old owner's garrison - and, unless `fieldArmiesFallBack` is false (a captor
+ * liberating the town it just took), its field armies at the town - fall back to the realm; provinces, capitals and
+ * fallen realms update.
+ */
+export function transferOwnership(world: WorldState, s: SettlementState, to: FactionId | null, out: SimEvent[], fieldArmiesFallBack = true): void {
   const from = s.ownerFactionId;
   if (from === to) return;
   s.ownerFactionId = to;
@@ -316,25 +321,25 @@ export function transferOwnership(world: WorldState, s: SettlementState, to: Fac
   s.taxRelief = null;
   s.pendingCapture = null;
   s.requisitionedFood = 0;
-  // Old owner's garrisoned armies leave.
-  const terrain = regionTerrain(world);
-  for (const id of stableKeys('armies', world.armies as Record<string, unknown>)) {
-    const a = world.armies[id]!;
-    if (a.factionId !== from || a.status !== 'garrisoned' || a.order.kind !== 'garrison' || a.order.settlementId !== s.id) continue;
-    a.status = 'camped';
-    a.order = { kind: 'idle' };
-    // Out of the gates onto dry ground, then back to the realm: the nearest own walls, settlement or depot.
-    const r = s.radius + SIEGE_CAMP_OFFSET;
-    for (const [dx, dz] of EXIT_DIRECTIONS) {
-      if (terrain.inBounds(s.x + dx * r, s.z + dz * r) && !terrain.isWater(s.x + dx * r, s.z + dz * r)) {
-        a.x = s.x + dx * r;
-        a.z = s.z + dz * r;
-        break;
-      }
+  // The old owner's armies at the town fall back to the realm: its garrison is evicted, and field armies camped
+  // within radius + FIELD_ARMY_FALLBACK_RANGE (or marching in to garrison it) would otherwise sit beside a foreign town
+  // with no supply line (SIM-01 review B3: the Household of Devavarman starved at Ratnapura after 'Let him go').
+  if (from) {
+    const terrain = regionTerrain(world);
+    const range = s.radius + FIELD_ARMY_FALLBACK_RANGE;
+    for (const id of stableKeys('armies', world.armies as Record<string, unknown>)) {
+      const a = world.armies[id]!;
+      if (a.factionId !== from) continue;
+      const garrisoned = a.status === 'garrisoned' && a.order.kind === 'garrison' && a.order.settlementId === s.id;
+      const inbound = a.status === 'marching' && a.order.kind === 'garrison' && a.order.settlementId === s.id;
+      const dx = a.x - s.x;
+      const dz = a.z - s.z;
+      const camped = a.status === 'camped' && dx * dx + dz * dz <= range * range;
+      if (!garrisoned && !((inbound || camped) && fieldArmiesFallBack)) continue;
+      const evicted = garrisoned || (camped && dx * dx + dz * dz < s.radius * s.radius);
+      fallBack(world, a, s, evicted, terrain);
+      notifyPlayer(world, out, from, 'warning', `${a.name} falls back from ${s.name}.`, { x: a.x, z: a.z });
     }
-    const to = retreatDestination(world, a);
-    if (to?.kind === 'garrison') orderArmy(world, a.id, { kind: 'garrison', settlementId: to.settlementId }, terrain);
-    else if (to) orderArmy(world, a.id, { kind: 'retreat', x: to.x, z: to.z }, terrain);
   }
   refreshProvinces(world);
   if (from && world.factions[from]) {
@@ -349,6 +354,33 @@ export function transferOwnership(world: WorldState, s: SettlementState, to: Fac
   }
   if (to && world.factions[to] && !world.factions[to]!.capitalSettlementId) world.factions[to]!.capitalSettlementId = s.id;
   if (to && world.factions[to] && !world.factions[to]!.alive) world.factions[to]!.alive = true;
+}
+
+/** Field armies of a settlement's previous owner camped this far beyond its radius fall back when it changes hands (m). */
+export const FIELD_ARMY_FALLBACK_RANGE = 300;
+
+/**
+ * An army of a settlement's previous owner leaves it: if `evict` (garrison, or camped inside the walls) it first steps
+ * out of the gates onto dry ground; then it marches back to the realm - the nearest own walls (garrison), else the
+ * nearest own settlement or depot (retreatDestination, the battle-retreat rule).
+ */
+function fallBack(world: WorldState, a: ArmyState, s: SettlementState, evict: boolean, terrain: TerrainQuery): void {
+  a.status = 'camped';
+  a.order = { kind: 'idle' };
+  a.path = [];
+  if (evict) {
+    const r = s.radius + SIEGE_CAMP_OFFSET;
+    for (const [dx, dz] of EXIT_DIRECTIONS) {
+      if (terrain.inBounds(s.x + dx * r, s.z + dz * r) && !terrain.isWater(s.x + dx * r, s.z + dz * r)) {
+        a.x = s.x + dx * r;
+        a.z = s.z + dz * r;
+        break;
+      }
+    }
+  }
+  const to = retreatDestination(world, a);
+  if (to?.kind === 'garrison') orderArmy(world, a.id, { kind: 'garrison', settlementId: to.settlementId }, terrain);
+  else if (to) orderArmy(world, a.id, { kind: 'retreat', x: to.x, z: to.z }, terrain);
 }
 
 /** Capture by force or surrender (§7.8). */
@@ -426,7 +458,8 @@ export function decideCapture(world: WorldState, factionId: FactionId, settlemen
     }
     addChronicle(world, factionId, `${s.name} was plundered.`, 1);
   } else if (decision === 'liberate') {
-    transferOwnership(world, s, null, out);
+    // The liberating army stays where its commander put it.
+    transferOwnership(world, s, null, out, false);
     s.occupiedSinceDay = null;
     s.loyalty = 0.5;
     for (const key of stableKeys('relations', world.diplomacy.relations as Record<string, unknown>)) {
