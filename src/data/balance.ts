@@ -47,7 +47,14 @@ export const BALANCE: BalanceConfig = {
     commanderFallenShock: -0.7,
     flankShock: -0.35,
     rearShock: -0.5,
-    allyRoutShock: -0.3,
+    /**
+     * ally_routed stacks once per routing friend within allyRoutRadius. -0.15 since the GP-01 co-review round 1
+     * (was -0.3): at -0.3 the routs of a few 20-man scout and chariot formations drove full-strength, never-engaged
+     * spear blocks to rout and surrender (Riders of the Frontier mirror: median 0.86 min). At -0.15 a rout still
+     * spreads, but battles keep their rallies and counter-attacks (Riders 1.2 min, Elephant Shock 2.2 -> 3.5 min,
+     * faction-default pairings in 3-8 min 34 -> 42 of 84) and the 13.1 balanced skirmish stays 10/10 (median 5.5).
+     */
+    allyRoutShock: -0.15,
     allyRoutRadius: 120,
     chargeShock: -0.25,
   },

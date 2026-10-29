@@ -444,7 +444,7 @@ Ages multiply further (`AgeDef.bonuses`, landmarks' `factionEffects`); multiplie
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Spearmen | 120 | 10 | 6 | 9 | 3 | 0 | 0 | 0 | 0 | 0 | 2 | 1.5 | 3.5 | 0.55 | 1 | 60 | 0.6 | 300 |
 | Archers | 100 | 8 | 3 | 3 | 0 | 6 | 160 | 20 | 6 | 0.3 | 0.5 | 1.6 | 3.8 | 0.8 | 1 | 50 | 0.45 | 350 |
-| Royal Guards | 60 | 14 | 10 | 11 | 5 | 0 | 0 | 0 | 0 | 0 | 4 | 1.5 | 3.6 | 0.7 | 1.2 | 85 | 0.9 | 300 |
+| Royal Guards | 60 | 18 | 12 | 12 | 5 | 0 | 0 | 0 | 0 | 0 | 5 | 1.5 | 3.6 | 0.7 | 1.2 | 85 | 0.9 | 300 |
 | Horsemen | 60 | 18 | 8 | 5 | 12 | 0 | 0 | 0 | 0 | 0 | 2 | 2.4 | 8.5 | 1.0 | 3 | 65 | 0.55 | 450 |
 | Chariots | 16 | 45 | 9 | 4 | 18 | 5 | 120 | 12 | 5 | 0.3 | 3 | 2.2 | 8.0 | 0.5 | 4 | 60 | 0.5 | 400 |
 | War Elephants | 8 | 160 | 20 | 8 | 30 | 3 | 80 | 10 | 6 | 0.3 | 4 | 1.8 | 4.5 | 0.35 | 9 | 70 | 0.4 | 350 |
@@ -688,8 +688,9 @@ dmgHP     = hits x rangedAttack x bonusVs[A->D] x Kr / (1 + 0.5 armor_D) x shape
 
 - Ammo -1 per volley; at 0 the formation shows "No arrows" and stops shooting; `resupply` refills.
 - Wet bows: reload x1.25 in `monsoon_rain`/`storm`.
-- **Friendly fire:** a volley at a target engaged in melee with friends applies 30% of its hits to the friendly
-  formation in contact (`RULES.battle.friendlyFireShare`), unless the shooter is on `hold_fire`.
+- **Friendly fire:** a volley at a target engaged in melee with friends applies 10% of its hits to the friendly
+  formation in contact (`RULES.battle.friendlyFireShare`; 30% before the GP-01 co-review - archers shooting over
+  their own spear line were then net harmful), unless the shooter is on `hold_fire`.
 - Morale: `volley_hit` (-0.08, 10 s) when hits > 5% of the target's soldiers [BASE].
 
 *Worked example:* 100 archers into a spear block: 24 hits -> 32 HP ≈ **3.2 men per volley (6 s)**; into 8
@@ -720,7 +721,7 @@ formation closes within 30 m, once per 20 s).
 | Elephants vs gates | Elephants adjacent to a gate deal `siege x soldiers` HP/s to it (5 x 8 = 40 HP/s). |
 | Defenders on walls | Defense x1.3, missile accuracy x1.2, range x1.2 (`RULES.battle.walls`). |
 | Breach | A segment or gate at 0 HP becomes passable. |
-| Siege battle victory | Attacker wins when a formation holds the inside of a breach/gate for **60 s** with the defenders broken, or defenders are broken; defender wins at the time limit or if attackers break. Objective markers: `breach_gate`. |
+| Siege battle victory | Attacker wins when a formation holds the inside of a breach/gate for **60 s** with the defenders broken there (no standing defender combat formation within 40 m of the breach), or the defenders are broken (§6.8; arrowless archers on the walls still hold them); defender wins at the time limit or if attackers break. Objective markers: `breach_gate`. |
 
 ### 6.7 Morale (GDD §5)
 
@@ -760,17 +761,20 @@ Morale events (`MoraleEventKind`, magnitude / decay seconds):
 | commander_fallen | -0.7 | 60 | Side commander killed/captured (all formations of the side) [BASE] |
 | flank_attacked | -0.35 | 25 | Taking melee damage from a flank (p = 0.5·dt per tick) [BASE] |
 | rear_attacked | -0.5 | 25 | Same, rear [BASE] |
-| ally_routed | -0.3 | 40 | A friend within 120 m routs [BASE] |
-| enemy_routed | +0.15 | 30 | Any enemy routs [BASE] |
+| ally_routed | -0.15 | 40 | A friend within 120 m routs [BASE]; stacks per routing friend (-0.3 before the GP-01 co-review round 1) |
+| enemy_routed | +0.15 | 30 | Any enemy routs [BASE]; stacks per routing enemy |
 | charged | -0.25 (x0.3 braced) | 20 | Charge impact [BASE] |
 | heavy_casualties | -0.12 | 20 | Losing >= 2% of max in one tick (max once per 3 s) [BASE] |
 | volley_hit | -0.08 | 10 | Volley hits > 5% of soldiers [BASE] |
 | elephant_panic | -0.3 | 20 | Trampled by panicking elephants |
 | supply_threatened | -0.2 | 60 | Own supply train attacked, or strategic line cut |
-| reinforced | +0.2 | 30 | A fresh friendly formation joins its melee |
+| reinforced | +0.2 | 30 | A fresh friendly formation joins its melee; stacks |
 | general_nearby | +0.1 | 10 | Commander within 60 m (refreshed every 10 s) |
 | victory_near | +0.25 | 30 | Enemy side below 35% of its starting strength |
 | rallied | +0.2 | 20 | On rally [BASE] |
+
+Events of the same kind refresh rather than stack (a formation is "flanked", not flanked twelve times), except the
+three marked "stacks". R is clamped to -1.5..1 (not -1..1) so that the GDD example below (-1.25) is not saturated.
 
 Thresholds: **wavering** below 40 (UI pulse + hint), **rout** below 30 (`routThreshold`), **rally** above 50
 (`rallyThreshold`) after 10 s without damage, **surrender** below 8 (`surrenderMorale`).
@@ -786,7 +790,7 @@ event -> -5, S -0.3 -> -3): target ≈ 25 -> it routs with 80% of its men alive.
 | **Routing** | Morale < 30: order = withdraw to own map edge at run; ignores commands; takes x3 melee damage; cohesion -0.05/s; routers passing through friends cost them 0.05 cohesion and trigger `ally_routed`. A router reaching the map edge **leaves the battle** (survivors return to the army). |
 | **Rallying** | Morale > 50 and no damage for 10 s -> `rallying` for 15 s (regroup, cohesion x2.5), then controllable. Max **2 rallies** per formation per battle; the third rout is final ("shattered"). The commander's Rally ability (§6.11) can force a rally check at morale > 35. |
 | **Surrender** | Routing **and** morale < 8 **and** (enemy formations within 30 m on >= 2 aspects **or** cornered: water, wall or map edge within 20 m in the flee direction) -> `surrendered`; all remaining soldiers are **captured**. |
-| **Side broken** | All combat formations (not engineers/supply) routing, destroyed or surrendered -> battle ends [BASE]. |
+| **Side broken** | All formations that hold the field routing, destroyed or surrendered -> battle ends [BASE]; both sides at once = draw. Engineers and supply trains never hold the field; neither do archer-category formations that are out of arrows and not in melee (they would otherwise keep a lost battle open to the time limit) - **except** a besieged garrison's archers standing on their own walls, who hold the walls with stones and spears until the attacker takes them [REQ GP-01]. A side broken while its arrowless archers still stand loses by `rout`. |
 | **Pursuit** | When a side breaks: `pursuitLosses = routing soldiers x (0.15 + 0.1 x winnerMountedShare) x (1 - 0.5 x loserMountedShare)`; 70% killed, 30% captured. Mounted share = mounted soldiers / combat soldiers still fighting. |
 | **Prisoners** | Results screen choice per battle: **Ransom** (loser pays 5 wealth per prisoner, capped at 30% of its treasury; opinion -5) or **Release** (opinion +5 per 100 released, max +20). AI: ransom if greedy/expansionist else release. Captured commanders: ransom 500 or held (event). |
 
@@ -2344,6 +2348,25 @@ support in the hero camera.
   (40-55% of its need), so scaling by the unmet share would move revolt from ~19 to ~27 days and not change who
   survives; revisit together with the deficit-realm item above. Free towns in famine never recover (production is
   linear in farm labor) - a land-limited yield or a labor shift to farming is the candidate rule.
+- **Battle balance with the baseline battle AI** (GP-01 co-review round 1, measured in the authoritative tactical sim,
+  skirmish auto-deploy, AI vs AI, plains, 20 seeds). Pass: 3 spear vs 1.5 horse 20/20; horse vs archers + 1 spear,
+  horse loses 20/20; elephants vs 2 horse 16/20; elephants vs 4 archers, archers 19/20; Samudra Balanced mirror
+  19/21 (40 seeds); §13.1 pacing 10/10 (median 5.5 min). Open, to re-measure with SIM-02's AI before the QA balance
+  pass:
+  - *4 spear + 2 archers vs 6 spear* wins 1-2/20 with the line-order auto-deploy (12-17/20 in hand-placed layouts): the
+    longer spear line overlaps both flanks while the archers shoot the centre. The rule set supports combined arms
+    (friendly fire 0.1); the AI must refuse or anchor its flanks and aim its archers at the overlapping blocks.
+  - *Royal guards vs 2.5 spear blocks* (equal cost) wins 0/20 (45-60% wanted), while guards beat 1 block 20/20, 1.5
+    blocks 20/20 in line (0/20 in their default square) and beat equal-cost horse and elephants. Numbers that can
+    envelop beat quality at equal cost in this model; the guards' row and their `counters` hint (weakVs cavalry) are
+    to be re-tuned together after SIM-02 (shape choice, flank refusal).
+  - Suvarna's Balanced Host beats every elephant-less faction's Balanced Host in 43 of 46 battles at equal soldiers (8 elephants
+    are worth 1,600 wealth); the elephant counter is archers' panic, which the baseline AI does not aim. Equal-wealth
+    skirmish budgets are the fallback if SIM-02's targeting does not close it.
+  - The baseline AI (`battleai.ts`, SIM-02) picks the flank side by formation index parity, not geometry: in mirror
+    battles one side's horse rides across the centre (Riders of the Frontier mirror 2/18 with ally_routed -0.3,
+    9/11 at -0.15; Suvarna Balanced mirror 13/27 at -0.15 but 18/22 with a geometric flank choice, 40 seeds). Hill
+    Fort Garrison pairings take 10-15 min because AI guards stay in their default square.
 - **Armies camped beside a hungry own town** keep the 30-day floor and do not forage it (civilians first; the remedies
   are garrisoning inside the walls, requisition, moving to a surplus town or "Hold the reserve"). The UI must say so
   (army supply panel: source and why it is empty). Partial starvation (desertion x unmet share) is a candidate rule
