@@ -28,6 +28,11 @@ dependencies** (ask the CTO).
 | `npm run assets [-- <id>]` | Build content-pipeline assets (Blender -> `.asset-cache/` -> `public/assets/` + `src/assets/manifest.ts`), incremental. Flags: `--draft`, `--force`, `--no-preview`, `--republish`, `--list`, `--selftest` |
 | `npm run assets:check` | Verify published files, manifest freshness and payload budgets (no Blender) |
 
+**Concurrent builds (two employees work at once):** never build into the shared `dist/` / `dist-single/`. Verify builds with
+`npx vite build --outDir .build/<ticket-id> --emptyOutDir` and `npx vite build --mode single --outDir .build/<ticket-id>-single --emptyOutDir`,
+and run smoke with `SMOKE_DIST=.build/<ticket-id> SMOKE_PORT=<your port> SMOKE_OUT=docs/sprint1/<ticket-id>/smoke npm run smoke` (`.build/` is git-ignored).
+
+
 Headless Chromium uses SwiftShader (software WebGL): it works but is slow - FPS there means nothing.
 Run browser scripts with `NODE_PATH=$(npm root -g) node script.cjs`.
 

@@ -6,6 +6,7 @@
  *   npm run smoke -- --scenes=menu,battle --quality=medium
  *
  * Env: SMOKE_PORT (default 4317), SMOKE_SKIP_BUILD=1, SMOKE_OUT (default docs/screenshots),
+ *      SMOKE_DIST (build/preview dir, default dist - use .build/<ticket-id> when teammates run concurrently),
  *      (asset-viewer shots need the published content in public/assets - see `npm run assets`)
  *      SMOKE_TIMEOUT_MS (per scene, default 240000), SMOKE_HEADED=1.
  *
@@ -24,6 +25,7 @@ const ROOT = path.resolve(__dirname, '..');
 const PORT = Number(process.env.SMOKE_PORT || 4317);
 const OUT = path.resolve(ROOT, process.env.SMOKE_OUT || 'docs/screenshots');
 const TIMEOUT = Number(process.env.SMOKE_TIMEOUT_MS || 240000);
+const DIST = process.env.SMOKE_DIST || 'dist';
 const args = Object.fromEntries(
   process.argv.slice(2).map((a) => {
     const m = /^--([^=]+)=?(.*)$/.exec(a);
@@ -85,12 +87,12 @@ async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   if (!process.env.SMOKE_SKIP_BUILD) {
     console.log('[smoke] building...');
-    execSync(`"${process.execPath}" "${path.join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js')}" build`, { cwd: ROOT, stdio: 'inherit' });
+    execSync(`"${process.execPath}" "${path.join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js')}" build --outDir "${DIST}" --emptyOutDir`, { cwd: ROOT, stdio: 'inherit' });
   }
   console.log(`[smoke] starting preview on :${PORT}`);
   // Spawn vite directly (not through npx) so the server process can be killed reliably.
   const viteBin = path.join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js');
-  const server = spawn(process.execPath, [viteBin, 'preview', '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
+  const server = spawn(process.execPath, [viteBin, 'preview', '--outDir', DIST, '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
   let serverLog = '';
   server.stdout.on('data', (d) => (serverLog += d));
   server.stderr.on('data', (d) => (serverLog += d));
