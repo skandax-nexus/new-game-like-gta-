@@ -53,7 +53,7 @@ Models gained metadata in the same change: `skinned`, `clipEvents` (`{clip: [{ty
   (`rowsPerFrame = ceil(vertices / width)`); all clips are stacked in one texture with a clip table
   (start frame, frames, loop, measured `strideMeters` / `speed` from planted feet for foot-locked playback).
   The bake re-evaluates the decoded data against Blender and fails above `max_error_mm` (1.0); the test
-  dummy reconstructs within 0.47 mm (LOD0) / 0.32 mm (LOD1).
+  dummy reconstructs within 0.47 mm (LOD0) / 0.42 mm (LOD1).
 - **Mesh** GLB: single primitive, `COLOR_0` = R team mask, G cloth seed, B part id (`partColors` in the
   manifest), meshopt **quantize only** (no reordering - vertex i must stay texel column i; the publisher
   verifies positions bit-exact).
@@ -76,7 +76,8 @@ Models gained metadata in the same change: `skinned`, `clipEvents` (`{clip: [{ty
 - **Publish:** albedo at 256 / 192 / 128 px per frame (2048 / 1536 / 1024 atlases), normal + depth at half
   resolution (lossy WebP q92 + alpha q95 - normals at full res were 2.8 MB).
 - **Runtime:** `createImpostorMesh(handle)` = camera-facing quad whose shader blends the 3 nearest frames
-  (barycentric), reprojects each by its depth so the parallax matches, lights with the stored normals
+  (barycentric), reprojects the quad into each frame's capture plane (no per-pixel depth parallax yet: the
+  depth in normal.a is reserved for a parallax / depth-offset pass), lights with the stored normals
   (`MeshStandardMaterial`, alpha-test 0.5, depth material for shadows). Switch distance comes from the
   manifest (`switchDistance`, 90 m for the test tree). A/B at 220 m: see the TA-07 report.
 

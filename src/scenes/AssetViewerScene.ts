@@ -150,7 +150,6 @@ function horizonColor(tex: THREE.Texture): THREE.Color | null {
   return n ? new THREE.Color(r / n, g / n, b / n) : null;
 }
 
-/** The lighting preset a baked sky belongs to: by id, else by its Nishita sun position. */
 /** Rasterize an SVG string into a CanvasTexture (flipY false: glTF UV convention), or null when unsupported. */
 async function svgTexture(svg: string, w: number, h: number): Promise<THREE.CanvasTexture | null> {
   if (typeof document === 'undefined') return null;
@@ -174,6 +173,7 @@ async function svgTexture(svg: string, w: number, h: number): Promise<THREE.Canv
   return tex;
 }
 
+/** The lighting preset a baked sky belongs to: by id, else by its Nishita sun position. */
 function presetForSky(entry: { id: string; sun: { elevationDeg: number; azimuthDeg: number } } | null): LightingPreset | null {
   if (!entry) return null;
   const all = Object.values(LIGHTING_PRESETS);
@@ -307,6 +307,10 @@ export class AssetViewerScene implements GameScene {
     }
     this.fitShadow();
     // ---- camera + controls
+    // RenderSystem.resize() returns early when the canvas size is unchanged, so this fresh camera would keep
+    // aspect 1 (every 16:9 frame stretched 1.78x horizontally, and the 'front' fit computed for a square view).
+    this.camera.aspect = Math.max(1, ctx.canvas.clientWidth) / Math.max(1, ctx.canvas.clientHeight);
+    this.camera.updateProjectionMatrix();
     this.controls = new OrbitControls(this.camera, ctx.canvas);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
@@ -315,6 +319,8 @@ export class AssetViewerScene implements GameScene {
     ctx.render.setView(this.scene, this.camera);
     this.applyGrade();
     ctx.render.resize();
+    this.camera.aspect = Math.max(1, ctx.canvas.clientWidth) / Math.max(1, ctx.canvas.clientHeight);
+    this.camera.updateProjectionMatrix();
     if (this.mode === 'lut') this.installLutPass();
     if (!ctx.params.noUi) this.createHud();
     ctx.bus.emit('scene:loading', { scene: 'assetviewer', progress: 1, label: 'Ready' });
@@ -1075,6 +1081,12 @@ export class AssetViewerScene implements GameScene {
         } else pos.set(c.x - r * 1.6, b.min.y + r * 1.3, c.z + r * 2.1);
         break;
       default: // hero 3/4 front-left view, the front (+Z) feature kept in frame
+        if (this.mode === 'splat') {
+          // A flat terrain patch needs height: the object framing below puts the eye at ground level (edge-on).
+          target.set(c.x, b.min.y + size.y * 0.5, c.z + size.z * 0.08);
+          pos.set(c.x - r * 0.35, b.min.y + r * 0.42, c.z + r * 0.78);
+          break;
+        }
         target.set(c.x + size.x * 0.06, b.min.y + size.y * 0.34, c.z + size.z * 0.16);
         pos.set(c.x - r * 0.78, b.min.y + size.y * 0.26, c.z + r * 1.85);
         break;
