@@ -3,7 +3,7 @@
  * TA-07 evidence capture (pipeline extensions + WP7 content). OWNER: Technical Artist G (TA-07).
  *
  *   npx vite build --outDir .build/ta-07 --emptyOutDir
- *   NODE_PATH=$(npm root -g) node scripts/shots/ta-07.cjs [--only=crowd,impostor,skies,fx,lut,skinned,kit,splat,images,off,mobile]
+ *   NODE_PATH=$(npm root -g) node scripts/shots/ta-07.cjs [--only=crowd,impostor,skies,fx,lut,skinned,banners,kit,splat,images,off,mobile]
  *
  * Env: SHOTS_PORT (default 4402), SHOTS_DIST (default .build/ta-07), SHOTS_OUT (default docs/sprint1/ta-07).
  * Starts `vite preview` on the ticket port, opens asset-viewer deep links in headless Chromium (SwiftShader),
@@ -105,7 +105,22 @@ async function main() {
   let browser;
   const run = (group) => !ONLY || ONLY.has(group);
 
+  /** Retry once when a capture comes back blank (SwiftShader occasionally loses the context under load). */
   async function shoot(name, query, opts = {}) {
+    let state = await shootOnce(name, query, opts);
+    const file = path.join(OUT, `${name}.png`);
+    if (opts.allowBlank || !fs.existsSync(file)) return state;
+    const st = await sharp(file).stats();
+    const spread = Math.max(...st.channels.slice(0, 3).map((c) => c.stdev));
+    if (spread < 1.5) {
+      console.log(`[ta-07] ${name}: blank capture (stdev ${spread.toFixed(2)}), retrying`);
+      report.shots.pop();
+      state = await shootOnce(name, query, opts);
+    }
+    return state;
+  }
+
+  async function shootOnce(name, query, opts = {}) {
     const vp = opts.viewport || [1280, 720];
     const context = await browser.newContext({ viewport: { width: vp[0], height: vp[1] }, deviceScaleFactor: 1, isMobile: !!opts.mobile, hasTouch: !!opts.mobile });
     const page = await context.newPage();
@@ -157,7 +172,12 @@ async function main() {
       await shoot('vat_crowd_close', 'asset=vat_test_dummy&count=60&hdri=sky_golden&camera=hero&t=2.1&noui=1', { quality: 'ultra' });
       const crowd = (s2 || s)?.crowd ?? null;
       report.numbers.crowd = crowd;
-      if (crowd) for (const l of crowd.lods) console.log(`[ta-07] crowd LOD${l.lod}: ${l.instances} instances, draw calls per frame ${l.main} main + ${l.shadow} shadow = ${l.main + l.shadow}`);
+      if (crowd)
+        for (const l of crowd.lods)
+          console.log(
+            `[ta-07] crowd LOD${l.lod}: ${l.instances} instances, ${l.perPass} draw calls per scene pass (1 InstancedMesh color + 1 shadow); ` +
+              `frame total ${l.main} main + ${l.shadow} shadow over ${l.scenePasses} scene passes (RenderPass + GTAO normal pre-pass at high)`,
+          );
     }
 
     // ---------------------------------------------------------------- impostor A/B
@@ -191,15 +211,15 @@ async function main() {
       }
       report.numbers.skies = table;
       for (const r of table) console.log(`[ta-07] ${r.sky.padEnd(13)} sun el ${String(r.elevationDeg).padStart(4)} az ${String(r.azimuthDeg).padStart(4)} dir [${r.direction.map((v) => v.toFixed(3)).join(', ')}] I ${r.sunIntensity}  ambient ${r.ambientIrradiance}  env x${(r.environmentIntensity ?? 0).toFixed(3)} (${r.preset})`);
-      for (const sky of idsOfKind('hdri')) await shoot(`sky_${sky.slice(4)}_probes`, `asset=${sky}&noui=1`, { quality: 'high' });
+      if (process.env.SHOTS_PROBES) for (const sky of idsOfKind('hdri')) await shoot(`sky_${sky.slice(4)}_probes`, `asset=${sky}&noui=1`, { quality: 'high' });
     }
 
     // ---------------------------------------------------------------- flipbooks
     if (run('fx')) {
-      for (const fx of idsOfKind('flipbook')) await shoot(`${fx}_playback`, `asset=${fx}&hdri=sky_day&t=0.55`, { quality: 'ultra' });
+      for (const fx of idsOfKind('flipbook')) await shoot(`${fx}_playback`, `asset=${fx}&hdri=sky_day&camera=front&t=0.55`, { quality: 'ultra' });
       if (idsOfKind('flipbook').includes('fx_smoke')) {
-        await shoot('fx_smoke_sun_east', 'asset=fx_smoke&hdri=sky_day&sun=90,25&frame=20&noui=1', { quality: 'ultra' });
-        await shoot('fx_smoke_sun_west', 'asset=fx_smoke&hdri=sky_day&sun=270,25&frame=20&noui=1', { quality: 'ultra' });
+        await shoot('fx_smoke_sun_east', 'asset=fx_smoke&hdri=sky_day&camera=front&sun=90,25&frame=20&noui=1', { quality: 'ultra' });
+        await shoot('fx_smoke_sun_west', 'asset=fx_smoke&hdri=sky_day&camera=front&sun=270,25&frame=20&noui=1', { quality: 'ultra' });
         const a = await sharp(path.join(OUT, 'fx_smoke_sun_east.png')).removeAlpha().raw().toBuffer({ resolveWithObject: true });
         const b = await sharp(path.join(OUT, 'fx_smoke_sun_west.png')).removeAlpha().raw().toBuffer({ resolveWithObject: true });
         let diff = 0;
@@ -219,11 +239,17 @@ async function main() {
 
     // ---------------------------------------------------------------- skinned clones + memory
     if (run('skinned')) {
-      await shoot('skinned_clones', 'asset=skin_test_character&clip=walk&hdri=sky_golden&camera=hero&t=0.4', { quality: 'ultra' });
+      await shoot('skinned_clones', 'asset=skin_test_character&clip=walk&hdri=sky_golden&camera=front&t=0.4', { quality: 'ultra' });
       const s = await shoot('skinned_memtest', 'asset=skin_test_character&clip=walk&hdri=sky_day&memtest=1&noui=1', { quality: 'high', frames: 4, until: () => { const s = window.__SAMRAJYA__.getState().sceneState; return !!(s && s.skinned && s.skinned.memtest && s.skinned.memtest.released); } });
       const mt = s?.skinned?.memtest ?? null;
       report.numbers.skinnedMemory = mt;
       if (mt) console.log(`[ta-07] skinned memory (renderer.info.memory): baseline ${JSON.stringify(mt.baseline)} -> loaded ${JSON.stringify(mt.loaded)} -> released ${JSON.stringify(mt.released)} ${mt.released && mt.released.geometries === mt.baseline.geometries && mt.released.textures === mt.baseline.textures ? 'OK (back to baseline)' : 'LEAK'}`);
+    }
+
+    // ---------------------------------------------------------------- banners (6 BannerShape variants, runtime bannerSvg textures)
+    if (run('banners') && idsOfKind('model').includes('banner_cloth')) {
+      const s = await shoot('banner_cloth_variants', 'asset=banner_cloth&hdri=sky_golden&camera=front&noui=1', { quality: 'ultra' });
+      report.numbers.banners = s ? { notes: s.notes, fallback: s.fallback } : null;
     }
 
     // ---------------------------------------------------------------- kit + splat
@@ -235,18 +261,19 @@ async function main() {
     if (run('splat')) await shoot('splat_lookdev', 'splat=ground_dry_earth,sandstone_carved_red&hdri=sky_golden&camera=hero', { quality: 'high' });
 
     // ---------------------------------------------------------------- images
-    if (run('images')) for (const img of idsOfKind('image')) await shoot(`${img}_view`, `asset=${img}&hdri=sky_day&noui=1`, { quality: 'ultra' });
+    if (run('images')) for (const img of idsOfKind('image')) await shoot(`${img}_view`, `asset=${img}&hdri=sky_day&camera=front&noui=1`, { quality: 'ultra' });
 
     // ---------------------------------------------------------------- assets=off: every new loader returns null, no errors
     if (run('off')) {
       const off = {};
       for (const [kind, id] of [['vat', 'vat_test_dummy'], ['impostor', 'impostor_test_tree'], ['flipbook', idsOfKind('flipbook')[0]], ['lut', 'lut_golden'], ['image', idsOfKind('image')[0]], ['skinned', 'skin_test_character']]) {
         if (!id) continue;
-        const s = await shoot(`off_${kind}`, `asset=${id}&assets=off`, { quality: 'medium' });
+        // SHOTS_SINGLE=1 (with SHOTS_DIST=.build/ta-07-single): the single-file build itself, no ?assets=off needed
+        const s = await shoot(`off_${kind}`, `asset=${id}${process.env.SHOTS_SINGLE ? '' : '&assets=off'}`, { quality: 'medium' });
         off[kind] = s ? { fallback: s.fallback, tier: s.tier, notes: s.notes } : null;
       }
       report.numbers.assetsOff = off;
-      console.log(`[ta-07] assets=off: ${Object.entries(off).map(([k, v]) => `${k} fallback=${v && v.fallback}`).join(', ')}`);
+      console.log(`[ta-07] ${process.env.SHOTS_SINGLE ? 'single-file build' : 'assets=off'}: ${Object.entries(off).map(([k, v]) => `${k} fallback=${v && v.fallback}`).join(', ')}`);
     }
 
     // ---------------------------------------------------------------- mobile
@@ -255,7 +282,17 @@ async function main() {
     if (browser) await browser.close();
     server.kill('SIGTERM');
   }
-  fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(report, null, 2));
+  // Merge with the previous report so partial runs (--only=...) keep the other groups' numbers.
+  const reportPath = path.join(OUT, 'report.json');
+  let merged = report;
+  try {
+    const prev = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+    const names = new Set(report.shots.map((s) => s.name));
+    merged = { shots: [...(prev.shots ?? []).filter((s) => !names.has(s.name)), ...report.shots], numbers: { ...(prev.numbers ?? {}), ...report.numbers } };
+  } catch {
+    // first run
+  }
+  fs.writeFileSync(reportPath, JSON.stringify(merged, null, 2));
   if (failures.length) {
     console.error(`[ta-07] FAILED: ${failures.join(', ')}`);
     process.exit(1);

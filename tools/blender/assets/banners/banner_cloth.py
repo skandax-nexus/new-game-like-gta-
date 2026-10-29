@@ -58,7 +58,7 @@ SX = CLOTH_W / 100.0  # viewBox units -> meters
 SY = CLOTH_H / 150.0
 CROSSBAR_Z = POLE_M - 0.22  # crossbar height (Blender Z up)
 CLOTH_Y = -0.035  # cloth hangs just in front of the pole (Blender -Y = glTF +Z = front)
-LATTICE = 5.0  # viewBox units (~5.5 cm)
+LATTICE = 6.5  # viewBox units (~7 cm): smooth wave deformation at ~4k triangles for all six cloths
 
 
 def parse_path(d: str) -> list[tuple[float, float]]:
@@ -256,7 +256,8 @@ for shape, d in SHAPES.items():
     cloth_nodes[shape] = nodes
     variants.append({"name": shape, "kind": "shape", "nodes": nodes})
 
-info = export.gltf(ctx.path(f"{ctx.id}.lod0.glb"), parts, vertex_colors=True, extras={"id": ctx.id})
+# no tangents: the cloth carries no normal map (runtime emblem texture only) - saves ~20 % of the GLB
+info = export.gltf(ctx.path(f"{ctx.id}.lod0.glb"), parts, vertex_colors=True, tangents=False, extras={"id": ctx.id})
 ctx.add_file("lod0", ctx.path(f"{ctx.id}.lod0.glb"), keepNodes=True)
 tris = {o.name: M.triangle_count(o) for o in parts}
 ctx.meta.update({

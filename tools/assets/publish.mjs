@@ -27,6 +27,7 @@ import { MeshoptDecoder, MeshoptEncoder } from 'meshoptimizer';
 import {
   CLIP_EVENT_TYPES,
   FLIPBOOK_MAPS,
+  FLIPBOOK_NORMAL_SCALE,
   IMPOSTOR_FRAME_PX,
   IMPOSTOR_MAPS,
   IMPOSTOR_NORMAL_SCALE,
@@ -425,6 +426,8 @@ async function publishFlipbook(asset, srcDir, meta, outFiles, tiers) {
   const { cols, rows } = m;
   if (!cols || !rows) throw new Error(`${asset.id}: flipbook needs cols and rows`);
   const maps = {};
+  // Additive everywhere (no sequence overrides the blend): the color atlas is premultiplied emission, no alpha.
+  const additiveOnly = m.blend === 'additive' && (m.sequences ?? []).every((s) => (s.blend ?? 'additive') === 'additive');
   for (const map of FLIPBOOK_MAPS) {
     const f = meta.files.find((x) => x.role === map);
     if (!f) {
@@ -434,15 +437,23 @@ async function publishFlipbook(asset, srcDir, meta, outFiles, tiers) {
     const info = await sharp(path.join(srcDir, f.path)).metadata();
     const srcMax = Math.max(info.width ?? 0, info.height ?? 0);
     const atlasPx = m.atlasPx ?? {};
+    const mapScale = map === 'normal' ? (m.normalScale ?? FLIPBOOK_NORMAL_SCALE) : 1;
     maps[map] = {};
-    for (const [size, ts] of bySize(tiers, (t) => Math.min(srcMax, atlasPx[t] ?? TIER_MAX_TEXTURE[t], TIER_MAX_TEXTURE[t]))) {
+    for (const [size, ts] of bySize(tiers, (t) => Math.min(srcMax, Math.round(Math.min(atlasPx[t] ?? TIER_MAX_TEXTURE[t], TIER_MAX_TEXTURE[t]) * mapScale)))) {
       const scale = size / srcMax;
       const fw = Math.max(1, Math.round(((info.width ?? 0) / cols) * scale));
       const fh = Math.max(1, Math.round(((info.height ?? 0) / rows) * scale));
-      const hasAlpha = map === 'color';
+      const hasAlpha = map === 'color' && !additiveOnly;
       const raw = await resampleAtlas(path.join(srcDir, f.path), cols, rows, fw, fh, { alpha: hasAlpha });
       const relPath = `fx/${asset.id}/${map}_${raw.width}.webp`;
-      const enc = map === 'normal' ? TEXTURE_ENCODING.normal_alpha : map === 'color' ? TEXTURE_ENCODING.color_alpha : TEXTURE_ENCODING.emissive;
+      const enc =
+        map === 'normal'
+          ? TEXTURE_ENCODING.flipbook_normal
+          : map === 'color'
+            ? hasAlpha
+              ? TEXTURE_ENCODING.color_alpha
+              : TEXTURE_ENCODING.color_additive
+            : TEXTURE_ENCODING.emissive;
       await writeWebpRaw(raw, relPath, enc, { alpha: hasAlpha });
       const rf = record(outFiles, relPath, ts, { kind: 'flipbook', map, size: raw.width });
       for (const t of ts) maps[map][t] = { path: relPath, bytes: rf.bytes, width: raw.width, height: raw.height };

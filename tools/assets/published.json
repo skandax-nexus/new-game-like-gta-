@@ -1,6 +1,1321 @@
 {
   "pipelineVersion": 1,
   "assets": {
+    "banner_cloth": {
+      "id": "banner_cloth",
+      "kind": "model",
+      "category": "banners",
+      "script": "tools/blender/assets/banners/banner_cloth.py",
+      "inputHash": "89029a9e836078fb9add9c09e1ced1f4d00819689b0b5c3928e4e7863664fc8c",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "bounds": {
+          "center": [
+            0,
+            2.21,
+            0.0025
+          ],
+          "max": [
+            0.632,
+            4.42,
+            0.035
+          ],
+          "min": [
+            -0.632,
+            0,
+            -0.03
+          ],
+          "radius": 2.2988
+        },
+        "description": "Banner pole + crossbar + finial + tassels and the six BannerShape cloths (variants), cloth weights in COLOR_0.r.",
+        "lodDistances": [
+          0
+        ],
+        "meta": {
+          "authoredFor": "infantryStandard",
+          "cloth": {
+            "sheen": 0.35,
+            "stiffnessNearPole": 0.85,
+            "waveAmp": 0.18,
+            "waveFreq": 2.4,
+            "waveSpeed": 3.2
+          },
+          "clothWeight": "COLOR_0.r: 0 pinned at the crossbar -> 1 at the free edge; COLOR_0.g: 1 = loose secondary parts",
+          "dimensions": {
+            "clothH": 1.6,
+            "clothW": 1.1,
+            "crossbarY": 3.98,
+            "poleM": 4.2
+          },
+          "nodeTriangles": {
+            "cloth_fringed": 708,
+            "cloth_notched": 782,
+            "cloth_pennant": 420,
+            "cloth_square": 554,
+            "cloth_streamer": 468,
+            "cloth_swallowtail": 738,
+            "crossbar": 28,
+            "finial": 28,
+            "fringe_fringed": 84,
+            "pole": 36,
+            "tassels": 112
+          },
+          "uv": "bannerSvg viewBox 0 0 100 150, u = x / 100, v = y / 150 (v = 0 at the crossbar), flipY false",
+          "vertexColors": "data"
+        },
+        "sockets": {
+          "crossbar": {
+            "bone": null,
+            "position": [
+              0,
+              3.98,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0,
+              1
+            ]
+          },
+          "finial": {
+            "bone": null,
+            "position": [
+              0,
+              4.2,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0,
+              1
+            ]
+          },
+          "grip": {
+            "bone": null,
+            "position": [
+              0,
+              1.15,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0,
+              1
+            ]
+          }
+        },
+        "triangles": [
+          3958
+        ],
+        "variants": [
+          {
+            "kind": "shape",
+            "name": "swallowtail",
+            "nodes": [
+              "cloth_swallowtail"
+            ]
+          },
+          {
+            "kind": "shape",
+            "name": "pennant",
+            "nodes": [
+              "cloth_pennant"
+            ]
+          },
+          {
+            "kind": "shape",
+            "name": "notched",
+            "nodes": [
+              "cloth_notched"
+            ]
+          },
+          {
+            "kind": "shape",
+            "name": "streamer",
+            "nodes": [
+              "cloth_streamer"
+            ]
+          },
+          {
+            "kind": "shape",
+            "name": "square",
+            "nodes": [
+              "cloth_square"
+            ]
+          },
+          {
+            "kind": "shape",
+            "name": "fringed",
+            "nodes": [
+              "cloth_fringed",
+              "fringe_fringed"
+            ]
+          }
+        ]
+      },
+      "files": [
+        {
+          "path": "models/banner_cloth/banner_cloth.lod0.glb",
+          "bytes": 47148,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "model",
+          "lod": 0,
+          "triangles": 3958
+        }
+      ],
+      "lods": [
+        {
+          "lod": 0,
+          "path": "models/banner_cloth/banner_cloth.lod0.glb",
+          "bytes": 47148,
+          "triangles": 3958,
+          "drawCalls": 12,
+          "skinned": false,
+          "animations": []
+        }
+      ],
+      "sets": {},
+      "footprint": null,
+      "bytes": {
+        "ultra": 47148,
+        "high": 47148,
+        "mobile": 47148
+      }
+    },
+    "fx_dust": {
+      "id": "fx_dust",
+      "kind": "flipbook",
+      "category": "fx",
+      "script": "tools/blender/assets/fx/fx_dust.py",
+      "inputHash": "879007c8f7bead0c8bf46b6916fc221ec18cbc219664f84849d4853f84fee2d9",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "atlasPx": {
+          "high": 1024,
+          "mobile": 512,
+          "ultra": 1024
+        },
+        "blend": "alpha",
+        "cols": 8,
+        "description": "Dust: ground puffs (2), expanding ring (top view), hoof kick; neutral albedo + normals, tint by ground.",
+        "emissiveIntensity": 1,
+        "fps": 8,
+        "frames": 64,
+        "lit": true,
+        "loop": false,
+        "rows": 8,
+        "sequences": [
+          {
+            "count": 16,
+            "fps": 6.4,
+            "loop": false,
+            "name": "puff",
+            "start": 0
+          },
+          {
+            "count": 16,
+            "fps": 6.4,
+            "loop": false,
+            "name": "puff_b",
+            "start": 16
+          },
+          {
+            "count": 16,
+            "fps": 8,
+            "loop": false,
+            "name": "ring",
+            "start": 32
+          },
+          {
+            "count": 16,
+            "fps": 10,
+            "loop": false,
+            "name": "hoof",
+            "start": 48
+          }
+        ],
+        "sizeMeters": [
+          2,
+          1.5
+        ],
+        "softFadeMeters": 0.5,
+        "tint": "#b0956e"
+      },
+      "files": [
+        {
+          "path": "fx/fx_dust/color_1024.webp",
+          "bytes": 232704,
+          "tiers": [
+            "ultra",
+            "high"
+          ],
+          "kind": "flipbook",
+          "map": "color",
+          "size": 1024
+        },
+        {
+          "path": "fx/fx_dust/color_512.webp",
+          "bytes": 74384,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "flipbook",
+          "map": "color",
+          "size": 512
+        },
+        {
+          "path": "fx/fx_dust/normal_512.webp",
+          "bytes": 18236,
+          "tiers": [
+            "ultra",
+            "high"
+          ],
+          "kind": "flipbook",
+          "map": "normal",
+          "size": 512
+        },
+        {
+          "path": "fx/fx_dust/normal_256.webp",
+          "bytes": 7588,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "flipbook",
+          "map": "normal",
+          "size": 256
+        }
+      ],
+      "flipbook": {
+        "maps": {
+          "color": {
+            "ultra": {
+              "path": "fx/fx_dust/color_1024.webp",
+              "bytes": 232704,
+              "width": 1024,
+              "height": 1024
+            },
+            "high": {
+              "path": "fx/fx_dust/color_1024.webp",
+              "bytes": 232704,
+              "width": 1024,
+              "height": 1024
+            },
+            "mobile": {
+              "path": "fx/fx_dust/color_512.webp",
+              "bytes": 74384,
+              "width": 512,
+              "height": 512
+            }
+          },
+          "normal": {
+            "ultra": {
+              "path": "fx/fx_dust/normal_512.webp",
+              "bytes": 18236,
+              "width": 512,
+              "height": 512
+            },
+            "high": {
+              "path": "fx/fx_dust/normal_512.webp",
+              "bytes": 18236,
+              "width": 512,
+              "height": 512
+            },
+            "mobile": {
+              "path": "fx/fx_dust/normal_256.webp",
+              "bytes": 7588,
+              "width": 256,
+              "height": 256
+            }
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 250940,
+        "high": 250940,
+        "mobile": 81972
+      }
+    },
+    "fx_fire": {
+      "id": "fx_fire",
+      "kind": "flipbook",
+      "category": "fx",
+      "script": "tools/blender/assets/fx/fx_fire.py",
+      "inputHash": "7a24047d2eb9780cc2dae3e575222ec4463865d316959f9a45f95d13736318df",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "atlasPx": {
+          "high": 1024,
+          "mobile": 512,
+          "ultra": 1024
+        },
+        "blend": "premultiplied",
+        "cols": 8,
+        "description": "Looping flame, premultiplied emission (x8) + soot occlusion, 64 frames at 24 fps.",
+        "emissiveIntensity": 8,
+        "fps": 24,
+        "frames": 64,
+        "lit": false,
+        "loop": true,
+        "rows": 8,
+        "sequences": [
+          {
+            "count": 64,
+            "fps": 24,
+            "loop": true,
+            "name": "all",
+            "start": 0
+          }
+        ],
+        "sizeMeters": [
+          1.5,
+          2
+        ],
+        "softFadeMeters": 0.3,
+        "tint": "#ffffff"
+      },
+      "files": [
+        {
+          "path": "fx/fx_fire/color_1024.webp",
+          "bytes": 305096,
+          "tiers": [
+            "ultra",
+            "high"
+          ],
+          "kind": "flipbook",
+          "map": "color",
+          "size": 1024
+        },
+        {
+          "path": "fx/fx_fire/color_512.webp",
+          "bytes": 89428,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "flipbook",
+          "map": "color",
+          "size": 512
+        }
+      ],
+      "flipbook": {
+        "maps": {
+          "color": {
+            "ultra": {
+              "path": "fx/fx_fire/color_1024.webp",
+              "bytes": 305096,
+              "width": 1024,
+              "height": 1024
+            },
+            "high": {
+              "path": "fx/fx_fire/color_1024.webp",
+              "bytes": 305096,
+              "width": 1024,
+              "height": 1024
+            },
+            "mobile": {
+              "path": "fx/fx_fire/color_512.webp",
+              "bytes": 89428,
+              "width": 512,
+              "height": 512
+            }
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 305096,
+        "high": 305096,
+        "mobile": 89428
+      }
+    },
+    "fx_lightning": {
+      "id": "fx_lightning",
+      "kind": "flipbook",
+      "category": "fx",
+      "script": "tools/blender/assets/fx/fx_lightning.py",
+      "inputHash": "30989f109c363cadd0d58a8350dc8d36931d24198a4fe7d1095d1e10eb372b3c",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "atlasPx": {
+          "high": 512,
+          "ultra": 512
+        },
+        "blend": "additive",
+        "cols": 2,
+        "description": "Four forked lightning bolts, white core + violet glow, additive x10 (high / ultra only).",
+        "emissiveIntensity": 10,
+        "fps": 1,
+        "frames": 4,
+        "lit": false,
+        "loop": true,
+        "rows": 2,
+        "sequences": [
+          {
+            "count": 1,
+            "fps": 1,
+            "loop": true,
+            "name": "bolt0",
+            "start": 0
+          },
+          {
+            "count": 1,
+            "fps": 1,
+            "loop": true,
+            "name": "bolt1",
+            "start": 1
+          },
+          {
+            "count": 1,
+            "fps": 1,
+            "loop": true,
+            "name": "bolt2",
+            "start": 2
+          },
+          {
+            "count": 1,
+            "fps": 1,
+            "loop": true,
+            "name": "bolt3",
+            "start": 3
+          }
+        ],
+        "sizeMeters": [
+          600,
+          1200
+        ],
+        "softFadeMeters": 0,
+        "tint": "#ffffff"
+      },
+      "files": [
+        {
+          "path": "fx/fx_lightning/color_512.webp",
+          "bytes": 12834,
+          "tiers": [
+            "ultra",
+            "high"
+          ],
+          "kind": "flipbook",
+          "map": "color",
+          "size": 512
+        }
+      ],
+      "publishKey": "tiers=ultra,high;fallback=",
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": null,
+      "flipbook": {
+        "maps": {
+          "color": {
+            "ultra": {
+              "path": "fx/fx_lightning/color_512.webp",
+              "bytes": 12834,
+              "width": 512,
+              "height": 512
+            },
+            "high": {
+              "path": "fx/fx_lightning/color_512.webp",
+              "bytes": 12834,
+              "width": 512,
+              "height": 512
+            }
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 12834,
+        "high": 12834,
+        "mobile": 0
+      }
+    },
+    "fx_mist": {
+      "id": "fx_mist",
+      "kind": "flipbook",
+      "category": "fx",
+      "script": "tools/blender/assets/fx/fx_mist.py",
+      "inputHash": "3164fe50d0540e4c5d9bedd7dc5b5b344fd19ecca118681f7dcc554c75e768f2",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "atlasPx": {
+          "high": 512,
+          "mobile": 512,
+          "ultra": 512
+        },
+        "blend": "alpha",
+        "cols": 2,
+        "description": "Mist sprites: bank, wisp, puff, sheet; feathered to zero at the edges, lit via soft normals.",
+        "emissiveIntensity": 1,
+        "fps": 1,
+        "frames": 4,
+        "lit": true,
+        "loop": true,
+        "rows": 2,
+        "sequences": [
+          {
+            "count": 1,
+            "fps": 1,
+            "loop": true,
+            "name": "bank",
+            "start": 0
+          },
+          {
+            "count": 1,
+            "fps": 1,
+            "loop": true,
+            "name": "wisp",
+            "start": 1
+          },
+          {
+            "count": 1,
+            "fps": 1,
+            "loop": true,
+            "name": "puff",
+            "start": 2
+          },
+          {
+            "count": 1,
+            "fps": 1,
+            "loop": true,
+            "name": "sheet",
+            "start": 3
+          }
+        ],
+        "sizeMeters": [
+          12,
+          5
+        ],
+        "softFadeMeters": 2,
+        "tint": "#dfe3e6"
+      },
+      "files": [
+        {
+          "path": "fx/fx_mist/color_512.webp",
+          "bytes": 34892,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "flipbook",
+          "map": "color",
+          "size": 512
+        },
+        {
+          "path": "fx/fx_mist/normal_256.webp",
+          "bytes": 2342,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "flipbook",
+          "map": "normal",
+          "size": 256
+        }
+      ],
+      "flipbook": {
+        "maps": {
+          "color": {
+            "ultra": {
+              "path": "fx/fx_mist/color_512.webp",
+              "bytes": 34892,
+              "width": 512,
+              "height": 512
+            },
+            "high": {
+              "path": "fx/fx_mist/color_512.webp",
+              "bytes": 34892,
+              "width": 512,
+              "height": 512
+            },
+            "mobile": {
+              "path": "fx/fx_mist/color_512.webp",
+              "bytes": 34892,
+              "width": 512,
+              "height": 512
+            }
+          },
+          "normal": {
+            "ultra": {
+              "path": "fx/fx_mist/normal_256.webp",
+              "bytes": 2342,
+              "width": 256,
+              "height": 256
+            },
+            "high": {
+              "path": "fx/fx_mist/normal_256.webp",
+              "bytes": 2342,
+              "width": 256,
+              "height": 256
+            },
+            "mobile": {
+              "path": "fx/fx_mist/normal_256.webp",
+              "bytes": 2342,
+              "width": 256,
+              "height": 256
+            }
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 37234,
+        "high": 37234,
+        "mobile": 37234
+      }
+    },
+    "fx_nature": {
+      "id": "fx_nature",
+      "kind": "flipbook",
+      "category": "fx",
+      "script": "tools/blender/assets/fx/fx_nature.py",
+      "inputHash": "c014c330d3d06f2933ed87adf1b0fd5f822af69834a7738c1f53962139f0610d",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "atlasPx": {
+          "high": 512,
+          "mobile": 512,
+          "ultra": 512
+        },
+        "blend": "alpha",
+        "cols": 8,
+        "description": "Nature: sal / peepal leaves and palash petals (8-frame tumbles), kash seed, fireflies + motes (additive).",
+        "emissiveIntensity": 1,
+        "fps": 8,
+        "frames": 29,
+        "lit": true,
+        "loop": true,
+        "rows": 8,
+        "sequences": [
+          {
+            "count": 8,
+            "fps": 8,
+            "loop": true,
+            "name": "leaf_sal",
+            "start": 0
+          },
+          {
+            "count": 8,
+            "fps": 8,
+            "loop": true,
+            "name": "leaf_peepal",
+            "start": 8
+          },
+          {
+            "count": 8,
+            "fps": 10,
+            "loop": true,
+            "name": "palash",
+            "start": 16
+          },
+          {
+            "count": 1,
+            "fps": 1,
+            "loop": true,
+            "name": "kash",
+            "start": 24
+          },
+          {
+            "blend": "additive",
+            "count": 2,
+            "fps": 3,
+            "lit": false,
+            "loop": true,
+            "name": "firefly",
+            "start": 25
+          },
+          {
+            "blend": "additive",
+            "count": 2,
+            "fps": 1,
+            "lit": false,
+            "loop": true,
+            "name": "mote",
+            "start": 27
+          }
+        ],
+        "sizeMeters": [
+          0.12,
+          0.12
+        ],
+        "softFadeMeters": 0.05,
+        "tint": "#ffffff"
+      },
+      "files": [
+        {
+          "path": "fx/fx_nature/color_512.webp",
+          "bytes": 21372,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "flipbook",
+          "map": "color",
+          "size": 512
+        },
+        {
+          "path": "fx/fx_nature/normal_256.webp",
+          "bytes": 2214,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "flipbook",
+          "map": "normal",
+          "size": 256
+        }
+      ],
+      "flipbook": {
+        "maps": {
+          "color": {
+            "ultra": {
+              "path": "fx/fx_nature/color_512.webp",
+              "bytes": 21372,
+              "width": 512,
+              "height": 512
+            },
+            "high": {
+              "path": "fx/fx_nature/color_512.webp",
+              "bytes": 21372,
+              "width": 512,
+              "height": 512
+            },
+            "mobile": {
+              "path": "fx/fx_nature/color_512.webp",
+              "bytes": 21372,
+              "width": 512,
+              "height": 512
+            }
+          },
+          "normal": {
+            "ultra": {
+              "path": "fx/fx_nature/normal_256.webp",
+              "bytes": 2214,
+              "width": 256,
+              "height": 256
+            },
+            "high": {
+              "path": "fx/fx_nature/normal_256.webp",
+              "bytes": 2214,
+              "width": 256,
+              "height": 256
+            },
+            "mobile": {
+              "path": "fx/fx_nature/normal_256.webp",
+              "bytes": 2214,
+              "width": 256,
+              "height": 256
+            }
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 23586,
+        "high": 23586,
+        "mobile": 23586
+      }
+    },
+    "fx_rain": {
+      "id": "fx_rain",
+      "kind": "flipbook",
+      "category": "fx",
+      "script": "tools/blender/assets/fx/fx_rain.py",
+      "inputHash": "e70cc0aff4703e193f2b8deb78be204e1ef1167a35e4ea01ffedf5a9d357a0c8",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "atlasPx": {
+          "high": 512,
+          "mobile": 512,
+          "ultra": 512
+        },
+        "blend": "alpha",
+        "cols": 8,
+        "description": "Rain: streak, 4x4 crown splash, 8-frame ripple (normal map), eave drip.",
+        "emissiveIntensity": 1,
+        "fps": 30,
+        "frames": 26,
+        "lit": false,
+        "loop": false,
+        "rows": 8,
+        "sequences": [
+          {
+            "count": 1,
+            "fps": 1,
+            "loop": false,
+            "name": "streak",
+            "start": 0
+          },
+          {
+            "count": 16,
+            "fps": 30,
+            "loop": false,
+            "name": "splash",
+            "start": 1
+          },
+          {
+            "count": 8,
+            "fps": 16,
+            "loop": false,
+            "name": "ripple",
+            "start": 17
+          },
+          {
+            "count": 1,
+            "fps": 1,
+            "loop": false,
+            "name": "drip",
+            "start": 25
+          }
+        ],
+        "sizeMeters": [
+          0.04,
+          0.5
+        ],
+        "softFadeMeters": 0.05,
+        "tint": "#c9d6dc"
+      },
+      "files": [
+        {
+          "path": "fx/fx_rain/color_512.webp",
+          "bytes": 17710,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "flipbook",
+          "map": "color",
+          "size": 512
+        },
+        {
+          "path": "fx/fx_rain/normal_256.webp",
+          "bytes": 2184,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "flipbook",
+          "map": "normal",
+          "size": 256
+        }
+      ],
+      "flipbook": {
+        "maps": {
+          "color": {
+            "ultra": {
+              "path": "fx/fx_rain/color_512.webp",
+              "bytes": 17710,
+              "width": 512,
+              "height": 512
+            },
+            "high": {
+              "path": "fx/fx_rain/color_512.webp",
+              "bytes": 17710,
+              "width": 512,
+              "height": 512
+            },
+            "mobile": {
+              "path": "fx/fx_rain/color_512.webp",
+              "bytes": 17710,
+              "width": 512,
+              "height": 512
+            }
+          },
+          "normal": {
+            "ultra": {
+              "path": "fx/fx_rain/normal_256.webp",
+              "bytes": 2184,
+              "width": 256,
+              "height": 256
+            },
+            "high": {
+              "path": "fx/fx_rain/normal_256.webp",
+              "bytes": 2184,
+              "width": 256,
+              "height": 256
+            },
+            "mobile": {
+              "path": "fx/fx_rain/normal_256.webp",
+              "bytes": 2184,
+              "width": 256,
+              "height": 256
+            }
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 19894,
+        "high": 19894,
+        "mobile": 19894
+      }
+    },
+    "fx_smoke": {
+      "id": "fx_smoke",
+      "kind": "flipbook",
+      "category": "fx",
+      "script": "tools/blender/assets/fx/fx_smoke.py",
+      "inputHash": "90bfe65af764d98ce2b0ded6b73b41c0d1b3df88a2077ced9b2dd592ca937f14",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "atlasPx": {
+          "high": 1024,
+          "mobile": 512,
+          "ultra": 1024
+        },
+        "blend": "alpha",
+        "cols": 8,
+        "description": "Billowing smoke puff over life (64 frames, one-shot), lit via normals; tint #4a4038 for fires.",
+        "emissiveIntensity": 1,
+        "fps": 16,
+        "frames": 64,
+        "lit": true,
+        "loop": false,
+        "rows": 8,
+        "sequences": [
+          {
+            "count": 64,
+            "fps": 16,
+            "loop": false,
+            "name": "all",
+            "start": 0
+          }
+        ],
+        "sizeMeters": [
+          4,
+          5
+        ],
+        "softFadeMeters": 0.8,
+        "tint": "#4a4038"
+      },
+      "files": [
+        {
+          "path": "fx/fx_smoke/color_1024.webp",
+          "bytes": 294082,
+          "tiers": [
+            "ultra",
+            "high"
+          ],
+          "kind": "flipbook",
+          "map": "color",
+          "size": 1024
+        },
+        {
+          "path": "fx/fx_smoke/color_512.webp",
+          "bytes": 89732,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "flipbook",
+          "map": "color",
+          "size": 512
+        },
+        {
+          "path": "fx/fx_smoke/normal_512.webp",
+          "bytes": 19740,
+          "tiers": [
+            "ultra",
+            "high"
+          ],
+          "kind": "flipbook",
+          "map": "normal",
+          "size": 512
+        },
+        {
+          "path": "fx/fx_smoke/normal_256.webp",
+          "bytes": 8358,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "flipbook",
+          "map": "normal",
+          "size": 256
+        }
+      ],
+      "flipbook": {
+        "maps": {
+          "color": {
+            "ultra": {
+              "path": "fx/fx_smoke/color_1024.webp",
+              "bytes": 294082,
+              "width": 1024,
+              "height": 1024
+            },
+            "high": {
+              "path": "fx/fx_smoke/color_1024.webp",
+              "bytes": 294082,
+              "width": 1024,
+              "height": 1024
+            },
+            "mobile": {
+              "path": "fx/fx_smoke/color_512.webp",
+              "bytes": 89732,
+              "width": 512,
+              "height": 512
+            }
+          },
+          "normal": {
+            "ultra": {
+              "path": "fx/fx_smoke/normal_512.webp",
+              "bytes": 19740,
+              "width": 512,
+              "height": 512
+            },
+            "high": {
+              "path": "fx/fx_smoke/normal_512.webp",
+              "bytes": 19740,
+              "width": 512,
+              "height": 512
+            },
+            "mobile": {
+              "path": "fx/fx_smoke/normal_256.webp",
+              "bytes": 8358,
+              "width": 256,
+              "height": 256
+            }
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 313822,
+        "high": 313822,
+        "mobile": 98090
+      }
+    },
+    "fx_sparks_embers": {
+      "id": "fx_sparks_embers",
+      "kind": "flipbook",
+      "category": "fx",
+      "script": "tools/blender/assets/fx/fx_sparks_embers.py",
+      "inputHash": "9a9c561d14dea72e339397690565f93e6768e8634555ac17f95d6c72e69af07b",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "atlasPx": {
+          "high": 512,
+          "mobile": 512,
+          "ultra": 512
+        },
+        "blend": "additive",
+        "cols": 8,
+        "description": "Additive sparks: spark, embers, slash spark, parry flash, finisher burst (premultiplied emission x6).",
+        "emissiveIntensity": 6,
+        "fps": 30,
+        "frames": 35,
+        "lit": false,
+        "loop": false,
+        "rows": 8,
+        "sequences": [
+          {
+            "count": 1,
+            "fps": 1,
+            "loop": false,
+            "name": "spark",
+            "start": 0
+          },
+          {
+            "count": 2,
+            "fps": 1,
+            "loop": false,
+            "name": "ember",
+            "start": 1
+          },
+          {
+            "count": 8,
+            "fps": 30,
+            "loop": false,
+            "name": "slash_spark",
+            "start": 3
+          },
+          {
+            "count": 8,
+            "fps": 60,
+            "loop": false,
+            "name": "parry_flash",
+            "start": 11
+          },
+          {
+            "count": 16,
+            "fps": 30,
+            "loop": false,
+            "name": "finisher_burst",
+            "start": 19
+          }
+        ],
+        "sizeMeters": [
+          0.6,
+          0.6
+        ],
+        "softFadeMeters": 0.1,
+        "tint": "#ffffff"
+      },
+      "files": [
+        {
+          "path": "fx/fx_sparks_embers/color_512.webp",
+          "bytes": 24694,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "flipbook",
+          "map": "color",
+          "size": 512
+        }
+      ],
+      "flipbook": {
+        "maps": {
+          "color": {
+            "ultra": {
+              "path": "fx/fx_sparks_embers/color_512.webp",
+              "bytes": 24694,
+              "width": 512,
+              "height": 512
+            },
+            "high": {
+              "path": "fx/fx_sparks_embers/color_512.webp",
+              "bytes": 24694,
+              "width": 512,
+              "height": 512
+            },
+            "mobile": {
+              "path": "fx/fx_sparks_embers/color_512.webp",
+              "bytes": 24694,
+              "width": 512,
+              "height": 512
+            }
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 24694,
+        "high": 24694,
+        "mobile": 24694
+      }
+    },
+    "fx_weapon_trail": {
+      "id": "fx_weapon_trail",
+      "kind": "flipbook",
+      "category": "fx",
+      "script": "tools/blender/assets/fx/fx_weapon_trail.py",
+      "inputHash": "463c4d90c520dc8e30623bbc3f74a51c139e9a42480286d0c58c73c36a660f1f",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "atlasPx": {
+          "high": 256,
+          "mobile": 256,
+          "ultra": 256
+        },
+        "blend": "additive",
+        "cols": 2,
+        "description": "Weapon trail: gradient (edge -> saffron -> tail), wide variant, two u-tileable streak noises.",
+        "emissiveIntensity": 3,
+        "fps": 1,
+        "frames": 4,
+        "lit": false,
+        "loop": true,
+        "rows": 2,
+        "sequences": [
+          {
+            "count": 1,
+            "fps": 1,
+            "loop": true,
+            "name": "trail",
+            "start": 0
+          },
+          {
+            "count": 1,
+            "fps": 1,
+            "loop": true,
+            "name": "trail_wide",
+            "start": 1
+          },
+          {
+            "blend": "additive",
+            "count": 1,
+            "fps": 1,
+            "lit": false,
+            "loop": true,
+            "name": "noise",
+            "start": 2
+          },
+          {
+            "blend": "additive",
+            "count": 1,
+            "fps": 1,
+            "lit": false,
+            "loop": true,
+            "name": "noise_b",
+            "start": 3
+          }
+        ],
+        "sizeMeters": [
+          1.2,
+          1
+        ],
+        "softFadeMeters": 0,
+        "tint": "#ffffff"
+      },
+      "files": [
+        {
+          "path": "fx/fx_weapon_trail/color_256.webp",
+          "bytes": 8690,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "flipbook",
+          "map": "color",
+          "size": 256
+        }
+      ],
+      "flipbook": {
+        "maps": {
+          "color": {
+            "ultra": {
+              "path": "fx/fx_weapon_trail/color_256.webp",
+              "bytes": 8690,
+              "width": 256,
+              "height": 256
+            },
+            "high": {
+              "path": "fx/fx_weapon_trail/color_256.webp",
+              "bytes": 8690,
+              "width": 256,
+              "height": 256
+            },
+            "mobile": {
+              "path": "fx/fx_weapon_trail/color_256.webp",
+              "bytes": 8690,
+              "width": 256,
+              "height": 256
+            }
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 8690,
+        "high": 8690,
+        "mobile": 8690
+      }
+    },
     "ground_dry_earth": {
       "id": "ground_dry_earth",
       "kind": "material",
@@ -180,10 +1495,11 @@
       "kind": "impostor",
       "category": "pipeline_test",
       "script": "tools/blender/assets/pipeline_test/impostor_test_tree.py",
-      "inputHash": "6f8805665bb9aef618e234877003435fb55333cdfd66947e3291ff760cc8248d",
+      "inputHash": "6ebab97aa09cd91242deb6ff0cd6cda1e0cb43971a05504560192a50afa2cb27",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
+        "aoBaked": 0.35,
         "center": [
           0.355,
           6.338,
@@ -205,7 +1521,7 @@
       "files": [
         {
           "path": "impostors/impostor_test_tree/albedo_2048.webp",
-          "bytes": 204356,
+          "bytes": 216610,
           "tiers": [
             "ultra"
           ],
@@ -215,7 +1531,7 @@
         },
         {
           "path": "impostors/impostor_test_tree/albedo_1536.webp",
-          "bytes": 262038,
+          "bytes": 266134,
           "tiers": [
             "high"
           ],
@@ -225,7 +1541,7 @@
         },
         {
           "path": "impostors/impostor_test_tree/albedo_1024.webp",
-          "bytes": 166908,
+          "bytes": 168626,
           "tiers": [
             "mobile"
           ],
@@ -269,19 +1585,19 @@
           "albedo": {
             "ultra": {
               "path": "impostors/impostor_test_tree/albedo_2048.webp",
-              "bytes": 204356,
+              "bytes": 216610,
               "size": 2048,
               "framePx": 256
             },
             "high": {
               "path": "impostors/impostor_test_tree/albedo_1536.webp",
-              "bytes": 262038,
+              "bytes": 266134,
               "size": 1536,
               "framePx": 192
             },
             "mobile": {
               "path": "impostors/impostor_test_tree/albedo_1024.webp",
-              "bytes": 166908,
+              "bytes": 168626,
               "size": 1024,
               "framePx": 128
             }
@@ -309,9 +1625,60 @@
         }
       },
       "bytes": {
-        "ultra": 719344,
-        "high": 622162,
-        "mobile": 372048
+        "ultra": 731598,
+        "high": 626258,
+        "mobile": 373766
+      }
+    },
+    "lens_dirt": {
+      "id": "lens_dirt",
+      "kind": "image",
+      "category": "images",
+      "script": "tools/blender/assets/images/lens_dirt.py",
+      "inputHash": "b5a61186f22593e743ca6ed56d177fb483f15c561ac067888c5fee5885345823",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "alpha": false,
+        "colorSpace": "srgb",
+        "description": "Lens dirt: smudges, droplet rings, dust specks, faint hexagonal ghosts (low contrast).",
+        "hdrScale": 1,
+        "tierPx": {
+          "ultra": 1024
+        },
+        "usage": "bloom dirt mask: bloom *= 0.25 + dirt * strength (ultra only)"
+      },
+      "files": [
+        {
+          "path": "images/lens_dirt/lens_dirt_1024.webp",
+          "bytes": 20152,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "image",
+          "width": 1024,
+          "height": 1024
+        }
+      ],
+      "publishKey": "tiers=ultra;fallback=",
+      "tiers": [
+        "ultra"
+      ],
+      "fallback": null,
+      "image": {
+        "files": {
+          "ultra": {
+            "path": "images/lens_dirt/lens_dirt_1024.webp",
+            "bytes": 20152,
+            "width": 1024,
+            "height": 1024
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 20152,
+        "high": 0,
+        "mobile": 0
       }
     },
     "lut_dawn": {
@@ -1344,12 +2711,127 @@
         "mobile": 179396
       }
     },
+    "sky_dawn": {
+      "id": "sky_dawn",
+      "kind": "hdri",
+      "category": "hdri",
+      "script": "tools/blender/assets/hdri/sky_dawn.py",
+      "inputHash": "c8f84b18f8c455f18bc935dc1e58095d2378572552d70d5684764f343c533fce",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "ambientIrradiance": 0.38,
+        "baked": {
+          "ambientIrradiance": 0.6746,
+          "calibration": 0.56334,
+          "sunIntensity": 5.8214
+        },
+        "clouds": 0.25,
+        "description": "Dawn, sun 6 deg E, pink-gold haze, thin clouds.",
+        "groundAlbedo": [
+          0.2,
+          0.18,
+          0.15
+        ],
+        "preset": "dawn",
+        "scale": 0.05786703738251029,
+        "sun": {
+          "azimuthDeg": 95,
+          "color": [
+            1,
+            0.552,
+            0.3231
+          ],
+          "direction": [
+            0.99074,
+            0.10453,
+            0.08668
+          ],
+          "elevationDeg": 6,
+          "intensity": 1.9
+        },
+        "tiers": {
+          "high": {
+            "height": 512,
+            "width": 1024
+          },
+          "mobile": {
+            "height": 256,
+            "width": 512
+          },
+          "ultra": {
+            "height": 1024,
+            "width": 2048
+          }
+        },
+        "treatment": "clear"
+      },
+      "files": [
+        {
+          "path": "hdri/sky_dawn_2048.exr",
+          "bytes": 200675,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "hdri",
+          "width": 2048,
+          "height": 1024
+        },
+        {
+          "path": "hdri/sky_dawn_1024.exr",
+          "bytes": 76545,
+          "tiers": [
+            "high"
+          ],
+          "kind": "hdri",
+          "width": 1024,
+          "height": 512
+        },
+        {
+          "path": "hdri/sky_dawn_512.exr",
+          "bytes": 27696,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "hdri",
+          "width": 512,
+          "height": 256
+        }
+      ],
+      "hdri": {
+        "files": {
+          "ultra": {
+            "path": "hdri/sky_dawn_2048.exr",
+            "bytes": 200675,
+            "width": 2048,
+            "height": 1024
+          },
+          "high": {
+            "path": "hdri/sky_dawn_1024.exr",
+            "bytes": 76545,
+            "width": 1024,
+            "height": 512
+          },
+          "mobile": {
+            "path": "hdri/sky_dawn_512.exr",
+            "bytes": 27696,
+            "width": 512,
+            "height": 256
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 200675,
+        "high": 76545,
+        "mobile": 27696
+      }
+    },
     "sky_day": {
       "id": "sky_day",
       "kind": "hdri",
       "category": "hdri",
       "script": "tools/blender/assets/hdri/sky_day.py",
-      "inputHash": "9680bf552028676ff8deae67fb97aecb5d833a6844b46395d74aa4e2f710d2a0",
+      "inputHash": "3dad07904e27341dffd9012bbb3f69c91fe43c2f9f393f583373022ced965c34",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -1395,7 +2877,7 @@
       "files": [
         {
           "path": "hdri/sky_day_2048.exr",
-          "bytes": 605148,
+          "bytes": 260875,
           "tiers": [
             "ultra"
           ],
@@ -1405,7 +2887,7 @@
         },
         {
           "path": "hdri/sky_day_1024.exr",
-          "bytes": 220713,
+          "bytes": 100418,
           "tiers": [
             "high"
           ],
@@ -1415,7 +2897,7 @@
         },
         {
           "path": "hdri/sky_day_512.exr",
-          "bytes": 80958,
+          "bytes": 36827,
           "tiers": [
             "mobile"
           ],
@@ -1428,28 +2910,244 @@
         "files": {
           "ultra": {
             "path": "hdri/sky_day_2048.exr",
-            "bytes": 605148,
+            "bytes": 260875,
             "width": 2048,
             "height": 1024
           },
           "high": {
             "path": "hdri/sky_day_1024.exr",
-            "bytes": 220713,
+            "bytes": 100418,
             "width": 1024,
             "height": 512
           },
           "mobile": {
             "path": "hdri/sky_day_512.exr",
-            "bytes": 80958,
+            "bytes": 36827,
             "width": 512,
             "height": 256
           }
         }
       },
       "bytes": {
-        "ultra": 605148,
-        "high": 220713,
-        "mobile": 80958
+        "ultra": 260875,
+        "high": 100418,
+        "mobile": 36827
+      }
+    },
+    "sky_dusk": {
+      "id": "sky_dusk",
+      "kind": "hdri",
+      "category": "hdri",
+      "script": "tools/blender/assets/hdri/sky_dusk.py",
+      "inputHash": "9641d630241e069bde71ff22a1df3aa28955b96f281c9182a1caefc52d1ffacf",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "ambientIrradiance": 0.16,
+        "baked": {
+          "ambientIrradiance": 0.3117,
+          "calibration": 0.4443,
+          "sunIntensity": 0
+        },
+        "clouds": 0.3,
+        "description": "Dusk, sun -2 deg W, afterglow, sky-only lighting.",
+        "groundAlbedo": [
+          0.2,
+          0.16,
+          0.13
+        ],
+        "preset": "dusk",
+        "scale": 0.4443007230601921,
+        "sun": {
+          "azimuthDeg": 280,
+          "color": [
+            1,
+            0.3231,
+            0.1559
+          ],
+          "direction": [
+            -0.98421,
+            -0.0349,
+            -0.17354
+          ],
+          "elevationDeg": -2,
+          "intensity": 0.55
+        },
+        "tiers": {
+          "high": {
+            "height": 512,
+            "width": 1024
+          },
+          "mobile": {
+            "height": 256,
+            "width": 512
+          },
+          "ultra": {
+            "height": 1024,
+            "width": 2048
+          }
+        },
+        "treatment": "dusk"
+      },
+      "files": [
+        {
+          "path": "hdri/sky_dusk_2048.exr",
+          "bytes": 134292,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "hdri",
+          "width": 2048,
+          "height": 1024
+        },
+        {
+          "path": "hdri/sky_dusk_1024.exr",
+          "bytes": 51622,
+          "tiers": [
+            "high"
+          ],
+          "kind": "hdri",
+          "width": 1024,
+          "height": 512
+        },
+        {
+          "path": "hdri/sky_dusk_512.exr",
+          "bytes": 18320,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "hdri",
+          "width": 512,
+          "height": 256
+        }
+      ],
+      "hdri": {
+        "files": {
+          "ultra": {
+            "path": "hdri/sky_dusk_2048.exr",
+            "bytes": 134292,
+            "width": 2048,
+            "height": 1024
+          },
+          "high": {
+            "path": "hdri/sky_dusk_1024.exr",
+            "bytes": 51622,
+            "width": 1024,
+            "height": 512
+          },
+          "mobile": {
+            "path": "hdri/sky_dusk_512.exr",
+            "bytes": 18320,
+            "width": 512,
+            "height": 256
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 134292,
+        "high": 51622,
+        "mobile": 18320
+      }
+    },
+    "sky_fog": {
+      "id": "sky_fog",
+      "kind": "hdri",
+      "category": "hdri",
+      "script": "tools/blender/assets/hdri/sky_fog.py",
+      "inputHash": "f1425769dedffec09e1b4d9dabbfae910225c126564d947825b013fdc02eb194",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "ambientIrradiance": 0.55,
+        "baked": {
+          "ambientIrradiance": 0.6497,
+          "calibration": 0.74301,
+          "sunIntensity": 4.8715
+        },
+        "clouds": 0.5,
+        "description": "Shishira fog: low sun, pale fog wall (high / ultra; mobile -> sky_overcast).",
+        "groundAlbedo": [
+          0.2,
+          0.2,
+          0.18
+        ],
+        "preset": "winter_fog",
+        "scale": 0.04329324331888278,
+        "sun": {
+          "azimuthDeg": 125,
+          "color": [
+            1,
+            0.7454,
+            0.5395
+          ],
+          "direction": [
+            0.80125,
+            0.20791,
+            0.56104
+          ],
+          "elevationDeg": 12,
+          "intensity": 1.4
+        },
+        "tiers": {
+          "high": {
+            "height": 512,
+            "width": 1024
+          },
+          "ultra": {
+            "height": 1024,
+            "width": 2048
+          }
+        },
+        "treatment": "fog"
+      },
+      "files": [
+        {
+          "path": "hdri/sky_fog_2048.exr",
+          "bytes": 25636,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "hdri",
+          "width": 2048,
+          "height": 1024
+        },
+        {
+          "path": "hdri/sky_fog_1024.exr",
+          "bytes": 11627,
+          "tiers": [
+            "high"
+          ],
+          "kind": "hdri",
+          "width": 1024,
+          "height": 512
+        }
+      ],
+      "publishKey": "tiers=ultra,high;fallback=sky_overcast",
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": "sky_overcast",
+      "hdri": {
+        "files": {
+          "ultra": {
+            "path": "hdri/sky_fog_2048.exr",
+            "bytes": 25636,
+            "width": 2048,
+            "height": 1024
+          },
+          "high": {
+            "path": "hdri/sky_fog_1024.exr",
+            "bytes": 11627,
+            "width": 1024,
+            "height": 512
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 25636,
+        "high": 11627,
+        "mobile": 0
       }
     },
     "sky_golden": {
@@ -1457,7 +3155,7 @@
       "kind": "hdri",
       "category": "hdri",
       "script": "tools/blender/assets/hdri/sky_golden.py",
-      "inputHash": "b3fbb01b5f89342e252fc5e1703cc641d1b3668a2017377c1c50666f37d28504",
+      "inputHash": "fa0c66e1c44552282f7418bc3373676711e8f0e2dbe7d6306610db2e00baa69f",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -1503,7 +3201,7 @@
       "files": [
         {
           "path": "hdri/sky_golden_2048.exr",
-          "bytes": 617120,
+          "bytes": 270426,
           "tiers": [
             "ultra"
           ],
@@ -1513,7 +3211,7 @@
         },
         {
           "path": "hdri/sky_golden_1024.exr",
-          "bytes": 228101,
+          "bytes": 104590,
           "tiers": [
             "high"
           ],
@@ -1523,7 +3221,7 @@
         },
         {
           "path": "hdri/sky_golden_512.exr",
-          "bytes": 83997,
+          "bytes": 38113,
           "tiers": [
             "mobile"
           ],
@@ -1536,28 +3234,488 @@
         "files": {
           "ultra": {
             "path": "hdri/sky_golden_2048.exr",
-            "bytes": 617120,
+            "bytes": 270426,
             "width": 2048,
             "height": 1024
           },
           "high": {
             "path": "hdri/sky_golden_1024.exr",
-            "bytes": 228101,
+            "bytes": 104590,
             "width": 1024,
             "height": 512
           },
           "mobile": {
             "path": "hdri/sky_golden_512.exr",
-            "bytes": 83997,
+            "bytes": 38113,
             "width": 512,
             "height": 256
           }
         }
       },
       "bytes": {
-        "ultra": 617120,
-        "high": 228101,
-        "mobile": 83997
+        "ultra": 270426,
+        "high": 104590,
+        "mobile": 38113
+      }
+    },
+    "sky_haze": {
+      "id": "sky_haze",
+      "kind": "hdri",
+      "category": "hdri",
+      "script": "tools/blender/assets/hdri/sky_haze.py",
+      "inputHash": "3cb2192113c9463bb915d06c0e739294aab6abf0a5d36d2d82ab29aa6a2e3fe9",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "ambientIrradiance": 0.9,
+        "baked": {
+          "ambientIrradiance": 0.7251,
+          "calibration": 0.71495,
+          "sunIntensity": 4.0008
+        },
+        "clouds": 0.05,
+        "description": "Grishma haze: dusty ochre horizon, almost cloudless.",
+        "groundAlbedo": [
+          0.32,
+          0.26,
+          0.18
+        ],
+        "preset": "dry_haze",
+        "scale": 0.019126802288084936,
+        "sun": {
+          "azimuthDeg": 200,
+          "color": [
+            1,
+            0.8714,
+            0.6584
+          ],
+          "direction": [
+            -0.19617,
+            0.81915,
+            0.53899
+          ],
+          "elevationDeg": 55,
+          "intensity": 3
+        },
+        "tiers": {
+          "high": {
+            "height": 512,
+            "width": 1024
+          },
+          "mobile": {
+            "height": 256,
+            "width": 512
+          },
+          "ultra": {
+            "height": 1024,
+            "width": 2048
+          }
+        },
+        "treatment": "haze"
+      },
+      "files": [
+        {
+          "path": "hdri/sky_haze_2048.exr",
+          "bytes": 63552,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "hdri",
+          "width": 2048,
+          "height": 1024
+        },
+        {
+          "path": "hdri/sky_haze_1024.exr",
+          "bytes": 26157,
+          "tiers": [
+            "high"
+          ],
+          "kind": "hdri",
+          "width": 1024,
+          "height": 512
+        },
+        {
+          "path": "hdri/sky_haze_512.exr",
+          "bytes": 10324,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "hdri",
+          "width": 512,
+          "height": 256
+        }
+      ],
+      "hdri": {
+        "files": {
+          "ultra": {
+            "path": "hdri/sky_haze_2048.exr",
+            "bytes": 63552,
+            "width": 2048,
+            "height": 1024
+          },
+          "high": {
+            "path": "hdri/sky_haze_1024.exr",
+            "bytes": 26157,
+            "width": 1024,
+            "height": 512
+          },
+          "mobile": {
+            "path": "hdri/sky_haze_512.exr",
+            "bytes": 10324,
+            "width": 512,
+            "height": 256
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 63552,
+        "high": 26157,
+        "mobile": 10324
+      }
+    },
+    "sky_night": {
+      "id": "sky_night",
+      "kind": "hdri",
+      "category": "hdri",
+      "script": "tools/blender/assets/hdri/sky_night.py",
+      "inputHash": "2549b9603854d1bf871d9844b9915f891ab6c2ee25d174be902f8bccd9bdce90",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "ambientIrradiance": 0.08,
+        "baked": {
+          "ambientIrradiance": 0.3463,
+          "calibration": 0.34645,
+          "sunIntensity": 3.9526
+        },
+        "clouds": 0.15,
+        "description": "Moonlit night: stars, Milky Way, thin clouds; moon = manifest sun, irradiance 0.08.",
+        "groundAlbedo": [
+          0.05,
+          0.05,
+          0.06
+        ],
+        "preset": "night",
+        "scale": 0.008802851668207887,
+        "sun": {
+          "azimuthDeg": 150,
+          "color": [
+            0.4513,
+            0.609,
+            1
+          ],
+          "direction": [
+            0.37157,
+            0.66913,
+            0.64358
+          ],
+          "elevationDeg": 42,
+          "intensity": 0.55
+        },
+        "tiers": {
+          "high": {
+            "height": 512,
+            "width": 1024
+          },
+          "mobile": {
+            "height": 256,
+            "width": 512
+          },
+          "ultra": {
+            "height": 1024,
+            "width": 2048
+          }
+        },
+        "treatment": "night"
+      },
+      "files": [
+        {
+          "path": "hdri/sky_night_2048.exr",
+          "bytes": 116572,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "hdri",
+          "width": 2048,
+          "height": 1024
+        },
+        {
+          "path": "hdri/sky_night_1024.exr",
+          "bytes": 41895,
+          "tiers": [
+            "high"
+          ],
+          "kind": "hdri",
+          "width": 1024,
+          "height": 512
+        },
+        {
+          "path": "hdri/sky_night_512.exr",
+          "bytes": 12489,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "hdri",
+          "width": 512,
+          "height": 256
+        }
+      ],
+      "hdri": {
+        "files": {
+          "ultra": {
+            "path": "hdri/sky_night_2048.exr",
+            "bytes": 116572,
+            "width": 2048,
+            "height": 1024
+          },
+          "high": {
+            "path": "hdri/sky_night_1024.exr",
+            "bytes": 41895,
+            "width": 1024,
+            "height": 512
+          },
+          "mobile": {
+            "path": "hdri/sky_night_512.exr",
+            "bytes": 12489,
+            "width": 512,
+            "height": 256
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 116572,
+        "high": 41895,
+        "mobile": 12489
+      }
+    },
+    "sky_noon": {
+      "id": "sky_noon",
+      "kind": "hdri",
+      "category": "hdri",
+      "script": "tools/blender/assets/hdri/sky_noon.py",
+      "inputHash": "735fb4a97fb9422872f1c1d4ad2fbfe745afc58c513b205500e6abd1a694c8dc",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "ambientIrradiance": 0.75,
+        "baked": {
+          "ambientIrradiance": 0.5423,
+          "calibration": 1.38287,
+          "sunIntensity": 3.8853
+        },
+        "clouds": 0.18,
+        "description": "Noon, sun 62 deg S, clear with light cumulus (noon key).",
+        "groundAlbedo": [
+          0.24,
+          0.2,
+          0.15
+        ],
+        "preset": "noon",
+        "scale": 0.03355850624178316,
+        "sun": {
+          "azimuthDeg": 170,
+          "color": [
+            1,
+            0.8963,
+            0.7682
+          ],
+          "direction": [
+            0.08152,
+            0.88295,
+            0.46234
+          ],
+          "elevationDeg": 62,
+          "intensity": 3.4
+        },
+        "tiers": {
+          "high": {
+            "height": 512,
+            "width": 1024
+          },
+          "mobile": {
+            "height": 256,
+            "width": 512
+          },
+          "ultra": {
+            "height": 1024,
+            "width": 2048
+          }
+        },
+        "treatment": "clear"
+      },
+      "files": [
+        {
+          "path": "hdri/sky_noon_2048.exr",
+          "bytes": 205998,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "hdri",
+          "width": 2048,
+          "height": 1024
+        },
+        {
+          "path": "hdri/sky_noon_1024.exr",
+          "bytes": 80941,
+          "tiers": [
+            "high"
+          ],
+          "kind": "hdri",
+          "width": 1024,
+          "height": 512
+        },
+        {
+          "path": "hdri/sky_noon_512.exr",
+          "bytes": 29499,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "hdri",
+          "width": 512,
+          "height": 256
+        }
+      ],
+      "hdri": {
+        "files": {
+          "ultra": {
+            "path": "hdri/sky_noon_2048.exr",
+            "bytes": 205998,
+            "width": 2048,
+            "height": 1024
+          },
+          "high": {
+            "path": "hdri/sky_noon_1024.exr",
+            "bytes": 80941,
+            "width": 1024,
+            "height": 512
+          },
+          "mobile": {
+            "path": "hdri/sky_noon_512.exr",
+            "bytes": 29499,
+            "width": 512,
+            "height": 256
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 205998,
+        "high": 80941,
+        "mobile": 29499
+      }
+    },
+    "sky_overcast": {
+      "id": "sky_overcast",
+      "kind": "hdri",
+      "category": "hdri",
+      "script": "tools/blender/assets/hdri/sky_overcast.py",
+      "inputHash": "cf26cbc13aed23a0edbfa61f78e578b07a7539d65447fe40c68cc2ad272af73e",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "ambientIrradiance": 0.5,
+        "baked": {
+          "ambientIrradiance": 0.6296,
+          "calibration": 1.14571,
+          "sunIntensity": 4.0642
+        },
+        "clouds": 0.95,
+        "description": "Monsoon overcast: heavy cloud deck, soft diffuse light.",
+        "groundAlbedo": [
+          0.12,
+          0.13,
+          0.1
+        ],
+        "preset": "monsoon",
+        "scale": 0.03152110137829551,
+        "sun": {
+          "azimuthDeg": 180,
+          "color": [
+            0.9116,
+            0.97,
+            1
+          ],
+          "direction": [
+            0,
+            0.76604,
+            0.64279
+          ],
+          "elevationDeg": 50,
+          "intensity": 0.85
+        },
+        "tiers": {
+          "high": {
+            "height": 512,
+            "width": 1024
+          },
+          "mobile": {
+            "height": 256,
+            "width": 512
+          },
+          "ultra": {
+            "height": 1024,
+            "width": 2048
+          }
+        },
+        "treatment": "overcast"
+      },
+      "files": [
+        {
+          "path": "hdri/sky_overcast_2048.exr",
+          "bytes": 46708,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "hdri",
+          "width": 2048,
+          "height": 1024
+        },
+        {
+          "path": "hdri/sky_overcast_1024.exr",
+          "bytes": 19738,
+          "tiers": [
+            "high"
+          ],
+          "kind": "hdri",
+          "width": 1024,
+          "height": 512
+        },
+        {
+          "path": "hdri/sky_overcast_512.exr",
+          "bytes": 7910,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "hdri",
+          "width": 512,
+          "height": 256
+        }
+      ],
+      "hdri": {
+        "files": {
+          "ultra": {
+            "path": "hdri/sky_overcast_2048.exr",
+            "bytes": 46708,
+            "width": 2048,
+            "height": 1024
+          },
+          "high": {
+            "path": "hdri/sky_overcast_1024.exr",
+            "bytes": 19738,
+            "width": 1024,
+            "height": 512
+          },
+          "mobile": {
+            "path": "hdri/sky_overcast_512.exr",
+            "bytes": 7910,
+            "width": 512,
+            "height": 256
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 46708,
+        "high": 19738,
+        "mobile": 7910
       }
     },
     "stupa_sanchi": {
@@ -1742,6 +3900,77 @@
         "ultra": 1921316,
         "high": 1566000,
         "mobile": 1359552
+      }
+    },
+    "sun_sprite": {
+      "id": "sun_sprite",
+      "kind": "image",
+      "category": "images",
+      "script": "tools/blender/assets/images/sun_sprite.py",
+      "inputHash": "a46b8f7ee4165d7942386e88c1822b69a3f00abfad0e1a62401906b0d5df5440",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "alpha": false,
+        "colorSpace": "srgb",
+        "description": "HDR sun disc (limb darkened) + aureole + halo + faint starburst; L / 50, sRGB.",
+        "hdrScale": 50,
+        "tierPx": {
+          "high": 512,
+          "mobile": 256,
+          "ultra": 512
+        },
+        "usage": "additive sun sprite: L = texel x hdrScale, tinted by the preset sun color, ~6 deg on screen"
+      },
+      "files": [
+        {
+          "path": "images/sun_sprite/sun_sprite_512.webp",
+          "bytes": 1704,
+          "tiers": [
+            "ultra",
+            "high"
+          ],
+          "kind": "image",
+          "width": 512,
+          "height": 512
+        },
+        {
+          "path": "images/sun_sprite/sun_sprite_256.webp",
+          "bytes": 754,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "image",
+          "width": 256,
+          "height": 256
+        }
+      ],
+      "image": {
+        "files": {
+          "ultra": {
+            "path": "images/sun_sprite/sun_sprite_512.webp",
+            "bytes": 1704,
+            "width": 512,
+            "height": 512
+          },
+          "high": {
+            "path": "images/sun_sprite/sun_sprite_512.webp",
+            "bytes": 1704,
+            "width": 512,
+            "height": 512
+          },
+          "mobile": {
+            "path": "images/sun_sprite/sun_sprite_256.webp",
+            "bytes": 754,
+            "width": 256,
+            "height": 256
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 1704,
+        "high": 1704,
+        "mobile": 754
       }
     },
     "vat_test_dummy": {

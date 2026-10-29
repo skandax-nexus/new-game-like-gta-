@@ -1,40 +1,51 @@
 /**
- * Strategic armies: creation, orders, pathing, movement, supply, contact -> engagements, applying
- * battle outcomes. OWNER: Lead AI & Simulation Engineer. Baseline by the CTO.
+ * Strategic armies: creation, orders and routing, hourly movement, arrivals, contacts -> engagements, split / merge /
+ * disband (DESIGN_SPEC §7.7). OWNER: Simulation Engineer - Strategic World Simulation (SIM-01). Baseline by the CTO;
+ * exported signatures kept (makeArmy, makeArmyUnit, orderArmy, planArmyPath, updateArmiesHourly, updateArmiesDaily,
+ * detectContacts, applyBattleOutcome, armySoldiers, armyStrength, isHostile).
  *
- * Required behavior:
- *  - planArmyPath: A* over world.roads (edge cost = length / quality speed / condition, blocked edges
- *    excluded) + off-road legs to/from the nearest nodes; straight-line fallback.
- *  - Movement per hour: speed = marchKmPerDay[road quality|offroad] * 1000 / 24 / travelScale map-m/h,
- *    x travelFactor (season/weather/terrain), x faction marchSpeed, slowest unit class.
- *  - Supply (daily): consume food = soldiers x upkeepFood; resupply from own settlements/depots within
- *    reach when the line is intact; forage (reduces local settlement food -> unrest) when allowed;
- *    starvation -> morale loss, desertion.
- *  - Contacts: hostile armies within BALANCE.military.contactRadius create an Engagement (player
- *    involved -> 'pending_player', else 'auto'). Sieges when ordered to besiege an enemy settlement.
- *  - applyBattleOutcome: write casualties back to ArmyUnitState by armyUnitId, morale/experience,
- *    routed armies retreat toward the nearest friendly settlement, commander fates, captured supply.
+ *  - Routes: pathing.ts (road Dijkstra + off-road legs, fords closed in flood, weak bridges, blocked roads).
+ *  - Speed per hour: road quality / off-road terrain of the current segment x pace(slowest category) x faction
+ *    marchSpeed x monsoon x wetness x (1 - 0.3 fatigue) x forced march 1.3.
+ *  - Contacts: hostile armies within 140 m x stance factor (aggressive 1.3, balanced 1, cautious 0.8; the larger of
+ *    the two) engage; a cautious army whose strength ratio is < 0.6 and that is >= 10% faster evades; a retreating
+ *    army is only caught by an enemy >= 20% faster; garrisons behind walls do not take field contacts. Same-faction
+ *    armies near the contact join their side. The marching army attacks.
+ * Supply, attrition and foraging: supply.ts. Sieges: siege.ts. Visibility: visibility.ts.
  */
 import type {
   ArmyOrder,
   ArmyState,
   ArmyUnitState,
-  BattleOutcome,
   Engagement,
   EngagementId,
   FactionId,
+  SettlementState,
   SimEvent,
   TerrainQuery,
   UnitClass,
   Vec2,
   WorldState,
 } from '../../core/types';
-import { nextWorldId, relationKey, sortedKeys } from '../../core/ids';
+import { isRebelFaction } from '../../core/types';
+import { nextWorldId, sortedKeys } from '../../core/ids';
 import { facingOf } from '../../core/math';
 import { BALANCE } from '../../data/balance';
 import { FACTIONS } from '../../data/factions';
+import { RULES } from '../../data/rules';
 import { UNITS } from '../../data/units';
-import { seasonOf, totalDays, travelFactor } from './seasons';
+import { totalDays } from './seasons';
+import { armiesHostile, atWarWith, notifyPlayer, stableKeys } from './state';
+import {
+  armySpeedMultiplier,
+  isRoughTerrain,
+  metersPerHourFromKmDay,
+  planRoute,
+  roadConditionFactor,
+  segmentEdge,
+  terrainFactor,
+  weatherFactor,
+} from './pathing';
 
 // ---------------------------------------------------------------------------------------------------
 // Creation
@@ -57,6 +68,23 @@ export function makeArmyUnit(world: { nextId: number }, unitClass: UnitClass, so
   };
 }
 
+/** Carried food capacity: soldiers x upkeepFood x 5 days + carts x 300 (DESIGN_SPEC §7.8). */
+export function carriedCapacity(units: readonly ArmyUnitState[]): number {
+  let cap = 0;
+  for (const u of units) {
+    cap += u.soldiers * UNITS[u.unitClass].stats.upkeepFood * RULES.supply.carriedRationDays;
+    if (u.unitClass === 'supply_train') cap += u.soldiers * RULES.supply.cartLoad;
+  }
+  return cap;
+}
+
+/** Raw daily food need before the faction's supplyEfficiency (Σ soldiers x upkeepFood x soldierFoodPerDay). */
+export function rawFoodNeed(units: readonly ArmyUnitState[]): number {
+  let n = 0;
+  for (const u of units) n += u.soldiers * UNITS[u.unitClass].stats.upkeepFood * BALANCE.military.soldierFoodPerDay;
+  return n;
+}
+
 export function makeArmy(
   world: WorldState,
   id: string,
@@ -69,9 +97,7 @@ export function makeArmy(
 ): ArmyState {
   const unitStates: ArmyUnitState[] = [];
   for (const u of units) for (let i = 0; i < u.formations; i++) unitStates.push(makeArmyUnit(world, u.unitClass));
-  const soldiers = unitStates.reduce((s, u) => s + u.soldiers, 0);
-  const carts = unitStates.filter((u) => u.unitClass === 'supply_train').reduce((s, u) => s + u.soldiers, 0);
-  const capacity = soldiers * 10 + carts * UNITS.supply_train.stats.supplyCapacity;
+  const capacity = carriedCapacity(unitStates);
   return {
     id,
     name,
@@ -83,13 +109,13 @@ export function makeArmy(
     path: [],
     pathIndex: 0,
     order: { kind: 'idle' },
-    stance: 'balanced',
+    stance: isRebelFaction(factionId) ? 'cautious' : 'balanced',
     status: 'camped',
     units: unitStates,
-    supply: { food: capacity * 0.8, foodCapacity: capacity, dailyConsumption: soldiers, sourceId: null, lineIntact: true, foraging: false, starvationDays: 0 },
+    supply: { food: capacity, foodCapacity: capacity, dailyConsumption: rawFoodNeed(unitStates), sourceId: null, lineIntact: true, foraging: false, starvationDays: 0 },
     morale: 70,
     fatigue: 0,
-    speedKmh: 1,
+    speedKmh: 0,
     engagementId: null,
     visibility: {},
     createdDay: totalDays(world.calendar),
@@ -117,252 +143,532 @@ export function armyStrength(a: ArmyState): number {
   return p;
 }
 
+/** Faction-level hostility (wars). Rebel armies: use armiesHostile / hostileToArmy from state.ts. */
 export function isHostile(world: WorldState, a: FactionId, b: FactionId): boolean {
-  if (a === b) return false;
-  return world.diplomacy.relations[relationKey(a, b)]?.atWar ?? false;
+  return atWarWith(world, a, b);
+}
+
+/** Current march speed (map m / hour) of an army on open ground (for evasion / pursuit comparisons). */
+export function potentialSpeed(world: WorldState, a: ArmyState): number {
+  return metersPerHourFromKmDay(BALANCE.military.marchKmPerDay.offroad) * armySpeedMultiplier(world, a, false);
 }
 
 // ---------------------------------------------------------------------------------------------------
 // Orders & pathing
 // ---------------------------------------------------------------------------------------------------
 
-/** Plan waypoints from the army to (x, z). Baseline: straight line. TODO(owner): road-graph A*. */
+/** Plan waypoints from the army to (x, z): path[0] is the army's position (pathIndex starts at 1). */
 export function planArmyPath(world: WorldState, army: ArmyState, x: number, z: number, terrain: TerrainQuery): Vec2[] {
-  void world;
   const b = terrain.bounds;
   const tx = Math.min(b.maxX - 50, Math.max(b.minX + 50, x));
   const tz = Math.min(b.maxZ - 50, Math.max(b.minZ + 50, z));
-  void army;
-  return [{ x: tx, z: tz }];
+  return planRoute(world, army, army.x, army.z, tx, tz, terrain).points;
 }
 
-export function orderArmy(world: WorldState, armyId: string, order: ArmyOrder, terrain: TerrainQuery): boolean {
-  const a = world.armies[armyId];
-  if (!a || a.status === 'in_battle') return false;
-  a.order = order;
-  let target: Vec2 | null = null;
+/** Where an order wants the army to go (null = stay). */
+export function orderTarget(world: WorldState, a: ArmyState, order: ArmyOrder): Vec2 | null {
   switch (order.kind) {
     case 'move':
     case 'retreat':
-      target = { x: order.x, z: order.z };
-      break;
+      return { x: order.x, z: order.z };
     case 'attack_army': {
       const t = world.armies[order.targetArmyId];
-      if (t) target = { x: t.x, z: t.z };
-      break;
+      return t ? { x: t.x, z: t.z } : null;
     }
     case 'besiege':
-    case 'garrison':
+    case 'assault':
     case 'raid': {
       const s = world.settlements[order.settlementId];
-      if (s) target = { x: s.x, z: s.z };
-      break;
+      if (!s) return null;
+      // Camp outside the walls on the side facing the army.
+      const dx = a.x - s.x;
+      const dz = a.z - s.z;
+      const d = Math.sqrt(dx * dx + dz * dz) || 1;
+      const r = s.radius + SIEGE_CAMP_OFFSET;
+      return { x: s.x + (dx / d) * r, z: s.z + (dz / d) * r };
+    }
+    case 'garrison': {
+      const s = world.settlements[order.settlementId];
+      return s ? { x: s.x, z: s.z } : null;
+    }
+    case 'escort': {
+      const d = world.depots[order.depotId];
+      return d ? { x: d.x, z: d.z } : null;
+    }
+    case 'patrol':
+      return order.points[0] ? { x: order.points[0].x, z: order.points[0].z } : null;
+    case 'resupply': {
+      const src = resupplyTarget(world, a, order.sourceId);
+      return src;
     }
     default:
-      break;
+      return null;
   }
-  if (target) {
+}
+
+/** Camp distance outside a settlement's radius for besiegers / raiders (map m). */
+export const SIEGE_CAMP_OFFSET = 100;
+
+function resupplyTarget(world: WorldState, a: ArmyState, sourceId: string | null): Vec2 | null {
+  if (sourceId) {
+    const s = world.settlements[sourceId];
+    if (s && s.ownerFactionId === a.factionId) return { x: s.x, z: s.z };
+    const d = world.depots[sourceId];
+    if (d && d.factionId === a.factionId) return { x: d.x, z: d.z };
+    return null;
+  }
+  let best: Vec2 | null = null;
+  let bd = Infinity;
+  for (const id of sortedKeys(world.settlements)) {
+    const s = world.settlements[id]!;
+    if (s.ownerFactionId !== a.factionId || s.besiegedBy) continue;
+    const d = (s.x - a.x) * (s.x - a.x) + (s.z - a.z) * (s.z - a.z);
+    if (d < bd) {
+      bd = d;
+      best = { x: s.x, z: s.z };
+    }
+  }
+  for (const id of sortedKeys(world.depots)) {
+    const dp = world.depots[id]!;
+    if (dp.factionId !== a.factionId || dp.food <= 0) continue;
+    const d = (dp.x - a.x) * (dp.x - a.x) + (dp.z - a.z) * (dp.z - a.z);
+    if (d < bd) {
+      bd = d;
+      best = { x: dp.x, z: dp.z };
+    }
+  }
+  return best;
+}
+
+let siegeHooks: { lift: (world: WorldState, army: ArmyState) => void } | null = null;
+/** siege.ts registers how an army leaves a siege (avoids an import cycle). */
+export function registerSiegeHooks(h: NonNullable<typeof siegeHooks>): void {
+  siegeHooks = h;
+}
+
+/** Give an army an order: plans the route and sets the status. Returns false for unknown / engaged armies. */
+export function orderArmy(world: WorldState, armyId: string, order: ArmyOrder, terrain: TerrainQuery): boolean {
+  const a = world.armies[armyId];
+  if (!a || a.status === 'in_battle' || a.engagementId) return false;
+  const keepSiege = a.status === 'besieging' && (order.kind === 'besiege' || order.kind === 'assault') && a.order.kind !== 'idle' && 'settlementId' in a.order && a.order.settlementId === order.settlementId;
+  if (a.status === 'besieging' && !keepSiege) siegeHooks?.lift(world, a);
+  if (a.order.kind === 'escort') {
+    const d = world.depots[a.order.depotId];
+    if (d && d.escortArmyId === a.id) d.escortArmyId = null;
+  }
+  a.order = order;
+  a.supply.foraging = order.kind === 'forage';
+  if (keepSiege) return true;
+  const target = orderTarget(world, a, order);
+  if (target && (Math.abs(target.x - a.x) > 1 || Math.abs(target.z - a.z) > 1)) {
     a.path = planArmyPath(world, a, target.x, target.z, terrain);
-    a.pathIndex = 0;
+    a.pathIndex = a.path.length > 1 ? 1 : 0;
+    a.status = 'marching';
+  } else if (target) {
+    // Already there: a zero-length march arrives on the next hourly update (arrival effects need the event sink).
+    a.path = [{ x: a.x, z: a.z }];
+    a.pathIndex = 1;
     a.status = 'marching';
   } else {
     a.path = [];
+    a.pathIndex = 0;
     a.status = 'camped';
   }
   return true;
 }
 
 // ---------------------------------------------------------------------------------------------------
-// Hourly movement + contacts
+// Hourly movement + arrivals + contacts
 // ---------------------------------------------------------------------------------------------------
 
-function slowestWalk(a: ArmyState): number {
-  let s = Infinity;
-  for (const u of a.units) s = Math.min(s, UNITS[u.unitClass].stats.walkSpeed);
-  return s === Infinity ? 1.4 : s;
+/** Advance one marching army by one hour along its path. Returns true when it arrived. */
+function advance(world: WorldState, a: ArmyState, terrain: TerrainQuery): boolean {
+  let remaining = 1;
+  let lastMph = 0;
+  const mul = armySpeedMultiplier(world, a, false);
+  while (remaining > 1e-9 && a.pathIndex < a.path.length) {
+    const wp = a.path[a.pathIndex] as Vec2;
+    const edge = segmentEdge(world, a.path, a.pathIndex);
+    let mph: number;
+    if (edge) {
+      mph = metersPerHourFromKmDay(BALANCE.military.marchKmPerDay[edge.quality]) * weatherFactor(world, edge.quality) * roadConditionFactor(edge.condition) * mul;
+    } else {
+      const tc = terrain.inBounds(a.x, a.z) ? terrain.terrainClassAt(a.x, a.z) : 'open';
+      let f = terrainFactor(world, a.factionId, tc);
+      if (f <= 0) f = 0.4; // crossing at a bridge / ford
+      const rough = isRoughTerrain(tc);
+      mph = metersPerHourFromKmDay(BALANCE.military.marchKmPerDay.offroad) * weatherFactor(world, null) * f * (rough ? armySpeedMultiplier(world, a, true) : mul);
+    }
+    lastMph = mph;
+    const dx = wp.x - a.x;
+    const dz = wp.z - a.z;
+    const d = Math.sqrt(dx * dx + dz * dz);
+    if (d > 0.01) a.facing = facingOf(dx, dz);
+    const t = mph > 0 ? d / mph : Infinity;
+    if (t <= remaining) {
+      a.x = wp.x;
+      a.z = wp.z;
+      remaining -= t;
+      a.pathIndex++;
+    } else {
+      a.x += (dx / d) * mph * remaining;
+      a.z += (dz / d) * mph * remaining;
+      remaining = 0;
+    }
+  }
+  a.speedKmh = (lastMph * BALANCE.military.travelScale) / 1000;
+  return a.pathIndex >= a.path.length;
+}
+
+let arrivalHooks: { besiege: (world: WorldState, a: ArmyState, s: SettlementState, out: SimEvent[], terrain: TerrainQuery) => void; assault: (world: WorldState, a: ArmyState, out: SimEvent[], terrain: TerrainQuery) => void } | null = null;
+/** siege.ts registers siege start / assault handlers. */
+export function registerArrivalHooks(h: NonNullable<typeof arrivalHooks>): void {
+  arrivalHooks = h;
+}
+
+function arrive(world: WorldState, a: ArmyState, out: SimEvent[], terrain: TerrainQuery): void {
+  a.path = [];
+  a.pathIndex = 0;
+  a.status = 'camped';
+  const o = a.order;
+  switch (o.kind) {
+    case 'move':
+    case 'retreat':
+      a.order = { kind: 'idle' };
+      out.push({ kind: 'army_arrived', armyId: a.id });
+      break;
+    case 'garrison': {
+      const s = world.settlements[o.settlementId];
+      if (s && s.ownerFactionId === a.factionId) {
+        a.status = 'garrisoned';
+        a.x = s.x;
+        a.z = s.z;
+      } else a.order = { kind: 'idle' };
+      out.push({ kind: 'army_arrived', armyId: a.id });
+      break;
+    }
+    case 'besiege': {
+      const s = world.settlements[o.settlementId];
+      if (s && arrivalHooks) arrivalHooks.besiege(world, a, s, out, terrain);
+      else a.order = { kind: 'idle' };
+      break;
+    }
+    case 'assault':
+      if (arrivalHooks) arrivalHooks.assault(world, a, out, terrain);
+      break;
+    case 'raid':
+      a.supply.foraging = true;
+      out.push({ kind: 'army_arrived', armyId: a.id });
+      break;
+    case 'escort': {
+      const d = world.depots[o.depotId];
+      if (d && d.factionId === a.factionId) d.escortArmyId = a.id;
+      break;
+    }
+    case 'patrol': {
+      if (o.points.length > 1) {
+        const first = o.points.shift() as Vec2;
+        o.points.push(first);
+        const next = o.points[0] as Vec2;
+        a.path = planArmyPath(world, a, next.x, next.z, terrain);
+        a.pathIndex = a.path.length > 1 ? 1 : 0;
+        a.status = 'marching';
+      }
+      break;
+    }
+    case 'attack_army': {
+      const t = world.armies[o.targetArmyId];
+      if (!t) a.order = { kind: 'idle' };
+      break;
+    }
+    case 'resupply':
+      out.push({ kind: 'army_arrived', armyId: a.id });
+      break;
+    default:
+      break;
+  }
+}
+
+/** Re-plan pursuit of a moving target every 6 hours. */
+function followTarget(world: WorldState, a: ArmyState, terrain: TerrainQuery): void {
+  if (a.order.kind !== 'attack_army') return;
+  const t = world.armies[a.order.targetArmyId];
+  if (!t || t.units.length === 0 || (t.factionId !== a.factionId && !armiesHostile(world, a, t))) {
+    a.order = { kind: 'idle' };
+    a.status = a.status === 'marching' ? 'camped' : a.status;
+    a.path = [];
+    a.pathIndex = 0;
+    return;
+  }
+  if (world.calendar.totalHours % 6 !== 0) return;
+  const end = a.path[a.path.length - 1];
+  if (end && (end.x - t.x) * (end.x - t.x) + (end.z - t.z) * (end.z - t.z) < 100 * 100 && a.status === 'marching') return;
+  a.path = planArmyPath(world, a, t.x, t.z, terrain);
+  a.pathIndex = a.path.length > 1 ? 1 : 0;
+  a.status = 'marching';
 }
 
 export function updateArmiesHourly(world: WorldState, out: SimEvent[], terrain: TerrainQuery): void {
-  const m = BALANCE.military;
-  const season = seasonOf(world.calendar);
-  for (const id of sortedKeys(world.armies)) {
-    const a = world.armies[id] as ArmyState;
-    if (a.status !== 'marching' || a.pathIndex >= a.path.length) continue;
-    const tc = terrain.terrainClassAt(a.x, a.z);
-    const factor = travelFactor(season, world.weather, tc, null) * (FACTIONS[a.factionId]?.modifiers.marchSpeed ?? 1) * (slowestWalk(a) / 1.4);
-    const metersPerHour = ((m.marchKmPerDay.offroad * 1000) / 24 / m.travelScale) * factor;
-    a.speedKmh = (metersPerHour * m.travelScale) / 1000;
-    let remaining = metersPerHour;
-    while (remaining > 0 && a.pathIndex < a.path.length) {
-      const wp = a.path[a.pathIndex] as Vec2;
-      const dx = wp.x - a.x;
-      const dz = wp.z - a.z;
-      const d = Math.sqrt(dx * dx + dz * dz);
-      if (d > 0.01) a.facing = facingOf(dx, dz);
-      if (d <= remaining) {
-        a.x = wp.x;
-        a.z = wp.z;
-        remaining -= d;
-        a.pathIndex++;
-      } else {
-        a.x += (dx / d) * remaining;
-        a.z += (dz / d) * remaining;
-        remaining = 0;
-      }
+  const ids = stableKeys('armies', world.armies as Record<string, unknown>);
+  for (let i = 0; i < ids.length; i++) {
+    const a = world.armies[ids[i] as string];
+    if (!a || a.engagementId) continue;
+    if (a.order.kind === 'attack_army') followTarget(world, a, terrain);
+    if (a.order.kind === 'assault' && a.status === 'besieging') {
+      arrivalHooks?.assault(world, a, out, terrain);
+      continue;
     }
-    if (a.pathIndex >= a.path.length) {
-      a.status = 'camped';
-      a.path = [];
-      a.pathIndex = 0;
-      if (a.order.kind === 'move' || a.order.kind === 'retreat') a.order = { kind: 'idle' };
-      out.push({ kind: 'army_arrived', armyId: a.id });
-    }
+    if (a.status !== 'marching') continue;
+    if (a.pathIndex >= a.path.length || advance(world, a, terrain)) arrive(world, a, out, terrain);
   }
-  detectContacts(world, out);
+  detectContacts(world, out, terrain);
+}
+
+// ---------------------------------------------------------------------------------------------------
+// Contacts
+// ---------------------------------------------------------------------------------------------------
+
+function contactRadius(a: ArmyState): number {
+  return BALANCE.military.contactRadius * RULES.armies.stance[a.stance].contactRadius;
+}
+
+function behindWalls(world: WorldState, a: ArmyState): boolean {
+  if (a.status !== 'garrisoned' || a.order.kind !== 'garrison') return false;
+  const s = world.settlements[a.order.settlementId];
+  return !!s && s.fortLevel >= 1;
+}
+
+function evades(world: WorldState, a: ArmyState, b: ArmyState): boolean {
+  if (a.stance !== 'cautious') return false;
+  const sa = armyStrength(a);
+  const sb = armyStrength(b);
+  return sb > 0 && sa / sb < 0.6 && potentialSpeed(world, a) >= 1.1 * potentialSpeed(world, b);
 }
 
 /** Create engagements for hostile armies in contact range. */
-export function detectContacts(world: WorldState, out: SimEvent[]): void {
-  const r2 = BALANCE.military.contactRadius * BALANCE.military.contactRadius;
-  const ids = sortedKeys(world.armies);
+export function detectContacts(world: WorldState, out: SimEvent[], terrain?: TerrainQuery): void {
+  const ids = stableKeys('armies', world.armies as Record<string, unknown>);
   for (let i = 0; i < ids.length; i++) {
-    const a = world.armies[ids[i] as string] as ArmyState;
-    if (a.engagementId || a.status === 'in_battle' || a.units.length === 0) continue;
+    const a = world.armies[ids[i] as string];
+    if (!a || a.engagementId || a.status === 'in_battle' || a.units.length === 0 || behindWalls(world, a)) continue;
     for (let j = i + 1; j < ids.length; j++) {
-      const b = world.armies[ids[j] as string] as ArmyState;
-      if (b.engagementId || b.status === 'in_battle' || b.units.length === 0) continue;
-      // Retreating armies break contact (baseline; TODO(owner): pursuit by faster armies).
-      if (a.order.kind === 'retreat' || b.order.kind === 'retreat') continue;
-      if (!isHostile(world, a.factionId, b.factionId)) continue;
+      const b = world.armies[ids[j] as string];
+      if (!b || b.engagementId || b.status === 'in_battle' || b.units.length === 0 || behindWalls(world, b)) continue;
+      if (!armiesHostile(world, a, b)) continue;
+      const r = Math.max(contactRadius(a), contactRadius(b));
       const dx = a.x - b.x;
       const dz = a.z - b.z;
-      if (dx * dx + dz * dz > r2) continue;
-      // Attacker = the one that was marching (or a).
+      if (dx * dx + dz * dz > r * r) continue;
+      // Retreating armies are only caught by an enemy at least 20% faster.
+      if (a.order.kind === 'retreat' && potentialSpeed(world, b) < 1.2 * potentialSpeed(world, a)) continue;
+      if (b.order.kind === 'retreat' && potentialSpeed(world, a) < 1.2 * potentialSpeed(world, b)) continue;
+      if (evades(world, a, b) || evades(world, b, a)) continue;
       const [att, def] = b.status === 'marching' && a.status !== 'marching' ? [b, a] : [a, b];
-      const id: EngagementId = nextWorldId(world, 'eng');
-      const involvesPlayer = world.factions[att.factionId]?.isPlayer || world.factions[def.factionId]?.isPlayer || false;
-      const e: Engagement = {
-        id,
-        sides: [[att.id], [def.id]],
-        x: (a.x + b.x) / 2,
-        z: (a.z + b.z) / 2,
-        settlementId: null,
-        kind: 'field',
-        startedHour: world.calendar.totalHours,
-        status: involvesPlayer ? 'pending_player' : 'auto',
-        battleId: null,
-        battle: null,
-        outcome: null,
-        prisonerDecision: null,
-      };
-      world.engagements[id] = e;
-      a.engagementId = id;
-      b.engagementId = id;
-      a.status = 'in_battle';
-      b.status = 'in_battle';
-      out.push({ kind: 'engagement_started', engagementId: id, involvesPlayer: !!involvesPlayer });
+      createEngagement(world, att, def, out, terrain ?? null, 'field', null);
       break;
     }
   }
 }
 
-// ---------------------------------------------------------------------------------------------------
-// Daily supply
-// ---------------------------------------------------------------------------------------------------
-
-export function updateArmiesDaily(world: WorldState, out: SimEvent[]): void {
-  const m = BALANCE.military;
-  for (const id of sortedKeys(world.armies)) {
-    const a = world.armies[id] as ArmyState;
-    let need = 0;
-    for (const u of a.units) need += u.soldiers * UNITS[u.unitClass].stats.upkeepFood * m.soldierFoodPerDay;
-    a.supply.dailyConsumption = need;
-    // Resupply from an owned settlement nearby.
-    let resupplied = false;
+/**
+ * Open an engagement between two armies (plus same-faction armies near the contact). Siege assaults pass kind
+ * 'siege' and the settlement. Player involvement -> 'pending_player' (the world pauses on the prompt), else 'auto'.
+ */
+export function createEngagement(world: WorldState, att: ArmyState, def: ArmyState, out: SimEvent[], terrain: TerrainQuery | null, kind: Engagement['kind'], settlementId: string | null): Engagement {
+  const id: EngagementId = nextWorldId(world, 'eng');
+  const x = (att.x + def.x) / 2;
+  const z = (att.z + def.z) / 2;
+  const join = (lead: ArmyState): string[] => {
+    const list = [lead.id];
+    const r = contactRadius(lead) * 2;
+    for (const oid of sortedKeys(world.armies)) {
+      const o = world.armies[oid]!;
+      if (o.id === lead.id || o.factionId !== lead.factionId || o.engagementId || o.units.length === 0 || o.status === 'in_battle') continue;
+      if (isRebelFaction(o.factionId) && o.rebelSettlementId !== lead.rebelSettlementId) continue;
+      if (kind !== 'siege' && behindWalls(world, o)) continue;
+      if ((o.x - x) * (o.x - x) + (o.z - z) * (o.z - z) <= r * r) list.push(o.id);
+    }
+    return list;
+  };
+  const sides: [string[], string[]] = [join(att), join(def)];
+  let eKind = kind;
+  if (eKind === 'field' && terrain && terrain.riverDistanceAt(x, z) < 150) eKind = 'river_crossing';
+  let near: string | null = settlementId;
+  if (!near) {
+    let bd = Infinity;
     for (const sid of sortedKeys(world.settlements)) {
       const s = world.settlements[sid]!;
+      const d = Math.sqrt((s.x - x) * (s.x - x) + (s.z - z) * (s.z - z));
+      if (d <= s.radius + 300 && d < bd) {
+        bd = d;
+        near = sid;
+      }
+    }
+  }
+  const involvesPlayer = [...sides[0], ...sides[1]].some((aid) => world.factions[world.armies[aid]!.factionId]?.isPlayer === true);
+  const e: Engagement = {
+    id,
+    sides,
+    x,
+    z,
+    settlementId: near,
+    kind: eKind,
+    startedHour: world.calendar.totalHours,
+    status: involvesPlayer ? 'pending_player' : 'auto',
+    battleId: null,
+    battle: null,
+    outcome: null,
+    prisonerDecision: null,
+  };
+  world.engagements[id] = e;
+  for (const side of sides) {
+    for (const aid of side) {
+      const a = world.armies[aid]!;
+      a.engagementId = id;
+      a.status = 'in_battle';
+    }
+  }
+  out.push({ kind: 'engagement_started', engagementId: id, involvesPlayer });
+  return e;
+}
+
+// ---------------------------------------------------------------------------------------------------
+// Split / merge / disband (DESIGN_SPEC §7.7)
+// ---------------------------------------------------------------------------------------------------
+
+export const ARMY_REASONS = {
+  noArmy: 'No such army',
+  notYours: 'Not your army',
+  inBattle: 'Army is in battle',
+  noUnits: 'Choose the formations to split off',
+  keepOne: 'At least one formation must stay',
+  unknownUnit: 'That formation is not in this army',
+  tooFar: 'The armies must be within 100 m to merge',
+  sameArmy: 'Choose another army',
+  tooMany: `An army holds at most ${RULES.armies.maxFormations} formations`,
+} as const;
+
+export const MERGE_DISTANCE = 100;
+
+export function validateSplit(world: WorldState, factionId: FactionId, armyId: string, unitIds: readonly string[]): string | null {
+  const a = world.armies[armyId];
+  if (!a) return ARMY_REASONS.noArmy;
+  if (a.factionId !== factionId) return ARMY_REASONS.notYours;
+  if (a.engagementId || a.status === 'in_battle') return ARMY_REASONS.inBattle;
+  if (unitIds.length === 0) return ARMY_REASONS.noUnits;
+  for (const u of unitIds) if (!a.units.some((x) => x.id === u)) return ARMY_REASONS.unknownUnit;
+  if (unitIds.length >= a.units.length) return ARMY_REASONS.keepOne;
+  return null;
+}
+
+/** Split selected formations into a new army (commander slot empty; supply split by food need). */
+export function splitArmy(world: WorldState, factionId: FactionId, armyId: string, unitIds: readonly string[]): { reason: string | null; armyId: string | null } {
+  const reason = validateSplit(world, factionId, armyId, unitIds);
+  if (reason) return { reason, armyId: null };
+  const a = world.armies[armyId]!;
+  const moving = a.units.filter((u) => unitIds.includes(u.id));
+  const share = rawFoodNeed(moving) / Math.max(1e-9, rawFoodNeed(a.units));
+  const id = nextWorldId(world, 'army');
+  const b = makeArmy(world, id, `${a.name} (detachment)`, a.factionId, a.x + 20, a.z + 20, [], null);
+  b.units = moving;
+  a.units = a.units.filter((u) => !unitIds.includes(u.id));
+  b.supply.food = a.supply.food * share;
+  a.supply.food -= b.supply.food;
+  b.morale = a.morale;
+  b.fatigue = a.fatigue;
+  b.stance = a.stance;
+  b.supply.foodCapacity = carriedCapacity(b.units);
+  a.supply.foodCapacity = carriedCapacity(a.units);
+  world.armies[id] = b;
+  return { reason: null, armyId: id };
+}
+
+export function validateMerge(world: WorldState, factionId: FactionId, armyId: string, otherId: string): string | null {
+  const a = world.armies[armyId];
+  const b = world.armies[otherId];
+  if (!a || !b) return ARMY_REASONS.noArmy;
+  if (a.factionId !== factionId || b.factionId !== factionId) return ARMY_REASONS.notYours;
+  if (a.id === b.id) return ARMY_REASONS.sameArmy;
+  if (a.engagementId || b.engagementId || a.status === 'in_battle' || b.status === 'in_battle') return ARMY_REASONS.inBattle;
+  if ((a.x - b.x) * (a.x - b.x) + (a.z - b.z) * (a.z - b.z) > MERGE_DISTANCE * MERGE_DISTANCE) return ARMY_REASONS.tooFar;
+  if (a.units.length + b.units.length > RULES.armies.maxFormations) return ARMY_REASONS.tooMany;
+  return null;
+}
+
+/** Merge `otherId` into `armyId` (units, food, soldier-weighted morale / fatigue; commander kept if set). */
+export function mergeArmies(world: WorldState, factionId: FactionId, armyId: string, otherId: string): string | null {
+  const reason = validateMerge(world, factionId, armyId, otherId);
+  if (reason) return reason;
+  const a = world.armies[armyId]!;
+  const b = world.armies[otherId]!;
+  const sa = armySoldiers(a);
+  const sb = armySoldiers(b);
+  const w = sa + sb > 0 ? sb / (sa + sb) : 0;
+  a.morale = a.morale * (1 - w) + b.morale * w;
+  a.fatigue = a.fatigue * (1 - w) + b.fatigue * w;
+  a.units.push(...b.units);
+  a.supply.food += b.supply.food;
+  a.supply.foodCapacity = carriedCapacity(a.units);
+  if (!a.commanderId && b.commanderId) {
+    a.commanderId = b.commanderId;
+    const c = world.characters[b.commanderId];
+    if (c) c.armyId = a.id;
+  }
+  delete world.armies[b.id];
+  return null;
+}
+
+/** Disband: 50% of the soldiers return to the nearest own settlement's recruit pool. */
+export function disbandArmy(world: WorldState, factionId: FactionId, armyId: string, out: SimEvent[]): string | null {
+  const a = world.armies[armyId];
+  if (!a) return ARMY_REASONS.noArmy;
+  if (a.factionId !== factionId) return ARMY_REASONS.notYours;
+  if (a.engagementId || a.status === 'in_battle') return ARMY_REASONS.inBattle;
+  removeArmy(world, a, true);
+  notifyPlayer(world, out, factionId, 'info', `${a.name} was disbanded.`);
+  return null;
+}
+
+/** Remove an army (destroyed or disbanded); returns soldiers to a recruit pool when `returnRecruits`. */
+export function removeArmy(world: WorldState, a: ArmyState, returnRecruits: boolean): void {
+  if (returnRecruits) {
+    let best: SettlementState | null = null;
+    let bd = Infinity;
+    for (const id of sortedKeys(world.settlements)) {
+      const s = world.settlements[id]!;
       if (s.ownerFactionId !== a.factionId) continue;
-      const dx = s.x - a.x;
-      const dz = s.z - a.z;
-      if (dx * dx + dz * dz > (s.radius + 400) * (s.radius + 400)) continue;
-      const want = Math.max(0, a.supply.foodCapacity - a.supply.food);
-      const give = Math.min(want, s.foodStored * 0.2);
-      s.foodStored -= give;
-      a.supply.food += give;
-      a.supply.sourceId = s.id;
-      resupplied = true;
-      break;
+      const d = (s.x - a.x) * (s.x - a.x) + (s.z - a.z) * (s.z - a.z);
+      if (d < bd) {
+        bd = d;
+        best = s;
+      }
     }
-    a.supply.lineIntact = resupplied || a.supply.lineIntact;
-    a.supply.food -= need;
-    if (a.supply.food < 0) {
-      a.supply.food = 0;
-      a.supply.starvationDays++;
-      a.morale = Math.max(0, a.morale - m.starvationMoralePerDay);
-      out.push({ kind: 'army_starving', armyId: a.id });
-    } else {
-      a.supply.starvationDays = 0;
-      const days = need > 0 ? a.supply.food / need : Infinity;
-      if (days < 5 && world.factions[a.factionId]?.isPlayer) out.push({ kind: 'army_supply_low', armyId: a.id, days: Math.floor(days) });
-    }
-    if (a.status === 'marching') a.fatigue = Math.min(1, a.fatigue + m.fatiguePerMarchDay);
-    else a.fatigue = Math.max(0, a.fatigue - m.recoveryPerRestDay);
+    if (best) best.recruitPool = Math.min(best.recruitmentPotential, best.recruitPool + 0.5 * armySoldiers(a));
   }
+  if (a.commanderId) {
+    const c = world.characters[a.commanderId];
+    if (c && c.armyId === a.id) c.armyId = null;
+  }
+  for (const id of sortedKeys(world.settlements)) {
+    const s = world.settlements[id]!;
+    if (s.besiegedBy === a.id) {
+      s.besiegedBy = null;
+      s.siegeDays = 0;
+      s.ladderProgress = 0;
+    }
+    if (s.rallyPoint?.kind === 'army' && s.rallyPoint.armyId === a.id) delete s.rallyPoint;
+  }
+  for (const id of sortedKeys(world.depots)) if (world.depots[id]!.escortArmyId === a.id) world.depots[id]!.escortArmyId = null;
+  for (const id of sortedKeys(world.roads.edges)) if (world.roads.edges[id]!.blockedBy === a.id) world.roads.edges[id]!.blockedBy = null;
+  delete world.armies[a.id];
 }
 
-// ---------------------------------------------------------------------------------------------------
-// Outcomes
-// ---------------------------------------------------------------------------------------------------
-
-/** Apply a battle outcome to the armies of an engagement (casualties by armyUnitId, retreat). */
-export function applyBattleOutcome(world: WorldState, engagementId: EngagementId, outcome: BattleOutcome, out: SimEvent[]): void {
-  const e = world.engagements[engagementId];
-  if (!e) return;
-  e.outcome = outcome;
-  e.status = 'resolved';
-  for (let side = 0; side < 2; side++) {
-    const res = outcome.sides[side as 0 | 1];
-    const byUnit = new Map<string, number>();
-    for (const f of res.formations) if (f.armyUnitId) byUnit.set(f.armyUnitId, (byUnit.get(f.armyUnitId) ?? 0) + f.survivors);
-    for (const armyId of e.sides[side as 0 | 1]) {
-      const a = world.armies[armyId];
-      if (!a) continue;
-      for (const u of a.units) {
-        const surv = byUnit.get(u.id);
-        if (surv !== undefined) u.soldiers = Math.max(0, Math.min(u.soldiers, surv));
-      }
-      a.units = a.units.filter((u) => u.soldiers > 0);
-      a.engagementId = null;
-      a.status = 'camped';
-      const won = outcome.winner === side;
-      // On a draw the attacker (side 0) falls back so the armies do not re-engage immediately.
-      const fallsBack = outcome.winner === null ? side === 0 : !won;
-      a.morale = Math.max(5, Math.min(100, a.morale + (won ? 10 : -25)));
-      if (a.units.length === 0) {
-        delete world.armies[a.id];
-        continue;
-      }
-      if (fallsBack) {
-        // Retreat toward the nearest friendly settlement.
-        let best: { x: number; z: number } | null = null;
-        let bestD = Infinity;
-        for (const s of Object.values(world.settlements)) {
-          if (s.ownerFactionId !== a.factionId) continue;
-          const d = (s.x - a.x) * (s.x - a.x) + (s.z - a.z) * (s.z - a.z);
-          if (d < bestD) {
-            bestD = d;
-            best = s;
-          }
-        }
-        if (best) {
-          a.order = { kind: 'retreat', x: best.x, z: best.z };
-          a.path = [{ x: best.x + 80, z: best.z + 80 }];
-          a.pathIndex = 0;
-          a.status = 'marching';
-        }
-      }
-    }
-  }
-  const winnerFaction = outcome.winner === null ? null : outcome.sides[outcome.winner].factionId;
-  out.push({ kind: 'engagement_resolved', engagementId, winnerFactionId: winnerFaction });
+/** Army display name with the faction variant naming convention ("Rebels of {settlement}"). */
+export function armyDisplayName(world: WorldState, a: ArmyState): string {
+  if (isRebelFaction(a.factionId)) return a.name;
+  return a.name || `${FACTIONS[a.factionId]?.adjective ?? a.factionId} Host`;
 }
+
+// Supply / daily systems and the battle write-back live in their own modules (re-exported for existing callers).
+export { updateArmiesDaily } from './supply';
+export { applyBattleOutcome } from './writeback';

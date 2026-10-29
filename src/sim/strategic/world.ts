@@ -61,6 +61,11 @@ import { laborFor } from './economy';
 import { assignMissingCells } from './placement';
 import { cancelConstruction, queueBuild, queueRepair, startLandmark } from './construction';
 import { queueRecruit } from './recruitment';
+import { disbandArmy, mergeArmies, splitArmy } from './armies';
+import { createDepot, requisitionGrain, sendRelief, transferSupply } from './supply';
+import { decideCapture, updateSiegesDaily } from './siege';
+import { expireGhostsDaily, updateVisibilityHourly } from './visibility';
+import { decidePrisoners } from './writeback';
 import { updateEconomyDaily, updateEconomyMonthly } from './economy';
 import { orderArmy, updateArmiesDaily, updateArmiesHourly, armySoldiers, makeArmy, makeArmyUnit } from './armies';
 import { declareWar, makePeace, respondToProposal, proposeTreaty, updateDiplomacyDaily, updateDiplomacyMonthly, createTreaty } from './diplomacy';
@@ -602,6 +607,7 @@ export function tickWorld(world: WorldState, commands: readonly IssuedStrategicC
   for (const c of commands) applyStrategicCommand(world, c, out, terrain);
   advanceCalendar(world.calendar, 1, adv);
   updateArmiesHourly(world, out, terrain);
+  updateVisibilityHourly(world, out);
   stepDistantBattles(world, out, terrain);
   if (adv.newDay) {
     const day = totalDays(world.calendar);
@@ -612,6 +618,8 @@ export function tickWorld(world: WorldState, commands: readonly IssuedStrategicC
     updateRoadBlocks(world);
     updateEconomyDaily(world, out);
     updateArmiesDaily(world, out);
+    updateSiegesDaily(world, out);
+    expireGhostsDaily(world);
     updatePoliticsDaily(world, out);
     updateDiplomacyDaily(world, out);
     updateEspionageDaily(world, out);
@@ -696,6 +704,30 @@ export function applyStrategicCommand(world: WorldState, issued: IssuedStrategic
       if (a) a.stance = c.stance;
       return !!a;
     }
+    case 'forced_march': {
+      const a = world.armies[c.armyId];
+      if (!a || a.factionId !== issued.factionId) return report(world, issued, out, 'Not your army');
+      a.forcedMarch = c.on;
+      return true;
+    }
+    case 'split_army':
+      return report(world, issued, out, splitArmy(world, issued.factionId, c.armyId, c.unitIds).reason);
+    case 'merge_armies':
+      return report(world, issued, out, mergeArmies(world, issued.factionId, c.armyId, c.otherArmyId));
+    case 'disband_army':
+      return report(world, issued, out, disbandArmy(world, issued.factionId, c.armyId, out));
+    case 'requisition_grain':
+      return report(world, issued, out, requisitionGrain(world, issued.factionId, c.settlementId, c.amount, c.toArmyId, c.toDepotId, out));
+    case 'send_relief':
+      return report(world, issued, out, sendRelief(world, issued.factionId, c.settlementId, c.food, c.wealth, out));
+    case 'create_depot':
+      return report(world, issued, out, createDepot(world, issued.factionId, c.x, c.z, c.settlementId, out).reason);
+    case 'transfer_supply':
+      return report(world, issued, out, transferSupply(world, issued.factionId, c.fromId, c.toId, c.amount));
+    case 'prisoners':
+      return report(world, issued, out, decidePrisoners(world, issued.factionId, c.engagementId, c.decision, out));
+    case 'capture_decision':
+      return report(world, issued, out, decideCapture(world, issued.factionId, c.settlementId, c.decision, out));
     case 'set_tax_rate': {
       const s = world.settlements[c.settlementId];
       if (s) s.taxRate = Math.min(0.6, Math.max(0, c.rate));

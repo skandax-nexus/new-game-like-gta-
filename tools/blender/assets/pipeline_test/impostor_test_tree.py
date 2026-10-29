@@ -17,6 +17,9 @@ from lib import impostor  # noqa: E402
 
 ctx = impostor.begin(__file__)
 objs = _test_tree.build(detail=1)
-ctx.meta.update(impostor.capture(ctx, objs, grid=8, frame_px=256, samples=16, switch_distance=90.0, source="model_test_tree"))
+# ao_strength: the mesh is darkened at runtime by GTAO + canopy self-shadowing that a flat card cannot reproduce
+# (A/B without it: impostor +9 % brighter on the tree pixels at 220 m) - bake part of the self-occlusion instead.
+ctx.meta.update(impostor.capture(ctx, objs, grid=8, frame_px=256, samples=16, switch_distance=90.0, source="model_test_tree",
+                                 ao_strength=0.35))
 ctx.meta["description"] = "Pipeline test: hemi-octahedral impostor of the 12 m test tree (A/B with model_test_tree)."
 ctx.finish()

@@ -44,7 +44,20 @@ import { instanceObject, type InstancedKit } from '../assets/loaders/instancing'
 import { createDetailTexture, createNoiseNormalMap } from '../render/environment/textures';
 import { createSplatMaterial, toGltfUv } from '../render/materials';
 import type { GradeParams } from '../render/post';
-import { DYES, LIGHTING_PRESETS, environmentIntensityFor, fogRadiance, presetToResolved, type LightingPreset } from '../render/style';
+import {
+  BANNER_SHAPES,
+  DYES,
+  EMBLEMS,
+  FACTION_ART,
+  LIGHTING_PRESETS,
+  bannerSvg,
+  environmentIntensityFor,
+  fogRadiance,
+  presetToResolved,
+  type BannerShape,
+  type LightingPreset,
+} from '../render/style';
+import type { BannerPattern } from '../core/types';
 
 const DEFAULT_HDRI = 'sky_day';
 const GROUND_MATERIAL = 'ground_dry_earth';
@@ -70,6 +83,8 @@ interface ViewerOptions {
   time: number | null;
   memtest: boolean;
   crossfade: boolean;
+  /** Model variant to show alone (default: all variants side by side). */
+  variant: string | null;
 }
 
 function viewerOptions(): ViewerOptions {
@@ -98,6 +113,7 @@ function viewerOptions(): ViewerOptions {
     time: num('t'),
     memtest: q.get('memtest') === '1',
     crossfade: q.get('crossfade') === '1',
+    variant: q.get('variant'),
   };
 }
 
@@ -126,6 +142,29 @@ function horizonColor(tex: THREE.Texture): THREE.Color | null {
 }
 
 /** The lighting preset a baked sky belongs to: by id, else by its Nishita sun position. */
+/** Rasterize an SVG string into a CanvasTexture (flipY false: glTF UV convention), or null when unsupported. */
+async function svgTexture(svg: string, w: number, h: number): Promise<THREE.CanvasTexture | null> {
+  if (typeof document === 'undefined') return null;
+  const img = new Image();
+  img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  try {
+    await img.decode();
+  } catch {
+    return null;
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const g = canvas.getContext('2d');
+  if (!g) return null;
+  g.drawImage(img, 0, 0, w, h);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.flipY = false;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
 function presetForSky(entry: { id: string; sun: { elevationDeg: number; azimuthDeg: number } } | null): LightingPreset | null {
   if (!entry) return null;
   const all = Object.values(LIGHTING_PRESETS);
@@ -178,6 +217,8 @@ export class AssetViewerScene implements GameScene {
   private time = 0;
   // mode state
   private crowd: CrowdLod[] = [];
+  /** renderer.render(scene) calls in the last frame (main pass + e.g. the GTAO normal pre-pass on high+). */
+  private scenePasses = { count: 0 };
   private vatTime: { value: number } | null = null;
   private flipMats: { mat: THREE.Material; fps: number; count: number; loop: boolean }[] = [];
   private impostorRadius = 1;
@@ -362,14 +403,78 @@ export class AssetViewerScene implements GameScene {
 
   private async buildModel(): Promise<void> {
     const lod = this.ctx.params.lod ?? undefined;
+    const entry = this.ctx.assets.resolve(this.assetId, 'model');
+    if (entry && entry.variants.length > 1 && !this.opts.variant) {
+      await this.buildVariants(entry);
+      return;
+    }
     const inst = await this.ctx.assets.loadModel(this.assetId, { lod, crossFade: this.opts.crossfade });
     this.model = inst;
     this.handles.push(inst);
     this.fallback = inst.fallback;
     this.scene.add(inst.object);
     const e = inst.entry as ModelAssetEntry | null;
+    const only = e && this.opts.variant ? e.variants.find((v) => v.name === this.opts.variant) : null;
+    if (e && only) {
+      const all = new Set(e.variants.flatMap((v) => v.nodes));
+      inst.object.traverse((o) => {
+        if (all.has(o.name)) o.visible = only.nodes.includes(o.name);
+      });
+    }
     if (e) this.bounds.set(new THREE.Vector3(...(e.bounds.min as [number, number, number])), new THREE.Vector3(...(e.bounds.max as [number, number, number])));
     else this.bounds.setFromObject(inst.object);
+  }
+
+  /**
+   * Variant layout: one clone per variant side by side (other variants' nodes hidden). Models whose COLOR_0 is
+   * data (banner_cloth) get a runtime bannerSvg() texture per shape on their cloth - proves the cloth UVs.
+   */
+  private async buildVariants(entry: ModelAssetEntry): Promise<void> {
+    const all = new Set(entry.variants.flatMap((v) => v.nodes));
+    const width = entry.bounds.max[0]! - entry.bounds.min[0]! + 0.8;
+    const patterns = Object.keys(EMBLEMS) as BannerPattern[];
+    const looks = Object.values(FACTION_ART);
+    const isBanner = entry.meta.vertexColors === 'data';
+    const n = entry.variants.length;
+    for (let i = 0; i < n; i++) {
+      const v = entry.variants[i]!;
+      const inst = await this.ctx.assets.loadModel(entry.id, { crossFade: false });
+      this.handles.push(inst);
+      if (i === 0) {
+        this.model = inst;
+        this.fallback = inst.fallback;
+      }
+      const keep = new Set(v.nodes);
+      inst.object.traverse((o) => {
+        if (all.has(o.name)) o.visible = keep.has(o.name);
+      });
+      inst.object.position.x = (i - (n - 1) / 2) * width;
+      this.scene.add(inst.object);
+      if (isBanner && v.name in BANNER_SHAPES) {
+        const look = looks[i % looks.length]!;
+        const svg = bannerSvg(patterns[i % patterns.length]!, v.name as BannerShape, { primary: look.clothDye, secondary: look.clothDyeSecondary, accent: look.trimMetal });
+        const tex = await svgTexture(svg, 256, 384);
+        if (!tex) continue;
+        this.owned.push(tex);
+        inst.object.traverse((o) => {
+          const m = o as THREE.Mesh;
+          if (!m.isMesh || !keep.has(m.name)) return;
+          const src = m.material as THREE.MeshStandardMaterial;
+          const mat = src.clone();
+          mat.map = tex;
+          mat.color.set(0xffffff);
+          mat.alphaTest = 0.5;
+          m.material = mat;
+          this.owned.push(mat);
+        });
+      }
+    }
+    const min = new THREE.Vector3(...(entry.bounds.min as [number, number, number]));
+    const max = new THREE.Vector3(...(entry.bounds.max as [number, number, number]));
+    min.x -= ((n - 1) / 2) * width;
+    max.x += ((n - 1) / 2) * width;
+    this.bounds.set(min, max);
+    this.notes.push(`${n} variants: ${entry.variants.map((v) => v.name).join(', ')}`);
   }
 
   private async buildMaterialLookdev(id: string): Promise<void> {
@@ -424,6 +529,10 @@ export class AssetViewerScene implements GameScene {
       return;
     }
     this.handles.push(vat);
+    const passes = this.scenePasses;
+    this.scene.onBeforeRender = () => {
+      passes.count++;
+    };
     const count = Math.max(1, Math.min(6000, Math.round(this.opts.count ?? 500)));
     const cols = Math.ceil(Math.sqrt(count * 1.6));
     const rows = Math.ceil(count / cols);
@@ -571,12 +680,13 @@ export class AssetViewerScene implements GameScene {
     this.handles.push(fb as FlipbookHandle);
     const e = fb.entry;
     const seqs = e.sequences;
+    // Atlas frames are square: show every sequence on a square quad of the effect's largest size.
     const size = e.sizeMeters ?? [2, 2];
-    const w = size[0]!;
-    const h = size[1] ?? size[0]!;
+    const w = Math.max(size[0] ?? 2, size[1] ?? 2);
+    const h = w;
     const cols = Math.min(seqs.length, 4);
     seqs.forEach((s, i) => {
-      const mat = createFlipbookMaterial(fb, { sequence: s.name, tint: e.tint !== '#ffffff' && e.lit ? e.tint : undefined });
+      const mat = createFlipbookMaterial(fb, { sequence: s.name, tint: e.tint !== '#ffffff' ? e.tint : undefined });
       const geo = new THREE.PlaneGeometry(w, h);
       const mesh = new THREE.Mesh(geo, mat);
       const c = i % cols;
@@ -847,7 +957,8 @@ export class AssetViewerScene implements GameScene {
   // ------------------------------------------------------------------ ground / shadows / camera
 
   private async buildGround(): Promise<void> {
-    const size = Math.max(400, this.bounds.getSize(new THREE.Vector3()).length() * 12, this.impostorDist * 6);
+    // Large enough that the gap below the horizon (atan(eye height / radius)) stays under ~2 px at hero framing.
+    const size = Math.max(4000, this.bounds.getSize(new THREE.Vector3()).length() * 12, this.impostorDist * 6);
     const geo = new THREE.CircleGeometry(size / 2, 96);
     geo.rotateX(-Math.PI / 2);
     const entry = this.ctx.assets.entry(GROUND_MATERIAL);
@@ -916,6 +1027,15 @@ export class AssetViewerScene implements GameScene {
         target.set(c.x + size.x * 0.12, b.min.y + size.y * 0.12, b.max.z - size.z * 0.08);
         pos.set(c.x + size.x * 0.32, b.min.y + size.y * 0.12, b.max.z + r * 0.18);
         break;
+      case 'front': {
+        // straight-on elevation that fits the full width (variant line-ups, banners)
+        const aspect = this.camera.aspect || 16 / 9;
+        const halfH = Math.atan(Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2)) * aspect);
+        const d = Math.max(r * 1.2, (size.x / 2 / Math.tan(halfH)) * 1.12, (size.y / 2 / Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2))) * 1.15);
+        target.set(c.x, b.min.y + size.y * 0.5, c.z);
+        pos.set(c.x, b.min.y + size.y * 0.42, b.max.z + d);
+        break;
+      }
       case 'top':
         pos.set(c.x + 0.01, b.max.y + r * 2.2, c.z + r * 0.4);
         target.copy(c);
@@ -934,7 +1054,7 @@ export class AssetViewerScene implements GameScene {
     }
     this.camera.position.copy(pos);
     this.camera.near = Math.max(0.05, r * 0.01);
-    this.camera.far = r * 400;
+    this.camera.far = Math.max(r * 400, 3000);
     this.camera.updateProjectionMatrix();
     this.camera.lookAt(target);
     if (this.controls) {
@@ -1030,8 +1150,17 @@ export class AssetViewerScene implements GameScene {
     this.applyGrade();
   }
 
-  private crowdDraws(): { lod: number; main: number; shadow: number; instances: number }[] {
-    return this.crowd.map((c, i) => ({ lod: i, main: c.draws.main, shadow: c.draws.shadow, instances: c.mesh.count }));
+  private crowdDraws(): { lod: number; main: number; shadow: number; instances: number; scenePasses: number; perPass: number }[] {
+    const passes = Math.max(1, this.scenePasses.count);
+    return this.crowd.map((c, i) => ({
+      lod: i,
+      main: c.draws.main,
+      shadow: c.draws.shadow,
+      instances: c.mesh.count,
+      scenePasses: passes,
+      // one InstancedMesh per LOD: draws per scene pass = color draw + its shadow draw
+      perPass: (c.draws.main + c.draws.shadow) / passes,
+    }));
   }
 
   private updateHud(): void {
@@ -1043,7 +1172,7 @@ export class AssetViewerScene implements GameScene {
     let extra = '';
     if (this.model?.object instanceof THREE.LOD) extra += `\nlod ${this.model.object.getCurrentLevel()} (auto${this.opts.crossfade ? ', cross-fade' : ''})`;
     else if (this.ctx.params.lod !== null) extra += `\nlod ${this.ctx.params.lod}`;
-    if (this.mode === 'vat') extra += `\n${this.crowdDraws().map((d) => `LOD${d.lod}: ${d.instances} inst, ${d.main}+${d.shadow} draws/frame`).join('  ')}`;
+    if (this.mode === 'vat') extra += `\n${this.crowdDraws().map((d) => `LOD${d.lod}: ${d.instances} inst, ${d.perPass} draws/pass (${d.main}+${d.shadow} in ${d.scenePasses} passes)`).join('  ')}`;
     if (this.mode === 'impostor') extra += `\ndistance ${this.impostorDist.toFixed(0)} m  mode ${this.opts.mode ?? 'ab'}`;
     if (this.mode === 'skinned') extra += `\n${this.clones.map((c) => `${c.clip}: ${c.fired.slice(-3).join(' ')}`).join('\n')}`;
     if (this.mode === 'kit') extra += `\n${this.kitDraws.map((k) => `${k.id}: ${k.meshes} draws`).join('  ')}`;
@@ -1086,6 +1215,7 @@ export class AssetViewerScene implements GameScene {
       c.draws.main = 0;
       c.draws.shadow = 0;
     }
+    this.scenePasses.count = 0;
     this.controls?.update(dt);
     ctx.render.render(dt);
     this.stepMemtest();

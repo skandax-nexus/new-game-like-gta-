@@ -1,131 +1,333 @@
 {
   "shots": [
     {
-      "name": "vat_crowd",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=vat_test_dummy&count=500&hdri=sky_golden&camera=overview&t=1.37&noui=1",
-      "ms": 36381,
-      "errors": [
-        "shots: page.screenshot: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n"
-      ],
-      "warnings": []
-    },
-    {
-      "name": "vat_crowd_hud",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=vat_test_dummy&count=500&hdri=sky_golden&camera=overview&t=1.37",
-      "ms": 32095,
-      "errors": [
-        "shots: page.screenshot: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n"
-      ],
-      "warnings": []
-    },
-    {
-      "name": "vat_crowd_walk",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=vat_test_dummy&clip=walk&count=500&hdri=sky_day&camera=overview&t=0.61&noui=1",
-      "ms": 19535,
-      "errors": [],
-      "warnings": []
-    },
-    {
-      "name": "vat_crowd_close",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=vat_test_dummy&count=60&hdri=sky_golden&camera=hero&t=2.1&noui=1",
-      "ms": 33088,
-      "errors": [
-        "shots: page.screenshot: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n"
-      ],
-      "warnings": []
-    },
-    {
       "name": "impostor_ab_60m",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=ab&dist=60&hdri=sky_day",
-      "ms": 14600,
+      "ms": 36421,
       "errors": [],
       "warnings": []
     },
     {
       "name": "impostor_mesh_220m",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=mesh&dist=220&hdri=sky_day&noui=1",
-      "ms": 12215,
+      "ms": 19189,
       "errors": [],
       "warnings": []
     },
     {
       "name": "impostor_imp_220m",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=impostor&dist=220&hdri=sky_day&noui=1",
-      "ms": 33153,
+      "ms": 26221,
       "errors": [],
       "warnings": []
     },
     {
       "name": "impostor_none_220m",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=none&dist=220&hdri=sky_day&noui=1",
-      "ms": 19440,
+      "ms": 17284,
       "errors": [],
       "warnings": []
     },
     {
-      "name": "skinned_clones",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=skin_test_character&clip=walk&hdri=sky_golden&camera=hero&t=0.4",
-      "ms": 29210,
+      "name": "sky_dawn_stupa",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_dawn&camera=hero&noui=1",
+      "ms": 63757,
       "errors": [],
       "warnings": []
     },
     {
-      "name": "skinned_memtest",
-      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=skin_test_character&clip=walk&hdri=sky_day&memtest=1&noui=1",
-      "ms": 28165,
+      "name": "sky_noon_stupa",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_noon&camera=hero&noui=1",
+      "ms": 61443,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "sky_golden_stupa",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=hero&noui=1",
+      "ms": 64521,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "sky_dusk_stupa",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_dusk&camera=hero&noui=1",
+      "ms": 56534,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "sky_night_stupa",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_night&camera=hero&noui=1",
+      "ms": 72270,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "sky_overcast_stupa",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_overcast&camera=hero&noui=1",
+      "ms": 57207,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "sky_haze_stupa",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_haze&camera=hero&noui=1",
+      "ms": 43678,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "sky_fog_stupa",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_fog&camera=hero&noui=1",
+      "ms": 58868,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "sky_day_stupa",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_day&camera=hero&noui=1",
+      "ms": 42834,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "sky_dawn_probes",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=sky_dawn&noui=1",
+      "ms": 42645,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "sky_day_probes",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=sky_day&noui=1",
+      "ms": 20303,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "sky_dusk_probes",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=sky_dusk&noui=1",
+      "ms": 16845,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "sky_fog_probes",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=sky_fog&noui=1",
+      "ms": 31424,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "sky_golden_probes",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=sky_golden&noui=1",
+      "ms": 25496,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "sky_haze_probes",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=sky_haze&noui=1",
+      "ms": 25624,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "sky_night_probes",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=sky_night&noui=1",
+      "ms": 25295,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "sky_noon_probes",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=sky_noon&noui=1",
+      "ms": 40181,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "sky_overcast_probes",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=sky_overcast&noui=1",
+      "ms": 54501,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "banner_cloth_variants",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=banner_cloth&hdri=sky_golden&camera=hero&noui=1",
+      "ms": 38857,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "lens_dirt_view",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=lens_dirt&hdri=sky_day&noui=1",
+      "ms": 56223,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "sun_sprite_view",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=sun_sprite&hdri=sky_day&noui=1",
+      "ms": 55603,
       "errors": [],
       "warnings": []
     }
   ],
   "numbers": {
-    "crowd": {
-      "lods": [
-        {
-          "lod": 0,
-          "main": 2,
-          "shadow": 2,
-          "instances": 261
-        },
-        {
-          "lod": 1,
-          "main": 2,
-          "shadow": 2,
-          "instances": 239
-        }
-      ],
-      "instances": 500
-    },
     "impostor": {
       "rect": {
-        "x": 547,
-        "y": 293,
-        "w": 61,
-        "h": 64
+        "x": 608,
+        "y": 325,
+        "w": 67,
+        "h": 72
       },
-      "cropMeshLum": 0.13059062823931153,
-      "cropImpostorLum": 0.13061156413161062,
-      "cropDiff": 0.0001603169582791939,
-      "objectMeshLum": 0,
-      "objectImpostorLum": 0,
+      "cropMeshLum": 0.11276008222539977,
+      "cropImpostorLum": 0.11588764806999421,
+      "cropDiff": 0.027736462965171103,
+      "objectMeshLum": 0.11275012039983069,
+      "objectImpostorLum": 0.11588617454756837,
       "objectPixels": [
-        0,
-        0
+        4821,
+        4823
       ],
-      "objectDiff": 0
+      "objectDiff": 0.027814197773064122
     },
-    "skinnedMemory": {
-      "baseline": {
-        "geometries": 11,
-        "textures": 3
+    "skies": [
+      {
+        "sky": "sky_dawn",
+        "preset": "dawn",
+        "elevationDeg": 6,
+        "azimuthDeg": 95,
+        "direction": [
+          0.99074,
+          0.10453,
+          0.08668
+        ],
+        "sunIntensity": 1.9,
+        "ambientIrradiance": 0.38,
+        "environmentIntensity": 1
       },
-      "loaded": {
-        "geometries": 11,
-        "textures": 3
+      {
+        "sky": "sky_noon",
+        "preset": "noon",
+        "elevationDeg": 62,
+        "azimuthDeg": 170,
+        "direction": [
+          0.08152,
+          0.88295,
+          0.46234
+        ],
+        "sunIntensity": 3.4,
+        "ambientIrradiance": 0.75,
+        "environmentIntensity": 1
       },
-      "released": {
-        "geometries": 14,
-        "textures": 29
+      {
+        "sky": "sky_golden",
+        "preset": "golden",
+        "elevationDeg": 7,
+        "azimuthDeg": 258,
+        "direction": [
+          -0.97086,
+          0.12187,
+          0.20636
+        ],
+        "sunIntensity": 5.791,
+        "ambientIrradiance": 0.7737,
+        "environmentIntensity": 0.5816207832493214
+      },
+      {
+        "sky": "sky_dusk",
+        "preset": "dusk",
+        "elevationDeg": -2,
+        "azimuthDeg": 280,
+        "direction": [
+          -0.98421,
+          -0.0349,
+          -0.17354
+        ],
+        "sunIntensity": 0.55,
+        "ambientIrradiance": 0.16,
+        "environmentIntensity": 1
+      },
+      {
+        "sky": "sky_night",
+        "preset": "night",
+        "elevationDeg": 42,
+        "azimuthDeg": 150,
+        "direction": [
+          0.37157,
+          0.66913,
+          0.64358
+        ],
+        "sunIntensity": 0.55,
+        "ambientIrradiance": 0.08,
+        "environmentIntensity": 1
+      },
+      {
+        "sky": "sky_overcast",
+        "preset": "monsoon",
+        "elevationDeg": 50,
+        "azimuthDeg": 180,
+        "direction": [
+          0,
+          0.76604,
+          0.64279
+        ],
+        "sunIntensity": 0.85,
+        "ambientIrradiance": 0.5,
+        "environmentIntensity": 1
+      },
+      {
+        "sky": "sky_haze",
+        "preset": "dry_haze",
+        "elevationDeg": 55,
+        "azimuthDeg": 200,
+        "direction": [
+          -0.19617,
+          0.81915,
+          0.53899
+        ],
+        "sunIntensity": 3,
+        "ambientIrradiance": 0.9,
+        "environmentIntensity": 1
+      },
+      {
+        "sky": "sky_fog",
+        "preset": "winter_fog",
+        "elevationDeg": 12,
+        "azimuthDeg": 125,
+        "direction": [
+          0.80125,
+          0.20791,
+          0.56104
+        ],
+        "sunIntensity": 1.4,
+        "ambientIrradiance": 0.55,
+        "environmentIntensity": 1
+      },
+      {
+        "sky": "sky_day",
+        "preset": null,
+        "elevationDeg": 42,
+        "azimuthDeg": 128,
+        "direction": [
+          0.58561,
+          0.66913,
+          0.45753
+        ],
+        "sunIntensity": 3.9414,
+        "ambientIrradiance": 0.5766,
+        "environmentIntensity": 1.6
       }
+    ],
+    "banners": {
+      "notes": [
+        "6 variants: swallowtail, pennant, notched, streamer, square, fringed"
+      ],
+      "fallback": false
     }
   }
 }

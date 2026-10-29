@@ -62,14 +62,20 @@ def puff_frames(seed: int, frames: int, duration: float, extent: Sequence[float]
 
 def lit_volume_frames(dens_frames: Sequence[np.ndarray], extent: Sequence[float], px: int, *, k_ext: float,
                       albedo: Sequence[float] = (0.62, 0.6, 0.58), samples: int = 16, view: str = "front",
-                      ambient_blur: float = 5.0) -> tuple[list[np.ndarray], list[np.ndarray]]:
+                      ambient_blur: float = 5.0, flatten: float = 0.0) -> tuple[list[np.ndarray], list[np.ndarray]]:
     """Cycles-render density frames as an occlusion-only (ambient) albedo for runtime lighting.
-    Returns (straight-alpha linear rgba frames, tangent-space normal frames)."""
+    `flatten` (0..1) compresses the opacity range over the sequence: each frame is scaled by
+    (peak column density / its own peak) ** flatten, so an expanding puff stays readable until its fade-out
+    instead of thinning to nothing at mid-life. Returns (straight-alpha linear rgba frames, normal frames)."""
     n = dens_frames[0].shape[0]
     vox = float(max(extent)) / (n - 1)
+    axis = 2 if view == "top" else 1
+    peaks = [float((d.sum(axis=axis) * vox).max()) for d in dens_frames]
+    top = max(peaks) if peaks else 1.0
     pairs = []
-    for d in dens_frames:
-        sigma = (d * k_ext).astype(F)
+    for d, pk in zip(dens_frames, peaks):
+        boost = (top / max(pk, top * 1e-3)) ** flatten if flatten > 0 else 1.0
+        sigma = (d * k_ext * boost).astype(F)
         rad = fb.light_volume(sigma, vox, albedo, key=(0.0, 0.0, 0.0), ambient=(1.0, 1.0, 1.0), ambient_blur=ambient_blur,
                               ambient_k=0.35)
         pairs.append((sigma, rad))

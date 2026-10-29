@@ -9,11 +9,1076 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 12123752,
-    "high": 5496088,
-    "mobile": 3086861
+    "ultra": 13304266,
+    "high": 6610545,
+    "mobile": 3536292
   },
   "assets": {
+    "banner_cloth": {
+      "kind": "model",
+      "id": "banner_cloth",
+      "category": "banners",
+      "hash": "89029a9e83",
+      "description": "Banner pole + crossbar + finial + tassels and the six BannerShape cloths (variants), cloth weights in COLOR_0.r.",
+      "bytes": {
+        "ultra": 47148,
+        "high": 47148,
+        "mobile": 47148
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "lods": [
+        {
+          "lod": 0,
+          "url": "models/banner_cloth/banner_cloth.lod0.glb",
+          "bytes": 47148,
+          "triangles": 3958,
+          "drawCalls": 12,
+          "distance": 0
+        }
+      ],
+      "minLod": {
+        "ultra": 0,
+        "high": 0,
+        "mobile": 0
+      },
+      "bounds": {
+        "min": [
+          -0.632,
+          0,
+          -0.03
+        ],
+        "max": [
+          0.632,
+          4.42,
+          0.035
+        ],
+        "center": [
+          0,
+          2.21,
+          0.0025
+        ],
+        "radius": 2.2988
+      },
+      "clips": [],
+      "skinned": false,
+      "clipEvents": {},
+      "rootMotion": {},
+      "construction": null,
+      "sockets": {
+        "crossbar": {
+          "bone": null,
+          "position": [
+            0,
+            3.98,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        "finial": {
+          "bone": null,
+          "position": [
+            0,
+            4.2,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        "grip": {
+          "bone": null,
+          "position": [
+            0,
+            1.15,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "variants": [
+        {
+          "name": "swallowtail",
+          "kind": "shape",
+          "nodes": [
+            "cloth_swallowtail"
+          ]
+        },
+        {
+          "name": "pennant",
+          "kind": "shape",
+          "nodes": [
+            "cloth_pennant"
+          ]
+        },
+        {
+          "name": "notched",
+          "kind": "shape",
+          "nodes": [
+            "cloth_notched"
+          ]
+        },
+        {
+          "name": "streamer",
+          "kind": "shape",
+          "nodes": [
+            "cloth_streamer"
+          ]
+        },
+        {
+          "name": "square",
+          "kind": "shape",
+          "nodes": [
+            "cloth_square"
+          ]
+        },
+        {
+          "name": "fringed",
+          "kind": "shape",
+          "nodes": [
+            "cloth_fringed",
+            "fringe_fringed"
+          ]
+        }
+      ],
+      "meta": {
+        "authoredFor": "infantryStandard",
+        "cloth": {
+          "sheen": 0.35,
+          "stiffnessNearPole": 0.85,
+          "waveAmp": 0.18,
+          "waveFreq": 2.4,
+          "waveSpeed": 3.2
+        },
+        "clothWeight": "COLOR_0.r: 0 pinned at the crossbar -> 1 at the free edge; COLOR_0.g: 1 = loose secondary parts",
+        "dimensions": {
+          "clothH": 1.6,
+          "clothW": 1.1,
+          "crossbarY": 3.98,
+          "poleM": 4.2
+        },
+        "nodeTriangles": {
+          "cloth_fringed": 708,
+          "cloth_notched": 782,
+          "cloth_pennant": 420,
+          "cloth_square": 554,
+          "cloth_streamer": 468,
+          "cloth_swallowtail": 738,
+          "crossbar": 28,
+          "finial": 28,
+          "fringe_fringed": 84,
+          "pole": 36,
+          "tassels": 112
+        },
+        "uv": "bannerSvg viewBox 0 0 100 150, u = x / 100, v = y / 150 (v = 0 at the crossbar), flipY false",
+        "vertexColors": "data"
+      },
+      "materialSets": [],
+      "sets": {},
+      "footprintMeters": null
+    },
+    "fx_dust": {
+      "kind": "flipbook",
+      "id": "fx_dust",
+      "category": "fx",
+      "hash": "879007c8f7",
+      "description": "Dust: ground puffs (2), expanding ring (top view), hoof kick; neutral albedo + normals, tint by ground.",
+      "bytes": {
+        "ultra": 250940,
+        "high": 250940,
+        "mobile": 81972
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "cols": 8,
+      "rows": 8,
+      "fps": 8,
+      "loop": false,
+      "sequences": [
+        {
+          "name": "puff",
+          "start": 0,
+          "count": 16,
+          "fps": 6.4,
+          "loop": false,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "puff_b",
+          "start": 16,
+          "count": 16,
+          "fps": 6.4,
+          "loop": false,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "ring",
+          "start": 32,
+          "count": 16,
+          "fps": 8,
+          "loop": false,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "hoof",
+          "start": 48,
+          "count": 16,
+          "fps": 10,
+          "loop": false,
+          "blend": null,
+          "lit": null
+        }
+      ],
+      "maps": {
+        "color": {
+          "ultra": {
+            "url": "fx/fx_dust/color_1024.webp",
+            "bytes": 232704,
+            "width": 1024,
+            "height": 1024
+          },
+          "high": {
+            "url": "fx/fx_dust/color_1024.webp",
+            "bytes": 232704,
+            "width": 1024,
+            "height": 1024
+          },
+          "mobile": {
+            "url": "fx/fx_dust/color_512.webp",
+            "bytes": 74384,
+            "width": 512,
+            "height": 512
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "fx/fx_dust/normal_512.webp",
+            "bytes": 18236,
+            "width": 512,
+            "height": 512
+          },
+          "high": {
+            "url": "fx/fx_dust/normal_512.webp",
+            "bytes": 18236,
+            "width": 512,
+            "height": 512
+          },
+          "mobile": {
+            "url": "fx/fx_dust/normal_256.webp",
+            "bytes": 7588,
+            "width": 256,
+            "height": 256
+          }
+        }
+      },
+      "blend": "alpha",
+      "lit": true,
+      "softFadeMeters": 0.5,
+      "emissiveIntensity": 1,
+      "sizeMeters": [
+        2,
+        1.5
+      ],
+      "tint": "#b0956e"
+    },
+    "fx_fire": {
+      "kind": "flipbook",
+      "id": "fx_fire",
+      "category": "fx",
+      "hash": "7a24047d2e",
+      "description": "Looping flame, premultiplied emission (x8) + soot occlusion, 64 frames at 24 fps.",
+      "bytes": {
+        "ultra": 305096,
+        "high": 305096,
+        "mobile": 89428
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "cols": 8,
+      "rows": 8,
+      "fps": 24,
+      "loop": true,
+      "sequences": [
+        {
+          "name": "all",
+          "start": 0,
+          "count": 64,
+          "fps": 24,
+          "loop": true,
+          "blend": null,
+          "lit": null
+        }
+      ],
+      "maps": {
+        "color": {
+          "ultra": {
+            "url": "fx/fx_fire/color_1024.webp",
+            "bytes": 305096,
+            "width": 1024,
+            "height": 1024
+          },
+          "high": {
+            "url": "fx/fx_fire/color_1024.webp",
+            "bytes": 305096,
+            "width": 1024,
+            "height": 1024
+          },
+          "mobile": {
+            "url": "fx/fx_fire/color_512.webp",
+            "bytes": 89428,
+            "width": 512,
+            "height": 512
+          }
+        }
+      },
+      "blend": "premultiplied",
+      "lit": false,
+      "softFadeMeters": 0.3,
+      "emissiveIntensity": 8,
+      "sizeMeters": [
+        1.5,
+        2
+      ],
+      "tint": "#ffffff"
+    },
+    "fx_lightning": {
+      "kind": "flipbook",
+      "id": "fx_lightning",
+      "category": "fx",
+      "hash": "30989f109c",
+      "description": "Four forked lightning bolts, white core + violet glow, additive x10 (high / ultra only).",
+      "bytes": {
+        "ultra": 12834,
+        "high": 12834,
+        "mobile": 0
+      },
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": null,
+      "cols": 2,
+      "rows": 2,
+      "fps": 1,
+      "loop": true,
+      "sequences": [
+        {
+          "name": "bolt0",
+          "start": 0,
+          "count": 1,
+          "fps": 1,
+          "loop": true,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "bolt1",
+          "start": 1,
+          "count": 1,
+          "fps": 1,
+          "loop": true,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "bolt2",
+          "start": 2,
+          "count": 1,
+          "fps": 1,
+          "loop": true,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "bolt3",
+          "start": 3,
+          "count": 1,
+          "fps": 1,
+          "loop": true,
+          "blend": null,
+          "lit": null
+        }
+      ],
+      "maps": {
+        "color": {
+          "ultra": {
+            "url": "fx/fx_lightning/color_512.webp",
+            "bytes": 12834,
+            "width": 512,
+            "height": 512
+          },
+          "high": {
+            "url": "fx/fx_lightning/color_512.webp",
+            "bytes": 12834,
+            "width": 512,
+            "height": 512
+          }
+        }
+      },
+      "blend": "additive",
+      "lit": false,
+      "softFadeMeters": 0,
+      "emissiveIntensity": 10,
+      "sizeMeters": [
+        600,
+        1200
+      ],
+      "tint": "#ffffff"
+    },
+    "fx_mist": {
+      "kind": "flipbook",
+      "id": "fx_mist",
+      "category": "fx",
+      "hash": "3164fe50d0",
+      "description": "Mist sprites: bank, wisp, puff, sheet; feathered to zero at the edges, lit via soft normals.",
+      "bytes": {
+        "ultra": 37234,
+        "high": 37234,
+        "mobile": 37234
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "cols": 2,
+      "rows": 2,
+      "fps": 1,
+      "loop": true,
+      "sequences": [
+        {
+          "name": "bank",
+          "start": 0,
+          "count": 1,
+          "fps": 1,
+          "loop": true,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "wisp",
+          "start": 1,
+          "count": 1,
+          "fps": 1,
+          "loop": true,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "puff",
+          "start": 2,
+          "count": 1,
+          "fps": 1,
+          "loop": true,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "sheet",
+          "start": 3,
+          "count": 1,
+          "fps": 1,
+          "loop": true,
+          "blend": null,
+          "lit": null
+        }
+      ],
+      "maps": {
+        "color": {
+          "ultra": {
+            "url": "fx/fx_mist/color_512.webp",
+            "bytes": 34892,
+            "width": 512,
+            "height": 512
+          },
+          "high": {
+            "url": "fx/fx_mist/color_512.webp",
+            "bytes": 34892,
+            "width": 512,
+            "height": 512
+          },
+          "mobile": {
+            "url": "fx/fx_mist/color_512.webp",
+            "bytes": 34892,
+            "width": 512,
+            "height": 512
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "fx/fx_mist/normal_256.webp",
+            "bytes": 2342,
+            "width": 256,
+            "height": 256
+          },
+          "high": {
+            "url": "fx/fx_mist/normal_256.webp",
+            "bytes": 2342,
+            "width": 256,
+            "height": 256
+          },
+          "mobile": {
+            "url": "fx/fx_mist/normal_256.webp",
+            "bytes": 2342,
+            "width": 256,
+            "height": 256
+          }
+        }
+      },
+      "blend": "alpha",
+      "lit": true,
+      "softFadeMeters": 2,
+      "emissiveIntensity": 1,
+      "sizeMeters": [
+        12,
+        5
+      ],
+      "tint": "#dfe3e6"
+    },
+    "fx_nature": {
+      "kind": "flipbook",
+      "id": "fx_nature",
+      "category": "fx",
+      "hash": "c014c330d3",
+      "description": "Nature: sal / peepal leaves and palash petals (8-frame tumbles), kash seed, fireflies + motes (additive).",
+      "bytes": {
+        "ultra": 23586,
+        "high": 23586,
+        "mobile": 23586
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "cols": 8,
+      "rows": 8,
+      "fps": 8,
+      "loop": true,
+      "sequences": [
+        {
+          "name": "leaf_sal",
+          "start": 0,
+          "count": 8,
+          "fps": 8,
+          "loop": true,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "leaf_peepal",
+          "start": 8,
+          "count": 8,
+          "fps": 8,
+          "loop": true,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "palash",
+          "start": 16,
+          "count": 8,
+          "fps": 10,
+          "loop": true,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "kash",
+          "start": 24,
+          "count": 1,
+          "fps": 1,
+          "loop": true,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "firefly",
+          "start": 25,
+          "count": 2,
+          "fps": 3,
+          "loop": true,
+          "blend": "additive",
+          "lit": false
+        },
+        {
+          "name": "mote",
+          "start": 27,
+          "count": 2,
+          "fps": 1,
+          "loop": true,
+          "blend": "additive",
+          "lit": false
+        }
+      ],
+      "maps": {
+        "color": {
+          "ultra": {
+            "url": "fx/fx_nature/color_512.webp",
+            "bytes": 21372,
+            "width": 512,
+            "height": 512
+          },
+          "high": {
+            "url": "fx/fx_nature/color_512.webp",
+            "bytes": 21372,
+            "width": 512,
+            "height": 512
+          },
+          "mobile": {
+            "url": "fx/fx_nature/color_512.webp",
+            "bytes": 21372,
+            "width": 512,
+            "height": 512
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "fx/fx_nature/normal_256.webp",
+            "bytes": 2214,
+            "width": 256,
+            "height": 256
+          },
+          "high": {
+            "url": "fx/fx_nature/normal_256.webp",
+            "bytes": 2214,
+            "width": 256,
+            "height": 256
+          },
+          "mobile": {
+            "url": "fx/fx_nature/normal_256.webp",
+            "bytes": 2214,
+            "width": 256,
+            "height": 256
+          }
+        }
+      },
+      "blend": "alpha",
+      "lit": true,
+      "softFadeMeters": 0.05,
+      "emissiveIntensity": 1,
+      "sizeMeters": [
+        0.12,
+        0.12
+      ],
+      "tint": "#ffffff"
+    },
+    "fx_rain": {
+      "kind": "flipbook",
+      "id": "fx_rain",
+      "category": "fx",
+      "hash": "e70cc0aff4",
+      "description": "Rain: streak, 4x4 crown splash, 8-frame ripple (normal map), eave drip.",
+      "bytes": {
+        "ultra": 19894,
+        "high": 19894,
+        "mobile": 19894
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "cols": 8,
+      "rows": 8,
+      "fps": 30,
+      "loop": false,
+      "sequences": [
+        {
+          "name": "streak",
+          "start": 0,
+          "count": 1,
+          "fps": 1,
+          "loop": false,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "splash",
+          "start": 1,
+          "count": 16,
+          "fps": 30,
+          "loop": false,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "ripple",
+          "start": 17,
+          "count": 8,
+          "fps": 16,
+          "loop": false,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "drip",
+          "start": 25,
+          "count": 1,
+          "fps": 1,
+          "loop": false,
+          "blend": null,
+          "lit": null
+        }
+      ],
+      "maps": {
+        "color": {
+          "ultra": {
+            "url": "fx/fx_rain/color_512.webp",
+            "bytes": 17710,
+            "width": 512,
+            "height": 512
+          },
+          "high": {
+            "url": "fx/fx_rain/color_512.webp",
+            "bytes": 17710,
+            "width": 512,
+            "height": 512
+          },
+          "mobile": {
+            "url": "fx/fx_rain/color_512.webp",
+            "bytes": 17710,
+            "width": 512,
+            "height": 512
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "fx/fx_rain/normal_256.webp",
+            "bytes": 2184,
+            "width": 256,
+            "height": 256
+          },
+          "high": {
+            "url": "fx/fx_rain/normal_256.webp",
+            "bytes": 2184,
+            "width": 256,
+            "height": 256
+          },
+          "mobile": {
+            "url": "fx/fx_rain/normal_256.webp",
+            "bytes": 2184,
+            "width": 256,
+            "height": 256
+          }
+        }
+      },
+      "blend": "alpha",
+      "lit": false,
+      "softFadeMeters": 0.05,
+      "emissiveIntensity": 1,
+      "sizeMeters": [
+        0.04,
+        0.5
+      ],
+      "tint": "#c9d6dc"
+    },
+    "fx_smoke": {
+      "kind": "flipbook",
+      "id": "fx_smoke",
+      "category": "fx",
+      "hash": "90bfe65af7",
+      "description": "Billowing smoke puff over life (64 frames, one-shot), lit via normals; tint #4a4038 for fires.",
+      "bytes": {
+        "ultra": 313822,
+        "high": 313822,
+        "mobile": 98090
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "cols": 8,
+      "rows": 8,
+      "fps": 16,
+      "loop": false,
+      "sequences": [
+        {
+          "name": "all",
+          "start": 0,
+          "count": 64,
+          "fps": 16,
+          "loop": false,
+          "blend": null,
+          "lit": null
+        }
+      ],
+      "maps": {
+        "color": {
+          "ultra": {
+            "url": "fx/fx_smoke/color_1024.webp",
+            "bytes": 294082,
+            "width": 1024,
+            "height": 1024
+          },
+          "high": {
+            "url": "fx/fx_smoke/color_1024.webp",
+            "bytes": 294082,
+            "width": 1024,
+            "height": 1024
+          },
+          "mobile": {
+            "url": "fx/fx_smoke/color_512.webp",
+            "bytes": 89732,
+            "width": 512,
+            "height": 512
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "fx/fx_smoke/normal_512.webp",
+            "bytes": 19740,
+            "width": 512,
+            "height": 512
+          },
+          "high": {
+            "url": "fx/fx_smoke/normal_512.webp",
+            "bytes": 19740,
+            "width": 512,
+            "height": 512
+          },
+          "mobile": {
+            "url": "fx/fx_smoke/normal_256.webp",
+            "bytes": 8358,
+            "width": 256,
+            "height": 256
+          }
+        }
+      },
+      "blend": "alpha",
+      "lit": true,
+      "softFadeMeters": 0.8,
+      "emissiveIntensity": 1,
+      "sizeMeters": [
+        4,
+        5
+      ],
+      "tint": "#4a4038"
+    },
+    "fx_sparks_embers": {
+      "kind": "flipbook",
+      "id": "fx_sparks_embers",
+      "category": "fx",
+      "hash": "9a9c561d14",
+      "description": "Additive sparks: spark, embers, slash spark, parry flash, finisher burst (premultiplied emission x6).",
+      "bytes": {
+        "ultra": 24694,
+        "high": 24694,
+        "mobile": 24694
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "cols": 8,
+      "rows": 8,
+      "fps": 30,
+      "loop": false,
+      "sequences": [
+        {
+          "name": "spark",
+          "start": 0,
+          "count": 1,
+          "fps": 1,
+          "loop": false,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "ember",
+          "start": 1,
+          "count": 2,
+          "fps": 1,
+          "loop": false,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "slash_spark",
+          "start": 3,
+          "count": 8,
+          "fps": 30,
+          "loop": false,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "parry_flash",
+          "start": 11,
+          "count": 8,
+          "fps": 60,
+          "loop": false,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "finisher_burst",
+          "start": 19,
+          "count": 16,
+          "fps": 30,
+          "loop": false,
+          "blend": null,
+          "lit": null
+        }
+      ],
+      "maps": {
+        "color": {
+          "ultra": {
+            "url": "fx/fx_sparks_embers/color_512.webp",
+            "bytes": 24694,
+            "width": 512,
+            "height": 512
+          },
+          "high": {
+            "url": "fx/fx_sparks_embers/color_512.webp",
+            "bytes": 24694,
+            "width": 512,
+            "height": 512
+          },
+          "mobile": {
+            "url": "fx/fx_sparks_embers/color_512.webp",
+            "bytes": 24694,
+            "width": 512,
+            "height": 512
+          }
+        }
+      },
+      "blend": "additive",
+      "lit": false,
+      "softFadeMeters": 0.1,
+      "emissiveIntensity": 6,
+      "sizeMeters": [
+        0.6,
+        0.6
+      ],
+      "tint": "#ffffff"
+    },
+    "fx_weapon_trail": {
+      "kind": "flipbook",
+      "id": "fx_weapon_trail",
+      "category": "fx",
+      "hash": "463c4d90c5",
+      "description": "Weapon trail: gradient (edge -> saffron -> tail), wide variant, two u-tileable streak noises.",
+      "bytes": {
+        "ultra": 8690,
+        "high": 8690,
+        "mobile": 8690
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "cols": 2,
+      "rows": 2,
+      "fps": 1,
+      "loop": true,
+      "sequences": [
+        {
+          "name": "trail",
+          "start": 0,
+          "count": 1,
+          "fps": 1,
+          "loop": true,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "trail_wide",
+          "start": 1,
+          "count": 1,
+          "fps": 1,
+          "loop": true,
+          "blend": null,
+          "lit": null
+        },
+        {
+          "name": "noise",
+          "start": 2,
+          "count": 1,
+          "fps": 1,
+          "loop": true,
+          "blend": "additive",
+          "lit": false
+        },
+        {
+          "name": "noise_b",
+          "start": 3,
+          "count": 1,
+          "fps": 1,
+          "loop": true,
+          "blend": "additive",
+          "lit": false
+        }
+      ],
+      "maps": {
+        "color": {
+          "ultra": {
+            "url": "fx/fx_weapon_trail/color_256.webp",
+            "bytes": 8690,
+            "width": 256,
+            "height": 256
+          },
+          "high": {
+            "url": "fx/fx_weapon_trail/color_256.webp",
+            "bytes": 8690,
+            "width": 256,
+            "height": 256
+          },
+          "mobile": {
+            "url": "fx/fx_weapon_trail/color_256.webp",
+            "bytes": 8690,
+            "width": 256,
+            "height": 256
+          }
+        }
+      },
+      "blend": "additive",
+      "lit": false,
+      "softFadeMeters": 0,
+      "emissiveIntensity": 3,
+      "sizeMeters": [
+        1.2,
+        1
+      ],
+      "tint": "#ffffff"
+    },
     "ground_dry_earth": {
       "kind": "material",
       "id": "ground_dry_earth",
@@ -98,12 +1163,12 @@ export const ASSET_MANIFEST = {
       "kind": "impostor",
       "id": "impostor_test_tree",
       "category": "pipeline_test",
-      "hash": "6f8805665b",
+      "hash": "6ebab97aa0",
       "description": "Pipeline test: hemi-octahedral impostor of the 12 m test tree (A/B with model_test_tree).",
       "bytes": {
-        "ultra": 719344,
-        "high": 622162,
-        "mobile": 372048
+        "ultra": 731598,
+        "high": 626258,
+        "mobile": 373766
       },
       "tiers": [
         "ultra",
@@ -126,19 +1191,19 @@ export const ASSET_MANIFEST = {
         "albedo": {
           "ultra": {
             "url": "impostors/impostor_test_tree/albedo_2048.webp",
-            "bytes": 204356,
+            "bytes": 216610,
             "size": 2048,
             "framePx": 256
           },
           "high": {
             "url": "impostors/impostor_test_tree/albedo_1536.webp",
-            "bytes": 262038,
+            "bytes": 266134,
             "size": 1536,
             "framePx": 192
           },
           "mobile": {
             "url": "impostors/impostor_test_tree/albedo_1024.webp",
-            "bytes": 166908,
+            "bytes": 168626,
             "size": 1024,
             "framePx": 128
           }
@@ -164,6 +1229,34 @@ export const ASSET_MANIFEST = {
           }
         }
       }
+    },
+    "lens_dirt": {
+      "kind": "image",
+      "id": "lens_dirt",
+      "category": "images",
+      "hash": "b5a61186f2",
+      "description": "Lens dirt: smudges, droplet rings, dust specks, faint hexagonal ghosts (low contrast).",
+      "bytes": {
+        "ultra": 20152,
+        "high": 0,
+        "mobile": 0
+      },
+      "tiers": [
+        "ultra"
+      ],
+      "fallback": null,
+      "files": {
+        "ultra": {
+          "url": "images/lens_dirt/lens_dirt_1024.webp",
+          "bytes": 20152,
+          "width": 1024,
+          "height": 1024
+        }
+      },
+      "colorSpace": "srgb",
+      "alpha": false,
+      "hdrScale": 1,
+      "usage": "bloom dirt mask: bloom *= 0.25 + dirt * strength (ultra only)"
     },
     "lut_dawn": {
       "kind": "lut",
@@ -795,16 +1888,70 @@ export const ASSET_MANIFEST = {
       "sets": {},
       "footprintMeters": null
     },
+    "sky_dawn": {
+      "kind": "hdri",
+      "id": "sky_dawn",
+      "category": "hdri",
+      "hash": "c8f84b18f8",
+      "description": "Dawn, sun 6 deg E, pink-gold haze, thin clouds.",
+      "bytes": {
+        "ultra": 200675,
+        "high": 76545,
+        "mobile": 27696
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "files": {
+        "ultra": {
+          "url": "hdri/sky_dawn_2048.exr",
+          "bytes": 200675,
+          "width": 2048,
+          "height": 1024
+        },
+        "high": {
+          "url": "hdri/sky_dawn_1024.exr",
+          "bytes": 76545,
+          "width": 1024,
+          "height": 512
+        },
+        "mobile": {
+          "url": "hdri/sky_dawn_512.exr",
+          "bytes": 27696,
+          "width": 512,
+          "height": 256
+        }
+      },
+      "sun": {
+        "azimuthDeg": 95,
+        "color": [
+          1,
+          0.552,
+          0.3231
+        ],
+        "direction": [
+          0.99074,
+          0.10453,
+          0.08668
+        ],
+        "elevationDeg": 6,
+        "intensity": 1.9
+      },
+      "ambientIrradiance": 0.38
+    },
     "sky_day": {
       "kind": "hdri",
       "id": "sky_day",
       "category": "hdri",
-      "hash": "9680bf5520",
+      "hash": "3dad07904e",
       "description": "Clear late-morning sky, sun 42 deg SE, light haze (lookdev / daytime IBL).",
       "bytes": {
-        "ultra": 605148,
-        "high": 220713,
-        "mobile": 80958
+        "ultra": 260875,
+        "high": 100418,
+        "mobile": 36827
       },
       "tiers": [
         "ultra",
@@ -815,19 +1962,19 @@ export const ASSET_MANIFEST = {
       "files": {
         "ultra": {
           "url": "hdri/sky_day_2048.exr",
-          "bytes": 605148,
+          "bytes": 260875,
           "width": 2048,
           "height": 1024
         },
         "high": {
           "url": "hdri/sky_day_1024.exr",
-          "bytes": 220713,
+          "bytes": 100418,
           "width": 1024,
           "height": 512
         },
         "mobile": {
           "url": "hdri/sky_day_512.exr",
-          "bytes": 80958,
+          "bytes": 36827,
           "width": 512,
           "height": 256
         }
@@ -849,16 +1996,117 @@ export const ASSET_MANIFEST = {
       },
       "ambientIrradiance": 0.5766
     },
+    "sky_dusk": {
+      "kind": "hdri",
+      "id": "sky_dusk",
+      "category": "hdri",
+      "hash": "9641d63024",
+      "description": "Dusk, sun -2 deg W, afterglow, sky-only lighting.",
+      "bytes": {
+        "ultra": 134292,
+        "high": 51622,
+        "mobile": 18320
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "files": {
+        "ultra": {
+          "url": "hdri/sky_dusk_2048.exr",
+          "bytes": 134292,
+          "width": 2048,
+          "height": 1024
+        },
+        "high": {
+          "url": "hdri/sky_dusk_1024.exr",
+          "bytes": 51622,
+          "width": 1024,
+          "height": 512
+        },
+        "mobile": {
+          "url": "hdri/sky_dusk_512.exr",
+          "bytes": 18320,
+          "width": 512,
+          "height": 256
+        }
+      },
+      "sun": {
+        "azimuthDeg": 280,
+        "color": [
+          1,
+          0.3231,
+          0.1559
+        ],
+        "direction": [
+          -0.98421,
+          -0.0349,
+          -0.17354
+        ],
+        "elevationDeg": -2,
+        "intensity": 0.55
+      },
+      "ambientIrradiance": 0.16
+    },
+    "sky_fog": {
+      "kind": "hdri",
+      "id": "sky_fog",
+      "category": "hdri",
+      "hash": "f1425769de",
+      "description": "Shishira fog: low sun, pale fog wall (high / ultra; mobile -> sky_overcast).",
+      "bytes": {
+        "ultra": 25636,
+        "high": 11627,
+        "mobile": 0
+      },
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": "sky_overcast",
+      "files": {
+        "ultra": {
+          "url": "hdri/sky_fog_2048.exr",
+          "bytes": 25636,
+          "width": 2048,
+          "height": 1024
+        },
+        "high": {
+          "url": "hdri/sky_fog_1024.exr",
+          "bytes": 11627,
+          "width": 1024,
+          "height": 512
+        }
+      },
+      "sun": {
+        "azimuthDeg": 125,
+        "color": [
+          1,
+          0.7454,
+          0.5395
+        ],
+        "direction": [
+          0.80125,
+          0.20791,
+          0.56104
+        ],
+        "elevationDeg": 12,
+        "intensity": 1.4
+      },
+      "ambientIrradiance": 0.55
+    },
     "sky_golden": {
       "kind": "hdri",
       "id": "sky_golden",
       "category": "hdri",
-      "hash": "b3fbb01b5f",
+      "hash": "fa0c66e1c4",
       "description": "Golden hour, sun 7 deg W, warm dusty haze (cinematic / hero mode).",
       "bytes": {
-        "ultra": 617120,
-        "high": 228101,
-        "mobile": 83997
+        "ultra": 270426,
+        "high": 104590,
+        "mobile": 38113
       },
       "tiers": [
         "ultra",
@@ -869,19 +2117,19 @@ export const ASSET_MANIFEST = {
       "files": {
         "ultra": {
           "url": "hdri/sky_golden_2048.exr",
-          "bytes": 617120,
+          "bytes": 270426,
           "width": 2048,
           "height": 1024
         },
         "high": {
           "url": "hdri/sky_golden_1024.exr",
-          "bytes": 228101,
+          "bytes": 104590,
           "width": 1024,
           "height": 512
         },
         "mobile": {
           "url": "hdri/sky_golden_512.exr",
-          "bytes": 83997,
+          "bytes": 38113,
           "width": 512,
           "height": 256
         }
@@ -902,6 +2150,222 @@ export const ASSET_MANIFEST = {
         "intensity": 5.791
       },
       "ambientIrradiance": 0.7737
+    },
+    "sky_haze": {
+      "kind": "hdri",
+      "id": "sky_haze",
+      "category": "hdri",
+      "hash": "3cb2192113",
+      "description": "Grishma haze: dusty ochre horizon, almost cloudless.",
+      "bytes": {
+        "ultra": 63552,
+        "high": 26157,
+        "mobile": 10324
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "files": {
+        "ultra": {
+          "url": "hdri/sky_haze_2048.exr",
+          "bytes": 63552,
+          "width": 2048,
+          "height": 1024
+        },
+        "high": {
+          "url": "hdri/sky_haze_1024.exr",
+          "bytes": 26157,
+          "width": 1024,
+          "height": 512
+        },
+        "mobile": {
+          "url": "hdri/sky_haze_512.exr",
+          "bytes": 10324,
+          "width": 512,
+          "height": 256
+        }
+      },
+      "sun": {
+        "azimuthDeg": 200,
+        "color": [
+          1,
+          0.8714,
+          0.6584
+        ],
+        "direction": [
+          -0.19617,
+          0.81915,
+          0.53899
+        ],
+        "elevationDeg": 55,
+        "intensity": 3
+      },
+      "ambientIrradiance": 0.9
+    },
+    "sky_night": {
+      "kind": "hdri",
+      "id": "sky_night",
+      "category": "hdri",
+      "hash": "2549b96038",
+      "description": "Moonlit night: stars, Milky Way, thin clouds; moon = manifest sun, irradiance 0.08.",
+      "bytes": {
+        "ultra": 116572,
+        "high": 41895,
+        "mobile": 12489
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "files": {
+        "ultra": {
+          "url": "hdri/sky_night_2048.exr",
+          "bytes": 116572,
+          "width": 2048,
+          "height": 1024
+        },
+        "high": {
+          "url": "hdri/sky_night_1024.exr",
+          "bytes": 41895,
+          "width": 1024,
+          "height": 512
+        },
+        "mobile": {
+          "url": "hdri/sky_night_512.exr",
+          "bytes": 12489,
+          "width": 512,
+          "height": 256
+        }
+      },
+      "sun": {
+        "azimuthDeg": 150,
+        "color": [
+          0.4513,
+          0.609,
+          1
+        ],
+        "direction": [
+          0.37157,
+          0.66913,
+          0.64358
+        ],
+        "elevationDeg": 42,
+        "intensity": 0.55
+      },
+      "ambientIrradiance": 0.08
+    },
+    "sky_noon": {
+      "kind": "hdri",
+      "id": "sky_noon",
+      "category": "hdri",
+      "hash": "735fb4a97f",
+      "description": "Noon, sun 62 deg S, clear with light cumulus (noon key).",
+      "bytes": {
+        "ultra": 205998,
+        "high": 80941,
+        "mobile": 29499
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "files": {
+        "ultra": {
+          "url": "hdri/sky_noon_2048.exr",
+          "bytes": 205998,
+          "width": 2048,
+          "height": 1024
+        },
+        "high": {
+          "url": "hdri/sky_noon_1024.exr",
+          "bytes": 80941,
+          "width": 1024,
+          "height": 512
+        },
+        "mobile": {
+          "url": "hdri/sky_noon_512.exr",
+          "bytes": 29499,
+          "width": 512,
+          "height": 256
+        }
+      },
+      "sun": {
+        "azimuthDeg": 170,
+        "color": [
+          1,
+          0.8963,
+          0.7682
+        ],
+        "direction": [
+          0.08152,
+          0.88295,
+          0.46234
+        ],
+        "elevationDeg": 62,
+        "intensity": 3.4
+      },
+      "ambientIrradiance": 0.75
+    },
+    "sky_overcast": {
+      "kind": "hdri",
+      "id": "sky_overcast",
+      "category": "hdri",
+      "hash": "cf26cbc13a",
+      "description": "Monsoon overcast: heavy cloud deck, soft diffuse light.",
+      "bytes": {
+        "ultra": 46708,
+        "high": 19738,
+        "mobile": 7910
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "files": {
+        "ultra": {
+          "url": "hdri/sky_overcast_2048.exr",
+          "bytes": 46708,
+          "width": 2048,
+          "height": 1024
+        },
+        "high": {
+          "url": "hdri/sky_overcast_1024.exr",
+          "bytes": 19738,
+          "width": 1024,
+          "height": 512
+        },
+        "mobile": {
+          "url": "hdri/sky_overcast_512.exr",
+          "bytes": 7910,
+          "width": 512,
+          "height": 256
+        }
+      },
+      "sun": {
+        "azimuthDeg": 180,
+        "color": [
+          0.9116,
+          0.97,
+          1
+        ],
+        "direction": [
+          0,
+          0.76604,
+          0.64279
+        ],
+        "elevationDeg": 50,
+        "intensity": 0.85
+      },
+      "ambientIrradiance": 0.5
     },
     "stupa_sanchi": {
       "kind": "model",
@@ -1020,6 +2484,48 @@ export const ASSET_MANIFEST = {
         25.2,
         25.2
       ]
+    },
+    "sun_sprite": {
+      "kind": "image",
+      "id": "sun_sprite",
+      "category": "images",
+      "hash": "a46b8f7ee4",
+      "description": "HDR sun disc (limb darkened) + aureole + halo + faint starburst; L / 50, sRGB.",
+      "bytes": {
+        "ultra": 1704,
+        "high": 1704,
+        "mobile": 754
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "files": {
+        "ultra": {
+          "url": "images/sun_sprite/sun_sprite_512.webp",
+          "bytes": 1704,
+          "width": 512,
+          "height": 512
+        },
+        "high": {
+          "url": "images/sun_sprite/sun_sprite_512.webp",
+          "bytes": 1704,
+          "width": 512,
+          "height": 512
+        },
+        "mobile": {
+          "url": "images/sun_sprite/sun_sprite_256.webp",
+          "bytes": 754,
+          "width": 256,
+          "height": 256
+        }
+      },
+      "colorSpace": "srgb",
+      "alpha": false,
+      "hdrScale": 50,
+      "usage": "additive sun sprite: L = texel x hdrScale, tinted by the preset sun color, ~6 deg on screen"
     },
     "vat_test_dummy": {
       "kind": "vat",

@@ -293,8 +293,9 @@ class VolumeRenderer:
         r.resolution_x, r.resolution_y = px
         r.resolution_percentage = 100
         r.film_transparent = True
-        # Keep the compiled volume shader / scene between frames: ~7 s setup once, then ~0.3 s per frame.
-        r.use_persistent_data = True
+        # NOT use_persistent_data: Cycles then keeps the first frame's packed slice atlas and every frame renders
+        # the same volume (selftest "frames differ" guards this).
+        r.use_persistent_data = False
         scn.view_settings.view_transform = "Standard"
         scn.view_settings.look = "None"
         scn.view_settings.exposure = 0.0

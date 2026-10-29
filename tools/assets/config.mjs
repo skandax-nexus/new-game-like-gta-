@@ -96,6 +96,10 @@ export const TEXTURE_ENCODING = {
   // Impostor normal + depth atlases (object-space, seen from >= switch distance): lossy is ~3 deg mean error
   // at a third of the near-lossless size (measured on impostor_test_tree: 2.0 MB -> 0.8 MB at 2048).
   impostor_normal: { quality: 92, alphaQuality: 95, smartSubsample: true, effort: 6 },
+  // Flipbook normals are soft (volume optical depth, leaf creases): lossy at half resolution (FLIPBOOK_NORMAL_SCALE).
+  flipbook_normal: { quality: 90, smartSubsample: true, effort: 6 },
+  // Additive-only flipbooks store premultiplied emission: alpha is redundant (the blend ignores it).
+  color_additive: { quality: 86, smartSubsample: true, effort: 6 },
   image: { quality: 88, alphaQuality: 92, smartSubsample: true, effort: 6 },
 };
 
@@ -104,6 +108,8 @@ export const TEXTURE_MAPS = ['baseColor', 'normal', 'orm', 'macro', 'emissive', 
 export const SRGB_MAPS = new Set(['baseColor', 'emissive']);
 /** Flipbook atlas maps: color (sRGB + linear alpha), normal (tangent space, OpenGL +Y), emissive (sRGB). */
 export const FLIPBOOK_MAPS = ['color', 'normal', 'emissive'];
+/** Flipbook normal atlases are published at this fraction of the color atlas (same grid, same UVs). */
+export const FLIPBOOK_NORMAL_SCALE = 0.5;
 /** Impostor atlas maps: albedo (sRGB + coverage alpha), normal (object-space normal + depth in alpha). */
 export const IMPOSTOR_MAPS = ['albedo', 'normal'];
 

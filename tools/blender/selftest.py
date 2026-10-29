@@ -314,6 +314,14 @@ def test_flipbook() -> None:
     rgba = flipbook.render_volumes(frames, (2, 2, 2), 32, samples=4)
     a = [float(f[..., 3].max()) for f in rgba]
     check("flipbook: Cycles renders the numpy volume (alpha)", min(a) > 0.3, str(np.round(a, 2)))
+    # every frame must render its own volume (regression: persistent render data kept the first atlas)
+    s0, r0 = frames[0]
+    moved = flipbook.render_volumes([(s0, r0), (np.roll(s0, 6, axis=0), np.roll(r0, 6, axis=0))], (2, 2, 2), 32, samples=4)
+    cx = []
+    for f in moved:
+        w = f[..., 3]
+        cx.append(float((w * np.arange(w.shape[1])[None, :]).sum() / max(float(w.sum()), 1e-6)))
+    check("flipbook: each frame renders its own volume", abs(cx[1] - cx[0]) > 2.0, f"alpha centroid x {cx[0]:.1f} -> {cx[1]:.1f} px")
     straight = [flipbook.to_straight(f) for f in rgba]
     nrm = [flipbook.normal_from_alpha(f[..., 3]) for f in straight]
     check("flipbook: normals from density are unit vectors", all(abs(float(np.linalg.norm(n * 2 - 1, axis=-1).mean()) - 1) < 0.02 for n in nrm))

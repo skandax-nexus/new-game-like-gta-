@@ -27,7 +27,6 @@ import { FACTIONS } from '../../data/factions';
 import { createBattle, deployZoneFor, forceOutcome, stepBattle } from '../tactical/battle';
 import { applyBattleOutcome, armyStrength } from './armies';
 import { getEnvironmentState } from './seasons';
-import { addChronicle, pushBattleHistory } from './state';
 
 /** Max simulated battle time for autoresolve (s). */
 export const AUTORESOLVE_MAX_SEC = 60 * 30;
@@ -177,10 +176,8 @@ export function resolveEngagementNow(world: WorldState, engagementId: Engagement
   const setup = battleSetupFromEngagement(world, engagementId, false, AUTORESOLVE_TERRAIN_RES);
   const state = autoresolveBattle(setup);
   const outcome = state.outcome!;
-  pushBattleHistory(world, outcome);
+  // Write-back pushes the history entry and the chronicle line (DESIGN_SPEC §6.12 items 1-8).
   applyBattleOutcome(world, engagementId, outcome, out);
-  const wf = outcome.winner === null ? null : outcome.sides[outcome.winner].factionId;
-  addChronicle(world, wf, outcome.summary[0] ?? 'A battle was fought.', 1);
 }
 
 /**

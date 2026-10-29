@@ -142,3 +142,24 @@ export function nearestSettlement(world: WorldState, x: number, z: number, pred:
   }
   return best;
 }
+
+/** Province containing (x, z): the nearest settlement's province (Voronoi, matching the borders the map draws). */
+export function provinceAtPoint(world: WorldState, x: number, z: number): string | null {
+  const s = nearestSettlement(world, x, z, () => true);
+  return s ? s.provinceId : null;
+}
+
+/** Nearest road node id to a point (and its distance in map m). */
+export function nearestNode(world: WorldState, x: number, z: number): { id: string | null; dist: number } {
+  let best: string | null = null;
+  let bd = Infinity;
+  for (const id of sortedKeys(world.roads.nodes)) {
+    const n = world.roads.nodes[id]!;
+    const d = (n.x - x) * (n.x - x) + (n.z - z) * (n.z - z);
+    if (d < bd) {
+      bd = d;
+      best = id;
+    }
+  }
+  return { id: best, dist: Math.sqrt(bd) };
+}

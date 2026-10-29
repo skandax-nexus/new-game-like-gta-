@@ -114,6 +114,8 @@ class _Override:
                     self.mats.append(slot.material)
         self.saved: list[tuple[bpy.types.Material, Any, list[bpy.types.Node]]] = []
         self.depth_inputs: list[tuple[Any, Any]] = []
+        # (strength, distance m): bake ambient occlusion into the albedo (see capture(ao_strength=...))
+        self.ao: tuple[float, float] = (0.0, 1.0)
 
     def apply(self, mode: str, center_bl: Vector, view_bl: Vector, radius: float) -> None:
         self.restore()
@@ -144,10 +146,34 @@ class _Override:
             em.inputs["Strength"].default_value = 1.0
             if mode == "albedo":
                 col = src("Base Color", (0.5, 0.5, 0.5, 1.0))
-                if isinstance(col, bpy.types.NodeSocket):
-                    nt.links.new(col, em.inputs["Color"])
-                else:
-                    em.inputs["Color"].default_value = tuple(col)
+                target = em.inputs["Color"]
+                strength, dist = self.ao
+                if strength > 0:
+                    # albedo x mix(1, AO, strength): the runtime's screen-space AO cannot see inside a flat card
+                    ao = node("ShaderNodeAmbientOcclusion")
+                    ao.samples = 16
+                    ao.inputs["Distance"].default_value = dist
+                    mix = node("ShaderNodeMix")
+                    mix.data_type = "RGBA"
+
+                    def sock(socks: Any, ident: str) -> Any:  # ShaderNodeMix repeats names per data type
+                        return next(x for x in socks if x.identifier == ident)
+
+                    sock(mix.inputs, "Factor_Float").default_value = strength
+                    nt.links.new(ao.outputs["Color"], sock(mix.inputs, "B_Color"))
+                    nt.links.new(sock(mix.outputs, "Result_Color"), em.inputs["Color"])
+                    if isinstance(col, bpy.types.NodeSocket):
+                        nt.links.new(col, sock(mix.inputs, "A_Color"))
+                        nt.links.new(col, ao.inputs["Color"])
+                    else:
+                        sock(mix.inputs, "A_Color").default_value = tuple(col)
+                        ao.inputs["Color"].default_value = tuple(col)
+                    target = None
+                if target is not None:
+                    if isinstance(col, bpy.types.NodeSocket):
+                        nt.links.new(col, target)
+                    else:
+                        target.default_value = tuple(col)
             elif mode == "normal":
                 nsrc = src("Normal", None) if bsdf is not None and bsdf.inputs["Normal"].links else None
                 if nsrc is None:
@@ -286,7 +312,8 @@ def _hide_others(objects: Sequence[bpy.types.Object]) -> list[tuple[bpy.types.Ob
 
 def render_views(objects: Sequence[bpy.types.Object], dirs: Sequence[np.ndarray], frame_px: int, center: np.ndarray,
                  radius: float, samples: int = 16, margin: float = 1.0,
-                 before_view: Callable[[int], None] | None = None) -> tuple[list[np.ndarray], list[np.ndarray]]:
+                 before_view: Callable[[int], None] | None = None, ao_strength: float = 0.0,
+                 ao_distance: float | None = None) -> tuple[list[np.ndarray], list[np.ndarray]]:
     """Albedo (sRGB rgb + alpha) and normal (rgb + depth alpha) frames, float [0, 1], one per direction."""
     scn = bpy.context.scene
     world = scn.world
@@ -294,6 +321,7 @@ def render_views(objects: Sequence[bpy.types.Object], dirs: Sequence[np.ndarray]
     hidden = _hide_others(objects)
     cam = _camera()
     ov = _Override(objects)
+    ov.ao = (float(ao_strength), float(ao_distance if ao_distance is not None else radius * 0.25))
     albedo_frames, normal_frames = [], []
     try:
         for k, d in enumerate(dirs):
@@ -349,14 +377,17 @@ def _preview_sheet(albedo: np.ndarray, normal: np.ndarray, path: Path) -> Path:
 
 def capture(ctx: AssetContext, objects: Sequence[bpy.types.Object], grid: int = 8, frame_px: int = 256,
             samples: int = 16, switch_distance: float | None = None, source: str | None = None,
-            margin: float = 1.0) -> dict[str, Any]:
-    """Hemi-octahedral impostor of `objects` -> albedo.png + normal.png (+ preview) and manifest metadata."""
+            margin: float = 1.0, ao_strength: float = 0.0, ao_distance: float | None = None) -> dict[str, Any]:
+    """Hemi-octahedral impostor of `objects` -> albedo.png + normal.png (+ preview) and manifest metadata.
+    `ao_strength` bakes self-occlusion (Cycles AO within `ao_distance`, default radius / 4) into the albedo: the
+    mesh gets screen-space AO and canopy self-shadowing at runtime, a flat card does not."""
     px = ctx.res(frame_px, max(32, frame_px // 4))
     center, radius = bounding_sphere(objects)
     radius *= margin
     dirs = [hemi_octa_decode(i / (grid - 1), j / (grid - 1)) for j in range(grid) for i in range(grid)]
     with timer(f"impostor capture {grid}x{grid} @ {px}px"):
-        alb, nrm = render_views(objects, dirs, px, center, radius, samples=ctx.samples(samples, 4))
+        alb, nrm = render_views(objects, dirs, px, center, radius, samples=ctx.samples(samples, 4), ao_strength=ao_strength,
+                                ao_distance=ao_distance)
     A = pack(alb, grid, grid)
     N = pack(nrm, grid, grid)
     pa = tg.write_png(ctx.path("albedo.png"), A, 8)
@@ -369,7 +400,8 @@ def capture(ctx: AssetContext, objects: Sequence[bpy.types.Object], grid: int = 
     log(f"impostor: radius {radius:.3f} m, center {np.round(center, 3).tolist()}, switch {sw} m")
     return {"layout": "hemi-octahedral", "grid": grid, "radius": round(radius, 4),
             "center": [round(float(x), 4) for x in center], "switchDistance": sw, "depthRange": round(2 * radius, 4),
-            "source": source, "framePx": {"ultra": frame_px, "high": int(frame_px * 0.75), "mobile": frame_px // 2}}
+            "source": source, "framePx": {"ultra": frame_px, "high": int(frame_px * 0.75), "mobile": frame_px // 2},
+            "aoBaked": round(float(ao_strength), 3)}
 
 
 def yaw_dirs(directions: int = 8, elevation_deg: float = 30.0) -> list[np.ndarray]:
