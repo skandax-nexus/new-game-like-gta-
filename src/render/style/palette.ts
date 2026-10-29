@@ -157,7 +157,7 @@ export const MATERIALS = {
   indigoPaint: '#2f3f6e',
   /** Ochre wash on mud walls (village paintings). */
   ochreWash: '#c08a3e',
-  /** Rice-paste white (kolam, mandana floor art) - an emissive-free accent. */
+  /** Rice-paste white (kolam, mandana floor art) - a non-emissive accent. */
   ricePaste: '#ece5d4',
 } as const;
 

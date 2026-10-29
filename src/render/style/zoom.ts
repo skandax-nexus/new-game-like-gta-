@@ -55,7 +55,7 @@ export interface ZoomLook {
     aoScale: number;
     aoRadiusM: number;
     bloomScale: number;
-    /** Depth of field: 0 = off. Hero/cutscenes focus on the subject, close band uses a tilt-shift-free subtle blur. */
+    /** Depth of field: 0 = off. Hero/cutscenes focus on the subject, the close band uses a subtle blur (never a tilt-shift miniature look). */
     dof: { strength: number; fStop: number; maxBlurPx: number };
     vignetteAdd: number;
     saturationMul: number;

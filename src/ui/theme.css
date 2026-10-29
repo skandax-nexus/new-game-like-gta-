@@ -54,7 +54,7 @@
   /* ----------------------------------------------------------------------------------- palette (raw) */
   --c-saffron: #e8892b;
   --c-saffron-bright: #f3a24a;
-  --c-saffron-deep: #b9561c;
+  --c-saffron-deep: #a8490f;
   --c-gold: #e9b949;
   --c-gold-soft: #d9b46a;
   --c-gold-dim: #8a6a2e;
@@ -173,7 +173,9 @@
   --btn-bg-active: linear-gradient(180deg, #6a4a1c 0%, #4c3412 100%);
   --btn-border: var(--ui-border);
   --btn-primary-text: #fff6e2;
-  --btn-primary-bg: linear-gradient(180deg, #f3a24a 0%, #e8892b 45%, #b9561c 100%);
+  /* Deep saffron so light text keeps >= 4.5:1 over most of the button (mid #b04e10 = 4.97:1). */
+  --btn-primary-bg: linear-gradient(180deg, #e08a34 0%, #c2601a 22%, #b04e10 60%, #8f3c0a 100%);
+  --btn-primary-shadow-text: 0 1px 1px rgba(60, 20, 0, 0.6);
   --btn-primary-border: #f2cf63;
   --btn-danger-bg: linear-gradient(180deg, #c8442d 0%, #9c2f25 100%);
   --btn-stone-bg: linear-gradient(180deg, #d8b98a 0%, #c9a272 50%, #a8845a 100%);

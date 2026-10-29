@@ -283,7 +283,7 @@ export const LIGHTING_PRESETS: Readonly<Record<LightingPresetId, LightingPreset>
     wetness: 0.85,
     practicals: 0.2,
     ambientFx: { dustMotes: 0, mist: 0.5, fireflies: 0, leaves: 0.4 },
-    keyFill: 1.4,
+    keyFill: 1.2,
   },
   dry_haze: {
     id: 'dry_haze',
