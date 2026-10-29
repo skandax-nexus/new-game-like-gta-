@@ -1,0 +1,75 @@
+{
+  "capturedFrom": "commit 04b6dbb (SAVE_VERSION 1, WORLD_SCHEMA_VERSION 1)",
+  "generator": "tests/fixtures/saves/capture-v1.ts",
+  "fixtures": [
+    {
+      "file": "campaign-day30.v1.sav",
+      "description": "Campaign broken_crown seed 42, normal, world scene at day 30",
+      "saveVersion": 1,
+      "worldSchema": 1,
+      "scene": "world",
+      "worldHash": "f99cdcc5",
+      "battleHash": null,
+      "bytes": 115879,
+      "notes": [
+        "day 30",
+        "3 construction/recruitment jobs",
+        "1 agents",
+        "1 proposals",
+        "3 engagements",
+        "5 events in history",
+        "6 armies"
+      ]
+    },
+    {
+      "file": "skirmish-midbattle.v1.sav",
+      "description": "Skirmish seed 7 plains 1,000 soldiers, saved mid-battle (SaveGame.battle)",
+      "saveVersion": 1,
+      "worldSchema": null,
+      "scene": "battle",
+      "worldHash": null,
+      "battleHash": "7ee85acf",
+      "bytes": 36950,
+      "notes": [
+        "t=78.3s",
+        "phase active",
+        "2 formations in melee",
+        "3 volleys in flight",
+        "outcome none"
+      ]
+    },
+    {
+      "file": "sandbox-month6.v1.sav",
+      "description": "Sandbox defaultSandbox(7), world scene after 6 months",
+      "saveVersion": 1,
+      "worldSchema": 1,
+      "scene": "world",
+      "worldHash": "900f2722",
+      "battleHash": null,
+      "bytes": 89268,
+      "notes": [
+        "1 Ashvin, 300 BCE",
+        "0 engagements (0 with a live BattleState)",
+        "0 battles in history",
+        "6 stat samples"
+      ]
+    },
+    {
+      "file": "campaign-fieldbattle.v1.sav",
+      "description": "Campaign broken_crown: the Royal Host fights a field battle, saved mid-battle (engagement.battle)",
+      "saveVersion": 1,
+      "worldSchema": 1,
+      "scene": "battle",
+      "worldHash": "8127af82",
+      "battleHash": "45593b23",
+      "bytes": 144465,
+      "notes": [
+        "eng_48 on day 8",
+        "t=86.4s",
+        "phase active",
+        "2 formations in melee",
+        "outcome none"
+      ]
+    }
+  ]
+}
