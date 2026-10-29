@@ -5,7 +5,7 @@
     {
       "name": "menu",
       "url": "http://127.0.0.1:4452/?scene=menu&quality=high&noaudio=1",
-      "ms": 17965,
+      "ms": 18677,
       "errors": [],
       "state": {
         "scene": "menu",
@@ -20,14 +20,14 @@
             "z": -598.72
           }
         },
-        "fps": 2.567394152283324,
+        "fps": 2.2332894337122333,
         "errors": 0
       }
     },
     {
       "name": "world",
       "url": "http://127.0.0.1:4452/?scene=world&quality=high&noaudio=1&seed=7&paused=1",
-      "ms": 19887,
+      "ms": 19559,
       "errors": [],
       "state": {
         "scene": "world",
@@ -90,14 +90,14 @@
           },
           "blocked": false
         },
-        "fps": 5.716190951102546,
+        "fps": 5.252100822633925,
         "errors": 0
       }
     },
     {
       "name": "world-overview",
       "url": "http://127.0.0.1:4452/?scene=world&quality=high&noaudio=1&seed=7&paused=1&camera=overview",
-      "ms": 24456,
+      "ms": 20991,
       "errors": [],
       "state": {
         "scene": "world",
@@ -160,14 +160,14 @@
           },
           "blocked": false
         },
-        "fps": 5.457522292693972,
+        "fps": 4.893325528218033,
         "errors": 0
       }
     },
     {
       "name": "hero",
       "url": "http://127.0.0.1:4452/?scene=hero&quality=high&noaudio=1",
-      "ms": 15065,
+      "ms": 39784,
       "errors": [],
       "state": {
         "scene": "hero",
@@ -184,14 +184,14 @@
           "prompt": null,
           "pois": 10
         },
-        "fps": 2.4098127430525653,
+        "fps": 4.153798759113546,
         "errors": 0
       }
     },
     {
       "name": "menu-mobile",
       "url": "http://127.0.0.1:4452/?scene=menu&quality=low&noaudio=1",
-      "ms": 3550,
+      "ms": 5979,
       "errors": [],
       "state": {
         "scene": "menu",
@@ -206,14 +206,14 @@
             "z": -598.72
           }
         },
-        "fps": 4.97079650799988,
+        "fps": 3.0989600556825208,
         "errors": 0
       }
     },
     {
       "name": "assetviewer-stupa",
       "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=hero&noui=1",
-      "ms": 28822,
+      "ms": 23606,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -257,14 +257,14 @@
           "flipbooks": 0,
           "notes": []
         },
-        "fps": 14.598076834048593,
+        "fps": 12.41411165021002,
         "errors": 0
       }
     },
     {
       "name": "assetviewer-torana",
       "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=close&noui=1",
-      "ms": 40671,
+      "ms": 43559,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -308,14 +308,14 @@
           "flipbooks": 0,
           "notes": []
         },
-        "fps": 15.075822600528447,
+        "fps": 14.509060550209075,
         "errors": 0
       }
     },
     {
       "name": "assetviewer-sandstone",
       "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=sandstone_carved_red&hdri=sky_day&noui=1",
-      "ms": 31436,
+      "ms": 22703,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -359,14 +359,14 @@
           "flipbooks": 0,
           "notes": []
         },
-        "fps": 13.391477385149305,
+        "fps": 15.077000498169472,
         "errors": 0
       }
     },
     {
       "name": "assetviewer-mobile",
       "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=low&noaudio=1&asset=stupa_sanchi&hdri=sky_day&camera=overview",
-      "ms": 7516,
+      "ms": 7435,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -410,14 +410,14 @@
           "flipbooks": 0,
           "notes": []
         },
-        "fps": 6.395844886312221,
+        "fps": 5.180859236818738,
         "errors": 0
       }
     },
     {
       "name": "assetviewer-fallback",
       "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=high&noaudio=1&asset=stupa_sanchi&assets=off",
-      "ms": 25326,
+      "ms": 22434,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -447,7 +447,7 @@
           "flipbooks": 0,
           "notes": []
         },
-        "fps": 1.1397605472506227,
+        "fps": 1.202507825936983,
         "errors": 0
       }
     }
