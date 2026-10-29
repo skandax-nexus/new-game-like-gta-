@@ -11,8 +11,11 @@
  * Narrative events are gated by scenario flags (`bc_act`, `sh_act`) set by each scenario's prologue event,
  * so chapter-1 content never leaks into sandbox or into the other scenario (see events.ts header).
  * All characters, places and houses are fictional (GDD §7: no real dynasties, no villains by culture).
+ *
+ * Starting state per faction: age = ScenarioDef.startingAges > FactionDef.startingAge > 'janapada';
+ * timber/stone = `initialMaterials()` (ScenarioDef.materials in a campaign, SANDBOX_MATERIALS in sandbox).
  */
-import type { InitialArmyDef, InitialCharacterDef, SandboxSetup, ScenarioDef, ScenarioId } from '../core/types';
+import type { FactionId, InitialArmyDef, InitialCharacterDef, MaterialStock, SandboxSetup, ScenarioDef, ScenarioId } from '../core/types';
 import { all, any, atWar, dayAtLeast, faction, flagSet, fv, hasTreaty, not, owns, PLAYER, soldiersAtLeast, stageAtLeast, ANY_OWNED, addF } from './dsl';
 
 const SKILLS = (martial: number, stewardship: number, diplomacy: number, intrigue: number, learning: number) => ({
@@ -80,7 +83,13 @@ const RELATIONS: ScenarioDef['relations'] = [
 
 const FACTION_IDS = ['heartland', 'highland', 'forest', 'frontier'];
 const TREASURY = { heartland: 4000, highland: 2600, forest: 1800, frontier: 1500 };
+/** Campaign stockpiles (DESIGN_SPEC §7.5 / §9.1): narrative, deliberately unequal - the hills have stone, the forest timber. */
 const MATERIALS = { heartland: { timber: 600, stone: 300 }, highland: { timber: 300, stone: 900 }, forest: { timber: 1200, stone: 100 }, frontier: { timber: 150, stone: 250 } };
+/**
+ * Campaign ages (DESIGN_SPEC §8.4 / §9.1), confirmed for Contracts v2: equal to each FactionDef.startingAge today, kept
+ * explicit so a later faction default (skirmish/sandbox) cannot silently move the campaign start. Marudesha starts in
+ * Janapada: its Riders of the Salt Road are an inherited host - new Horsemen need the Mahajanapada Age.
+ */
 const STARTING_AGES: ScenarioDef['startingAges'] = { heartland: 'mahajanapada', highland: 'mahajanapada', forest: 'mahajanapada', frontier: 'janapada' };
 
 const HIGHLAND = faction('highland');
@@ -249,6 +258,32 @@ export function defaultSandbox(seed: number): SandboxSetup {
     difficulty: 'normal',
     victoryTypes: ['unification', 'prosperity', 'diplomatic_hegemony', 'cultural_legacy'],
   };
+}
+
+/**
+ * Sandbox starting stockpiles (DESIGN_SPEC §7.5 / §10.2). A sandbox realm has no ScenarioDef, so without this table it
+ * would start with 0 timber / 0 stone and could not queue a single granary. Every realm gets about the same market
+ * value - ≈525 wealth at the RULES.market base prices (timber 60, stone 90 per lot of 100) - leaning toward its home
+ * materials, so the start is fair but flavoured (AoE civ style). Floor: every realm can open with a granary, workshops
+ * and a housing quarter (300 timber / 40 stone) before production takes over. All six factions (sandbox allows any).
+ */
+export const SANDBOX_MATERIALS: Readonly<Record<FactionId, MaterialStock>> = {
+  heartland: { timber: 650, stone: 150 },
+  highland: { timber: 300, stone: 375 },
+  forest: { timber: 725, stone: 100 },
+  frontier: { timber: 500, stone: 250 },
+  maritime: { timber: 650, stone: 150 },
+  citystates: { timber: 350, stone: 350 },
+};
+
+/**
+ * Timber/stone stockpile a faction starts with: the scenario's `materials` in a campaign (scenarioId set), else
+ * SANDBOX_MATERIALS; missing entries are 0. Returns a fresh object (safe to store in state). createWorld and the
+ * v1 -> v2 save migration must both use this so migration defaults stay equal to creation defaults.
+ */
+export function initialMaterials(scenarioId: ScenarioId | null, factionId: FactionId): MaterialStock {
+  const m = scenarioId ? SCENARIOS[scenarioId]?.materials?.[factionId] : SANDBOX_MATERIALS[factionId];
+  return { timber: m?.timber ?? 0, stone: m?.stone ?? 0 };
 }
 
 /** Slider ranges for the sandbox setup screen (UI reads these; values outside are clamped). */

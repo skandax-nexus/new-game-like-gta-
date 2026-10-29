@@ -1053,6 +1053,11 @@ to the royal reserve. Trade treaties with a faction owning the resource lower it
 level (x0.5 without a `timber` resource) and 2 wealth; Quarry & Mine produces 6 stone/day per level and 3 wealth,
 only on a stone/iron/copper deposit; production requires >= 50 crafts workers per level. Starting stockpiles per
 scenario (`ScenarioDef.materials`): Suvarna 600/300, Giridurga 300/900, Nilavana 1,200/100, Marudesha 150/250.
+Sandbox (no scenario; `SANDBOX_MATERIALS`): every realm starts with about the same market value (≈525 wealth at base
+prices) leaning toward its home materials - Suvarna 650/150, Giridurga 300/375, Nilavana 725/100, Marudesha 500/250,
+Samudra 650/150, Kotanagara 350/350; floor: a granary, workshops and a housing quarter (300 timber / 40 stone) for
+everyone. `initialMaterials(scenarioId, factionId)` (`campaign.ts`) resolves both and is the one reader for
+`createWorld` and the v1 -> v2 save migration (§14.3).
 
 The **ledger** (`FactionLedger`) is shown on the treasury tooltip with last month's figures and a projection.
 
@@ -1417,7 +1422,10 @@ landmark, conch + drums, the new buttons light up on the command card).
 
 Rules: one landmark per faction per age; starting one hides the other option; a landmark cannot be cancelled
 after 50%; losing the landmark's settlement later does **not** revert the age (the bonus effects of that landmark
-are lost while it is not owned). Suvarna and Giridurga start the campaign in Mahajanapada; Marudesha in Janapada.
+are lost while it is not owned). Suvarna, Giridurga and Nilavana start the campaign in Mahajanapada; Marudesha in
+Janapada (`ScenarioDef.startingAges`, equal to each `FactionDef.startingAge` and kept explicit so a faction default
+cannot move the campaign; Marudesha's starting Horsemen are an inherited host - new ones need Mahajanapada).
+Sandbox and skirmish use `FactionDef.startingAge`: Samudra Janapada, Kotanagara Mahajanapada.
 Reaching Samrajya in the 540-day campaign requires expanding to 8 settlements (Suvarna starts with 5) - by the
 temple town, the port charter, Shilapur or conquest - and is the "great ending" garnish of any victory
 (epilogue line + statistics), not a requirement.
@@ -1735,7 +1743,8 @@ strength are not created except spearmen/archers [BASE].
 strength 0.5-1.5; drought risk 0-1; rebelliousness 0-1; AI aggression 0-1), start month (`SANDBOX_START_MONTHS`),
 player faction (any of 6) and rivals (2-5 others), difficulty and enabled victory types. Presets
 (`SANDBOX_PRESETS`): **The River of Kings** (default), **A Golden Age**, **The Year of Drought**, **The Warring
-River**, **Restless Provinces**. Sandbox starts at war with the first rival [BASE].
+River**, **Restless Provinces**. Sandbox starts at war with the first rival [BASE]. Every realm starts with the
+slider treasury, its `FactionDef.startingAge` and the `SANDBOX_MATERIALS` timber/stone stockpile (§7.5).
 
 Sandbox victory conditions (`RULES.victory`; progress shown as four bars in the victory panel = `victoryProgress`):
 
@@ -2177,7 +2186,7 @@ reserve days per settlement, unrest per settlement, events fired and choices, he
 | `buildings.ts` | 21 buildings: costs (wealth/timber/stone/labor), effects, footprints, categories, card slots, production, workers | sim, render, UI |
 | `ages.ts` | 3 ages, 16 landmarks, helpers `landmarksFor`, `nextAge` | sim, UI |
 | `region.ts` | Region (8 provinces, 16 settlements, 22 roads), `SETTLEMENT_LORE`, `REGION_FEATURES`, river names | sim, render, UI, hero |
-| `campaign.ts` | `broken_crown`, `seven_hills`, shared cast/armies, sandbox defaults, `SANDBOX_RANGES/PRESETS/START_MONTHS` | sim, UI |
+| `campaign.ts` | `broken_crown`, `seven_hills`, shared cast/armies, sandbox defaults, `SANDBOX_RANGES/PRESETS/START_MONTHS`, `SANDBOX_MATERIALS`, `initialMaterials()` | sim, save, UI |
 | `events.ts` | 51 events (26 Broken Crown, 8 Seven Hills, 1 shared, 16 systemic) | sim, UI |
 | `hero.ts` | 9 districts, 22 characters, 19 dialogue trees (4 of them negotiations), 5 missions, 6 enemies, `HERO_COMBAT`, `NEGOTIATION_RULES`, `TACTIC_INFO`, `HERO_GROUPS`, `HERO_AVATARS`, `TRAINING_STEPS`, `MISSION_INSPECTABLES` | hero scene, UI |
 | `rules.ts` | `RULES`: all design constants used by the formulas in §6-§8 and §10 | sim, gameplay, UI |
@@ -2230,6 +2239,10 @@ Nothing existing was renamed or removed; no runtime state shape changed (no save
    `hero_dialogue`, `hero_negotiation`, `mission_result`, `game_stats`; bus events `ui:hint { key: string }` and
    `hero:mission_end { missionId; success: boolean }`.
 6. [STRETCH] Condition kinds `age_at_least { faction, age }` and `landmark_built { faction, landmarkId }`.
+7. Sandbox starting materials (CORE-01 review): `migrateWorldV1toV2` (`core/save.ts`) fills `FactionState.materials`
+   with `initialMaterials(w.scenarioId, fid)` from `data/campaign.ts` instead of reading `ScenarioDef.materials`
+   only - in the **same commit** as Lead AI & Simulation item 11, so migration defaults stay equal to creation
+   defaults (`tests/contracts/migration.test.ts`). Value change only: no state-shape change, no `SAVE_VERSION` bump.
 
 **Lead AI & Simulation (strategic sim, battle AI):**
 1. Economy §7.2-§7.5: storage capacity in **days** (`foodCapacity` effects are days), harvest pulses (trickle
@@ -2258,6 +2271,8 @@ Nothing existing was renamed or removed; no runtime state shape changed (no save
    player scope (API for the hero scene).
 10. Campaign AI and battle AI per §7.14/§10.4 (`AI_PERSONALITY_DEFS`, `DIFFICULTY_DEFS`); intent translation
     rules §6.4.
+11. `createWorld` (`sim/strategic/world.ts`): `materials: initialMaterials(scenario?.id ?? null, fid)` (sandbox realms
+    get `SANDBOX_MATERIALS`, §7.5), landed together with CTO item 7.
 
 **Lead Gameplay (battle, hero, session):**
 1. Battle §6.2-§6.12: shape modifiers and shape-change time; charge preconditions; missiles with `bonusVs`,
