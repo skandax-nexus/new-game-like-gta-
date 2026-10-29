@@ -422,7 +422,10 @@ def bake_macro(obj: bpy.types.Object, res: int, set_name: str) -> str:
     grime = bake.bake(obj, "EMIT", img2, samples=ctx.samples(16, 4), uv_layer="UVLightmap")[..., 0]
     for i, m in enumerate(saved):
         obj.data.materials[i] = m
+    gm_data = ground.data
     bpy.data.objects.remove(ground)
+    bpy.data.meshes.remove(gm_data)
+    bpy.context.view_layer.update()
     obj.data.uv_layers.active = obj.data.uv_layers["UVMap"]
     ao = tg.blur(np.clip(ao, 0, 1), 0.7)
     grime = tg.blur(np.clip(grime, 0, 1), 0.7)

@@ -1,6 +1,6 @@
 /**
  * The MVP strategic region: "The River of Kings" (GDD §2, §8 ch.3 setting, §15 one functioning region;
- * DESIGN_SPEC §2). OWNER: Creative Director.
+ * DESIGN_SPEC §3). OWNER: Creative Director.
  *
  * Geography (matches the region terrain generated from REGION_SEED - see core/terrain/heightfield.ts):
  *  - The Rajavahini ("she who carries kings") flows west -> east across the middle of the map

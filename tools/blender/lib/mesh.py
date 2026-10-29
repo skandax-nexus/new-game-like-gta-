@@ -99,7 +99,7 @@ def join(objects: Sequence[bpy.types.Object], name: str) -> bpy.types.Object:
         raise ValueError("join(): no mesh objects")
     with bpy.context.temp_override(active_object=objects[0], selected_editable_objects=objects,
                                    selected_objects=objects, object=objects[0]):
-        for o in bpy.context.view_layer.objects:
+        for o in [x for x in bpy.context.view_layer.objects if x is not None]:
             o.select_set(False)
         for o in objects:
             o.select_set(True)
@@ -344,7 +344,7 @@ def _uv_operator(obj: bpy.types.Object, uv_name: str, fn) -> None:
     # Keep NAMES only: layer references are invalidated by edit-mode toggles (stale pointer -> crash).
     prev_name = me.uv_layers.active.name if me.uv_layers.active is not None else None
     me.uv_layers.active = layer
-    for o in bpy.context.view_layer.objects:
+    for o in [x for x in bpy.context.view_layer.objects if x is not None]:
         o.select_set(False)
     obj.select_set(True)
     bpy.context.view_layer.objects.active = obj

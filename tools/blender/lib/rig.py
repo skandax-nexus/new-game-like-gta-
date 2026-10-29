@@ -52,7 +52,7 @@ def create_armature(name: str, bones: Sequence[BoneSpec], location: Sequence[flo
     arm = bpy.data.objects.new(name, data)
     arm.location = tuple(location)
     M.link(arm)
-    for o in bpy.context.view_layer.objects:
+    for o in [x for x in bpy.context.view_layer.objects if x is not None]:
         o.select_set(False)
     arm.select_set(True)
     bpy.context.view_layer.objects.active = arm
@@ -217,7 +217,7 @@ def skin_proximity(mesh_obj: bpy.types.Object, arm: bpy.types.Object, bones: Seq
 
 def skin_auto(mesh_obj: bpy.types.Object, arm: bpy.types.Object) -> str:
     """Blender heat-map weights (ARMATURE_AUTO). Returns 'heat' or 'proximity' (fallback)."""
-    for o in bpy.context.view_layer.objects:
+    for o in [x for x in bpy.context.view_layer.objects if x is not None]:
         o.select_set(False)
     mesh_obj.select_set(True)
     arm.select_set(True)

@@ -1,5 +1,5 @@
 /**
- * Settlement building definitions (DESIGN_SPEC §6.5 construction, §7 AoE layer). OWNER: Creative Director.
+ * Settlement building definitions (DESIGN_SPEC §7.6 construction, §8 AoE layer). OWNER: Creative Director.
  *
  * Units: cost.wealth = wealth; cost.timber / cost.stone = material units; cost.labor = PERSON-DAYS of
  * work. Nominal crew = labor / buildDays; construction runs at min(1.25, builders / crew) speed

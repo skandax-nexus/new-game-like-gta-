@@ -1,5 +1,5 @@
 /**
- * Age progression (DESIGN_SPEC §7.4): Janapada (village/clan polity) -> Mahajanapada (great realm) ->
+ * Age progression (DESIGN_SPEC §8.4): Janapada (village/clan polity) -> Mahajanapada (great realm) ->
  * Samrajya (empire), re-theming the Age of Empires age-up. OWNER: Creative Director.
  *
  * A faction advances by completing ONE of its two landmarks for the next age (AoE IV style). The

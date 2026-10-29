@@ -1,8 +1,8 @@
 /**
- * Unit class definitions (GDD §4 table; DESIGN_SPEC §4). OWNER: Creative Director (balance); visuals
+ * Unit class definitions (GDD §4 table; DESIGN_SPEC §5). OWNER: Creative Director (balance); visuals
  * agreed with the Art Director.
  *
- * Units of measure (see DESIGN_SPEC §1.3):
+ * Units of measure (see DESIGN_SPEC §0):
  *  - hp/attack/defense are abstract combat points (formation-level math in sim/tactical/combat.ts).
  *  - speeds m/s; ranges/vision/spacing m; reload s; turnRate rad/s.
  *  - upkeepFood = grain measures per soldier (model) per day (1 measure = 10 person-days of rations;

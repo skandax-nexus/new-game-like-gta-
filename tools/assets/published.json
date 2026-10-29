@@ -6,15 +6,101 @@
       "kind": "material",
       "category": "materials",
       "script": "tools/blender/assets/materials/sandstone_carved_red.py",
-      "inputHash": "9d0c8313520e5ab3b8bfa31bc776f1266806389e80f2d8738f596adddec60d17",
+      "inputHash": "2a5f4e183a929dae849efc6168f94343eb2a589d62c8fccb420f0d1f394d1f4a",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
-        "averageColor": "#773e2e",
+        "averageColor": "#753d2e",
+        "decals": [
+          {
+            "name": "spiral_rosette",
+            "r": 0.02875,
+            "r_v": 0.02875,
+            "u": 0.086963,
+            "v": 0.212627
+          },
+          {
+            "name": "spiral_rosette",
+            "r": 0.02875,
+            "r_v": 0.02875,
+            "u": 0.211963,
+            "v": 0.227373
+          },
+          {
+            "name": "spiral_rosette",
+            "r": 0.02875,
+            "r_v": 0.02875,
+            "u": 0.336963,
+            "v": 0.212627
+          },
+          {
+            "name": "spiral_rosette",
+            "r": 0.02875,
+            "r_v": 0.02875,
+            "u": 0.461963,
+            "v": 0.227373
+          },
+          {
+            "name": "spiral_rosette",
+            "r": 0.02875,
+            "r_v": 0.02875,
+            "u": 0.586963,
+            "v": 0.212627
+          },
+          {
+            "name": "spiral_rosette",
+            "r": 0.02875,
+            "r_v": 0.02875,
+            "u": 0.711963,
+            "v": 0.227373
+          },
+          {
+            "name": "spiral_rosette",
+            "r": 0.02875,
+            "r_v": 0.02875,
+            "u": 0.836963,
+            "v": 0.212627
+          },
+          {
+            "name": "spiral_rosette",
+            "r": 0.02875,
+            "r_v": 0.02875,
+            "u": 0.961963,
+            "v": 0.227373
+          },
+          {
+            "name": "lotus_medallion",
+            "r": 0.087,
+            "r_v": 0.087,
+            "u": 0.125,
+            "v": 0.58
+          },
+          {
+            "name": "lotus_medallion",
+            "r": 0.087,
+            "r_v": 0.087,
+            "u": 0.375,
+            "v": 0.58
+          },
+          {
+            "name": "lotus_medallion",
+            "r": 0.087,
+            "r_v": 0.087,
+            "u": 0.625,
+            "v": 0.58
+          },
+          {
+            "name": "lotus_medallion",
+            "r": 0.087,
+            "r_v": 0.087,
+            "u": 0.875,
+            "v": 0.58
+          }
+        ],
         "description": "Weathered carved red sandstone trim sheet: ashlar, creeper scroll, dentils, padma, bead-and-reel, lotus medallion frieze.",
         "heightRangeMeters": [
-          -0.02245,
-          0.02222
+          -0.02291,
+          0.02235
         ],
         "metalness": 0,
         "normalScale": 1,
@@ -71,7 +157,7 @@
       "files": [
         {
           "path": "textures/sandstone_carved_red/baseColor_2048.webp",
-          "bytes": 442166,
+          "bytes": 462406,
           "tiers": [
             "ultra"
           ],
@@ -81,7 +167,7 @@
         },
         {
           "path": "textures/sandstone_carved_red/baseColor_1024.webp",
-          "bytes": 147418,
+          "bytes": 144814,
           "tiers": [
             "high"
           ],
@@ -91,7 +177,7 @@
         },
         {
           "path": "textures/sandstone_carved_red/baseColor_512.webp",
-          "bytes": 39718,
+          "bytes": 35688,
           "tiers": [
             "mobile"
           ],
@@ -101,7 +187,7 @@
         },
         {
           "path": "textures/sandstone_carved_red/normal_2048.webp",
-          "bytes": 3056126,
+          "bytes": 3293946,
           "tiers": [
             "ultra"
           ],
@@ -111,7 +197,7 @@
         },
         {
           "path": "textures/sandstone_carved_red/normal_1024.webp",
-          "bytes": 960908,
+          "bytes": 981344,
           "tiers": [
             "high"
           ],
@@ -121,7 +207,7 @@
         },
         {
           "path": "textures/sandstone_carved_red/normal_512.webp",
-          "bytes": 272158,
+          "bytes": 258408,
           "tiers": [
             "mobile"
           ],
@@ -131,7 +217,7 @@
         },
         {
           "path": "textures/sandstone_carved_red/orm_2048.webp",
-          "bytes": 772462,
+          "bytes": 847290,
           "tiers": [
             "ultra"
           ],
@@ -141,7 +227,7 @@
         },
         {
           "path": "textures/sandstone_carved_red/orm_1024.webp",
-          "bytes": 217332,
+          "bytes": 222778,
           "tiers": [
             "high"
           ],
@@ -151,7 +237,7 @@
         },
         {
           "path": "textures/sandstone_carved_red/orm_512.webp",
-          "bytes": 55424,
+          "bytes": 52012,
           "tiers": [
             "mobile"
           ],
@@ -165,60 +251,60 @@
           "baseColor": {
             "ultra": {
               "path": "textures/sandstone_carved_red/baseColor_2048.webp",
-              "bytes": 442166,
+              "bytes": 462406,
               "size": 2048
             },
             "high": {
               "path": "textures/sandstone_carved_red/baseColor_1024.webp",
-              "bytes": 147418,
+              "bytes": 144814,
               "size": 1024
             },
             "mobile": {
               "path": "textures/sandstone_carved_red/baseColor_512.webp",
-              "bytes": 39718,
+              "bytes": 35688,
               "size": 512
             }
           },
           "normal": {
             "ultra": {
               "path": "textures/sandstone_carved_red/normal_2048.webp",
-              "bytes": 3056126,
+              "bytes": 3293946,
               "size": 2048
             },
             "high": {
               "path": "textures/sandstone_carved_red/normal_1024.webp",
-              "bytes": 960908,
+              "bytes": 981344,
               "size": 1024
             },
             "mobile": {
               "path": "textures/sandstone_carved_red/normal_512.webp",
-              "bytes": 272158,
+              "bytes": 258408,
               "size": 512
             }
           },
           "orm": {
             "ultra": {
               "path": "textures/sandstone_carved_red/orm_2048.webp",
-              "bytes": 772462,
+              "bytes": 847290,
               "size": 2048
             },
             "high": {
               "path": "textures/sandstone_carved_red/orm_1024.webp",
-              "bytes": 217332,
+              "bytes": 222778,
               "size": 1024
             },
             "mobile": {
               "path": "textures/sandstone_carved_red/orm_512.webp",
-              "bytes": 55424,
+              "bytes": 52012,
               "size": 512
             }
           }
         }
       },
       "bytes": {
-        "ultra": 4270754,
-        "high": 1325658,
-        "mobile": 367300
+        "ultra": 4603642,
+        "high": 1348936,
+        "mobile": 346108
       }
     },
     "sky_day": {

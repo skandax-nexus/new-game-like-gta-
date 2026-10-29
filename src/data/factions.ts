@@ -1,5 +1,5 @@
 /**
- * Faction definitions (GDD §4; DESIGN_SPEC §3). OWNER: Creative Director. Colors agreed with the Art
+ * Faction definitions (GDD §4; DESIGN_SPEC §4). OWNER: Creative Director. Colors agreed with the Art
  * Director (team colors must stay distinct for deutan/protan players: saffron vs indigo vs jade vs violet).
  *
  * All factions are FICTIONAL composites inspired by the political diversity of the ancient subcontinent.
@@ -201,7 +201,7 @@ export const PLAYABLE_FACTION_IDS: readonly FactionId[] = Object.values(FACTIONS
   .filter((f) => f.playable)
   .map((f) => f.id);
 
-/** AI minor powers present in the campaign region (DESIGN_SPEC §3.3). */
+/** AI minor powers present in the campaign region (DESIGN_SPEC §4.3). */
 export const MINOR_FACTION_IDS: readonly FactionId[] = ['forest', 'frontier'];
 
 export function getFaction(id: FactionId): FactionDef {

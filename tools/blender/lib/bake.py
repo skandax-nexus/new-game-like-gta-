@@ -84,7 +84,7 @@ def _detach(added: list[tuple]) -> None:
 
 
 def _select_only(objs: Iterable[bpy.types.Object], active: bpy.types.Object) -> None:
-    for o in bpy.context.view_layer.objects:
+    for o in [x for x in bpy.context.view_layer.objects if x is not None]:
         o.select_set(False)
     for o in objs:
         o.hide_render = False

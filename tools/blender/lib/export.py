@@ -131,7 +131,7 @@ def gltf(path: Path | str, objects: Sequence[bpy.types.Object], animations: bool
                 m.ngon_method = "BEAUTY"
                 m.keep_custom_normals = True
                 tri_mods.append((o, m))
-    for o in bpy.context.view_layer.objects:
+    for o in [x for x in bpy.context.view_layer.objects if x is not None]:
         o.select_set(False)
     for o in objs:
         o.hide_set(False)

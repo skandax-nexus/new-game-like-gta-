@@ -1,6 +1,6 @@
 /**
  * Narrative + systemic events (GDD §6 consequence chains, §8 branching narrative). OWNER: Creative Director.
- * Specified in docs/DESIGN_SPEC.md §9 (campaign timeline, branch map) and §7.11 (systemic events).
+ * Specified in docs/DESIGN_SPEC.md §9 (campaign timeline, branch map) and §7.13 (systemic events).
  *
  * Authoring rules (enforced by tests/data.test.ts):
  *  - choices[0] is the SAFE DEFAULT: it never has `requires` (the sim auto-resolves ignored events with it).

@@ -9,27 +9,27 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 4534474,
-    "high": 1426739,
-    "mobile": 406369
+    "ultra": 4867362,
+    "high": 1450017,
+    "mobile": 385177
   },
   "assets": {
     "sandstone_carved_red": {
       "kind": "material",
       "id": "sandstone_carved_red",
       "category": "materials",
-      "hash": "9d0c831352",
+      "hash": "2a5f4e183a",
       "description": "Weathered carved red sandstone trim sheet: ashlar, creeper scroll, dentils, padma, bead-and-reel, lotus medallion frieze.",
       "bytes": {
-        "ultra": 4270754,
-        "high": 1325658,
-        "mobile": 367300
+        "ultra": 4603642,
+        "high": 1348936,
+        "mobile": 346108
       },
       "tileSizeMeters": [
         2,
         2
       ],
-      "averageColor": "#773e2e",
+      "averageColor": "#753d2e",
       "roughness": 0.866,
       "metalness": 0,
       "normalScale": 1,
@@ -81,51 +81,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/sandstone_carved_red/baseColor_2048.webp",
-            "bytes": 442166,
+            "bytes": 462406,
             "size": 2048
           },
           "high": {
             "url": "textures/sandstone_carved_red/baseColor_1024.webp",
-            "bytes": 147418,
+            "bytes": 144814,
             "size": 1024
           },
           "mobile": {
             "url": "textures/sandstone_carved_red/baseColor_512.webp",
-            "bytes": 39718,
+            "bytes": 35688,
             "size": 512
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/sandstone_carved_red/normal_2048.webp",
-            "bytes": 3056126,
+            "bytes": 3293946,
             "size": 2048
           },
           "high": {
             "url": "textures/sandstone_carved_red/normal_1024.webp",
-            "bytes": 960908,
+            "bytes": 981344,
             "size": 1024
           },
           "mobile": {
             "url": "textures/sandstone_carved_red/normal_512.webp",
-            "bytes": 272158,
+            "bytes": 258408,
             "size": 512
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/sandstone_carved_red/orm_2048.webp",
-            "bytes": 772462,
+            "bytes": 847290,
             "size": 2048
           },
           "high": {
             "url": "textures/sandstone_carved_red/orm_1024.webp",
-            "bytes": 217332,
+            "bytes": 222778,
             "size": 1024
           },
           "mobile": {
             "url": "textures/sandstone_carved_red/orm_512.webp",
-            "bytes": 55424,
+            "bytes": 52012,
             "size": 512
           }
         }

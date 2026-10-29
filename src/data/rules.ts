@@ -16,7 +16,8 @@ export interface RebellionStageEffect {
   production: number;
   /** Building condition lost per day. */
   conditionLossPerDay: number;
-  /** Event fired on entering the stage (null = notification only). */
+  /** Event that dramatizes the stage. It fires from its own unrest trigger in events.ts (the sim only
+   *  needs to apply the multipliers); null = notification only. */
   eventId: string | null;
 }
 
@@ -53,6 +54,45 @@ export const RULES = {
     /** Crop health lost when an enemy army camps/forages within 600 m during the sowing month. */
     warSowingPenalty: 0.3,
   },
+  /** Moving grain inside a realm (DESIGN_SPEC §7.3 distribution). Only along owned, unblocked roads with condition >= 0.5. */
+  distribution: {
+    /** Settlements above this many reserve days export a share of the excess per day to the realm pool. */
+    exportAboveDays: 120,
+    exportSharePerDay: 0.05,
+    /** Settlements below this many reserve days import from the pool (proportionally to need). */
+    importBelowDays: 60,
+    transportLoss: 0.1,
+    /** Crown share of each harvest (x taxRate / defaultRate x compliance) into FactionState.foodReserve. */
+    grainTaxShareOfHarvest: 0.1,
+    /** No grain tax from a settlement left with fewer reserve days than this after the harvest. */
+    grainTaxMinReserveDays: 90,
+    /** Settlements below this many reserve days draw from the royal reserve automatically (unless held). */
+    reliefBelowDays: 30,
+    reliefDaysPerMonth: 30,
+    /** Rationing policy (event flag `rationing`): consumption x, unrest/day, health/day, duration. */
+    rationing: { consumption: 0.85, unrestPerDay: 0.002, healthPerDay: -0.002, days: 120 },
+  },
+  settlement: {
+    sanitationBase: 0.4,
+    sanitationOvercrowding: 0.3,
+    healthBase: 0.5,
+    healthSanitation: 0.4,
+    healthWater: 0.1,
+    healthHunger: 0.3,
+    orderBase: 0.5,
+    orderUnrest: 0.2,
+    orderGarrison: 0.1,
+    /** health / publicOrder move this fraction of the gap to target per day. */
+    driftPerDay: 0.02,
+    infrastructureRepairPerDay: 0.01,
+    damageRepairPerDay: 0.005,
+    /** waterAvailability = base + moistureWeight x terrain moisture + building effects - drought. */
+    waterBase: 0.45,
+    waterMoistureWeight: 0.5,
+    droughtWaterPenalty: 0.2,
+    irrigationBase: 0.15,
+    initialHousingPerCapita: 1.1,
+  },
   // ------------------------------------------------------------------------------------------- §7.4
   prices: {
     /** Reserve days at which the grain price is 1.0. */
@@ -83,12 +123,12 @@ export const RULES = {
       heavy: { income: 1.35, unrestPerMonth: 0.0135, loyalty: -0.05, legitimacyPerMonth: -0.005 },
       emergency: { income: 1.7, unrestPerMonth: 0.017, loyalty: -0.12, legitimacyPerMonth: -0.015 },
     } satisfies Record<TaxPolicy, { income: number; unrestPerMonth: number; loyalty: number; legitimacyPerMonth: number }>,
-    /** Share of a surplus harvest collected in kind into FactionState.foodReserve. */
-    grainTaxShare: 0.25,
     /** Administration cost per owned settlement per month (x faction governanceCost). */
     adminPerSettlement: 4,
     /** Extra administration per settlement beyond the age's governorSlots x 2. */
     adminOverextension: 6,
+    /** Treasury below zero: unpaid soldiers and officials. */
+    debt: { armyMoralePerDay: -2, desertionPerDay: 0.005, stabilityPer1000PerMonth: -0.01, legitimacyPerMonth: -0.01 },
   },
   trade: {
     perCapitaPerMonth: 0.002,
@@ -125,7 +165,7 @@ export const RULES = {
     /**
      * Annual growth x housing factor x health; famine deaths per BALANCE. Default labor shares below are
      * tuned so that, with a normal monsoon, annual civilian grain balance is about: Suvarna +15%,
-     * Giridurga -9%, Nilavana +3%, Marudesha -15%, free towns -4% (DESIGN_SPEC §13.2).
+     * Giridurga -9%, Nilavana +3%, Marudesha -8%, free towns -4% (DESIGN_SPEC §13.2).
      */
     overcrowdingGrowthPenalty: 2,
     /** Labor = population x BALANCE.economy.laborPerPopulation x (0.5 + 0.5 x health). */
@@ -138,7 +178,7 @@ export const RULES = {
       fort: { farming: 0.55, construction: 0.1, crafts: 0.1, military: 0.25 },
     },
   },
-  // ------------------------------------------------------------------------------------------- §8.2
+  // ------------------------------------------------------------------------------------------- §7.6 / §8.2
   construction: {
     /** Settlement build grid cell (m). Footprints are multiples of this. */
     gridCell: 4,
@@ -282,6 +322,9 @@ export const RULES = {
     governor: { stewardshipTaxPerPoint: 0.01, interestLoyalty: 0.05, demandBelowLoyalty: 0.3, secedeBelowLoyalty: 0.15, demandAmbitionAbove: 0.6 },
     /** Legitimacy per month for each governor above the age's governor slots. */
     overSlotLegitimacyPerMonth: -0.02,
+    /** Faction stability drifts toward its target by driftPerMonth of the gap (DESIGN_SPEC §7.9). */
+    stability: { base: 0.5, legitimacyWeight: 0.3, loyaltyWeight: 0.2, unrestShareWeight: 0.3, perWar: 0.05, warWearinessAfterMonths: 6, recentVictory: 0.05, recentDefeat: -0.05, driftPerMonth: 0.1 },
+    legitimacy: { resolvedPerMonth: 0.01, unresolvedWithClaimantPerMonth: -0.02, warWithoutGrievance: -0.03 },
   },
   dynasty: {
     /** Yearly health loss by age band. */
@@ -383,7 +426,14 @@ export const RULES = {
     weather: { rainAccuracy: 0.4, wetReload: 1.25, mudMounted: 0.5, mudInfantry: 0.25, rangeVsVisibility: 0.5, heatFatigue: 1.3, heatAboveC: 34, nightVision: 0.4, nightAccuracy: 0.7, nightMorale: -5 },
     commander: { ownFormation: 0.9, nearMeters: 180, near: 0.7, far: 0.5, fallen: 0.35, skillPer100: 1, fallBelowStrength: 0.35, rallyRadius: 120, rallyMorale: 15, rallyCooldownSec: 90 },
     experience: { attackPerExp: 0.25, defensePerExp: 0.15, moralePerExp: 15, winGain: 0.1, lossGain: 0.05 },
-    elephantPanic: { chancePerVolleyHitShare: 4, durationSec: 8, friendlyDamageShare: 0.5 },
+    /** p(panic) per volley = clamp(unruliness x base x (1 - morale/100) x hits / elephants, 0, maxChance). */
+    elephantPanic: { base: 0.8, maxChance: 0.5, durationSec: 8, trampleShare: 0.5, trampleRadius: 6, moraleAfter: -20 },
+    /** Volleys into a melee: share of hits that land on the shooter's engaged friends (not with hold_fire). */
+    friendlyFireShare: 0.3,
+    /** Missile damage taken by a formation standing in forest. */
+    forestCover: 0.6,
+    /** Defenders on walls: defense / ranged accuracy / range multipliers. */
+    walls: { defense: 1.3, accuracy: 1.2, range: 1.2, segments: 12, holdBreachSec: 60 },
     prisoners: { ransomPerSoldier: 5, releaseOpinion: 5 },
   },
   // ------------------------------------------------------------------------------------------- §8.4
@@ -393,7 +443,7 @@ export const RULES = {
     /** One landmark per faction per age; the second option disappears once one is started. */
     exclusive: true,
   },
-  // ------------------------------------------------------------------------------------------- §9.4
+  // ------------------------------------------------------------------------------------------- §10.2
   victory: {
     /** Sandbox victory thresholds (VictoryState / FactionState.victoryProgress = progress to these). */
     unification: { settlementShare: 0.75, capitalsHeld: 'all_rival_capitals' },

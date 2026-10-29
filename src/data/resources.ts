@@ -1,5 +1,5 @@
 /**
- * Strategic resources as shown to the player (DESIGN_SPEC §6.1): the Age of Empires presentation of the
+ * Strategic resources as shown to the player (DESIGN_SPEC §8.1): the Age of Empires presentation of the
  * GDD §6 settlement economy. OWNER: Creative Director (content); icons are painted procedurally by the UI.
  *
  * 1 grain measure = rations for 10 person-days (a civilian eats 0.1/day). Wealth is silver coin.

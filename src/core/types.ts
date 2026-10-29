@@ -391,7 +391,7 @@ export interface FactionUnitVariant {
   multipliers: Partial<Record<NumericKeys<UnitStats>, number>>;
 }
 
-/** Banner/heraldry description (DESIGN_SPEC §3). Colors come from `FactionDef.colors`. */
+/** Banner/heraldry description (DESIGN_SPEC §4.6). Colors come from `FactionDef.colors`. */
 export interface HeraldryDef {
   /** e.g. "The Risen Sun of Suvarna". */
   name: string;
@@ -1192,9 +1192,9 @@ export interface BuildingDef extends Sourced {
   footprint?: BuildingFootprint;
   /** Command-card grid slot 0..14 within the category tab. */
   commandSlot?: number;
-  /** Raw materials produced per day per level (timber/stone/wealth) when staffed (DESIGN_SPEC §6.4). */
+  /** Raw materials produced per day per level (timber/stone/wealth) when staffed (DESIGN_SPEC §7.5). */
   produces?: Partial<Record<'timber' | 'stone' | 'wealth', number>>;
-  /** Visible villagers per level working here (presentation; DESIGN_SPEC §7.3). */
+  /** Visible villagers per level working here (presentation; DESIGN_SPEC §8.3). */
   workers?: number;
 }
 
@@ -2015,7 +2015,7 @@ export interface ScenarioDef extends Sourced {
   startingAges?: Partial<Record<FactionId, AgeId>>;
   /** Character the player controls in hero exploration (default: heir, else ruler). */
   heroCharacterId?: CharacterId;
-  /** Starting timber/stone stockpiles per faction (DESIGN_SPEC §6.4; requires the stockpile state). */
+  /** Starting timber/stone stockpiles per faction (DESIGN_SPEC §7.5; requires the stockpile state). */
   materials?: Partial<Record<FactionId, { timber: number; stone: number }>>;
   /**
    * Strength of the monsoon that feeds the first kharif harvest (1 = normal, 0.4..1.4; DESIGN_SPEC §7.3).
@@ -2598,7 +2598,7 @@ export interface SaveSlotInfo {
 export const AGE_IDS = ['janapada', 'mahajanapada', 'samrajya'] as const;
 export type AgeId = (typeof AGE_IDS)[number];
 
-/** Materials + money cost. `labor` is person-days of work (see DESIGN_SPEC §6.5 construction). */
+/** Materials + money cost. `labor` is person-days of work (see DESIGN_SPEC §7.6 construction). */
 export interface MaterialCost {
   wealth: number;
   timber: number;
