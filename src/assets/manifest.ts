@@ -9,9 +9,9 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 13403726,
-    "high": 6330789,
-    "mobile": 3474038
+    "ultra": 13387338,
+    "high": 6305101,
+    "mobile": 3460584
   },
   "assets": {
     "banner_cloth": {
@@ -198,7 +198,7 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_dust",
       "category": "fx",
-      "hash": "b65e76187f",
+      "hash": "5e6639d863",
       "description": "Dust (Eulerian sims): rolling ground puffs (2), closed expanding ring (top view), hoof kick; neutral albedo + normals, tint by ground.",
       "bytes": {
         "ultra": 96516,
@@ -307,18 +307,19 @@ export const ASSET_MANIFEST = {
         2.2,
         2.2
       ],
+      "groundLine": 0.0227,
       "tint": "#b0956e"
     },
     "fx_fire": {
       "kind": "flipbook",
       "id": "fx_fire",
       "category": "fx",
-      "hash": "1466ccffa4",
+      "hash": "5e5a2e8436",
       "description": "Looping flame (Eulerian sim, licking tongues), premultiplied emission x8 + slight occlusion, no soot; 64 frames at 24 fps.",
       "bytes": {
-        "ultra": 274768,
-        "high": 144920,
-        "mobile": 62630
+        "ultra": 258380,
+        "high": 119232,
+        "mobile": 49176
       },
       "tiers": [
         "ultra",
@@ -346,19 +347,19 @@ export const ASSET_MANIFEST = {
         "color": {
           "ultra": {
             "url": "fx/fx_fire/color_2048.webp",
-            "bytes": 274768,
+            "bytes": 258380,
             "width": 2048,
             "height": 2048
           },
           "high": {
             "url": "fx/fx_fire/color_1024.webp",
-            "bytes": 144920,
+            "bytes": 119232,
             "width": 1024,
             "height": 1024
           },
           "mobile": {
             "url": "fx/fx_fire/color_512.webp",
-            "bytes": 62630,
+            "bytes": 49176,
             "width": 512,
             "height": 512
           }
@@ -372,13 +373,14 @@ export const ASSET_MANIFEST = {
         1.9,
         1.9
       ],
+      "groundLine": 0.13,
       "tint": "#ffffff"
     },
     "fx_lightning": {
       "kind": "flipbook",
       "id": "fx_lightning",
       "category": "fx",
-      "hash": "651fe587e9",
+      "hash": "2f3b1775a1",
       "description": "Four forked lightning bolts, white core + violet glow, additive x10 (high / ultra only).",
       "bytes": {
         "ultra": 40650,
@@ -468,13 +470,14 @@ export const ASSET_MANIFEST = {
         600,
         1200
       ],
+      "groundLine": null,
       "tint": "#ffffff"
     },
     "fx_mist": {
       "kind": "flipbook",
       "id": "fx_mist",
       "category": "fx",
-      "hash": "50b0d5a36d",
+      "hash": "e8bfddc84e",
       "description": "Mist sprites: bank, wisp, puff, sheet - irregular, wide, noise-eroded clusters; zero at the edges, lit via soft normals.",
       "bytes": {
         "ultra": 16690,
@@ -583,13 +586,14 @@ export const ASSET_MANIFEST = {
         8,
         6
       ],
+      "groundLine": null,
       "tint": "#dfe3e6"
     },
     "fx_nature": {
       "kind": "flipbook",
       "id": "fx_nature",
       "category": "fx",
-      "hash": "746a0b867b",
+      "hash": "414aefefb7",
       "description": "Nature: sal / peepal leaves and palash petals (8-frame tumbles), kash seed, fireflies + motes (additive).",
       "bytes": {
         "ultra": 21168,
@@ -718,13 +722,14 @@ export const ASSET_MANIFEST = {
         0.12,
         0.12
       ],
+      "groundLine": null,
       "tint": "#ffffff"
     },
     "fx_rain": {
       "kind": "flipbook",
       "id": "fx_rain",
       "category": "fx",
-      "hash": "350dfe11a6",
+      "hash": "4e4df1ca1d",
       "description": "Rain: streak, 4x4 crown splash, 8-frame ripple (normal map), eave drip.",
       "bytes": {
         "ultra": 19306,
@@ -833,13 +838,14 @@ export const ASSET_MANIFEST = {
         0.04,
         0.5
       ],
+      "groundLine": null,
       "tint": "#c9d6dc"
     },
     "fx_smoke": {
       "kind": "flipbook",
       "id": "fx_smoke",
       "category": "fx",
-      "hash": "b3a1e52da4",
+      "hash": "e19d11e2f0",
       "description": "Billowing smoke puff over life (Eulerian sim, 64 frames, one-shot), lit via density-gradient normals; tint #4a4038 for fires.",
       "bytes": {
         "ultra": 355066,
@@ -918,13 +924,14 @@ export const ASSET_MANIFEST = {
         3,
         3
       ],
+      "groundLine": null,
       "tint": "#4a4038"
     },
     "fx_sparks_embers": {
       "kind": "flipbook",
       "id": "fx_sparks_embers",
       "category": "fx",
-      "hash": "a911333e42",
+      "hash": "341a569312",
       "description": "Additive sparks (gold -> saffron): spark, embers, slash spark, parry flash, finisher burst with dust shockwave; premultiplied emission x6, lossless.",
       "bytes": {
         "ultra": 126888,
@@ -1023,13 +1030,14 @@ export const ASSET_MANIFEST = {
         0.6,
         0.6
       ],
+      "groundLine": null,
       "tint": "#ffffff"
     },
     "fx_weapon_trail": {
       "kind": "flipbook",
       "id": "fx_weapon_trail",
       "category": "fx",
-      "hash": "cc7c397e9c",
+      "hash": "57890061c3",
       "description": "Weapon trail: gradient (edge -> saffron -> tail), wide variant, two u-tileable streak noises.",
       "bytes": {
         "ultra": 28266,
@@ -1132,6 +1140,7 @@ export const ASSET_MANIFEST = {
         1.2,
         1
       ],
+      "groundLine": null,
       "tint": "#ffffff"
     },
     "ground_dry_earth": {

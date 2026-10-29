@@ -195,7 +195,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_dust.py",
-      "inputHash": "b65e76187f78a00823b97908ede48e00559c527fa58912b42be67cc90e6a4a36",
+      "inputHash": "5e6639d8635ae05b7b6aab76a27c7d91d21a7296b43069f9a8fdae99c10ead42",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -210,6 +210,7 @@
         "emissiveIntensity": 1,
         "fps": 8,
         "frames": 64,
+        "groundLine": 0.0227,
         "lit": true,
         "loop": false,
         "rows": 8,
@@ -349,7 +350,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_fire.py",
-      "inputHash": "1466ccffa49d04acf810510dc7b86df574164a3f90a0742272df4555ad91b748",
+      "inputHash": "5e5a2e8436d9aef773242aeb2fd5bb3f1238478139fdf91893428389bde68cdd",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -364,6 +365,7 @@
         "emissiveIntensity": 8,
         "fps": 24,
         "frames": 64,
+        "groundLine": 0.13,
         "lit": false,
         "loop": true,
         "rows": 8,
@@ -386,7 +388,7 @@
       "files": [
         {
           "path": "fx/fx_fire/color_2048.webp",
-          "bytes": 274768,
+          "bytes": 258380,
           "tiers": [
             "ultra"
           ],
@@ -396,7 +398,7 @@
         },
         {
           "path": "fx/fx_fire/color_1024.webp",
-          "bytes": 144920,
+          "bytes": 119232,
           "tiers": [
             "high"
           ],
@@ -406,7 +408,7 @@
         },
         {
           "path": "fx/fx_fire/color_512.webp",
-          "bytes": 62630,
+          "bytes": 49176,
           "tiers": [
             "mobile"
           ],
@@ -420,19 +422,19 @@
           "color": {
             "ultra": {
               "path": "fx/fx_fire/color_2048.webp",
-              "bytes": 274768,
+              "bytes": 258380,
               "width": 2048,
               "height": 2048
             },
             "high": {
               "path": "fx/fx_fire/color_1024.webp",
-              "bytes": 144920,
+              "bytes": 119232,
               "width": 1024,
               "height": 1024
             },
             "mobile": {
               "path": "fx/fx_fire/color_512.webp",
-              "bytes": 62630,
+              "bytes": 49176,
               "width": 512,
               "height": 512
             }
@@ -440,9 +442,9 @@
         }
       },
       "bytes": {
-        "ultra": 274768,
-        "high": 144920,
-        "mobile": 62630
+        "ultra": 258380,
+        "high": 119232,
+        "mobile": 49176
       }
     },
     "fx_lightning": {
@@ -450,7 +452,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_lightning.py",
-      "inputHash": "651fe587e91d20c701520222737e0c66e357c2f6344a31516cc79714ca8173ac",
+      "inputHash": "2f3b1775a1a07dcedbbb2af04b3c691e4bf79794f8cc4cc7551dc1a531cdc6cb",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -565,7 +567,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_mist.py",
-      "inputHash": "50b0d5a36d5a19a56188f8cc68723a337ab89de34de462d8418937f7a1a726cf",
+      "inputHash": "e8bfddc84e5269f0b5888a3ef291d2c4735bb4a4d7861a5c9bd9984fb4b65bf6",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -701,7 +703,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_nature.py",
-      "inputHash": "746a0b867bfdaf5e15ba51f93e835170056b4705b38dbc5f1f84b3da29a7d69a",
+      "inputHash": "414aefefb718680134a836ad3e636c67ef84747d3a21a5a62a1a1aded7f284c6",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -855,7 +857,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_rain.py",
-      "inputHash": "350dfe11a6deec0fcd749f0571ce6acf77ba4fb648bdfde00570a2f53d8aea18",
+      "inputHash": "4e4df1ca1d66e3dbf64e8a3c498bb5730bfe1b45819a5beaa626c6275af4dc0a",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -991,7 +993,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_smoke.py",
-      "inputHash": "b3a1e52da45160f9b79ba9babc18cd4f7ffcb7256e4064b6ba64fbe433195556",
+      "inputHash": "e19d11e2f0482e88561cc862e1ad71049ebdf3ab55c913e9b1425263f1bc85d5",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -1142,7 +1144,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_sparks_embers.py",
-      "inputHash": "a911333e421d1f62f9fd4688df1280586a24866c0d6cf825ad166676d39255bb",
+      "inputHash": "341a569312f864183e8d368bfd5cf6c02709f9c8084d212c5807fafff6940459",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -1263,7 +1265,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_weapon_trail.py",
-      "inputHash": "cc7c397e9ceec1e8477e3d31d1d2173c23bba0396741ae8ef4eb6a07f0380ec1",
+      "inputHash": "57890061c399d92fa86ade549cc584c36fbb8e417fe31c1b3bcdc4da225dc10b",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {

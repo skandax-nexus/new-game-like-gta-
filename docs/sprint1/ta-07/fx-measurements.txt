@@ -1,0 +1,52 @@
+# TA-07 R1 flipbook measurements on the PUBLISHED atlases (scratch tool fxmeasure.py; smoke 'before' = edca44a)
+== flipbook frame borders (outer 2 px, encoded atlas, max over frames; /255)
+  fx_fire            color_2048.webp    all 0
+  fx_fire            color_1024.webp    all 0
+  fx_fire            color_512.webp     all 0
+  fx_smoke           color_2048.webp    all 0
+  fx_smoke           color_1024.webp    all 0
+  fx_smoke           color_512.webp     all 0
+  fx_dust            color_1024.webp    puff 0; puff_b 0; ring 0; hoof 0
+  fx_dust            color_512.webp     puff 1; puff_b 0; ring 0; hoof 1
+  fx_sparks_embers   color_1024.webp    spark 0; ember 0; slash_spark 0; parry_flash 0; finisher_burst 0
+  fx_sparks_embers   color_512.webp     spark 0; ember 0; slash_spark 0; parry_flash 0; finisher_burst 0
+  fx_mist            color_512.webp     bank 0; wisp 0; puff 0; sheet 0
+  fx_nature          color_512.webp     leaf_sal 0; leaf_peepal 0; palash 1; kash 0; firefly 0; mote 0
+  fx_rain            color_512.webp     streak 0; splash 0; ripple 0; drip 0
+  fx_weapon_trail    color_256.webp     trail 255 (left 255); trail_wide 255 (left 255); noise 255 (top 160,bottom 177,left 255,right 255); noise_b 254 (top 254,bottom 252,left 238,right 241)
+  fx_lightning       color_512.webp     bolt0 255 (bottom 255); bolt1 255 (bottom 255); bolt2 255 (bottom 255); bolt3 255 (bottom 255)
+== fx_dust ring (top view): alpha centroid offset from the frame centre and angular closure (36 bins, alpha > 25 % of the frame peak)
+  frame  0: centroid (-0.09, -0.13) px of 128, mean radius 17.2 px, closed 36/36
+  frame  1: centroid (-0.11, -0.24) px of 128, mean radius 19.1 px, closed 36/36
+  frame  2: centroid (-0.06, -0.29) px of 128, mean radius 20.2 px, closed 36/36
+  frame  3: centroid (-0.08, -0.22) px of 128, mean radius 20.9 px, closed 36/36
+  frame  4: centroid (-0.04, -0.18) px of 128, mean radius 21.4 px, closed 36/36
+  frame  5: centroid (+0.01, -0.06) px of 128, mean radius 21.9 px, closed 36/36
+  frame  6: centroid (+0.09, +0.06) px of 128, mean radius 22.3 px, closed 36/36
+  frame  7: centroid (+0.25, +0.15) px of 128, mean radius 22.6 px, closed 36/36
+  frame  8: centroid (+0.44, +0.24) px of 128, mean radius 22.9 px, closed 36/36
+  frame  9: centroid (+0.62, +0.35) px of 128, mean radius 23.2 px, closed 36/36
+  frame 10: centroid (+0.80, +0.48) px of 128, mean radius 23.6 px, closed 36/36
+  frame 11: centroid (+0.87, +0.56) px of 128, mean radius 24.0 px, closed 36/36
+  frame 12: centroid (+0.78, +0.50) px of 128, mean radius 24.3 px, closed 36/36
+  frame 13: centroid (+0.62, +0.29) px of 128, mean radius 24.8 px, closed 35/36
+  frame 14: centroid (+0.41, +0.00) px of 128, mean radius 25.1 px, closed 35/36
+== fx_dust side sequences: width : height and straight base (longest run of the bottom-most alpha row > 0.1)
+  puff    f3 w:h 2.52 base 11%, f5 w:h 2.30 base 2%, f8 w:h 1.97 base 2%, f10 w:h 1.83 base 2%, f13 w:h 1.67 base 4%
+  puff_b  f3 w:h 2.16 base 5%, f5 w:h 1.93 base 1%, f8 w:h 1.70 base 2%, f10 w:h 1.70 base 2%, f13 w:h 1.77 base 4%
+  hoof    f3 w:h 1.85 base 2%, f5 w:h 1.28 base 2%, f8 w:h 2.21 base 4%, f10 w:h 2.06 base 6%, f13 w:h 2.10 base 3%
+== fx_fire color_2048.webp: core (all channels > 70 %) 0.0 % of the flame area
+== fx_fire color_1024.webp: core (all channels > 70 %) 0.0 % of the flame area
+== fx_fire color_512.webp: core (all channels > 70 %) 0.0 % of the flame area
+== fx_sparks_embers color_1024.webp: near-white (all channels > 90 %) share of the lit area: spark 0.0 %, ember 0.0 %, slash_spark 0.0 %, parry_flash 0.0 %, finisher_burst 0.0 %
+== fx_smoke color_2048.webp: alpha speckle (alpha - median3x3) RMS 0.50/255
+== fx_smoke color_1024.webp: alpha speckle (alpha - median3x3) RMS 1.55/255 (before rework edca44a: 8.28/255)
+== fx_smoke color_512.webp: alpha speckle (alpha - median3x3) RMS 5.11/255 (before rework edca44a: 2.94/255)
+
+# runtime look (scratch emissive_sim.py: decode x emissiveIntensity over the dark viewer backdrop, three ACESFilmic, sRGB)
+spark            effect px     996  near-white   0.0 %  pale core (all ch >= 191)  11.8 %
+ember            effect px   13960  near-white   0.0 %  pale core (all ch >= 191)   4.0 %
+slash            effect px   12029  near-white   1.3 %  pale core (all ch >= 191)   6.9 %
+parry            effect px   29796  near-white   0.0 %  pale core (all ch >= 191)   0.7 %
+finisher         effect px   66776  near-white   0.0 %  pale core (all ch >= 191)   4.0 %
+fire             effect px  538911  near-white   0.0 %  pale core (all ch >= 191)  14.0 %
