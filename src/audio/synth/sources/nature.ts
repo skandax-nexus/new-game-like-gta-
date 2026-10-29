@@ -51,10 +51,11 @@ export function rainBed(out: Float32Array, rng: Rand, sr: number, intensity: num
   for (let i = 0; i < n; i++) {
     const p = pink.process(rng.bi());
     roar.process(p);
-    out[i] += (hiss.process(p) * (0.3 + 0.5 * k) + roar.band * 0.6 * k) * swell.next() * gain;
+    out[i] += (hiss.process(p) * (0.08 + 0.7 * k * k) + roar.band * 0.6 * k) * swell.next() * gain;
   }
   // Drops: tiny clicks (leaves, thatch) and small bubbles (puddles).
-  const rate = 250 + 2400 * k;
+  // Light rain is a patter of countable drops; a monsoon downpour is a roar.
+  const rate = 140 + 2600 * Math.pow(k, 1.5);
   const dur = n / sr;
   let t = rng.expo(rate);
   while (t < dur) {

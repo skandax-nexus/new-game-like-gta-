@@ -58,11 +58,14 @@ export type CrowdMood = 'murmur' | 'cheer' | 'panic' | 'roar' | 'court';
  */
 export function crowd(out: Float32Array, offset: number, rng: Rand, sr: number, opts: { dur: number; voices: number; mood: CrowdMood; excite?: number; gain?: number; women?: number; swell?: boolean }): void {
   // Render into a scratch buffer so the group can swell in and die away together (no hard group cut).
-  const tmp = new Float32Array(Math.round((opts.dur + 0.3) * sr));
-  crowdInto(tmp, rng, sr, opts);
+  const steadyLoop = opts.swell === false;
+  const tmp = new Float32Array(Math.round((opts.dur + (steadyLoop ? 3 : 0.3)) * sr));
+  crowdInto(tmp, rng, sr, opts, steadyLoop);
   const n = tmp.length;
-  const fadeIn = Math.round(0.12 * sr);
-  const fadeOutStart = opts.swell === false ? n - Math.round(0.1 * sr) : Math.round(n * 0.55);
+  // swell === false: a steady texture for loops (no fades at all - the loop folding handles the seam).
+  const steady = opts.swell === false;
+  const fadeIn = steady ? 0 : Math.round(0.12 * sr);
+  const fadeOutStart = steady ? n : Math.round(n * 0.55);
   const o = Math.round(offset);
   for (let i = 0; i < n && o + i < out.length; i++) {
     let e = i < fadeIn ? i / fadeIn : 1;
@@ -71,15 +74,17 @@ export function crowd(out: Float32Array, offset: number, rng: Rand, sr: number, 
   }
 }
 
-function crowdInto(out: Float32Array, rng: Rand, sr: number, opts: { dur: number; voices: number; mood: CrowdMood; excite?: number; gain?: number; women?: number }): void {
+function crowdInto(out: Float32Array, rng: Rand, sr: number, opts: { dur: number; voices: number; mood: CrowdMood; excite?: number; gain?: number; women?: number }, loop: boolean): void {
   const offset = 0;
+  // Loop mode: stationary start phases and phrases that may run past `dur` (the caller wraps them).
+  const end = loop ? opts.dur + 3 : opts.dur;
   const ex = clamp(opts.excite ?? 0.5, 0, 1);
   const g = opts.gain ?? 1;
   for (let v = 0; v < opts.voices; v++) {
     const kind: VoiceKind = rng.next() < (opts.women ?? 0.3) ? 'female' : 'male';
     const base = (kind === 'female' ? 210 : 120) * (0.85 + rng.next() * 0.3) * (1 + ex * 0.35);
     const vg = g * (0.35 + 0.65 * rng.next()) / Math.sqrt(opts.voices);
-    let t = rng.next() * (opts.mood === 'cheer' ? 0.25 : 0.8);
+    let t = rng.next() * (loop ? 2.5 : opts.mood === 'cheer' ? 0.25 : 0.8);
     while (t < opts.dur - 0.05) {
       const at = offset + t * sr;
       switch (opts.mood) {
@@ -88,7 +93,7 @@ function crowdInto(out: Float32Array, rng: Rand, sr: number, opts: { dur: number
           // A phrase of 2-7 syllables, then a pause.
           const syl = 2 + rng.int(6);
           const sd = opts.mood === 'court' ? 0.16 : 0.13;
-          const d = Math.min(opts.dur - t, syl * sd * (0.8 + rng.next() * 0.5));
+          const d = Math.min(end - t, syl * sd * (0.8 + rng.next() * 0.5));
           const vowels: (readonly [number, VowelId])[] = [];
           const amp: Key[] = [[0, 0]];
           for (let s = 0; s < syl; s++) {
@@ -103,7 +108,7 @@ function crowdInto(out: Float32Array, rng: Rand, sr: number, opts: { dur: number
           break;
         }
         case 'cheer': {
-          const d = Math.min(opts.dur - t, 0.6 + rng.next() * 1.1);
+          const d = Math.min(end - t, 0.6 + rng.next() * 1.1);
           const f1 = base * 1.4;
           const v1 = rng.pick(['a', 'aa', 'e', 'o'] as const);
           voice(out, at, {
@@ -121,7 +126,7 @@ function crowdInto(out: Float32Array, rng: Rand, sr: number, opts: { dur: number
           break;
         }
         case 'panic': {
-          const d = Math.min(opts.dur - t, 0.5 + rng.next() * 0.9);
+          const d = Math.min(end - t, 0.5 + rng.next() * 0.9);
           const f1 = base * 1.8;
           voice(out, at, {
             duration: d,
@@ -138,7 +143,7 @@ function crowdInto(out: Float32Array, rng: Rand, sr: number, opts: { dur: number
           break;
         }
         case 'roar': {
-          const d = Math.min(opts.dur - t, 0.8 + rng.next() * 1.6);
+          const d = Math.min(end - t, 0.8 + rng.next() * 1.6);
           const f1 = base * (1.05 + ex * 0.4);
           voice(out, at, {
             duration: d,
@@ -331,6 +336,7 @@ export function elephantRumble(out: Float32Array, offset: number, rng: Rand, sr:
     roughness: 0.6,
     jitter: 0.04,
     open: 0.5,
+    presence: 0,
   }, rng, sr, gain * 2.2);
   return d;
 }

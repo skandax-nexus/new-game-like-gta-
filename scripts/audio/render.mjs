@@ -128,6 +128,23 @@ if (!ONLY || ONLY.has('sfx')) {
   }
 }
 
+// ------------------------------------------------------------------------------------------ AMBIENCE
+if (!ONLY || ONLY.has('ambience')) {
+  for (const key of A.AMBIENCE_KEYS) {
+    if (!want('ambience', key)) continue;
+    const def = A.ambienceDef(key);
+    const st = A.simulateAmbience(key, AMB_SECONDS, SR, SEED);
+    const extra = { category: def.category, spots: def.spots.map((x) => x.name) };
+    if (def.bed) {
+      const bed = A.renderBed(key, SR, SEED);
+      extra.bedSeconds = +(bed.data.length / bed.sampleRate).toFixed(3);
+      extra.bedRate = bed.sampleRate;
+      extra.seam = AN.loopSeam(bed.data, bed.sampleRate);
+    }
+    write('ambience', key, [st.L, st.R], `${def.category.toUpperCase()}  ${def.bed ? `BED ${extra.bedSeconds}S LOOP` : 'SPOTS ONLY'}  ${def.spots.length} SPOT TYPES`, extra);
+  }
+}
+
 // ----------------------------------------------------------------------------------- contact sheets
 fs.mkdirSync(path.join(OUT, 'sheets'), { recursive: true });
 for (const [group, panels] of Object.entries(sheets)) {

@@ -5,7 +5,7 @@
  */
 import { clamp, type Rand } from '../core';
 import { Biquad, Svf } from '../filters';
-import { Drift, Pink } from '../osc';
+import { Brown, Drift, Pink } from '../osc';
 import { noiseBurst, thud } from './impacts';
 
 /**
@@ -53,47 +53,86 @@ export function splash(out: Float32Array, offset: number, rng: Rand, sr: number,
 }
 
 /**
- * Flowing water bed: band-limited noise "sheet" with slow flow modulation + a field of bubbles and
- * small laps. `kind`: 'lap' (river edge lapping, rhythmic swells), 'river' (broad flow), 'fountain'
- * (bright splashing fall).
+ * Flowing water beds (adds into out):
+ *  - 'river': a slow, wide river - a dark flow body (brown noise < 600 Hz, breathing), a gurgle field of
+ *    Minnaert bubbles (400-1600 Hz) and a faint surface ripple band; almost nothing above 4 kHz.
+ *  - 'lap': water slapping the ghat steps - a quiet flow body plus a slosh every 2-4 s (a band-limited
+ *    swell with a bubble cluster at its crest and a few drips after).
+ *  - 'fountain': water falling onto water and stone - dense granular splatter (short band-passed grains
+ *    1.5-6 kHz with log-normal levels), a mid hiss and fine bubbles.
  */
 export function waterBed(out: Float32Array, rng: Rand, sr: number, kind: 'lap' | 'river' | 'fountain', gain = 1): void {
   const n = out.length;
-  const pink = new Pink();
-  const svf = new Svf(sr, 900, 0.6);
-  const hi = new Biquad('highpass', kind === 'fountain' ? 1200 : 250, 0.6, sr);
-  const flow = new Drift(rng, kind === 'lap' ? 1.6 : 3.5, sr, 0.35, 1);
-  const tone = new Drift(rng, 2.7, sr, 0.6, 1.4);
-  const lapPeriod = 2.2 + rng.next() * 1.2;
-  const base = kind === 'fountain' ? 2600 : kind === 'river' ? 700 : 1100;
-  for (let i = 0; i < n; i++) {
-    const t = i / sr;
-    if ((i & 31) === 0) svf.setFreq(base * tone.next(), 0.55);
-    const f = flow.next();
-    let amp = f;
-    if (kind === 'lap') {
-      // Soft swells as small waves reach the steps.
-      const ph = (t / lapPeriod) % 1;
-      amp *= 0.35 + 0.65 * Math.pow(Math.sin(Math.PI * ph), 3);
-    }
-    svf.process(pink.process(rng.bi()));
-    const x = hi.process(svf.band * 1.2 + svf.low * (kind === 'river' ? 0.9 : 0.3));
-    out[i] += x * amp * gain * (kind === 'fountain' ? 0.9 : 1.1);
-  }
-  // Bubble field.
-  const rate = kind === 'fountain' ? 110 : kind === 'river' ? 55 : 30;
-  let t = rng.expo(rate);
   const dur = n / sr;
+  if (kind === 'fountain') {
+    const hiss = new Svf(sr, 2200, 0.7);
+    const pink = new Pink();
+    const flick = new Drift(rng, 0.35, sr, 0.75, 1);
+    for (let i = 0; i < n; i++) {
+      hiss.process(pink.process(rng.bi()));
+      out[i] += hiss.band * 0.35 * flick.next() * gain;
+    }
+    // Splatter grains.
+    const rate = 900;
+    let t = rng.expo(rate);
+    const bq = new Biquad('bandpass', 3000, 2.5, sr);
+    while (t < dur) {
+      const at = Math.round(t * sr);
+      const len = Math.round((0.0015 + rng.next() * 0.006) * sr);
+      bq.set('bandpass', 1500 + Math.pow(rng.next(), 1.5) * 4500, 2 + rng.next() * 3, sr);
+      bq.reset();
+      const amp = gain * Math.exp(rng.gauss() * 0.8) * 0.05;
+      for (let i = 0; i < len * 3 && at + i < n; i++) out[at + i] += bq.process(i < len ? rng.bi() * (1 - i / len) : 0) * amp;
+      t += rng.expo(rate);
+    }
+    let b = rng.expo(60);
+    while (b < dur) {
+      bubble(out, b * sr, sr, 0.5 + Math.pow(rng.next(), 2) * 2.5, gain * (0.01 + 0.04 * rng.next()), 0.1);
+      b += rng.expo(60);
+    }
+    return;
+  }
+  // Flow body (both river and lap).
+  const brown = new Brown();
+  const body = new Svf(sr, 500, 0.6);
+  const breath = new Drift(rng, kind === 'river' ? 4.5 : 3, sr, 0.45, 1);
+  const ripple = new Svf(sr, 1800, 1.2);
+  const ripAmp = new Drift(rng, 0.25, sr, 0, 1);
+  const pink = new Pink();
+  const bodyGain = kind === 'river' ? 1.4 : 0.45;
+  for (let i = 0; i < n; i++) {
+    body.process(brown.process(rng.bi()));
+    ripple.process(pink.process(rng.bi()));
+    const r = ripAmp.next();
+    out[i] += (body.low * bodyGain * breath.next() + ripple.band * 0.18 * r * r) * gain;
+  }
+  // Gurgle field.
+  const rate = kind === 'river' ? 45 : 14;
+  let t = rng.expo(rate);
   while (t < dur) {
-    const r = kind === 'fountain' ? 0.4 + Math.pow(rng.next(), 2) * 2.2 : 0.8 + Math.pow(rng.next(), 2) * 5;
-    bubble(out, t * sr, sr, r, gain * (0.02 + 0.08 * rng.next()), 0.08 + rng.next() * 0.12);
-    t += rng.expo(rate);
+    bubble(out, t * sr, sr, 2 + Math.pow(rng.next(), 1.5) * 6, gain * (0.03 + 0.1 * rng.next()), 0.08 + rng.next() * 0.1);
+    t += rng.expo(rate) * (rng.chance(0.3) ? 0.2 : 1);
   }
   if (kind === 'lap') {
-    let s = rng.next() * 2;
+    // Sloshes against the steps.
+    let s = rng.next() * 1.5;
     while (s < dur) {
-      splash(out, s * sr, rng, sr, 0.05 + rng.next() * 0.1, gain * 0.25);
-      s += lapPeriod * (0.8 + rng.next() * 0.9);
+      const len = Math.round((0.7 + rng.next() * 0.6) * sr);
+      const at = Math.round(s * sr);
+      const sv = new Svf(sr, 700, 0.8);
+      const pk = 0.25 + rng.next() * 0.15;
+      const amp = gain * (0.5 + 0.5 * rng.next());
+      for (let i = 0; i < len && at + i < n; i++) {
+        const u = i / len;
+        if ((i & 31) === 0) sv.setFreq(400 + 1400 * Math.sin(Math.PI * Math.min(1, u * 1.4)), 0.8);
+        const e = u < pk ? Math.pow(u / pk, 2) : Math.pow(1 - (u - pk) / (1 - pk), 2.2);
+        sv.process(pink.process(rng.bi()));
+        out[at + i] += sv.band * e * amp * 0.9;
+      }
+      const crest = s + pk * (len / sr);
+      for (let k = 0; k < 10 + rng.int(14); k++) bubble(out, (crest + rng.next() * 0.35) * sr, sr, 1 + Math.pow(rng.next(), 2) * 5, gain * (0.04 + 0.1 * rng.next()), 0.12);
+      for (let k = 0; k < 2 + rng.int(4); k++) drip(out, (crest + 0.3 + rng.next() * 0.6) * sr, rng, sr, gain * 0.15);
+      s += 2.1 + rng.next() * 1.8;
     }
   }
 }

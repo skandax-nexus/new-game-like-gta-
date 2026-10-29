@@ -105,6 +105,17 @@ export function foldLoop(src: Float32Array, loopFrames: number, xfadeFrames: num
   return out;
 }
 
+/**
+ * Circular rendering for event-based loops (drum patterns, chant, crowds): everything that rings past the
+ * loop end is added onto the head, exactly as it would overlap when the loop repeats. Returns a copy of
+ * length `loopFrames`.
+ */
+export function wrapAdd(src: Float32Array, loopFrames: number): Float32Array {
+  const out = src.slice(0, loopFrames);
+  for (let i = loopFrames; i < src.length; i++) out[(i - loopFrames) % loopFrames] += src[i];
+  return out;
+}
+
 export function foldLoopStereo(src: Stereo, loopFrames: number, xfadeFrames: number): Stereo {
   return { L: foldLoop(src.L, loopFrames, xfadeFrames), R: foldLoop(src.R, loopFrames, xfadeFrames) };
 }

@@ -202,3 +202,30 @@ export function crackles(out: Float32Array, offset: number, rng: Rand, sr: numbe
 export function scatterInto(out: Float32Array, src: Float32Array, rng: Rand, count: number, startFrame: number, spanFrames: number, gain: number): void {
   for (let k = 0; k < count; k++) addInto(out, src, startFrame + rng.next() * spanFrames, gain * (0.4 + 0.6 * rng.next()));
 }
+
+/**
+ * Wooden creak (stick-slip friction): an irregular pulse train whose rate wanders, through two wood
+ * resonances. Rowlocks, cart axles, wheel hubs, loom frames, gate hinges.
+ */
+export function creak(out: Float32Array, offset: number, rng: Rand, sr: number, opts: { dur: number; f?: number; gain?: number; formant?: number } = { dur: 0.6 }): void {
+  const n = Math.round(opts.dur * sr);
+  const o = Math.round(offset);
+  const f = opts.f ?? 180 + rng.next() * 260;
+  const r1 = new Biquad('bandpass', opts.formant ?? 900 + rng.next() * 900, 3, sr);
+  const r2 = new Biquad('bandpass', (opts.formant ?? 1400) * 2.3, 4, sr);
+  const g = opts.gain ?? 1;
+  let ph = 0;
+  let rate = f;
+  for (let i = 0; i < n && o + i < out.length; i++) {
+    if ((i & 63) === 0) rate = f * (0.75 + 0.5 * rng.next()) * (1 + 0.3 * Math.sin((2 * Math.PI * i) / n));
+    ph += rate / sr;
+    let x = 0;
+    if (ph >= 1) {
+      ph -= 1;
+      x = 0.6 + 0.8 * rng.next();
+    }
+    const env = Math.sin((Math.PI * i) / n);
+    const y = r1.process(x) + 0.6 * r2.process(x);
+    if (o + i >= 0) out[o + i] += y * env * g * 2;
+  }
+}

@@ -164,23 +164,32 @@ export function spectralCentroid(buf: Float32Array, sr: number, size = 4096): nu
 }
 
 /**
- * Loop-seam score: compares the step across the loop boundary (last -> first sample) with the typical
- * sample-to-sample step inside the loop, and the short-term RMS just before / after the seam.
- * A seamless loop has jumpRatio ~ 1 (no larger than ordinary steps) and levelDiffDb ~ 0.
+ * Loop-seam score for a buffer meant to loop:
+ *  - jumpRatio: the step across the wrap (last -> first sample) over the mean sample-to-sample step
+ *    (~1 for a seamless loop, >> 1 for a click);
+ *  - levelDiffDb: |level just before the seam - level just after| over `windowSec` windows;
+ *  - typicalDiffDb: the 95th percentile of the same difference between adjacent windows inside the
+ *    loop - textures with syllables or chirps vary on their own, so the seam is judged against that.
  */
-export function loopSeam(buf: Float32Array, sr: number, windowSec = 0.05): { jumpRatio: number; levelDiffDb: number } {
+export function loopSeam(buf: Float32Array, sr: number, windowSec = 0.4): { jumpRatio: number; levelDiffDb: number; typicalDiffDb: number } {
   const n = buf.length;
   let sumStep = 0;
   for (let i = 1; i < n; i++) sumStep += Math.abs(buf[i] - buf[i - 1]);
   const meanStep = sumStep / Math.max(1, n - 1);
   const jump = Math.abs(buf[0] - buf[n - 1]);
-  const w = Math.min(Math.round(windowSec * sr), n >> 2);
-  let e1 = 0;
-  let e2 = 0;
-  for (let i = 0; i < w; i++) {
-    e1 += buf[n - w + i] * buf[n - w + i];
-    e2 += buf[i] * buf[i];
-  }
-  const levelDiffDb = Math.abs(gainToDb(Math.sqrt(e1 / w)) - gainToDb(Math.sqrt(e2 / w)));
-  return { jumpRatio: meanStep > 0 ? jump / meanStep : 0, levelDiffDb };
+  const w = Math.max(16, Math.min(Math.round(windowSec * sr), n >> 2));
+  const level = (start: number): number => {
+    let e = 0;
+    for (let i = 0; i < w; i++) {
+      const x = buf[(start + i + n) % n];
+      e += x * x;
+    }
+    return gainToDb(Math.sqrt(e / w));
+  };
+  const levelDiffDb = Math.abs(level(n - w) - level(0));
+  const diffs: number[] = [];
+  for (let s = w; s + w <= n - w; s += w) diffs.push(Math.abs(level(s - w) - level(s)));
+  diffs.sort((a, b) => a - b);
+  const typicalDiffDb = diffs.length ? (diffs[Math.min(diffs.length - 1, Math.floor(diffs.length * 0.95))] as number) : 0;
+  return { jumpRatio: meanStep > 0 ? jump / meanStep : 0, levelDiffDb, typicalDiffDb };
 }

@@ -59,6 +59,8 @@ export interface VoiceParams {
   open?: number;
   /** Vibrato [rateHz, depthCents]. */
   vibrato?: readonly [number, number];
+  /** High-band aspiration above the formants (0 = none; default 1 for people, 0.5 for animals). */
+  presence?: number;
 }
 
 function keyAt(keys: readonly Key[], t: number, cursor: { i: number }): number {
@@ -103,7 +105,7 @@ export function voice(out: Float32Array, offset: number, p: VoiceParams, rng: Ra
   let periodIdx = 0;
   let noiseLp = 0;
   let hiNoise = 0;
-  const presence = kind === 'animal' ? 0.5 : 1;
+  const presence = p.presence ?? (kind === 'animal' ? 0.5 : 1);
   for (let i = 0; i < len; i++) {
     const t = i / sr;
     if ((i & 31) === 0) {

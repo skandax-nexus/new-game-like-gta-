@@ -5,8 +5,10 @@
  */
 import { ALL_SFX, SFX_META, type SfxSoundId } from './sfx/meta';
 import { renderSfx } from './sfx/render';
+import { AMBIENCE_DEFS, AMBIENCE_KEYS, ambienceDef, worldBedLayers } from './ambience/meta';
+import { renderBed, renderSpot, simulateAmbience } from './ambience/render';
 
-export { ALL_SFX, SFX_META, renderSfx };
+export { ALL_SFX, SFX_META, renderSfx, AMBIENCE_DEFS, AMBIENCE_KEYS, ambienceDef, worldBedLayers, renderBed, renderSpot, simulateAmbience };
 export type { SfxSoundId };
 
 /** All variants of one SFX at the `high` tier count. */

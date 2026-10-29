@@ -121,6 +121,6 @@ describe('audio synth primitives', () => {
     const loop = foldLoop(src, sr * 2, Math.round(sr * 0.5));
     const seam = loopSeam(loop, sr);
     expect(seam.jumpRatio).toBeLessThan(4);
-    expect(seam.levelDiffDb).toBeLessThan(3);
+    expect(seam.levelDiffDb).toBeLessThan(Math.max(1.5, seam.typicalDiffDb + 1));
   });
 });
