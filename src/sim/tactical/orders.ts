@@ -31,8 +31,8 @@ import type { BattleEventRecord, BattleState, FormationOrder, FormationState, Si
 import { angleDelta, dcos, dsin, facingOf } from '../../core/math';
 import { RULES } from '../../data/rules';
 import { UNITS } from '../../data/units';
-import type { BattleContext } from './context';
-import { footprintRadius, formationSpeed, moveFormation, runAlong, setFrontage, turnInPlace } from './formations';
+import type { BattleContext, RulesContext } from './context';
+import { formationSpeed, moveFormation, runAlong, setFrontage, turnInPlace } from './formations';
 import { aspectOfPoint, standing } from './morale';
 import { effectiveRange } from './projectiles';
 import { buildRate, completeWork, gateNear, repairGate, segmentNear, WORK_HP, WORK_SECONDS, workNear } from './siege';
@@ -90,13 +90,17 @@ export function nearestEnemy(state: BattleState, ctx: BattleContext, f: Formatio
   let best: FormationState | null = null;
   let bd = Infinity;
   const n = ctx.n;
-  const rf = footprintRadius(f);
+  const rf = ctx.radius[f.index]!;
+  const row = f.index * n;
+  const lim = maxGap + rf + 80;
   for (const o of state.formations) {
     if (o.side === f.side || o.soldiers <= 0 || o.activity === 'surrendered' || o.activity === 'destroyed') continue;
+    const d2 = ctx.d2[row + o.index]!;
+    if (d2 > lim * lim) continue;
     if (!includeRouting && o.activity === 'routing') continue;
     if (!o.spotted || isOffField(ctx, o)) continue;
     if (meleeOnly && UNITS[o.unitClass].category === 'ranged') continue;
-    const d = Math.sqrt(ctx.d2[f.index * n + o.index]!) - rf - footprintRadius(o) * 0.5;
+    const d = Math.sqrt(d2) - rf - ctx.radius[o.index]! * 0.5;
     if (d <= maxGap && d < bd) {
       bd = d;
       best = o;
@@ -183,7 +187,7 @@ function keepRange(state: BattleState, ctx: BattleContext, f: FormationState, t:
   const dz = t.z - f.z;
   const d = Math.sqrt(dx * dx + dz * dz);
   if (d > r * 0.9) {
-    moveFormation(ctx, f, t.x - (dx / d) * r * 0.8, t.z - (dz / d) * r * 0.8, false, null, false, 1, dt);
+    moveFormation(ctx, f, t.x - (dx / d) * r * 0.8, t.z - (dz / d) * r * 0.8, false, null, false, 1, dt, state.formations);
     return true;
   }
   if (d < r * 0.4) {
@@ -284,7 +288,7 @@ export function executeFormation(state: BattleState, ctx: BattleContext, f: Form
       startOrder(state, f, o);
       break;
     case 'move_to': {
-      const rem = moveFormation(ctx, f, o.x, o.z, o.run, o.facing, false, 1, dt);
+      const rem = moveFormation(ctx, f, o.x, o.z, o.run, o.facing, false, 1, dt, state.formations);
       activity = speedOf(f) > 0.05 ? 'moving' : 'idle';
       if (rem <= 0 && (o.facing === null || Math.abs(angleDelta(f.facing, o.facing)) < 0.03)) {
         const w = (o as { width?: unknown }).width;
@@ -319,7 +323,7 @@ export function executeFormation(state: BattleState, ctx: BattleContext, f: Form
         const runFrom = isMountedOrBeast(f.unitClass) ? RULES.battle.charge.mountedRunFrom : RULES.battle.charge.infantryRunFrom;
         run = gap <= runFrom && canCharge(f);
       }
-      moveFormation(ctx, f, t.x, t.z, run, null, false, 1, dt);
+      moveFormation(ctx, f, t.x, t.z, run, null, false, 1, dt, state.formations);
       const sp = speedOf(f);
       if (o.type === 'charge') {
         if (run && sp >= RULES.battle.charge.minSpeedShare * st.runSpeed) f.chargeRun += sp * dt;
@@ -345,7 +349,7 @@ export function executeFormation(state: BattleState, ctx: BattleContext, f: Form
       const back = t.depth * 0.5 - 10;
       const px = t.x + rx * (t.width * 0.5 + 35) + dsin(t.facing) * back;
       const pz = t.z + rz * (t.width * 0.5 + 35) + dcos(t.facing) * back;
-      const rem = moveFormation(ctx, f, px, pz, true, null, false, 1, dt);
+      const rem = moveFormation(ctx, f, px, pz, true, null, false, 1, dt, state.formations);
       activity = 'moving';
       if (rem < 4) startOrder(state, f, { type: 'charge', target: t.index });
       break;
@@ -377,7 +381,7 @@ export function executeFormation(state: BattleState, ctx: BattleContext, f: Form
       }
       const fromAnchor = Math.sqrt((f.x - o.x) * (f.x - o.x) + (f.z - o.z) * (f.z - o.z));
       if (threat && !isShooter(st) && fromAnchor < o.radius + 20) {
-        moveFormation(ctx, f, threat.x, threat.z, false, null, false, 1, dt);
+        moveFormation(ctx, f, threat.x, threat.z, false, null, false, 1, dt, state.formations);
         activity = 'moving';
       } else if (fromAnchor > 5) {
         const e = nearestEnemy(state, ctx, f, 300);
@@ -486,7 +490,7 @@ function executeConstruct(state: BattleState, ctx: BattleContext, f: FormationSt
  * Validate an order for a formation at issue time. Returns an error string or null. Snaps ladder sites onto the wall
  * exterior.
  */
-export function validateOrder(state: BattleState, ctx: BattleContext, f: FormationState, o: FormationOrder): string | null {
+export function validateOrder(state: BattleState, ctx: RulesContext, f: FormationState, o: FormationOrder): string | null {
   const st = ctx.stats[f.index]!;
   switch (o.type) {
     case 'attack_target':
@@ -525,7 +529,7 @@ export function validateOrder(state: BattleState, ctx: BattleContext, f: Formati
 }
 
 /** Ladder sites snap to the outside of the wall at the clicked angle. */
-export function snapOrder(ctx: BattleContext, o: FormationOrder): FormationOrder {
+export function snapOrder(ctx: RulesContext, o: FormationOrder): FormationOrder {
   if (o.type !== 'construct' || o.work !== 'ladder' || !ctx.fort) return o;
   const g = ctx.fort;
   const a = angleFromCenter(g, o.x, o.z);

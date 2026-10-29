@@ -27,8 +27,9 @@ import { BALANCE } from '../../data/balance';
 import { DIFFICULTY_DEFS } from '../../data/difficulty';
 import { RULES } from '../../data/rules';
 import type { BattleContext } from './context';
+import { aspectOf, localOf } from './context';
 import { distFromCenter, insideRing, WALL_WALK_DEPTH } from './fort';
-import { footprintRadius, toLocal } from './formations';
+import { toLocal } from './formations';
 import { fatigueTier, isFoot, isMounted } from './stats';
 
 /** Floor of the recent-events input R (see header). */
@@ -209,10 +210,12 @@ export function computeMoraleInputs(state: BattleState, ctx: BattleContext, f: F
   let coveredR = false;
   let aspects = 0;
   let mountedFlank = false;
-  const rf = footprintRadius(f);
-  for (const o of state.formations) {
+  const rf = ctx.radius[f.index]!;
+  const fs = state.formations;
+  for (let k = 0; k < n; k++) {
+    const o = fs[k]!;
     if (o === f || o.soldiers <= 0 || o.activity === 'surrendered') continue;
-    const d2 = ctx.d2[row + o.index]!;
+    const d2 = ctx.d2[row + k]!;
     if (d2 > 160 * 160) continue;
     const routing = o.activity === 'routing';
     if (d2 <= 80 * 80 && !routing) {
@@ -220,18 +223,18 @@ export function computeMoraleInputs(state: BattleState, ctx: BattleContext, f: F
       else enemies += weight(ctx, o);
     }
     if (routing) continue;
-    const d = Math.sqrt(d2);
-    const gap = d - rf - footprintRadius(o);
+    const gap = Math.sqrt(d2) - rf - ctx.radius[k]!;
     if (o.side === f.side) {
-      if (gap > 30) continue;
-      toLocal(f, o.x, o.z, loc);
+      if (gap > 30 || (coveredL && coveredR)) continue;
+      localOf(ctx, f, o.x, o.z, loc);
       if (Math.abs(loc.z) > Math.max(f.depth, o.depth) / 2 + 25) continue;
       if (Math.abs(loc.x) - f.width / 2 - o.width / 2 > 30) continue;
       if (loc.x < 0) coveredL = true;
       else coveredR = true;
-    } else {
-      if (gap <= 30) aspects |= 1 << aspectOfPoint(f, o.x, o.z);
-      if (gap <= 60 && isMounted(o.unitClass) && aspectOfPoint(f, o.x, o.z) !== 0) mountedFlank = true;
+    } else if (gap <= 60) {
+      const asp = aspectOf(ctx, f, o.x, o.z);
+      if (gap <= 30) aspects |= 1 << asp;
+      if (asp !== 0 && isMounted(o.unitClass)) mountedFlank = true;
     }
   }
   let aspectCount = 0;

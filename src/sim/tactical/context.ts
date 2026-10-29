@@ -35,8 +35,13 @@ export interface BattleContext {
   readonly hurt: Uint8Array;
   /** Formation was engaged at the start of this tick (reinforced / contact events). */
   readonly wasEngaged: Uint8Array;
-  /** Charge impact already resolved for this contact (index = attacker). */
-  readonly impacted: Uint8Array;
+  /** Positions at the start of the tick (trample / router pass-through entry detection). */
+  readonly prevX: Float64Array;
+  readonly prevZ: Float64Array;
+  /** Per-tick geometry cache (computeDistances): footprint half-diagonal, sin / cos of the facing. */
+  readonly radius: Float64Array;
+  readonly sin: Float64Array;
+  readonly cos: Float64Array;
 }
 
 const contexts = new WeakMap<BattleSetup, BattleContext>();
@@ -63,8 +68,24 @@ function buildContext(state: BattleState, terrain: TerrainQuery): BattleContext 
     active: new Uint8Array(Math.max(1, n)),
     hurt: new Uint8Array(Math.max(1, n)),
     wasEngaged: new Uint8Array(Math.max(1, n)),
-    impacted: new Uint8Array(Math.max(1, n)),
+    prevX: new Float64Array(Math.max(1, n)),
+    prevZ: new Float64Array(Math.max(1, n)),
+    radius: new Float64Array(Math.max(1, n)),
+    sin: new Float64Array(Math.max(1, n)),
+    cos: new Float64Array(Math.max(1, n)),
   };
+}
+
+/** Rules-only view (stats + fort geometry) for command validation when no terrain is at hand. */
+export type RulesContext = Pick<BattleContext, 'stats' | 'fort'>;
+
+/** Existing context of a battle, or a rules-only view built from the setup (no terrain needed). */
+export function rulesContext(state: BattleState): RulesContext {
+  const ctx = contexts.get(state.setup);
+  if (ctx && ctx.n === state.formations.length) return ctx;
+  const stats: UnitStats[] = [];
+  for (const f of state.formations) stats[f.index] = variantStats(state.setup.sides[f.side].factionId, f.unitClass);
+  return { stats, fort: createFortGeometry(state.setup) };
 }
 
 /** The derived context of a battle (created on first use). */
@@ -78,11 +99,17 @@ export function battleContext(state: BattleState, terrain: TerrainQuery): Battle
   return ctx;
 }
 
-/** Recompute the squared distance matrix (once per tick). */
+/** Recompute the squared distance matrix and the geometry cache (after any movement). */
 export function computeDistances(state: BattleState, ctx: BattleContext): void {
   const fs = state.formations;
   const n = ctx.n;
   const d2 = ctx.d2;
+  for (let i = 0; i < n; i++) {
+    const a = fs[i] as FormationState;
+    ctx.radius[i] = 0.5 * Math.sqrt(a.width * a.width + a.depth * a.depth);
+    ctx.sin[i] = dsin(a.facing);
+    ctx.cos[i] = dcos(a.facing);
+  }
   for (let i = 0; i < n; i++) {
     const a = fs[i] as FormationState;
     d2[i * n + i] = 0;
@@ -103,6 +130,31 @@ export function computeDistances(state: BattleState, ctx: BattleContext): void {
 
 function mix(h: number, v: number): number {
   return Math.imul(h ^ (v | 0), 16777619) >>> 0;
+}
+
+/**
+ * (x, z) in f's local frame (x right, z forward) using the facing cached by computeDistances - valid until f turns
+ * again this tick (morale / contact code runs after all movement).
+ */
+export function localOf(ctx: BattleContext, f: FormationState, x: number, z: number, out: { x: number; z: number }): void {
+  const dx = x - f.x;
+  const dz = z - f.z;
+  const s = ctx.sin[f.index]!;
+  const c = ctx.cos[f.index]!;
+  out.x = dx * -c + dz * s;
+  out.z = dx * s + dz * c;
+}
+
+/** Which aspect of f a point lies on: 0 front, 1 left, 2 right, 3 rear (box-normalized; cached facing). */
+export function aspectOf(ctx: BattleContext, f: FormationState, x: number, z: number): 0 | 1 | 2 | 3 {
+  const dx = x - f.x;
+  const dz = z - f.z;
+  const s = ctx.sin[f.index]!;
+  const c = ctx.cos[f.index]!;
+  const nx = (dx * -c + dz * s) / Math.max(1, f.width / 2);
+  const nz = (dx * s + dz * c) / Math.max(1, f.depth / 2);
+  if (Math.abs(nz) >= Math.abs(nx)) return nz >= 0 ? 0 : 3;
+  return nx < 0 ? 1 : 2;
 }
 
 /** Signature of everything the overlay depends on (cheap; no allocation). */

@@ -248,6 +248,46 @@ export function turnInPlace(ctx: BattleContext, f: FormationState, desired: numb
 }
 
 const wp: Vec2 = { x: 0, z: 0 };
+const av: Vec2 = { x: 0, z: 0 };
+
+/**
+ * Local avoidance of friendly formations standing between f and its goal (formation level; the soldier layer does
+ * the individual separation): the heading is bent sideways around any friend whose footprint lies on the path
+ * within ~25 m. Routers / tramplers are ignored (they pass through).
+ */
+function avoidFriends(ctx: BattleContext, f: FormationState, others: readonly FormationState[], hx: number, hz: number, goalDist: number, out: Vec2): void {
+  out.x = hx;
+  out.z = hz;
+  const n = ctx.n;
+  const rf = ctx.radius[f.index]!;
+  const look = 25 + f.depth * 0.5;
+  let ax = 0;
+  let az = 0;
+  for (const o of others) {
+    if (o === f || o.side !== f.side || o.soldiers <= 0 || o.activity === 'surrendered' || o.activity === 'destroyed') continue;
+    const ro = ctx.radius[o.index]!;
+    const reach = look + ro + rf;
+    if (ctx.d2[f.index * n + o.index]! > reach * reach) continue;
+    if (passesThrough(f, o)) continue;
+    const rx = o.x - f.x;
+    const rz = o.z - f.z;
+    const along = rx * hx + rz * hz;
+    if (along <= 0 || along > goalDist || along > look + ro) continue;
+    const lat = rx * -hz + rz * hx;
+    const clear = ro * 0.85 + f.width * 0.5 + 2;
+    if (Math.abs(lat) >= clear) continue;
+    const away = lat > 0 ? -1 : lat < 0 ? 1 : f.index < o.index ? 1 : -1;
+    const w = ((clear - Math.abs(lat)) / clear) * (1 - along / (look + ro + 1));
+    ax += -hz * away * w;
+    az += hx * away * w;
+  }
+  if (ax === 0 && az === 0) return;
+  const x = hx + ax * 2;
+  const z = hz + az * 2;
+  const l = Math.sqrt(x * x + z * z) || 1;
+  out.x = x / l;
+  out.z = z / l;
+}
 
 /**
  * Move a formation toward (tx, tz) for dt with pathing (flow field around obstacles), wheeling, turning in place
@@ -266,6 +306,7 @@ export function moveFormation(
   backwards: boolean,
   speedScale: number,
   dt: number,
+  others: readonly FormationState[] | null = null,
 ): number {
   const dx = tx - f.x;
   const dz = tz - f.z;
@@ -287,6 +328,11 @@ export function moveFormation(
   } else {
     hx /= hl;
     hz /= hl;
+  }
+  if (others && !backwards) {
+    avoidFriends(ctx, f, others, hx, hz, d, av);
+    hx = av.x;
+    hz = av.z;
   }
   const heading = facingOf(hx, hz);
   let speed = formationSpeed(ctx, f, run) * speedScale;
@@ -403,11 +449,11 @@ export function separateFormations(ctx: BattleContext, list: readonly FormationS
   for (let i = 0; i < n; i++) {
     if (!active[i]) continue;
     const a = list[i]!;
-    const ra = footprintRadius(a);
+    const ra = ctx.radius[i]!;
     for (let j = i + 1; j < n; j++) {
       if (!active[j]) continue;
       const b = list[j]!;
-      const rr = ra + footprintRadius(b);
+      const rr = ra + ctx.radius[j]!;
       if (ctx.d2[i * n + j]! > rr * rr) continue;
       const friends = a.side === b.side;
       if (friends && passesThrough(a, b)) continue;

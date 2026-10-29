@@ -15,8 +15,8 @@
  *         x (1 + 0.25 exp) x shape.meleeAttack x (escalade 0.7 when climbing ladders against the walls)
  *   DEF = meleeDefense x terrain.defense x (0.6 + 0.4 C) x (1 + 0.15 exp) x shape.meleeDefense x (on walls 1.3) + armor
  *   dmgHP = frontage x ATK / max(1, DEF) x aspect(1 / 1.5 / 2) x rout(3) x disengage(1.5) x K x dt x U(0.85, 1.15)
- *   Side effects: D cohesion -0.01 x aspect x dt; A fatigue +0.003 x dt x fatigueRate x 100 x terrain/heat/long-fight
- *   multipliers; flank/rear hits add a morale event with p = 0.5 dt.
+ *   Side effects: D cohesion -0.01 x aspect x dt; flank/rear hits add a morale event with p = 0.5 dt; A's fighting
+ *   fatigue +0.003 x dt x fatigueRate x 100 x terrain/heat/long-fight multipliers (once per tick, battle.ts).
  * Charge impact (§6.6.2), once on contact after >= 20 m run at >= 60% run speed:
  *   impactHP = min(n_A, 2 files_A) x chargeBonus x mass_A / (mass_D + 1) x 0.35 x shape.chargeImpact x U(0.8, 1.2)
  *              x braced(0.35); recoil on a braced target = 0.5 x the unbraced impact (8 elephants: 189 HP).
@@ -174,8 +174,7 @@ export function meleeHit(state: BattleState, ctx: BattleContext, att: FormationS
   applyDamage(state, ctx, def, dmg, att, out);
   if (aspect > 0 && rng.chance(dt * 0.5)) addMoraleEvent(def, aspect === 1 ? 'flank_attacked' : 'rear_attacked', state.time);
   def.cohesion = Math.max(0, def.cohesion - 0.01 * am * dt);
-  const st = ctx.stats[att.index]!;
-  att.fatigue = Math.min(1, att.fatigue + BALANCE.combat.fatigueFightPerSec * dt * st.fatigueRate * 100 * fatigueGainMultiplier(state, ctx, att));
+  // Fighting fatigue (+0.003/s x fatigueRate x 100) is applied once per engaged formation per tick in battle.ts.
 }
 
 /** Melee exchange between two engaged formations for dt (both directions). */
