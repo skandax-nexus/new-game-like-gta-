@@ -47,20 +47,20 @@ s = np.exp(-(x / w) ** 2) * np.clip(1.0 - np.abs(y) / 0.95, 0, 1) ** 0.6 * (0.45
 seq("streak", [rgba(s * 0.85)], 1)
 
 # splash: crown of droplets (side view, ground at y = -0.75)
-drops = [(rng.uniform(-1.0, 1.0), rng.uniform(0.9, 1.6), rng.uniform(0.025, 0.05)) for _ in range(18)]
+drops = [(rng.uniform(-1.0, 1.0), rng.uniform(1.4, 2.4), rng.uniform(0.03, 0.055)) for _ in range(20)]
 imgs = []
 for f in range(16):
     t = f / 15.0
     a = np.zeros_like(x)
-    crown_h = 0.35 * np.sin(np.pi * min(1.0, t * 1.6)) * (1 - t)
-    cw = 0.12 + 0.55 * t
+    crown_h = 0.5 * np.sin(np.pi * min(1.0, t * 1.6)) * (1 - t)
+    cw = 0.14 + 0.6 * t
     crown = np.exp(-((np.abs(x) - cw) / 0.05) ** 2) * ((y > -0.75) & (y < -0.75 + crown_h + 0.02)) * (1 - t) ** 0.8
     a += crown * 0.9
     sheet = np.exp(-((y + 0.75) / 0.03) ** 2) * np.clip(1 - np.abs(x) / (cw + 0.05), 0, 1) * (1 - t) * 0.7
     a += sheet
     for vx, vy, r in drops:
-        px_ = vx * 0.55 * t
-        py_ = -0.75 + vy * t - 1.9 * t * t
+        px_ = vx * 0.8 * t
+        py_ = -0.75 + vy * t - 2.5 * t * t
         if py_ < -0.78:
             continue
         a += np.exp(-(((x - px_) / r) ** 2 + ((y - py_) / (r * 1.4)) ** 2)) * (1 - t * 0.6)

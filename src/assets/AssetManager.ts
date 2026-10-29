@@ -451,11 +451,14 @@ export class AssetManager {
         const scene = (skinned ? SkeletonUtils.clone(gltf.scene) : gltf.scene.clone(true)) as THREE.Group;
         scene.name = `${entry.id}_lod${lod.lod}`;
         await this.bindMaterials(entry.id, scene, acquiredMats);
+        // meta.vertexColors === 'data': COLOR_0 carries data (e.g. banner cloth weights), not albedo.
+        const colorIsData = entry.meta.vertexColors === 'data';
         scene.traverse((o) => {
           const m = o as THREE.Mesh;
           if (m.isMesh) {
             m.castShadow = opts.castShadow ?? true;
             m.receiveShadow = opts.receiveShadow ?? true;
+            if (colorIsData) for (const mat of Array.isArray(m.material) ? m.material : [m.material]) mat.vertexColors = false;
           }
         });
         if (skinned) {

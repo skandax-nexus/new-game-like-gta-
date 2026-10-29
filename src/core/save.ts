@@ -252,10 +252,16 @@ export function deserializeSave(text: string): SaveGame {
     throw new SaveError(`Save file is not valid JSON: ${(err as Error).message}`);
   }
   if (!raw || raw.format !== 'samrajya-save') throw new SaveError('Not a SAMRAJYA save file');
-  const migrated = migrateSave(raw);
-  const game = migrated as unknown as SaveGame;
-  validateSave(game);
-  return game;
+  try {
+    const game = migrateSave(raw) as unknown as SaveGame;
+    validateSave(game);
+    return game;
+  } catch (err) {
+    // Migrations and the shape walk assume the v1 skeleton; a hand-edited / truncated file fails with a TypeError
+    // there. Callers (session, import) handle SaveError only, so report it as one.
+    if (err instanceof SaveError) throw err;
+    throw new SaveError(`Save file is malformed: ${(err as Error).message}`);
+  }
 }
 
 /** Structural validation of a current-version save (throws SaveError listing the first problems). */

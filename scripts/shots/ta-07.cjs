@@ -124,11 +124,12 @@ async function main() {
       await page.goto(url, { waitUntil: 'load', timeout: 240000 });
       await page.waitForFunction(() => window.__SAMRAJYA__ && window.__SAMRAJYA__.ready && window.__SAMRAJYA__.sceneReady, null, { timeout: 240000, polling: 250 });
       await page.evaluate((n) => window.__SAMRAJYA__.waitFrames(n), opts.frames || 4);
+      if (opts.until) await page.waitForFunction(opts.until, null, { timeout: 240000, polling: 500 });
       state = await page.evaluate(() => window.__SAMRAJYA__.getState().sceneState);
       if (opts.memory) state.memory = await page.evaluate(() => window.__SAMRAJYA__.getProfile());
       await page.evaluate(() => window.__SAMRAJYA__.freeze(true));
       for (const c of await page.evaluate(() => window.__SAMRAJYA__.getErrors().map((r) => r.message))) errors.push(`crash: ${c}`);
-      await page.screenshot({ path: path.join(OUT, `${name}.png`) });
+      await page.screenshot({ path: path.join(OUT, `${name}.png`), timeout: 240000 });
     } catch (err) {
       errors.push(`shots: ${err && err.message ? err.message : String(err)}`);
     }
@@ -219,7 +220,7 @@ async function main() {
     // ---------------------------------------------------------------- skinned clones + memory
     if (run('skinned')) {
       await shoot('skinned_clones', 'asset=skin_test_character&clip=walk&hdri=sky_golden&camera=hero&t=0.4', { quality: 'ultra' });
-      const s = await shoot('skinned_memtest', 'asset=skin_test_character&clip=walk&hdri=sky_day&memtest=1&noui=1', { quality: 'high', frames: 8 });
+      const s = await shoot('skinned_memtest', 'asset=skin_test_character&clip=walk&hdri=sky_day&memtest=1&noui=1', { quality: 'high', frames: 4, until: () => { const s = window.__SAMRAJYA__.getState().sceneState; return !!(s && s.skinned && s.skinned.memtest && s.skinned.memtest.released); } });
       const mt = s?.skinned?.memtest ?? null;
       report.numbers.skinnedMemory = mt;
       if (mt) console.log(`[ta-07] skinned memory (renderer.info.memory): baseline ${JSON.stringify(mt.baseline)} -> loaded ${JSON.stringify(mt.loaded)} -> released ${JSON.stringify(mt.released)} ${mt.released && mt.released.geometries === mt.baseline.geometries && mt.released.textures === mt.baseline.textures ? 'OK (back to baseline)' : 'LEAK'}`);

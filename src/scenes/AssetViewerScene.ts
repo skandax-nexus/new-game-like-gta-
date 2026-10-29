@@ -187,7 +187,13 @@ export class AssetViewerScene implements GameScene {
   private clones: SkinnedClone[] = [];
   private kits: InstancedKit[] = [];
   private kitDraws: { id: string; meshes: number; triangles: number }[] = [];
-  private memtest: { baseline: { geometries: number; textures: number }; loaded: { geometries: number; textures: number } | null; released: { geometries: number; textures: number } | null } | null = null;
+  private memtest: {
+    phase: 'baseline' | 'loading' | 'loaded' | 'released' | 'done';
+    frames: number;
+    baseline: { geometries: number; textures: number } | null;
+    loaded: { geometries: number; textures: number } | null;
+    released: { geometries: number; textures: number } | null;
+  } | null = null;
   private notes: string[] = [];
 
   constructor(private readonly ctx: AppContext) {}
@@ -529,7 +535,10 @@ export class AssetViewerScene implements GameScene {
   /** Screen rectangle (pixels, top-left origin) of the impostor subject's bounding sphere. */
   private subjectRect(): { x: number; y: number; w: number; h: number } | null {
     if (this.mode !== 'impostor') return null;
-    const { width, height } = this.ctx.render.getStats();
+    // CSS pixels of the canvas (screenshots are taken at deviceScaleFactor 1, the render size may be scaled).
+    const box = this.ctx.render.renderer.domElement.getBoundingClientRect();
+    const width = box.width;
+    const height = box.height;
     const c = this.impostorCenter.clone();
     const r = this.impostorRadius;
     const pts = [-1, 1].flatMap((sx) => [-1, 1].flatMap((sy) => [-1, 1].map((sz) => c.clone().add(new THREE.Vector3(sx * r, sy * r, sz * r)))));
@@ -539,8 +548,8 @@ export class AssetViewerScene implements GameScene {
     let y1 = -Infinity;
     for (const p of pts) {
       p.project(this.camera);
-      const x = (p.x * 0.5 + 0.5) * width;
-      const y = (1 - (p.y * 0.5 + 0.5)) * height;
+      const x = box.left + (p.x * 0.5 + 0.5) * width;
+      const y = box.top + (1 - (p.y * 0.5 + 0.5)) * height;
       x0 = Math.min(x0, x);
       y0 = Math.min(y0, y);
       x1 = Math.max(x1, x);
@@ -671,9 +680,16 @@ export class AssetViewerScene implements GameScene {
 
   private async buildSkinned(): Promise<void> {
     if (this.opts.memtest) {
-      // Baseline after the sky / ground of a previous identical scene setup: render once to upload them.
-      this.memtest = { baseline: this.memInfo(), loaded: null, released: null };
+      // Frame-driven (update()): render the empty stage for a few frames -> baseline, load both clones and render
+      // -> loaded, release them and render -> released (must equal the baseline).
+      this.memtest = { phase: 'baseline', frames: 0, baseline: null, loaded: null, released: null };
+      this.bounds.set(new THREE.Vector3(-2.2, 0, -1), new THREE.Vector3(2.2, 1.9, 1));
+      return;
     }
+    await this.loadSkinnedClones();
+  }
+
+  private async loadSkinnedClones(): Promise<void> {
     const a = await this.ctx.assets.loadModel(this.assetId, { crossFade: false });
     const b = await this.ctx.assets.loadModel(this.assetId, { crossFade: false });
     this.model = a;
@@ -701,16 +717,39 @@ export class AssetViewerScene implements GameScene {
       const bb = e.bounds;
       this.bounds.set(new THREE.Vector3(bb.min[0]! - 1.3, bb.min[1]!, bb.min[2]!), new THREE.Vector3(bb.max[0]! + 1.3, bb.max[1]!, bb.max[2]!));
     } else this.bounds.set(new THREE.Vector3(-2, 0, -1), new THREE.Vector3(2, 2, 1));
-    if (this.memtest) {
-      // Render a few frames so every GPU resource is uploaded, measure, then release both clones.
-      for (let i = 0; i < 2; i++) this.ctx.render.render(1 / 30);
-      this.memtest.loaded = this.memInfo();
+  }
+
+  /** memtest state machine, one step per rendered frame (3 frames per phase so every upload has happened). */
+  private stepMemtest(): void {
+    const m = this.memtest;
+    if (!m) return;
+    m.frames++;
+    if (m.phase === 'baseline' && m.frames >= 3) {
+      m.baseline = this.memInfo();
+      m.phase = 'loading';
+      this.loadSkinnedClones().then(
+        () => {
+          m.phase = 'loaded';
+          m.frames = 0;
+        },
+        (err: unknown) => {
+          this.notes.push(`memtest load failed: ${err instanceof Error ? err.message : String(err)}`);
+          m.phase = 'done';
+        },
+      );
+    } else if (m.phase === 'loaded' && m.frames >= 3) {
+      m.loaded = this.memInfo();
+      this.releaseClones();
+      m.phase = 'released';
+      m.frames = 0;
+    } else if (m.phase === 'released' && m.frames >= 3) {
+      m.released = this.memInfo();
+      m.phase = 'done';
     }
   }
 
-  /** memtest: release both clones (and the shared cache) and measure the renderer's memory again. */
-  private finishMemtest(): void {
-    if (!this.memtest || this.memtest.released) return;
+  /** Release both clones (and, with the last reference, the shared model cache). */
+  private releaseClones(): void {
     for (const c of this.clones) {
       c.mixer.stopAllAction();
       c.mixer.uncacheRoot(c.instance.object);
@@ -720,8 +759,6 @@ export class AssetViewerScene implements GameScene {
     }
     this.clones = [];
     this.model = null;
-    this.ctx.render.render(1 / 30);
-    this.memtest.released = this.memInfo();
   }
 
   // ------------------------------------------------------------------ splat terrain (TA-01)
@@ -1045,13 +1082,13 @@ export class AssetViewerScene implements GameScene {
       c.lastTime = now;
       if (c.bar) c.bar.style.width = `${(now / dur) * 100}%`;
     }
-    if (this.memtest && this.memtest.loaded && !this.memtest.released) this.finishMemtest();
     for (const c of this.crowd) {
       c.draws.main = 0;
       c.draws.shadow = 0;
     }
     this.controls?.update(dt);
     ctx.render.render(dt);
+    this.stepMemtest();
     this.hudTimer -= dt;
     if (this.hudTimer <= 0) {
       this.hudTimer = 0.5;

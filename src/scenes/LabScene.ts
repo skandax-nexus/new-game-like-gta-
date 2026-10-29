@@ -32,9 +32,6 @@ const DEFAULT_HOUR = 16.6;
 const DEFAULT_SCENE_SIZE = 160;
 const GROUND_RADIUS = 2000;
 const GROUND_MATERIAL = 'ground_dry_earth';
-/** The error panel stays this long after the fallback menu is ready (and never longer than the cap). */
-const ERROR_PANEL_AFTER_MENU_MS = 8000;
-const ERROR_PANEL_CAP_MS = 60000;
 /** Framing distances are authored for 16:9; narrower (portrait) views back off by up to this factor. */
 const REF_ASPECT = 16 / 9;
 const MAX_FIT = 2.2;
@@ -248,13 +245,22 @@ export class LabScene implements GameScene {
 
   // ------------------------------------------------------------------ failure path
 
-  /** Themed error panel (survives the scene switch) + fallback to the main menu on the first frame. */
+  /**
+   * Themed error panel (survives the scene switch) + fallback to the main menu on the first frame. The panel stays
+   * over the menu until it is dismissed or the player leaves the menu - no wall-clock timer, so slow (SwiftShader)
+   * captures and slow devices always see it.
+   */
   private fail(reason: string): void {
     this.failure = reason;
     const ctx = this.ctx;
     console.warn(`[lab] ${reason}`);
     const labs = listLabs();
-    const close = (): void => panel.remove();
+    let offExit: (() => void) | null = null;
+    const close = (): void => {
+      panel.remove();
+      offExit?.();
+      offExit = null;
+    };
     const panel = document.createElement('div');
     panel.className = 'panel lab-error';
     panel.setAttribute('role', 'alert');
@@ -288,9 +294,11 @@ export class LabScene implements GameScene {
     btn.addEventListener('click', close);
     panel.append(title, body, chips, hint, btn);
     ctx.overlayRoot.appendChild(panel);
-    // Keep it readable over the menu: close a few seconds after the fallback scene is ready.
-    ctx.bus.once('scene:ready', () => setTimeout(close, ERROR_PANEL_AFTER_MENU_MS));
-    setTimeout(close, ERROR_PANEL_CAP_MS);
+    // The menu is exited before any next scene enters (SceneManager.doGo), so this never fires for the menu this
+    // failure falls back to; it closes the panel when the player moves on (campaign, another lab...).
+    offExit = ctx.bus.on('scene:exited', (e) => {
+      if (e.scene === 'menu') close();
+    });
   }
 
   // ------------------------------------------------------------------ HUD

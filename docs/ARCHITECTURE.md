@@ -597,13 +597,15 @@ show a screen before it exists (`__SAMRAJYA__.showScreen('market', {...})`). `__
 ### 21.6 Feature labs
 
 `?scene=lab&lab=<id>` (LabScene) loads `<id>.lab.ts` and calls `LAB.setup(ctx, host)`. The host
-(`scenes/lab/types.ts`) provides the scene, a perspective camera with OrbitControls, the regular `EnvironmentRig`
-(URL `?hour/season/weather` applied), an 800 m ground disc, `addTerrain()` (region-terrain window with the
-terrain and water renderers), `setEnvironment`, `frame(target, distance, yaw, pitch)`, `own(resource)` (disposed
-on exit), `setInfo(lines)` (HUD) and `progress()`. The lab returns `{ update(dt), dispose(), debugCommand? }`.
-Labs reach `sceneReady`, freeze and screenshot like every scene; `call('noop' | 'lab.info' | 'lab.list' |
-'lab.frame' | 'lab.env')` are built in, other names go to the lab. Unknown ids show a themed error panel listing
-the available labs and fall back to the main menu. Example: `src/scenes/lab/example.lab.ts`.
+(`scenes/lab/types.ts`) provides the scene, a perspective camera with OrbitControls, the regular `EnvironmentRig` (URL
+`?hour/season/weather` applied), a 4 km ground disc (`ground_dry_earth`, procedural with `?assets=off`),
+`addTerrain()` (region-terrain window with the terrain and water renderers), `setEnvironment`, `frame(target,
+distance, yaw, pitch)`, `own(resource)` (disposed on exit), `setInfo(lines)` (HUD) and `progress()`. The lab returns
+`{ update(dt), dispose(), debugCommand? }`. Labs reach `sceneReady`, freeze and screenshot like every scene;
+`call('noop' | 'lab.info' | 'lab.list' | 'lab.frame' | 'lab.env')` are built in, other names go to the lab. Unknown
+ids show a themed error panel listing the available labs and fall back to the main menu; the panel stays over the menu
+until dismissed or until the player leaves the menu (no timer, so slow headless captures always see it). Example:
+`src/scenes/lab/example.lab.ts`.
 
 ### 21.7 Debug API v2
 

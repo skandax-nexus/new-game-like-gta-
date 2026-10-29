@@ -277,6 +277,15 @@ describe('save validation', () => {
     expect(() => deserializeSave(serializeSave(game))).toThrow(/world\.factions\.heartland\.age missing/);
   });
 
+  it('reports a structurally broken v1 save as a SaveError (not a TypeError from the migration)', () => {
+    const raw = rawV1(readFixture('campaign-day30.v1.sav'));
+    delete (raw.world as Record<string, unknown>).armies;
+    delete (raw.world as Record<string, unknown>).diplomacy;
+    const body = encodeJson(raw);
+    expect(() => deserializeSave(body)).toThrow(SaveError);
+    expect(() => deserializeSave(body)).toThrow(/malformed/);
+  });
+
   it('rejects saves from a newer build', () => {
     const text = serializeSave(campaignSave()).replace('"version":2', `"version":${SAVE_VERSION + 1}`);
     const body = text.slice(0, text.lastIndexOf('\n#'));
