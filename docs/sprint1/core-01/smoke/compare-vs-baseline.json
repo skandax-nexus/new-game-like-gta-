@@ -1,0 +1,107 @@
+{
+  "method": "mean |pixel diff| (0-255) between smoke PNGs of the pre-CORE-01 commit 04b6dbb (git worktree, same script, port 4401) and this ticket (docs/sprint1/core-01/smoke). SwiftShader frames vary run to run; reruns of the baseline quantify that noise.",
+  "shots": {
+    "menu": {
+      "baseRun1VsCore01": {
+        "meanAbsDiff": 0.53,
+        "pctChannelsOver40": 0.16
+      }
+    },
+    "world": {
+      "baseRun1VsCore01": {
+        "meanAbsDiff": 95.31,
+        "pctChannelsOver40": 88.09
+      },
+      "baseRun2VsCore01": {
+        "meanAbsDiff": 1.9,
+        "pctChannelsOver40": 0.05
+      },
+      "baseRun1VsBaseRun2": {
+        "meanAbsDiff": 96.84,
+        "pctChannelsOver40": 88.3
+      },
+      "note": "Baseline run 1 captured a black canvas (SwiftShader capture flake); baseline run 2 matches CORE-01 (1.90)."
+    },
+    "world-overview": {
+      "baseRun1VsCore01": {
+        "meanAbsDiff": 0.43,
+        "pctChannelsOver40": 0
+      },
+      "baseRun2VsCore01": {
+        "meanAbsDiff": 0.81,
+        "pctChannelsOver40": 0
+      },
+      "baseRun1VsBaseRun2": {
+        "meanAbsDiff": 0.54,
+        "pctChannelsOver40": 0
+      }
+    },
+    "battle": {
+      "baseRun1VsCore01": {
+        "meanAbsDiff": 0.67,
+        "pctChannelsOver40": 0.19
+      }
+    },
+    "battle-close": {
+      "baseRun1VsCore01": {
+        "meanAbsDiff": 5.88,
+        "pctChannelsOver40": 5
+      },
+      "baseRun2VsCore01": {
+        "meanAbsDiff": 4.87,
+        "pctChannelsOver40": 3.76
+      },
+      "baseRun1VsBaseRun2": {
+        "meanAbsDiff": 4.53,
+        "pctChannelsOver40": 3.53
+      }
+    },
+    "battle-river-5000": {
+      "baseRun1VsCore01": {
+        "meanAbsDiff": 1.56,
+        "pctChannelsOver40": 0.41
+      }
+    },
+    "hero": {
+      "baseRun1VsCore01": {
+        "meanAbsDiff": 12.58,
+        "pctChannelsOver40": 1.02
+      },
+      "baseRun2VsCore01": {
+        "meanAbsDiff": 9.36,
+        "pctChannelsOver40": 0.41
+      },
+      "baseRun1VsBaseRun2": {
+        "meanAbsDiff": 3.81,
+        "pctChannelsOver40": 0.15
+      },
+      "isolation": {
+        "baseRun2VsCleanHeadRun1": {
+          "meanAbsDiff": 0.07,
+          "pctChannelsOver40": 0
+        },
+        "cleanHeadRun1VsCleanHeadRun2": {
+          "meanAbsDiff": 14.66,
+          "pctChannelsOver40": 0.76
+        },
+        "ta07S1VsCleanHeadRun1": {
+          "meanAbsDiff": 14.66,
+          "pctChannelsOver40": 0.76
+        },
+        "note": "The hero shot alternates between two render states run to run (also without CORE-01: TA-07 S1 commit); a clean-HEAD run is identical to a baseline run (0.07)."
+      }
+    },
+    "menu-mobile": {
+      "baseRun1VsCore01": {
+        "meanAbsDiff": 0.66,
+        "pctChannelsOver40": 0.35
+      }
+    },
+    "battle-mobile": {
+      "baseRun1VsCore01": {
+        "meanAbsDiff": 0.04,
+        "pctChannelsOver40": 0
+      }
+    }
+  }
+}

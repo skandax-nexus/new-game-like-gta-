@@ -1,0 +1,543 @@
+{
+  "build": "0.1.0+3fad2e7",
+  "quality": "high",
+  "shots": [
+    {
+      "name": "menu",
+      "url": "http://127.0.0.1:4401/?scene=menu&quality=high&noaudio=1",
+      "ms": 33934,
+      "errors": [],
+      "state": {
+        "scene": "menu",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "scene": "menu",
+          "center": {
+            "x": -534.3999999999999,
+            "z": -598.72
+          }
+        },
+        "fps": 1.3421618045522747,
+        "errors": 0
+      }
+    },
+    {
+      "name": "world",
+      "url": "http://127.0.0.1:4401/?scene=world&quality=high&noaudio=1&seed=7&paused=1",
+      "ms": 46228,
+      "errors": [],
+      "state": {
+        "scene": "world",
+        "mode": "campaign",
+        "paused": true,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "world": {
+            "day": 0,
+            "date": {
+              "year": -300,
+              "month": 6,
+              "day": 0,
+              "hour": 8
+            },
+            "season": "sharad",
+            "weather": "clear",
+            "factions": [
+              {
+                "id": "forest",
+                "treasury": 1800,
+                "settlements": 2,
+                "soldiers": 478
+              },
+              {
+                "id": "frontier",
+                "treasury": 1500,
+                "settlements": 2,
+                "soldiers": 266
+              },
+              {
+                "id": "heartland",
+                "treasury": 4000,
+                "settlements": 5,
+                "soldiers": 1650
+              },
+              {
+                "id": "highland",
+                "treasury": 2600,
+                "settlements": 5,
+                "soldiers": 1172
+              }
+            ],
+            "armies": 7,
+            "engagements": 0,
+            "pendingEvents": 0,
+            "victory": "ongoing"
+          },
+          "selection": {
+            "kind": "none",
+            "id": null
+          },
+          "camera": {
+            "x": -534.3999999999999,
+            "z": -538.72,
+            "distance": 900,
+            "yaw": 0.5,
+            "tilt": 0
+          },
+          "blocked": false
+        },
+        "fps": 2.5913868482653055,
+        "errors": 0
+      }
+    },
+    {
+      "name": "world-overview",
+      "url": "http://127.0.0.1:4401/?scene=world&quality=high&noaudio=1&seed=7&paused=1&camera=overview",
+      "ms": 47234,
+      "errors": [],
+      "state": {
+        "scene": "world",
+        "mode": "campaign",
+        "paused": true,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "world": {
+            "day": 0,
+            "date": {
+              "year": -300,
+              "month": 6,
+              "day": 0,
+              "hour": 8
+            },
+            "season": "sharad",
+            "weather": "clear",
+            "factions": [
+              {
+                "id": "forest",
+                "treasury": 1800,
+                "settlements": 2,
+                "soldiers": 478
+              },
+              {
+                "id": "frontier",
+                "treasury": 1500,
+                "settlements": 2,
+                "soldiers": 266
+              },
+              {
+                "id": "heartland",
+                "treasury": 4000,
+                "settlements": 5,
+                "soldiers": 1650
+              },
+              {
+                "id": "highland",
+                "treasury": 2600,
+                "settlements": 5,
+                "soldiers": 1172
+              }
+            ],
+            "armies": 7,
+            "engagements": 0,
+            "pendingEvents": 0,
+            "victory": "ongoing"
+          },
+          "selection": {
+            "kind": "none",
+            "id": null
+          },
+          "camera": {
+            "x": -534.3999999999999,
+            "z": -538.72,
+            "distance": 4200,
+            "yaw": 0.5,
+            "tilt": 0
+          },
+          "blocked": false
+        },
+        "fps": 2.6853401287417515,
+        "errors": 0
+      }
+    },
+    {
+      "name": "battle",
+      "url": "http://127.0.0.1:4401/?scene=battle&quality=high&noaudio=1&seed=7&soldiers=1000&preset=plains",
+      "ms": 47598,
+      "errors": [],
+      "state": {
+        "scene": "battle",
+        "mode": "skirmish",
+        "paused": true,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "battleId": "skirmish_7",
+          "time": 25.7,
+          "tick": 514,
+          "phase": "active",
+          "sides": [
+            {
+              "faction": "heartland",
+              "soldiers": 500,
+              "initial": 500,
+              "routed": 0,
+              "morale": 82
+            },
+            {
+              "faction": "highland",
+              "soldiers": 499,
+              "initial": 501,
+              "routed": 0,
+              "morale": 72
+            }
+          ],
+          "formations": 15,
+          "soldierCapacity": 1001,
+          "visibleSoldiers": 808,
+          "outcome": null,
+          "selection": [
+            0
+          ],
+          "camera": {
+            "x": 1773.5126794628586,
+            "z": 1006.1413659602291,
+            "distance": 165,
+            "yaw": -0.08295356090102977,
+            "tilt": 0
+          }
+        },
+        "fps": 3.2000000315638957,
+        "errors": 0
+      }
+    },
+    {
+      "name": "battle-close",
+      "url": "http://127.0.0.1:4401/?scene=battle&quality=high&noaudio=1&seed=7&soldiers=1000&preset=plains&camera=close",
+      "ms": 33379,
+      "errors": [],
+      "state": {
+        "scene": "battle",
+        "mode": "skirmish",
+        "paused": true,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "battleId": "skirmish_7",
+          "time": 35.7,
+          "tick": 713,
+          "phase": "active",
+          "sides": [
+            {
+              "faction": "heartland",
+              "soldiers": 500,
+              "initial": 500,
+              "routed": 0,
+              "morale": 84
+            },
+            {
+              "faction": "highland",
+              "soldiers": 489,
+              "initial": 501,
+              "routed": 2,
+              "morale": 77
+            }
+          ],
+          "formations": 15,
+          "soldierCapacity": 1001,
+          "visibleSoldiers": 824,
+          "outcome": null,
+          "selection": [
+            0
+          ],
+          "camera": {
+            "x": 1769.011415508944,
+            "z": 1060.2792995988436,
+            "distance": 55,
+            "yaw": -0.08295356090102977,
+            "tilt": -0.05
+          }
+        },
+        "fps": 1.9102561900252049,
+        "errors": 0
+      }
+    },
+    {
+      "name": "battle-river-5000",
+      "url": "http://127.0.0.1:4401/?scene=battle&quality=high&noaudio=1&seed=11&soldiers=5000&preset=river_crossing&hour=17",
+      "ms": 58451,
+      "errors": [],
+      "state": {
+        "scene": "battle",
+        "mode": "skirmish",
+        "paused": true,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "battleId": "skirmish_11",
+          "time": 16.1,
+          "tick": 321,
+          "phase": "active",
+          "sides": [
+            {
+              "faction": "heartland",
+              "soldiers": 2499,
+              "initial": 2499,
+              "routed": 0,
+              "morale": 81
+            },
+            {
+              "faction": "highland",
+              "soldiers": 2500,
+              "initial": 2500,
+              "routed": 0,
+              "morale": 76
+            }
+          ],
+          "formations": 75,
+          "soldierCapacity": 4999,
+          "visibleSoldiers": 3306,
+          "outcome": null,
+          "selection": [
+            0
+          ],
+          "camera": {
+            "x": -104.29501017561036,
+            "z": -181.3984194308585,
+            "distance": 165,
+            "yaw": 0.260803873614263,
+            "tilt": 0
+          }
+        },
+        "fps": 1.4467034193547816,
+        "errors": 0
+      }
+    },
+    {
+      "name": "hero",
+      "url": "http://127.0.0.1:4401/?scene=hero&quality=high&noaudio=1",
+      "ms": 40899,
+      "errors": [],
+      "state": {
+        "scene": "hero",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "settlement": "rajapura",
+          "hero": {
+            "x": -534.3999999999999,
+            "z": -408.72
+          },
+          "prompt": null,
+          "pois": 10
+        },
+        "fps": 5.2497376061474625,
+        "errors": 0
+      }
+    },
+    {
+      "name": "menu-mobile",
+      "url": "http://127.0.0.1:4401/?scene=menu&quality=low&noaudio=1",
+      "ms": 7146,
+      "errors": [],
+      "state": {
+        "scene": "menu",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "low",
+        "sceneState": {
+          "scene": "menu",
+          "center": {
+            "x": -534.3999999999999,
+            "z": -598.72
+          }
+        },
+        "fps": 3.0648731497988546,
+        "errors": 0
+      }
+    },
+    {
+      "name": "battle-mobile",
+      "url": "http://127.0.0.1:4401/?scene=battle&quality=low&noaudio=1&seed=7&soldiers=600&preset=plains",
+      "ms": 14775,
+      "errors": [],
+      "state": {
+        "scene": "battle",
+        "mode": "skirmish",
+        "paused": true,
+        "timeScale": 1,
+        "quality": "low",
+        "sceneState": {
+          "battleId": "skirmish_7",
+          "time": 20.6,
+          "tick": 412,
+          "phase": "active",
+          "sides": [
+            {
+              "faction": "heartland",
+              "soldiers": 300,
+              "initial": 300,
+              "routed": 0,
+              "morale": 82
+            },
+            {
+              "faction": "highland",
+              "soldiers": 300,
+              "initial": 300,
+              "routed": 0,
+              "morale": 76
+            }
+          ],
+          "formations": 15,
+          "soldierCapacity": 600,
+          "visibleSoldiers": 488,
+          "outcome": null,
+          "selection": [
+            0
+          ],
+          "camera": {
+            "x": 1773.6092908418075,
+            "z": 1006.1590376148199,
+            "distance": 165,
+            "yaw": -0.08101075183934191,
+            "tilt": 0
+          }
+        },
+        "fps": 2.918805659419388,
+        "errors": 0
+      }
+    },
+    {
+      "name": "assetviewer-stupa",
+      "url": "http://127.0.0.1:4401/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=hero&noui=1",
+      "ms": 43100,
+      "errors": [],
+      "state": {
+        "scene": "assetviewer",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "ultra",
+        "sceneState": {
+          "scene": "assetviewer",
+          "asset": "stupa_sanchi",
+          "kind": "model",
+          "tier": "ultra",
+          "fallback": false,
+          "hdri": "sky_golden",
+          "triangles": 45108,
+          "lod": 0
+        },
+        "fps": 13.516270369831858,
+        "errors": 0
+      }
+    },
+    {
+      "name": "assetviewer-torana",
+      "url": "http://127.0.0.1:4401/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=close&noui=1",
+      "ms": 45132,
+      "errors": [],
+      "state": {
+        "scene": "assetviewer",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "ultra",
+        "sceneState": {
+          "scene": "assetviewer",
+          "asset": "stupa_sanchi",
+          "kind": "model",
+          "tier": "ultra",
+          "fallback": false,
+          "hdri": "sky_golden",
+          "triangles": 45108,
+          "lod": 0
+        },
+        "fps": 14.430847316252311,
+        "errors": 0
+      }
+    },
+    {
+      "name": "assetviewer-sandstone",
+      "url": "http://127.0.0.1:4401/?scene=assetviewer&quality=ultra&noaudio=1&asset=sandstone_carved_red&hdri=sky_day&noui=1",
+      "ms": 39315,
+      "errors": [],
+      "state": {
+        "scene": "assetviewer",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "ultra",
+        "sceneState": {
+          "scene": "assetviewer",
+          "asset": "sandstone_carved_red",
+          "kind": "material",
+          "tier": "ultra",
+          "fallback": false,
+          "hdri": "sky_day",
+          "triangles": null,
+          "lod": null
+        },
+        "fps": 10.807960901157736,
+        "errors": 0
+      }
+    },
+    {
+      "name": "assetviewer-mobile",
+      "url": "http://127.0.0.1:4401/?scene=assetviewer&quality=low&noaudio=1&asset=stupa_sanchi&hdri=sky_day&camera=overview",
+      "ms": 7470,
+      "errors": [],
+      "state": {
+        "scene": "assetviewer",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "low",
+        "sceneState": {
+          "scene": "assetviewer",
+          "asset": "stupa_sanchi",
+          "kind": "model",
+          "tier": "mobile",
+          "fallback": false,
+          "hdri": "sky_day",
+          "triangles": 45108,
+          "lod": 0
+        },
+        "fps": 5.7418853552605915,
+        "errors": 0
+      }
+    },
+    {
+      "name": "assetviewer-fallback",
+      "url": "http://127.0.0.1:4401/?scene=assetviewer&quality=high&noaudio=1&asset=stupa_sanchi&assets=off",
+      "ms": 23962,
+      "errors": [],
+      "state": {
+        "scene": "assetviewer",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "scene": "assetviewer",
+          "asset": "stupa_sanchi",
+          "kind": "model",
+          "tier": "off",
+          "fallback": true,
+          "hdri": null,
+          "triangles": 0,
+          "lod": null
+        },
+        "fps": 1.1081337009794576,
+        "errors": 0
+      }
+    }
+  ]
+}
