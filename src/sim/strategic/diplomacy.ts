@@ -43,7 +43,7 @@ import { treatyAge, treatyUnlocked } from './ages';
 import { armyStrength } from './armies';
 import { factionMod } from './modifiers';
 import { totalDays } from './seasons';
-import { addChronicle, notifyPlayer } from './state';
+import { addChronicle, addStat, notifyPlayer } from './state';
 import { activeTreaties, activeTreaty, isTreatyActive, relationOf } from './treaties';
 
 const DR = RULES.diplomacy;
@@ -171,8 +171,17 @@ function endWar(world: WorldState, a: FactionId, b: FactionId, out: SimEvent[] |
  * b the payer unless the terms name them; `marriage_alliance` +30 opinion, +0.2 trust.
  */
 export function createTreaty(world: WorldState, type: TreatyType, a: FactionId, b: FactionId, terms: TreatyTerms = emptyTerms(), out: SimEvent[] | null = null): Treaty {
+  return signTreaty(world, type, a, b, terms, out, false);
+}
+
+/** A scenario's starting treaty: the record only (no duration, truce, opinion, statistics or chronicle). */
+export function seedTreaty(world: WorldState, type: TreatyType, a: FactionId, b: FactionId): Treaty {
+  return signTreaty(world, type, a, b, emptyTerms(), null, true);
+}
+
+function signTreaty(world: WorldState, type: TreatyType, a: FactionId, b: FactionId, terms: TreatyTerms, out: SimEvent[] | null, initial: boolean): Treaty {
   const t2: TreatyTerms = { ...terms };
-  if (t2.durationDays === null) t2.durationDays = treatyDuration(type);
+  if (t2.durationDays === null && !initial) t2.durationDays = treatyDuration(type);
   if (type === 'tributary') {
     if (!t2.overlord && !t2.payer) {
       t2.overlord = a;
@@ -194,12 +203,17 @@ export function createTreaty(world: WorldState, type: TreatyType, a: FactionId, 
   world.diplomacy.treaties[t.id] = t;
   const rel = getRelation(world, a, b);
   rel?.treatyIds.push(t.id);
+  if (initial) return t;
   if (type === 'peace') endWar(world, a, b, out);
   if (type === 'marriage_alliance' && rel) {
     rel.opinion = clampOpinion(rel.opinion + DR.marriageOpinion);
     rel.trust = Math.min(1, rel.trust + DR.marriageTrust);
   }
   out?.push({ kind: 'treaty_signed', treatyId: t.id });
+  for (const fid of [a, b]) {
+    addStat(world, fid, 'treaties_signed', 1);
+    if (type === 'marriage_alliance') addStat(world, fid, 'marriages', 1);
+  }
   const fa = FACTIONS[a]?.shortName ?? a;
   const fb = FACTIONS[b]?.shortName ?? b;
   addChronicle(world, a, `${fa} and ${fb} signed a ${type.replace('_', ' ')} treaty.`, type === 'peace' || type === 'marriage_alliance' || type === 'tributary' ? 2 : 1);
@@ -223,6 +237,7 @@ export function breakTreaty(world: WorldState, by: FactionId, treatyId: string, 
   const f = world.factions[by];
   if (t.type === 'marriage_alliance' && f) f.legitimacy = Math.max(0, f.legitimacy + DR.breakMarriageLegitimacy);
   out.push({ kind: 'treaty_broken', treatyId: t.id, by });
+  addStat(world, by, 'treaties_broken', 1);
   addChronicle(world, by, `${FACTIONS[by]?.shortName ?? by} broke its ${t.type.replace('_', ' ')} treaty with ${FACTIONS[other]?.shortName ?? other}.`, 1);
   return null;
 }
@@ -270,6 +285,8 @@ export function declareWar(world: WorldState, a: FactionId, b: FactionId, out: S
   const fa = world.factions[a];
   if (fa && !cause) fa.legitimacy = Math.max(0, fa.legitimacy + RULES.politics.legitimacy.warWithoutGrievance);
   out.push({ kind: 'war_declared', a, b });
+  addStat(world, a, 'wars', 1);
+  addStat(world, b, 'wars', 1);
   addChronicle(world, a, `${FACTIONS[a]?.shortName ?? a} declared war on ${FACTIONS[b]?.shortName ?? b}.`, 2);
   notifyPlayer(world, out, b, 'danger', `${FACTIONS[a]?.shortName ?? a} has declared war on us!`);
   // Allies of the defender: mutual defense partners and the overlord of a tributary.

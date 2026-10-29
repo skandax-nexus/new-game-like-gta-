@@ -30,8 +30,10 @@ import { EVENT_HISTORY_LIMIT } from '../../core/constants';
 import { EVENTS, getEventDef } from '../../data/events';
 import { SCENARIOS } from '../../data/campaign';
 import { seasonOf, totalDays } from './seasons';
-import { addChronicle, withWorldRng } from './state';
-import { armySoldiers } from './armies';
+import { addChronicle, addStat, notifyPlayer, withWorldRng } from './state';
+import { clamp01 } from '../../core/math';
+import { DIFFICULTY_DEFS } from '../../data/difficulty';
+import { armySoldiers, makeArmy } from './armies';
 import { createTreaty, declareWar, emptyTerms, hasTreaty } from './diplomacy';
 import { registerEffectRunner } from './construction';
 import { forceRebellionStage } from './politics';
@@ -187,23 +189,69 @@ function applyOp(cur: number, op: 'add' | 'set' | 'mul', v: number): number {
   return op === 'add' ? cur + v : op === 'mul' ? cur * v : v;
 }
 
-/** Apply one effect. */
-export function applyEffect(world: WorldState, effect: Effect, scope: EventScope, out: SimEvent[]): void {
+/** Settlement variables where a rise is a misfortune / a fall is a misfortune (others are never scaled). */
+const SETTLEMENT_WORSE_UP: ReadonlySet<string> = new Set(['unrest', 'damage', 'grainPrice']);
+const SETTLEMENT_WORSE_DOWN: ReadonlySet<string> = new Set(['foodStored', 'population', 'loyalty', 'wealth', 'publicOrder', 'health', 'recruitPool', 'infrastructure', 'waterAvailability', 'irrigation', 'sanitation', 'housing']);
+const CHARACTER_WORSE_DOWN: ReadonlySet<string> = new Set(['loyalty', 'health', 'opinionOfRuler']);
+/** Set while a disaster event's effects apply (see applyEffect). */
+let severityOn = false;
+
+/**
+ * Misfortune severity (DESIGN_SPEC §10.3): a harmful add / mul on the player's own settlement, realm or people is
+ * scaled by DIFFICULTY_DEFS[difficulty].eventSeverity (x0.75 Chronicler ... x1.3 Samrat). `worseUp` = a rise hurts.
+ */
+export function severityScaled(world: WorldState, op: 'add' | 'set' | 'mul', v: number, worseUp: boolean, playerTarget: boolean): number {
+  if (!playerTarget || op === 'set' || !severityOn) return v;
+  const k = DIFFICULTY_DEFS[world.difficulty]?.eventSeverity ?? 1;
+  if (k === 1) return v;
+  if (op === 'add') return (worseUp ? v > 0 : v < 0) ? v * k : v;
+  // mul
+  if (worseUp ? v > 1 : v < 1) return Math.max(0, 1 + (v - 1) * k);
+  return v;
+}
+
+/**
+ * Apply one effect. `misfortune` (effects of disaster events) scales harmful changes to the player's own settlements,
+ * realm and people by the difficulty's eventSeverity; choice costs and rewards are never scaled.
+ */
+export function applyEffect(world: WorldState, effect: Effect, scope: EventScope, out: SimEvent[], misfortune = false): void {
+  const prev = severityOn;
+  severityOn = misfortune;
+  try {
+    applyEffectInner(world, effect, scope, out);
+  } finally {
+    severityOn = prev;
+  }
+}
+
+function applyEffectInner(world: WorldState, effect: Effect, scope: EventScope, out: SimEvent[]): void {
   switch (effect.kind) {
-    case 'settlement_var':
+    case 'settlement_var': {
+      const v = effect.variable as string;
+      const scaled = SETTLEMENT_WORSE_UP.has(v) || SETTLEMENT_WORSE_DOWN.has(v);
       for (const s of resolveSettlements(world, effect.target, scope)) {
         const rec = s as unknown as Record<string, number>;
-        rec[effect.variable] = applyOp(rec[effect.variable] ?? 0, effect.op, effect.value);
+        const val = scaled ? severityScaled(world, effect.op, effect.value, SETTLEMENT_WORSE_UP.has(v), s.ownerFactionId === world.playerFactionId) : effect.value;
+        rec[effect.variable] = applyOp(rec[effect.variable] ?? 0, effect.op, val);
+        if (v === 'unrest' || v === 'loyalty' || v === 'publicOrder' || v === 'health') rec[effect.variable] = clamp01(rec[effect.variable] as number);
       }
       return;
+    }
     case 'faction_var': {
       const f = resolveFaction(world, effect.target, scope);
-      if (f) f[effect.variable] = applyOp(f[effect.variable], effect.op, effect.value);
+      if (!f) return;
+      const val = severityScaled(world, effect.op, effect.value, false, f.id === world.playerFactionId);
+      f[effect.variable] = applyOp(f[effect.variable], effect.op, val);
+      if (effect.variable === 'legitimacy' || effect.variable === 'stability') f[effect.variable] = clamp01(f[effect.variable]);
       return;
     }
     case 'character_var': {
       const c = resolveCharacter(world, effect.target, scope);
-      if (c) c[effect.variable] = applyOp(c[effect.variable], effect.op, effect.value);
+      if (!c) return;
+      const val = CHARACTER_WORSE_DOWN.has(effect.variable) ? severityScaled(world, effect.op, effect.value, false, c.factionId === world.playerFactionId) : effect.value;
+      c[effect.variable] = applyOp(c[effect.variable], effect.op, val);
+      if (effect.variable === 'loyalty' || effect.variable === 'ambition' || effect.variable === 'health' || effect.variable === 'claim') c[effect.variable] = clamp01(c[effect.variable]);
+      if (effect.variable === 'health' && c.health <= 0 && c.alive) handleDeath(world, c.id, out);
       return;
     }
     case 'set_flag':
@@ -262,10 +310,30 @@ export function applyEffect(world: WorldState, effect: Effect, scope: EventScope
       }
       return;
     }
-    case 'spawn_army':
-    case 'damage_road':
-      // TODO(Lead AI & Simulation): spawn rebel/relief armies; damage road edges (condition).
+    case 'spawn_army': {
+      const f = resolveFaction(world, effect.faction, scope);
+      if (!f || !f.alive) return;
+      const near = effect.nearSettlement ? world.settlements[effect.nearSettlement] : null;
+      const x = effect.x ?? (near ? near.x + near.radius + 150 : null);
+      const z = effect.z ?? (near ? near.z : null);
+      if (x === null || z === null) return;
+      const id = nextWorldId(world, 'army');
+      const a = makeArmy(world, id, effect.name, f.id, x, z, effect.units, null);
+      world.armies[id] = a;
+      notifyPlayer(world, out, null, f.isPlayer ? 'info' : 'warning', `${effect.name} has taken the field.`, { x, z });
       return;
+    }
+    case 'damage_road': {
+      const ids: string[] = [];
+      if (effect.edgeId) ids.push(effect.edgeId);
+      else if (effect.nearSettlement) ids.push(...(world.roads.adjacency[`node_${effect.nearSettlement}`] ?? []));
+      const amount = severityScaled(world, 'add', -Math.abs(effect.amount), false, !!effect.nearSettlement && world.settlements[effect.nearSettlement]?.ownerFactionId === world.playerFactionId);
+      for (const id of ids) {
+        const e = world.roads.edges[id];
+        if (e) e.condition = Math.max(0, e.condition + amount);
+      }
+      return;
+    }
     default:
       return;
   }
@@ -357,8 +425,9 @@ export function resolveEventChoice(world: WorldState, instanceId: string, choice
   const choice = def?.choices.find((c) => c.id === choiceId);
   if (!def || !choice) return false;
   if (choice.requires && !evalCondition(world, choice.requires, inst.scope)) return false;
-  for (const e of choice.effects) applyEffect(world, e, inst.scope, out);
+  for (const e of choice.effects) applyEffect(world, e, inst.scope, out, def.category === 'disaster');
   noteEventChoice(world, inst.scope.factionId, def.choices, choiceId, out);
+  addStat(world, inst.scope.factionId, 'events_resolved', 1);
   inst.status = 'resolved';
   inst.choiceId = choiceId;
   inst.resolvedDay = totalDays(world.calendar);
@@ -397,8 +466,9 @@ export function checkObjectives(world: WorldState, out: SimEvent[]): void {
   const timeUp = scenario.timeLimitDays !== null && day >= scenario.timeLimitDays;
   const outcomes = scenario.outcomes.slice().sort((a, b) => b.priority - a.priority);
   for (const oc of outcomes) {
-    const hardDefeat = oc.kind === 'defeat' && evalCondition(world, oc.condition, scope);
-    if (hardDefeat || (timeUp && evalCondition(world, oc.condition, scope))) {
+    // Defeats always end at once; victories marked `immediate` too (§9.6); everything else at the time limit.
+    const eligible = oc.kind === 'defeat' || oc.immediate === true || timeUp;
+    if (eligible && evalCondition(world, oc.condition, scope)) {
       world.victory.status = oc.kind === 'defeat' ? 'defeat' : oc.kind === 'victory' ? 'victory' : 'ended';
       world.victory.outcomeId = oc.id;
       world.victory.endedDay = day;

@@ -493,8 +493,10 @@ export function detectContacts(world: WorldState, out: SimEvent[], terrain?: Ter
  */
 export function createEngagement(world: WorldState, att: ArmyState, def: ArmyState, out: SimEvent[], terrain: TerrainQuery | null, kind: Engagement['kind'], settlementId: string | null): Engagement {
   const id: EngagementId = nextWorldId(world, 'eng');
-  const x = (att.x + def.x) / 2;
-  const z = (att.z + def.z) / 2;
+  // Siege battles are fought around the walls (the battle map centres on the settlement, §6.6.5).
+  const siegeAt = kind === 'siege' && settlementId ? world.settlements[settlementId] : undefined;
+  const x = siegeAt ? siegeAt.x : (att.x + def.x) / 2;
+  const z = siegeAt ? siegeAt.z : (att.z + def.z) / 2;
   const join = (lead: ArmyState): string[] => {
     const list = [lead.id];
     const r = contactRadius(lead) * 2;

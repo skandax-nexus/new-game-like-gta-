@@ -358,6 +358,7 @@ function setStage(world: WorldState, s: SettlementState, stage: RebellionStage, 
   const revoltIdx = stageIndex('revolt');
   if (stageIndex(stage) >= revoltIdx && stageIndex(prev) < revoltIdx) {
     s.revoltSinceDay = today(world);
+    addStat(world, s.ownerFactionId, 'revolts', 1);
     spawnRebels(world, s, out);
   } else if (stageIndex(stage) < revoltIdx && stageIndex(prev) >= revoltIdx) {
     s.revoltSinceDay = null;

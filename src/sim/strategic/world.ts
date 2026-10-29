@@ -68,10 +68,12 @@ import { expireGhostsDaily, updateVisibilityHourly } from './visibility';
 import { decidePrisoners } from './writeback';
 import { updateEconomyDaily, updateEconomyMonthly } from './economy';
 import { orderArmy, updateArmiesDaily, updateArmiesHourly, armySoldiers, makeArmy, makeArmyUnit } from './armies';
-import { arrangeMarriage, declareWar, makePeace, propose, respondToProposal, updateDiplomacyDaily, updateDiplomacyMonthly, createTreaty, validateResponse } from './diplomacy';
+import { arrangeMarriage, declareWar, makePeace, propose, respondToProposal, updateDiplomacyDaily, updateDiplomacyMonthly, seedTreaty, validateResponse } from './diplomacy';
 import { appointGovernor, negotiateRebels, updatePoliticsDaily, updatePoliticsMonthly } from './politics';
 import { designateHeir, updateCharactersYearly } from './dynasty';
 import { appointCouncil, noteCommandForCouncil, updateCouncilMonthly } from './council';
+import { updateVictoryDaily } from './victory';
+import { updateHeroAvailabilityDaily } from './hero';
 import { recallAgent, startMission, updateEspionageDaily } from './espionage';
 import { checkObjectives, evaluateEventsDaily, resolveEventChoice } from './events';
 import { runCampaignAI } from './ai';
@@ -561,7 +563,7 @@ export function createWorld(setup: WorldSetup): WorldState {
       rel.opinion = r.opinion;
       rel.atWar = r.atWar;
       rel.warStartDay = r.atWar ? 0 : null;
-      for (const t of r.treaties) createTreaty(world, t as TreatyType, r.a, r.b);
+      for (const t of r.treaties) seedTreaty(world, t as TreatyType, r.a, r.b);
     }
   } else {
     // Sandbox: player starts at war with the first rival so there is conflict to resolve.
@@ -633,6 +635,8 @@ export function tickWorld(world: WorldState, commands: readonly IssuedStrategicC
       for (const c of cmds) applyStrategicCommand(world, c, out, terrain);
     }
     checkObjectives(world, out);
+    updateVictoryDaily(world, out);
+    updateHeroAvailabilityDaily(world, out);
   }
   if (adv.newMonth) {
     out.push({ kind: 'new_month', month: world.calendar.month });
