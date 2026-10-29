@@ -370,6 +370,32 @@ export interface FactionDef extends Sourced {
   aiPersonality: AiPersonality;
   /** Preferred architecture palette key (Art Director, see render/style). */
   architectureStyle: 'heartland_brick' | 'highland_stone' | 'coastal_timber' | 'forest_timber' | 'frontier_mud' | 'city_sandstone';
+  // --- Optional content extensions (Creative Director, additive; see docs/DESIGN_SPEC.md) ---
+  /** Named heraldry for banners/UI (blazon text for the Art Director). */
+  heraldry?: HeraldryDef;
+  /** One-line motto shown on faction select. */
+  motto?: string;
+  /** Age the faction starts in for skirmish/sandbox (scenarios may override). Default 'janapada'. */
+  startingAge?: AgeId;
+  /** Short gameplay pitch for the faction-select card (2-3 bullets max). */
+  playstyle?: string[];
+  /** Faction flavor of a unit class (AoE-style civ bonus): stat multipliers applied at formation creation. */
+  unitVariants?: Partial<Record<UnitClass, FactionUnitVariant>>;
+}
+
+/** Faction-specific variant of a unit class (name + multiplicative stat changes; 1 = unchanged). */
+export interface FactionUnitVariant {
+  name: string;
+  description: string;
+  multipliers: Partial<Record<NumericKeys<UnitStats>, number>>;
+}
+
+/** Banner/heraldry description (DESIGN_SPEC §3). Colors come from `FactionDef.colors`. */
+export interface HeraldryDef {
+  /** e.g. "The Risen Sun of Suvarna". */
+  name: string;
+  /** Plain-language blazon for the Art Director, e.g. "saffron field, golden twelve-rayed sun". */
+  blazon: string;
 }
 
 // =====================================================================================================
@@ -504,6 +530,17 @@ export interface UnitDef extends Sourced {
   defaultShape: FormationShape;
   allowedShapes: FormationShape[];
   visual: UnitVisualDef;
+  // --- Optional content extensions (Creative Director, additive; see docs/DESIGN_SPEC.md) ---
+  /** Age in which the class becomes recruitable (default 'janapada'). */
+  age?: AgeId;
+  /** Age from which the class can no longer be recruited (period-dependent units, e.g. chariots). */
+  retiredInAge?: AgeId;
+  /** Command-card grid slot 0..14 (row-major 5x3: Q W E R T / A S D F G / Z X C V B). */
+  commandSlot?: number;
+  /** <= 4 letter label for formation markers / compact UI (e.g. "SPR"). */
+  shortName?: string;
+  /** Readable counter summary for tooltips (derived from bonusVs; kept in data for wording). */
+  counters?: { strongVs: UnitClass[]; weakVs: UnitClass[] };
 }
 
 // =====================================================================================================
@@ -1145,6 +1182,32 @@ export interface BuildingDef extends Sourced {
   architecture: ArchitectureKind[];
   /** Unit classes unlocked for recruitment here. */
   unlocksUnits: UnitClass[];
+  // --- Optional content extensions (Creative Director, additive; see docs/DESIGN_SPEC.md) ---
+  /** Age in which the building becomes available (default 'janapada'). */
+  age?: AgeId;
+  /** Command-card tab. */
+  category?: BuildingCategory;
+  /** Placement footprint on the 4 m settlement build grid. */
+  footprint?: BuildingFootprint;
+  /** Command-card grid slot 0..14 within the category tab. */
+  commandSlot?: number;
+  /** Raw materials produced per day per level (timber/stone/wealth) when staffed (DESIGN_SPEC §6.4). */
+  produces?: Partial<Record<'timber' | 'stone' | 'wealth', number>>;
+  /** Visible villagers per level working here (presentation; DESIGN_SPEC §7.3). */
+  workers?: number;
+}
+
+export type BuildingCategory = 'economy' | 'military' | 'civic' | 'defense';
+
+/** Placement rule + footprint (meters, multiples of 4) for AoE-style building placement. */
+export interface BuildingFootprint {
+  w: number;
+  d: number;
+  /**
+   * inner: inside the settlement pad; outer: ring just outside the pad (fields, mines); perimeter: wall ring;
+   * shore: touching the river bank; road: on a road edge between settlements; resource: on a resource node.
+   */
+  placement: 'inner' | 'outer' | 'perimeter' | 'shore' | 'road' | 'resource';
 }
 
 export interface BuildingInstance {
@@ -1866,6 +1929,24 @@ export interface ScenarioOutcomeDef {
   condition: Condition;
   /** Higher wins when several outcomes match the same day. */
   priority: number;
+  /**
+   * Optional (additive): when true the outcome ends the scenario as soon as its condition holds (like
+   * defeats do today); otherwise victory/mixed outcomes are evaluated only at the time limit.
+   */
+  immediate?: boolean;
+}
+
+/** Optional act structure inside one scenario (DESIGN_SPEC §9). An act is active while its flag is set. */
+export interface ScenarioActDef {
+  id: string;
+  /** Act number shown in the UI (1-based). */
+  number: number;
+  title: string;
+  subtitle: string;
+  /** World event flag set when this act begins (e.g. "act" == 2). */
+  flag: string;
+  flagValue: number | boolean | string;
+  summary: string;
 }
 
 export interface InitialArmyDef {
@@ -1923,6 +2004,14 @@ export interface ScenarioDef extends Sourced {
   scriptedEvents: { eventId: EventDefId; day: number }[];
   victoryTypes: VictoryType[];
   hints: string[];
+  // --- Optional content extensions (Creative Director, additive; see docs/DESIGN_SPEC.md) ---
+  acts?: ScenarioActDef[];
+  /** Age each faction starts in (missing = FactionDef.startingAge ?? 'janapada'). */
+  startingAges?: Partial<Record<FactionId, AgeId>>;
+  /** Character the player controls in hero exploration (default: heir, else ruler). */
+  heroCharacterId?: CharacterId;
+  /** Starting timber/stone stockpiles per faction (DESIGN_SPEC §6.4; requires the stockpile state). */
+  materials?: Partial<Record<FactionId, { timber: number; stone: number }>>;
 }
 
 export interface VictoryState {
@@ -2486,4 +2575,427 @@ export interface SaveSlotInfo {
   slot: string;
   meta: SaveMeta;
   sizeBytes: number;
+}
+
+// =====================================================================================================
+// Content schema extensions  (Creative Director, ADDITIVE - authored in src/data/**, specified in
+// docs/DESIGN_SPEC.md). Nothing here is referenced by WorldState/BattleState yet; sim/UI integration is
+// requested in the design spec's handoff section.
+// =====================================================================================================
+
+// --- Ages (AoE-style progression re-themed: village polity -> kingdom -> empire) ---
+
+export const AGE_IDS = ['janapada', 'mahajanapada', 'samrajya'] as const;
+export type AgeId = (typeof AGE_IDS)[number];
+
+/** Materials + money cost. `labor` is person-days of work (see DESIGN_SPEC §6.5 construction). */
+export interface MaterialCost {
+  wealth: number;
+  timber: number;
+  stone: number;
+  labor: number;
+}
+
+export interface AgeRequirements {
+  /** Age the faction must currently be in (null for the first age). */
+  previous: AgeId | null;
+  minSettlements: number;
+  minProvinces: number;
+  minPopulation: number;
+  /** Distinct building types (any level) across owned settlements. */
+  minBuildingTypes: number;
+  minLegitimacy: number;
+  minStability: number;
+}
+
+export interface AgeDef extends Sourced {
+  id: AgeId;
+  /** 0, 1, 2 */
+  index: number;
+  numeral: 'I' | 'II' | 'III';
+  name: string;
+  /** Short tagline, e.g. "Age of Clans and Villages". */
+  title: string;
+  description: string;
+  /** Requirements to START the landmark that advances INTO this age (first age: none). */
+  requirements: AgeRequirements;
+  /** Buildings first available in this age. */
+  unlockBuildings: BuildingType[];
+  /** Max level any building may reach in this age (per-type caps below override). */
+  maxBuildingLevel: number;
+  buildingLevelCaps: Partial<Record<BuildingType, number>>;
+  /** Unit classes first recruitable in this age. */
+  unlockUnits: UnitClass[];
+  /** Treaty types the faction may propose from this age. */
+  unlockTreaties: TreatyType[];
+  /** Multiplicative faction modifier bonuses granted on reaching the age (1 = none). */
+  bonuses: Partial<FactionModifiers>;
+  /** Flat bonuses for newly recruited formations from this age (experience 0..1, morale points). */
+  recruitBonus: { experience: number; morale: number; armor: number };
+  /** Number of province governors the court can support without legitimacy loss. */
+  governorSlots: number;
+}
+
+/** Faction-unique landmark: building it advances the faction into `age` (pick one of two). */
+export interface LandmarkDef extends Sourced {
+  id: string;
+  factionId: FactionId;
+  /** The age this landmark advances the faction INTO. */
+  age: AgeId;
+  name: string;
+  localName?: string;
+  description: string;
+  /** One-line mechanical summary for the tooltip. */
+  summary: string;
+  cost: MaterialCost;
+  buildDays: number;
+  allowedIn: SettlementKind[];
+  footprint: BuildingFootprint;
+  /** Procedural pieces composing it (render may add a bespoke model later). */
+  architecture: ArchitectureKind[];
+  /** Approximate height in meters (silhouette readability on the strategic map). */
+  heightMeters: number;
+  /** Applied to the host settlement. */
+  settlementEffects: SettlementModifiers;
+  /** Applied to every owned settlement. */
+  realmEffects: SettlementModifiers;
+  /** Multiplicative faction modifier changes (1 = none). */
+  factionEffects: Partial<FactionModifiers>;
+  /** One-time effects on completion (event DSL; scope = owner faction + host settlement). */
+  onComplete: Effect[];
+}
+
+// --- Strategic resources (AoE presentation of the GDD §6 economy) ---
+
+export const ECONOMY_RESOURCES = ['grain', 'timber', 'stone', 'wealth', 'labor', 'manpower'] as const;
+export type EconomyResource = (typeof ECONOMY_RESOURCES)[number];
+
+export interface ResourceDisplayDef {
+  id: EconomyResource;
+  name: string;
+  /** AoE analogue (food / wood / stone / gold / villagers / population). */
+  aoeAnalogue: string;
+  /** Procedural icon key for the UI icon painter. */
+  icon: 'sheaf' | 'logs' | 'block' | 'coins' | 'villager' | 'spear';
+  /** Icon tint (UI uses theme tokens; this is the reference color). */
+  color: HexColor;
+  /** Where the number comes from (state path, documentation for UI devs). */
+  source: string;
+  /** Tooltip line. */
+  description: string;
+  /** Display unit, e.g. "measures" (1 grain measure = 10 person-days of rations). */
+  unit: string;
+}
+
+// --- Difficulty & AI personalities ---
+
+export interface DifficultyDef {
+  id: Difficulty;
+  name: string;
+  description: string;
+  /** Multipliers on player / AI tax + trade income. */
+  playerIncome: number;
+  aiIncome: number;
+  /** Multiplier on AI recruitment cost and time. */
+  aiRecruitCost: number;
+  /** 0..1 added to AI aggression (war declarations, attacks). */
+  aiAggressionBonus: number;
+  /** Seconds between battle-AI re-plans (lower = sharper). */
+  battleAiReplanSec: number;
+  /** Added to AI commander martial skill (0..20 scale). */
+  aiCommanderSkill: number;
+  /** Added to player formations' base morale. */
+  playerMoraleBonus: number;
+  /** Multiplier on negative event magnitudes (famine, unrest, disasters). */
+  eventSeverity: number;
+  /** Hero mode: parry window (s), enemy damage multiplier, player HP multiplier. */
+  heroParryWindowSec: number;
+  heroEnemyDamage: number;
+  heroPlayerHp: number;
+  /** Tutorial hints on by default. */
+  hints: boolean;
+}
+
+export interface AiPersonalityDef {
+  id: AiPersonality;
+  name: string;
+  description: string;
+  /** Relative utility weights for the campaign AI planner (sum need not be 1). */
+  weights: { expand: number; defend: number; develop: number; diplomacy: number; raid: number; trade: number };
+  /** Declares war when (own strength / target strength) * opinion factor exceeds this. */
+  warRatio: number;
+  /** Sues for peace when war score (own perspective) falls below this (-100..100). */
+  peaceWarScore: number;
+  /** Will accept becoming a tributary when strength ratio below this. */
+  tributaryRatio: number;
+  /** Battle AI tuning. */
+  battle: {
+    /** 0..1 preference to attack vs hold. */
+    aggression: number;
+    /** 0..1 how often cavalry is sent around the flank. */
+    flanking: number;
+    /** Fraction of formations kept in reserve. */
+    reserve: number;
+    /** Side withdraws when its strength falls below this fraction of the start. */
+    withdrawAt: number;
+  };
+}
+
+// --- Tutorial / contextual hints ---
+
+export interface TutorialHintDef {
+  id: string;
+  /** UI trigger key (documented in DESIGN_SPEC §12.4), e.g. "world.first_army_selected". */
+  trigger: string;
+  title: string;
+  text: string;
+  /** Alternative text for touch devices (null = same). */
+  touchText: string | null;
+  scene: SceneId;
+  /** Lower shows first when several hints are due. */
+  priority: number;
+}
+
+// --- Hero exploration (GDD §3 limited scope; DESIGN_SPEC §11) ---
+
+export const NEGOTIATION_TACTICS = ['duty', 'gain', 'strength', 'kinship', 'reveal'] as const;
+export type NegotiationTactic = (typeof NEGOTIATION_TACTICS)[number];
+
+export type HeroMood = 'dawn_mist' | 'golden_dust' | 'noon_haze' | 'monsoon_wet' | 'lamp_night' | 'incense_dim';
+
+/** A district of a hero-explorable settlement. Anchor is polar around the settlement centre. */
+export interface HeroDistrictDef extends Sourced {
+  id: string;
+  settlementId: SettlementId;
+  name: string;
+  localName?: string;
+  description: string;
+  /** Facing-convention angle (0 = +Z south, PI/2 = +X east) of the district centre from the settlement centre. */
+  angle: number;
+  /** 0..1 fraction of the settlement radius. */
+  radius: number;
+  /** Pieces the layout should concentrate here. */
+  architecture: ArchitectureKind[];
+  /** 0..1 ambient crowd density (cosmetic villagers per 100 m^2 scaled by quality). */
+  crowd: number;
+  mood: HeroMood;
+  /** Ambient sound bed keys for audio. */
+  ambience: string[];
+  /** Points of interest the player can inspect (clues for negotiations). */
+  inspectables: HeroInspectableDef[];
+}
+
+export interface HeroInspectableDef {
+  id: string;
+  label: string;
+  /** Architecture piece the prompt attaches to. */
+  kind: ArchitectureKind;
+  /** Text shown when inspected. */
+  text: string;
+  /** Clue id unlocked (enables `reveal` arguments), or null. */
+  clue: string | null;
+  /** Optional world effects when first inspected. */
+  effects: Effect[];
+}
+
+export interface NegotiationProfile {
+  /** 0..100 starting stance toward the hero's cause. */
+  startStance: number;
+  /** Number of arguments before the counterpart ends the talk. */
+  patience: number;
+  /** Stance >= this wins the negotiation. */
+  winAt: number;
+  /** Stance <= this ends it as a failure. */
+  loseAt: number;
+  strongVs: NegotiationTactic[];
+  weakVs: NegotiationTactic[];
+  /** Tactics that reduce stance. */
+  backfires: NegotiationTactic[];
+  /** Clue ids that make `reveal` available. */
+  revealClues: string[];
+  /** Flags set on success / failure (also applied as event effects). */
+  onSuccess: Effect[];
+  onFailure: Effect[];
+}
+
+export interface HeroAppearanceDef {
+  silhouette: 'noble' | 'warrior' | 'priest' | 'merchant' | 'farmer' | 'scholar' | 'guard' | 'envoy' | 'child';
+  /** Garment colors (reference; render picks nearest palette entry). */
+  garment: HexColor;
+  accent: HexColor;
+  headgear: 'none' | 'turban' | 'crown' | 'helmet' | 'veil' | 'topknot';
+  prop: 'none' | 'staff' | 'ledger' | 'sword' | 'mace' | 'bow' | 'lamp' | 'scroll' | 'basket' | 'spear';
+  /** Height multiplier vs a 1.7 m adult. */
+  scale: number;
+}
+
+export interface HeroCharacterDef extends Sourced {
+  id: string;
+  name: string;
+  title: string;
+  /** One line: who they are and what they want. */
+  role: string;
+  /** Link to a scenario character (opinion/loyalty updates), or null for townsfolk. */
+  characterId: CharacterId | null;
+  settlementId: SettlementId;
+  districtId: string;
+  appearance: HeroAppearanceDef;
+  traits: Trait[];
+  interest: GovernorInterest;
+  /** Dialogue tree id (src/data/hero.ts DIALOGUES) or null for ambient barks only. */
+  dialogueId: string | null;
+  negotiation: NegotiationProfile | null;
+  /** Short ambient lines spoken when the hero walks past. */
+  barks: string[];
+}
+
+export interface DialogueChoiceDef {
+  id: string;
+  label: string;
+  /** Next node id, or null to end the conversation. */
+  next: string | null;
+  /** Negotiation argument type (only inside negotiation trees). */
+  tactic: NegotiationTactic | null;
+  /** Choice shown only when the condition holds / the clue is known. */
+  requires: Condition | null;
+  requiresClue: string | null;
+  effects: Effect[];
+  /** Starts a hero mission when picked. */
+  startsMission: string | null;
+}
+
+export interface DialogueNodeDef {
+  id: string;
+  /** HeroCharacterDef id, 'hero', or 'narrator'. */
+  speaker: string;
+  text: string;
+  choices: DialogueChoiceDef[];
+}
+
+export interface DialogueTreeDef {
+  id: string;
+  start: string;
+  nodes: Record<string, DialogueNodeDef>;
+}
+
+export type HeroObjectiveKind = 'reach' | 'talk' | 'inspect' | 'persuade' | 'defeat' | 'survive' | 'protect' | 'duel';
+
+export interface HeroObjectiveDef {
+  id: string;
+  kind: HeroObjectiveKind;
+  label: string;
+  /** District, character, inspectable, enemy-wave or escort id (by kind). */
+  target: string | null;
+  /** How many (e.g. persuade 3 of 4 nobles). */
+  count: number;
+  optional: boolean;
+}
+
+export interface HeroEnemyDef {
+  id: string;
+  name: string;
+  archetype: 'swordsman' | 'spearman' | 'archer' | 'captain' | 'champion';
+  hp: number;
+  /** Poise: stagger threshold; heavy hits and parries deplete it. */
+  poise: number;
+  /** Damage of light / heavy / unblockable attacks. */
+  damage: { light: number; heavy: number; unblockable: number };
+  /** Seconds between attack decisions (lower = more aggressive). */
+  attackInterval: number;
+  /** m/s */
+  moveSpeed: number;
+  /** Telegraph time (s) for heavy / unblockable attacks (the red flash). */
+  telegraphSec: number;
+  /** Phase thresholds (fraction of hp) that change the moveset (champions). */
+  phases: number[];
+}
+
+export interface HeroWaveDef {
+  id: string;
+  /** enemy id -> count */
+  enemies: { enemy: string; count: number }[];
+  /** Seconds after the previous wave is cleared (0 = immediately). */
+  delaySec: number;
+  /** Spawn district or named marker. */
+  spawn: string;
+}
+
+export interface CinematicShotDef {
+  id: string;
+  durationSec: number;
+  camera: 'aerial' | 'crane_down' | 'tracking_behind' | 'steadicam_side' | 'low_angle' | 'close_up' | 'over_shoulder' | 'orbit';
+  /** What the shot frames (district id, character id or landmark). */
+  subject: string;
+  /** Fractional hour of day for lighting. */
+  hour: number;
+  mood: HeroMood;
+  /** Subtitle / narration (null = none). */
+  line: string | null;
+  /** Hero walks under player control during this shot (opening walk). */
+  playerControl: boolean;
+}
+
+export interface HeroMissionDef extends Sourced {
+  id: string;
+  title: string;
+  kind: 'cinematic' | 'negotiation' | 'combat' | 'duel' | 'training';
+  settlementId: SettlementId;
+  /** One paragraph shown on the mission card. */
+  description: string;
+  /** When the mission is offered (event DSL, player scope). */
+  availability: Condition;
+  startDistrict: string;
+  /** Hour of day the mission is played at. */
+  hour: number;
+  objectives: HeroObjectiveDef[];
+  waves: HeroWaveDef[];
+  cinematic: CinematicShotDef[];
+  /** Real seconds; null = untimed. */
+  timeLimitSec: number | null;
+  /** Applied to the world on success / failure (player scope). */
+  onSuccess: Effect[];
+  onFailure: Effect[];
+  /** Can the player retry on failure (combat missions: yes; negotiations: no). */
+  retryable: boolean;
+}
+
+/** One move of the hero's focused melee set (Wukong-like feel, tiny scope). Times in seconds. */
+export interface HeroMoveDef {
+  id: string;
+  input: string;
+  damage: number;
+  /** Poise damage dealt. */
+  poiseDamage: number;
+  staminaCost: number;
+  startupSec: number;
+  activeSec: number;
+  recoverySec: number;
+  /** Time into the move after which a dodge/next attack can cancel it. */
+  cancelAfterSec: number;
+  /** Hit-stop on connect (ms) and camera shake amplitude (m). */
+  hitStopMs: number;
+  shake: number;
+  /** Forward lunge distance (m). */
+  lunge: number;
+  /** Impact VFX key. */
+  vfx: 'slash_spark' | 'heavy_dust' | 'parry_flash' | 'finisher_burst' | 'none';
+}
+
+export interface HeroCombatConfig {
+  hp: number;
+  stamina: number;
+  staminaRegenPerSec: number;
+  staminaRegenDelaySec: number;
+  /** Light combo chain (in order) + heavy (charge) moves. */
+  lightCombo: HeroMoveDef[];
+  heavy: { min: HeroMoveDef; max: HeroMoveDef; chargeSec: number };
+  dodge: { durationSec: number; iframeStartSec: number; iframeEndSec: number; distance: number; staminaCost: number; perfectWindowSec: number; perfectSlowMoSec: number; perfectTimeScale: number };
+  block: { damageReduction: number; staminaPerDamage: number; regenWhileBlocking: number; guardBreakStaggerSec: number };
+  parry: { windowSec: number; staggerSec: number; ripostMultiplier: number; hitStopMs: number; shake: number };
+  remedy: { charges: number; heal: number; durationSec: number };
+  lockOn: { range: number; coneRad: number };
+  /** Hit-reaction on the hero. */
+  hitStunSec: number;
+  /** Camera framing (third person): distance, height, shoulder offset, FOV (deg) exploring / in combat. */
+  camera: { exploreDistance: number; combatDistance: number; height: number; shoulder: number; fovExplore: number; fovCombat: number };
 }
