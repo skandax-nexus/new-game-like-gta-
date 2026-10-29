@@ -195,7 +195,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_dust.py",
-      "inputHash": "4a931a8bce89bd66d61d46ff020ac311774b4b12d8589230148f7341a589085d",
+      "inputHash": "b65e76187f78a00823b97908ede48e00559c527fa58912b42be67cc90e6a4a36",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -253,7 +253,7 @@
       "files": [
         {
           "path": "fx/fx_dust/color_1024.webp",
-          "bytes": 70680,
+          "bytes": 71474,
           "tiers": [
             "ultra",
             "high"
@@ -264,7 +264,7 @@
         },
         {
           "path": "fx/fx_dust/color_512.webp",
-          "bytes": 37542,
+          "bytes": 38164,
           "tiers": [
             "mobile"
           ],
@@ -274,7 +274,7 @@
         },
         {
           "path": "fx/fx_dust/normal_512.webp",
-          "bytes": 24876,
+          "bytes": 25042,
           "tiers": [
             "ultra",
             "high"
@@ -285,7 +285,7 @@
         },
         {
           "path": "fx/fx_dust/normal_256.webp",
-          "bytes": 10336,
+          "bytes": 10202,
           "tiers": [
             "mobile"
           ],
@@ -299,19 +299,19 @@
           "color": {
             "ultra": {
               "path": "fx/fx_dust/color_1024.webp",
-              "bytes": 70680,
+              "bytes": 71474,
               "width": 1024,
               "height": 1024
             },
             "high": {
               "path": "fx/fx_dust/color_1024.webp",
-              "bytes": 70680,
+              "bytes": 71474,
               "width": 1024,
               "height": 1024
             },
             "mobile": {
               "path": "fx/fx_dust/color_512.webp",
-              "bytes": 37542,
+              "bytes": 38164,
               "width": 512,
               "height": 512
             }
@@ -319,19 +319,19 @@
           "normal": {
             "ultra": {
               "path": "fx/fx_dust/normal_512.webp",
-              "bytes": 24876,
+              "bytes": 25042,
               "width": 512,
               "height": 512
             },
             "high": {
               "path": "fx/fx_dust/normal_512.webp",
-              "bytes": 24876,
+              "bytes": 25042,
               "width": 512,
               "height": 512
             },
             "mobile": {
               "path": "fx/fx_dust/normal_256.webp",
-              "bytes": 10336,
+              "bytes": 10202,
               "width": 256,
               "height": 256
             }
@@ -339,9 +339,9 @@
         }
       },
       "bytes": {
-        "ultra": 95556,
-        "high": 95556,
-        "mobile": 47878
+        "ultra": 96516,
+        "high": 96516,
+        "mobile": 48366
       }
     },
     "fx_fire": {
@@ -450,7 +450,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_lightning.py",
-      "inputHash": "2b5652dc3c00e3f839e5e670c7b408df31e74b5ac17e467d7fe311a23f593049",
+      "inputHash": "651fe587e91d20c701520222737e0c66e357c2f6344a31516cc79714ca8173ac",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -462,6 +462,7 @@
         "cols": 2,
         "description": "Four forked lightning bolts, white core + violet glow, additive x10 (high / ultra only).",
         "emissiveIntensity": 10,
+        "encoding": "near_lossless",
         "fps": 1,
         "frames": 4,
         "lit": false,
@@ -473,6 +474,9 @@
             "fps": 1,
             "loop": true,
             "name": "bolt0",
+            "openEdges": [
+              "bottom"
+            ],
             "start": 0
           },
           {
@@ -480,6 +484,9 @@
             "fps": 1,
             "loop": true,
             "name": "bolt1",
+            "openEdges": [
+              "bottom"
+            ],
             "start": 1
           },
           {
@@ -487,6 +494,9 @@
             "fps": 1,
             "loop": true,
             "name": "bolt2",
+            "openEdges": [
+              "bottom"
+            ],
             "start": 2
           },
           {
@@ -494,6 +504,9 @@
             "fps": 1,
             "loop": true,
             "name": "bolt3",
+            "openEdges": [
+              "bottom"
+            ],
             "start": 3
           }
         ],
@@ -507,7 +520,7 @@
       "files": [
         {
           "path": "fx/fx_lightning/color_512.webp",
-          "bytes": 12724,
+          "bytes": 40650,
           "tiers": [
             "ultra",
             "high"
@@ -528,13 +541,13 @@
           "color": {
             "ultra": {
               "path": "fx/fx_lightning/color_512.webp",
-              "bytes": 12724,
+              "bytes": 40650,
               "width": 512,
               "height": 512
             },
             "high": {
               "path": "fx/fx_lightning/color_512.webp",
-              "bytes": 12724,
+              "bytes": 40650,
               "width": 512,
               "height": 512
             }
@@ -542,8 +555,8 @@
         }
       },
       "bytes": {
-        "ultra": 12724,
-        "high": 12724,
+        "ultra": 40650,
+        "high": 40650,
         "mobile": 0
       }
     },
@@ -552,7 +565,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_mist.py",
-      "inputHash": "e5a253710bc2772a76ff1f99f8066aa030fd5f6c48592ada3c01a92c042ffb89",
+      "inputHash": "50b0d5a36d5a19a56188f8cc68723a337ab89de34de462d8418937f7a1a726cf",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -688,7 +701,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_nature.py",
-      "inputHash": "d1a7ab8c29c1142f5176411161e222297b8570caf9ef51e8f6f783fcb7818872",
+      "inputHash": "746a0b867bfdaf5e15ba51f93e835170056b4705b38dbc5f1f84b3da29a7d69a",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -842,7 +855,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_rain.py",
-      "inputHash": "5a8437e2400c1be3c50c7bbcc1b1403c71637a45f6de59dbef752449425f7d69",
+      "inputHash": "350dfe11a6deec0fcd749f0571ce6acf77ba4fb648bdfde00570a2f53d8aea18",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -1129,7 +1142,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_sparks_embers.py",
-      "inputHash": "3dcec16842953b8b719b9e862f962721f1dceab49ab678d3f9c88fc199b55215",
+      "inputHash": "a911333e421d1f62f9fd4688df1280586a24866c0d6cf825ad166676d39255bb",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -1195,7 +1208,7 @@
       "files": [
         {
           "path": "fx/fx_sparks_embers/color_1024.webp",
-          "bytes": 181652,
+          "bytes": 126888,
           "tiers": [
             "ultra",
             "high"
@@ -1206,7 +1219,7 @@
         },
         {
           "path": "fx/fx_sparks_embers/color_512.webp",
-          "bytes": 59682,
+          "bytes": 29952,
           "tiers": [
             "mobile"
           ],
@@ -1220,19 +1233,19 @@
           "color": {
             "ultra": {
               "path": "fx/fx_sparks_embers/color_1024.webp",
-              "bytes": 181652,
+              "bytes": 126888,
               "width": 1024,
               "height": 1024
             },
             "high": {
               "path": "fx/fx_sparks_embers/color_1024.webp",
-              "bytes": 181652,
+              "bytes": 126888,
               "width": 1024,
               "height": 1024
             },
             "mobile": {
               "path": "fx/fx_sparks_embers/color_512.webp",
-              "bytes": 59682,
+              "bytes": 29952,
               "width": 512,
               "height": 512
             }
@@ -1240,9 +1253,9 @@
         }
       },
       "bytes": {
-        "ultra": 181652,
-        "high": 181652,
-        "mobile": 59682
+        "ultra": 126888,
+        "high": 126888,
+        "mobile": 29952
       }
     },
     "fx_weapon_trail": {
@@ -1250,7 +1263,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_weapon_trail.py",
-      "inputHash": "c9aa9d3da13fa7cb754e7ed0dbacfa7ac8fc8ef904e8517a4c8c1c711f34c22e",
+      "inputHash": "cc7c397e9ceec1e8477e3d31d1d2173c23bba0396741ae8ef4eb6a07f0380ec1",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -1263,6 +1276,7 @@
         "cols": 2,
         "description": "Weapon trail: gradient (edge -> saffron -> tail), wide variant, two u-tileable streak noises.",
         "emissiveIntensity": 3,
+        "encoding": "near_lossless",
         "fps": 1,
         "frames": 4,
         "lit": false,
@@ -1274,6 +1288,9 @@
             "fps": 1,
             "loop": true,
             "name": "trail",
+            "openEdges": [
+              "left"
+            ],
             "start": 0
           },
           {
@@ -1281,6 +1298,9 @@
             "fps": 1,
             "loop": true,
             "name": "trail_wide",
+            "openEdges": [
+              "left"
+            ],
             "start": 1
           },
           {
@@ -1290,6 +1310,12 @@
             "lit": false,
             "loop": true,
             "name": "noise",
+            "openEdges": [
+              "top",
+              "bottom",
+              "left",
+              "right"
+            ],
             "start": 2
           },
           {
@@ -1299,6 +1325,12 @@
             "lit": false,
             "loop": true,
             "name": "noise_b",
+            "openEdges": [
+              "top",
+              "bottom",
+              "left",
+              "right"
+            ],
             "start": 3
           }
         ],
@@ -1312,7 +1344,7 @@
       "files": [
         {
           "path": "fx/fx_weapon_trail/color_256.webp",
-          "bytes": 8434,
+          "bytes": 28266,
           "tiers": [
             "ultra",
             "high",
@@ -1328,19 +1360,19 @@
           "color": {
             "ultra": {
               "path": "fx/fx_weapon_trail/color_256.webp",
-              "bytes": 8434,
+              "bytes": 28266,
               "width": 256,
               "height": 256
             },
             "high": {
               "path": "fx/fx_weapon_trail/color_256.webp",
-              "bytes": 8434,
+              "bytes": 28266,
               "width": 256,
               "height": 256
             },
             "mobile": {
               "path": "fx/fx_weapon_trail/color_256.webp",
-              "bytes": 8434,
+              "bytes": 28266,
               "width": 256,
               "height": 256
             }
@@ -1348,9 +1380,9 @@
         }
       },
       "bytes": {
-        "ultra": 8434,
-        "high": 8434,
-        "mobile": 8434
+        "ultra": 28266,
+        "high": 28266,
+        "mobile": 28266
       }
     },
     "ground_dry_earth": {
@@ -2753,22 +2785,22 @@
       "kind": "hdri",
       "category": "hdri",
       "script": "tools/blender/assets/hdri/sky_dawn.py",
-      "inputHash": "d54ed1791b8e6b53070ed64ebffe9aa0b088a969ceff37c9258ceab8299e8fdc",
+      "inputHash": "c9075a2ca7e42e1ca168bb3f042742e1f30793f193240557ff1729fbd3637874",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
         "ambientIrradiance": 0.38,
         "baked": {
           "ambientIrradiance": 0.5502,
-          "calibration": 0.5542,
+          "calibration": 0.59318,
           "sunIntensity": 5.8214
         },
         "clouds": 0.25,
         "description": "Dawn, sun 6 deg E, pink-gold haze, thin clouds.",
         "ground": [
-          0.03761,
-          0.02751,
-          0.024
+          0.0355,
+          0.02783,
+          0.02605
         ],
         "groundAlbedo": [
           0.2,
@@ -2776,7 +2808,7 @@
           0.15
         ],
         "preset": "dawn",
-        "scale": 0.05692758434586492,
+        "scale": 0.06093247157010457,
         "sun": {
           "azimuthDeg": 95,
           "color": [
@@ -2811,7 +2843,7 @@
       "files": [
         {
           "path": "hdri/sky_dawn_2048.exr",
-          "bytes": 262933,
+          "bytes": 216579,
           "tiers": [
             "ultra"
           ],
@@ -2821,7 +2853,7 @@
         },
         {
           "path": "hdri/sky_dawn_1024.exr",
-          "bytes": 97979,
+          "bytes": 84282,
           "tiers": [
             "high"
           ],
@@ -2831,7 +2863,7 @@
         },
         {
           "path": "hdri/sky_dawn_512.exr",
-          "bytes": 33851,
+          "bytes": 30424,
           "tiers": [
             "mobile"
           ],
@@ -2844,28 +2876,28 @@
         "files": {
           "ultra": {
             "path": "hdri/sky_dawn_2048.exr",
-            "bytes": 262933,
+            "bytes": 216579,
             "width": 2048,
             "height": 1024
           },
           "high": {
             "path": "hdri/sky_dawn_1024.exr",
-            "bytes": 97979,
+            "bytes": 84282,
             "width": 1024,
             "height": 512
           },
           "mobile": {
             "path": "hdri/sky_dawn_512.exr",
-            "bytes": 33851,
+            "bytes": 30424,
             "width": 512,
             "height": 256
           }
         }
       },
       "bytes": {
-        "ultra": 262933,
-        "high": 97979,
-        "mobile": 33851
+        "ultra": 216579,
+        "high": 84282,
+        "mobile": 30424
       }
     },
     "sky_day": {
@@ -2873,7 +2905,7 @@
       "kind": "hdri",
       "category": "hdri",
       "script": "tools/blender/assets/hdri/sky_day.py",
-      "inputHash": "3dad07904e27341dffd9012bbb3f69c91fe43c2f9f393f583373022ced965c34",
+      "inputHash": "080fff2b29eecda5b6551335f00eb86e449c49d6028733ced4c18a20737d0f00",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -2981,25 +3013,30 @@
       "kind": "hdri",
       "category": "hdri",
       "script": "tools/blender/assets/hdri/sky_dusk.py",
-      "inputHash": "9641d630241e069bde71ff22a1df3aa28955b96f281c9182a1caefc52d1ffacf",
+      "inputHash": "c25f6dde4b1a5d6c7011eeb3c217e9d9447d7069c1cc8d22d7ca64b328d58fbe",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
         "ambientIrradiance": 0.16,
         "baked": {
           "ambientIrradiance": 0.3117,
-          "calibration": 0.4443,
+          "calibration": 0.4163,
           "sunIntensity": 0
         },
         "clouds": 0.3,
         "description": "Dusk, sun -2 deg W, afterglow, sky-only lighting.",
+        "ground": [
+          0.01012,
+          0.00739,
+          0.01282
+        ],
         "groundAlbedo": [
           0.2,
           0.16,
           0.13
         ],
         "preset": "dusk",
-        "scale": 0.4443007230601921,
+        "scale": 0.4162981467254039,
         "sun": {
           "azimuthDeg": 280,
           "color": [
@@ -3034,7 +3071,7 @@
       "files": [
         {
           "path": "hdri/sky_dusk_2048.exr",
-          "bytes": 134292,
+          "bytes": 165757,
           "tiers": [
             "ultra"
           ],
@@ -3044,7 +3081,7 @@
         },
         {
           "path": "hdri/sky_dusk_1024.exr",
-          "bytes": 51622,
+          "bytes": 64109,
           "tiers": [
             "high"
           ],
@@ -3054,7 +3091,7 @@
         },
         {
           "path": "hdri/sky_dusk_512.exr",
-          "bytes": 18320,
+          "bytes": 23429,
           "tiers": [
             "mobile"
           ],
@@ -3067,28 +3104,28 @@
         "files": {
           "ultra": {
             "path": "hdri/sky_dusk_2048.exr",
-            "bytes": 134292,
+            "bytes": 165757,
             "width": 2048,
             "height": 1024
           },
           "high": {
             "path": "hdri/sky_dusk_1024.exr",
-            "bytes": 51622,
+            "bytes": 64109,
             "width": 1024,
             "height": 512
           },
           "mobile": {
             "path": "hdri/sky_dusk_512.exr",
-            "bytes": 18320,
+            "bytes": 23429,
             "width": 512,
             "height": 256
           }
         }
       },
       "bytes": {
-        "ultra": 134292,
-        "high": 51622,
-        "mobile": 18320
+        "ultra": 165757,
+        "high": 64109,
+        "mobile": 23429
       }
     },
     "sky_fog": {
@@ -3096,7 +3133,7 @@
       "kind": "hdri",
       "category": "hdri",
       "script": "tools/blender/assets/hdri/sky_fog.py",
-      "inputHash": "f1425769dedffec09e1b4d9dabbfae910225c126564d947825b013fdc02eb194",
+      "inputHash": "3178dfdf044691620c58f1c5f4c19ced1bd55214c9b90c2d9816fe32830fdcdb",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -3108,6 +3145,11 @@
         },
         "clouds": 0.5,
         "description": "Shishira fog: low sun, pale fog wall (high / ultra; mobile -> sky_overcast).",
+        "ground": [
+          0.04057,
+          0.04077,
+          0.03798
+        ],
         "groundAlbedo": [
           0.2,
           0.2,
@@ -3145,7 +3187,7 @@
       "files": [
         {
           "path": "hdri/sky_fog_2048.exr",
-          "bytes": 25636,
+          "bytes": 30959,
           "tiers": [
             "ultra"
           ],
@@ -3155,7 +3197,7 @@
         },
         {
           "path": "hdri/sky_fog_1024.exr",
-          "bytes": 11627,
+          "bytes": 14005,
           "tiers": [
             "high"
           ],
@@ -3174,21 +3216,21 @@
         "files": {
           "ultra": {
             "path": "hdri/sky_fog_2048.exr",
-            "bytes": 25636,
+            "bytes": 30959,
             "width": 2048,
             "height": 1024
           },
           "high": {
             "path": "hdri/sky_fog_1024.exr",
-            "bytes": 11627,
+            "bytes": 14005,
             "width": 1024,
             "height": 512
           }
         }
       },
       "bytes": {
-        "ultra": 25636,
-        "high": 11627,
+        "ultra": 30959,
+        "high": 14005,
         "mobile": 0
       }
     },
@@ -3197,7 +3239,7 @@
       "kind": "hdri",
       "category": "hdri",
       "script": "tools/blender/assets/hdri/sky_golden.py",
-      "inputHash": "fa0c66e1c44552282f7418bc3373676711e8f0e2dbe7d6306610db2e00baa69f",
+      "inputHash": "e235c606988f11ac906edb0dd837acee399b769cbfda3929100277fe69348927",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -3305,25 +3347,30 @@
       "kind": "hdri",
       "category": "hdri",
       "script": "tools/blender/assets/hdri/sky_haze.py",
-      "inputHash": "3cb2192113c9463bb915d06c0e739294aab6abf0a5d36d2d82ab29aa6a2e3fe9",
+      "inputHash": "15a43819bcf7a3c5aaa1edc1714e5ab9a5fc2dca3e73e4c57aad1ba854515a9e",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
         "ambientIrradiance": 0.9,
         "baked": {
-          "ambientIrradiance": 0.7251,
-          "calibration": 0.71495,
+          "ambientIrradiance": 0.6598,
+          "calibration": 0.7139,
           "sunIntensity": 4.0008
         },
         "clouds": 0.05,
         "description": "Grishma haze: dusty ochre horizon, almost cloudless.",
+        "ground": [
+          0.296,
+          0.21583,
+          0.12192
+        ],
         "groundAlbedo": [
           0.32,
           0.26,
           0.18
         ],
         "preset": "dry_haze",
-        "scale": 0.019126802288084936,
+        "scale": 0.019098840930182662,
         "sun": {
           "azimuthDeg": 200,
           "color": [
@@ -3358,7 +3405,7 @@
       "files": [
         {
           "path": "hdri/sky_haze_2048.exr",
-          "bytes": 63552,
+          "bytes": 71093,
           "tiers": [
             "ultra"
           ],
@@ -3368,7 +3415,7 @@
         },
         {
           "path": "hdri/sky_haze_1024.exr",
-          "bytes": 26157,
+          "bytes": 28936,
           "tiers": [
             "high"
           ],
@@ -3378,7 +3425,7 @@
         },
         {
           "path": "hdri/sky_haze_512.exr",
-          "bytes": 10324,
+          "bytes": 10830,
           "tiers": [
             "mobile"
           ],
@@ -3391,28 +3438,28 @@
         "files": {
           "ultra": {
             "path": "hdri/sky_haze_2048.exr",
-            "bytes": 63552,
+            "bytes": 71093,
             "width": 2048,
             "height": 1024
           },
           "high": {
             "path": "hdri/sky_haze_1024.exr",
-            "bytes": 26157,
+            "bytes": 28936,
             "width": 1024,
             "height": 512
           },
           "mobile": {
             "path": "hdri/sky_haze_512.exr",
-            "bytes": 10324,
+            "bytes": 10830,
             "width": 512,
             "height": 256
           }
         }
       },
       "bytes": {
-        "ultra": 63552,
-        "high": 26157,
-        "mobile": 10324
+        "ultra": 71093,
+        "high": 28936,
+        "mobile": 10830
       }
     },
     "sky_night": {
@@ -3420,25 +3467,30 @@
       "kind": "hdri",
       "category": "hdri",
       "script": "tools/blender/assets/hdri/sky_night.py",
-      "inputHash": "2549b9603854d1bf871d9844b9915f891ab6c2ee25d174be902f8bccd9bdce90",
+      "inputHash": "ce548b6bffa6692b22b8bf101cffeff2ac7027fa3681f2e0be4ed1262718374e",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
         "ambientIrradiance": 0.08,
         "baked": {
           "ambientIrradiance": 0.3463,
-          "calibration": 0.34645,
+          "calibration": 0.35612,
           "sunIntensity": 3.9526
         },
         "clouds": 0.15,
         "description": "Moonlit night: stars, Milky Way, thin clouds; moon = manifest sun, irradiance 0.08.",
+        "ground": [
+          0.00356,
+          0.00485,
+          0.00967
+        ],
         "groundAlbedo": [
           0.05,
           0.05,
           0.06
         ],
         "preset": "night",
-        "scale": 0.008802851668207887,
+        "scale": 0.009048708126845615,
         "sun": {
           "azimuthDeg": 150,
           "color": [
@@ -3473,7 +3525,7 @@
       "files": [
         {
           "path": "hdri/sky_night_2048.exr",
-          "bytes": 116572,
+          "bytes": 125656,
           "tiers": [
             "ultra"
           ],
@@ -3483,7 +3535,7 @@
         },
         {
           "path": "hdri/sky_night_1024.exr",
-          "bytes": 41895,
+          "bytes": 45533,
           "tiers": [
             "high"
           ],
@@ -3493,7 +3545,7 @@
         },
         {
           "path": "hdri/sky_night_512.exr",
-          "bytes": 12489,
+          "bytes": 13744,
           "tiers": [
             "mobile"
           ],
@@ -3506,28 +3558,28 @@
         "files": {
           "ultra": {
             "path": "hdri/sky_night_2048.exr",
-            "bytes": 116572,
+            "bytes": 125656,
             "width": 2048,
             "height": 1024
           },
           "high": {
             "path": "hdri/sky_night_1024.exr",
-            "bytes": 41895,
+            "bytes": 45533,
             "width": 1024,
             "height": 512
           },
           "mobile": {
             "path": "hdri/sky_night_512.exr",
-            "bytes": 12489,
+            "bytes": 13744,
             "width": 512,
             "height": 256
           }
         }
       },
       "bytes": {
-        "ultra": 116572,
-        "high": 41895,
-        "mobile": 12489
+        "ultra": 125656,
+        "high": 45533,
+        "mobile": 13744
       }
     },
     "sky_noon": {
@@ -3535,25 +3587,30 @@
       "kind": "hdri",
       "category": "hdri",
       "script": "tools/blender/assets/hdri/sky_noon.py",
-      "inputHash": "735fb4a97fb9422872f1c1d4ad2fbfe745afc58c513b205500e6abd1a694c8dc",
+      "inputHash": "09d83403281694b5a0198abcfc5d8be596421ef3bfda5dc8fd7cb4d1775339a2",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
         "ambientIrradiance": 0.75,
         "baked": {
-          "ambientIrradiance": 0.5423,
-          "calibration": 1.38287,
+          "ambientIrradiance": 0.3969,
+          "calibration": 1.56564,
           "sunIntensity": 3.8853
         },
         "clouds": 0.18,
         "description": "Noon, sun 62 deg S, clear with light cumulus (noon key).",
+        "ground": [
+          0.27182,
+          0.22011,
+          0.16523
+        ],
         "groundAlbedo": [
           0.24,
           0.2,
           0.15
         ],
         "preset": "noon",
-        "scale": 0.03355850624178316,
+        "scale": 0.03799370806105337,
         "sun": {
           "azimuthDeg": 170,
           "color": [
@@ -3588,7 +3645,7 @@
       "files": [
         {
           "path": "hdri/sky_noon_2048.exr",
-          "bytes": 205998,
+          "bytes": 222314,
           "tiers": [
             "ultra"
           ],
@@ -3598,7 +3655,7 @@
         },
         {
           "path": "hdri/sky_noon_1024.exr",
-          "bytes": 80941,
+          "bytes": 86493,
           "tiers": [
             "high"
           ],
@@ -3608,7 +3665,7 @@
         },
         {
           "path": "hdri/sky_noon_512.exr",
-          "bytes": 29499,
+          "bytes": 30932,
           "tiers": [
             "mobile"
           ],
@@ -3621,28 +3678,28 @@
         "files": {
           "ultra": {
             "path": "hdri/sky_noon_2048.exr",
-            "bytes": 205998,
+            "bytes": 222314,
             "width": 2048,
             "height": 1024
           },
           "high": {
             "path": "hdri/sky_noon_1024.exr",
-            "bytes": 80941,
+            "bytes": 86493,
             "width": 1024,
             "height": 512
           },
           "mobile": {
             "path": "hdri/sky_noon_512.exr",
-            "bytes": 29499,
+            "bytes": 30932,
             "width": 512,
             "height": 256
           }
         }
       },
       "bytes": {
-        "ultra": 205998,
-        "high": 80941,
-        "mobile": 29499
+        "ultra": 222314,
+        "high": 86493,
+        "mobile": 30932
       }
     },
     "sky_overcast": {
@@ -3650,25 +3707,30 @@
       "kind": "hdri",
       "category": "hdri",
       "script": "tools/blender/assets/hdri/sky_overcast.py",
-      "inputHash": "cf26cbc13aed23a0edbfa61f78e578b07a7539d65447fe40c68cc2ad272af73e",
+      "inputHash": "f4ccbe086def628d1ffb13e756ef1370d6f4770a3e04b5120f5e08fefcdaf1b4",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
         "ambientIrradiance": 0.5,
         "baked": {
           "ambientIrradiance": 0.6296,
-          "calibration": 1.14571,
+          "calibration": 0.62604,
           "sunIntensity": 4.0642
         },
         "clouds": 0.95,
         "description": "Monsoon overcast: heavy cloud deck, soft diffuse light.",
+        "ground": [
+          0.0199,
+          0.02531,
+          0.02004
+        ],
         "groundAlbedo": [
           0.12,
           0.13,
           0.1
         ],
         "preset": "monsoon",
-        "scale": 0.03152110137829551,
+        "scale": 0.01722384547100768,
         "sun": {
           "azimuthDeg": 180,
           "color": [
@@ -3703,7 +3765,7 @@
       "files": [
         {
           "path": "hdri/sky_overcast_2048.exr",
-          "bytes": 46708,
+          "bytes": 73611,
           "tiers": [
             "ultra"
           ],
@@ -3713,7 +3775,7 @@
         },
         {
           "path": "hdri/sky_overcast_1024.exr",
-          "bytes": 19738,
+          "bytes": 28177,
           "tiers": [
             "high"
           ],
@@ -3723,7 +3785,7 @@
         },
         {
           "path": "hdri/sky_overcast_512.exr",
-          "bytes": 7910,
+          "bytes": 10127,
           "tiers": [
             "mobile"
           ],
@@ -3736,28 +3798,28 @@
         "files": {
           "ultra": {
             "path": "hdri/sky_overcast_2048.exr",
-            "bytes": 46708,
+            "bytes": 73611,
             "width": 2048,
             "height": 1024
           },
           "high": {
             "path": "hdri/sky_overcast_1024.exr",
-            "bytes": 19738,
+            "bytes": 28177,
             "width": 1024,
             "height": 512
           },
           "mobile": {
             "path": "hdri/sky_overcast_512.exr",
-            "bytes": 7910,
+            "bytes": 10127,
             "width": 512,
             "height": 256
           }
         }
       },
       "bytes": {
-        "ultra": 46708,
-        "high": 19738,
-        "mobile": 7910
+        "ultra": 73611,
+        "high": 28177,
+        "mobile": 10127
       }
     },
     "stupa_sanchi": {

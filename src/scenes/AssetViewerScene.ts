@@ -247,7 +247,7 @@ export class AssetViewerScene implements GameScene {
   private lutPass: ShaderPass | null = null;
   private clones: SkinnedClone[] = [];
   private kits: InstancedKit[] = [];
-  private kitDraws: { id: string; meshes: number; triangles: number }[] = [];
+  private kitDraws: { id: string; meshes: number; triangles: number; box?: number[] }[] = [];
   private memtest: {
     phase: 'baseline' | 'loading' | 'loaded' | 'released' | 'done';
     frames: number;
@@ -752,7 +752,9 @@ export class AssetViewerScene implements GameScene {
       if (this.opts.prepass !== 'off') installPrepassGuard(mesh, 'skip');
       const c = i % cols;
       const r = Math.floor(i / cols);
-      mesh.position.set((c - (cols - 1) / 2) * w * 1.15, h / 2 + 0.05 + r * h * 1.15, 0);
+      // grounded books (fire, dust): sink the quad by groundLine so the base sits on the ground, like the game
+      const sink = e.groundLine !== null ? e.groundLine * h : -0.05;
+      mesh.position.set((c - (cols - 1) / 2) * w * 1.15, h / 2 - sink + r * h * 1.15, 0);
       mesh.renderOrder = 10;
       mesh.visible = !this.opts.hidefx;
       this.scene.add(mesh);
@@ -1020,16 +1022,18 @@ export class AssetViewerScene implements GameScene {
         // Skinned meshes cannot share one InstancedMesh (per-copy skeletons): independent clones, one draw per
         // primitive per copy - battle crowds use VAT instead (?asset=vat_test_dummy).
         let prims = 0;
+        const placed = new THREE.Box3();
         for (let k = 0; k < count; k++) {
           const clone = k === 0 ? inst : await this.ctx.assets.loadModel(id, { lod: 0 });
           if (k > 0) this.handles.push(clone);
           clone.object.applyMatrix4(mats[k]!);
+          placed.expandByObject(clone.object);
           this.scene.add(clone.object);
           clone.object.traverse((o) => {
             if ((o as THREE.Mesh).isMesh && o.visible) prims++;
           });
         }
-        this.kitDraws.push({ id, meshes: prims, triangles: inst.triangles * count });
+        this.kitDraws.push({ id, meshes: prims, triangles: inst.triangles * count, box: [...placed.min.toArray(), ...placed.max.toArray()].map((v) => +v.toFixed(2)) });
       } else {
         const kit = instanceObject(inst.object, mats);
         this.scene.add(kit.group);

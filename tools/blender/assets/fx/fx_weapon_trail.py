@@ -11,7 +11,8 @@ now, 1 = the oldest tail point) and v = across the ribbon (0 = blade root, 1 = b
   `noise_b`    a second, finer noise to cross-scroll against `noise`
 Additive (premultiplied emission x emissiveIntensity 3). Border guard: the trail gradients are bright at their LEFT
 edge by design (u = 0 is the blade edge now) and the noises tile in u (and wrap in v), so those sequences open
-exactly those edges (`open_edges`); every other edge fades to 0. OWNER: Technical Artist G (TA-07).
+exactly those edges (`open_edges`); every other edge fades to 0. Published near-lossless (28 KB): lossy WebP
+ringing put 4-8/255 on the trails' closed top / right edges. OWNER: Technical Artist G (TA-07).
 """
 import pathlib
 import sys
@@ -76,5 +77,6 @@ meta = fb.write(ctx, frames, 2, 2, fps=1, loop=True, sequences=seqs, blend="addi
                 labels=kit.label_sequences(seqs), srgb=True,
                 description="Weapon trail: gradient (edge -> saffron -> tail), wide variant, two u-tileable streak noises.")
 meta["tint"] = "#ffffff"
+meta["encoding"] = "near_lossless"
 ctx.meta.update(meta)
 ctx.finish()

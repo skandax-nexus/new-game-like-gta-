@@ -186,6 +186,7 @@ function entryFor(a) {
           loop: s.loop ?? m.loop !== false,
           blend: s.blend ?? null,
           lit: s.lit ?? null,
+          openEdges: s.openEdges ?? [],
         })),
         maps: Object.fromEntries(Object.entries(a.flipbook.maps).map(([k, tiers]) => [k, tierMap(tiers, (f) => ({ url: f.path, bytes: f.bytes, width: f.width, height: f.height }))])),
         blend: m.blend ?? 'alpha',
@@ -193,6 +194,7 @@ function entryFor(a) {
         softFadeMeters: round(m.softFadeMeters ?? 0.5, 3),
         emissiveIntensity: round(m.emissiveIntensity ?? 1, 3),
         sizeMeters: m.sizeMeters ? roundVec(m.sizeMeters, 3) : null,
+        groundLine: typeof m.groundLine === 'number' ? round(m.groundLine, 4) : null,
         tint: m.tint ?? '#ffffff',
       };
     }

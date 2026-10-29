@@ -227,6 +227,35 @@ async function main() {
     // ---------------------------------------------------------------- flipbooks
     if (run('fx')) {
       for (const fx of idsOfKind('flipbook')) await shoot(`${fx}_playback`, `asset=${fx}&hdri=sky_day&camera=front&phase=0.35`, { quality: 'ultra' });
+      // emissive books: how much of the effect clips to near-white at runtime emissiveIntensity (Art Director:
+      // fire <= ~15 % of the flame area, sparks <= 10-15 % core). Effect pixels = differ from the backdrop-only shot.
+      const clipRows = [];
+      for (const [fx, sky, phase] of [['fx_fire', 'sky_day', 0.35], ['fx_fire', 'sky_night', 0.35], ['fx_sparks_embers', 'sky_day', 0.3]]) {
+        if (!idsOfKind('flipbook').includes(fx)) continue;
+        const q = `asset=${fx}&hdri=${sky}&camera=front&phase=${phase}&noui=1`;
+        const tag = `${fx}_${sky.slice(4)}`;
+        await shoot(`${tag}_fxclip`, q, { quality: 'ultra' });
+        await shoot(`${tag}_fxclip_bg`, `${q}&hidefx=1`, { quality: 'ultra' });
+        const A = await sharp(path.join(OUT, `${tag}_fxclip.png`)).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+        const B = await sharp(path.join(OUT, `${tag}_fxclip_bg.png`)).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+        let fxPx = 0;
+        let white = 0;
+        let pale = 0;
+        for (let i = 0; i < A.data.length; i += 3) {
+          const d = Math.abs(A.data[i] - B.data[i]) + Math.abs(A.data[i + 1] - B.data[i + 1]) + Math.abs(A.data[i + 2] - B.data[i + 2]);
+          if (d < 24) continue;
+          fxPx++;
+          const lo = Math.min(A.data[i], A.data[i + 1], A.data[i + 2]);
+          if (lo >= 245) white++;
+          // pale core: #fff2c0-like or whiter (every channel >= 191, brightest >= 230)
+          if (lo >= 191 && Math.max(A.data[i], A.data[i + 1], A.data[i + 2]) >= 230) pale++;
+        }
+        const pct = (n) => (fxPx ? n / fxPx : 0);
+        clipRows.push({ fx, sky, effectPixels: fxPx, nearWhite: white, fraction: pct(white), paleCore: pale, paleFraction: pct(pale) });
+        console.log(`[ta-07] ${fx} under ${sky}: ${fxPx} effect pixels, ${(100 * pct(white)).toFixed(1)} % near-white (min channel >= 245), ${(100 * pct(pale)).toFixed(1)} % pale core (all channels >= 191)`);
+        fs.rmSync(path.join(OUT, `${tag}_fxclip_bg.png`), { force: true });
+      }
+      report.numbers.emissiveClip = clipRows;
       if (idsOfKind('flipbook').includes('fx_smoke')) {
         await shoot('fx_smoke_sun_east', 'asset=fx_smoke&hdri=sky_day&camera=front&sun=90,25&frame=20&tint=none&noui=1', { quality: 'ultra' });
         await shoot('fx_smoke_sun_west', 'asset=fx_smoke&hdri=sky_day&camera=front&sun=270,25&frame=20&tint=none&noui=1', { quality: 'ultra' });
@@ -312,7 +341,9 @@ async function main() {
     // ---------------------------------------------------------------- kit + splat
     if (run('kit')) {
       const s = await shoot('kit_grid', 'kit=stupa_sanchi,model_test_tree,skin_test_character&count=4&hdri=sky_day&camera=overview', { quality: 'high' });
-      report.numbers.kit = s?.kit ?? null;
+      // skinned kit pieces are human-sized next to 40 m stupas: a close kit shot shows the independent clones too
+      const s2 = await shoot('kit_grid_skinned', 'kit=skin_test_character&count=4&hdri=sky_day&camera=overview', { quality: 'high' });
+      report.numbers.kit = [...(s?.kit ?? []), ...((s2?.kit ?? []).map((k) => ({ ...k, id: `${k.id} (alone)` })))];
       if (s?.kit) console.log(`[ta-07] kit draw calls: ${s.kit.map((k) => `${k.id} ${k.meshes}`).join(', ')}`);
     }
     // TA-01 lookdev under the neutral noon sky with an 18 % grey card (Art Director: golden was too dark to judge albedo)

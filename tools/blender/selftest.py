@@ -339,21 +339,33 @@ def test_flipbook() -> None:
 
 def test_fluid_and_integrator() -> None:
     """FluidSim (projection, buoyancy, floor) and the exact emission-absorption integrator vs Cycles."""
-    nz = flipbook.value_noise3((24, 24, 24), 6.0, 3, octaves=2)
     sim = flipbook.FluidSim((24, 24, 24), (1.2, 1.2, 1.2), floor=False, vorticity=0.0)
+    # a smooth PERIODIC random field (low Fourier modes) - the solver's domain is periodic in x / y / z here
+    rng = np.random.default_rng(4)
+    xs, ys, zs = sim.world()
+    L = 1.2
     for a in range(3):
-        sim.vel[a] = (flipbook.value_noise3((24, 24, 24), 6.0, 10 + a, octaves=2) - 0.5) * 2.0
+        f = np.zeros(sim.n, np.float32)
+        for _ in range(6):
+            k = rng.integers(-2, 3, 3)
+            f += rng.normal() * np.sin(2 * np.pi * (k[0] * xs + k[1] * ys + k[2] * zs) / L + rng.uniform(0, 6.28)).astype(np.float32)
+        sim.vel[a] = f
     h = sim.h
 
     def div_ratio(v: np.ndarray) -> float:
-        dv = np.gradient(v[0], h, axis=0) + np.gradient(v[1], h, axis=1) + np.gradient(v[2], h, axis=2)
-        g = max(float(np.abs(np.gradient(v[0], h, axis=0)).max()), 1e-9)
-        return float(np.abs(dv).max()) / g
+        """Spectral divergence norm relative to the gradient norm: |k . U| / (|k| |U|) (exact derivatives)."""
+        kx = (2 * np.pi * np.fft.fftfreq(v.shape[1], d=h))[:, None, None]
+        ky = (2 * np.pi * np.fft.fftfreq(v.shape[2], d=h))[None, :, None]
+        kz = (2 * np.pi * np.fft.fftfreq(v.shape[3], d=h))[None, None, :]
+        U, V, W = (np.fft.fftn(v[i]) for i in range(3))
+        dv = np.abs(kx * U + ky * V + kz * W)
+        km = np.sqrt(kx ** 2 + ky ** 2 + kz ** 2) * np.sqrt(np.abs(U) ** 2 + np.abs(V) ** 2 + np.abs(W) ** 2)
+        return float(np.sqrt((dv ** 2).sum()) / max(float(np.sqrt((km ** 2).sum())), 1e-9))
 
     before = div_ratio(sim.vel)
     sim.project()
     after = div_ratio(sim.vel)
-    check("fluid: pressure projection removes the divergence", after < 0.15 * before, f"max|div| / max|du/dx| {before:.3f} -> {after:.3f}")
+    check("fluid: pressure projection removes the divergence", after < 1e-3 * before, f"|k.U| / (|k| |U|) {before:.3f} -> {after:.2e}")
     # a hot blob rises (buoyancy) and expands with a prescribed divergence
     sim = flipbook.FluidSim((24, 24, 32), (1.2, 1.2, 1.6), floor=True, vorticity=2.0)
     x, y, z = sim.world()
@@ -441,7 +453,10 @@ def test_flipbook_border_guard() -> None:
         raised = str(e)
     check("flipbook border guard: write() fails the bake", "border guard" in raised and "frame 1" in raised, raised.splitlines()[0] if raised else "no error")
     meta = flipbook.write(ctx, [good, bad], 2, 1, fps=8, loop=False, sequences=seqs)
-    check("flipbook border guard: open_edges is bake-time only (not published)", all("open_edges" not in sq for sq in meta["sequences"]))
+    pub = {sq["name"]: sq for sq in meta["sequences"]}
+    check("flipbook border guard: open edges published as openEdges (the runner re-checks encoded atlases)",
+          all("open_edges" not in sq for sq in meta["sequences"]) and pub["ribbon"].get("openEdges") == ["right"]
+          and "openEdges" not in pub["ok"], str([(n, sq.get("openEdges")) for n, sq in pub.items()]))
 
 
 for t in (test_skinned_export, test_lod, test_normal_bake, test_texture_set_bake, test_vat, test_impostor, test_flipbook,

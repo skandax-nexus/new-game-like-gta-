@@ -297,7 +297,15 @@ export interface FlipbookSequenceEntry {
   readonly blend: 'alpha' | 'additive' | 'premultiplied' | null;
   /** Per-sequence lighting override; null = the atlas `lit`. */
   readonly lit: boolean | null;
+  /**
+   * Frame edges this sequence's content legitimately reaches (weapon-trail ribbons: 'left' = the blade now;
+   * ground-strike bolts: 'bottom'; tileable noises: all four). Every other edge is clear: the outer 2 px of the
+   * encoded atlas carry <= 2/255 (flipbook border guard, checked at bake and on every published tier).
+   */
+  readonly openEdges: readonly FlipbookEdge[];
 }
+
+export type FlipbookEdge = 'top' | 'bottom' | 'left' | 'right';
 
 export interface FlipbookFileEntry {
   readonly url: string;
@@ -331,6 +339,12 @@ export interface FlipbookAssetEntry extends AssetEntryBase {
   readonly emissiveIntensity: number;
   /** Typical world size of one sprite (m), or null. */
   readonly sizeMeters: readonly number[] | null;
+  /**
+   * Grounded effects (fire base, dust contact): fraction of the frame height ABOVE the frame's bottom edge where the
+   * effect meets the ground - sink the quad by groundLine x height so the base sits on the terrain (the content keeps
+   * that margin so lossy encoding never smears it onto the border). null = free-floating (smoke, sparks, mist).
+   */
+  readonly groundLine: number | null;
   /** Suggested particle tint (sRGB hex) for neutral atlases, e.g. building smoke `#4a4038`. */
   readonly tint: string;
 }

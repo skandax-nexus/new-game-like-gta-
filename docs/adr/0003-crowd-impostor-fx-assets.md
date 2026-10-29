@@ -129,24 +129,33 @@ current level casts a shadow (no double shadow).
   Why not Mantaflow: it needs a GUI-era cache and minutes per frame on CPU; the numpy solver is deterministic,
   scriptable and diff-reviewable, and its output is integrated without noise.
 - **Format:** atlas `cols x rows` (frame k row-major from the top-left, flipY false), `sequences`
-  (name, start, count, fps, loop, optional per-sequence `blend` / `lit` overrides), `blend` alpha | additive |
+  (name, start, count, fps, loop, optional per-sequence `blend` / `lit` overrides, `openEdges`), `blend` alpha | additive |
   premultiplied, `lit` (normal map present: the particle is lit by the sun - smoke, dust, mist, leaves),
-  `emissiveIntensity`, `softFadeMeters`, `sizeMeters`, `tint`. Color is sRGB, alpha linear; normals are
+  `emissiveIntensity`, `softFadeMeters`, `sizeMeters`, `groundLine` (grounded books: the fraction of the frame height
+  above its bottom edge where the effect meets the ground - fire 0.13, dust 0.023; sink the quad by that much; null
+  = free-floating), `tint`. Color is sRGB, alpha linear; normals are
   tangent space (+Y up).
 - **Publish:** color atlas at `atlasPx` per tier (lossy WebP q86 + alpha q90; additive-only books drop the
   redundant alpha; `encoding: 'lossless' | 'near_lossless'` overrides it - fx_sparks_embers is lossless because
-  4:2:0 chroma put cyan fringes on its thin streaks), normal atlas at half resolution, lossy q90
+  4:2:0 chroma put cyan fringes on its thin streaks, fx_lightning / fx_weapon_trail near-lossless, see border guard), normal atlas at half resolution, lossy q90
   (`FLIPBOOK_NORMAL_SCALE`), same grid so the UVs are shared. fx_fire and fx_smoke ship 2048 atlases (256 px
   frames) on ultra (Art Director decision), 1024 on high, 512 on mobile.
 - **Border guard:** `flipbook.write()` fails the bake when any frame's outer 2 px carry coverage / emission above
-  2/255 in the encoded atlas, checked at the source resolution and after downsampling to the smallest shipped
+  2/255 (8-bit encoded values), checked at the source resolution and after downsampling to the smallest shipped
   frame size (a puff cut by its frame edge shows as a hard straight line on the particle quad). Sequences that
   must touch an edge opt out per edge with `"open_edges": ["left", ...]` (weapon-trail ribbons, ground-hitting
-  bolts); the flag is bake-time only. Covered by the Blender selftest.
+  bolts), published per sequence as `openEdges`. The runner repeats the check on every **encoded** tier atlas
+  after WebP compression (`publish.mjs flipbookBorderProblems`, fails the publish): lossy ringing and bleed from a
+  neighbouring frame's open edge only appear there (fx_lightning's ground strikes put 8-10/255 on the closed top
+  edge of the frames below them; fx_lightning and fx_weapon_trail therefore publish near-lossless). Covered by the
+  Blender selftest and `tests/assets/flipbook-borders.test.ts` (every published tier of every flipbook).
 - **Runtime:** `frameAt(seq, t)`, `frameRect(entry, k)` are the contract for the particle system;
   `createFlipbookMaterial(handle, { sequence, lit, tint })` is the reference quad material (two-frame
-  cross-fade, derivative-TBN normals, premultiplied blending via `CustomBlending` ONE / ONE_MINUS_SRC_ALPHA,
-  additive and premultiplied books multiplied by `emissiveIntensity`). It tags the material prepass `'skip'`;
+  cross-fade, derivative-TBN normals, premultiplied blending via `CustomBlending` ONE / ONE_MINUS_SRC_ALPHA with
+  `material.premultipliedAlpha` OFF - three's PREMULTIPLIED_ALPHA chunk multiplies rgb by alpha a second time, which
+  showed the fire as rgb x occlusion with dark wisps (rework round 1) - additive and premultiplied books multiplied by
+  `emissiveIntensity`, opacity fading premultiplied emission too). Premultiplied atlases are published without the
+  RGB bleed that straight-alpha atlases get (their RGB under alpha 0 is emission, not filler). It tags the material prepass `'skip'`;
   `createFlipbookMesh(handle, opts, geometry?)` (or `installPrepassGuard(mesh, 'skip')` on the particle system's own
   mesh) enforces it.
 

@@ -9,8 +9,9 @@ integration) with the Bible ramp `#fff2c0` core -> `#ffb040` body -> `#e2571e` t
 ignition temperature with a steep ramp, so flames have crisp, separating tongues; NO soot (fire is emission plus a
 slight occlusion - the smoke column above a fire is fx_smoke). Seamless loop: the last 16 simulated frames
 cross-fade into the first. Stored premultiplied (runtime blend ONE / ONE_MINUS_SRC_ALPHA, color x emissiveIntensity
-8). The core (white-yellow) stays a small fraction of the flame (logged); the base fades in over 16 cm and every
-frame keeps its border clear (flipbook border guard). Building fires 3-8 m, torches 0.3 m (scale the 1.9 m
+8). The core (white-yellow) stays a small fraction of the flame (logged); the base fades in over 16 cm, the ground
+line sits 13 % of the frame (25 cm) above its bottom edge (manifest `groundLine`: sink the quad by that much), and every
+frame keeps its border clear in the source and in every encoded tier down to 64 px frames (flipbook border guard). Building fires 3-8 m, torches 0.3 m (scale the 1.9 m
 sprite). Atlas 2048 / 1024 / 512 (256 px frames on ultra: Art Director decision, TA-07 review).
 OWNER: Technical Artist G (TA-07).
 """
@@ -57,7 +58,8 @@ with timer(f"fire sim {shape} x {WARMUP + FRAMES + BLEND} frames"):
         if f >= WARMUP:
             temps.append(sim.temp.copy())
 temps = fb.loop_blend(temps, FRAMES, BLEND)
-frame = (0.0, S / 2 - 0.035 * S, S)
+GROUND = 0.13  # ground line 13 % (25 cm) above the frame bottom: lanczos + lossy WebP keep the bright base off the border
+frame = (0.0, S / 2 - GROUND * S, S)
 with timer("fire render (exact integration)"):
     hdr, worst = kit.fire_frames(temps, EXT, H, PX, frame=frame)
 # Normalize the HDR emission: the 99th percentile of flame pixels -> 1.0 in the 8-bit atlas (x emissiveIntensity 8).
@@ -71,6 +73,7 @@ log(f"fire: core (#fff2c0-like, all channels > 70 %) {100.0 * core / max(flame, 
     f"{worst / pk * 255:.2f}/255")
 meta = fb.write(ctx, color, 8, 8, fps=FPS, loop=True, blend="premultiplied", lit=False, emissive_intensity=8.0,
                 soft_fade_m=0.3, size_m=(S, S), atlas_px={"ultra": 2048, "high": 1024, "mobile": 512},
+                ground_line=GROUND,
                 description="Looping flame (Eulerian sim, licking tongues), premultiplied emission x8 + slight occlusion, "
                             "no soot; 64 frames at 24 fps.")
 meta["tint"] = "#ffffff"

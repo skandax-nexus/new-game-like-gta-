@@ -24,6 +24,9 @@ Border guard (write() fails the bake): every frame's outer 2 px must carry no co
 the encoded atlas, at the source resolution AND after downsampling to the smallest shipped frame size - content
 touching a frame edge shows as a hard straight cut on the particle quad. Sequences that legitimately reach an
 edge opt out per edge: {"name": "trail", ..., "open_edges": ["left"]} (weapon-trail ribbons, ground-hitting bolts).
+The open edges are published per sequence (`openEdges`), and the runner repeats the check on every ENCODED tier
+atlas after WebP compression (tools/assets/publish.mjs: lossy ringing / bleed from a neighbouring open edge fails
+the publish too).
 """
 from __future__ import annotations
 
@@ -971,11 +974,13 @@ def write(ctx: AssetContext, color: Sequence[np.ndarray], cols: int, rows: int, 
           emissive: Sequence[np.ndarray] | None = None, blend: str = "alpha", lit: bool = False,
           emissive_intensity: float = 1.0, soft_fade_m: float = 0.5, size_m: Sequence[float] | None = None,
           atlas_px: dict[str, int] | None = None, description: str = "", labels: Sequence[str] | None = None,
-          srgb: bool = True) -> dict[str, Any]:
+          srgb: bool = True, ground_line: float | None = None) -> dict[str, Any]:
     """Pack and write the flipbook maps (+ contact sheet preview); returns the manifest metadata.
     `color` frames: linear rgb + alpha (straight, or premultiplied when blend == 'premultiplied').
     Fails (ValueError) when a frame's border carries coverage / emission (see the module doc: border guard);
-    sequences opt out per edge with "open_edges"."""
+    sequences opt out per edge with "open_edges". `ground_line`: fraction of the frame height above the bottom edge
+    where a grounded effect (fire base, dust contact) meets the ground - published as `groundLine` so the particle
+    system can sink the quad by that much (the content keeps a margin above the border for lossy encoding)."""
     if len(color) > cols * rows:
         raise ValueError(f"{len(color)} frames do not fit {cols}x{rows}")
     seqs_in = list(sequences) if sequences else None
@@ -1015,7 +1020,16 @@ def write(ctx: AssetContext, color: Sequence[np.ndarray], cols: int, rows: int, 
         sheet = contact_sheet(disp, min(cols, 8), labels=labels, normals=normals, premultiplied=blend == "premultiplied",
                               cell=min(128, max(64, color[0].shape[0])), title=f"{ctx.id}  {len(color)} FRAMES  {cols}X{rows}")
         ctx.add_file("preview_contact", tg.write_png(ctx.path("preview_contact.png"), sheet, 8))
-    pub_seqs = [{k: v for k, v in sq.items() if k != "open_edges"} for sq in seqs_in] if seqs_in else None
+    # open_edges -> published `openEdges` (sorted edge names; omitted when every edge is closed)
+    pub_seqs = None
+    if seqs_in:
+        pub_seqs = []
+        for sq in seqs_in:
+            ps = {k: v for k, v in sq.items() if k != "open_edges"}
+            oe = _open_edges(sq)
+            if oe:
+                ps["openEdges"] = [e for e in EDGES if e in oe]
+            pub_seqs.append(ps)
     meta = {
         "cols": cols, "rows": rows, "frames": len(color), "fps": fps, "loop": loop,
         "sequences": pub_seqs or [{"name": "all", "start": 0, "count": len(color), "fps": fps, "loop": loop}],
@@ -1024,6 +1038,8 @@ def write(ctx: AssetContext, color: Sequence[np.ndarray], cols: int, rows: int, 
     }
     if atlas_px:
         meta["atlasPx"] = atlas_px
+    if ground_line is not None:
+        meta["groundLine"] = round(float(ground_line), 4)
     log(f"flipbook: {len(color)} frames in {cols}x{rows} ({atlas.shape[1]}x{atlas.shape[0]} px), blend {blend}, lit {lit}")
     return meta
 

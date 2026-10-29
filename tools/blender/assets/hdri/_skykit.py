@@ -284,7 +284,9 @@ def build(script_file: str, preset_name: str, *, treatment: str = "clear", stars
         elif treatment == "haze":
             # thin sun-shaded clouds first, then the pale, bright dusty dome over them (the fog tone lifted halfway to
             # white, brighter than the clear horizon)
-            sky, _ = C.cloud_layer(sky, d_bl, bsun, clouds, cloud_seed, scale=cscale)
+            # (bright, low-contrast: sunlit dust-haze clouds, never darker stains on the dome)
+            sky, _ = C.cloud_layer(sky, d_bl, bsun, clouds, cloud_seed, scale=cscale, lit_gain=0.36, shadow_gain=1.3,
+                                   base_dark=0.12, thickness=1.6, sun_white=0.35)
             sky = horizon_blend(sky, fog * 0.5 + 0.5 * float(fog.max()), 20.0, 0.35, desat=0.3, floor=0.5, gain=1.8)
         elif treatment == "clear":
             if el < 15:  # low sun (dawn): warm lit sides, long shadows through the layer, strong silver lining

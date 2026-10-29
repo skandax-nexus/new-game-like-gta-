@@ -200,12 +200,25 @@ async function resampleAtlas(srcPath, cols, rows, fw, fh, { bleed = true, alpha 
   return { data: out, width: W, height: H };
 }
 
-async function writeWebpRaw(raw, relPath, enc, { alpha = true } = {}) {
+async function writeWebpRaw(raw, relPath, enc, { alpha = true, verify = null } = {}) {
   const out = path.join(PUBLIC_DIR, relPath);
   ensureDir(out);
   let img = sharp(raw.data, { raw: { width: raw.width, height: raw.height, channels: 4 } });
   if (!alpha) img = img.removeAlpha();
-  await img.webp({ ...enc, ...(alpha ? { exact: true } : {}) }).toFile(out);
+  if (!verify) {
+    await img.webp({ ...enc, ...(alpha ? { exact: true } : {}) }).toFile(out);
+    return;
+  }
+  // verify the ENCODED file before it replaces the published one (a failed check leaves public/ untouched)
+  const tmp = `${out}.verify.webp`;
+  await img.webp({ ...enc, ...(alpha ? { exact: true } : {}) }).toFile(tmp);
+  try {
+    await verify(tmp);
+  } catch (e) {
+    fs.rmSync(tmp, { force: true });
+    throw e;
+  }
+  fs.renameSync(tmp, out);
 }
 
 // =========================================================================================== glTF
@@ -423,6 +436,65 @@ async function publishImpostor(asset, srcDir, meta, outFiles, tiers) {
 }
 
 // =========================================================================================== flipbook
+export const FLIPBOOK_BORDER_PX = 2;
+export const FLIPBOOK_BORDER_LIMIT = 2; // 0-255 (lib/flipbook.py BORDER_LIMIT = 2/255)
+
+/**
+ * Flipbook border guard on an ENCODED atlas (decoded back to 8-bit RGBA): the outer `px` pixels of every frame edge
+ * its sequence does not open (`openEdges`) must stay <= `limit` (0-255). `signal` 'alpha' checks coverage (alpha
+ * books: their transparent RGB is bled colour), 'rgb' the emission (additive books, stored without alpha), 'both'
+ * both (premultiplied). Frames no sequence uses are skipped. Returns one message per failing frame edge.
+ * The bake (lib/flipbook.py write) checks the source frames; this catches what WebP compression adds - ringing,
+ * 4:2:0 chroma and bleed from a neighbouring frame's open edge.
+ */
+export function flipbookBorderProblems(data, width, height, channels, { cols, rows, sequences, signal, px = FLIPBOOK_BORDER_PX, limit = FLIPBOOK_BORDER_LIMIT }) {
+  const fw = width / cols;
+  const fh = height / rows;
+  if (!Number.isInteger(fw) || !Number.isInteger(fh)) throw new Error(`${width}x${height} is not a ${cols}x${rows} grid`);
+  const owner = new Map();
+  for (const s of sequences ?? []) for (let k = s.start; k < s.start + s.count; k++) owner.set(k, s);
+  const level = (x, y) => {
+    const i = (y * width + x) * channels;
+    const a = channels > 3 ? data[i + 3] : 0;
+    if (signal === 'alpha') return a;
+    const e = Math.max(data[i], data[i + 1], data[i + 2]);
+    return signal === 'rgb' ? e : Math.max(a, e);
+  };
+  const problems = [];
+  for (let k = 0; k < cols * rows; k++) {
+    const s = owner.get(k);
+    if (!s) continue;
+    const open = new Set(s.openEdges ?? []);
+    const x0 = (k % cols) * fw;
+    const y0 = Math.floor(k / cols) * fh;
+    const strips = {
+      top: [x0, y0, fw, px],
+      bottom: [x0, y0 + fh - px, fw, px],
+      left: [x0, y0, px, fh],
+      right: [x0 + fw - px, y0, px, fh],
+    };
+    for (const [edge, [sx, sy, sw, sh]] of Object.entries(strips)) {
+      if (open.has(edge)) continue;
+      let worst = 0;
+      for (let y = sy; y < sy + sh; y++) for (let x = sx; x < sx + sw; x++) worst = Math.max(worst, level(x, y));
+      if (worst > limit) problems.push(`frame ${k} (${s.name}) ${edge} edge ${worst}/255`);
+    }
+  }
+  return problems;
+}
+
+async function checkEncodedBorders(asset, relPath, file, m, signal) {
+  const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const sequences = m.sequences ?? [{ name: 'all', start: 0, count: m.frames ?? m.cols * m.rows }];
+  const problems = flipbookBorderProblems(data, info.width, info.height, info.channels, { cols: m.cols, rows: m.rows, sequences, signal });
+  if (problems.length)
+    throw new Error(
+      `${asset.id}: flipbook border guard failed on the encoded ${relPath} (> ${FLIPBOOK_BORDER_LIMIT}/255 in the outer ${FLIPBOOK_BORDER_PX} px ` +
+        `after WebP compression):\n  ${problems.slice(0, 12).join('\n  ')}${problems.length > 12 ? `\n  ... and ${problems.length - 12} more` : ''}\n` +
+        'Publish it near-lossless / lossless (asset meta "encoding"), or keep open-edge frames away from closed edges in the atlas.',
+    );
+}
+
 async function publishFlipbook(asset, srcDir, meta, outFiles, tiers) {
   const m = meta.flipbook ?? {};
   const { cols, rows } = m;
@@ -446,7 +518,10 @@ async function publishFlipbook(asset, srcDir, meta, outFiles, tiers) {
       const fw = Math.max(1, Math.round(((info.width ?? 0) / cols) * scale));
       const fh = Math.max(1, Math.round(((info.height ?? 0) / rows) * scale));
       const hasAlpha = map === 'color' && !additiveOnly;
-      const raw = await resampleAtlas(path.join(srcDir, f.path), cols, rows, fw, fh, { alpha: hasAlpha });
+      // RGB bleed into transparent texels (mip / filter fringes) only for straight-alpha books: a premultiplied atlas
+      // stores emission where alpha is 0 (fire), so its RGB there is data, and bled colour would be ADDED on screen.
+      const bleed = hasAlpha && m.blend !== 'premultiplied';
+      const raw = await resampleAtlas(path.join(srcDir, f.path), cols, rows, fw, fh, { alpha: hasAlpha, bleed });
       const relPath = `fx/${asset.id}/${map}_${raw.width}.webp`;
       const override = m.encoding === 'lossless' ? TEXTURE_ENCODING.flipbook_lossless : m.encoding === 'near_lossless' ? TEXTURE_ENCODING.flipbook_near_lossless : null;
       if (m.encoding && !override) throw new Error(`${asset.id}: unknown flipbook encoding "${m.encoding}" (lossless | near_lossless)`);
@@ -459,7 +534,9 @@ async function publishFlipbook(asset, srcDir, meta, outFiles, tiers) {
                 ? TEXTURE_ENCODING.color_alpha
                 : TEXTURE_ENCODING.color_additive))
             : (override ?? TEXTURE_ENCODING.emissive);
-      await writeWebpRaw(raw, relPath, enc, { alpha: hasAlpha });
+      const signal = map === 'emissive' ? 'rgb' : !hasAlpha ? 'rgb' : m.blend === 'premultiplied' ? 'both' : m.blend === 'additive' ? 'rgb' : 'alpha';
+      const verify = map === 'normal' ? null : (file) => checkEncodedBorders(asset, relPath, file, m, signal);
+      await writeWebpRaw(raw, relPath, enc, { alpha: hasAlpha, verify });
       const rf = record(outFiles, relPath, ts, { kind: 'flipbook', map, size: raw.width });
       for (const t of ts) maps[map][t] = { path: relPath, bytes: rf.bytes, width: raw.width, height: raw.height };
     }

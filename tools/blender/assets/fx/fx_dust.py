@@ -11,8 +11,8 @@ the runtime tints by the ground color (sample the splat albedo, lighten 15 %) an
                     over 14 cm, so there is no straight base edge
   `ring`            the construction-completion / heavy-landing ring seen from above: a symmetric radial wall jet
                     (no wind, no mean drift) that stays a closed, centred ring while it expands to ~2 m
-  `hoof`            a low spray kicked backwards (+x) and up by a hoof or wheel that falls back and settles into a
-                    rolling puff
+  `hoof`            a hoof / wheel kick: grains and clods thrown backwards (+x) in low ballistic arcs (<= ~0.23 m) over
+                    a low dust jet that rolls out along the ground; the grains land into the rolling puff
 Every frame keeps its border clear (flipbook border guard). Atlas 1024 / 1024 / 512. OWNER: Technical Artist G (TA-07).
 """
 import math
@@ -35,6 +35,51 @@ ALBEDO = (0.74, 0.72, 0.69)
 color: list = []
 normals: list = []
 sequences: list = []
+
+
+def spray(c: list, n: list, seed: int, frame: tuple, dur: float, count: int = 40) -> None:
+    """Hoof kick: grains / clods thrown backwards (+x) and up from the hoof, flying ballistic arcs (gravity, low: <= ~0.2 m)
+    and landing into the rolling puff the sim makes - drawn as motion-blurred soft specks composited over the dust
+    frames (darker than the dust, facing normals). Every grain lands inside the frame (flight <= 0.43 s, x <= 0.62 m)."""
+    rng = np.random.default_rng(seed)
+    cx, cz, size = frame
+    u0, v_top = cx - size / 2, cz + size / 2
+    jj, ii = np.mgrid[0:PX, 0:PX].astype(np.float32)
+    win = fb.frame_window(PX, 0.02, 0.06)
+    grains = [(rng.uniform(-0.62, -0.46), rng.uniform(0.04, 0.09), rng.uniform(1.0, 2.5), rng.uniform(0.8, 2.1),
+               rng.uniform(0.0, 0.16), rng.uniform(0.012, 0.028), rng.uniform(0.55, 1.0)) for _ in range(count)]
+    dt = dur / N
+    for f in range(N):
+        t = (f + 1) * dt
+        ag = np.zeros((PX, PX), np.float32)
+        for x0, z0, vx, vz, delay, rad, amp in grains:
+            tt = t - delay
+            if tt <= 0:
+                continue
+            pos = lambda q: (x0 + vx * q, z0 + vz * q - 4.9 * q * q)  # noqa: E731
+            xa, za = pos(max(0.0, tt - 0.03))
+            xb, zb = pos(tt)
+            if zb < 0.03:
+                continue  # landed: absorbed by the rolling puff
+            # world -> pixel (front view: x right, z up)
+            pa = np.array([(xa - u0) / size * PX, (v_top - za) / size * PX])
+            pb = np.array([(xb - u0) / size * PX, (v_top - zb) / size * PX])
+            d = fb.segment_distance(ii, jj, pa, pb)
+            r_px = rad / size * PX
+            fade = min(1.0, (zb - 0.03) / 0.08)
+            ag = np.maximum(ag, (np.exp(-(d / max(r_px, 0.6)) ** 2) * amp * fade).astype(np.float32))
+        ag = ag * win
+        cf = c[f]
+        ap = cf[..., 3]
+        ao = ag + ap * (1.0 - ag)
+        w = np.where(ao > 1e-5, ag / np.maximum(ao, 1e-5), 0.0)[..., None]
+        grain_rgb = np.array(ALBEDO, np.float32) * 0.3  # clods read darker than the dust
+        cf[..., :3] = cf[..., :3] * (1.0 - w) + grain_rgb * w
+        cf[..., 3] = ao
+        nf = n[f]
+        flat = np.array([0.5, 0.5, 1.0], np.float32)
+        base = np.where((nf[..., :3] == 0).all(axis=-1, keepdims=True), flat, nf[..., :3])
+        nf[..., :3] = np.where(ao[..., None] > 1e-5, base * (1.0 - w) + flat * w, nf[..., :3])
 
 
 def run(name: str, kind: str, seed: int, dur: float, *, jet: float, up: float, temp: float, buoy: float, weight: float,
@@ -93,6 +138,8 @@ def run(name: str, kind: str, seed: int, dur: float, *, jet: float, up: float, t
     gf = (-0.04 + 0.34 * kit.smooth01((gn - 0.25) / 0.5)) if view == "front" else 0.0
     c, n, worst = kit.lit_frames(frames, ext, H, PX, view=view, frame=frame, depth=2.6, albedo=ALBEDO, flatten=0.55,
                                  fades=kit.life_fade(N, 0.08, 0.35), normal_blur=1.5, normal_strength=0.75, ground_fade=gf)
+    if kind == "hoof":
+        spray(c, n, seed + 5, frame, dur)
     for i in (5, 10):
         ys, xs = np.nonzero(c[i][..., 3] > 0.1)
         if len(xs):
@@ -109,10 +156,12 @@ run("puff", "puff", 5, 2.5, jet=2.2, up=1.6, temp=0.8, buoy=2.2, weight=0.25, da
 run("puff_b", "puff", 9, 2.5, jet=2.2, up=1.7, temp=0.85, buoy=2.4, weight=0.25, damp=0.25, exp=3.8, wind=0.25, size=2.2,
     width=0.42, height=0.3)
 run("ring", "ring", 21, 2.0, jet=4.5, up=0.8, temp=0.5, buoy=1.2, weight=0.2, damp=0.15, exp=2.5, wind=0.0, size=3.6, width=0.18)
-run("hoof", "hoof", 13, 1.6, jet=4.6, up=1.3, temp=0.4, buoy=1.0, weight=1.1, damp=0.25, exp=2.5, wind=0.25, size=2.2, width=0.22)
+run("hoof", "hoof", 13, 1.6, jet=8.0, up=0.7, temp=0.1, buoy=0.4, weight=1.8, damp=0.3, exp=0.5, wind=0.2, size=2.2, width=0.2,
+    vort=6.0)
 
 meta = fb.write(ctx, color, 8, 8, fps=8, loop=False, sequences=sequences, normals=normals, blend="alpha", lit=True,
                 soft_fade_m=0.5, size_m=(2.2, 2.2), atlas_px={"ultra": 1024, "high": 1024, "mobile": 512},
+                ground_line=round(0.05 / 2.2, 4),  # front-view sequences: ground 5 cm above the frame bottom (ring: top view)
                 labels=kit.label_sequences(sequences),
                 description="Dust (Eulerian sims): rolling ground puffs (2), closed expanding ring (top view), hoof kick; "
                             "neutral albedo + normals, tint by ground.")

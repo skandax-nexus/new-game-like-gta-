@@ -82,8 +82,12 @@ const FLIP_COLOR = /* glsl */ `
   float flipK0; float flipK1; float flipA;
   flipFrames( flipK0, flipK1, flipA );
   vec4 flipC = mix( texture2D( flipColor, flipUv( flipK0, vUv ) ), texture2D( flipColor, flipUv( flipK1, vUv ) ), flipA );
-  #if defined( FLIP_PREMULTIPLIED ) || defined( FLIP_ADDITIVE )
-    // premultiplied / additive books store emission: x emissiveIntensity (fire 8, sparks 6, trails 3, lightning 10)
+  #if defined( FLIP_PREMULTIPLIED )
+    // premultiplied books store emission + occlusion: x emissiveIntensity (fire 8); material opacity fades both
+    diffuseColor.rgb *= flipC.rgb * flipEmissive * diffuseColor.a;
+    diffuseColor.a *= flipC.a;
+  #elif defined( FLIP_ADDITIVE )
+    // additive books store emission: x emissiveIntensity (sparks 6, trails 3, lightning 10); blending applies alpha
     diffuseColor.rgb *= flipC.rgb * flipEmissive;
     diffuseColor.a *= flipC.a;
   #else
@@ -143,9 +147,13 @@ export function createFlipbookMaterial(h: FlipbookHandle, opts: FlipbookMaterial
   // transparent (white boxes at distance): emissive books fade with distance in the particle system instead.
   if (additive || premul) mat.fog = false;
   if (premul) {
+    // The atlas is ALREADY premultiplied (emission + occlusion alpha): blend ONE / ONE_MINUS_SRC_ALPHA, and do NOT set
+    // material.premultipliedAlpha - three's PREMULTIPLIED_ALPHA chunk multiplies rgb by alpha again, which turned the
+    // fire into rgb x occlusion (dim, sparse tongues and dark "soot" wisps where the gas cools).
     mat.blendSrc = THREE.OneFactor;
     mat.blendDst = THREE.OneMinusSrcAlphaFactor;
-    mat.premultipliedAlpha = true;
+    mat.blendEquation = THREE.AddEquation;
+    mat.premultipliedAlpha = false;
   }
   mat.name = `${e.id}:${seq.name}`;
   mat.onBeforeCompile = (shader) => {

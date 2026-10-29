@@ -9,9 +9,9 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 13359494,
-    "high": 6315259,
-    "mobile": 3476355
+    "ultra": 13403726,
+    "high": 6330789,
+    "mobile": 3474038
   },
   "assets": {
     "banner_cloth": {
@@ -198,12 +198,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_dust",
       "category": "fx",
-      "hash": "4a931a8bce",
+      "hash": "b65e76187f",
       "description": "Dust (Eulerian sims): rolling ground puffs (2), closed expanding ring (top view), hoof kick; neutral albedo + normals, tint by ground.",
       "bytes": {
-        "ultra": 95556,
-        "high": 95556,
-        "mobile": 47878
+        "ultra": 96516,
+        "high": 96516,
+        "mobile": 48366
       },
       "tiers": [
         "ultra",
@@ -223,7 +223,8 @@ export const ASSET_MANIFEST = {
           "fps": 6.4,
           "loop": false,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         },
         {
           "name": "puff_b",
@@ -232,7 +233,8 @@ export const ASSET_MANIFEST = {
           "fps": 6.4,
           "loop": false,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         },
         {
           "name": "ring",
@@ -241,7 +243,8 @@ export const ASSET_MANIFEST = {
           "fps": 8,
           "loop": false,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         },
         {
           "name": "hoof",
@@ -250,26 +253,27 @@ export const ASSET_MANIFEST = {
           "fps": 10,
           "loop": false,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         }
       ],
       "maps": {
         "color": {
           "ultra": {
             "url": "fx/fx_dust/color_1024.webp",
-            "bytes": 70680,
+            "bytes": 71474,
             "width": 1024,
             "height": 1024
           },
           "high": {
             "url": "fx/fx_dust/color_1024.webp",
-            "bytes": 70680,
+            "bytes": 71474,
             "width": 1024,
             "height": 1024
           },
           "mobile": {
             "url": "fx/fx_dust/color_512.webp",
-            "bytes": 37542,
+            "bytes": 38164,
             "width": 512,
             "height": 512
           }
@@ -277,19 +281,19 @@ export const ASSET_MANIFEST = {
         "normal": {
           "ultra": {
             "url": "fx/fx_dust/normal_512.webp",
-            "bytes": 24876,
+            "bytes": 25042,
             "width": 512,
             "height": 512
           },
           "high": {
             "url": "fx/fx_dust/normal_512.webp",
-            "bytes": 24876,
+            "bytes": 25042,
             "width": 512,
             "height": 512
           },
           "mobile": {
             "url": "fx/fx_dust/normal_256.webp",
-            "bytes": 10336,
+            "bytes": 10202,
             "width": 256,
             "height": 256
           }
@@ -334,7 +338,8 @@ export const ASSET_MANIFEST = {
           "fps": 24,
           "loop": true,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         }
       ],
       "maps": {
@@ -373,11 +378,11 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_lightning",
       "category": "fx",
-      "hash": "2b5652dc3c",
+      "hash": "651fe587e9",
       "description": "Four forked lightning bolts, white core + violet glow, additive x10 (high / ultra only).",
       "bytes": {
-        "ultra": 12724,
-        "high": 12724,
+        "ultra": 40650,
+        "high": 40650,
         "mobile": 0
       },
       "tiers": [
@@ -397,7 +402,10 @@ export const ASSET_MANIFEST = {
           "fps": 1,
           "loop": true,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": [
+            "bottom"
+          ]
         },
         {
           "name": "bolt1",
@@ -406,7 +414,10 @@ export const ASSET_MANIFEST = {
           "fps": 1,
           "loop": true,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": [
+            "bottom"
+          ]
         },
         {
           "name": "bolt2",
@@ -415,7 +426,10 @@ export const ASSET_MANIFEST = {
           "fps": 1,
           "loop": true,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": [
+            "bottom"
+          ]
         },
         {
           "name": "bolt3",
@@ -424,20 +438,23 @@ export const ASSET_MANIFEST = {
           "fps": 1,
           "loop": true,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": [
+            "bottom"
+          ]
         }
       ],
       "maps": {
         "color": {
           "ultra": {
             "url": "fx/fx_lightning/color_512.webp",
-            "bytes": 12724,
+            "bytes": 40650,
             "width": 512,
             "height": 512
           },
           "high": {
             "url": "fx/fx_lightning/color_512.webp",
-            "bytes": 12724,
+            "bytes": 40650,
             "width": 512,
             "height": 512
           }
@@ -457,7 +474,7 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_mist",
       "category": "fx",
-      "hash": "e5a253710b",
+      "hash": "50b0d5a36d",
       "description": "Mist sprites: bank, wisp, puff, sheet - irregular, wide, noise-eroded clusters; zero at the edges, lit via soft normals.",
       "bytes": {
         "ultra": 16690,
@@ -482,7 +499,8 @@ export const ASSET_MANIFEST = {
           "fps": 1,
           "loop": true,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         },
         {
           "name": "wisp",
@@ -491,7 +509,8 @@ export const ASSET_MANIFEST = {
           "fps": 1,
           "loop": true,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         },
         {
           "name": "puff",
@@ -500,7 +519,8 @@ export const ASSET_MANIFEST = {
           "fps": 1,
           "loop": true,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         },
         {
           "name": "sheet",
@@ -509,7 +529,8 @@ export const ASSET_MANIFEST = {
           "fps": 1,
           "loop": true,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         }
       ],
       "maps": {
@@ -568,7 +589,7 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_nature",
       "category": "fx",
-      "hash": "d1a7ab8c29",
+      "hash": "746a0b867b",
       "description": "Nature: sal / peepal leaves and palash petals (8-frame tumbles), kash seed, fireflies + motes (additive).",
       "bytes": {
         "ultra": 21168,
@@ -593,7 +614,8 @@ export const ASSET_MANIFEST = {
           "fps": 8,
           "loop": true,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         },
         {
           "name": "leaf_peepal",
@@ -602,7 +624,8 @@ export const ASSET_MANIFEST = {
           "fps": 8,
           "loop": true,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         },
         {
           "name": "palash",
@@ -611,7 +634,8 @@ export const ASSET_MANIFEST = {
           "fps": 10,
           "loop": true,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         },
         {
           "name": "kash",
@@ -620,7 +644,8 @@ export const ASSET_MANIFEST = {
           "fps": 1,
           "loop": true,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         },
         {
           "name": "firefly",
@@ -629,7 +654,8 @@ export const ASSET_MANIFEST = {
           "fps": 3,
           "loop": true,
           "blend": "additive",
-          "lit": false
+          "lit": false,
+          "openEdges": []
         },
         {
           "name": "mote",
@@ -638,7 +664,8 @@ export const ASSET_MANIFEST = {
           "fps": 1,
           "loop": true,
           "blend": "additive",
-          "lit": false
+          "lit": false,
+          "openEdges": []
         }
       ],
       "maps": {
@@ -697,7 +724,7 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_rain",
       "category": "fx",
-      "hash": "5a8437e240",
+      "hash": "350dfe11a6",
       "description": "Rain: streak, 4x4 crown splash, 8-frame ripple (normal map), eave drip.",
       "bytes": {
         "ultra": 19306,
@@ -722,7 +749,8 @@ export const ASSET_MANIFEST = {
           "fps": 1,
           "loop": false,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         },
         {
           "name": "splash",
@@ -731,7 +759,8 @@ export const ASSET_MANIFEST = {
           "fps": 30,
           "loop": false,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         },
         {
           "name": "ripple",
@@ -740,7 +769,8 @@ export const ASSET_MANIFEST = {
           "fps": 16,
           "loop": false,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         },
         {
           "name": "drip",
@@ -749,7 +779,8 @@ export const ASSET_MANIFEST = {
           "fps": 1,
           "loop": false,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         }
       ],
       "maps": {
@@ -833,7 +864,8 @@ export const ASSET_MANIFEST = {
           "fps": 16,
           "loop": false,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         }
       ],
       "maps": {
@@ -892,12 +924,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_sparks_embers",
       "category": "fx",
-      "hash": "3dcec16842",
+      "hash": "a911333e42",
       "description": "Additive sparks (gold -> saffron): spark, embers, slash spark, parry flash, finisher burst with dust shockwave; premultiplied emission x6, lossless.",
       "bytes": {
-        "ultra": 181652,
-        "high": 181652,
-        "mobile": 59682
+        "ultra": 126888,
+        "high": 126888,
+        "mobile": 29952
       },
       "tiers": [
         "ultra",
@@ -917,7 +949,8 @@ export const ASSET_MANIFEST = {
           "fps": 1,
           "loop": false,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         },
         {
           "name": "ember",
@@ -926,7 +959,8 @@ export const ASSET_MANIFEST = {
           "fps": 1,
           "loop": false,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         },
         {
           "name": "slash_spark",
@@ -935,7 +969,8 @@ export const ASSET_MANIFEST = {
           "fps": 30,
           "loop": false,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         },
         {
           "name": "parry_flash",
@@ -944,7 +979,8 @@ export const ASSET_MANIFEST = {
           "fps": 60,
           "loop": false,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         },
         {
           "name": "finisher_burst",
@@ -953,26 +989,27 @@ export const ASSET_MANIFEST = {
           "fps": 30,
           "loop": false,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": []
         }
       ],
       "maps": {
         "color": {
           "ultra": {
             "url": "fx/fx_sparks_embers/color_1024.webp",
-            "bytes": 181652,
+            "bytes": 126888,
             "width": 1024,
             "height": 1024
           },
           "high": {
             "url": "fx/fx_sparks_embers/color_1024.webp",
-            "bytes": 181652,
+            "bytes": 126888,
             "width": 1024,
             "height": 1024
           },
           "mobile": {
             "url": "fx/fx_sparks_embers/color_512.webp",
-            "bytes": 59682,
+            "bytes": 29952,
             "width": 512,
             "height": 512
           }
@@ -992,12 +1029,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_weapon_trail",
       "category": "fx",
-      "hash": "c9aa9d3da1",
+      "hash": "cc7c397e9c",
       "description": "Weapon trail: gradient (edge -> saffron -> tail), wide variant, two u-tileable streak noises.",
       "bytes": {
-        "ultra": 8434,
-        "high": 8434,
-        "mobile": 8434
+        "ultra": 28266,
+        "high": 28266,
+        "mobile": 28266
       },
       "tiers": [
         "ultra",
@@ -1017,7 +1054,10 @@ export const ASSET_MANIFEST = {
           "fps": 1,
           "loop": true,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": [
+            "left"
+          ]
         },
         {
           "name": "trail_wide",
@@ -1026,7 +1066,10 @@ export const ASSET_MANIFEST = {
           "fps": 1,
           "loop": true,
           "blend": null,
-          "lit": null
+          "lit": null,
+          "openEdges": [
+            "left"
+          ]
         },
         {
           "name": "noise",
@@ -1035,7 +1078,13 @@ export const ASSET_MANIFEST = {
           "fps": 1,
           "loop": true,
           "blend": "additive",
-          "lit": false
+          "lit": false,
+          "openEdges": [
+            "top",
+            "bottom",
+            "left",
+            "right"
+          ]
         },
         {
           "name": "noise_b",
@@ -1044,26 +1093,32 @@ export const ASSET_MANIFEST = {
           "fps": 1,
           "loop": true,
           "blend": "additive",
-          "lit": false
+          "lit": false,
+          "openEdges": [
+            "top",
+            "bottom",
+            "left",
+            "right"
+          ]
         }
       ],
       "maps": {
         "color": {
           "ultra": {
             "url": "fx/fx_weapon_trail/color_256.webp",
-            "bytes": 8434,
+            "bytes": 28266,
             "width": 256,
             "height": 256
           },
           "high": {
             "url": "fx/fx_weapon_trail/color_256.webp",
-            "bytes": 8434,
+            "bytes": 28266,
             "width": 256,
             "height": 256
           },
           "mobile": {
             "url": "fx/fx_weapon_trail/color_256.webp",
-            "bytes": 8434,
+            "bytes": 28266,
             "width": 256,
             "height": 256
           }
@@ -1892,12 +1947,12 @@ export const ASSET_MANIFEST = {
       "kind": "hdri",
       "id": "sky_dawn",
       "category": "hdri",
-      "hash": "d54ed1791b",
+      "hash": "c9075a2ca7",
       "description": "Dawn, sun 6 deg E, pink-gold haze, thin clouds.",
       "bytes": {
-        "ultra": 262933,
-        "high": 97979,
-        "mobile": 33851
+        "ultra": 216579,
+        "high": 84282,
+        "mobile": 30424
       },
       "tiers": [
         "ultra",
@@ -1908,19 +1963,19 @@ export const ASSET_MANIFEST = {
       "files": {
         "ultra": {
           "url": "hdri/sky_dawn_2048.exr",
-          "bytes": 262933,
+          "bytes": 216579,
           "width": 2048,
           "height": 1024
         },
         "high": {
           "url": "hdri/sky_dawn_1024.exr",
-          "bytes": 97979,
+          "bytes": 84282,
           "width": 1024,
           "height": 512
         },
         "mobile": {
           "url": "hdri/sky_dawn_512.exr",
-          "bytes": 33851,
+          "bytes": 30424,
           "width": 512,
           "height": 256
         }
@@ -1946,7 +2001,7 @@ export const ASSET_MANIFEST = {
       "kind": "hdri",
       "id": "sky_day",
       "category": "hdri",
-      "hash": "3dad07904e",
+      "hash": "080fff2b29",
       "description": "Clear late-morning sky, sun 42 deg SE, light haze (lookdev / daytime IBL).",
       "bytes": {
         "ultra": 260875,
@@ -2000,12 +2055,12 @@ export const ASSET_MANIFEST = {
       "kind": "hdri",
       "id": "sky_dusk",
       "category": "hdri",
-      "hash": "9641d63024",
+      "hash": "c25f6dde4b",
       "description": "Dusk, sun -2 deg W, afterglow, sky-only lighting.",
       "bytes": {
-        "ultra": 134292,
-        "high": 51622,
-        "mobile": 18320
+        "ultra": 165757,
+        "high": 64109,
+        "mobile": 23429
       },
       "tiers": [
         "ultra",
@@ -2016,19 +2071,19 @@ export const ASSET_MANIFEST = {
       "files": {
         "ultra": {
           "url": "hdri/sky_dusk_2048.exr",
-          "bytes": 134292,
+          "bytes": 165757,
           "width": 2048,
           "height": 1024
         },
         "high": {
           "url": "hdri/sky_dusk_1024.exr",
-          "bytes": 51622,
+          "bytes": 64109,
           "width": 1024,
           "height": 512
         },
         "mobile": {
           "url": "hdri/sky_dusk_512.exr",
-          "bytes": 18320,
+          "bytes": 23429,
           "width": 512,
           "height": 256
         }
@@ -2054,11 +2109,11 @@ export const ASSET_MANIFEST = {
       "kind": "hdri",
       "id": "sky_fog",
       "category": "hdri",
-      "hash": "f1425769de",
+      "hash": "3178dfdf04",
       "description": "Shishira fog: low sun, pale fog wall (high / ultra; mobile -> sky_overcast).",
       "bytes": {
-        "ultra": 25636,
-        "high": 11627,
+        "ultra": 30959,
+        "high": 14005,
         "mobile": 0
       },
       "tiers": [
@@ -2069,13 +2124,13 @@ export const ASSET_MANIFEST = {
       "files": {
         "ultra": {
           "url": "hdri/sky_fog_2048.exr",
-          "bytes": 25636,
+          "bytes": 30959,
           "width": 2048,
           "height": 1024
         },
         "high": {
           "url": "hdri/sky_fog_1024.exr",
-          "bytes": 11627,
+          "bytes": 14005,
           "width": 1024,
           "height": 512
         }
@@ -2101,7 +2156,7 @@ export const ASSET_MANIFEST = {
       "kind": "hdri",
       "id": "sky_golden",
       "category": "hdri",
-      "hash": "fa0c66e1c4",
+      "hash": "e235c60698",
       "description": "Golden hour, sun 7 deg W, warm dusty haze (cinematic / hero mode).",
       "bytes": {
         "ultra": 270426,
@@ -2155,12 +2210,12 @@ export const ASSET_MANIFEST = {
       "kind": "hdri",
       "id": "sky_haze",
       "category": "hdri",
-      "hash": "3cb2192113",
+      "hash": "15a43819bc",
       "description": "Grishma haze: dusty ochre horizon, almost cloudless.",
       "bytes": {
-        "ultra": 63552,
-        "high": 26157,
-        "mobile": 10324
+        "ultra": 71093,
+        "high": 28936,
+        "mobile": 10830
       },
       "tiers": [
         "ultra",
@@ -2171,19 +2226,19 @@ export const ASSET_MANIFEST = {
       "files": {
         "ultra": {
           "url": "hdri/sky_haze_2048.exr",
-          "bytes": 63552,
+          "bytes": 71093,
           "width": 2048,
           "height": 1024
         },
         "high": {
           "url": "hdri/sky_haze_1024.exr",
-          "bytes": 26157,
+          "bytes": 28936,
           "width": 1024,
           "height": 512
         },
         "mobile": {
           "url": "hdri/sky_haze_512.exr",
-          "bytes": 10324,
+          "bytes": 10830,
           "width": 512,
           "height": 256
         }
@@ -2209,12 +2264,12 @@ export const ASSET_MANIFEST = {
       "kind": "hdri",
       "id": "sky_night",
       "category": "hdri",
-      "hash": "2549b96038",
+      "hash": "ce548b6bff",
       "description": "Moonlit night: stars, Milky Way, thin clouds; moon = manifest sun, irradiance 0.08.",
       "bytes": {
-        "ultra": 116572,
-        "high": 41895,
-        "mobile": 12489
+        "ultra": 125656,
+        "high": 45533,
+        "mobile": 13744
       },
       "tiers": [
         "ultra",
@@ -2225,19 +2280,19 @@ export const ASSET_MANIFEST = {
       "files": {
         "ultra": {
           "url": "hdri/sky_night_2048.exr",
-          "bytes": 116572,
+          "bytes": 125656,
           "width": 2048,
           "height": 1024
         },
         "high": {
           "url": "hdri/sky_night_1024.exr",
-          "bytes": 41895,
+          "bytes": 45533,
           "width": 1024,
           "height": 512
         },
         "mobile": {
           "url": "hdri/sky_night_512.exr",
-          "bytes": 12489,
+          "bytes": 13744,
           "width": 512,
           "height": 256
         }
@@ -2263,12 +2318,12 @@ export const ASSET_MANIFEST = {
       "kind": "hdri",
       "id": "sky_noon",
       "category": "hdri",
-      "hash": "735fb4a97f",
+      "hash": "09d8340328",
       "description": "Noon, sun 62 deg S, clear with light cumulus (noon key).",
       "bytes": {
-        "ultra": 205998,
-        "high": 80941,
-        "mobile": 29499
+        "ultra": 222314,
+        "high": 86493,
+        "mobile": 30932
       },
       "tiers": [
         "ultra",
@@ -2279,19 +2334,19 @@ export const ASSET_MANIFEST = {
       "files": {
         "ultra": {
           "url": "hdri/sky_noon_2048.exr",
-          "bytes": 205998,
+          "bytes": 222314,
           "width": 2048,
           "height": 1024
         },
         "high": {
           "url": "hdri/sky_noon_1024.exr",
-          "bytes": 80941,
+          "bytes": 86493,
           "width": 1024,
           "height": 512
         },
         "mobile": {
           "url": "hdri/sky_noon_512.exr",
-          "bytes": 29499,
+          "bytes": 30932,
           "width": 512,
           "height": 256
         }
@@ -2317,12 +2372,12 @@ export const ASSET_MANIFEST = {
       "kind": "hdri",
       "id": "sky_overcast",
       "category": "hdri",
-      "hash": "cf26cbc13a",
+      "hash": "f4ccbe086d",
       "description": "Monsoon overcast: heavy cloud deck, soft diffuse light.",
       "bytes": {
-        "ultra": 46708,
-        "high": 19738,
-        "mobile": 7910
+        "ultra": 73611,
+        "high": 28177,
+        "mobile": 10127
       },
       "tiers": [
         "ultra",
@@ -2333,19 +2388,19 @@ export const ASSET_MANIFEST = {
       "files": {
         "ultra": {
           "url": "hdri/sky_overcast_2048.exr",
-          "bytes": 46708,
+          "bytes": 73611,
           "width": 2048,
           "height": 1024
         },
         "high": {
           "url": "hdri/sky_overcast_1024.exr",
-          "bytes": 19738,
+          "bytes": 28177,
           "width": 1024,
           "height": 512
         },
         "mobile": {
           "url": "hdri/sky_overcast_512.exr",
-          "bytes": 7910,
+          "bytes": 10127,
           "width": 512,
           "height": 256
         }

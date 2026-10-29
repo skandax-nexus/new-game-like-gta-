@@ -8,8 +8,9 @@ midpoint-displacement bolts with forking branches, a white core and a cool viole
 light). Drawn on tall quads (~1-2 km in the distance) for 2-4 flicker frames while the weather system flashes the
 sky. Additive (premultiplied emission x emissiveIntensity 10). High / ultra only: the mobile tier keeps the
 procedural sky flash. The main channel strikes the ground: it runs to the bottom edge of its frame (`open_edges: bottom`, the quad's
-bottom sits on the horizon / terrain); the top (cloud base) and the sides fade to 0 before the border.
-OWNER: Technical Artist G (TA-07).
+bottom sits on the horizon / terrain); the top (cloud base) and the sides fade to 0 before the border. Published
+near-lossless: lossy WebP bled the bright ground strike of bolt0 / bolt1 into the closed top edge of the frames below
+(8-10/255 there) and fringed the thin cores. OWNER: Technical Artist G (TA-07).
 """
 import pathlib
 import sys
@@ -87,5 +88,6 @@ meta = fb.write(ctx, frames, 2, 2, fps=1, loop=True, sequences=seqs, blend="addi
                 labels=kit.label_sequences(seqs), srgb=True,
                 description="Four forked lightning bolts, white core + violet glow, additive x10 (high / ultra only).")
 meta["tint"] = "#ffffff"
+meta["encoding"] = "near_lossless"
 ctx.meta.update(meta)
 ctx.finish()

@@ -33,10 +33,13 @@ x, y = kit.coords(PX)
 r = np.hypot(x, y)
 ang = np.arctan2(y, x)
 WIN = fb.frame_window(PX, 0.04, 0.10)
+# radial fade for blooms / rays / rings: round falloff to exactly 0 well inside the frame (the square frame window
+# alone left a visible square glow around the finisher bloom on a dark backdrop)
+RAD = kit.smoothstep(0.92, 0.62, r)
 rng = np.random.default_rng(7)
 frames: list = []
 seqs: list = []
-DUST = "#c9a77a"  # dust-coloured shockwave (emissive, dim)
+DUST = "#a8865c"  # dust-coloured shockwave (emissive, dim)
 
 
 def seq(name: str, imgs: list, fps: float, loop: bool = False) -> None:
@@ -58,8 +61,8 @@ def tapered(a: np.ndarray, b: np.ndarray, w0: float, w1: float) -> np.ndarray:
 
 
 # spark: head at the top, tail towards the bottom
-i = tapered(np.array([0.0, -0.62]), np.array([0.0, 0.58]), 0.012, 0.05) * 2.2 + kit.glow(x, y, 0.0, 0.58, 0.06) * 1.2
-seq("spark", [kit.spark_emission(i, gain=1.0, window=WIN)], 1)
+i = tapered(np.array([0.0, -0.62]), np.array([0.0, 0.58]), 0.012, 0.05) * 1.7 + kit.glow(x, y, 0.0, 0.58, 0.05) * 0.7
+seq("spark", [kit.spark_emission(i, gain=1.0, core=0.95, window=WIN)], 1)
 # embers: soft irregular coals, saffron rim, gold heart
 embers = []
 for k in range(2):
@@ -89,29 +92,31 @@ imgs = []
 rays_a = rng.uniform(0, 2 * np.pi)
 for f in range(8):
     t = f / 7.0
-    rays = (np.cos(4.0 * (ang - rays_a)) * 0.5 + 0.5) ** 10 * np.exp(-r / (0.16 + 0.42 * t))
-    rays += 0.5 * (np.cos(4.0 * (ang - rays_a) + np.pi / 4 * 4) * 0.5 + 0.5) ** 16 * np.exp(-r / (0.1 + 0.3 * t))
-    ring = np.exp(-((r - (0.14 + 0.5 * t)) / (0.035 + 0.03 * t)) ** 2) * 0.8
-    core = kit.glow(x, y, 0, 0, 0.09 + 0.06 * t, 2.0)
-    i = (rays * 1.4 + ring + core * 1.5) * (1.0 - t) ** 1.4
-    imgs.append(kit.spark_emission(i, gain=1.0, core=0.92, window=WIN))
+    rays = (np.cos(4.0 * (ang - rays_a)) * 0.5 + 0.5) ** 10 * np.exp(-(r / (0.2 + 0.4 * t)) ** 1.5)
+    rays += 0.5 * (np.cos(4.0 * (ang - rays_a) + np.pi / 4 * 4) * 0.5 + 0.5) ** 16 * np.exp(-(r / (0.12 + 0.3 * t)) ** 1.5)
+    ring = np.exp(-((r - (0.14 + 0.45 * t)) / (0.035 + 0.03 * t)) ** 2) * 0.8
+    core = kit.glow(x, y, 0, 0, 0.07 + 0.05 * t, 2.0)
+    i = (rays * 1.2 + ring + core * 1.1) * (1.0 - t) ** 1.4 * RAD
+    imgs.append(kit.spark_emission(i, gain=1.0, core=0.95, window=WIN))
 seq("parry_flash", imgs, 60)
 # finisher burst: saffron-gold bloom + ring, dust shockwave, curved flying sparks (few, varied - no spokes)
 imgs = []
+# flyers leave from the bloom's edge (r0), not from the centre, so they never meet in a white hub of spokes
 flyers = [(rng.uniform(0, 2 * np.pi), rng.uniform(0.8, 1.3), rng.uniform(0.45, 1.0), rng.uniform(-0.6, 0.6)) for _ in range(16)]
 for f in range(16):
     t = (f + 1) / 16.0
-    bloom = np.exp(-r / (0.12 + 0.3 * t)) * (1.0 - t) ** 2.0 * 2.0
-    ring = np.exp(-((r - (0.08 + 0.55 * t)) / (0.03 + 0.05 * t)) ** 2) * (1.0 - t) ** 1.2 * 1.3
+    bloom = np.exp(-(r / (0.09 + 0.16 * t)) ** 2) * (1.0 - t) ** 2.0 * 0.8
+    ring = np.exp(-((r - (0.1 + 0.5 * t)) / (0.03 + 0.045 * t)) ** 2) * (1.0 - t) ** 1.2 * 1.1
     acc = bloom + ring
     for a_, sp, b, curl in flyers:
         def pos(tt: float) -> np.ndarray:
             a2 = a_ + curl * tt
-            return np.array([np.cos(a2), np.sin(a2)]) * sp * tt * 0.6
-        acc += tapered(pos(max(0.0, t - 0.28)), pos(t), 0.008, 0.024) * b * (1.0 - t) ** 0.8 * 3.6
-    fire = kit.spark_emission(acc, gold="#e9b949", saffron="#e8892b", gain=1.0, core=0.92, window=WIN)
-    shock = np.exp(-((r - (0.12 + 0.68 * t)) / (0.07 + 0.08 * t)) ** 2) * (1.0 - t) ** 1.3 * 0.95
-    dust = kit.spark_emission(shock, gold=DUST, saffron="#8c6a48", gain=1.0, core=2.0, window=WIN)
+            return np.array([np.cos(a2), np.sin(a2)]) * (0.1 + sp * tt * 0.55)
+        acc += tapered(pos(max(0.0, t - 0.24)), pos(t), 0.007, 0.02) * b * (1.0 - t) ** 0.8 * 2.2 * min(1.0, t * 4.0)
+    fire = kit.spark_emission(acc * RAD, gold="#e9b949", saffron="#e8892b", gain=1.0, core=0.97, window=WIN)
+    # dim: x emissiveIntensity 6 at runtime, so the dust ring stays a tan haze (~0.5 HDR), never a pale-white band
+    shock = np.exp(-((r - (0.12 + 0.6 * t)) / (0.07 + 0.07 * t)) ** 2) * (1.0 - t) ** 1.3 * 0.12
+    dust = kit.spark_emission(shock * RAD, gold=DUST, saffron="#6e5236", gain=1.0, core=2.0, window=WIN)
     imgs.append(np.concatenate([fire[..., :3] + dust[..., :3], np.maximum(fire[..., 3:], dust[..., 3:])], axis=-1))
 seq("finisher_burst", imgs, 30)
 
