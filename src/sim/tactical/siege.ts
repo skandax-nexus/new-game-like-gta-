@@ -184,11 +184,12 @@ function batter(state: BattleState, ctx: BattleContext, f: FormationState, hpPer
 
 /** Per-tick siege update: rams, elephants and soldiers vs gates / palisades, breaches, tower garrisons, breach hold. */
 export function updateSiegeWorks(state: BattleState, ctx: BattleContext, dt: number, out: BattleEventRecord[]): void {
-  // Rams travel with their engineers.
+  // Rams travel with their engineers. A crew that routs, surrenders or dies abandons the ram where it stands; a
+  // construct 'ram' order at the abandoned ram re-crews it (workNear finds uncrewed finished rams).
   for (const w of state.works) {
     if (w.work !== 'ram' || w.progress < 1 || w.hp <= 0 || w.formation < 0) continue;
     const f = state.formations[w.formation];
-    if (!f || f.soldiers <= 0 || f.activity === 'surrendered') {
+    if (!f || f.soldiers <= 0 || f.activity === 'surrendered' || f.activity === 'routing') {
       w.formation = -1;
       continue;
     }
@@ -196,7 +197,7 @@ export function updateSiegeWorks(state: BattleState, ctx: BattleContext, dt: num
     w.x = pt.x;
     w.z = pt.z;
     w.facing = f.facing;
-    if (f.activity === 'routing' || f.engagedWith.length > 0) continue;
+    if (f.engagedWith.length > 0) continue;
     const st = ctx.stats[f.index]!;
     if (batter(state, ctx, f, (RAM_HP_PER_10 * (st.siege / 4) * f.soldiers) / 10, dt, out)) f.activity = 'constructing';
   }

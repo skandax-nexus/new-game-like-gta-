@@ -5,7 +5,7 @@
  * Measurement: a sandbox world started in month 3 (one full kharif + rabi cycle), no armies or events, M forced for the
  * year, 360 days of the real daily economy; balance = grain produced / civilian consumption - 1 per owner.
  * The bands hold with the data change requested from the Creative Director (CD-1, see helpers.PENDING_DATA_REQUESTS);
- * the current-data numbers are reported in docs/sprint1/sim-01/report.md.
+ * the current-data numbers are reported in docs/sprint1/sim-01/campaign-report.md.
  */
 import { describe, expect, it } from 'vitest';
 import type { SimEvent, WorldState } from '../../../src/core/types';

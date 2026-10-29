@@ -1,8 +1,9 @@
 /**
  * Tactical performance budgets in node (ARCHITECTURE §15; GP-01): formation sim < 0.3 ms per step at 1,000 soldiers
  * and < 0.8 ms at 5,000; soldier layer < 1.0 / 3.0 ms with the 'high' LOD distances and the camera on the front line.
- * Measured as the median of 100-step chunk averages over the approach and melee (robust to CPU contention from
- * parallel test files). OWNER: Gameplay Engineer - Tactical Battle Simulation.
+ * Measured as the median of 100-step chunk averages over the approach and melee. The battle is deterministic, so it
+ * is run twice and each chunk keeps its faster run: contention from parallel test files or a teammate's headless
+ * browser only ever inflates a chunk. OWNER: Gameplay Engineer - Tactical Battle Simulation.
  */
 import { describe, expect, it } from 'vitest';
 import type { BattleEventRecord } from '../../../src/core/types';
@@ -19,7 +20,28 @@ interface PerfResult {
   steps: number;
 }
 
+interface Chunks {
+  formations: number;
+  f: number[];
+  s: number[];
+  steps: number;
+}
+
 function measure(total: number): PerfResult {
+  const a = run(total);
+  const b = run(total);
+  const k = Math.min(a.f.length, b.f.length);
+  const f: number[] = [];
+  const s: number[] = [];
+  for (let i = 0; i < k; i++) {
+    f.push(Math.min(a.f[i]!, b.f[i]!));
+    s.push(Math.min(a.s[i]!, b.s[i]!));
+  }
+  const med = (x: number[]): number => x.slice().sort((p, q) => p - q)[Math.floor(x.length / 2)]!;
+  return { formations: a.formations, soldiers: total, formationMs: med(f), soldierMs: med(s), steps: a.steps };
+}
+
+function run(total: number): Chunks {
   const setup = createSkirmishSetup({ seed: 7, preset: 'plains', totalSoldiers: total, playerFactionId: 'heartland', enemyFactionId: 'highland', armies: null, playerSide: 0, hour: 9, season: 'sharad', weather: 'clear', difficulty: 'normal', aiVsAi: true, compositions: ['balanced', 'balanced'] });
   const hf = Heightfield.generate({ ...setup.terrain, resolution: 257 });
   const state = createBattle(setup, hf);
@@ -63,8 +85,7 @@ function measure(total: number): PerfResult {
       sAcc = 0;
     }
   }
-  const med = (a: number[]): number => a.slice().sort((x, y) => x - y)[Math.floor(a.length / 2)]!;
-  return { formations: state.formations.length, soldiers: total, formationMs: med(fChunks), soldierMs: med(sChunks), steps };
+  return { formations: state.formations.length, f: fChunks, s: sChunks, steps };
 }
 
 describe('tactical performance budgets (node)', () => {

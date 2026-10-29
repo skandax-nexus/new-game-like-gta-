@@ -7,7 +7,7 @@
  * test file running in a parallel worker lands in one sample at a time, so the per-hour minimum is the simulation's own
  * cost; the raw maximum (GC and contention included) is printed too.
  * Days with a battle are excluded from the day-rollover worst case (autoresolve runs the tactical sim - GP-01's
- * budget). Numbers go to docs/sprint1/sim-01/report.md.
+ * budget). The numbers are printed ([perf] line) for the SIM-01 hand-off.
  */
 import { describe, expect, it } from 'vitest';
 import type { SimEvent, WorldState } from '../../../src/core/types';

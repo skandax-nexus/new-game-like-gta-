@@ -587,10 +587,21 @@ function canFight(state: BattleState, ctx: BattleContext, f: FormationState): bo
   return f.soldiers > 0 && f.activity !== 'surrendered' && f.activity !== 'destroyed' && f.panicUntil <= state.time && !isOffField(ctx, f);
 }
 
+/** Melee contact margins per footprint (m): new contact / held contact. */
+const CONTACT_MARGIN = 0.75;
+const CONTACT_HOLD_MARGIN = 2;
+
 function updateContacts(state: BattleState, ctx: BattleContext): void {
   const fs = state.formations;
   const n = ctx.n;
-  for (const f of fs) f.engagedWith.length = 0;
+  // Hysteresis: a pair already in melee stays in contact until it opens a 4 m gap (2 m margin each), a new pair
+  // closes to 1.5 m (0.75 m each) - formations jostling on the contact line no longer flicker in and out.
+  const pairWas = ctx.pairWas;
+  pairWas.fill(0);
+  for (const f of fs) {
+    for (const oi of f.engagedWith) pairWas[f.index * n + oi] = 1;
+    f.engagedWith.length = 0;
+  }
   const minRun = RULES.battle.charge.minRunMeters;
   for (let i = 0; i < n; i++) {
     const a = fs[i] as FormationState;
@@ -601,14 +612,14 @@ function updateContacts(state: BattleState, ctx: BattleContext): void {
       if (b.side === a.side) continue;
       const rr = ra + ctx.radius[j]! + 4;
       if (ctx.d2[i * n + j]! > rr * rr || !canFight(state, ctx, b)) continue;
-      if (ctx.d2[i * n + j]! > rr * rr) continue;
-      if (footprintOverlap(a, b, 0.75, mtv, ctx) <= 0) continue;
+      const held = pairWas[i * n + j] === 1;
+      if (footprintOverlap(a, b, held ? CONTACT_HOLD_MARGIN : CONTACT_MARGIN, mtv, ctx) <= 0) continue;
       if (wallBetween(state, ctx, a, b)) continue;
       a.engagedWith.push(b.index);
       b.engagedWith.push(a.index);
       a.hidden = false;
       b.hidden = false;
-      const fresh = !ctx.wasEngaged[i] || !ctx.wasEngaged[j];
+      const fresh = !held && (!ctx.wasEngaged[i] || !ctx.wasEngaged[j]);
       if (a.activity === 'charging' && a.chargeRun >= minRun && canCharge(a)) {
         resolveChargeImpact(state, ctx, a, b, rng, tmpOut);
         a.chargeRun = 0;

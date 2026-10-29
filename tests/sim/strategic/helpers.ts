@@ -85,11 +85,13 @@ export function toNextDay(world: WorldState): void {
  * is a no-op.
  *  - CD-1 RULES.population.laborHealthWeight 0.5 -> 0: the §13.2 targets were calibrated with labor = pop x 0.45
  *    (tests/data.test.ts reference formula); a health-weighted labor costs 10-18% of farm labor and spirals deficit realms.
- *  - CD-2 RULES.distribution.exportAboveDays 120 -> 90: grain villages hover at 90-170 reserve days, so with 120 they
- *    rarely export and the capital (break-even on its own fields) starves every lean season before the kharif
- *    harvest; at 90 Dhanyagram / Kusumpur feed Rajapura and The Broken Crown auto-resolved ends 'mixed' on 6/6 seeds.
+ *  - CD-2 RULES.distribution.exportAboveDays 120 -> 75: grain villages hover at 40-170 reserve days, so with 120 they
+ *    rarely export and the capital (break-even on its own fields) starves every lean season before the next
+ *    harvest; at 75 Dhanyagram / Kusumpur feed Rajapura and The Broken Crown auto-resolved ends 'mixed' on seeds 1-6.
+ *    Survivors among seeds 1-10 with CD-1: 120 -> 1/10, 90 -> 9/10, 75 -> 10/10, 60 -> 10/10 (at 90 the result moves
+ *    with tactical battle outcomes: a capital that empties days before the second rabi harvest revolts - CD-3).
  */
-export const PENDING_DATA_REQUESTS = { laborHealthWeight: 0, exportAboveDays: 90 } as const;
+export const PENDING_DATA_REQUESTS = { laborHealthWeight: 0, exportAboveDays: 75 } as const;
 
 export function withPendingData<T>(fn: () => T): T {
   const pop = RULES.population as unknown as { laborHealthWeight: number };

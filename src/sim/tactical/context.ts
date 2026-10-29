@@ -35,6 +35,8 @@ export interface BattleContext {
   readonly hurt: Uint8Array;
   /** Formation was engaged at the start of this tick (reinforced / contact events). */
   readonly wasEngaged: Uint8Array;
+  /** n x n: the pair (i, j) was in melee at the start of this tick (contact hysteresis). */
+  readonly pairWas: Uint8Array;
   /** Positions at the start of the tick (trample / router pass-through entry detection). */
   readonly prevX: Float64Array;
   readonly prevZ: Float64Array;
@@ -80,6 +82,7 @@ function buildContext(state: BattleState, terrain: TerrainQuery): BattleContext 
     active: new Uint8Array(Math.max(1, n)),
     hurt: new Uint8Array(Math.max(1, n)),
     wasEngaged: new Uint8Array(Math.max(1, n)),
+    pairWas: new Uint8Array(Math.max(1, n * n)),
     prevX: new Float64Array(Math.max(1, n)),
     prevZ: new Float64Array(Math.max(1, n)),
     prevFacing: new Float64Array(Math.max(1, n)),
