@@ -29,7 +29,7 @@ import { type AmbienceLayer, ambienceDef, worldBedLayers } from './ambience/meta
 import { battleBedLayers, heroCombatCues, type SfxCue } from './cues';
 import { flavourFromAmbience, type MusicContext } from './music/moods';
 import type { ScoreStats } from './music/engine';
-import { ALL_SFX, SFX_META, type SfxSoundId, variantsForTier } from './sfx/meta';
+import { ALL_SFX, SFX_GROUPS, SFX_META, type SfxGroup, type SfxSoundId, variantsForTier } from './sfx/meta';
 import { dbToGain } from './synth/core';
 import { airAbsorptionHz, DEFAULT_LISTENER, distance3, distanceGain, type ListenerPose, reverbSend, thunderDelaySec } from './spatial/model';
 import { splitVoiceCap } from './spatial/voices';
@@ -49,6 +49,8 @@ export interface AudioManagerOptions {
   profiler?: Profiler | null;
   /** Worker factory (null = run the renderers inline on the main thread). */
   workerFactory?: WorkerFactory | null;
+  /** Stream the score through an AudioWorklet fed directly by the music worker (default true). */
+  worklet?: boolean;
   /** Variation seed (default: random per session). */
   seed?: number;
 }
@@ -62,9 +64,11 @@ export interface AudioStats {
   voices: { sfx: number; ambience: number; flat: number; cap: number; stolen: number; rejected: number };
   triggers: number;
   bank: { keys: number; mb: number; renders: number; renderMs: number };
-  music: { mood: Mood; intensity: number; bufferedSec: number; underruns: number; chunks: number; workerMsPerChunk: number; score: ScoreStats | null };
+  music: { mood: Mood; intensity: number; stream: 'pending' | 'worklet' | 'buffers'; bufferedSec: number; underruns: number; chunks: number; workerMsPerChunk: number; latencyMs: number; maxLatencyMs: number; score: ScoreStats | null };
   ambience: { key: string; gain: number }[];
   mainMs: { last: number; avg: number; max: number };
+  /** Main-thread time spent handling worker messages (AudioBuffer creation / chunk scheduling). */
+  messages: { sound: number; chunk: number; soundMs: number; chunkMs: number; maxMs: number };
   workers: 'worker' | 'inline' | 'none';
 }
 
@@ -73,20 +77,38 @@ const AUDIO_STINGER_LIST: readonly AudioStinger[] = AUDIO_STINGERS;
 const SFX_INDEX = new Map<string, number>(ALL_SFX.map((k, i) => [k, i]));
 const SFX_KEYS: readonly string[] = ALL_SFX.map((k) => `sfx:${k}`);
 const UI_FIRST: readonly SfxSoundId[] = ['ui_click', 'ui_hover', 'ui_open', 'ui_close', 'ui_confirm', 'ui_error', 'notify', 'order_ack'];
-/** Stingers kept rendered per mood (others are released: a stereo stinger costs ~2 MB). */
+/**
+ * Stingers kept rendered per mood (others are released: a stereo stinger costs 1.4-3 MB). The first one is
+ * urgent where it opens the mood (battle start conch, duel phase bells); the rest render after the SFX.
+ */
 const STINGERS_FOR: Record<Mood, readonly AudioStinger[]> = {
   menu: ['construction_complete'],
   world: ['construction_complete', 'harvest', 'age_up', 'landmark_complete', 'victory', 'defeat'],
   city: ['construction_complete', 'harvest', 'age_up', 'landmark_complete'],
-  battle: ['construction_complete', 'battle_start', 'victory', 'defeat'],
-  siege: ['construction_complete', 'battle_start', 'victory', 'defeat'],
-  hero_explore: ['construction_complete', 'mission_success', 'mission_failure', 'duel_phase'],
-  hero_combat: ['construction_complete', 'mission_success', 'mission_failure', 'duel_phase'],
-  duel: ['construction_complete', 'duel_phase', 'mission_success', 'mission_failure'],
-  victory: ['construction_complete', 'victory'],
-  defeat: ['construction_complete', 'defeat'],
+  battle: ['battle_start', 'victory', 'defeat', 'construction_complete'],
+  siege: ['battle_start', 'victory', 'defeat', 'construction_complete'],
+  hero_explore: ['mission_success', 'mission_failure', 'duel_phase', 'construction_complete'],
+  hero_combat: ['mission_success', 'mission_failure', 'duel_phase', 'construction_complete'],
+  duel: ['duel_phase', 'mission_success', 'mission_failure', 'construction_complete'],
+  victory: ['victory', 'construction_complete'],
+  defeat: ['defeat', 'construction_complete'],
 };
+const URGENT_STINGER: Partial<Record<Mood, AudioStinger>> = { battle: 'battle_start', siege: 'battle_start', duel: 'duel_phase', victory: 'victory', defeat: 'defeat' };
 const IR_SECONDS: Record<QualityTier, number> = { low: 1.2, medium: 1.8, high: 2.4, ultra: 3 };
+/** SFX groups kept rendered per mood (UI always). */
+const GROUPS_FOR: Record<Mood, readonly SfxGroup[]> = {
+  menu: ['ui'],
+  world: ['ui', 'world'],
+  city: ['ui', 'world'],
+  battle: ['ui', 'battle'],
+  siege: ['ui', 'battle'],
+  hero_explore: ['ui', 'hero'],
+  hero_combat: ['ui', 'hero'],
+  duel: ['ui', 'hero'],
+  victory: ['ui', 'battle', 'world'],
+  defeat: ['ui', 'battle', 'world'],
+};
+
 /** How much larger the audible world is per mood (strategic camera far above the map). */
 const DISTANCE_SCALE: Record<Mood, number> = { menu: 3, world: 5, city: 3, battle: 2.5, siege: 2.5, hero_explore: 1, hero_combat: 1, duel: 1, victory: 2.5, defeat: 2.5 };
 
@@ -112,6 +134,7 @@ export class AudioManager {
   private readonly offs: (() => void)[] = [];
   private profiler: Profiler | null;
   private readonly seed: number;
+  private readonly useWorklet: boolean;
   private readonly factory: WorkerFactory | null;
   private raf = 0;
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -162,6 +185,7 @@ export class AudioManager {
     this.profiler = opts.profiler ?? null;
     this.seed = opts.seed ?? (Math.random() * 0x7fffffff) | 0;
     this.factory = opts.workerFactory === undefined ? createAudioWorker : opts.workerFactory;
+    this.useWorklet = opts.worklet ?? !/[?&]audioworklet=0(&|$)/.test(typeof location !== 'undefined' ? location.search : '');
     if (disabled) return;
     this.offs.push(
       bus.on('audio:sfx', (e) => this.enqueue(e.sfx, e.volume ?? 1, e.pan ?? 0, e.position ?? null, 0)),
@@ -261,8 +285,12 @@ export class AudioManager {
     this.musicPort.post({ t: 'context', ctx: this.musicCtx });
     this.musicPort.post({ t: 'mood', mood: this.mood, intensity: this.intensity });
     this.sentIntensity = this.intensity;
-    this.stream = new MusicStream(ctx, this.musicPort, mixer.musicDuck);
-    this.stream.ahead = this.tier === 'low' ? 1.5 : 1.25;
+    const stream = new MusicStream(ctx, this.musicPort, mixer.musicDuck);
+    this.stream = stream;
+    stream.ahead = this.streamAhead();
+    void stream.start(this.useWorklet).then(() => {
+      stream.ahead = this.streamAhead();
+    });
     const split = splitVoiceCap(this.voiceCap);
     this.sfxVoices = new VoicePlayer(ctx, 'spatial', split.sfx, mixer.sfxIn, mixer.sfxSend, this.hrtf);
     this.ambVoices = new VoicePlayer(ctx, 'spatial', split.ambience, mixer.ambience, mixer.ambSend, this.hrtf);
@@ -293,16 +321,31 @@ export class AudioManager {
     if (!bank) return;
     bank.request(`ir:hall:${IR_SECONDS[this.tier]}`, 1, 98);
     for (const id of UI_FIRST) bank.request(`sfx:${id}`, variantsForTier(SFX_META[id], this.tier), 100);
-    for (const id of ALL_SFX) bank.request(`sfx:${id}`, variantsForTier(SFX_META[id], this.tier), 40 + SFX_META[id].priority * 0.5);
+    this.warmGroups();
     this.warmStingers();
+  }
+
+  /** Keep the SFX groups of the current mood rendered; release the others (re-rendered on demand). */
+  private warmGroups(): void {
+    const bank = this.bank;
+    if (!bank) return;
+    const want = GROUPS_FOR[this.mood];
+    for (const id of ALL_SFX) {
+      const key = `sfx:${id}`;
+      if (SFX_GROUPS[id].some((g) => want.includes(g))) bank.request(key, variantsForTier(SFX_META[id], this.tier), 40 + SFX_META[id].priority * 0.5);
+      else if (bank.has(key) && this.mood !== 'victory' && this.mood !== 'defeat') bank.release(key);
+    }
   }
 
   private warmStingers(): void {
     const bank = this.bank;
     if (!bank) return;
     const keep = STINGERS_FOR[this.mood];
-    keep.forEach((s, i) => bank.request(`stinger:${s}`, 1, 75 - i));
-    for (const s of AUDIO_STINGER_LIST) if (!keep.includes(s) && bank.has(`stinger:${s}`)) bank.release(`stinger:${s}`);
+    const urgent = URGENT_STINGER[this.mood];
+    keep.forEach((s, i) => bank.request(this.stingerKey(s), 1, s === urgent ? 75 : 20 - i));
+    for (const s of AUDIO_STINGER_LIST) {
+      for (const key of [`stinger:${s}`, `stinger:${s}:half`]) if (bank.isRequested(key) && (!keep.includes(s) || key !== this.stingerKey(s))) bank.release(key);
+    }
   }
 
   setSettings(s: GameSettings): void {
@@ -322,10 +365,11 @@ export class AudioManager {
     this.sfxVoices?.setHrtf(this.hrtf);
     this.ambVoices?.setHrtf(this.hrtf);
     if (this.ambience) this.ambience.spotVariants = this.tier === 'low' ? 2 : 3;
-    if (this.stream) this.stream.ahead = this.tier === 'low' ? 1.5 : 1.25;
+    if (this.stream) this.stream.ahead = this.streamAhead();
     if (prevTier !== this.tier && this.bank) {
       // Higher tiers render more variants (requests only add what is missing).
-      for (const id of ALL_SFX) this.bank.request(`sfx:${id}`, variantsForTier(SFX_META[id], this.tier), 30 + SFX_META[id].priority * 0.3);
+      this.warmGroups();
+      this.warmStingers();
       this.bank.request(`ir:hall:${IR_SECONDS[this.tier]}`, 1, 90);
     }
   }
@@ -339,6 +383,7 @@ export class AudioManager {
       this.musicPort?.post({ t: 'mood', mood, intensity: this.intensity });
       this.sentIntensity = this.intensity;
       this.ambienceDirty = true;
+      this.warmGroups();
       this.warmStingers();
     }
   }
@@ -407,13 +452,17 @@ export class AudioManager {
     if (this.disabled) return;
     this.musicPort?.post({ t: 'cue', stinger: id });
     if (!this.playStinger(id) && this.ctx) {
-      this.bank?.request(`stinger:${id}`, 1, 99);
+      this.bank?.request(this.stingerKey(id), 1, 99);
       this.pendingStinger = { id, until: this.ctx.currentTime + 2 };
     }
   }
 
+  private stingerKey(id: AudioStinger): string {
+    return this.tier === 'low' ? `stinger:${id}:half` : `stinger:${id}`;
+  }
+
   private playStinger(id: AudioStinger): boolean {
-    const buf = this.bank?.get(`stinger:${id}`, 0) ?? null;
+    const buf = this.bank?.get(this.stingerKey(id), 0) ?? null;
     if (!buf || !this.stingerVoices || !this.mixer) return false;
     const p = this.params;
     p.kind = `stinger:${id}`;
@@ -521,7 +570,11 @@ export class AudioManager {
       if (hasPos && d / this.distanceScale > 2500) key = 'sfx:fx_thunder_far';
     }
     const buf = this.bank?.pick(key) ?? null;
-    if (!buf) return;
+    if (!buf) {
+      // Outside the loaded groups (or still rendering): render on demand for the next trigger.
+      if (this.bank && !this.bank.isRequested(key)) this.bank.request(key, 2, 85);
+      return;
+    }
     const p = this.params;
     p.kind = key;
     p.priority = meta.priority;
@@ -631,7 +684,23 @@ export class AudioManager {
     }
   }
 
+  private readonly msg = { sound: 0, chunk: 0, soundMs: 0, chunkMs: 0, maxMs: 0 };
+
   private onWorker(m: FromWorker): void {
+    const t0 = performance.now();
+    this.handleWorker(m);
+    const ms = performance.now() - t0;
+    if (m.t === 'sound') {
+      this.msg.sound++;
+      this.msg.soundMs += ms;
+    } else if (m.t === 'chunk') {
+      this.msg.chunk++;
+      this.msg.chunkMs += ms;
+    }
+    if (ms > this.msg.maxMs) this.msg.maxMs = ms;
+  }
+
+  private handleWorker(m: FromWorker): void {
     switch (m.t) {
       case 'sound':
         this.bank?.receive(m.key, m.variant, m.sampleRate, m.channels, m.ms);
@@ -639,12 +708,21 @@ export class AudioManager {
       case 'chunk':
         this.stream?.onChunk(m.L, m.R, m.frames, m.ms, m.stats);
         break;
+      case 'score':
+        this.stream?.onScore(m.stats);
+        break;
       case 'error':
         console.warn(`[audio] worker: ${m.message}${m.key ? ` (${m.key})` : ''}`);
         break;
       case 'ready':
         break;
     }
+  }
+
+  /** Seconds of score kept ahead: the worklet path is immune to main-thread hitches, so it needs less. */
+  private streamAhead(): number {
+    const low = this.tier === 'low';
+    return this.stream?.mode === 'worklet' ? (low ? 1.25 : 1.0) : low ? 1.5 : 1.25;
   }
 
   private onVisibility(): void {
@@ -689,14 +767,18 @@ export class AudioManager {
       music: {
         mood: this.mood,
         intensity: this.intensity,
+        stream: stream?.mode ?? 'pending',
         bufferedSec: +(stream?.bufferedSec ?? 0).toFixed(3),
         underruns: stream?.underruns ?? 0,
         chunks: stream?.chunks ?? 0,
         workerMsPerChunk: stream && stream.chunks ? +(stream.workerMs / stream.chunks).toFixed(2) : 0,
+        latencyMs: stream ? +stream.latencyMs.toFixed(1) : 0,
+        maxLatencyMs: stream ? +stream.maxLatencyMs.toFixed(1) : 0,
         score: stream?.lastStats ?? null,
       },
       ambience: this.ambSnapshot.slice(),
       mainMs: { last: +this.lastMs.toFixed(3), avg: +this.avgMs.toFixed(3), max: +this.maxMs.toFixed(3) },
+      messages: { sound: this.msg.sound, chunk: this.msg.chunk, soundMs: +this.msg.soundMs.toFixed(2), chunkMs: +this.msg.chunkMs.toFixed(2), maxMs: +this.msg.maxMs.toFixed(2) },
       workers: this.disabled || !this.bankPort ? 'none' : this.bankPort.inline ? 'inline' : 'worker',
     };
   }
@@ -711,6 +793,7 @@ export class AudioManager {
     this.flatVoices?.stopAll();
     this.ambVoices?.stopAll();
     this.stingerVoices?.stopAll();
+    this.stream?.dispose();
     this.bankPort?.dispose();
     this.musicPort?.dispose();
     this.mixer?.dispose();

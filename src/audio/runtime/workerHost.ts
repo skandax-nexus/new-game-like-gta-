@@ -14,7 +14,7 @@ import { renderSfx } from '../sfx/render';
 import { isSfxSoundId, sfxRenderRate } from '../sfx/meta';
 import { ambienceDef, spotRenderRate } from '../ambience/meta';
 import { impulseResponse } from '../synth/reverb';
-import type { FromWorker, SoundKey, ToWorker, WorkerRole } from './protocol';
+import type { FromWorker, SoundKey, StreamToWorker, ToWorker, WorkerRole } from './protocol';
 
 export type Post = (msg: FromWorker, transfer: ArrayBuffer[]) => void;
 export type Defer = (fn: () => void) => void;
@@ -56,8 +56,10 @@ export function renderSoundKey(key: SoundKey, variant: number, sr: number, seed:
       break;
     case 'stinger':
       if (a && hasStinger(a)) {
-        const s = renderStinger(a as AudioStinger, sr, seed);
-        return { channels: [s.L, s.R], sampleRate: sr };
+        // 'stinger:<id>:half' = half rate (low tier: half the memory, phone speakers lose little).
+        const rate = b === 'half' ? Math.round(sr / 2) : sr;
+        const s = renderStinger(a as AudioStinger, rate, seed);
+        return { channels: [s.L, s.R], sampleRate: rate };
       }
       break;
     case 'ir': {
@@ -131,22 +133,41 @@ export class WorkerHost {
         case 'cue':
           this.engine?.cue(msg.stinger);
           break;
-        case 'chunk': {
-          if (!this.engine) break;
-          const n = msg.frames;
-          const L = msg.recycle && msg.recycle[0].length === n ? msg.recycle[0] : new Float32Array(n);
-          const R = msg.recycle && msg.recycle[1].length === n ? msg.recycle[1] : new Float32Array(n);
-          const t0 = this.now();
-          this.engine.render(L, R, 0, n);
-          const ms = this.now() - t0;
-          const seq = this.seq++;
-          this.post({ t: 'chunk', seq, frames: n, L, R, ms, stats: seq % 8 === 0 ? this.engine.stats() : null }, [L.buffer as ArrayBuffer, R.buffer as ArrayBuffer]);
+        case 'chunk':
+          this.renderChunk(msg.frames, msg.recycle, this.post, true);
+          break;
+        case 'stream': {
+          const port = msg.port;
+          const post: Post = (m, transfer) => port.postMessage(m, transfer);
+          port.onmessage = (e: MessageEvent<StreamToWorker>) => this.onStream(e.data, post);
           break;
         }
       }
     } catch (err) {
       this.post({ t: 'error', message: err instanceof Error ? err.message : String(err) }, []);
     }
+  }
+
+  /** A pull from the stream AudioWorklet (reply on its port; score stats go to the main thread). */
+  onStream(msg: StreamToWorker, reply: Post): void {
+    try {
+      if (msg && msg.t === 'pull') this.renderChunk(msg.frames, msg.recycle, reply, false);
+    } catch (err) {
+      this.post({ t: 'error', message: err instanceof Error ? err.message : String(err) }, []);
+    }
+  }
+
+  private renderChunk(n: number, recycle: [Float32Array, Float32Array] | undefined, reply: Post, statsInline: boolean): void {
+    if (!this.engine) return;
+    const L = recycle && recycle[0].length === n ? recycle[0] : new Float32Array(n);
+    const R = recycle && recycle[1].length === n ? recycle[1] : new Float32Array(n);
+    const t0 = this.now();
+    this.engine.render(L, R, 0, n);
+    const ms = this.now() - t0;
+    const seq = this.seq++;
+    const stats = seq % 8 === 0 ? this.engine.stats() : null;
+    reply({ t: 'chunk', seq, frames: n, L, R, ms, stats: statsInline ? stats : null }, [L.buffer as ArrayBuffer, R.buffer as ArrayBuffer]);
+    if (stats && !statsInline) this.post({ t: 'score', stats }, []);
   }
 
   private warming = false;

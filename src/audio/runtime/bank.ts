@@ -48,6 +48,10 @@ export class SoundBank {
     }
   }
 
+  isRequested(key: SoundKey): boolean {
+    return this.m.has(key);
+  }
+
   has(key: SoundKey): boolean {
     return (this.m.get(key)?.ready ?? 0) > 0;
   }

@@ -130,6 +130,25 @@ export const SFX_META: Record<SfxSoundId, SfxMeta> = {
   fx_thunder_far: m({}, { rate: 'half', priority: 40, gainDb: -6, variants: 2, maxInstances: 2, minIntervalMs: 2500, refDistance: 2000, maxDistance: 40000, rolloff: 0.4, reverbSend: 0.1, pitchCents: 150, gainJitterDb: 3 }),
 };
 
+export type SfxGroup = 'ui' | 'world' | 'battle' | 'hero';
+
+/**
+ * Which contexts need a sound loaded (the bank keeps only the groups of the current mood: UI always).
+ * A sound requested outside its groups is rendered on demand (its first trigger is silent).
+ */
+export const SFX_GROUPS: Record<SfxSoundId, readonly SfxGroup[]> = {
+  ui_click: ['ui'], ui_hover: ['ui'], ui_open: ['ui'], ui_close: ['ui'], ui_confirm: ['ui'], ui_error: ['ui'], notify: ['ui'], order_ack: ['ui'],
+  march: ['world', 'battle'], charge_horn: ['world', 'battle'], conch: ['world', 'battle', 'hero'], drum_hit: ['world', 'battle'],
+  arrow_volley: ['battle'], arrow_impact: ['battle'], clash: ['battle'], elephant_trumpet: ['battle', 'hero'], horse_neigh: ['world', 'battle', 'hero'],
+  cheer: ['world', 'battle'], rout_cry: ['battle'],
+  build: ['world'], coins: ['world'], harvest: ['world'], thunder: ['world', 'battle', 'hero'], bell: ['world', 'hero'],
+  sword_light: ['hero'], sword_heavy: ['hero'], parry_ring: ['hero'], block_thud: ['hero'], roll_cloth: ['hero'], body_hit: ['hero'], stagger_grunt: ['hero'], salve: ['hero'],
+  bell_temple: ['world', 'hero'], construction_complete: ['world'], landmark_complete: ['world'], age_up_fanfare: ['world'], market_coins: ['world', 'hero'],
+  gate_break: ['battle'], wall_crumble: ['battle', 'world'], ram_hit: ['battle'], fire_crackle: ['world', 'battle', 'hero'], river_splash: ['world', 'hero'],
+  footstep_stone: ['hero'], footstep_dirt: ['hero'],
+  fx_perfect_dodge: ['hero'], fx_finisher_boom: ['hero'], fx_hit_metal: ['hero'], fx_thunder_far: ['world', 'battle', 'hero'],
+};
+
 /** Variant count at a quality tier (low 0.5x, medium 0.75x, high 1x, ultra 1.25x; at least 2). */
 export function variantsForTier(meta: SfxMeta, tier: 'low' | 'medium' | 'high' | 'ultra'): number {
   const k = tier === 'low' ? 0.5 : tier === 'medium' ? 0.75 : tier === 'ultra' ? 1.25 : 1;

@@ -163,9 +163,10 @@ export function farAway(src: Float32Array, sr: number, distanceM: number, rng: R
 }
 
 /** Final pass for mono one-shots: DC removal, tail trim, peak normalize, limit, sanitize. */
-export function finishMono(buf: Float32Array, sr: number, peakDb = -3, trim = true): Float32Array {
+export function finishMono(buf: Float32Array, sr: number, peakDb = -3, trim = true, tailDb = -58): Float32Array {
   removeDc(buf, sr, 12);
-  let out = trim ? trimTail(buf, sr) : buf;
+  // Tails below -58 dB re peak are inaudible in a game mix: trim them (memory) with a short fade.
+  let out = trim ? trimTail(buf, sr, tailDb, 0.01, 0.04) : buf;
   normalizePeak(out, peakDb);
   limit([out], sr);
   sanitize(out);

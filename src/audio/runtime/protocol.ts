@@ -12,7 +12,7 @@ export type WorkerRole = 'music' | 'bank';
 
 /**
  * Sound keys rendered by the bank worker:
- *   sfx:<SfxSoundId>   spot:<ambienceKey>:<spotName>   bed:<ambienceKey>   stinger:<AudioStinger>   ir:<name>
+ *   sfx:<SfxSoundId>   spot:<ambienceKey>:<spotName>   bed:<ambienceKey>   stinger:<AudioStinger>[:half]   ir:hall:<seconds>
  */
 export type SoundKey = string;
 
@@ -25,10 +25,17 @@ export type ToWorker =
   | { t: 'context'; ctx: MusicContext }
   | { t: 'cue'; stinger: AudioStinger }
   /** Ask for the next music chunk; `recycle` returns earlier chunk arrays for reuse. */
-  | { t: 'chunk'; frames: number; recycle?: [Float32Array, Float32Array] };
+  | { t: 'chunk'; frames: number; recycle?: [Float32Array, Float32Array] }
+  /** Music worker: serve chunk pulls arriving on `port` (from the stream AudioWorklet), replying there. */
+  | { t: 'stream'; port: MessagePort };
+
+/** Messages on the stream MessagePort (AudioWorklet -> music worker); replies are FromWorker 'chunk'. */
+export type StreamToWorker = { t: 'pull'; frames: number; recycle?: [Float32Array, Float32Array] };
 
 export type FromWorker =
   | { t: 'ready'; role: WorkerRole }
   | { t: 'sound'; key: SoundKey; variant: number; sampleRate: number; channels: Float32Array[]; ms: number }
   | { t: 'chunk'; seq: number; frames: number; L: Float32Array; R: Float32Array; ms: number; stats: ScoreStats | null }
+  /** Score stats (worklet mode, every 8 chunks; in buffers mode they ride on 'chunk'). */
+  | { t: 'score'; stats: ScoreStats }
   | { t: 'error'; message: string; key?: SoundKey };
