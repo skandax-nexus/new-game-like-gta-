@@ -12,10 +12,13 @@
  *   world-day0.png         The Broken Crown at the start (overview camera)
  *   world-march.png        the Royal Host ordered to besiege Giridurg (issueStrategicCommand), 6 days of marching
  *   world-day60.png        60 simulated days later: harvest, prices, events, AI moves - the HUD numbers changed
+ *                          (taken once the day-60 fog lifts, +2 days for seed 7)
  *   game-stats.png         showScreen('game_stats') after 60 days (statistics counters tracked by the sim)
  *   world-mobile.png       390x844 low quality after 10 days
  *   shots-report.json      every assertion with its observed value (state hashes, day, treasury, armies); two
- *                          browser runs of the same seed + command give the same world hash
+ *                          browser runs of the same seed + command give the same world hash. The world only moves
+ *                          by step() (re-paused after every prompt click), so every hash in the report is the same
+ *                          from one run of this script to the next.
  */
 'use strict';
 const { spawn, execSync } = require('node:child_process');
@@ -115,7 +118,8 @@ async function advanceDays(page, days) {
     const st = info.sceneState;
     if (st.world.day >= day0 + days || st.world.victory !== 'ongoing') break;
     if (st.blocked) {
-      const clicked = await page.evaluate(() => {
+      const clicked = await page.evaluate(async () => {
+        const api = window.__SAMRAJYA__;
         // An engagement prompt wins ("Let the Generals Decide" = autoresolve); otherwise the newest modal's first choice.
         const auto = [...document.querySelectorAll('button')].find((b) => /generals decide|autoresolve|auto-resolve|auto resolve/i.test(b.textContent || ''));
         const modals = [...document.querySelectorAll('.panel.modal')];
@@ -123,23 +127,25 @@ async function advanceDays(page, days) {
         const buttons = modal ? [...modal.querySelectorAll('button.btn')] : [];
         const target = auto || buttons[0];
         if (!target) return null;
+        const label = (target.textContent || '').slice(0, 40);
         target.click();
-        return (target.textContent || '').slice(0, 40);
+        // The world scene resumes the game in the frame it sees the prompt closed (WorldScene.update). Pause again
+        // at the end of that same frame - before the next frame accumulates time - so the world only ever moves by
+        // step() and the hashes in this report are reproducible run to run, not wall-clock dependent.
+        for (let i = 0; i < 30; i++) {
+          await api.waitFrames(1);
+          if (!api.getState().paused) {
+            api.pause();
+            break;
+          }
+        }
+        return label;
       });
       report.clicks = report.clicks || [];
       report.clicks.push({ day: st.world.day, clicked });
-      // Closing a prompt resumes the game; pause again so the world only moves by step() and the hashes below are
-      // reproducible run to run (not wall-clock dependent).
-      await page.evaluate(() => {
-        window.__SAMRAJYA__.pause();
-        return window.__SAMRAJYA__.waitFrames(3);
-      });
       continue;
     }
-    await page.evaluate(() => {
-      window.__SAMRAJYA__.pause();
-      window.__SAMRAJYA__.step(24);
-    });
+    await page.evaluate(() => window.__SAMRAJYA__.step(24));
   }
   await page.evaluate(() => window.__SAMRAJYA__.waitFrames(2));
 }

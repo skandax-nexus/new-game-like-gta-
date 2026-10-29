@@ -15,14 +15,14 @@
    "ok": true,
    "observed": {
     "before": "a803ad04",
-    "after": "867c8761"
+    "after": "2cf3630b"
    }
   },
   {
    "name": "world: 60 simulated days later the world has moved on",
    "ok": true,
    "observed": {
-    "hash": "9bedca24",
+    "hash": "e9e95708",
     "sceneState": {
      "world": {
       "day": 60,
@@ -30,7 +30,7 @@
        "year": -300,
        "month": 8,
        "day": 0,
-       "hour": 12
+       "hour": 0
       },
       "season": "hemanta",
       "weather": "fog",
@@ -89,7 +89,7 @@
    "name": "world-mobile: 10 days at low quality",
    "ok": true,
    "observed": {
-    "hash": "f41f784a",
+    "hash": "936eff6f",
     "day": 10
    }
   },
@@ -263,8 +263,8 @@
  ],
  "march": {
   "scene": "world",
-  "paused": false,
-  "hash": "867c8761",
+  "paused": true,
+  "hash": "2cf3630b",
   "sceneState": {
    "world": {
     "day": 6,
@@ -272,7 +272,7 @@
      "year": -300,
      "month": 6,
      "day": 6,
-     "hour": 7
+     "hour": 0
     },
     "season": "sharad",
     "weather": "clear",
@@ -323,8 +323,8 @@
  },
  "day60": {
   "scene": "world",
-  "paused": false,
-  "hash": "9bedca24",
+  "paused": true,
+  "hash": "e9e95708",
   "sceneState": {
    "world": {
     "day": 60,
@@ -332,7 +332,7 @@
      "year": -300,
      "month": 8,
      "day": 0,
-     "hour": 12
+     "hour": 0
     },
     "season": "hemanta",
     "weather": "fog",
