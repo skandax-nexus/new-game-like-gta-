@@ -1,11 +1,11 @@
 {
-  "build": "0.1.0+3140590",
+  "build": "0.1.0+nogit",
   "quality": "high",
   "shots": [
     {
       "name": "battle",
       "url": "http://127.0.0.1:4407/?scene=battle&quality=high&noaudio=1&seed=7&soldiers=1000&preset=plains",
-      "ms": 34103,
+      "ms": 29119,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -15,8 +15,8 @@
         "quality": "high",
         "sceneState": {
           "battleId": "skirmish_7",
-          "time": 25.6,
-          "tick": 511,
+          "time": 25.5,
+          "tick": 510,
           "phase": "deployment",
           "sides": [
             {
@@ -49,14 +49,14 @@
             "tilt": 0
           }
         },
-        "fps": 4.50882035878401,
+        "fps": 3.3479268701307148,
         "errors": 0
       }
     },
     {
       "name": "battle-close",
       "url": "http://127.0.0.1:4407/?scene=battle&quality=high&noaudio=1&seed=7&soldiers=1000&preset=plains&camera=close",
-      "ms": 20783,
+      "ms": 29597,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -66,8 +66,8 @@
         "quality": "high",
         "sceneState": {
           "battleId": "skirmish_7",
-          "time": 35.5,
-          "tick": 710,
+          "time": 35.4,
+          "tick": 707,
           "phase": "active",
           "sides": [
             {
@@ -82,7 +82,7 @@
               "soldiers": 500,
               "initial": 500,
               "routed": 0,
-              "morale": 81
+              "morale": 80
             }
           ],
           "formations": 14,
@@ -100,14 +100,14 @@
             "tilt": -0.05
           }
         },
-        "fps": 3.075661238679647,
+        "fps": 3.4088003861460168,
         "errors": 0
       }
     },
     {
       "name": "battle-river-5000",
       "url": "http://127.0.0.1:4407/?scene=battle&quality=high&noaudio=1&seed=11&soldiers=5000&preset=river_crossing&hour=17",
-      "ms": 35132,
+      "ms": 47839,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -117,14 +117,14 @@
         "quality": "high",
         "sceneState": {
           "battleId": "skirmish_11",
-          "time": 15.4,
-          "tick": 308,
+          "time": 15.6,
+          "tick": 311,
           "phase": "deployment",
           "sides": [
             {
               "faction": "heartland",
-              "soldiers": 2499,
-              "initial": 2499,
+              "soldiers": 2500,
+              "initial": 2500,
               "routed": 0,
               "morale": 58
             },
@@ -137,28 +137,28 @@
             }
           ],
           "formations": 70,
-          "soldierCapacity": 4999,
-          "visibleSoldiers": 3321,
+          "soldierCapacity": 5000,
+          "visibleSoldiers": 3306,
           "outcome": null,
           "selection": [
             0
           ],
           "camera": {
-            "x": -105.9320823652236,
-            "z": -179.49674037856119,
+            "x": -106.06290818634989,
+            "z": -179.47496894885086,
             "distance": 165,
-            "yaw": 0.18314006108911665,
+            "yaw": 0.18558940084874082,
             "tilt": 0
           }
         },
-        "fps": 3.4366986073524806,
+        "fps": 3.0790885843201847,
         "errors": 0
       }
     },
     {
       "name": "battle-mobile",
       "url": "http://127.0.0.1:4407/?scene=battle&quality=low&noaudio=1&seed=7&soldiers=600&preset=plains",
-      "ms": 6429,
+      "ms": 7080,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -169,7 +169,7 @@
         "sceneState": {
           "battleId": "skirmish_7",
           "time": 20.6,
-          "tick": 411,
+          "tick": 412,
           "phase": "deployment",
           "sides": [
             {
@@ -181,28 +181,28 @@
             },
             {
               "faction": "highland",
-              "soldiers": 299,
-              "initial": 299,
+              "soldiers": 300,
+              "initial": 300,
               "routed": 0,
               "morale": 60
             }
           ],
           "formations": 14,
-          "soldierCapacity": 599,
-          "visibleSoldiers": 499,
+          "soldierCapacity": 600,
+          "visibleSoldiers": 502,
           "outcome": null,
           "selection": [
             0
           ],
           "camera": {
-            "x": 1776.8951332114402,
-            "z": 1007.6314308920194,
+            "x": 1777.2025330535503,
+            "z": 1007.6876588838988,
             "distance": 165,
-            "yaw": -0.11897737392917852,
+            "yaw": -0.12944774261857647,
             "tilt": 0
           }
         },
-        "fps": 4.160932028679591,
+        "fps": 4.034385352039235,
         "errors": 0
       }
     }

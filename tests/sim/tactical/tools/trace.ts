@@ -72,7 +72,7 @@ function run(setup: BattleSetup, terrain: TerrainQuery, opts: { maxSec: number; 
     wavering: MORALE_WAVERING,
     formations: state.formations.map((f) => ({ index: f.index, side: f.side, cls: f.unitClass, name: f.name, start: f.maxSoldiers, commander: f.hasCommander })),
     grid: grid(state, terrain),
-    fort: setup.fortification ? { cx: setup.fortification.center.x, cz: setup.fortification.center.z, r: setup.fortification.radius } : null,
+    fort: setup.fortification ? { cx: setup.fortification.center.x, cz: setup.fortification.center.z, r: setup.fortification.radius, defenderSide: setup.fortification.defenderSide } : null,
     siege: state.siege,
     works: state.works,
     frames,
