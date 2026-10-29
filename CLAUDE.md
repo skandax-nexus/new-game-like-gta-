@@ -33,6 +33,10 @@ Run browser scripts with `NODE_PATH=$(npm root -g) node script.cjs`.
 
 ## Org chart and ownership (edit ONLY paths you own)
 
+Sprint 1: the full org chart (incl. Technical Art Director + technical artists), the ticket board with each
+ticket's owned paths, CTO grants and working agreements W1-W15 are in `docs/STUDIO.md` - a ticket's owned
+paths and grants override this table for the sprint.
+
 | Role | Owns |
 |---|---|
 | Studio Head / Producer | `docs/GDD.md`, planning docs |
