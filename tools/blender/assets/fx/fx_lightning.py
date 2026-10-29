@@ -11,7 +11,7 @@ procedural sky flash. The main channel strikes the ground: it runs to the bottom
 bottom sits on the horizon / terrain); the top (cloud base) and the sides fade to 0 before the border. One ROW of
 frames, so every open bottom edge lies on the atlas border (clamped) and never touches another frame's closed edge:
 in the old 2 x 2 layout the strikes of bolt0 / bolt1 bled into the top edge of bolt2 / bolt3 (lossy WebP 8-10/255,
-and texture filtering / mipmaps at runtime - a white blip above those bolts). Published near-lossless (thin cores
+and texture filtering / mipmaps at runtime - a white blip above those bolts). Published lossless (thin cores
 keep their colour). OWNER: Technical Artist G (TA-07).
 """
 import pathlib
@@ -90,6 +90,6 @@ meta = fb.write(ctx, frames, 4, 1, fps=1, loop=True, sequences=seqs, blend="addi
                 labels=kit.label_sequences(seqs), srgb=True,
                 description="Four forked lightning bolts, white core + violet glow, additive x10 (high / ultra only).")
 meta["tint"] = "#ffffff"
-meta["encoding"] = "near_lossless"
+meta["encoding"] = "lossless"
 ctx.meta.update(meta)
 ctx.finish()

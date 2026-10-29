@@ -1,11 +1,11 @@
 {
-  "build": "0.1.0+f295dab",
+  "build": "0.1.0+2e220f0",
   "quality": "high",
   "shots": [
     {
       "name": "menu",
       "url": "http://127.0.0.1:4402/?scene=menu&quality=high&noaudio=1",
-      "ms": 14174,
+      "ms": 55253,
       "errors": [],
       "state": {
         "scene": "menu",
@@ -20,14 +20,14 @@
             "z": -598.72
           }
         },
-        "fps": 1.904072789235737,
+        "fps": 4.183006686477985,
         "errors": 0
       }
     },
     {
       "name": "world",
       "url": "http://127.0.0.1:4402/?scene=world&quality=high&noaudio=1&seed=7&paused=1",
-      "ms": 26032,
+      "ms": 28083,
       "errors": [],
       "state": {
         "scene": "world",
@@ -90,14 +90,14 @@
           },
           "blocked": false
         },
-        "fps": 4.780738088809089,
+        "fps": 4.715441169052581,
         "errors": 0
       }
     },
     {
       "name": "world-overview",
       "url": "http://127.0.0.1:4402/?scene=world&quality=high&noaudio=1&seed=7&paused=1&camera=overview",
-      "ms": 50766,
+      "ms": 38236,
       "errors": [],
       "state": {
         "scene": "world",
@@ -160,14 +160,14 @@
           },
           "blocked": false
         },
-        "fps": 4.331683128693855,
+        "fps": 2.913675755576112,
         "errors": 0
       }
     },
     {
       "name": "battle",
       "url": "http://127.0.0.1:4402/?scene=battle&quality=high&noaudio=1&seed=7&soldiers=1000&preset=plains",
-      "ms": 40615,
+      "ms": 34268,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -211,14 +211,14 @@
             "tilt": 0
           }
         },
-        "fps": 3.2094010590799966,
+        "fps": 3.0673399286058007,
         "errors": 0
       }
     },
     {
       "name": "battle-close",
       "url": "http://127.0.0.1:4402/?scene=battle&quality=high&noaudio=1&seed=7&soldiers=1000&preset=plains&camera=close",
-      "ms": 31138,
+      "ms": 32147,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -228,8 +228,8 @@
         "quality": "high",
         "sceneState": {
           "battleId": "skirmish_7",
-          "time": 35.6,
-          "tick": 711,
+          "time": 35.5,
+          "tick": 709,
           "phase": "active",
           "sides": [
             {
@@ -262,14 +262,14 @@
             "tilt": -0.05
           }
         },
-        "fps": 2.8935185438849467,
+        "fps": 3.156648660025942,
         "errors": 0
       }
     },
     {
       "name": "battle-river-5000",
       "url": "http://127.0.0.1:4402/?scene=battle&quality=high&noaudio=1&seed=11&soldiers=5000&preset=river_crossing&hour=17",
-      "ms": 41042,
+      "ms": 40607,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -279,8 +279,8 @@
         "quality": "high",
         "sceneState": {
           "battleId": "skirmish_11",
-          "time": 15.6,
-          "tick": 311,
+          "time": 15.5,
+          "tick": 310,
           "phase": "deployment",
           "sides": [
             {
@@ -313,14 +313,14 @@
             "tilt": 0
           }
         },
-        "fps": 1.3059234150542767,
+        "fps": 2.498846643956211,
         "errors": 0
       }
     },
     {
       "name": "hero",
       "url": "http://127.0.0.1:4402/?scene=hero&quality=high&noaudio=1",
-      "ms": 64751,
+      "ms": 70944,
       "errors": [],
       "state": {
         "scene": "hero",
@@ -337,14 +337,14 @@
           "prompt": null,
           "pois": 10
         },
-        "fps": 3.2933556129015873,
+        "fps": 3.5303495770852065,
         "errors": 0
       }
     },
     {
       "name": "menu-mobile",
       "url": "http://127.0.0.1:4402/?scene=menu&quality=low&noaudio=1",
-      "ms": 6671,
+      "ms": 5414,
       "errors": [],
       "state": {
         "scene": "menu",
@@ -359,14 +359,14 @@
             "z": -598.72
           }
         },
-        "fps": 4.153168933316167,
+        "fps": 4.898492290106304,
         "errors": 0
       }
     },
     {
       "name": "battle-mobile",
       "url": "http://127.0.0.1:4402/?scene=battle&quality=low&noaudio=1&seed=7&soldiers=600&preset=plains",
-      "ms": 8714,
+      "ms": 11270,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -410,14 +410,14 @@
             "tilt": 0
           }
         },
-        "fps": 3.6569756767541257,
+        "fps": 4.762897080864527,
         "errors": 0
       }
     },
     {
       "name": "assetviewer-stupa",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=hero&noui=1",
-      "ms": 46091,
+      "ms": 41732,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -463,14 +463,14 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 18.799348229434123,
+        "fps": 18.285811777946964,
         "errors": 0
       }
     },
     {
       "name": "assetviewer-torana",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=close&noui=1",
-      "ms": 58711,
+      "ms": 29985,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -516,14 +516,14 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 15.365148277864705,
+        "fps": 16.937669257509157,
         "errors": 0
       }
     },
     {
       "name": "assetviewer-sandstone",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=sandstone_carved_red&hdri=sky_day&noui=1",
-      "ms": 48359,
+      "ms": 39568,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -569,14 +569,14 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 15.397155988429825,
+        "fps": 12.181380857285006,
         "errors": 0
       }
     },
     {
       "name": "assetviewer-mobile",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=low&noaudio=1&asset=stupa_sanchi&hdri=sky_day&camera=overview",
-      "ms": 5710,
+      "ms": 6419,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -622,14 +622,14 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 32.840722685533855,
+        "fps": 41.98373106510553,
         "errors": 0
       }
     },
     {
       "name": "assetviewer-fallback",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=stupa_sanchi&assets=off",
-      "ms": 15261,
+      "ms": 21924,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -661,7 +661,7 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 16.949152344508825,
+        "fps": 1.3634396618554017,
         "errors": 0
       }
     }

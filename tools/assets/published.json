@@ -452,7 +452,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_lightning.py",
-      "inputHash": "2398faec8343b482ef860d5406b8dd234dbfecccc37d73e441dd115b79d5b6ae",
+      "inputHash": "e08b73b726d5c1136348ff37278746cea0bafa6894b2865dffe33a68a39c97cb",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -464,7 +464,7 @@
         "cols": 4,
         "description": "Four forked lightning bolts, white core + violet glow, additive x10 (high / ultra only).",
         "emissiveIntensity": 10,
-        "encoding": "near_lossless",
+        "encoding": "lossless",
         "fps": 1,
         "frames": 4,
         "lit": false,
@@ -522,7 +522,7 @@
       "files": [
         {
           "path": "fx/fx_lightning/color_1024.webp",
-          "bytes": 40780,
+          "bytes": 53454,
           "tiers": [
             "ultra",
             "high"
@@ -543,13 +543,13 @@
           "color": {
             "ultra": {
               "path": "fx/fx_lightning/color_1024.webp",
-              "bytes": 40780,
+              "bytes": 53454,
               "width": 1024,
               "height": 256
             },
             "high": {
               "path": "fx/fx_lightning/color_1024.webp",
-              "bytes": 40780,
+              "bytes": 53454,
               "width": 1024,
               "height": 256
             }
@@ -557,8 +557,8 @@
         }
       },
       "bytes": {
-        "ultra": 40780,
-        "high": 40780,
+        "ultra": 53454,
+        "high": 53454,
         "mobile": 0
       }
     },
@@ -1265,7 +1265,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_weapon_trail.py",
-      "inputHash": "8ac439649d45afcfa7e7b1e36ce42bb5fcd6aa21de24915ce33ae310172ecaa9",
+      "inputHash": "7c2caa667002749a22a5c15a1fe2913a2bbf60f2e67670be56d49a53beb32c07",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -1278,7 +1278,7 @@
         "cols": 2,
         "description": "Weapon trail: gradient (edge -> saffron -> tail), wide variant, two u-tileable streak noises.",
         "emissiveIntensity": 3,
-        "encoding": "near_lossless",
+        "encoding": "lossless",
         "fps": 1,
         "frames": 4,
         "lit": false,
@@ -1346,7 +1346,7 @@
       "files": [
         {
           "path": "fx/fx_weapon_trail/color_256.webp",
-          "bytes": 27976,
+          "bytes": 45886,
           "tiers": [
             "ultra",
             "high",
@@ -1362,19 +1362,19 @@
           "color": {
             "ultra": {
               "path": "fx/fx_weapon_trail/color_256.webp",
-              "bytes": 27976,
+              "bytes": 45886,
               "width": 256,
               "height": 256
             },
             "high": {
               "path": "fx/fx_weapon_trail/color_256.webp",
-              "bytes": 27976,
+              "bytes": 45886,
               "width": 256,
               "height": 256
             },
             "mobile": {
               "path": "fx/fx_weapon_trail/color_256.webp",
-              "bytes": 27976,
+              "bytes": 45886,
               "width": 256,
               "height": 256
             }
@@ -1382,9 +1382,9 @@
         }
       },
       "bytes": {
-        "ultra": 27976,
-        "high": 27976,
-        "mobile": 27976
+        "ultra": 45886,
+        "high": 45886,
+        "mobile": 45886
       }
     },
     "ground_dry_earth": {

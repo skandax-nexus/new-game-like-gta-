@@ -9,9 +9,9 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 13387178,
-    "high": 6304941,
-    "mobile": 3460294
+    "ultra": 13417762,
+    "high": 6335525,
+    "mobile": 3478204
   },
   "assets": {
     "banner_cloth": {
@@ -380,11 +380,11 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_lightning",
       "category": "fx",
-      "hash": "2398faec83",
+      "hash": "e08b73b726",
       "description": "Four forked lightning bolts, white core + violet glow, additive x10 (high / ultra only).",
       "bytes": {
-        "ultra": 40780,
-        "high": 40780,
+        "ultra": 53454,
+        "high": 53454,
         "mobile": 0
       },
       "tiers": [
@@ -450,13 +450,13 @@ export const ASSET_MANIFEST = {
         "color": {
           "ultra": {
             "url": "fx/fx_lightning/color_1024.webp",
-            "bytes": 40780,
+            "bytes": 53454,
             "width": 1024,
             "height": 256
           },
           "high": {
             "url": "fx/fx_lightning/color_1024.webp",
-            "bytes": 40780,
+            "bytes": 53454,
             "width": 1024,
             "height": 256
           }
@@ -1037,12 +1037,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_weapon_trail",
       "category": "fx",
-      "hash": "8ac439649d",
+      "hash": "7c2caa6670",
       "description": "Weapon trail: gradient (edge -> saffron -> tail), wide variant, two u-tileable streak noises.",
       "bytes": {
-        "ultra": 27976,
-        "high": 27976,
-        "mobile": 27976
+        "ultra": 45886,
+        "high": 45886,
+        "mobile": 45886
       },
       "tiers": [
         "ultra",
@@ -1114,19 +1114,19 @@ export const ASSET_MANIFEST = {
         "color": {
           "ultra": {
             "url": "fx/fx_weapon_trail/color_256.webp",
-            "bytes": 27976,
+            "bytes": 45886,
             "width": 256,
             "height": 256
           },
           "high": {
             "url": "fx/fx_weapon_trail/color_256.webp",
-            "bytes": 27976,
+            "bytes": 45886,
             "width": 256,
             "height": 256
           },
           "mobile": {
             "url": "fx/fx_weapon_trail/color_256.webp",
-            "bytes": 27976,
+            "bytes": 45886,
             "width": 256,
             "height": 256
           }

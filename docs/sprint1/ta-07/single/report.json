@@ -3,42 +3,42 @@
     {
       "name": "off_vat",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=medium&noaudio=1&asset=vat_test_dummy",
-      "ms": 7796,
+      "ms": 13703,
       "errors": [],
       "warnings": []
     },
     {
       "name": "off_impostor",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=medium&noaudio=1&asset=impostor_test_tree",
-      "ms": 19094,
+      "ms": 16722,
       "errors": [],
       "warnings": []
     },
     {
       "name": "off_flipbook",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=medium&noaudio=1&asset=fx_dust",
-      "ms": 16677,
+      "ms": 14235,
       "errors": [],
       "warnings": []
     },
     {
       "name": "off_lut",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=medium&noaudio=1&asset=lut_golden",
-      "ms": 19019,
+      "ms": 18884,
       "errors": [],
       "warnings": []
     },
     {
       "name": "off_image",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=medium&noaudio=1&asset=lens_dirt",
-      "ms": 14892,
+      "ms": 18422,
       "errors": [],
       "warnings": []
     },
     {
       "name": "off_skinned",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=medium&noaudio=1&asset=skin_test_character",
-      "ms": 19127,
+      "ms": 16208,
       "errors": [],
       "warnings": []
     }

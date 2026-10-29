@@ -104,7 +104,8 @@ current level casts a shadow (no double shadow).
   pre-pass (prepass `'replace'`) it draws the same billboard with its coverage cut-out, the atlas normals and a
   per-pixel **depth relief** from normal.a (`gl_FragDepth`), so GTAO sees the canopy's shape instead of a flat
   card (the main color pass does not offset depth). Switch distance comes from the manifest (`switchDistance`,
-  90 m for the test tree). A/B at 220 m: see the TA-07 report.
+  90 m for the test tree). A/B at 220 m (quality high): mean luminance of the crop differs by 2.7 %, of the tree pixels
+  alone by 9.3 % (the impostor is a little brighter: baked normals vs the live mesh shading).
 
 ### Flipbooks - VFX
 
@@ -137,8 +138,8 @@ current level casts a shadow (no double shadow).
   tangent space (+Y up).
 - **Publish:** color atlas at `atlasPx` per tier (lossy WebP q86 + alpha q90; additive-only books drop the
   redundant alpha; `encoding: 'lossless' | 'near_lossless'` overrides it - fx_sparks_embers is lossless because
-  4:2:0 chroma put cyan fringes on its thin streaks, fx_lightning / fx_weapon_trail near-lossless, see border guard), normal atlas at half resolution, lossy q90
-  (`FLIPBOOK_NORMAL_SCALE`), same grid so the UVs are shared. fx_fire and fx_smoke ship 2048 atlases (256 px
+  4:2:0 chroma put cyan fringes on its thin streaks; fx_lightning / fx_weapon_trail too, see border guard), normal
+  atlas at half resolution, lossy q90 (`FLIPBOOK_NORMAL_SCALE`), same grid so the UVs are shared. fx_fire and fx_smoke ship 2048 atlases (256 px
   frames) on ultra (Art Director decision), 1024 on high, 512 on mobile.
 - **Border guard:** `flipbook.write()` fails the bake when any frame's outer 2 px carry coverage / emission above
   2/255 (8-bit encoded values), checked at the source resolution and after downsampling to the smallest shipped
@@ -151,7 +152,7 @@ current level casts a shadow (no double shadow).
   reached the bottom edge of its 64 px mobile frames). **Layout rule:** an open edge must lie on the atlas border or
   against another open edge - texture filtering and mipmaps blend across frame seams at runtime (the reference
   material also insets its taps by half a texel). fx_lightning is one row of frames (bottoms on the atlas border),
-  fx_weapon_trail is [noise | trail] / [noise_b | trail_wide]; both publish near-lossless. Grounded books keep a
+  fx_weapon_trail is [noise | trail] / [noise_b | trail_wide]; both publish lossless. Grounded books keep a
   margin under the ground line (`groundLine`). Covered by the Blender selftest and
   `tests/assets/flipbook-borders.test.ts` (every published tier of every flipbook).
 - **Runtime:** `frameAt(seq, t)`, `frameRect(entry, k)` are the contract for the particle system;
@@ -186,13 +187,17 @@ showed a rectangle with a dark AO halo - Art Director review).
 - **Applied by:** `createVatInstancedMesh` (`'replace'`, or `'skip'` via options), `createImpostorMesh`
   (`'replace'`), `createFlipbookMaterial` (material tag `'skip'`) and `createFlipbookMesh` (guard installed).
 - **Measured** (`scripts/shots/ta-07.cjs --only=gtao`, quality=ultra, GTAO on): in the empty corners of every
-  flipbook quad the tagged shot matches the backdrop-only shot within 0.5/255; untagged quads (`?prepass=off`, the
-  pre-rework behaviour) differ by 1.7-7.2/255 (visible cards).
+  flipbook quad the tagged shot matches the backdrop-only shot within 0.93/255 (target 1/255); untagged quads
+  (`?prepass=off`, the pre-rework behaviour) differ by 3.5-10.2/255 (visible cards). VAT crowd: one InstancedMesh per
+  LOD = 1 draw per pass (color, posed AO pre-pass, shadow); note three re-renders the shadow map in EVERY
+  `renderer.render` call, so the GTAO pre-pass also re-renders shadows (change request to Lead Graphics below).
 - **Change request to Lead Graphics (src/render/post.ts, optional but cheaper):** before
   `gtao.render()` / `ssao.render()`, hide (and restore after) every object for which
   `prepassModeOf(o) === 'skip'`, and every other transparent mesh with `depthWrite === false` that does not carry
   the tag (procedural particles, water sheets, decals created outside the TA-07 helpers). Tagged objects already
   work without it; the up-front hide saves a program switch per particle mesh. Do not hide `'replace'` objects.
+  Also set `renderer.shadowMap.autoUpdate = false` and `needsUpdate = true` once per frame before the main pass:
+  the AO pre-pass is a second `renderer.render` call and currently re-renders every shadow caster.
 
 ### LUTs and images
 
