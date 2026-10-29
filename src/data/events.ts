@@ -225,7 +225,7 @@ const BROKEN_CROWN: EventDef[] = [
     trigger: NEVER,
     choices: [
       { id: 'trust_rabi', label: 'Trust the winter crop', description: 'No cost now. The lean months will be hard.', effects: [chronicle('The court decided to wait for the winter harvest.')], requires: null, aiWeight: 1, advisorSeat: 'court_scholar' },
-      { id: 'ration', label: 'Ration the capital\'s grain', description: 'Stability -0.02; Rajapura unrest +0.05; the capital eats 15% less for 120 days (rationing rule).', effects: [setFlag('rationing'), addF(PLAYER, 'stability', -0.02), addS(RAJAPURA, 'unrest', 0.05)], requires: null, aiWeight: 1, advisorSeat: 'chief_minister' },
+      { id: 'ration', label: 'Ration the realm\'s grain', description: 'Stability -0.02; Rajapura unrest +0.05; the realm eats 15% less for 120 days (rationing rule).', effects: [setFlag('rationing'), addF(PLAYER, 'stability', -0.02), addS(RAJAPURA, 'unrest', 0.05)], requires: null, aiWeight: 1, advisorSeat: 'chief_minister' },
       { id: 'buy_grain', label: 'Buy grain from the river merchants', description: 'Treasury -1,200; royal reserve +8,000 measures. The barges will need guarding.', effects: [setFlag('grain_barges'), addF(PLAYER, 'treasury', -1200), addF(PLAYER, 'foodReserve', 8000)], requires: fv(PLAYER, 'treasury', '>=', 1200), aiWeight: 1, advisorSeat: 'treasurer' },
     ],
   }),
