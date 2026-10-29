@@ -23,12 +23,13 @@ import sharp from 'sharp';
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS, EXTMeshoptCompression } from '@gltf-transform/extensions';
 import { dedup, flatten, join, meshopt, prune, quantize, reorder, resample, weld } from '@gltf-transform/functions';
-import { MeshoptEncoder } from 'meshoptimizer';
+import { MeshoptDecoder, MeshoptEncoder } from 'meshoptimizer';
 import {
   CLIP_EVENT_TYPES,
   FLIPBOOK_MAPS,
   IMPOSTOR_FRAME_PX,
   IMPOSTOR_MAPS,
+  IMPOSTOR_NORMAL_SCALE,
   IMPOSTOR_MAX_TEXTURE,
   PUBLIC_DIR,
   TEXTURE_ENCODING,
@@ -210,9 +211,9 @@ async function writeWebpRaw(raw, relPath, enc, { alpha = true } = {}) {
 let encoderReady = null;
 
 async function gltfIo() {
-  encoderReady ??= MeshoptEncoder.ready;
+  encoderReady ??= Promise.all([MeshoptEncoder.ready, MeshoptDecoder.ready]);
   await encoderReady;
-  return new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'meshopt.encoder': MeshoptEncoder });
+  return new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'meshopt.encoder': MeshoptEncoder, 'meshopt.decoder': MeshoptDecoder });
 }
 
 function countDoc(doc) {
@@ -378,10 +379,11 @@ async function publishVat(asset, srcDir, meta, outFiles, tiers) {
       const f = files.find((x) => x.role === `impostor_${map}`);
       if (!f) continue;
       maps[map] = {};
-      for (const [px, ts] of bySize(tiers, (t) => Math.min(im.framePx ?? 128, IMPOSTOR_FRAME_PX[t]))) {
+      const scale = map === 'normal' ? IMPOSTOR_NORMAL_SCALE : 1;
+      for (const [px, ts] of bySize(tiers, (t) => Math.max(16, Math.round(Math.min(im.framePx ?? 128, IMPOSTOR_FRAME_PX[t]) * scale)))) {
         const raw = await resampleAtlas(path.join(srcDir, f.path), cols, rows, px, px);
         const relPath = `vat/${asset.id}/impostor_${map}_${raw.width}.webp`;
-        await writeWebpRaw(raw, relPath, map === 'albedo' ? TEXTURE_ENCODING.color_alpha : TEXTURE_ENCODING.normal_alpha);
+        await writeWebpRaw(raw, relPath, map === 'albedo' ? TEXTURE_ENCODING.color_alpha : TEXTURE_ENCODING.impostor_normal);
         const rf = record(outFiles, relPath, ts, { kind: 'vat-impostor', map, size: raw.width });
         for (const t of ts) maps[map][t] = { path: relPath, bytes: rf.bytes, size: raw.width, framePx: px };
       }
@@ -404,11 +406,12 @@ async function publishImpostor(asset, srcDir, meta, outFiles, tiers) {
     if (!f) throw new Error(`${asset.id}: impostor needs an "${map}" atlas`);
     maps[map] = {};
     const framePx = m.framePx ?? IMPOSTOR_FRAME_PX;
-    for (const [px, ts] of bySize(tiers, (t) => framePx[t] ?? IMPOSTOR_FRAME_PX[t])) {
+    const scale = map === 'normal' ? (m.normalScale ?? IMPOSTOR_NORMAL_SCALE) : 1;
+    for (const [px, ts] of bySize(tiers, (t) => Math.max(16, Math.round((framePx[t] ?? IMPOSTOR_FRAME_PX[t]) * scale)))) {
       if (px * grid > IMPOSTOR_MAX_TEXTURE[ts[0]]) throw new Error(`${asset.id}: ${map} ${px * grid}px exceeds the ${ts[0]} impostor limit`);
       const raw = await resampleAtlas(path.join(srcDir, f.path), grid, grid, px, px);
       const relPath = `impostors/${asset.id}/${map}_${raw.width}.webp`;
-      await writeWebpRaw(raw, relPath, map === 'albedo' ? TEXTURE_ENCODING.color_alpha : TEXTURE_ENCODING.normal_alpha);
+      await writeWebpRaw(raw, relPath, map === 'albedo' ? TEXTURE_ENCODING.color_alpha : TEXTURE_ENCODING.impostor_normal);
       const rf = record(outFiles, relPath, ts, { kind: 'impostor', map, size: raw.width });
       for (const t of ts) maps[map][t] = { path: relPath, bytes: rf.bytes, size: raw.width, framePx: px };
     }

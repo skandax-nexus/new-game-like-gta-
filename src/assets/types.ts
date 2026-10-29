@@ -258,6 +258,8 @@ export interface VatAssetEntry extends AssetEntryBase {
   readonly vertexColors: boolean;
   /** Part names by id (B channel x 255). */
   readonly parts: readonly string[];
+  /** Optional sRGB hex color per part (texture-less units / previews); empty when the material is textured. */
+  readonly partColors: readonly string[];
   readonly impostor: VatImpostorEntry | null;
   readonly materialSets: readonly string[];
   readonly sets: { readonly [name: string]: TextureSetEntry };
@@ -291,6 +293,10 @@ export interface FlipbookSequenceEntry {
   readonly count: number;
   readonly fps: number;
   readonly loop: boolean;
+  /** Per-sequence blend override (e.g. additive fireflies in a lit leaf atlas); null = the atlas blend. */
+  readonly blend: 'alpha' | 'additive' | 'premultiplied' | null;
+  /** Per-sequence lighting override; null = the atlas `lit`. */
+  readonly lit: boolean | null;
 }
 
 export interface FlipbookFileEntry {
@@ -325,6 +331,8 @@ export interface FlipbookAssetEntry extends AssetEntryBase {
   readonly emissiveIntensity: number;
   /** Typical world size of one sprite (m), or null. */
   readonly sizeMeters: readonly number[] | null;
+  /** Suggested particle tint (sRGB hex) for neutral atlases, e.g. building smoke `#4a4038`. */
+  readonly tint: string;
 }
 
 // ------------------------------------------------------------------------------------------- LUT / image

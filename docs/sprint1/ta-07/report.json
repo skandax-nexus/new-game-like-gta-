@@ -1,0 +1,131 @@
+{
+  "shots": [
+    {
+      "name": "vat_crowd",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=vat_test_dummy&count=500&hdri=sky_golden&camera=overview&t=1.37&noui=1",
+      "ms": 36381,
+      "errors": [
+        "shots: page.screenshot: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n"
+      ],
+      "warnings": []
+    },
+    {
+      "name": "vat_crowd_hud",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=vat_test_dummy&count=500&hdri=sky_golden&camera=overview&t=1.37",
+      "ms": 32095,
+      "errors": [
+        "shots: page.screenshot: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n"
+      ],
+      "warnings": []
+    },
+    {
+      "name": "vat_crowd_walk",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=vat_test_dummy&clip=walk&count=500&hdri=sky_day&camera=overview&t=0.61&noui=1",
+      "ms": 19535,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "vat_crowd_close",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=vat_test_dummy&count=60&hdri=sky_golden&camera=hero&t=2.1&noui=1",
+      "ms": 33088,
+      "errors": [
+        "shots: page.screenshot: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n"
+      ],
+      "warnings": []
+    },
+    {
+      "name": "impostor_ab_60m",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=ab&dist=60&hdri=sky_day",
+      "ms": 14600,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "impostor_mesh_220m",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=mesh&dist=220&hdri=sky_day&noui=1",
+      "ms": 12215,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "impostor_imp_220m",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=impostor&dist=220&hdri=sky_day&noui=1",
+      "ms": 33153,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "impostor_none_220m",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=none&dist=220&hdri=sky_day&noui=1",
+      "ms": 19440,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "skinned_clones",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=skin_test_character&clip=walk&hdri=sky_golden&camera=hero&t=0.4",
+      "ms": 29210,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "skinned_memtest",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=skin_test_character&clip=walk&hdri=sky_day&memtest=1&noui=1",
+      "ms": 28165,
+      "errors": [],
+      "warnings": []
+    }
+  ],
+  "numbers": {
+    "crowd": {
+      "lods": [
+        {
+          "lod": 0,
+          "main": 2,
+          "shadow": 2,
+          "instances": 261
+        },
+        {
+          "lod": 1,
+          "main": 2,
+          "shadow": 2,
+          "instances": 239
+        }
+      ],
+      "instances": 500
+    },
+    "impostor": {
+      "rect": {
+        "x": 547,
+        "y": 293,
+        "w": 61,
+        "h": 64
+      },
+      "cropMeshLum": 0.13059062823931153,
+      "cropImpostorLum": 0.13061156413161062,
+      "cropDiff": 0.0001603169582791939,
+      "objectMeshLum": 0,
+      "objectImpostorLum": 0,
+      "objectPixels": [
+        0,
+        0
+      ],
+      "objectDiff": 0
+    },
+    "skinnedMemory": {
+      "baseline": {
+        "geometries": 11,
+        "textures": 3
+      },
+      "loaded": {
+        "geometries": 11,
+        "textures": 3
+      },
+      "released": {
+        "geometries": 14,
+        "textures": 29
+      }
+    }
+  }
+}

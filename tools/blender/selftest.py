@@ -5,8 +5,11 @@ Self-test of the tools/blender/lib helpers (run after changing the library or up
 
 Builds a tiny skinned mannequin with standard clips, exports it, re-reads the GLB and checks skins,
 animations, UV sets, tangents and binding extras; checks decimation, a high->low normal bake and a
-procedural texture-set bake. Writes to .asset-cache/_selftest/. Exit code 1 on failure.
-OWNER: Technical Art Director.
+procedural texture-set bake. TA-07 cases: VAT bake (reconstruction error, texture layout, GLB vertex order,
+octahedral normals, stride), impostor capture (hemi-octahedral math, coverage, normals, depth) and flipbook
+volumes (curl-noise divergence, Cycles volume render, loop blend, normals from density, packing).
+Writes to .asset-cache/_selftest/. Exit code 1 on failure.
+OWNER: Technical Art Director (TA-07 adds the vat / impostor / flipbook cases).
 """
 from __future__ import annotations
 
@@ -22,7 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bpy  # noqa: E402
 import numpy as np  # noqa: E402
 
-from lib import anim, bake, core, export, lod, materials, mesh as M, nodes, rig, texgen as tg  # noqa: E402
+from lib import anim, bake, core, export, flipbook, impostor, lod, materials, mesh as M, nodes, rig, texgen as tg, vat  # noqa: E402
 
 OUT = core.REPO_ROOT / ".asset-cache" / "_selftest"
 OUT.mkdir(parents=True, exist_ok=True)
@@ -160,7 +163,170 @@ def test_texture_set_bake() -> None:
     check("bake: torus4d mapping tiles seamlessly", seam < 0.03, f"edge delta {seam:.4f}")
 
 
-for t in (test_skinned_export, test_lod, test_normal_bake, test_texture_set_bake):
+def _two_bone_tube() -> tuple:
+    """A vertical tube skinned to a 2-bone chain with a looping bend clip and a one-shot."""
+    import os
+    bones = [rig.BoneSpec("root", (0, 0, 0), (0, 0.2, 0), None, deform=False),
+             rig.BoneSpec("hips", (0, 0, 0), (0, 0, 0.6), "root"),
+             rig.BoneSpec("spine", (0, 0, 0.6), (0, 0, 1.2), "hips", connect=True)]
+    arm = rig.create_armature("tube_rig", bones)
+    sides, rings = 12, 8
+    verts = [(0.1 * math.cos(2 * math.pi * i / sides), 0.1 * math.sin(2 * math.pi * i / sides), 1.2 * k / (rings - 1))
+             for k in range(rings) for i in range(sides)]
+    faces = [(k * sides + i, k * sides + (i + 1) % sides, (k + 1) * sides + (i + 1) % sides, (k + 1) * sides + i)
+             for k in range(rings - 1) for i in range(sides)]
+    tube = M.from_pydata("tube_lod0", verts, faces)
+    M.triangulate(tube)
+    rig.skin_proximity(tube, arm, blend=0.25)
+    anim.cycle(arm, "walk", 16, lambda ph: {"spine": {"rot": (40 * math.sin(ph * 2 * math.pi), 0, 0)},
+                                           "hips": {"rot": (0, 0, 10 * math.sin(ph * 2 * math.pi))}}, samples=8)
+    clip = anim.new_clip(arm, "attack", 12)
+    anim.key(clip, arm, 1, "spine", rot=(0, 0, 0))
+    anim.key(clip, arm, 12, "spine", rot=(-70, 0, 0))
+    anim.finish(clip, arm)
+    del os
+    return arm, tube
+
+
+def test_vat() -> None:
+    import os
+    os.environ["SAMRAJYA_ASSET_OUT"] = str(OUT / "vat")
+    os.environ["SAMRAJYA_ASSET_ID"] = "selftest_vat"
+    try:
+        ctx = vat.begin(__file__)
+    finally:
+        del os.environ["SAMRAJYA_ASSET_OUT"]
+        del os.environ["SAMRAJYA_ASSET_ID"]
+    arm, tube = _two_bone_tube()
+    n = len(tube.data.vertices)
+    vat.set_vertex_colors(tube, team=np.linspace(0, 1, n), cloth=0.5, part=3)
+    lod1 = vat.decimate_lod(tube, arm, 0.5, "tube_lod1")
+    meta = vat.bake(ctx, arm, [tube, lod1], fps=15, rest=None, parts=["a", "b", "c", "d"])
+    l0 = meta["lods"][0]
+    check("vat: reconstruction error <= 1 mm", l0["errorMm"] <= 1.0 and meta["lods"][1]["errorMm"] <= 1.0,
+          f"{l0['errorMm']} / {meta['lods'][1]['errorMm']} mm")
+    clips = {c["name"]: c for c in meta["clips"]}
+    check("vat: clip table (loop excludes the end frame, one-shot includes it)",
+          clips["walk"]["frames"] == 8 and clips["attack"]["frames"] == 7 and clips["attack"]["startFrame"] == 0
+          and clips["walk"]["startFrame"] == 7 and meta["frames"] == 15, str(meta["clips"]))
+    pos = np.frombuffer((ctx.out_dir / "selftest_vat.lod0.pos.bin").read_bytes(), "<f2").reshape(l0["height"], l0["width"], 3)
+    nrm = np.frombuffer((ctx.out_dir / "selftest_vat.lod0.nrm.bin").read_bytes(), np.uint8).reshape(l0["height"], l0["width"], 2)
+    check("vat: texture layout", pos.shape == (15 * l0["rowsPerFrame"], l0["width"], 3) and l0["width"] <= 4096)
+    j = read_glb_json(ctx.out_dir / "selftest_vat.lod0.glb")
+    prim = j["meshes"][0]["primitives"][0]
+    nv = j["accessors"][prim["attributes"]["POSITION"]]["count"]
+    check("vat: GLB vertex count == VAT columns", nv == l0["vertices"] and "COLOR_0" in prim["attributes"], f"{nv} vs {l0['vertices']}")
+    # Reconstruct attack frame 6 (last) of LOD0 from the files and compare with Blender's evaluation.
+    data = (ctx.out_dir / "selftest_vat.lod0.glb").read_bytes()
+    clen = struct.unpack_from("<I", data, 12)[0]
+    bin_off = 20 + clen + 8
+    acc = j["accessors"][prim["attributes"]["POSITION"]]
+    bv = j["bufferViews"][acc["bufferView"]]
+    rest = np.frombuffer(data, "<f4", count=nv * 3, offset=bin_off + bv["byteOffset"]).reshape(nv, 3)
+    w = l0["width"]
+    rows = l0["rowsPerFrame"]
+    f = clips["attack"]["startFrame"] + 6
+    idx = np.arange(nv)
+    off = pos[f * rows + idx // w, idx % w].astype(np.float64)
+    acts = {name: a for name, a, _, _ in vat.clip_actions(arm)}
+    vat._use_action(arm, acts["attack"])
+    vat._set_time(1 + 6 * 2)
+    co, _ = vat._evaluate(tube)
+    tbl = vat._export_table(tube)
+    exact = vat.to_three(co[tbl["vertex"]]).astype(np.float64)
+    err = float(np.abs(rest + off - exact).max()) * 1000
+    check("vat: decoded files reproduce the deformed mesh", err < 1.0, f"{err:.3f} mm")
+    e = np.random.default_rng(1).normal(size=(2000, 3))
+    e /= np.linalg.norm(e, axis=1, keepdims=True)
+    dec = vat.octa_decode(np.round(vat.octa_encode(e) * 255) / 255)
+    ang = float(np.degrees(np.arccos(np.clip((dec * e).sum(axis=1), -1, 1))).max())
+    check("vat: octahedral RG8 normals < 1.5 deg", ang < 1.5, f"{ang:.2f} deg")
+    del nrm
+    vat._use_action(arm, None)
+
+
+def test_impostor() -> None:
+    import os
+    for u, v in ((0.0, 0.0), (0.3, 0.8), (1.0, 0.5), (0.5, 0.5)):
+        d = impostor.hemi_octa_decode(u, v)
+        uu, vv = impostor.hemi_octa_encode(d)
+        assert abs(uu - u) < 1e-6 and abs(vv - v) < 1e-6, (u, v, uu, vv)
+    check("impostor: hemi-octahedral encode(decode(uv)) == uv", True)
+    core.reset_scene()
+    os.environ["SAMRAJYA_ASSET_OUT"] = str(OUT / "impostor")
+    os.environ["SAMRAJYA_ASSET_ID"] = "selftest_impostor"
+    try:
+        ctx = impostor.begin(__file__)
+    finally:
+        del os.environ["SAMRAJYA_ASSET_OUT"]
+        del os.environ["SAMRAJYA_ASSET_ID"]
+    bpy.ops.mesh.primitive_cube_add(size=1.0, location=(0, 0, 0.5))
+    cube = bpy.context.active_object
+    mat = export.runtime_material("imp_red", fallback_color="#c04020")
+    cube.data.materials.append(mat)
+    meta = impostor.capture(ctx, [cube], grid=4, frame_px=32, samples=4)
+    A = tg.image_to_numpy(bpy.data.images.load(str(ctx.path("albedo.png"))))
+    N = tg.image_to_numpy(bpy.data.images.load(str(ctx.path("normal.png"))))
+    check("impostor: atlas size", A.shape[:2] == (128, 128) and N.shape[:2] == (128, 128), str(A.shape))
+    cover = float(A[..., 3].mean())
+    check("impostor: coverage", 0.1 < cover < 0.9, f"{cover:.2f}")
+    # frame (col 1, row 1) of a 4x4 grid looks from high above: the top face (+Y) dominates its normals.
+    fr = N[32:64, 32:64]
+    a = A[32:64, 32:64, 3] > 0.5
+    ny = float((fr[..., 1][a] * 2 - 1).mean())
+    check("impostor: object-space normals (top face +Y seen from above)", ny > 0.45, f"mean n.y {ny:.2f}")
+    alb = A[..., :3][A[..., 3] > 0.9].mean(axis=0)
+    check("impostor: albedo is the base color (no lighting)", abs(alb[0] - 0.753) < 0.05 and abs(alb[2] - 0.125) < 0.05,
+          str(np.round(alb, 3)))
+    check("impostor: radius / switch distance", meta["radius"] > 0.8 and meta["switchDistance"] > 0, str(meta["radius"]))
+
+
+def test_flipbook() -> None:
+    import os
+    curl = flipbook.CurlNoise(3)
+    p = np.random.default_rng(2).uniform(-1, 1, (64, 3)).astype(np.float32)
+    h = 1e-3
+    div = np.zeros(64)
+    for ax in range(3):
+        dp = np.zeros(3, np.float32)
+        dp[ax] = h
+        div += (curl.velocity(p + dp, 0.3)[:, ax] - curl.velocity(p - dp, 0.3)[:, ax]) / (2 * h)
+    mag = float(np.abs(curl.velocity(p, 0.3)).mean())
+    check("flipbook: curl noise is divergence-free", float(np.abs(div).max()) < 0.02 * max(mag, 1e-3) * 50,
+          f"max |div| {np.abs(div).max():.4f}, mean |v| {mag:.3f}")
+    core.reset_scene()
+    os.environ["SAMRAJYA_ASSET_OUT"] = str(OUT / "flipbook")
+    os.environ["SAMRAJYA_ASSET_ID"] = "selftest_flipbook"
+    try:
+        ctx = flipbook.begin(__file__)
+    finally:
+        del os.environ["SAMRAJYA_ASSET_OUT"]
+        del os.environ["SAMRAJYA_ASSET_ID"]
+    sim = flipbook.ParticleVolume(24, (2, 2, 2), 5)
+    rng = np.random.default_rng(5)
+    sim.emit(rng.normal(0, 0.15, (400, 3)) + [0, 0, 0.6], rng.normal(0, 0.2, (400, 3)), np.full(400, 2.0), np.ones(400))
+    frames = []
+    for _ in range(3):
+        sim.step(0.1)
+        d, _ = sim.fields()
+        s = d * (3.0 / max(float(d.sum(axis=1).max()) * (2 / 23), 1e-6))
+        frames.append((s, flipbook.light_volume(s, 2 / 23, (0.6, 0.6, 0.6))))
+    rgba = flipbook.render_volumes(frames, (2, 2, 2), 32, samples=4)
+    a = [float(f[..., 3].max()) for f in rgba]
+    check("flipbook: Cycles renders the numpy volume (alpha)", min(a) > 0.3, str(np.round(a, 2)))
+    straight = [flipbook.to_straight(f) for f in rgba]
+    nrm = [flipbook.normal_from_alpha(f[..., 3]) for f in straight]
+    check("flipbook: normals from density are unit vectors", all(abs(float(np.linalg.norm(n * 2 - 1, axis=-1).mean()) - 1) < 0.02 for n in nrm))
+    seq = [np.full((4, 4, 4), float(i), np.float32) for i in range(12)]
+    lp = flipbook.loop_blend(seq, 8, 4)
+    check("flipbook: loop blend is continuous across the wrap", abs(float(lp[0][0, 0, 0]) - 8.0) < 1e-4
+          and abs(float(lp[7][0, 0, 0]) - 7.0) < 1e-4 and len(lp) == 8, str([float(x[0, 0, 0]) for x in lp]))
+    meta = flipbook.write(ctx, straight, 2, 2, normals=nrm, fps=12, loop=False, lit=True)
+    check("flipbook: atlas files + metadata", ctx.path("color.png").exists() and ctx.path("normal.png").exists()
+          and meta["cols"] == 2 and meta["frames"] == 3)
+
+
+for t in (test_skinned_export, test_lod, test_normal_bake, test_texture_set_bake, test_vat, test_impostor, test_flipbook):
     try:
         t()
     except Exception as e:  # noqa: BLE001

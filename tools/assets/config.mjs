@@ -44,6 +44,8 @@ export const TIER_MAX_TEXTURE = { ultra: 2048, high: 1024, mobile: 512 };
  */
 export const IMPOSTOR_MAX_TEXTURE = { ultra: 2048, high: 1536, mobile: 1024 };
 export const IMPOSTOR_FRAME_PX = { ultra: 256, high: 192, mobile: 128 };
+/** Normal + depth frames are published at this fraction of the albedo frame size (lighting is low-frequency). */
+export const IMPOSTOR_NORMAL_SCALE = 0.5;
 /** VAT textures: vertex columns wrap so the width stays <= 4096 (WebGL2 mobile limit), frames as rows. */
 export const VAT_MAX_TEXTURE = 4096;
 
@@ -91,6 +93,9 @@ export const TEXTURE_ENCODING = {
   // ---- kinds with alpha
   color_alpha: { quality: 86, alphaQuality: 90, smartSubsample: true, effort: 6 },
   normal_alpha: { nearLossless: true, quality: 60, effort: 6 },
+  // Impostor normal + depth atlases (object-space, seen from >= switch distance): lossy is ~3 deg mean error
+  // at a third of the near-lossless size (measured on impostor_test_tree: 2.0 MB -> 0.8 MB at 2048).
+  impostor_normal: { quality: 92, alphaQuality: 95, smartSubsample: true, effort: 6 },
   image: { quality: 88, alphaQuality: 92, smartSubsample: true, effort: 6 },
 };
 

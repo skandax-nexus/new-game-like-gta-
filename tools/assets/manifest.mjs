@@ -137,6 +137,7 @@ function entryFor(a) {
         restBounds: bounds(m.restBounds),
         vertexColors: m.vertexColors !== false,
         parts: m.parts ?? [],
+        partColors: m.partColors ?? [],
         impostor:
           imp && m.impostor
             ? {
@@ -183,6 +184,8 @@ function entryFor(a) {
           count: s.count,
           fps: s.fps ?? m.fps ?? 24,
           loop: s.loop ?? m.loop !== false,
+          blend: s.blend ?? null,
+          lit: s.lit ?? null,
         })),
         maps: Object.fromEntries(Object.entries(a.flipbook.maps).map(([k, tiers]) => [k, tierMap(tiers, (f) => ({ url: f.path, bytes: f.bytes, width: f.width, height: f.height }))])),
         blend: m.blend ?? 'alpha',
@@ -190,6 +193,7 @@ function entryFor(a) {
         softFadeMeters: round(m.softFadeMeters ?? 0.5, 3),
         emissiveIntensity: round(m.emissiveIntensity ?? 1, 3),
         sizeMeters: m.sizeMeters ? roundVec(m.sizeMeters, 3) : null,
+        tint: m.tint ?? '#ffffff',
       };
     }
     case 'lut':

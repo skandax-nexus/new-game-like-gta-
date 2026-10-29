@@ -1,23 +1,33 @@
 /**
  * Runtime asset manager for content-pipeline assets (tools/assets -> public/assets -> manifest.ts).
- * OWNER: CTO + Technical Art Director.
+ * OWNER: Technical Artist G (TA-07, CTO grant for Sprint 1) - CTO + Technical Art Director review.
+ * Formats and API: docs/ARCHITECTURE.md §18, docs/adr/0003-crowd-impostor-fx-assets.md.
  *
  *   const assets = ctx.assets;                                    // created in main.ts
- *   const sky = await assets.loadHdri('sky_day');                 // { texture, envMap, sun, release }
- *   const stupa = await assets.loadModel('stupa_sanchi');         // { object (THREE.LOD), entry, release }
+ *   const sky = await assets.loadHdri('sky_day');                 // { texture, envMap, sun, release } | null
+ *   const stupa = await assets.loadModel('stupa_sanchi', { crossFade: true });   // { object (THREE.LOD), ... }
  *   const stone = await assets.loadMaterial('sandstone_carved_red', { uvScale: [2, 1] });
+ *   const crowd = await assets.loadVat('vat_test_dummy');         // VAT LODs (geometry + textures) | null
+ *   const tree = await assets.loadImpostor('impostor_test_tree'); // impostor atlases | null
+ *   const smoke = await assets.loadFlipbook('fx_smoke');          // flipbook atlases | null
+ *   const grade = await assets.loadLut('lut_golden');             // Data3DTexture | null
+ *   const sun = await assets.loadImage('sun_sprite');             // sRGB texture | null
  *   assets.onProgress((p) => ...);                                // loading-screen progress (bytes + items)
- *   ... later: stupa.release(); stone.release(); sky.release();   // ref-counted; GPU memory freed at 0
+ *   ... later: every handle.release()                             // ref-counted; GPU memory freed at 0
  *
  * - Tier: AssetTier from the quality tier (ultra -> ultra, high -> high, medium/low -> mobile) or
  *   ?assets=ultra|high|mobile|off. 'off' (and the single-file build) never fetch: procedural fallbacks.
- * - Textures: fetch -> createImageBitmap (no premultiply / color conversion, flipY false like glTF) ->
- *   uploaded during loading (renderer.initTexture) so the first frame does not hitch.
+ *   Assets that do not ship on the active tier (`@tiers`) resolve to their `@fallback` asset, else null.
+ * - Decoding stays off the main thread where possible: textures via fetch + createImageBitmap (no
+ *   premultiply / color conversion, flipY false like glTF), VAT payloads via DecompressionStream + typed arrays;
+ *   everything is uploaded during loading (renderer.initTexture) so the first frame does not hitch.
  * - Models: GLTFLoader + MeshoptDecoder; texture-less proxy materials are replaced by PBR materials bound
- *   to the shared (tier-appropriate) texture sets named in their glTF extras (see tools/blender/lib/export.py).
+ *   to the shared (tier-appropriate) texture sets named in their glTF extras (tools/blender/lib/export.py).
+ *   Skinned models return independently animatable SkeletonUtils clones (LOD levels share LOD0's skeleton)
+ *   plus their AnimationClips and clipEvents; `crossFade` returns a dithered CrossFadeLOD.
  * - Fallbacks: a missing/failed asset never breaks the game - models fall back to a registered procedural
- *   factory (registerModelFallback) or a bounds-sized block in the asset's average color; materials to
- *   factor-only PBR; HDRIs resolve to null (caller keeps its procedural sky). Failures are console.warn'ed.
+ *   factory (registerModelFallback) or a bounds-sized block; materials to factor-only PBR; every other loader
+ *   resolves to null (the caller keeps its procedural sky / particles / grade). Failures are console.warn'ed.
  */
 import * as THREE from 'three';
 import type { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -25,12 +35,25 @@ import type { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import type { QualityTier } from '../core/types';
 import { configureSetTexture, createPbrMaterial, disposePbrMaterial, type PbrTextures } from '../render/materials/pbr';
-import { ASSET_MANIFEST, type AssetId, type HdriAssetId, type MaterialAssetId, type ModelAssetId } from './manifest';
+import {
+  ASSET_MANIFEST,
+  type AssetId,
+  type FlipbookAssetId,
+  type HdriAssetId,
+  type ImageAssetId,
+  type ImpostorAssetId,
+  type LutAssetId,
+  type MaterialAssetId,
+  type ModelAssetId,
+  type VatAssetId,
+} from './manifest';
 import type {
   AssetEntry,
   AssetManifest,
   AssetTier,
+  ClipEventEntry,
   HdriAssetEntry,
+  ImageAssetEntry,
   MaterialAssetEntry,
   ModelAssetEntry,
   SunEntry,
@@ -38,6 +61,17 @@ import type {
   TextureSetEntry,
 } from './types';
 import { ASSET_TIERS } from './types';
+import { decodeBitmap, bitmapPixels, fetchBytes, mimeOf } from './loaders/decode';
+import { applyVatBounds, createVatTextures, decodeVat, type VatHandle, type VatLodData } from './loaders/vat';
+import type { ImpostorHandle } from './loaders/impostor';
+import type { FlipbookHandle } from './loaders/flipbook';
+import { createLutTexture, stripToVolume, type LutHandle } from './loaders/lut';
+import { makeCrossFadeLod, type CrossFadeOptions } from './loaders/lodFade';
+
+export type { VatHandle, VatLodData } from './loaders/vat';
+export type { ImpostorHandle } from './loaders/impostor';
+export type { FlipbookHandle } from './loaders/flipbook';
+export type { LutHandle } from './loaders/lut';
 
 declare const __ASSETS_ENABLED__: boolean;
 /** False in the single-file build (assets are not inlined): everything uses procedural fallbacks. */
@@ -80,9 +114,12 @@ export interface MaterialHandle extends Releasable {
 }
 
 export interface ModelInstance extends Releasable {
-  /** THREE.LOD when the model has several LODs, else the scene group. Add it to your scene. */
+  /** THREE.LOD when the model has several LODs (CrossFadeLOD with `crossFade`), else the scene group. */
   readonly object: THREE.Object3D;
   readonly animations: readonly THREE.AnimationClip[];
+  /** Gameplay markers per clip (seconds), from the manifest (empty for fallbacks). */
+  readonly clipEvents: { readonly [clip: string]: readonly ClipEventEntry[] };
+  readonly skinned: boolean;
   readonly entry: ModelAssetEntry | null;
   readonly fallback: boolean;
   readonly triangles: number;
@@ -97,6 +134,16 @@ export interface HdriHandle extends Releasable {
   readonly entry: HdriAssetEntry;
 }
 
+export interface ImageHandle extends Releasable {
+  readonly entry: ImageAssetEntry;
+  /** sRGB (or linear) texture, flipY false, clamp, mipmapped. */
+  readonly texture: THREE.Texture;
+  readonly width: number;
+  readonly height: number;
+  /** Multiply the sampled color by this for HDR use (sun sprite). */
+  readonly hdrScale: number;
+}
+
 export interface ModelLoadOptions {
   castShadow?: boolean;
   receiveShadow?: boolean;
@@ -104,6 +151,13 @@ export interface ModelLoadOptions {
   lod?: number;
   /** Multiplies every LOD switch distance (quality / FOV scaling). */
   lodDistanceScale?: number;
+  /** Dithered cross-fade between LOD levels (CrossFadeLOD + per-level dither materials). */
+  crossFade?: boolean | CrossFadeOptions;
+}
+
+export interface VatLoadOptions {
+  /** LOD indices to load (default: from the tier's minLod to the last). */
+  lods?: readonly number[];
 }
 
 export interface MaterialLoadOptions {
@@ -138,6 +192,12 @@ interface LoadedGltf {
   animations: THREE.AnimationClip[];
 }
 
+interface AtlasConfig {
+  srgb: boolean;
+  mipmaps?: boolean;
+  repeat?: boolean;
+}
+
 const TEXTURE_FETCH_OPTIONS: ImageBitmapOptions = { imageOrientation: 'none', premultiplyAlpha: 'none', colorSpaceConversion: 'none' };
 
 export class AssetManager {
@@ -150,6 +210,8 @@ export class AssetManager {
   private readonly gltfs = new Map<string, CacheEntry<LoadedGltf>>();
   private readonly hdris = new Map<string, CacheEntry<{ texture: THREE.Texture; envMap: THREE.Texture }>>();
   private readonly materials = new Map<string, CacheEntry<THREE.MeshStandardMaterial>>();
+  private readonly vatData = new Map<string, CacheEntry<{ positions: THREE.DataTexture; normals: THREE.DataTexture }>>();
+  private readonly luts = new Map<string, CacheEntry<THREE.Data3DTexture>>();
   private readonly modelFallbacks = new Map<string, () => THREE.Object3D>();
   private readonly listeners = new Set<(p: AssetProgress) => void>();
   private readonly warned = new Set<string>();
@@ -265,8 +327,15 @@ export class AssetManager {
     this.emitProgress();
   }
 
-  stats(): { textures: number; models: number; hdris: number; materials: number } {
-    return { textures: this.textures.size, models: this.gltfs.size, hdris: this.hdris.size, materials: this.materials.size };
+  stats(): { textures: number; models: number; hdris: number; materials: number; vats: number; luts: number } {
+    return {
+      textures: this.textures.size,
+      models: this.gltfs.size,
+      hdris: this.hdris.size,
+      materials: this.materials.size,
+      vats: this.vatData.size,
+      luts: this.luts.size,
+    };
   }
 
   // ------------------------------------------------------------------ texture sets
@@ -276,13 +345,13 @@ export class AssetManager {
    * ("stupa_sanchi:macro"). Missing maps are simply absent (factor fallback).
    */
   async loadTextureSet(ref: string): Promise<TextureSetHandle> {
-    const set = this.resolveSet(ref);
+    const resolved = this.resolveSet(ref);
     const tier = this.tierSetting;
-    if (!set || tier === 'off') {
+    if (!resolved || tier === 'off') {
       if (tier !== 'off') this.warnOnce(ref, `texture set "${ref}" not in the manifest`);
       return { textures: {}, complete: false, release: () => undefined };
     }
-    const hash = this.entry(ref.split(':')[0] ?? ref)?.hash ?? '';
+    const { set, hash } = resolved;
     const urls: string[] = [];
     const textures: PbrTextures = {};
     let complete = true;
@@ -317,15 +386,17 @@ export class AssetManager {
   async loadMaterial(id: MaterialAssetId | string, opts: MaterialLoadOptions = {}): Promise<MaterialHandle> {
     const key = `${id}|${JSON.stringify(opts)}`;
     const entry = this.entry(id);
-    const fallback = !entry || entry.kind !== 'material' || this.tierSetting === 'off';
+    const shipped = this.resolve(id, 'material');
+    const fallback = !shipped;
     const value = await this.acquire(this.materials, key, async () => {
-      const set = fallback ? null : await this.loadTextureSet(id);
+      const set = shipped ? await this.loadTextureSet(shipped.id) : null;
+      const base = shipped ?? (entry && entry.kind === 'material' ? entry : null);
       const mat = createPbrMaterial(set?.textures ?? {}, {
         name: id,
-        fallbackColor: entry && entry.kind === 'material' ? entry.averageColor : '#808080',
-        roughness: entry && entry.kind === 'material' ? entry.roughness : 0.8,
+        fallbackColor: base ? base.averageColor : '#808080',
+        roughness: base ? base.roughness : 0.8,
         ...opts,
-        normalScale: (opts.normalScale ?? 1) * (entry && entry.kind === 'material' ? entry.normalScale : 1),
+        normalScale: (opts.normalScale ?? 1) * (base ? base.normalScale : 1),
       });
       mat.userData.setHandle = set;
       return mat;
@@ -348,10 +419,11 @@ export class AssetManager {
   // ------------------------------------------------------------------ models
 
   async loadModel(id: ModelAssetId | string, opts: ModelLoadOptions = {}): Promise<ModelInstance> {
-    const entry = this.entry(id);
-    if (!entry || entry.kind !== 'model' || this.tierSetting === 'off') {
-      if (this.tierSetting !== 'off') this.warnOnce(id, `model "${id}" not in the manifest`);
-      return this.fallbackModel(id, entry && entry.kind === 'model' ? entry : null);
+    const entry = this.resolve(id, 'model');
+    const raw = this.entry(id);
+    if (!entry || this.tierSetting === 'off') {
+      if (this.tierSetting !== 'off' && !raw) this.warnOnce(id, `model "${id}" not in the manifest`);
+      return this.fallbackModel(id, raw && raw.kind === 'model' ? raw : null);
     }
     const tier = this.tierSetting;
     const minLod = Math.min(entry.minLod[tier] ?? 0, entry.lods.length - 1);
@@ -368,15 +440,17 @@ export class AssetManager {
         }),
       );
       const scale = opts.lodDistanceScale ?? 1;
-      const root = loaded.length > 1 ? new THREE.LOD() : new THREE.Group();
-      root.name = id;
+      let root: THREE.Object3D = loaded.length > 1 ? new THREE.LOD() : new THREE.Group();
+      root.name = entry.id;
       let triangles = 0;
       let animations: THREE.AnimationClip[] = [];
+      const skinned = entry.skinned || loaded.some((l) => l.gltf.animations.length > 0);
+      let primary: THREE.Object3D | null = null;
       for (let i = 0; i < loaded.length; i++) {
         const { lod, gltf } = loaded[i]!;
-        const scene = (gltf.animations.length ? SkeletonUtils.clone(gltf.scene) : gltf.scene.clone(true)) as THREE.Group;
-        scene.name = `${id}_lod${lod.lod}`;
-        await this.bindMaterials(id, scene, acquiredMats);
+        const scene = (skinned ? SkeletonUtils.clone(gltf.scene) : gltf.scene.clone(true)) as THREE.Group;
+        scene.name = `${entry.id}_lod${lod.lod}`;
+        await this.bindMaterials(entry.id, scene, acquiredMats);
         scene.traverse((o) => {
           const m = o as THREE.Mesh;
           if (m.isMesh) {
@@ -384,6 +458,10 @@ export class AssetManager {
             m.receiveShadow = opts.receiveShadow ?? true;
           }
         });
+        if (skinned) {
+          if (!primary) primary = scene;
+          else shareSkeleton(primary, scene);
+        }
         if (root instanceof THREE.LOD) root.addLevel(scene, i === 0 ? 0 : lod.distance * scale);
         else root.add(scene);
         if (i === 0) {
@@ -391,17 +469,32 @@ export class AssetManager {
           animations = gltf.animations;
         }
       }
+      let disposeFade: (() => void) | null = null;
+      if (opts.crossFade && root instanceof THREE.LOD) {
+        const cf = makeCrossFadeLod(root, typeof opts.crossFade === 'object' ? opts.crossFade : {});
+        root = cf.lod;
+        disposeFade = cf.dispose;
+      }
       let released = false;
+      const object = root;
       return {
-        object: root,
+        object,
         animations,
+        clipEvents: entry.clipEvents,
+        skinned,
         entry,
         fallback: false,
         triangles,
         release: () => {
           if (released) return;
           released = true;
-          root.removeFromParent();
+          object.removeFromParent();
+          // SkeletonUtils clones own their Skeleton (and its bone texture): free them.
+          object.traverse((o) => {
+            const sm = o as THREE.SkinnedMesh;
+            if (sm.isSkinnedMesh) sm.skeleton.dispose();
+          });
+          disposeFade?.();
           for (const m of acquiredMats) m.release();
           for (const u of acquiredGltf) this.releaseFrom(this.gltfs, u);
         },
@@ -466,7 +559,7 @@ export class AssetManager {
     proxy: THREE.MeshStandardMaterial,
     acquired: Releasable[],
   ): Promise<THREE.Material> {
-    const key = `model:${modelId}|${setRef}|${macroRef ?? ''}|${JSON.stringify(opts)}`;
+    const key = `model:${modelId}|${setRef}|${macroRef ?? ''}|${JSON.stringify(opts)}|${this.tierSetting}`;
     const mat = await this.acquire(this.materials, key, async () => {
       const set = await this.loadTextureSet(setRef);
       const macro = macroRef ? await this.loadTextureSet(macroRef) : null;
@@ -521,6 +614,8 @@ export class AssetManager {
     return {
       object,
       animations: [],
+      clipEvents: {},
+      skinned: false,
       entry,
       fallback: true,
       triangles: 0,
@@ -549,7 +644,7 @@ export class AssetManager {
   async loadHdri(id: HdriAssetId | string): Promise<HdriHandle | null> {
     const entry = this.resolve(id, 'hdri');
     if (!entry || this.tierSetting === 'off') {
-      if (this.tierSetting !== 'off') this.warnOnce(id, `hdri "${id}" not in the manifest`);
+      if (this.tierSetting !== 'off' && !this.entry(id)) this.warnOnce(id, `hdri "${id}" not in the manifest`);
       return null;
     }
     const file = entry.files[this.tierSetting];
@@ -599,6 +694,228 @@ export class AssetManager {
     }
   }
 
+  // ------------------------------------------------------------------ VAT crowds
+
+  /**
+   * Vertex-animation crowd unit: per LOD the rest-pose geometry (vertex i == VAT column i), its bound
+   * material and the position / normal textures. Build materials with loaders/vat createVatMaterial.
+   */
+  async loadVat(id: VatAssetId | string, opts: VatLoadOptions = {}): Promise<VatHandle | null> {
+    const entry = this.resolve(id, 'vat');
+    if (!entry || this.tierSetting === 'off') {
+      if (this.tierSetting !== 'off' && !this.entry(id)) this.warnOnce(id, `vat "${id}" not in the manifest`);
+      return null;
+    }
+    const tier = this.tierSetting;
+    const minLod = Math.min(entry.minLod[tier] ?? 0, entry.lods.length - 1);
+    const wanted = opts.lods ? entry.lods.filter((l) => opts.lods!.includes(l.lod)) : entry.lods.slice(minLod);
+    const gltfUrls: string[] = [];
+    const dataUrls: string[] = [];
+    const mats: Releasable[] = [];
+    const releaseAll = (): void => {
+      for (const m of mats) m.release();
+      for (const u of gltfUrls) this.releaseFrom(this.gltfs, u);
+      for (const u of dataUrls) this.releaseFrom(this.vatData, u);
+    };
+    try {
+      const lods = await Promise.all(
+        wanted.map(async (lod): Promise<VatLodData> => {
+          const gurl = this.url(lod.url, entry.hash);
+          const durl = this.url(lod.vat.url, entry.hash);
+          const [gltf, data] = await Promise.all([
+            this.acquire(this.gltfs, gurl, () => this.fetchGltf(gurl, lod.bytes), (g) => disposeGltf(g)).then((g) => {
+              gltfUrls.push(gurl);
+              return g;
+            }),
+            this.acquire(
+              this.vatData,
+              durl,
+              async () => {
+                const lid = this.beginLoad(lod.vat.bytes);
+                try {
+                  const bytes = await fetchBytes(durl, (n) => this.updateLoad(lid, n));
+                  const tex = createVatTextures(await decodeVat(bytes, lod), lod);
+                  this.initTexture(tex.positions);
+                  this.initTexture(tex.normals);
+                  return tex;
+                } finally {
+                  this.endLoad(lid, lod.vat.bytes);
+                }
+              },
+              (t) => {
+                t.positions.dispose();
+                t.normals.dispose();
+              },
+            ).then((d) => {
+              dataUrls.push(durl);
+              return d;
+            }),
+          ]);
+          let mesh: THREE.Mesh | null = null;
+          gltf.scene.traverse((o) => {
+            if (!mesh && (o as THREE.Mesh).isMesh) mesh = o as THREE.Mesh;
+          });
+          if (!mesh) throw new Error(`${lod.url}: no mesh`);
+          const m = mesh as THREE.Mesh;
+          const geo = m.geometry;
+          if (geo.getAttribute('position').count !== lod.vertices) throw new Error(`${lod.url}: ${geo.getAttribute('position').count} vertices, VAT has ${lod.vertices}`);
+          const color = geo.getAttribute('color');
+          if (color && !geo.getAttribute('vatColor')) geo.setAttribute('vatColor', color);
+          else if (!color && !geo.getAttribute('vatColor'))
+            geo.setAttribute('vatColor', new THREE.BufferAttribute(new Uint8Array(lod.vertices * 4).fill(0), 4, true));
+          applyVatBounds(geo, entry);
+          const holder = new THREE.Group();
+          const proxy = new THREE.Mesh(geo, m.material);
+          holder.add(proxy);
+          await this.bindMaterials(entry.id, holder, mats);
+          const material = proxy.material as THREE.MeshStandardMaterial;
+          return { lod: lod.lod, entry: lod, geometry: geo, material, positions: data.positions, normals: data.normals };
+        }),
+      );
+      let released = false;
+      return {
+        entry,
+        lods,
+        clip: (name: string) => entry.clips.find((c) => c.name === name) ?? null,
+        release: () => {
+          if (released) return;
+          released = true;
+          releaseAll();
+        },
+      };
+    } catch (err) {
+      releaseAll();
+      this.warnOnce(id, `vat "${id}" failed to load: ${String(err)}`);
+      return null;
+    }
+  }
+
+  // ------------------------------------------------------------------ impostors, flipbooks, images, LUTs
+
+  /** Hemi-octahedral impostor atlases (albedo + normal/depth) for the active tier, or null. */
+  async loadImpostor(id: ImpostorAssetId | string): Promise<ImpostorHandle | null> {
+    const entry = this.resolve(id, 'impostor');
+    const tier = this.tierSetting;
+    if (!entry || tier === 'off') {
+      if (tier !== 'off' && !this.entry(id)) this.warnOnce(id, `impostor "${id}" not in the manifest`);
+      return null;
+    }
+    const a = entry.maps.albedo[tier];
+    const n = entry.maps.normal[tier];
+    if (!a || !n) return null;
+    const got: string[] = [];
+    try {
+      const [albedo, normal] = await Promise.all([
+        this.acquireAtlas(this.url(a.url, entry.hash), a.bytes, { srgb: true }).then((t) => (got.push(this.url(a.url, entry.hash)), t)),
+        this.acquireAtlas(this.url(n.url, entry.hash), n.bytes, { srgb: false }).then((t) => (got.push(this.url(n.url, entry.hash)), t)),
+      ]);
+      return { entry, albedo, normal, framePx: a.framePx, release: this.releaser(this.textures, got) };
+    } catch (err) {
+      for (const u of got) this.releaseFrom(this.textures, u);
+      this.warnOnce(id, `impostor "${id}" failed to load: ${String(err)}`);
+      return null;
+    }
+  }
+
+  /** Flipbook atlases (color + optional normal / emissive) for the active tier, or null. */
+  async loadFlipbook(id: FlipbookAssetId | string): Promise<FlipbookHandle | null> {
+    const entry = this.resolve(id, 'flipbook');
+    const tier = this.tierSetting;
+    if (!entry || tier === 'off') {
+      if (tier !== 'off' && !this.entry(id)) this.warnOnce(id, `flipbook "${id}" not in the manifest`);
+      return null;
+    }
+    const got: string[] = [];
+    const load = async (f: { url: string; bytes: number } | undefined, srgb: boolean): Promise<THREE.Texture | null> => {
+      if (!f) return null;
+      const url = this.url(f.url, entry.hash);
+      const t = await this.acquireAtlas(url, f.bytes, { srgb });
+      got.push(url);
+      return t;
+    };
+    try {
+      const [color, normal, emissive] = await Promise.all([
+        load(entry.maps.color[tier], true),
+        load(entry.maps.normal?.[tier], false),
+        load(entry.maps.emissive?.[tier], true),
+      ]);
+      if (!color) throw new Error('no color atlas for this tier');
+      return {
+        entry,
+        color,
+        normal,
+        emissive,
+        sequence: (name: string) => entry.sequences.find((s) => s.name === name) ?? null,
+        release: this.releaser(this.textures, got),
+      };
+    } catch (err) {
+      for (const u of got) this.releaseFrom(this.textures, u);
+      this.warnOnce(id, `flipbook "${id}" failed to load: ${String(err)}`);
+      return null;
+    }
+  }
+
+  /** sRGB image (sun sprite, lens dirt, portraits, key art) for the active tier, or null. */
+  async loadImage(id: ImageAssetId | string): Promise<ImageHandle | null> {
+    const entry = this.resolve(id, 'image');
+    const tier = this.tierSetting;
+    if (!entry || tier === 'off') {
+      if (tier !== 'off' && !this.entry(id)) this.warnOnce(id, `image "${id}" not in the manifest`);
+      return null;
+    }
+    const f = entry.files[tier];
+    if (!f) return null;
+    const url = this.url(f.url, entry.hash);
+    try {
+      const texture = await this.acquireAtlas(url, f.bytes, { srgb: entry.colorSpace === 'srgb' });
+      return { entry, texture, width: f.width, height: f.height, hdrScale: entry.hdrScale, release: this.releaser(this.textures, [url]) };
+    } catch (err) {
+      this.warnOnce(id, `image "${id}" failed to load: ${String(err)}`);
+      return null;
+    }
+  }
+
+  /** 32^3 grading LUT as a Data3DTexture (display-referred, applied after tone mapping + grade), or null. */
+  async loadLut(id: LutAssetId | string): Promise<LutHandle | null> {
+    const entry = this.resolve(id, 'lut');
+    const tier = this.tierSetting;
+    if (!entry || tier === 'off') {
+      if (tier !== 'off' && !this.entry(id)) this.warnOnce(id, `lut "${id}" not in the manifest`);
+      return null;
+    }
+    const f = entry.files[tier];
+    if (!f) return null;
+    const url = this.url(f.url, entry.hash);
+    try {
+      const texture = await this.acquire(
+        this.luts,
+        url,
+        async () => {
+          const lid = this.beginLoad(f.bytes);
+          try {
+            const bytes = await fetchBytes(url, (n) => this.updateLoad(lid, n));
+            const bmp = await decodeBitmap(bytes, 'image/png');
+            try {
+              if (bmp.width !== entry.size * entry.size || bmp.height !== entry.size) throw new Error(`LUT strip is ${bmp.width}x${bmp.height}`);
+              const tex = createLutTexture(stripToVolume(bitmapPixels(bmp), entry.size), entry.size);
+              tex.name = url;
+              return tex;
+            } finally {
+              bmp.close();
+            }
+          } finally {
+            this.endLoad(lid, f.bytes);
+          }
+        },
+        (t) => t.dispose(),
+      );
+      return { entry, texture, size: entry.size, strength: entry.strength, release: this.releaser(this.luts, [url]) };
+    } catch (err) {
+      this.warnOnce(id, `lut "${id}" failed to load: ${String(err)}`);
+      return null;
+    }
+  }
+
   /** Warm the caches for a set of assets (loading screens). Resolves when all settled. */
   async preload(ids: readonly string[], label = 'Loading assets'): Promise<void> {
     this.setProgressLabel(label);
@@ -607,12 +924,34 @@ export class AssetManager {
       ids.map(async (id) => {
         const e = this.entry(id);
         if (!e) return;
-        if (e.kind === 'material') handles.push(await this.loadTextureSet(id));
-        else if (e.kind === 'model') handles.push(await this.loadModel(id));
-        else {
-          const h = await this.loadHdri(id);
-          if (h) handles.push(h);
+        let h: Releasable | null = null;
+        switch (e.kind) {
+          case 'material':
+            h = await this.loadTextureSet(id);
+            break;
+          case 'model':
+            h = await this.loadModel(id);
+            break;
+          case 'hdri':
+            h = await this.loadHdri(id);
+            break;
+          case 'vat':
+            h = await this.loadVat(id);
+            break;
+          case 'impostor':
+            h = await this.loadImpostor(id);
+            break;
+          case 'flipbook':
+            h = await this.loadFlipbook(id);
+            break;
+          case 'lut':
+            h = await this.loadLut(id);
+            break;
+          case 'image':
+            h = await this.loadImage(id);
+            break;
         }
+        if (h) handles.push(h);
       }),
     );
     // Keep the cache warm for one frame so the caller's own loads hit it, then drop our refs.
@@ -620,7 +959,7 @@ export class AssetManager {
   }
 
   dispose(): void {
-    for (const map of [this.materials, this.gltfs, this.hdris, this.textures] as Map<string, CacheEntry<unknown>>[]) {
+    for (const map of [this.materials, this.gltfs, this.hdris, this.textures, this.vatData, this.luts] as Map<string, CacheEntry<unknown>>[]) {
       for (const e of map.values()) if (e.value) e.dispose(e.value);
       map.clear();
     }
@@ -635,12 +974,26 @@ export class AssetManager {
     return `${this.baseUrl}${rel}${hash ? `?v=${hash}` : ''}`;
   }
 
-  private resolveSet(ref: string): TextureSetEntry | null {
+  /** Texture set of a material asset (following @fallback on this tier) or a model-local set. */
+  private resolveSet(ref: string): { set: TextureSetEntry; hash: string } | null {
     const [id, local] = ref.split(':') as [string, string | undefined];
-    const e = this.entry(id);
-    if (!e) return null;
-    if (local) return e.kind === 'model' ? (e.sets[local] ?? null) : null;
-    return e.kind === 'material' ? e : null;
+    if (local) {
+      const e = this.entry(id);
+      if (!e) return null;
+      const set = e.kind === 'model' || e.kind === 'vat' ? (e.sets[local] ?? null) : null;
+      return set ? { set, hash: e.hash } : null;
+    }
+    const m = this.resolve(id, 'material');
+    return m ? { set: m, hash: m.hash } : null;
+  }
+
+  private releaser<T>(map: Map<string, CacheEntry<T>>, keys: readonly string[]): () => void {
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      for (const k of keys) this.releaseFrom(map, k);
+    };
   }
 
   private async acquire<T>(map: Map<string, CacheEntry<T>>, key: string, create: () => Promise<T>, dispose: (v: T) => void): Promise<T> {
@@ -679,30 +1032,47 @@ export class AssetManager {
   }
 
   private async acquireTexture(url: string, map: TextureMapName, bytes: number): Promise<THREE.Texture> {
-    return this.acquire(this.textures, url, () => this.fetchTexture(url, map, bytes), (t) => t.dispose());
+    return this.acquire(this.textures, url, async () => {
+      const tex = await this.fetchTexture(url, bytes);
+      configureSetTexture(tex, map === 'height' ? 'orm' : map, this.anisotropy);
+      this.initTexture(tex);
+      return tex;
+    }, (t) => t.dispose());
   }
 
-  private async fetchTexture(url: string, map: TextureMapName, bytes: number): Promise<THREE.Texture> {
+  /** Atlas / image texture: clamp to edge, mipmapped, sRGB or linear. Cached by URL. */
+  private async acquireAtlas(url: string, bytes: number, cfg: AtlasConfig): Promise<THREE.Texture> {
+    return this.acquire(this.textures, url, async () => {
+      const tex = await this.fetchTexture(url, bytes);
+      tex.flipY = false;
+      tex.colorSpace = cfg.srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+      tex.wrapS = cfg.repeat ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
+      tex.wrapT = tex.wrapS;
+      tex.generateMipmaps = cfg.mipmaps !== false;
+      tex.minFilter = tex.generateMipmaps ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter;
+      tex.magFilter = THREE.LinearFilter;
+      tex.anisotropy = Math.max(1, this.anisotropy);
+      tex.needsUpdate = true;
+      this.initTexture(tex);
+      return tex;
+    }, (t) => t.dispose());
+  }
+
+  private initTexture(tex: THREE.Texture): void {
+    try {
+      this.renderer.initTexture(tex);
+    } catch {
+      // upload lazily on first use
+    }
+  }
+
+  private async fetchTexture(url: string, bytes: number): Promise<THREE.Texture> {
     const id = this.beginLoad(bytes);
     try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      let blob: Blob;
-      if (res.body && typeof res.body.getReader === 'function') {
-        const reader = res.body.getReader();
-        const chunks: Uint8Array[] = [];
-        let got = 0;
-        for (;;) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          chunks.push(value);
-          got += value.byteLength;
-          this.updateLoad(id, got);
-        }
-        blob = new Blob(chunks, { type: res.headers.get('content-type') ?? 'image/webp' });
-      } else blob = await res.blob();
+      const data = await fetchBytes(url, (n) => this.updateLoad(id, n));
       let tex: THREE.Texture;
       if (typeof createImageBitmap === 'function') {
+        const blob = new Blob([data], { type: mimeOf(url) });
         let bmp: ImageBitmap;
         try {
           bmp = await createImageBitmap(blob, TEXTURE_FETCH_OPTIONS);
@@ -713,16 +1083,9 @@ export class AssetManager {
         tex.userData.bitmap = bmp;
         tex.addEventListener('dispose', () => bmp.close());
       } else {
-        const img = await blobToImage(blob);
-        tex = new THREE.Texture(img);
+        tex = new THREE.Texture(await blobToImage(new Blob([data], { type: mimeOf(url) })));
       }
       tex.name = url;
-      configureSetTexture(tex, map === 'height' ? 'orm' : map, this.anisotropy);
-      try {
-        this.renderer.initTexture(tex);
-      } catch {
-        // upload lazily on first use
-      }
       return tex;
     } finally {
       this.endLoad(id, bytes);
@@ -777,6 +1140,23 @@ export class AssetManager {
     this.warned.add(key);
     console.warn(`[assets] ${msg} - using procedural fallback`);
   }
+}
+
+/** Rebind every SkinnedMesh under `other` to the bones (by name) of `primary`: one mixer drives all LODs. */
+function shareSkeleton(primary: THREE.Object3D, other: THREE.Object3D): void {
+  const bones = new Map<string, THREE.Bone>();
+  primary.traverse((o) => {
+    if ((o as THREE.Bone).isBone) bones.set(o.name, o as THREE.Bone);
+  });
+  other.traverse((o) => {
+    const sm = o as THREE.SkinnedMesh;
+    if (!sm.isSkinnedMesh) return;
+    const sk = sm.skeleton;
+    const mapped = sk.bones.map((b) => bones.get(b.name) ?? b);
+    const old = sk;
+    sm.bind(new THREE.Skeleton(mapped, sk.boneInverses), sm.bindMatrix);
+    old.dispose();
+  });
 }
 
 function blobToImage(blob: Blob): Promise<HTMLImageElement> {

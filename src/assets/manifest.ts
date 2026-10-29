@@ -9,9 +9,9 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 10787000,
-    "high": 4256518,
-    "mobile": 2140135
+    "ultra": 12123752,
+    "high": 5496088,
+    "mobile": 3086861
   },
   "assets": {
     "ground_dry_earth": {
@@ -93,6 +93,427 @@ export const ASSET_MANIFEST = {
           }
         }
       }
+    },
+    "impostor_test_tree": {
+      "kind": "impostor",
+      "id": "impostor_test_tree",
+      "category": "pipeline_test",
+      "hash": "6f8805665b",
+      "description": "Pipeline test: hemi-octahedral impostor of the 12 m test tree (A/B with model_test_tree).",
+      "bytes": {
+        "ultra": 719344,
+        "high": 622162,
+        "mobile": 372048
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "layout": "hemi-octahedral",
+      "grid": 8,
+      "radius": 6.8217,
+      "center": [
+        0.355,
+        6.338,
+        0.2436
+      ],
+      "switchDistance": 90,
+      "depthRange": 13.6433,
+      "source": "model_test_tree",
+      "maps": {
+        "albedo": {
+          "ultra": {
+            "url": "impostors/impostor_test_tree/albedo_2048.webp",
+            "bytes": 204356,
+            "size": 2048,
+            "framePx": 256
+          },
+          "high": {
+            "url": "impostors/impostor_test_tree/albedo_1536.webp",
+            "bytes": 262038,
+            "size": 1536,
+            "framePx": 192
+          },
+          "mobile": {
+            "url": "impostors/impostor_test_tree/albedo_1024.webp",
+            "bytes": 166908,
+            "size": 1024,
+            "framePx": 128
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "impostors/impostor_test_tree/normal_1024.webp",
+            "bytes": 514988,
+            "size": 1024,
+            "framePx": 128
+          },
+          "high": {
+            "url": "impostors/impostor_test_tree/normal_768.webp",
+            "bytes": 360124,
+            "size": 768,
+            "framePx": 96
+          },
+          "mobile": {
+            "url": "impostors/impostor_test_tree/normal_512.webp",
+            "bytes": 205140,
+            "size": 512,
+            "framePx": 64
+          }
+        }
+      }
+    },
+    "lut_dawn": {
+      "kind": "lut",
+      "id": "lut_dawn",
+      "category": "luts",
+      "hash": "fd527a4457",
+      "description": "32^3 grade LUT (GRADE_PRESETS.dawn); display-referred, after tone mapping.",
+      "bytes": {
+        "ultra": 7497,
+        "high": 7497,
+        "mobile": 0
+      },
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": null,
+      "size": 32,
+      "layout": "strip-horizontal",
+      "files": {
+        "ultra": {
+          "url": "luts/lut_dawn.png",
+          "bytes": 7497,
+          "width": 1024,
+          "height": 32
+        },
+        "high": {
+          "url": "luts/lut_dawn.png",
+          "bytes": 7497,
+          "width": 1024,
+          "height": 32
+        }
+      },
+      "source": "GRADE_PRESETS.dawn",
+      "strength": 0.35
+    },
+    "lut_dusk": {
+      "kind": "lut",
+      "id": "lut_dusk",
+      "category": "luts",
+      "hash": "31f5cdd5fc",
+      "description": "32^3 grade LUT (GRADE_PRESETS.dusk); display-referred, after tone mapping.",
+      "bytes": {
+        "ultra": 304,
+        "high": 304,
+        "mobile": 0
+      },
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": null,
+      "size": 32,
+      "layout": "strip-horizontal",
+      "files": {
+        "ultra": {
+          "url": "luts/lut_dusk.png",
+          "bytes": 304,
+          "width": 1024,
+          "height": 32
+        },
+        "high": {
+          "url": "luts/lut_dusk.png",
+          "bytes": 304,
+          "width": 1024,
+          "height": 32
+        }
+      },
+      "source": "GRADE_PRESETS.dusk",
+      "strength": 0.35
+    },
+    "lut_fog": {
+      "kind": "lut",
+      "id": "lut_fog",
+      "category": "luts",
+      "hash": "4e4bcddeed",
+      "description": "32^3 grade LUT (GRADE_PRESETS.fog); display-referred, after tone mapping.",
+      "bytes": {
+        "ultra": 6875,
+        "high": 6875,
+        "mobile": 0
+      },
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": null,
+      "size": 32,
+      "layout": "strip-horizontal",
+      "files": {
+        "ultra": {
+          "url": "luts/lut_fog.png",
+          "bytes": 6875,
+          "width": 1024,
+          "height": 32
+        },
+        "high": {
+          "url": "luts/lut_fog.png",
+          "bytes": 6875,
+          "width": 1024,
+          "height": 32
+        }
+      },
+      "source": "GRADE_PRESETS.fog",
+      "strength": 0.35
+    },
+    "lut_golden": {
+      "kind": "lut",
+      "id": "lut_golden",
+      "category": "luts",
+      "hash": "c9e24695b0",
+      "description": "32^3 grade LUT (GRADE_PRESETS.golden); display-referred, after tone mapping.",
+      "bytes": {
+        "ultra": 7476,
+        "high": 7476,
+        "mobile": 0
+      },
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": null,
+      "size": 32,
+      "layout": "strip-horizontal",
+      "files": {
+        "ultra": {
+          "url": "luts/lut_golden.png",
+          "bytes": 7476,
+          "width": 1024,
+          "height": 32
+        },
+        "high": {
+          "url": "luts/lut_golden.png",
+          "bytes": 7476,
+          "width": 1024,
+          "height": 32
+        }
+      },
+      "source": "GRADE_PRESETS.golden",
+      "strength": 0.35
+    },
+    "lut_haze": {
+      "kind": "lut",
+      "id": "lut_haze",
+      "category": "luts",
+      "hash": "83e818e871",
+      "description": "32^3 grade LUT (GRADE_PRESETS.haze); display-referred, after tone mapping.",
+      "bytes": {
+        "ultra": 7502,
+        "high": 7502,
+        "mobile": 0
+      },
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": null,
+      "size": 32,
+      "layout": "strip-horizontal",
+      "files": {
+        "ultra": {
+          "url": "luts/lut_haze.png",
+          "bytes": 7502,
+          "width": 1024,
+          "height": 32
+        },
+        "high": {
+          "url": "luts/lut_haze.png",
+          "bytes": 7502,
+          "width": 1024,
+          "height": 32
+        }
+      },
+      "source": "GRADE_PRESETS.haze",
+      "strength": 0.35
+    },
+    "lut_identity": {
+      "kind": "lut",
+      "id": "lut_identity",
+      "category": "luts",
+      "hash": "cae320a2e7",
+      "description": "32^3 grade LUT (identity); display-referred, after tone mapping.",
+      "bytes": {
+        "ultra": 297,
+        "high": 297,
+        "mobile": 0
+      },
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": null,
+      "size": 32,
+      "layout": "strip-horizontal",
+      "files": {
+        "ultra": {
+          "url": "luts/lut_identity.png",
+          "bytes": 297,
+          "width": 1024,
+          "height": 32
+        },
+        "high": {
+          "url": "luts/lut_identity.png",
+          "bytes": 297,
+          "width": 1024,
+          "height": 32
+        }
+      },
+      "source": "identity",
+      "strength": 1
+    },
+    "lut_monsoon": {
+      "kind": "lut",
+      "id": "lut_monsoon",
+      "category": "luts",
+      "hash": "cde287f559",
+      "description": "32^3 grade LUT (GRADE_PRESETS.monsoon); display-referred, after tone mapping.",
+      "bytes": {
+        "ultra": 7137,
+        "high": 7137,
+        "mobile": 0
+      },
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": null,
+      "size": 32,
+      "layout": "strip-horizontal",
+      "files": {
+        "ultra": {
+          "url": "luts/lut_monsoon.png",
+          "bytes": 7137,
+          "width": 1024,
+          "height": 32
+        },
+        "high": {
+          "url": "luts/lut_monsoon.png",
+          "bytes": 7137,
+          "width": 1024,
+          "height": 32
+        }
+      },
+      "source": "GRADE_PRESETS.monsoon",
+      "strength": 0.35
+    },
+    "lut_night": {
+      "kind": "lut",
+      "id": "lut_night",
+      "category": "luts",
+      "hash": "d307c16040",
+      "description": "32^3 grade LUT (GRADE_PRESETS.night); display-referred, after tone mapping.",
+      "bytes": {
+        "ultra": 5642,
+        "high": 5642,
+        "mobile": 0
+      },
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": null,
+      "size": 32,
+      "layout": "strip-horizontal",
+      "files": {
+        "ultra": {
+          "url": "luts/lut_night.png",
+          "bytes": 5642,
+          "width": 1024,
+          "height": 32
+        },
+        "high": {
+          "url": "luts/lut_night.png",
+          "bytes": 5642,
+          "width": 1024,
+          "height": 32
+        }
+      },
+      "source": "GRADE_PRESETS.night",
+      "strength": 0.35
+    },
+    "model_test_tree": {
+      "kind": "model",
+      "id": "model_test_tree",
+      "category": "pipeline_test",
+      "hash": "acfac43a73",
+      "description": "Pipeline test: 12 m broadleaf tree (mesh side of the impostor A/B).",
+      "bytes": {
+        "ultra": 201796,
+        "high": 201796,
+        "mobile": 201796
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "lods": [
+        {
+          "lod": 0,
+          "url": "models/model_test_tree/model_test_tree.lod0.glb",
+          "bytes": 143212,
+          "triangles": 9472,
+          "drawCalls": 4,
+          "distance": 0
+        },
+        {
+          "lod": 1,
+          "url": "models/model_test_tree/model_test_tree.lod1.glb",
+          "bytes": 58584,
+          "triangles": 2444,
+          "drawCalls": 4,
+          "distance": 60
+        }
+      ],
+      "minLod": {
+        "ultra": 0,
+        "high": 0,
+        "mobile": 0
+      },
+      "bounds": {
+        "min": [
+          -4.5281,
+          -0.0703,
+          -4.3728
+        ],
+        "max": [
+          5.2381,
+          12.7463,
+          4.8601
+        ],
+        "center": [
+          0.355,
+          6.338,
+          0.2436
+        ],
+        "radius": 9.2856
+      },
+      "clips": [],
+      "skinned": false,
+      "clipEvents": {},
+      "rootMotion": {},
+      "construction": null,
+      "sockets": {},
+      "variants": [],
+      "meta": {},
+      "materialSets": [],
+      "sets": {},
+      "footprintMeters": null
     },
     "sandstone_carved_red": {
       "kind": "material",
@@ -216,6 +637,163 @@ export const ASSET_MANIFEST = {
           }
         }
       }
+    },
+    "skin_test_character": {
+      "kind": "model",
+      "id": "skin_test_character",
+      "category": "pipeline_test",
+      "hash": "0641ba4ffe",
+      "description": "Pipeline test: skinned spear-bearer (standard skeleton), idle/walk/attack/die, clipEvents, sockets.",
+      "bytes": {
+        "ultra": 179396,
+        "high": 179396,
+        "mobile": 179396
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "lods": [
+        {
+          "lod": 0,
+          "url": "models/skin_test_character/skin_test_character.lod0.glb",
+          "bytes": 91980,
+          "triangles": 992,
+          "drawCalls": 6,
+          "distance": 0
+        },
+        {
+          "lod": 1,
+          "url": "models/skin_test_character/skin_test_character.lod1.glb",
+          "bytes": 87416,
+          "triangles": 347,
+          "drawCalls": 6,
+          "distance": 14
+        }
+      ],
+      "minLod": {
+        "ultra": 0,
+        "high": 0,
+        "mobile": 0
+      },
+      "bounds": {
+        "min": [
+          -0.295,
+          0.005,
+          -0.195
+        ],
+        "max": [
+          0.61,
+          2.72,
+          0.195
+        ],
+        "center": [
+          0.1575,
+          1.3625,
+          0
+        ],
+        "radius": 1.4442
+      },
+      "clips": [
+        "idle",
+        "walk",
+        "attack",
+        "die"
+      ],
+      "skinned": true,
+      "clipEvents": {
+        "attack": [
+          {
+            "type": "sfx",
+            "time": 0.2667,
+            "data": "sword_light"
+          },
+          {
+            "type": "hit_start",
+            "time": 0.3
+          },
+          {
+            "type": "hit_end",
+            "time": 0.4333
+          },
+          {
+            "type": "cancel",
+            "time": 0.6
+          }
+        ],
+        "walk": [
+          {
+            "type": "footstep",
+            "time": 0,
+            "data": "L"
+          },
+          {
+            "type": "footstep",
+            "time": 0.5333,
+            "data": "R"
+          }
+        ]
+      },
+      "rootMotion": {
+        "attack": {
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "yawDeg": 0
+        },
+        "walk": {
+          "translation": [
+            0,
+            0,
+            1.247
+          ],
+          "yawDeg": 0
+        }
+      },
+      "construction": null,
+      "sockets": {
+        "banner": {
+          "bone": "chest",
+          "position": [
+            0,
+            0.12,
+            0.16
+          ],
+          "rotation": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        "weapon": {
+          "bone": "hand.R",
+          "position": [
+            0,
+            0.05,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "variants": [],
+      "meta": {
+        "faction": "test",
+        "heightMeters": 1.75,
+        "notes": "TA-07 pipeline test character"
+      },
+      "materialSets": [],
+      "sets": {},
+      "footprintMeters": null
     },
     "sky_day": {
       "kind": "hdri",
@@ -442,6 +1020,152 @@ export const ASSET_MANIFEST = {
         25.2,
         25.2
       ]
+    },
+    "vat_test_dummy": {
+      "kind": "vat",
+      "id": "vat_test_dummy",
+      "category": "pipeline_test",
+      "hash": "282a6857fd",
+      "description": "Pipeline test: rigged spear-bearer, idle/walk/attack VAT (15 fps), LOD0 + re-baked LOD1.",
+      "bytes": {
+        "ultra": 193486,
+        "high": 193486,
+        "mobile": 193486
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "fps": 15,
+      "frames": 53,
+      "clips": [
+        {
+          "name": "attack",
+          "startFrame": 0,
+          "frames": 13,
+          "fps": 15,
+          "loop": false,
+          "strideMeters": null,
+          "speed": null
+        },
+        {
+          "name": "idle",
+          "startFrame": 13,
+          "frames": 24,
+          "fps": 15,
+          "loop": true,
+          "strideMeters": null,
+          "speed": null
+        },
+        {
+          "name": "walk",
+          "startFrame": 37,
+          "frames": 16,
+          "fps": 15,
+          "loop": true,
+          "strideMeters": 1.2474,
+          "speed": 1.1694
+        }
+      ],
+      "lods": [
+        {
+          "lod": 0,
+          "url": "vat/vat_test_dummy/vat_test_dummy.lod0.glb",
+          "bytes": 13848,
+          "triangles": 764,
+          "vertices": 436,
+          "distance": 0,
+          "errorMm": 0.4723,
+          "vat": {
+            "url": "vat/vat_test_dummy/vat_test_dummy.lod0.vat",
+            "bytes": 122813,
+            "rawBytes": 184864,
+            "width": 436,
+            "height": 53,
+            "rowsPerFrame": 1
+          }
+        },
+        {
+          "lod": 1,
+          "url": "vat/vat_test_dummy/vat_test_dummy.lod1.glb",
+          "bytes": 6680,
+          "triangles": 228,
+          "vertices": 165,
+          "distance": 35,
+          "errorMm": 0.4189,
+          "vat": {
+            "url": "vat/vat_test_dummy/vat_test_dummy.lod1.vat",
+            "bytes": 50145,
+            "rawBytes": 69960,
+            "width": 165,
+            "height": 53,
+            "rowsPerFrame": 1
+          }
+        }
+      ],
+      "minLod": {
+        "high": 0,
+        "mobile": 0,
+        "ultra": 0
+      },
+      "bounds": {
+        "min": [
+          -1.232,
+          -0.0558,
+          -1.3047
+        ],
+        "max": [
+          0.9099,
+          2.6828,
+          1.204
+        ],
+        "center": [
+          -0.161,
+          1.3135,
+          -0.0504
+        ],
+        "radius": 2.1437
+      },
+      "restBounds": {
+        "min": [
+          -0.3463,
+          0.0041,
+          -0.4745
+        ],
+        "max": [
+          0.5752,
+          2.6403,
+          0.55
+        ],
+        "center": [
+          0.1144,
+          1.3222,
+          0.0377
+        ],
+        "radius": 1.4811
+      },
+      "vertexColors": true,
+      "parts": [
+        "skin",
+        "cloth",
+        "team",
+        "metal",
+        "wood",
+        "leather"
+      ],
+      "partColors": [
+        "#8f5d40",
+        "#d9cfbb",
+        "#ece6da",
+        "#4a4a4c",
+        "#a4834f",
+        "#6b4a32"
+      ],
+      "impostor": null,
+      "materialSets": [],
+      "sets": {}
     }
   }
 } as const satisfies AssetManifest;

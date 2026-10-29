@@ -175,6 +175,676 @@
         "mobile": 269520
       }
     },
+    "impostor_test_tree": {
+      "id": "impostor_test_tree",
+      "kind": "impostor",
+      "category": "pipeline_test",
+      "script": "tools/blender/assets/pipeline_test/impostor_test_tree.py",
+      "inputHash": "6f8805665bb9aef618e234877003435fb55333cdfd66947e3291ff760cc8248d",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "center": [
+          0.355,
+          6.338,
+          0.2436
+        ],
+        "depthRange": 13.6433,
+        "description": "Pipeline test: hemi-octahedral impostor of the 12 m test tree (A/B with model_test_tree).",
+        "framePx": {
+          "high": 192,
+          "mobile": 128,
+          "ultra": 256
+        },
+        "grid": 8,
+        "layout": "hemi-octahedral",
+        "radius": 6.8217,
+        "source": "model_test_tree",
+        "switchDistance": 90
+      },
+      "files": [
+        {
+          "path": "impostors/impostor_test_tree/albedo_2048.webp",
+          "bytes": 204356,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "impostor",
+          "map": "albedo",
+          "size": 2048
+        },
+        {
+          "path": "impostors/impostor_test_tree/albedo_1536.webp",
+          "bytes": 262038,
+          "tiers": [
+            "high"
+          ],
+          "kind": "impostor",
+          "map": "albedo",
+          "size": 1536
+        },
+        {
+          "path": "impostors/impostor_test_tree/albedo_1024.webp",
+          "bytes": 166908,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "impostor",
+          "map": "albedo",
+          "size": 1024
+        },
+        {
+          "path": "impostors/impostor_test_tree/normal_1024.webp",
+          "bytes": 514988,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "impostor",
+          "map": "normal",
+          "size": 1024
+        },
+        {
+          "path": "impostors/impostor_test_tree/normal_768.webp",
+          "bytes": 360124,
+          "tiers": [
+            "high"
+          ],
+          "kind": "impostor",
+          "map": "normal",
+          "size": 768
+        },
+        {
+          "path": "impostors/impostor_test_tree/normal_512.webp",
+          "bytes": 205140,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "impostor",
+          "map": "normal",
+          "size": 512
+        }
+      ],
+      "impostor": {
+        "maps": {
+          "albedo": {
+            "ultra": {
+              "path": "impostors/impostor_test_tree/albedo_2048.webp",
+              "bytes": 204356,
+              "size": 2048,
+              "framePx": 256
+            },
+            "high": {
+              "path": "impostors/impostor_test_tree/albedo_1536.webp",
+              "bytes": 262038,
+              "size": 1536,
+              "framePx": 192
+            },
+            "mobile": {
+              "path": "impostors/impostor_test_tree/albedo_1024.webp",
+              "bytes": 166908,
+              "size": 1024,
+              "framePx": 128
+            }
+          },
+          "normal": {
+            "ultra": {
+              "path": "impostors/impostor_test_tree/normal_1024.webp",
+              "bytes": 514988,
+              "size": 1024,
+              "framePx": 128
+            },
+            "high": {
+              "path": "impostors/impostor_test_tree/normal_768.webp",
+              "bytes": 360124,
+              "size": 768,
+              "framePx": 96
+            },
+            "mobile": {
+              "path": "impostors/impostor_test_tree/normal_512.webp",
+              "bytes": 205140,
+              "size": 512,
+              "framePx": 64
+            }
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 719344,
+        "high": 622162,
+        "mobile": 372048
+      }
+    },
+    "lut_dawn": {
+      "id": "lut_dawn",
+      "kind": "lut",
+      "category": "luts",
+      "script": "tools/blender/assets/luts/lut_dawn.py",
+      "inputHash": "fd527a4457d33046b3b883ff7e1b593667f490e1e9e030fec8a16936bc4c3072",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "description": "32^3 grade LUT (GRADE_PRESETS.dawn); display-referred, after tone mapping.",
+        "preset": "dawn",
+        "size": 32,
+        "source": "GRADE_PRESETS.dawn",
+        "strength": 0.35
+      },
+      "files": [
+        {
+          "path": "luts/lut_dawn.png",
+          "bytes": 7497,
+          "tiers": [
+            "ultra",
+            "high"
+          ],
+          "kind": "lut",
+          "size": 32
+        }
+      ],
+      "publishKey": "tiers=ultra,high;fallback=",
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": null,
+      "lut": {
+        "files": {
+          "ultra": {
+            "path": "luts/lut_dawn.png",
+            "bytes": 7497,
+            "width": 1024,
+            "height": 32
+          },
+          "high": {
+            "path": "luts/lut_dawn.png",
+            "bytes": 7497,
+            "width": 1024,
+            "height": 32
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 7497,
+        "high": 7497,
+        "mobile": 0
+      }
+    },
+    "lut_dusk": {
+      "id": "lut_dusk",
+      "kind": "lut",
+      "category": "luts",
+      "script": "tools/blender/assets/luts/lut_dusk.py",
+      "inputHash": "31f5cdd5fccbbaa635ba06ced27311bdaedc50ccaeb8854898649036789d7e3e",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "description": "32^3 grade LUT (GRADE_PRESETS.dusk); display-referred, after tone mapping.",
+        "preset": "dusk",
+        "size": 32,
+        "source": "GRADE_PRESETS.dusk",
+        "strength": 0.35
+      },
+      "files": [
+        {
+          "path": "luts/lut_dusk.png",
+          "bytes": 304,
+          "tiers": [
+            "ultra",
+            "high"
+          ],
+          "kind": "lut",
+          "size": 32
+        }
+      ],
+      "publishKey": "tiers=ultra,high;fallback=",
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": null,
+      "lut": {
+        "files": {
+          "ultra": {
+            "path": "luts/lut_dusk.png",
+            "bytes": 304,
+            "width": 1024,
+            "height": 32
+          },
+          "high": {
+            "path": "luts/lut_dusk.png",
+            "bytes": 304,
+            "width": 1024,
+            "height": 32
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 304,
+        "high": 304,
+        "mobile": 0
+      }
+    },
+    "lut_fog": {
+      "id": "lut_fog",
+      "kind": "lut",
+      "category": "luts",
+      "script": "tools/blender/assets/luts/lut_fog.py",
+      "inputHash": "4e4bcddeed68ffdd40edc74d7b4359ec372624a7fee35fca1ea2045015461c7c",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "description": "32^3 grade LUT (GRADE_PRESETS.fog); display-referred, after tone mapping.",
+        "preset": "fog",
+        "size": 32,
+        "source": "GRADE_PRESETS.fog",
+        "strength": 0.35
+      },
+      "files": [
+        {
+          "path": "luts/lut_fog.png",
+          "bytes": 6875,
+          "tiers": [
+            "ultra",
+            "high"
+          ],
+          "kind": "lut",
+          "size": 32
+        }
+      ],
+      "publishKey": "tiers=ultra,high;fallback=",
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": null,
+      "lut": {
+        "files": {
+          "ultra": {
+            "path": "luts/lut_fog.png",
+            "bytes": 6875,
+            "width": 1024,
+            "height": 32
+          },
+          "high": {
+            "path": "luts/lut_fog.png",
+            "bytes": 6875,
+            "width": 1024,
+            "height": 32
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 6875,
+        "high": 6875,
+        "mobile": 0
+      }
+    },
+    "lut_golden": {
+      "id": "lut_golden",
+      "kind": "lut",
+      "category": "luts",
+      "script": "tools/blender/assets/luts/lut_golden.py",
+      "inputHash": "c9e24695b06cc5d1e30e239865f787f1e81dd9c590dcf4cac218f0b860de304d",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "description": "32^3 grade LUT (GRADE_PRESETS.golden); display-referred, after tone mapping.",
+        "preset": "golden",
+        "size": 32,
+        "source": "GRADE_PRESETS.golden",
+        "strength": 0.35
+      },
+      "files": [
+        {
+          "path": "luts/lut_golden.png",
+          "bytes": 7476,
+          "tiers": [
+            "ultra",
+            "high"
+          ],
+          "kind": "lut",
+          "size": 32
+        }
+      ],
+      "publishKey": "tiers=ultra,high;fallback=",
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": null,
+      "lut": {
+        "files": {
+          "ultra": {
+            "path": "luts/lut_golden.png",
+            "bytes": 7476,
+            "width": 1024,
+            "height": 32
+          },
+          "high": {
+            "path": "luts/lut_golden.png",
+            "bytes": 7476,
+            "width": 1024,
+            "height": 32
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 7476,
+        "high": 7476,
+        "mobile": 0
+      }
+    },
+    "lut_haze": {
+      "id": "lut_haze",
+      "kind": "lut",
+      "category": "luts",
+      "script": "tools/blender/assets/luts/lut_haze.py",
+      "inputHash": "83e818e871d4c659cf67c7a288daf85b5e38b99528a999865fba257bdf5975c7",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "description": "32^3 grade LUT (GRADE_PRESETS.haze); display-referred, after tone mapping.",
+        "preset": "haze",
+        "size": 32,
+        "source": "GRADE_PRESETS.haze",
+        "strength": 0.35
+      },
+      "files": [
+        {
+          "path": "luts/lut_haze.png",
+          "bytes": 7502,
+          "tiers": [
+            "ultra",
+            "high"
+          ],
+          "kind": "lut",
+          "size": 32
+        }
+      ],
+      "publishKey": "tiers=ultra,high;fallback=",
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": null,
+      "lut": {
+        "files": {
+          "ultra": {
+            "path": "luts/lut_haze.png",
+            "bytes": 7502,
+            "width": 1024,
+            "height": 32
+          },
+          "high": {
+            "path": "luts/lut_haze.png",
+            "bytes": 7502,
+            "width": 1024,
+            "height": 32
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 7502,
+        "high": 7502,
+        "mobile": 0
+      }
+    },
+    "lut_identity": {
+      "id": "lut_identity",
+      "kind": "lut",
+      "category": "luts",
+      "script": "tools/blender/assets/luts/lut_identity.py",
+      "inputHash": "cae320a2e7f49829fb15c04ec7858080f53a51aa8689e1dcc0c1d073c4db6b14",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "description": "32^3 grade LUT (identity); display-referred, after tone mapping.",
+        "preset": null,
+        "size": 32,
+        "source": "identity",
+        "strength": 1
+      },
+      "files": [
+        {
+          "path": "luts/lut_identity.png",
+          "bytes": 297,
+          "tiers": [
+            "ultra",
+            "high"
+          ],
+          "kind": "lut",
+          "size": 32
+        }
+      ],
+      "publishKey": "tiers=ultra,high;fallback=",
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": null,
+      "lut": {
+        "files": {
+          "ultra": {
+            "path": "luts/lut_identity.png",
+            "bytes": 297,
+            "width": 1024,
+            "height": 32
+          },
+          "high": {
+            "path": "luts/lut_identity.png",
+            "bytes": 297,
+            "width": 1024,
+            "height": 32
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 297,
+        "high": 297,
+        "mobile": 0
+      }
+    },
+    "lut_monsoon": {
+      "id": "lut_monsoon",
+      "kind": "lut",
+      "category": "luts",
+      "script": "tools/blender/assets/luts/lut_monsoon.py",
+      "inputHash": "cde287f559044d55e527b850cb6d0c1bf3df0e9058cf19b329bceb40000e28e5",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "description": "32^3 grade LUT (GRADE_PRESETS.monsoon); display-referred, after tone mapping.",
+        "preset": "monsoon",
+        "size": 32,
+        "source": "GRADE_PRESETS.monsoon",
+        "strength": 0.35
+      },
+      "files": [
+        {
+          "path": "luts/lut_monsoon.png",
+          "bytes": 7137,
+          "tiers": [
+            "ultra",
+            "high"
+          ],
+          "kind": "lut",
+          "size": 32
+        }
+      ],
+      "publishKey": "tiers=ultra,high;fallback=",
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": null,
+      "lut": {
+        "files": {
+          "ultra": {
+            "path": "luts/lut_monsoon.png",
+            "bytes": 7137,
+            "width": 1024,
+            "height": 32
+          },
+          "high": {
+            "path": "luts/lut_monsoon.png",
+            "bytes": 7137,
+            "width": 1024,
+            "height": 32
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 7137,
+        "high": 7137,
+        "mobile": 0
+      }
+    },
+    "lut_night": {
+      "id": "lut_night",
+      "kind": "lut",
+      "category": "luts",
+      "script": "tools/blender/assets/luts/lut_night.py",
+      "inputHash": "d307c160405891f556fd87f1bf19409c731a7c7f047a1b3e15e2cc0a890d6f13",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "description": "32^3 grade LUT (GRADE_PRESETS.night); display-referred, after tone mapping.",
+        "preset": "night",
+        "size": 32,
+        "source": "GRADE_PRESETS.night",
+        "strength": 0.35
+      },
+      "files": [
+        {
+          "path": "luts/lut_night.png",
+          "bytes": 5642,
+          "tiers": [
+            "ultra",
+            "high"
+          ],
+          "kind": "lut",
+          "size": 32
+        }
+      ],
+      "publishKey": "tiers=ultra,high;fallback=",
+      "tiers": [
+        "ultra",
+        "high"
+      ],
+      "fallback": null,
+      "lut": {
+        "files": {
+          "ultra": {
+            "path": "luts/lut_night.png",
+            "bytes": 5642,
+            "width": 1024,
+            "height": 32
+          },
+          "high": {
+            "path": "luts/lut_night.png",
+            "bytes": 5642,
+            "width": 1024,
+            "height": 32
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 5642,
+        "high": 5642,
+        "mobile": 0
+      }
+    },
+    "model_test_tree": {
+      "id": "model_test_tree",
+      "kind": "model",
+      "category": "pipeline_test",
+      "script": "tools/blender/assets/pipeline_test/model_test_tree.py",
+      "inputHash": "acfac43a734a6614fe5e56e6839cbf00e68463b7ce4f83e7fa5daad6a8162a74",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "bounds": {
+          "center": [
+            0.355,
+            6.338,
+            0.2436
+          ],
+          "max": [
+            5.2381,
+            12.7463,
+            4.8601
+          ],
+          "min": [
+            -4.5281,
+            -0.0703,
+            -4.3728
+          ],
+          "radius": 9.2856
+        },
+        "description": "Pipeline test: 12 m broadleaf tree (mesh side of the impostor A/B).",
+        "lodDistances": [
+          0,
+          60
+        ],
+        "triangles": [
+          9472,
+          2444
+        ]
+      },
+      "files": [
+        {
+          "path": "models/model_test_tree/model_test_tree.lod0.glb",
+          "bytes": 143212,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "model",
+          "lod": 0,
+          "triangles": 9472
+        },
+        {
+          "path": "models/model_test_tree/model_test_tree.lod1.glb",
+          "bytes": 58584,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "model",
+          "lod": 1,
+          "triangles": 2444
+        }
+      ],
+      "lods": [
+        {
+          "lod": 0,
+          "path": "models/model_test_tree/model_test_tree.lod0.glb",
+          "bytes": 143212,
+          "triangles": 9472,
+          "drawCalls": 4,
+          "skinned": false,
+          "animations": []
+        },
+        {
+          "lod": 1,
+          "path": "models/model_test_tree/model_test_tree.lod1.glb",
+          "bytes": 58584,
+          "triangles": 2444,
+          "drawCalls": 4,
+          "skinned": false,
+          "animations": []
+        }
+      ],
+      "sets": {},
+      "footprint": null,
+      "bytes": {
+        "ultra": 201796,
+        "high": 201796,
+        "mobile": 201796
+      }
+    },
     "sandstone_carved_red": {
       "id": "sandstone_carved_red",
       "kind": "material",
@@ -479,6 +1149,199 @@
         "ultra": 4603642,
         "high": 1348936,
         "mobile": 346108
+      }
+    },
+    "skin_test_character": {
+      "id": "skin_test_character",
+      "kind": "model",
+      "category": "pipeline_test",
+      "script": "tools/blender/assets/pipeline_test/skin_test_character.py",
+      "inputHash": "0641ba4ffecc86dd3a9c0370722aa328deed6a57543abd5b328ed65167d12e33",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "bounds": {
+          "center": [
+            0.1575,
+            1.3625,
+            0
+          ],
+          "max": [
+            0.61,
+            2.72,
+            0.195
+          ],
+          "min": [
+            -0.295,
+            0.005,
+            -0.195
+          ],
+          "radius": 1.4442
+        },
+        "clipEvents": {
+          "attack": [
+            {
+              "time": 0.3,
+              "type": "hit_start"
+            },
+            {
+              "time": 0.43333333333333335,
+              "type": "hit_end"
+            },
+            {
+              "time": 0.6,
+              "type": "cancel"
+            },
+            {
+              "data": "sword_light",
+              "time": 0.26666666666666666,
+              "type": "sfx"
+            }
+          ],
+          "walk": [
+            {
+              "data": "L",
+              "time": 0,
+              "type": "footstep"
+            },
+            {
+              "data": "R",
+              "time": 0.5333333333333333,
+              "type": "footstep"
+            }
+          ]
+        },
+        "clips": [
+          "idle",
+          "walk",
+          "attack",
+          "die"
+        ],
+        "description": "Pipeline test: skinned spear-bearer (standard skeleton), idle/walk/attack/die, clipEvents, sockets.",
+        "lodDistances": [
+          0,
+          14
+        ],
+        "meta": {
+          "faction": "test",
+          "heightMeters": 1.75,
+          "notes": "TA-07 pipeline test character"
+        },
+        "rootMotion": {
+          "attack": {
+            "translation": [
+              0,
+              0,
+              0
+            ],
+            "yawDeg": 0
+          },
+          "walk": {
+            "translation": [
+              0,
+              0,
+              1.247
+            ],
+            "yawDeg": 0
+          }
+        },
+        "sockets": {
+          "banner": {
+            "bone": "chest",
+            "position": [
+              0,
+              0.12,
+              0.16
+            ],
+            "rotation": [
+              0,
+              0,
+              0,
+              1
+            ]
+          },
+          "weapon": {
+            "bone": "hand.R",
+            "position": [
+              0,
+              0.05,
+              0
+            ],
+            "rotation": [
+              0,
+              0,
+              0,
+              1
+            ]
+          }
+        },
+        "triangles": [
+          992,
+          347
+        ]
+      },
+      "files": [
+        {
+          "path": "models/skin_test_character/skin_test_character.lod0.glb",
+          "bytes": 91980,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "model",
+          "lod": 0,
+          "triangles": 992
+        },
+        {
+          "path": "models/skin_test_character/skin_test_character.lod1.glb",
+          "bytes": 87416,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "model",
+          "lod": 1,
+          "triangles": 347
+        }
+      ],
+      "lods": [
+        {
+          "lod": 0,
+          "path": "models/skin_test_character/skin_test_character.lod0.glb",
+          "bytes": 91980,
+          "triangles": 992,
+          "drawCalls": 6,
+          "skinned": true,
+          "animations": [
+            "attack",
+            "die",
+            "idle",
+            "walk"
+          ]
+        },
+        {
+          "lod": 1,
+          "path": "models/skin_test_character/skin_test_character.lod1.glb",
+          "bytes": 87416,
+          "triangles": 347,
+          "drawCalls": 6,
+          "skinned": true,
+          "animations": [
+            "attack",
+            "die",
+            "idle",
+            "walk"
+          ]
+        }
+      ],
+      "sets": {},
+      "footprint": null,
+      "bytes": {
+        "ultra": 179396,
+        "high": 179396,
+        "mobile": 179396
       }
     },
     "sky_day": {
@@ -879,6 +1742,237 @@
         "ultra": 1921316,
         "high": 1566000,
         "mobile": 1359552
+      }
+    },
+    "vat_test_dummy": {
+      "id": "vat_test_dummy",
+      "kind": "vat",
+      "category": "pipeline_test",
+      "script": "tools/blender/assets/pipeline_test/vat_test_dummy.py",
+      "inputHash": "282a6857fda474ac3165b08d47e1eec9e2f04003867ef00d6f678f432e95c68f",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "bounds": {
+          "center": [
+            -0.161,
+            1.3135,
+            -0.0504
+          ],
+          "max": [
+            0.9099,
+            2.6828,
+            1.204
+          ],
+          "min": [
+            -1.232,
+            -0.0558,
+            -1.3047
+          ],
+          "radius": 2.1437
+        },
+        "clips": [
+          {
+            "fps": 15,
+            "frames": 13,
+            "loop": false,
+            "name": "attack",
+            "speed": null,
+            "startFrame": 0,
+            "strideMeters": null
+          },
+          {
+            "fps": 15,
+            "frames": 24,
+            "loop": true,
+            "name": "idle",
+            "speed": null,
+            "startFrame": 13,
+            "strideMeters": null
+          },
+          {
+            "fps": 15,
+            "frames": 16,
+            "loop": true,
+            "name": "walk",
+            "speed": 1.1694352235645056,
+            "startFrame": 37,
+            "strideMeters": 1.2473975718021393
+          }
+        ],
+        "description": "Pipeline test: rigged spear-bearer, idle/walk/attack VAT (15 fps), LOD0 + re-baked LOD1.",
+        "fps": 15,
+        "frames": 53,
+        "lodDistances": [
+          0,
+          35
+        ],
+        "lods": [
+          {
+            "errorMm": 0.4723,
+            "height": 53,
+            "lod": 0,
+            "normalErrorDeg": 0.935,
+            "rowsPerFrame": 1,
+            "triangles": 764,
+            "vertices": 436,
+            "width": 436
+          },
+          {
+            "errorMm": 0.4189,
+            "height": 53,
+            "lod": 1,
+            "normalErrorDeg": 0.91,
+            "rowsPerFrame": 1,
+            "triangles": 228,
+            "vertices": 165,
+            "width": 165
+          }
+        ],
+        "materialSets": [],
+        "minLod": {
+          "high": 0,
+          "mobile": 0,
+          "ultra": 0
+        },
+        "partColors": [
+          "#8f5d40",
+          "#d9cfbb",
+          "#ece6da",
+          "#4a4a4c",
+          "#a4834f",
+          "#6b4a32"
+        ],
+        "parts": [
+          "skin",
+          "cloth",
+          "team",
+          "metal",
+          "wood",
+          "leather"
+        ],
+        "rest": {
+          "clip": "idle",
+          "frame": 0
+        },
+        "restBounds": {
+          "center": [
+            0.1144,
+            1.3222,
+            0.0377
+          ],
+          "max": [
+            0.5752,
+            2.6403,
+            0.55
+          ],
+          "min": [
+            -0.3463,
+            0.0041,
+            -0.4745
+          ],
+          "radius": 1.4811
+        },
+        "vertexColors": true
+      },
+      "files": [
+        {
+          "path": "vat/vat_test_dummy/vat_test_dummy.lod0.glb",
+          "bytes": 13848,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "vat-mesh",
+          "lod": 0,
+          "triangles": 764
+        },
+        {
+          "path": "vat/vat_test_dummy/vat_test_dummy.lod0.vat",
+          "bytes": 122813,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "vat-data",
+          "lod": 0
+        },
+        {
+          "path": "vat/vat_test_dummy/vat_test_dummy.lod1.glb",
+          "bytes": 6680,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "vat-mesh",
+          "lod": 1,
+          "triangles": 228
+        },
+        {
+          "path": "vat/vat_test_dummy/vat_test_dummy.lod1.vat",
+          "bytes": 50145,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "vat-data",
+          "lod": 1
+        }
+      ],
+      "vat": {
+        "lods": [
+          {
+            "lod": 0,
+            "path": "vat/vat_test_dummy/vat_test_dummy.lod0.glb",
+            "bytes": 13848,
+            "triangles": 764,
+            "vertices": 436,
+            "attributes": [
+              "POSITION",
+              "NORMAL",
+              "COLOR_0"
+            ],
+            "vat": {
+              "path": "vat/vat_test_dummy/vat_test_dummy.lod0.vat",
+              "bytes": 122813,
+              "rawBytes": 184864,
+              "width": 436,
+              "height": 53,
+              "rowsPerFrame": 1
+            }
+          },
+          {
+            "lod": 1,
+            "path": "vat/vat_test_dummy/vat_test_dummy.lod1.glb",
+            "bytes": 6680,
+            "triangles": 228,
+            "vertices": 165,
+            "attributes": [
+              "POSITION",
+              "NORMAL",
+              "COLOR_0"
+            ],
+            "vat": {
+              "path": "vat/vat_test_dummy/vat_test_dummy.lod1.vat",
+              "bytes": 50145,
+              "rawBytes": 69960,
+              "width": 165,
+              "height": 53,
+              "rowsPerFrame": 1
+            }
+          }
+        ],
+        "impostor": null,
+        "sets": {}
+      },
+      "bytes": {
+        "ultra": 193486,
+        "high": 193486,
+        "mobile": 193486
       }
     }
   }
