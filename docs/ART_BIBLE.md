@@ -1120,15 +1120,21 @@ banner emblems, UI. Mobile must look like the same game in a smaller window.
 | Reflections | env map | env map | planar (rivers) | SSR + planar |
 | DoF / grain / CA | off | off | hero + cutscenes | all close bands |
 | Grass | off (terrain color) | 18 blades/m^2 | 40 | 70 |
-| Trees | impostors beyond 90 m | LOD1 beyond 35 m | full chain | full chain, longer LOD0 |
+| Trees | impostors beyond 90 m | LOD1 beyond 35 m, impostors beyond 160 m | full chain, impostors beyond 220 m | full chain, longer LOD0, impostors beyond 300 m |
 | Soldiers | VAT LOD1 + impostors | VAT LOD0 near | VAT LOD0 | + skinned hero-quality near cinematic camera |
-| Particles / weather | 400 / 1,500 | 1,200 / 4,000 | 3,000 / 9,000 | 6,000 / 15,000 |
+| Particles / weather | 400 / 1,500 | 1,200 / 4,000 | 3,000 / 9,000 | 6,000 / 16,000 |
 | Practical lights (torches) | 1 | 4 | 8 | 16 |
 | Banners | static mesh | cloth shader | cloth shader | cloth shader + lit sheen |
 | Post | single merged pass (grade + vignette + FXAA) | separate, FXAA | SMAA | SMAA / TAA in hero |
 
 Low tier compensates for missing AO with baked AO in vertex colors and macro maps (stronger by 20%), and
 for missing bloom with 30% brighter emissives on flames and lamps.
+
+Tree impostor distances are `QualitySettings.treeImpostorDistance` (90 / 160 / 220 / 300 m; high matches
+the ASSET_LIST §0.3 reference chain 35 / 90 / 220 m) and, like every LOD switch, scale with
+`ZoomLook.lodBias` (§2). Particle and weather counts are `QualitySettings.particles` / `weatherParticles`.
+The ultra post stays SMAA in the RTS bands; TAA is for hero and cinematic views until GFX-01 shows no
+ghosting on moving crowds, spears and banners at tactical zoom.
 
 ---
 
