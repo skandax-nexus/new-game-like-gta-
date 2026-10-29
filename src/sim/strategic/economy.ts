@@ -45,7 +45,15 @@ import { buildingLevel, emptyMods, factionMod, incomeMultiplier, sandboxFertilit
 import { connectedRoadShare, realmComponents } from './network';
 import { countTreaties, paysTributeTo } from './treaties';
 import { recoverMarketPrices } from './market';
-import { makeArmyUnit } from './armies';
+import { progressConstruction, repairWallsDaily } from './construction';
+import { progressRecruitment } from './recruitment';
+import { assignMissingCells, footprintOf } from './placement';
+
+/** v1 saves (and buildings the layout could not place yet) lack cells. */
+function needsCells(s: SettlementState): boolean {
+  for (const b of s.buildings) if (!b.cell && footprintOf(b.type)?.placement !== 'perimeter') return true;
+  return false;
+}
 
 export { buildingLevel };
 
@@ -519,16 +527,6 @@ export function materialsProduction(world: WorldState, s: SettlementState): { ti
   return res;
 }
 
-/** Idle builders per settlement for today (set by construction progress; baseline: all idle without jobs). */
-export type IdleBuildersFn = (world: WorldState, s: SettlementState) => number;
-
-let jobsHook: { construction: (world: WorldState, s: SettlementState, out: SimEvent[]) => number; recruitment: (world: WorldState, s: SettlementState, out: SimEvent[]) => void } | null = null;
-
-/** Construction / recruitment progress hooks (registered by construction.ts / recruitment.ts). */
-export function registerJobHooks(h: NonNullable<typeof jobsHook>): void {
-  jobsHook = h;
-}
-
 /** The whole daily economy. */
 export function updateEconomyDaily(world: WorldState, out: SimEvent[]): void {
   deliverSandboxStockpiles(world);
@@ -563,10 +561,11 @@ export function updateEconomyDaily(world: WorldState, out: SimEvent[]): void {
       f.treasury += m.wealth;
       addMonthToDate(world, f.id, 'other_income', m.wealth);
     }
-    const idle = jobsHook ? jobsHook.construction(world, s, out) : baselineConstruction(world, s, out);
+    if (needsCells(s)) assignMissingCells(world, s);
+    const idle = progressConstruction(world, s, out);
+    repairWallsDaily(world, s);
     updateLocal(world, s, mods, idle);
-    if (jobsHook) jobsHook.recruitment(world, s, out);
-    else baselineRecruitment(world, s, out);
+    progressRecruitment(world, s, out);
   }
   for (const [fid, v] of day.produced) addStat(world, fid, 'grain_harvested', v);
   recoverMarketPrices(world);
@@ -586,41 +585,6 @@ function expirePolicies(world: WorldState, out: SimEvent[]): void {
     if (f.policies.rationingUntilDay !== null) anyRationing = true;
   }
   if (!anyRationing && world.events.flags.rationing !== undefined) delete world.events.flags.rationing;
-}
-
-// Baseline job progress kept until construction.ts / recruitment.ts register their hooks.
-function baselineConstruction(world: WorldState, s: SettlementState, out: SimEvent[]): number {
-  if (s.construction.length === 0) return 1;
-  const job = s.construction[0]!;
-  const def = BUILDINGS[job.type];
-  const speed = FACTIONS[s.ownerFactionId ?? '']?.modifiers.constructionSpeed ?? 1;
-  job.progress += (speed * (0.5 + s.laborAllocation.construction)) / Math.max(1, def.buildDays);
-  if (job.progress >= 1) {
-    s.construction.shift();
-    const existing = s.buildings.find((b) => b.type === job.type);
-    if (existing) existing.level = job.targetLevel;
-    else s.buildings.push({ type: job.type, level: job.targetLevel, condition: 1 });
-    out.push({ kind: 'construction_complete', settlementId: s.id, building: job.type, level: job.targetLevel });
-    void world;
-  }
-  return 0;
-}
-
-function baselineRecruitment(world: WorldState, s: SettlementState, out: SimEvent[]): void {
-  if (s.recruitment.length === 0) return;
-  const job = s.recruitment[0]!;
-  const def = UNITS[job.unitClass as UnitClass];
-  job.progress += 1 / Math.max(1, def.stats.recruitDays);
-  if (job.progress < 1) return;
-  s.recruitment.shift();
-  const army = job.targetArmyId ? world.armies[job.targetArmyId] : null;
-  for (let i = 0; i < job.formations; i++) {
-    const unit = makeArmyUnit(world, job.unitClass);
-    if (army) army.units.push(unit);
-    else s.garrison.push(unit);
-  }
-  s.recruitPool = Math.max(0, s.recruitPool - def.stats.menPerFormation * job.formations);
-  out.push({ kind: 'recruitment_complete', settlementId: s.id, unitClass: job.unitClass, armyId: army?.id ?? null });
 }
 
 // ---------------------------------------------------------------------------------------------------

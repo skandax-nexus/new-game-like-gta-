@@ -33,6 +33,7 @@ import { seasonOf, totalDays } from './seasons';
 import { addChronicle, withWorldRng } from './state';
 import { armySoldiers } from './armies';
 import { createTreaty, declareWar, hasTreaty } from './diplomacy';
+import { registerEffectRunner } from './construction';
 
 function cmp(a: number, op: CompareOp, b: number): boolean {
   switch (op) {
@@ -409,3 +410,8 @@ export function checkObjectives(world: WorldState, out: SimEvent[]): void {
     }
   }
 }
+
+// Landmark onComplete effects run through the event DSL (registered here to avoid an import cycle).
+registerEffectRunner((world, effects, scope, out) => {
+  for (const e of effects) applyEffect(world, e, scope, out);
+});

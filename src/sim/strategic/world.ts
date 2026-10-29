@@ -58,6 +58,9 @@ import { executeMarketTrade } from './market';
 import { updateRoadBlocks } from './network';
 import { factionMod } from './modifiers';
 import { laborFor } from './economy';
+import { assignMissingCells } from './placement';
+import { cancelConstruction, queueBuild, queueRepair, startLandmark } from './construction';
+import { queueRecruit } from './recruitment';
 import { updateEconomyDaily, updateEconomyMonthly } from './economy';
 import { orderArmy, updateArmiesDaily, updateArmiesHourly, armySoldiers, makeArmy, makeArmyUnit } from './armies';
 import { declareWar, makePeace, respondToProposal, proposeTreaty, updateDiplomacyDaily, updateDiplomacyMonthly, createTreaty } from './diplomacy';
@@ -374,6 +377,9 @@ export function createWorld(setup: WorldSetup): WorldState {
     roads.adjacency[edge.a]?.push(edge.id);
     roads.adjacency[edge.b]?.push(edge.id);
   });
+
+  // Starting buildings receive grid cells (placement.ts; render lays out what still has none).
+  for (const id of Object.keys(world.settlements).sort()) assignMissingCells(world, world.settlements[id]!);
 
   // Characters & dynasties.
   if (scenario) {
@@ -705,18 +711,24 @@ export function applyStrategicCommand(world: WorldState, issued: IssuedStrategic
       if (s) s.laborAllocation = { ...c.allocation };
       return !!s;
     }
-    case 'build': {
+    case 'build':
+      return report(world, issued, out, queueBuild(world, issued.factionId, c.settlementId, c.building, c.cell, c.rot, out).reason);
+    case 'recruit':
+      return report(world, issued, out, queueRecruit(world, issued.factionId, c.settlementId, c.unitClass, c.formations, c.targetArmyId).reason);
+    case 'cancel_construction':
+      return report(world, issued, out, cancelConstruction(world, issued.factionId, c.settlementId, c.building, c.jobIndex, out).reason);
+    case 'repair_building':
+      return report(world, issued, out, queueRepair(world, issued.factionId, c.settlementId, c.building, out).reason);
+    case 'start_landmark':
+      return report(world, issued, out, startLandmark(world, issued.factionId, c.landmarkId, c.settlementId, c.cell, c.rot, out).reason);
+    case 'set_rally_point': {
       const s = world.settlements[c.settlementId];
-      if (!s) return false;
-      const cur = s.buildings.find((b) => b.type === c.building)?.level ?? 0;
-      // CORE-01 compile-fix: v2 job fields (nothing is charged yet; crew 0 = derive from the definition).
-      s.construction.push({ type: c.building, targetLevel: cur + 1, progress: 0, startedDay: totalDays(world.calendar), laborAssigned: 0, paid: { wealth: 0, timber: 0, stone: 0, labor: 0 }, crew: 0 });
-      return true;
-    }
-    case 'recruit': {
-      const s = world.settlements[c.settlementId];
-      if (!s) return false;
-      s.recruitment.push({ unitClass: c.unitClass, formations: c.formations, progress: 0, startedDay: totalDays(world.calendar), targetArmyId: c.targetArmyId });
+      if (!s || s.ownerFactionId !== issued.factionId) return false;
+      if (c.rallyPoint === null) delete s.rallyPoint;
+      else if (c.rallyPoint.kind === 'army') {
+        if (world.armies[c.rallyPoint.armyId]?.factionId !== issued.factionId) return report(world, issued, out, 'That army is not yours');
+        s.rallyPoint = { kind: 'army', armyId: c.rallyPoint.armyId };
+      } else s.rallyPoint = { kind: 'point', x: c.rallyPoint.x, z: c.rallyPoint.z };
       return true;
     }
     case 'event_choice':
@@ -753,6 +765,12 @@ export function applyStrategicCommand(world: WorldState, issued: IssuedStrategic
       // marriages, governors, council, rebels, roads...). Keep validation in validateStrategicCommand.
       return false;
   }
+}
+
+/** Report a refusal reason to the player (AI reads reasons from validators). Returns true when `reason` is null. */
+function report(world: WorldState, issued: IssuedStrategicCommand, out: SimEvent[], reason: string | null): boolean {
+  if (reason && world.factions[issued.factionId]?.isPlayer) out.push({ kind: 'notification', factionId: issued.factionId, severity: 'warning', text: reason, focus: null });
+  return reason === null;
 }
 
 // Re-exported so callers (UI/AI) can declare war/peace without importing diplomacy directly.
