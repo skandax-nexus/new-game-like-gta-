@@ -1,11 +1,11 @@
 {
-  "build": "0.1.0+733f4c6",
+  "build": "0.1.0+nogit",
   "quality": "high",
   "shots": [
     {
       "name": "battle",
       "url": "http://127.0.0.1:4457/?scene=battle&quality=high&noaudio=1&seed=7&soldiers=1000&preset=plains",
-      "ms": 25412,
+      "ms": 44053,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -15,8 +15,8 @@
         "quality": "high",
         "sceneState": {
           "battleId": "skirmish_7",
-          "time": 25.5,
-          "tick": 510,
+          "time": 25.9,
+          "tick": 517,
           "phase": "deployment",
           "sides": [
             {
@@ -49,14 +49,14 @@
             "tilt": 0
           }
         },
-        "fps": 3.56281516075073,
+        "fps": 2.278066500809398,
         "errors": 0
       }
     },
     {
       "name": "battle-close",
       "url": "http://127.0.0.1:4457/?scene=battle&quality=high&noaudio=1&seed=7&soldiers=1000&preset=plains&camera=close",
-      "ms": 30667,
+      "ms": 41196,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -66,8 +66,8 @@
         "quality": "high",
         "sceneState": {
           "battleId": "skirmish_7",
-          "time": 35.9,
-          "tick": 717,
+          "time": 35.6,
+          "tick": 711,
           "phase": "active",
           "sides": [
             {
@@ -75,14 +75,14 @@
               "soldiers": 500,
               "initial": 500,
               "routed": 0,
-              "morale": 80
+              "morale": 79
             },
             {
               "faction": "highland",
               "soldiers": 500,
               "initial": 500,
               "routed": 0,
-              "morale": 82
+              "morale": 81
             }
           ],
           "formations": 14,
@@ -100,14 +100,14 @@
             "tilt": -0.05
           }
         },
-        "fps": 2.8959126983878365,
+        "fps": 4.41952327745928,
         "errors": 0
       }
     },
     {
       "name": "battle-river-5000",
       "url": "http://127.0.0.1:4457/?scene=battle&quality=high&noaudio=1&seed=11&soldiers=5000&preset=river_crossing&hour=17",
-      "ms": 53033,
+      "ms": 43528,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -117,14 +117,14 @@
         "quality": "high",
         "sceneState": {
           "battleId": "skirmish_11",
-          "time": 15.7,
-          "tick": 313,
+          "time": 15.4,
+          "tick": 307,
           "phase": "deployment",
           "sides": [
             {
               "faction": "heartland",
-              "soldiers": 2499,
-              "initial": 2499,
+              "soldiers": 2500,
+              "initial": 2500,
               "routed": 0,
               "morale": 58
             },
@@ -137,28 +137,28 @@
             }
           ],
           "formations": 70,
-          "soldierCapacity": 4999,
-          "visibleSoldiers": 3321,
+          "soldierCapacity": 5000,
+          "visibleSoldiers": 3306,
           "outcome": null,
           "selection": [
             0
           ],
           "camera": {
-            "x": -105.9320823652236,
-            "z": -179.49674037856119,
+            "x": -106.06290818634989,
+            "z": -179.47496894885086,
             "distance": 165,
-            "yaw": 0.18314006108911665,
+            "yaw": 0.18558940084874082,
             "tilt": 0
           }
         },
-        "fps": 3.1614785884067222,
+        "fps": 2.8435189523989934,
         "errors": 0
       }
     },
     {
       "name": "battle-mobile",
       "url": "http://127.0.0.1:4457/?scene=battle&quality=low&noaudio=1&seed=7&soldiers=600&preset=plains",
-      "ms": 15264,
+      "ms": 13536,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -168,8 +168,8 @@
         "quality": "low",
         "sceneState": {
           "battleId": "skirmish_7",
-          "time": 20.6,
-          "tick": 411,
+          "time": 20.7,
+          "tick": 414,
           "phase": "deployment",
           "sides": [
             {
@@ -181,28 +181,28 @@
             },
             {
               "faction": "highland",
-              "soldiers": 299,
-              "initial": 299,
+              "soldiers": 300,
+              "initial": 300,
               "routed": 0,
               "morale": 60
             }
           ],
           "formations": 14,
-          "soldierCapacity": 599,
-          "visibleSoldiers": 499,
+          "soldierCapacity": 600,
+          "visibleSoldiers": 502,
           "outcome": null,
           "selection": [
             0
           ],
           "camera": {
-            "x": 1776.8951332114402,
-            "z": 1007.6314308920194,
+            "x": 1777.2025330535503,
+            "z": 1007.6876588838988,
             "distance": 165,
-            "yaw": -0.11897737392917852,
+            "yaw": -0.12944774261857647,
             "tilt": 0
           }
         },
-        "fps": 7.4804487141357034,
+        "fps": 5.2784375859781525,
         "errors": 0
       }
     }

@@ -239,6 +239,32 @@ When all of a side's melee blocks are routing at once and its archers are dry, t
 so those blocks can no longer rally (§6.8, max 2) and come back. The mixed-arms target (>= 60 %) already failed in
 this harness before the rework (8 / 40; the CD's own harness measured 12 / 20 at friendly fire 0.1).
 
+## Lead re-review (round 1, Lead Gameplay Engineer)
+
+Re-run against a clean export of HEAD `2e220f0` (tactical code as of `cd237a6`; a teammate's uncommitted
+`src/assets/**` work excluded):
+
+- `tsc --noEmit` clean; `npm test` 602 / 603 (the only failure is the CTO-owned migration test, see Known issues);
+  tactical + purity + determinism 93 / 93; all worked examples, the pacing table (median 4.97 min, 10 / 10) and the
+  review pairing (0 time limits, 0 draws) reproduce exactly.
+- Perf measured with a SwiftShader capture competing for the CPU (load average ~7): 1,000 soldiers 0.070 / 0.468 ms,
+  5,000 soldiers 0.595 / 1.382 ms (formation / soldier layer; budgets 0.3 / 1.0 and 0.8 / 3.0); new-order pathing
+  median 0.80 ms, p90 0.90 ms.
+- `vite build` and `vite build --mode single` (2.27 MB) into `.build/gp-01-review*`; `gp-01.cjs` 16 / 16 against
+  that build, in-engine hash `946d4e94` on both loads; smoke `--scenes=battle` on port 4457 4 / 4, no console errors
+  (`review-smoke/`, re-captured).
+- composeArmy at 2,500 per side (Field of Kings): only Riders of the Frontier reaches `MAX_FORMATIONS_PER_SIDE` (48),
+  trimming 35 men; no class is lost.
+
+Reviewer fix: **`scripts/shots/gp-01.cjs` blank-shot guard.** In the re-capture, `battle-mobile-melee.png` came out
+with a blank 3D view (HUD over the dark page background, no WebGL frame), and the script still reported "ok". It was
+reproduced in a standalone run, with no context loss or errors. Between page loads the canvas backing size changed
+(dynamic resolution under load), so the likely cause is a resize clearing the drawing buffer right before `freeze`.
+`shot()` now measures the share of the most common colour (every rendered evidence / smoke image: 1.0-2.3 %; the
+blank one: 32.7 %), re-renders and retakes at >= 15 % (up to 3 attempts), and records a "3D view rendered" check per
+shot. Validated with `--only=engine`: `battle-river-melee` came out blank (70.1 %) on the first attempt and was
+retaken correctly; 17 / 17 checks. The committed images above all measure <= 2.3 % (none blank).
+
 ## Known issues
 
 - `tests/contracts/migration.test.ts` > "battles (incl. a finished one with an outcome)" fails: the test strips v2
@@ -259,3 +285,7 @@ this harness before the rework (8 / 40; the CD's own harness measured 12 / 20 at
 - The battle camera cannot be placed from the debug API; `battle-melee-close.png` relies on a fixed screen anchor
   for the deterministic seed-2 battle (request to the BattleScene owner for a `battle.focus` debug command).
 - The soldier renderer does not yet map `SOLDIER_ANIM.reload` (12) / `charge` (13) (request to GFX-04).
+- Under SwiftShader load a frozen frame can present a blank 3D view (3 of 23 frames in the lead re-review). This is
+  likely a dynamic-resolution canvas resize just before `__SAMRAJYA__.freeze(true)`, in renderer / debug-API code
+  outside GP-01. `gp-01.cjs` now detects and retakes such shots; `scripts/smoke.cjs` (CTO) only checks for errors
+  and could accept one (request to the CTO / GFX-01).

@@ -25,7 +25,10 @@
  *                               keep a broken garrison in the battle)
  *   traces.json                 the trace data behind the three maps
  *   shots-report.json           every assertion with its observed value (full runs only; --only=maps|engine skips it)
- * Exit 1 on any failed assertion, console error, page error, failed request or crash report.
+ * Every in-engine shot is checked for a blank 3D view (a WebGL canvas that presented nothing, so the page background
+ * shows through - seen once under SwiftShader load, likely a dynamic-resolution resize right before freeze); a blank
+ * shot is re-rendered and retaken up to 3 times, then fails the run instead of passing silently.
+ * Exit 1 on any failed assertion, console error, page error, failed request, crash report or blank shot.
  */
 'use strict';
 const { spawn, execSync } = require('node:child_process');
@@ -89,10 +92,53 @@ async function waitReady(page) {
   await page.evaluate(() => window.__SAMRAJYA__.waitFrames(2));
 }
 
+/**
+ * Share of a screenshot taken by its single most common colour. A rendered battle frame measures <= 2.5 % (every
+ * GP-01 evidence and smoke image: 1.0-2.3 %); a blank WebGL canvas with the dark page background showing through
+ * measured 32.7 % at 390x844 (the HUD covers the rest). Decoded in the page with a 2D canvas (no npm dependencies).
+ */
+async function dominantColourShare(page, png) {
+  return page.evaluate(async (b64) => {
+    const img = new Image();
+    img.src = `data:image/png;base64,${b64}`;
+    await img.decode();
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth;
+    c.height = img.naturalHeight;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(img, 0, 0);
+    const d = g.getImageData(0, 0, c.width, c.height).data;
+    const counts = new Map();
+    let best = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      const k = (d[i] << 16) | (d[i + 1] << 8) | d[i + 2];
+      const n = (counts.get(k) || 0) + 1;
+      counts.set(k, n);
+      if (n > best) best = n;
+    }
+    return best / (d.length / 4);
+  }, png.toString('base64'));
+}
+
+/** Dominant-colour share at or above which a shot counts as a blank 3D view. */
+const BLANK_SHARE = 0.15;
+
 async function shot(page, name, note) {
-  await page.evaluate(() => window.__SAMRAJYA__ && window.__SAMRAJYA__.freeze(true)).catch(() => undefined);
-  await page.screenshot({ path: path.join(OUT, `${name}.png`), timeout: TIMEOUT });
-  await page.evaluate(() => window.__SAMRAJYA__ && window.__SAMRAJYA__.freeze(false)).catch(() => undefined);
+  const file = path.join(OUT, `${name}.png`);
+  let share = 1;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    if (attempt > 1) {
+      console.log(`[gp-01] ${name}: blank 3D view (dominant colour ${(share * 100).toFixed(1)} %), re-rendering and retaking (attempt ${attempt})`);
+      // The battle is paused: frames re-render the same state (no sim step).
+      await page.evaluate(() => window.__SAMRAJYA__.waitFrames(30)).catch(() => undefined);
+    }
+    await page.evaluate(() => window.__SAMRAJYA__ && window.__SAMRAJYA__.freeze(true)).catch(() => undefined);
+    const png = await page.screenshot({ path: file, timeout: TIMEOUT });
+    await page.evaluate(() => window.__SAMRAJYA__ && window.__SAMRAJYA__.freeze(false)).catch(() => undefined);
+    share = await dominantColourShare(page, png);
+    if (share < BLANK_SHARE) break;
+  }
+  check(`${name}: the 3D view rendered (not a blank canvas)`, share < BLANK_SHARE, { dominantColourShare: Number(share.toFixed(4)) });
   report.shots.push({ name: `${name}.png`, note });
   console.log(`[gp-01] shot ${name}.png  ${note}`);
 }
