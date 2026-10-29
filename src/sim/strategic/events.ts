@@ -34,6 +34,8 @@ import { addChronicle, withWorldRng } from './state';
 import { armySoldiers } from './armies';
 import { createTreaty, declareWar, hasTreaty } from './diplomacy';
 import { registerEffectRunner } from './construction';
+import { forceRebellionStage } from './politics';
+import { transferOwnership } from './siege';
 
 function cmp(a: number, op: CompareOp, b: number): boolean {
   switch (op) {
@@ -232,10 +234,8 @@ export function applyEffect(world: WorldState, effect: Effect, scope: EventScope
       return;
     }
     case 'set_rebellion_stage':
-      for (const s of resolveSettlements(world, effect.target, scope)) {
-        s.rebellionStage = effect.stage;
-        out.push({ kind: 'rebellion_stage', settlementId: s.id, stage: effect.stage });
-      }
+      // Unrest rises to the stage's threshold so the ladder holds it; 'secession' secedes at once (politics.ts).
+      for (const s of resolveSettlements(world, effect.target, scope)) forceRebellionStage(world, s, effect.stage, out);
       return;
     case 'kill_character': {
       const c = resolveCharacter(world, effect.target, scope);
@@ -257,10 +257,9 @@ export function applyEffect(world: WorldState, effect: Effect, scope: EventScope
       const targets = resolveSettlements(world, effect.settlement, scope);
       const to = resolveFaction(world, effect.to, scope);
       for (const s of targets) {
-        if (!to) continue;
+        if (!to || s.ownerFactionId === to.id) continue;
         const from = s.ownerFactionId;
-        s.ownerFactionId = to.id;
-        s.ownerSinceDay = totalDays(world.calendar);
+        transferOwnership(world, s, to.id, out);
         out.push({ kind: 'settlement_captured', settlementId: s.id, from, to: to.id });
       }
       return;

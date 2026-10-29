@@ -81,20 +81,28 @@ export function toNextDay(world: WorldState): void {
 
 /**
  * Data changes requested from the Creative Director in docs/sprint1/sim-01 (report "requests"). Suites that measure
- * DESIGN_SPEC §13.2 bands apply them temporarily; once the data files carry these values this is a no-op.
+ * DESIGN_SPEC §13.2 bands or play whole campaigns apply them temporarily; once the data files carry these values this
+ * is a no-op.
  *  - CD-1 RULES.population.laborHealthWeight 0.5 -> 0: the §13.2 targets were calibrated with labor = pop x 0.45
  *    (tests/data.test.ts reference formula); a health-weighted labor costs 10-18% of farm labor and spirals deficit realms.
+ *  - CD-2 RULES.distribution.exportAboveDays 120 -> 90: grain villages hover at 90-170 reserve days, so with 120 they
+ *    rarely export and the capital (break-even on its own fields) starves every lean season before the kharif
+ *    harvest; at 90 Dhanyagram / Kusumpur feed Rajapura and The Broken Crown auto-resolved ends 'mixed' on 6/6 seeds.
  */
-export const PENDING_DATA_REQUESTS = { laborHealthWeight: 0 } as const;
+export const PENDING_DATA_REQUESTS = { laborHealthWeight: 0, exportAboveDays: 90 } as const;
 
 export function withPendingData<T>(fn: () => T): T {
   const pop = RULES.population as unknown as { laborHealthWeight: number };
+  const dist = RULES.distribution as unknown as { exportAboveDays: number };
   const prev = pop.laborHealthWeight;
+  const prevExport = dist.exportAboveDays;
   pop.laborHealthWeight = PENDING_DATA_REQUESTS.laborHealthWeight;
+  dist.exportAboveDays = PENDING_DATA_REQUESTS.exportAboveDays;
   try {
     return fn();
   } finally {
     pop.laborHealthWeight = prev;
+    dist.exportAboveDays = prevExport;
   }
 }
 

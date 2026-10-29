@@ -69,7 +69,7 @@ import { decidePrisoners } from './writeback';
 import { updateEconomyDaily, updateEconomyMonthly } from './economy';
 import { orderArmy, updateArmiesDaily, updateArmiesHourly, armySoldiers, makeArmy, makeArmyUnit } from './armies';
 import { declareWar, makePeace, respondToProposal, proposeTreaty, updateDiplomacyDaily, updateDiplomacyMonthly, createTreaty } from './diplomacy';
-import { updatePoliticsDaily, updateCharactersYearly } from './politics';
+import { appointGovernor, negotiateRebels, updateCharactersYearly, updatePoliticsDaily, updatePoliticsMonthly } from './politics';
 import { startSpyMission, updateEspionageDaily } from './espionage';
 import { checkObjectives, evaluateEventsDaily, resolveEventChoice } from './events';
 import { runCampaignAI } from './ai';
@@ -635,6 +635,7 @@ export function tickWorld(world: WorldState, commands: readonly IssuedStrategicC
   if (adv.newMonth) {
     out.push({ kind: 'new_month', month: world.calendar.month });
     updateEconomyMonthly(world, out);
+    updatePoliticsMonthly(world, out);
     updateDiplomacyMonthly(world, out);
     sampleStats(world);
   }
@@ -785,6 +786,10 @@ export function applyStrategicCommand(world: WorldState, issued: IssuedStrategic
     }
     case 'market_trade':
       return executeMarketTrade(world, issued.factionId, c.resource, c.lots, c.buy, out).ok;
+    case 'negotiate_rebels':
+      return report(world, issued, out, negotiateRebels(world, issued.factionId, c.settlementId, c.offer, out));
+    case 'appoint_governor':
+      return report(world, issued, out, appointGovernor(world, issued.factionId, c.provinceId, c.characterId, out));
     case 'set_policy': {
       const f = world.factions[issued.factionId];
       if (!f) return false;
