@@ -708,10 +708,14 @@ function rulerAdult(world: WorldState, f: FactionState): boolean {
   return !!r && r.alive && world.calendar.year - r.birthYear >= RULES.dynasty.adultAge;
 }
 
-/** Governor loyalty drift (monthly, 10% of the gap): 0.5 + 0.15 interest satisfied / -0.1 not, -0.2 x province unrest, + 0.2 x (legitimacy - 0.5). */
+/**
+ * Governor loyalty target (RULES.politics.governor.loyaltyDrift, CD-6): base + interestMet / interestUnmet +
+ * provinceUnrest x province unrest + legitimacy x (faction legitimacy - 0.5); loyalty moves perMonth of the gap monthly.
+ */
 export function governorLoyaltyTarget(world: WorldState, g: CharacterState, p: ProvinceState): number {
   const f = world.factions[g.factionId];
-  return clamp01(0.5 + (interestSatisfied(world, g, p) ? 0.15 : -0.1) - 0.2 * p.unrest + 0.2 * ((f?.legitimacy ?? 0.5) - 0.5));
+  const L = P.governor.loyaltyDrift;
+  return clamp01(L.base + (interestSatisfied(world, g, p) ? L.interestMet : L.interestUnmet) + L.provinceUnrest * p.unrest + L.legitimacy * ((f?.legitimacy ?? 0.5) - 0.5));
 }
 
 export function updatePoliticsMonthly(world: WorldState, out: SimEvent[]): void {
@@ -734,7 +738,7 @@ export function updatePoliticsMonthly(world: WorldState, out: SimEvent[]): void 
     // Governor loyalty, demands and secession attempts.
     for (const p of govs) {
       const g = world.characters[p.governorId as string] as CharacterState;
-      g.loyalty = clamp01(g.loyalty + (governorLoyaltyTarget(world, g, p) - g.loyalty) * 0.1);
+      g.loyalty = clamp01(g.loyalty + (governorLoyaltyTarget(world, g, p) - g.loyalty) * G.loyaltyDrift.perMonth);
       g.opinionOfRuler = Math.round((g.loyalty - 0.5) * 200);
       const cap = world.settlements[p.capitalSettlementId];
       if (g.loyalty < G.secedeBelowLoyalty) {

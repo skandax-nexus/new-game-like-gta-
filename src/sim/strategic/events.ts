@@ -40,6 +40,10 @@ import { forceRebellionStage } from './politics';
 import { handleDeath } from './dynasty';
 import { noteEventChoice } from './council';
 import { transferOwnership } from './siege';
+import { setRationing } from './economy';
+
+/** Event flag that switches the scope realm's rationing policy on (set_flag) or off (clear_flag). */
+export const RATIONING_FLAG = 'rationing';
 
 function cmp(a: number, op: CompareOp, b: number): boolean {
   switch (op) {
@@ -256,9 +260,13 @@ function applyEffectInner(world: WorldState, effect: Effect, scope: EventScope, 
     }
     case 'set_flag':
       world.events.flags[effect.flag] = effect.value;
+      // Policy flags act on the scope's realm (DESIGN_SPEC §7.3.5 item 5): 'Ration the realm's grain' / 'Ration the
+      // clans' start the same 120-day rationing rule as set_policy rationing on.
+      if (effect.flag === RATIONING_FLAG && scope.factionId) setRationing(world, scope.factionId, !!effect.value);
       return;
     case 'clear_flag':
       delete world.events.flags[effect.flag];
+      if (effect.flag === RATIONING_FLAG && scope.factionId) setRationing(world, scope.factionId, false);
       return;
     case 'trigger_event':
       world.events.scheduled.push({ eventId: effect.eventId, day: totalDays(world.calendar) + effect.delayDays, scope: { ...scope } });

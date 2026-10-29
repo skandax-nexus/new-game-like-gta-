@@ -33,31 +33,27 @@ import { battleSetupFromEngagement, decideEngagement, predictBattle, retreatLoss
 import { computeScore, endGameStats } from '../../../src/sim/strategic/statistics';
 import { victoryBreakdowns } from '../../../src/sim/strategic/victory';
 import { applyDialogueEffects, applyHeroMissionResult, availableHeroMissions, heroMissionDoneFlag } from '../../../src/sim/strategic/hero';
-import { campaign, issue, quiet, runDays, sandbox, withPendingData } from './helpers';
+import { campaign, issue, quiet, runDays, sandbox } from './helpers';
 
 const scope = (fid = 'heartland', settlementId: string | null = null) => ({ factionId: fid, settlementId, provinceId: null, characterId: null, armyId: null });
 
 describe('whole campaigns', () => {
   it('The Broken Crown with every event auto-resolved ends mixed - never defeat - on 6/6 seeds', () => {
-    withPendingData(() => {
-      for (const seed of [1, 2, 3, 4, 5, 6]) {
-        const w = campaign(seed);
-        runDays(w, 545);
-        expect(w.victory.status, `seed ${seed}: ${w.victory.outcomeId}`).toBe('ended');
-        expect(['out_restored', 'out_iron']).toContain(w.victory.outcomeId);
-        expect(w.victory.endedDay).toBe(540);
-        expect(w.settlements.rajapura!.ownerFactionId).toBe('heartland');
-      }
-    });
+    for (const seed of [1, 2, 3, 4, 5, 6]) {
+      const w = campaign(seed);
+      runDays(w, 545);
+      expect(w.victory.status, `seed ${seed}: ${w.victory.outcomeId}`).toBe('ended');
+      expect(['out_restored', 'out_iron']).toContain(w.victory.outcomeId);
+      expect(w.victory.endedDay).toBe(540);
+      expect(w.settlements.rajapura!.ownerFactionId).toBe('heartland');
+    }
   }, 600_000);
 
   it('The Seven Hills runs 540 days without exceptions', () => {
-    withPendingData(() => {
-      const w = campaign(3, 'seven_hills', 'hard');
-      runDays(w, 545);
-      expect(w.calendar.totalHours).toBeGreaterThan(0);
-      expect(['ended', 'victory', 'defeat']).toContain(w.victory.status);
-    });
+    const w = campaign(3, 'seven_hills', 'hard');
+    runDays(w, 545);
+    expect(w.calendar.totalHours).toBeGreaterThan(0);
+    expect(['ended', 'victory', 'defeat']).toContain(w.victory.status);
   }, 600_000);
 
   it('every sandbox preset runs 540 days without exceptions', () => {
@@ -243,15 +239,13 @@ describe('statistics and score (DESIGN_SPEC §8.9)', () => {
   });
 
   it('counters are tracked by the systems: wars, treaties, revolts, decisions, harvests', () => {
-    withPendingData(() => {
-      const w = campaign(5);
-      runDays(w, 200);
-      const st = w.statistics.heartland!;
-      expect(st.grain_harvested ?? 0).toBeGreaterThan(0);
-      expect(st.events_resolved ?? 0).toBeGreaterThan(0);
-      const rows = endGameStats(w);
-      expect(rows.map((r) => r.def.id)).toContain('famine_days');
-    });
+    const w = campaign(5);
+    runDays(w, 200);
+    const st = w.statistics.heartland!;
+    expect(st.grain_harvested ?? 0).toBeGreaterThan(0);
+    expect(st.events_resolved ?? 0).toBeGreaterThan(0);
+    const rows = endGameStats(w);
+    expect(rows.map((r) => r.def.id)).toContain('famine_days');
   }, 120_000);
 });
 

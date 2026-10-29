@@ -4,14 +4,14 @@
  *  - Suvarna's month-1 net (+400..+700 wealth).
  * Measurement: a sandbox world started in month 3 (one full kharif + rabi cycle), no armies or events, M forced for the
  * year, 360 days of the real daily economy; balance = grain produced / civilian consumption - 1 per owner.
- * The bands hold with the data change requested from the Creative Director (CD-1, see helpers.PENDING_DATA_REQUESTS);
- * the current-data numbers are reported in docs/sprint1/sim-01/campaign-report.md.
+ * Measured with the data as shipped (the Creative Director applied CD-1 laborHealthWeight 0 and CD-2 exportAboveDays 75
+ * in ba45410); the per-run numbers are in docs/sprint1/sim-01/campaign-report.md.
  */
 import { describe, expect, it } from 'vitest';
 import type { SimEvent, WorldState } from '../../../src/core/types';
 import { advanceCalendar } from '../../../src/sim/strategic/seasons';
 import { updateEconomyDaily } from '../../../src/sim/strategic/economy';
-import { campaign, quiet, runDays, sandbox, withPendingData } from './helpers';
+import { campaign, quiet, runDays, sandbox } from './helpers';
 
 /** Annual civilian grain balance per realm. */
 export function measureRealmBalance(m: number, seed = 11): Record<string, number> {
@@ -39,7 +39,7 @@ export function measureRealmBalance(m: number, seed = 11): Record<string, number
 
 describe('DESIGN_SPEC §13.2 with the actual sim', () => {
   it('normal monsoon: Suvarna +15% (8..25%), Giridurga -9% (-18..-2%), Nilavana +3% (-5..12%), Marudesha -8% (-20..0%)', () => {
-    const b = withPendingData(() => measureRealmBalance(1));
+    const b = measureRealmBalance(1);
     expect(b.heartland!).toBeGreaterThan(0.08);
     expect(b.heartland!).toBeLessThan(0.25);
     expect(b.highland!).toBeGreaterThan(-0.18);
@@ -51,21 +51,16 @@ describe('DESIGN_SPEC §13.2 with the actual sim', () => {
   });
 
   it('M = 0.7: every realm < +2%, Suvarna > -12%', () => {
-    const b = withPendingData(() => measureRealmBalance(0.7));
+    const b = measureRealmBalance(0.7);
     for (const [k, v] of Object.entries(b)) expect(v, k).toBeLessThan(0.02);
     expect(b.heartland!).toBeGreaterThan(-0.12);
   });
 
   it('Suvarna month-1 net is between +400 and +700 wealth (The Broken Crown, default choices)', () => {
-    for (const pending of [false, true]) {
-      const run = (): number => {
-        const w = campaign(1);
-        runDays(w, 31, { until: (x) => x.calendar.month !== 6 });
-        return w.factions.heartland!.ledger.net;
-      };
-      const net = pending ? withPendingData(run) : run();
-      expect(net, pending ? 'with CD-1' : 'current data').toBeGreaterThan(400);
-      expect(net, pending ? 'with CD-1' : 'current data').toBeLessThan(700);
-    }
+    const w = campaign(1);
+    runDays(w, 31, { until: (x) => x.calendar.month !== 6 });
+    const net = w.factions.heartland!.ledger.net;
+    expect(net).toBeGreaterThan(400);
+    expect(net).toBeLessThan(700);
   });
 });

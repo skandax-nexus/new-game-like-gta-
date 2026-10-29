@@ -93,6 +93,17 @@ export function siteMoisture(s: SettlementState): number {
   return clamp01(1 - s.disasterExposure.drought);
 }
 
+/**
+ * Turn the realm-wide rationing rule (DESIGN_SPEC §7.3.5 item 5) on for RULES.distribution.rationing.days, or off.
+ * The one entry point for the `set_policy rationing` command and the `rationing` event flag (Thin Harvest, Hungry
+ * Plateau): FactionState.policies.rationingUntilDay is what isRationing() reads.
+ */
+export function setRationing(world: WorldState, factionId: FactionId, on: boolean): void {
+  const f = world.factions[factionId];
+  if (!f) return;
+  f.policies.rationingUntilDay = on ? today(world) + RULES.distribution.rationing.days : null;
+}
+
 export function isRationing(world: WorldState, s: SettlementState): boolean {
   const owner = s.ownerFactionId ? world.factions[s.ownerFactionId] : null;
   return !!owner && owner.policies.rationingUntilDay !== null && owner.policies.rationingUntilDay > today(world);

@@ -13,7 +13,7 @@ import { describe, expect, it } from 'vitest';
 import type { SimEvent, WorldState } from '../../../src/core/types';
 import { getRegionHeightfield, tickWorld } from '../../../src/sim/strategic/world';
 import { makeArmy } from '../../../src/sim/strategic/armies';
-import { campaign, runDays, withPendingData } from './helpers';
+import { campaign, runDays } from './helpers';
 
 function busyWorld(): WorldState {
   const w = campaign(5);
@@ -64,54 +64,52 @@ function measureRound(): Round {
 
 describe('strategic tick performance (ARCHITECTURE §15)', () => {
   it('average hour-step < 0.2 ms; worst day rollover < 2 ms (16 settlements, 10 armies)', () => {
-    withPendingData(() => {
-      const probe = busyWorld();
-      expect(Object.keys(probe.armies).length).toBe(10);
-      expect(Object.keys(probe.settlements).length).toBe(16);
-      // Every round simulates the same 60 days (same seed), so the per-hour minimum over rounds is the sim's own
-      // cost: other test files running in parallel workers (and GC pauses) only ever add time. Rounds repeat until
-      // the budget holds or 60 s pass.
-      const best = { minDt: new Float64Array(HOURS).fill(Infinity), maxDt: new Float64Array(HOURS), dayHour: new Uint8Array(HOURS), battle: new Uint8Array(HOURS) };
-      const start = process.hrtime.bigint();
-      let rounds = 0;
-      let avg = Infinity;
-      let worstDay = Infinity;
-      let worstDayRaw = 0;
-      let worstHour = 0;
-      let median = 0;
-      let days = 0;
-      for (;;) {
-        const r = measureRound();
-        rounds++;
-        for (let h = 0; h < HOURS; h++) {
-          best.minDt[h] = Math.min(best.minDt[h] as number, r.minDt[h] as number);
-          best.maxDt[h] = Math.max(best.maxDt[h] as number, r.maxDt[h] as number);
-          best.dayHour[h] = r.dayHour[h] as number;
-          best.battle[h] = (best.battle[h] as number) | (r.battle[h] as number);
-        }
-        let sum = 0;
-        worstDay = 0;
-        worstDayRaw = 0;
-        worstHour = 0;
-        const dayCosts: number[] = [];
-        for (let h = 0; h < HOURS; h++) {
-          sum += best.minDt[h] as number;
-          if (best.dayHour[h] && !best.battle[h]) {
-            worstDay = Math.max(worstDay, best.minDt[h] as number);
-            worstDayRaw = Math.max(worstDayRaw, best.maxDt[h] as number);
-            dayCosts.push(best.minDt[h] as number);
-          } else if (!best.battle[h]) worstHour = Math.max(worstHour, best.minDt[h] as number);
-        }
-        dayCosts.sort((x, y) => x - y);
-        days = dayCosts.length;
-        median = dayCosts[Math.floor(dayCosts.length / 2)] ?? 0;
-        avg = sum / HOURS;
-        const elapsed = Number(process.hrtime.bigint() - start) / 1e9;
-        if ((avg < 0.2 && worstDay < 2 && rounds >= 2) || elapsed > 60) break;
+    const probe = busyWorld();
+    expect(Object.keys(probe.armies).length).toBe(10);
+    expect(Object.keys(probe.settlements).length).toBe(16);
+    // Every round simulates the same 60 days (same seed), so the per-hour minimum over rounds is the sim's own
+    // cost: other test files running in parallel workers (and GC pauses) only ever add time. Rounds repeat until
+    // the budget holds or 60 s pass.
+    const best = { minDt: new Float64Array(HOURS).fill(Infinity), maxDt: new Float64Array(HOURS), dayHour: new Uint8Array(HOURS), battle: new Uint8Array(HOURS) };
+    const start = process.hrtime.bigint();
+    let rounds = 0;
+    let avg = Infinity;
+    let worstDay = Infinity;
+    let worstDayRaw = 0;
+    let worstHour = 0;
+    let median = 0;
+    let days = 0;
+    for (;;) {
+      const r = measureRound();
+      rounds++;
+      for (let h = 0; h < HOURS; h++) {
+        best.minDt[h] = Math.min(best.minDt[h] as number, r.minDt[h] as number);
+        best.maxDt[h] = Math.max(best.maxDt[h] as number, r.maxDt[h] as number);
+        best.dayHour[h] = r.dayHour[h] as number;
+        best.battle[h] = (best.battle[h] as number) | (r.battle[h] as number);
       }
-      console.log(`[perf] avg hour-step ${avg.toFixed(4)} ms | day rollover median ${median.toFixed(3)} ms, worst ${worstDay.toFixed(3)} ms (raw incl. GC / contention ${worstDayRaw.toFixed(3)} ms) | worst plain hour ${worstHour.toFixed(3)} ms | ${days} days, ${rounds} rounds`);
-      expect(avg).toBeLessThan(0.2);
-      expect(worstDay).toBeLessThan(2);
-    });
+      let sum = 0;
+      worstDay = 0;
+      worstDayRaw = 0;
+      worstHour = 0;
+      const dayCosts: number[] = [];
+      for (let h = 0; h < HOURS; h++) {
+        sum += best.minDt[h] as number;
+        if (best.dayHour[h] && !best.battle[h]) {
+          worstDay = Math.max(worstDay, best.minDt[h] as number);
+          worstDayRaw = Math.max(worstDayRaw, best.maxDt[h] as number);
+          dayCosts.push(best.minDt[h] as number);
+        } else if (!best.battle[h]) worstHour = Math.max(worstHour, best.minDt[h] as number);
+      }
+      dayCosts.sort((x, y) => x - y);
+      days = dayCosts.length;
+      median = dayCosts[Math.floor(dayCosts.length / 2)] ?? 0;
+      avg = sum / HOURS;
+      const elapsed = Number(process.hrtime.bigint() - start) / 1e9;
+      if ((avg < 0.2 && worstDay < 2 && rounds >= 2) || elapsed > 60) break;
+    }
+    console.log(`[perf] avg hour-step ${avg.toFixed(4)} ms | day rollover median ${median.toFixed(3)} ms, worst ${worstDay.toFixed(3)} ms (raw incl. GC / contention ${worstDayRaw.toFixed(3)} ms) | worst plain hour ${worstHour.toFixed(3)} ms | ${days} days, ${rounds} rounds`);
+    expect(avg).toBeLessThan(0.2);
+    expect(worstDay).toBeLessThan(2);
   }, 600_000);
 });

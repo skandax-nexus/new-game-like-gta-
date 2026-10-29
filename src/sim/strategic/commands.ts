@@ -24,9 +24,9 @@ import { appointGovernor, negotiateRebels, validateAppointGovernor, validateNego
 import { queueRecruit, validateRecruit } from './recruitment';
 import { decideCapture, settlementHostile, SIEGE_REASONS, assaultState, validateCaptureDecision } from './siege';
 import { createDepot, requisitionGrain, sendRelief, transferSupply, validateCreateDepot, validateRequisition, validateSendRelief, validateTransfer } from './supply';
-import { totalDays } from './seasons';
 import { addMonthToDate, hostileToArmy, notifyPlayer, regionTerrain } from './state';
 import { decidePrisoners, validatePrisoners } from './writeback';
+import { setRationing } from './economy';
 
 export const COMMAND_REASONS = {
   faction: 'Unknown or defeated faction',
@@ -66,8 +66,6 @@ export const COMMAND_REASONS = {
 
 const TAX_POLICIES = ['lenient', 'standard', 'heavy', 'emergency'] as const;
 const STANCES = ['aggressive', 'balanced', 'cautious'] as const;
-/** Wealth per real km of road per unit of missing condition (repair_road restores the road to full). */
-export const ROAD_REPAIR_WEALTH_PER_KM = 20;
 
 function armyOf(world: WorldState, fid: string, armyId: string, allowBattle = false): { army: ArmyState | null; reason: string | null } {
   const a = world.armies[armyId];
@@ -141,12 +139,12 @@ function validLabor(a: LaborAllocation): boolean {
   return Math.abs(sum - 1) <= 0.011;
 }
 
-/** Wealth to restore a road edge to full condition. */
+/** Wealth to restore a road edge to full condition: RULES.roads.repairWealthPerKm x km x missing condition. */
 export function roadRepairCost(world: WorldState, edgeId: string): number {
   const e = world.roads.edges[edgeId];
   if (!e) return 0;
   const km = (e.length * BALANCE.military.travelScale) / 1000;
-  return Math.ceil(ROAD_REPAIR_WEALTH_PER_KM * km * Math.max(0, 1 - e.condition));
+  return Math.ceil(RULES.roads.repairWealthPerKm * km * Math.max(0, 1 - e.condition));
 }
 
 export function validateRepairRoad(world: WorldState, fid: string, edgeId: string): string | null {
@@ -357,7 +355,7 @@ export function executeCommand(world: WorldState, issued: IssuedStrategicCommand
     case 'set_policy': {
       const f = world.factions[fid]!;
       if (c.policy === 'hold_reserve') f.policies.holdReserve = c.on;
-      else f.policies.rationingUntilDay = c.on ? totalDays(world.calendar) + RULES.distribution.rationing.days : null;
+      else setRationing(world, fid, c.on);
       return true;
     }
     case 'set_rally_point': {

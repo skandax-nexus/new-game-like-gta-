@@ -7,6 +7,7 @@ import type { SettlementState, SimEvent, WorldState } from '../../../src/core/ty
 import { advanceCalendar, floodLevel, monsoonForecastFor, monsoonStrengthFor, monsoonYields, updateMonsoonDaily } from '../../../src/sim/strategic/seasons';
 import {
   dailyConsumption,
+  isRationing,
   materialsProduction,
   reserveColor,
   spoilageRate,
@@ -19,7 +20,10 @@ import {
 import { emptyMods, settlementEffects } from '../../../src/sim/strategic/modifiers';
 import { executeMarketTrade, quoteMarketTrade, recoverMarketPrices } from '../../../src/sim/strategic/market';
 import { RULES } from '../../../src/data/rules';
-import { campaign, quiet, sandbox } from './helpers';
+import { BALANCE } from '../../../src/data/balance';
+import { applyEffect } from '../../../src/sim/strategic/events';
+import { totalDays } from '../../../src/sim/strategic/seasons';
+import { campaign, issue, quiet, runDays, sandbox, toNextDay } from './helpers';
 
 const adv = { newDay: false, newMonth: false, newYear: false, seasonChanged: false };
 
@@ -63,17 +67,20 @@ describe('prices (DESIGN_SPEC §7.4)', () => {
 });
 
 describe('storage in days (DESIGN_SPEC §7.3.4)', () => {
-  it('capacity = pop x 0.1 x (90 + 45 days per granary level)', () => {
+  it('capacity = pop x 0.1 x (RULES.storage.baseDays + 45 days per granary level)', () => {
+    // Base storage is the Creative Director's knob (RULES.storage.baseDays); the rule is what is tested here.
+    const base = RULES.storage.baseDays;
+    expect(base).toBeGreaterThan(0);
     const w = quiet(campaign(3));
     const dh = S(w, 'dhanyagram'); // Granary L2
     const mods = settlementEffects(w, dh, emptyMods());
     expect(mods.foodCapacity).toBe(90);
-    expect(storageCapacity(dh, mods)).toBeCloseTo(dh.population * 0.1 * 180, 6);
+    expect(storageCapacity(dh, mods)).toBeCloseTo(dh.population * 0.1 * (base + 90), 6);
     const ush = S(w, 'ushtragram'); // no granary
-    expect(storageCapacity(ush, settlementEffects(w, ush, emptyMods()))).toBeCloseTo(ush.population * 0.1 * 90, 6);
-    // Rajapura no longer has the baseline ~10 days of storage: 180 days with Granary L2.
+    expect(storageCapacity(ush, settlementEffects(w, ush, emptyMods()))).toBeCloseTo(ush.population * 0.1 * base, 6);
+    // Rajapura no longer has the baseline ~10 days of storage: baseDays + 90 with Granary L2.
     const raj = S(w, 'rajapura');
-    expect(raj.foodCapacity / raj.foodConsumption).toBeCloseTo(180, 0);
+    expect(raj.foodCapacity / raj.foodConsumption).toBeCloseTo(base + 90, 0);
     expect(reserveColor(120)).toBe('green');
     expect(reserveColor(45)).toBe('amber');
     expect(reserveColor(10)).toBe('red');
@@ -190,6 +197,46 @@ describe('consumption and distribution (DESIGN_SPEC §7.3.4-§7.3.5)', () => {
     expect(dailyConsumption(w, s)).toBeCloseTo(normal * RULES.distribution.rationing.consumption, 6);
   });
 
+  it("The Thin Harvest 'ration' sets the realm's rationing rule: consumption x0.85 across the realm for 120 days", () => {
+    const w = campaign(1);
+    runDays(w, 60, { autoEvents: false, until: (x) => x.events.pending.some((p) => p.defId === 'evt_bc_thin_harvest') });
+    const inst = w.events.pending.find((p) => p.defId === 'evt_bc_thin_harvest');
+    expect(inst, 'The Thin Harvest fires on day 46').toBeDefined();
+    const own = Object.values(w.settlements).filter((s) => s.ownerFactionId === 'heartland');
+    expect(own.length).toBeGreaterThan(1);
+    const normal = own.map((s) => dailyConsumption(w, s));
+    expect(own.some((s) => isRationing(w, s))).toBe(false);
+    issue(w, { kind: 'event_choice', eventInstanceId: inst!.id, choiceId: 'ration' });
+    const startDay = totalDays(w.calendar);
+    expect(w.factions.heartland!.policies.rationingUntilDay).toBe(startDay + RULES.distribution.rationing.days);
+    own.forEach((s, i) => {
+      expect(isRationing(w, s), s.id).toBe(true);
+      // Civilian consumption x0.85; the garrison's rations are unchanged.
+      const civ = s.population * BALANCE.economy.foodPerPersonPerDay;
+      expect(dailyConsumption(w, s), s.id).toBeCloseTo(normal[i]! - civ * (1 - RULES.distribution.rationing.consumption), 6);
+    });
+    // Still in force on day 119 of the rule, over on day 120 (the flag is cleared with it).
+    toNextDay(w);
+    runDays(w, RULES.distribution.rationing.days - 2, { autoEvents: false });
+    expect(totalDays(w.calendar)).toBe(startDay + RULES.distribution.rationing.days - 1);
+    expect(own.filter((s) => s.ownerFactionId === 'heartland').every((s) => isRationing(w, s))).toBe(true);
+    runDays(w, 1, { autoEvents: false });
+    expect(own.some((s) => isRationing(w, s))).toBe(false);
+    expect(w.factions.heartland!.policies.rationingUntilDay).toBeNull();
+    expect(w.events.flags.rationing).toBeUndefined();
+  }, 60_000);
+
+  it('the rationing flag acts on the scope realm only; clear_flag ends it', () => {
+    const w = quiet(campaign(3));
+    const out: SimEvent[] = [];
+    const scope = { factionId: 'highland', settlementId: null, provinceId: null, characterId: null, armyId: null };
+    applyEffect(w, { kind: 'set_flag', flag: 'rationing', value: true }, scope, out);
+    expect(isRationing(w, S(w, 'giridurg'))).toBe(true);
+    expect(isRationing(w, S(w, 'rajapura'))).toBe(false);
+    applyEffect(w, { kind: 'clear_flag', flag: 'rationing' }, scope, out);
+    expect(isRationing(w, S(w, 'giridurg'))).toBe(false);
+  });
+
   it('relief draws from the royal reserve up to 30 days, unless the reserve is held', () => {
     const w = quiet(campaign(3));
     const f = w.factions.heartland!;
@@ -209,7 +256,7 @@ describe('consumption and distribution (DESIGN_SPEC §7.3.4-§7.3.5)', () => {
     expect(w2.factions.heartland!.foodReserve).toBe(50_000);
   });
 
-  it('the internal market ships grain from > 120 days to < 60 days, losing 10%', () => {
+  it('the internal market ships grain from > exportAboveDays (75) to < importBelowDays (60), losing 10%', () => {
     const w = quiet(campaign(3));
     const exp = S(w, 'dhanyagram');
     const imp = S(w, 'kusumpur');

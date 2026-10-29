@@ -1,13 +1,12 @@
 /**
  * Test helpers for the strategic simulation suites (SIM-01). OWNER: Simulation Engineer - Strategic World Simulation.
  * Deterministic world runners: tick N days, auto-resolve the player's events (first choice = the safe default) and
- * engagements (autoresolve), issue commands, and temporarily apply pending data requests (tuning overrides).
+ * engagements (autoresolve) and issue commands.
  */
 import type { IssuedStrategicCommand, SandboxSetup, SimEvent, StrategicCommand, WorldState } from '../../../src/core/types';
 import { createWorld, getRegionHeightfield, tickWorld } from '../../../src/sim/strategic/world';
 import { defaultSandbox } from '../../../src/data/campaign';
 import { getEventDef } from '../../../src/data/events';
-import { RULES } from '../../../src/data/rules';
 
 export function campaign(seed = 1, scenarioId = 'broken_crown', difficulty: WorldState['difficulty'] = 'normal'): WorldState {
   return createWorld({ kind: 'scenario', scenarioId, seed, difficulty });
@@ -77,35 +76,6 @@ export function issue(world: WorldState, c: StrategicCommand, factionId = world.
 export function toNextDay(world: WorldState): void {
   const hours = (24 - world.calendar.hour) % 24 || 24;
   runHours(world, hours, { autoEvents: false, autoEngagements: false });
-}
-
-/**
- * Data changes requested from the Creative Director in docs/sprint1/sim-01 (report "requests"). Suites that measure
- * DESIGN_SPEC §13.2 bands or play whole campaigns apply them temporarily; once the data files carry these values this
- * is a no-op.
- *  - CD-1 RULES.population.laborHealthWeight 0.5 -> 0: the §13.2 targets were calibrated with labor = pop x 0.45
- *    (tests/data.test.ts reference formula); a health-weighted labor costs 10-18% of farm labor and spirals deficit realms.
- *  - CD-2 RULES.distribution.exportAboveDays 120 -> 75: grain villages hover at 40-170 reserve days, so with 120 they
- *    rarely export and the capital (break-even on its own fields) starves every lean season before the next
- *    harvest; at 75 Dhanyagram / Kusumpur feed Rajapura and The Broken Crown auto-resolved ends 'mixed' on seeds 1-6.
- *    Survivors among seeds 1-10 with CD-1: 120 -> 1/10, 90 -> 9/10, 75 -> 10/10, 60 -> 10/10 (at 90 the result moves
- *    with tactical battle outcomes: a capital that empties days before the second rabi harvest revolts - CD-3).
- */
-export const PENDING_DATA_REQUESTS = { laborHealthWeight: 0, exportAboveDays: 75 } as const;
-
-export function withPendingData<T>(fn: () => T): T {
-  const pop = RULES.population as unknown as { laborHealthWeight: number };
-  const dist = RULES.distribution as unknown as { exportAboveDays: number };
-  const prev = pop.laborHealthWeight;
-  const prevExport = dist.exportAboveDays;
-  pop.laborHealthWeight = PENDING_DATA_REQUESTS.laborHealthWeight;
-  dist.exportAboveDays = PENDING_DATA_REQUESTS.exportAboveDays;
-  try {
-    return fn();
-  } finally {
-    pop.laborHealthWeight = prev;
-    dist.exportAboveDays = prevExport;
-  }
 }
 
 /** Remove armies, scheduled scenario events and pending events (economy-only harnesses). */

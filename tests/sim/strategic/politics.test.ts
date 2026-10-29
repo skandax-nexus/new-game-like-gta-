@@ -32,7 +32,7 @@ import {
   updatePoliticsMonthly,
 } from '../../../src/sim/strategic/politics';
 import { applyEffect } from '../../../src/sim/strategic/events';
-import { campaign, cmd, issue, quiet, runDays, sandbox, withPendingData } from './helpers';
+import { campaign, cmd, issue, quiet, runDays, sandbox } from './helpers';
 
 /** A careless ruler's answer to each event of the chain. */
 const CARELESS: Record<string, string> = { evt_protest: 'ignore', evt_tax_refusal: 'force', evt_riots: 'let_burn', evt_governor_demands: 'coerce', evt_prices_rise: 'ignore', evt_revolt: 'crush' };
@@ -187,19 +187,17 @@ describe('the GDD §6 chain (DESIGN_SPEC §7.13)', () => {
   });
 
   it('a careful year (normal monsoon, standard tax, peace) keeps every settlement of the realm calm for 12 months', () => {
-    withPendingData(() => {
-      const w = peace(quiet(campaign(5)));
-      w.monsoon.strength = 1;
-      const max: Record<string, number> = {};
-      runDays(w, 360, {
-        onHour: () => {
-          for (const s of Object.values(w.settlements)) if (s.ownerFactionId === 'heartland') max[s.id] = Math.max(max[s.id] ?? 0, s.unrest);
-        },
-      });
-      expect(Object.keys(max).sort()).toEqual(['dhanyagram', 'kusumpur', 'rajapura', 'ratnapura', 'setupur']);
-      for (const [id, u] of Object.entries(max)) expect(u, id).toBeLessThan(0.15);
-      for (const s of Object.values(w.settlements)) if (s.ownerFactionId === 'heartland') expect(s.rebellionStage, s.id).toBe('calm');
+    const w = peace(quiet(campaign(5)));
+    w.monsoon.strength = 1;
+    const max: Record<string, number> = {};
+    runDays(w, 360, {
+      onHour: () => {
+        for (const s of Object.values(w.settlements)) if (s.ownerFactionId === 'heartland') max[s.id] = Math.max(max[s.id] ?? 0, s.unrest);
+      },
     });
+    expect(Object.keys(max).sort()).toEqual(['dhanyagram', 'kusumpur', 'rajapura', 'ratnapura', 'setupur']);
+    for (const [id, u] of Object.entries(max)) expect(u, id).toBeLessThan(0.15);
+    for (const s of Object.values(w.settlements)) if (s.ownerFactionId === 'heartland') expect(s.rebellionStage, s.id).toBe('calm');
   });
 });
 
