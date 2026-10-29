@@ -2338,6 +2338,7 @@ support in the hero camera.
 | Senapati / Mantri / Rajuka / Amatya | General / minister / provincial officer / official |
 | Raja, Rani, Kumara, Kumari, Samraj | King, queen, prince, princess, emperor |
 | Dharma | Duty, right conduct (a negotiation tactic, "Duty") |
+| Vina, drone vina, vamsha, mridanga, bheri / dundubhi, shankha, ghanta | Score instruments by their early names (Appendix B): plucked string instrument, the string drone under the score, flute, two-headed drum, war drums, conch, bell |
 
 ## Appendix B - Historical care
 
@@ -2348,6 +2349,17 @@ support in the hero camera.
   system). `sourceNote` explains the basis for reviewers. Nothing fictional is presented in-game as fact.
 - Stylizations are flagged: shikhara temples and monumental stepwells are later architectural forms used for
   visual identity; chariot retirement by age is a game simplification of a gradual decline.
+- Score and sound (AUD-01 ruling). The score is *raga-inspired*: named raga and tala grammars are later forms
+  used as a flagged stylization (like the shikhara) and are never presented as the music of 300 BCE. Text a
+  player can read (settings, credits, codex, tooltips, any audio label in a shipped build) names instruments by
+  their early forms. The drone is the **drone vina**, never "tanpura": the tanpura is a long-necked drone lute
+  attested only from about the 16th-17th century CE; its buzzing-bridge timbre is kept as a stylization.
+  Melody strings are the **vina** (arched-harp vinas appear in early stupa reliefs); the flute is the **vamsha**
+  (*venu*; bansuri timbre); drums are the **mridanga** (pakhawaj / mridangam timbres) and the war drums
+  **bheri** and **dundubhi** (dhol / nagara timbres); then the **shankha** (conch) and **ghanta** (bell). Tabla,
+  sitar and harmonium are not used, in sound or in name. Internal DSP identifiers (`RagaDef.tanpura`,
+  `renderTanpuraString`, drum-kit and tala ids) are timbre references, not player-facing text, and may keep
+  their names.
 - No real dynasty, ruler, city or epic hero is depicted or named; generated names avoid famous figures.
 - No culture is reduced to good-versus-evil; every faction has a legitimate grievance and a cost; forest and
   frontier peoples are settled polities with councils, trade and law.
