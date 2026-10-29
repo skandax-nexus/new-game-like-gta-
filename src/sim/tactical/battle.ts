@@ -38,12 +38,12 @@ import { BALANCE } from '../../data/balance';
 import { RULES } from '../../data/rules';
 import { UNITS } from '../../data/units';
 import { runBattleAI, translateIntent } from './battleai';
-import { battleContext, computeDistances, rulesContext } from './context';
+import { battleContext, computeDistances, refreshGeometry, rulesContext } from './context';
 import type { BattleContext } from './context';
 import { footprintOverlap, movingCohesionLoss, pointInFootprint, refreshDims, resetDims, separateFormations } from './formations';
 import type { Mtv } from './formations';
 import { fatigueGainMultiplier, isEscalade, resolveChargeImpact, resolveMelee, resolveTrample } from './combat';
-import { addMoraleEvent, aspectOfPoint, driftMorale, isNight, pruneMoraleEvents, standing, updateMoraleBreakdown } from './morale';
+import { addMoraleEvent, aspectOfPoint, driftMorale, isNight, prepareMorale, pruneMoraleEvents, standing, updateMoraleBreakdown } from './morale';
 import { effectiveRange, launchVolley, updateVolleys } from './projectiles';
 import { gapBetween, isOffField, MAX_QUEUE, nearestEnemy, executeFormation, retreatDirection, snapOrder, startOrder, validateOrder } from './orders';
 import { autoDeploy, makeFormation } from './setup';
@@ -447,7 +447,7 @@ export function stepBattle(state: BattleState, dt: number, terrain: TerrainQuery
     const f = fs[i] as FormationState;
     ctx.active[i] = f.soldiers > 0 && f.activity !== 'surrendered' && f.activity !== 'destroyed' && !isOffField(ctx, f) ? 1 : 0;
   }
-  computeDistances(state, ctx);
+  refreshGeometry(state, ctx);
   passThroughEffects(state, ctx);
   separateFormations(ctx, fs, ctx.active);
   // Velocity = actual displacement this tick (after collisions): arrows lead it, bracing and fatigue read it.
@@ -477,6 +477,7 @@ export function stepBattle(state: BattleState, dt: number, terrain: TerrainQuery
 
   casualtyEffects(state, ctx, dt);
   periodicMorale(state, ctx);
+  prepareMorale(state, ctx);
   for (const f of fs) updateMoraleState(state, ctx, f, dt);
   for (const f of fs) updateCondition(state, ctx, f, dt);
   updateSpotting(state, ctx);
@@ -568,9 +569,9 @@ function passThroughEffects(state: BattleState, ctx: BattleContext): void {
       const reach = ctx.radius[j]! + ep.trampleRadius + 30;
       if (ctx.d2[i * n + j]! > reach * reach) continue;
       if (panicking) {
-        if (pointInFootprint(o, a.x, a.z, ep.trampleRadius) && !pointInFootprint(o, ctx.prevX[i]!, ctx.prevZ[i]!, ep.trampleRadius)) resolveTrample(state, ctx, a, o, rng, tmpOut);
+        if (pointInFootprint(o, a.x, a.z, ep.trampleRadius, ctx) && !pointInFootprint(o, ctx.prevX[i]!, ctx.prevZ[i]!, ep.trampleRadius, ctx)) resolveTrample(state, ctx, a, o, rng, tmpOut);
       } else if (routing) {
-        if (o.side === a.side && o.activity !== 'routing' && pointInFootprint(o, a.x, a.z, 0) && !pointInFootprint(o, ctx.prevX[i]!, ctx.prevZ[i]!, 0)) {
+        if (o.side === a.side && o.activity !== 'routing' && pointInFootprint(o, a.x, a.z, 0, ctx) && !pointInFootprint(o, ctx.prevX[i]!, ctx.prevZ[i]!, 0, ctx)) {
           o.cohesion = Math.max(0, o.cohesion - 0.05);
           addMoraleEvent(o, 'ally_routed', state.time);
         }
@@ -601,7 +602,7 @@ function updateContacts(state: BattleState, ctx: BattleContext): void {
       const rr = ra + ctx.radius[j]! + 4;
       if (ctx.d2[i * n + j]! > rr * rr || !canFight(state, ctx, b)) continue;
       if (ctx.d2[i * n + j]! > rr * rr) continue;
-      if (footprintOverlap(a, b, 0.75, mtv) <= 0) continue;
+      if (footprintOverlap(a, b, 0.75, mtv, ctx) <= 0) continue;
       if (wallBetween(state, ctx, a, b)) continue;
       a.engagedWith.push(b.index);
       b.engagedWith.push(a.index);
@@ -678,9 +679,14 @@ function updateShooting(state: BattleState, ctx: BattleContext, f: FormationStat
     let bd = Infinity;
     let routingBest: FormationState | null = null;
     let rbd = Infinity;
+    // Upper bound of range_eff (walls x1.2, tower x1.2, +50% for 50 m of height) to skip far pairs cheaply.
+    const st2 = ctx.stats[f.index]!;
+    const bound = Math.min(st2.range, RULES.battle.weather.rangeVsVisibility * state.setup.environment.weather.visibility) * 1.44 * 1.5;
+    const bound2 = bound * bound;
     for (const e of state.formations) {
-      if (e.side === f.side || e.soldiers <= 0 || !e.spotted || e.activity === 'surrendered' || isOffField(ctx, e)) continue;
+      if (e.side === f.side || e.soldiers <= 0 || !e.spotted || e.activity === 'surrendered') continue;
       const d = ctx.d2[f.index * ctx.n + e.index]!;
+      if (d > bound2 || isOffField(ctx, e)) continue;
       const r = effectiveRange(state, ctx, f, e);
       if (d > r * r) continue;
       if (e.activity === 'routing') {
@@ -872,6 +878,8 @@ function updateSpotting(state: BattleState, ctx: BattleContext): void {
   const n = ctx.n;
   const night = isNight(state);
   const vis = state.setup.environment.weather.visibility;
+  const nightVision = night ? RULES.battle.weather.nightVision : 1;
+  for (const f of fs) ctx.vision[f.index] = Math.min(ctx.stats[f.index]!.visionRange * nightVision, vis);
   for (const f of fs) {
     if (f.soldiers <= 0) {
       f.spotted = true;
@@ -893,10 +901,11 @@ function updateSpotting(state: BattleState, ctx: BattleContext): void {
       }
     }
     const stealth = f.unitClass === 'scouts' ? 1 - 0.5 * ctx.stats[f.index]!.stealth : 1;
+    const rf = ctx.radius[f.index]!;
     let seen = false;
     for (const e of fs) {
       if (e.side === f.side || e.soldiers <= 0 || e.activity === 'surrendered') continue;
-      const r = Math.min(ctx.stats[e.index]!.visionRange * (night ? RULES.battle.weather.nightVision : 1), vis) * stealth + ctx.radius[f.index]!;
+      const r = ctx.vision[e.index]! * stealth + rf;
       if (ctx.d2[f.index * n + e.index]! <= r * r) {
         seen = true;
         break;

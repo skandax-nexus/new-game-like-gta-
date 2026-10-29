@@ -43,6 +43,17 @@ export interface BattleContext {
   readonly radius: Float64Array;
   readonly sin: Float64Array;
   readonly cos: Float64Array;
+  /** Per-tick scratch: spotting radius of each formation (vision x night, capped by weather visibility). */
+  readonly vision: Float64Array;
+  /** Per-tick morale scratch: weight (soldiers x hp / 10, 0 = gone) and flags (1 present, 2 routing, 4 mounted). */
+  readonly weight: Float64Array;
+  readonly mflags: Uint8Array;
+  /** Per-tick morale accumulators (prepareMorale): friend / enemy weight within 80 m, enemy aspects within 30 m,
+   *  bits (1 left covered, 2 right covered, 4 mounted enemy on a flank / rear within 60 m, 8 charged by elephants). */
+  readonly mFriends: Float64Array;
+  readonly mEnemies: Float64Array;
+  readonly mAspects: Uint8Array;
+  readonly mBits: Uint8Array;
 }
 
 const contexts = new WeakMap<BattleSetup, BattleContext>();
@@ -75,6 +86,13 @@ function buildContext(state: BattleState, terrain: TerrainQuery): BattleContext 
     radius: new Float64Array(Math.max(1, n)),
     sin: new Float64Array(Math.max(1, n)),
     cos: new Float64Array(Math.max(1, n)),
+    vision: new Float64Array(Math.max(1, n)),
+    weight: new Float64Array(Math.max(1, n)),
+    mflags: new Uint8Array(Math.max(1, n)),
+    mFriends: new Float64Array(Math.max(1, n)),
+    mEnemies: new Float64Array(Math.max(1, n)),
+    mAspects: new Uint8Array(Math.max(1, n)),
+    mBits: new Uint8Array(Math.max(1, n)),
   };
 }
 
@@ -132,6 +150,20 @@ export function computeDistances(state: BattleState, ctx: BattleContext): void {
 
 function mix(h: number, v: number): number {
   return Math.imul(h ^ (v | 0), 16777619) >>> 0;
+}
+
+/**
+ * Refresh only the facing / footprint cache after movement (the distance matrix from the start of the tick stays:
+ * formations move <= 0.5 m per tick, so broad phases add a margin instead of recomputing n^2 distances).
+ */
+export function refreshGeometry(state: BattleState, ctx: BattleContext): void {
+  const fs = state.formations;
+  for (let i = 0; i < ctx.n; i++) {
+    const a = fs[i] as FormationState;
+    ctx.radius[i] = 0.5 * Math.sqrt(a.width * a.width + a.depth * a.depth);
+    ctx.sin[i] = dsin(a.facing);
+    ctx.cos[i] = dcos(a.facing);
+  }
 }
 
 /**

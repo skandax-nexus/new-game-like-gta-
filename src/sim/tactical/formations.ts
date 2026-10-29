@@ -164,11 +164,12 @@ export interface Mtv {
  * Oriented-box overlap (SAT, 4 axes) of two footprints shrunk/grown by `margin` meters on every side. Returns the
  * penetration depth (> 0 = overlapping) and writes the separation axis (A -> B) into `out`.
  */
-export function footprintOverlap(a: FormationState, b: FormationState, margin: number, out: Mtv): number {
-  const sa = dsin(a.facing);
-  const ca = dcos(a.facing);
-  const sb = dsin(b.facing);
-  const cb = dcos(b.facing);
+export function footprintOverlap(a: FormationState, b: FormationState, margin: number, out: Mtv, ctx?: BattleContext): number {
+  // The tick's cached sin / cos when a context is given (valid after refreshGeometry).
+  const sa = ctx ? ctx.sin[a.index]! : dsin(a.facing);
+  const ca = ctx ? ctx.cos[a.index]! : dcos(a.facing);
+  const sb = ctx ? ctx.sin[b.index]! : dsin(b.facing);
+  const cb = ctx ? ctx.cos[b.index]! : dcos(b.facing);
   const hwA = Math.max(0.5, a.width / 2 + margin);
   const hdA = Math.max(0.5, a.depth / 2 + margin);
   const hwB = Math.max(0.5, b.width / 2 + margin);
@@ -204,11 +205,11 @@ export function footprintOverlap(a: FormationState, b: FormationState, margin: n
 }
 
 /** True if the point lies inside f's footprint grown by `margin`. */
-export function pointInFootprint(f: FormationState, x: number, z: number, margin: number): boolean {
+export function pointInFootprint(f: FormationState, x: number, z: number, margin: number, ctx?: BattleContext): boolean {
   const dx = x - f.x;
   const dz = z - f.z;
-  const s = dsin(f.facing);
-  const c = dcos(f.facing);
+  const s = ctx ? ctx.sin[f.index]! : dsin(f.facing);
+  const c = ctx ? ctx.cos[f.index]! : dcos(f.facing);
   const lx = dx * -c + dz * s;
   const lz = dx * s + dz * c;
   return Math.abs(lx) <= f.width / 2 + margin && Math.abs(lz) <= f.depth / 2 + margin;
@@ -453,13 +454,14 @@ export function separateFormations(ctx: BattleContext, list: readonly FormationS
     for (let j = i + 1; j < n; j++) {
       if (!active[j]) continue;
       const b = list[j]!;
-      const rr = ra + ctx.radius[j]!;
+      // +3 m: the distance matrix is from the start of the tick (formations move <= 0.5 m per tick).
+      const rr = ra + ctx.radius[j]! + 3;
       if (ctx.d2[i * n + j]! > rr * rr) continue;
       const friends = a.side === b.side;
       if (friends && passesThrough(a, b)) continue;
       if (!friends && (a.panicUntil > 0 || b.panicUntil > 0)) continue;
       // Friends keep 1 m apart; foes may close to touching (contact margin is checked separately).
-      const o = footprintOverlap(a, b, friends ? 0.5 : -0.75, mtv);
+      const o = footprintOverlap(a, b, friends ? 0.5 : -0.75, mtv, ctx);
       if (o <= 0) continue;
       const ia = 1 / inertia(a, ctx.stats[a.index]!);
       const ib = 1 / inertia(b, ctx.stats[b.index]!);

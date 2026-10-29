@@ -30,6 +30,9 @@ const FLOW_CACHE = 24;
 /** Dial buckets (> max integer edge cost). */
 const BUCKETS = 1024;
 const BUCKET_MASK = BUCKETS - 1;
+/** Direct-route memo size (power of two). */
+const MEMO_SIZE = 4096;
+const MEMO_MASK = MEMO_SIZE - 1;
 /** Max cells of the descent chain examined for string pulling. */
 const CHAIN_STEPS = 10;
 
@@ -198,7 +201,11 @@ export class BattleGrid {
     this.costMul.fill(10);
     this.road.fill(0);
     for (const f of this.flows) f.key = -1;
+    this.memoKey.fill(-1);
   }
+
+  private readonly memoKey = new Float64Array(MEMO_SIZE).fill(-1);
+  private readonly memoVal = new Uint8Array(MEMO_SIZE);
 
   /**
    * Visit the cells covered by a thick segment (a rectangle of half-width `halfWidth` around a->b), calling
@@ -477,7 +484,7 @@ export class BattleGrid {
   waypoint(profile: number, side: number, x: number, z: number, tx: number, tz: number, out: { x: number; z: number }): number {
     out.x = tx;
     out.z = tz;
-    if (this.lineClear(x, z, tx, tz, profile, side)) return ROUTE_DIRECT;
+    if (this.directClear(this.cellAt(x, z), this.cellAt(tx, tz), profile, side)) return ROUTE_DIRECT;
     const dest = this.cellAt(tx, tz);
     const dist = this.flowField(profile, side, dest);
     const here = this.cellAt(x, z);
@@ -503,6 +510,21 @@ export class BattleGrid {
     out.x = this.centerX(best);
     out.z = this.centerZ(best);
     return ROUTE_FLOW;
+  }
+
+  /**
+   * Straight-line passability between two cells (cell centers), memoized in a direct-mapped table. A pure function of
+   * (cells, profile, side, overlay), so the memo never changes results (it is cleared with the overlay).
+   */
+  directClear(from: number, to: number, profile: number, side: number): boolean {
+    if (from === to) return true;
+    const key = ((from * 31 + to) * 16 + profile) * 2 + side;
+    const slot = (Math.imul(key, 2654435761) >>> 0) & MEMO_MASK;
+    if (this.memoKey[slot] === key) return this.memoVal[slot] === 1;
+    const v = this.lineClear(this.centerX(from), this.centerZ(from), this.centerX(to), this.centerZ(to), profile, side);
+    this.memoKey[slot] = key;
+    this.memoVal[slot] = v ? 1 : 0;
+    return v;
   }
 
   /** Path length estimate (cost units / 10 ~ meters on open ground) from (x, z) to `dest` cell, or Infinity. */

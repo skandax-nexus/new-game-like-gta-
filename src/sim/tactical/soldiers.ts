@@ -23,7 +23,6 @@
 import type { BattleState, FormationState, Rect, SoldierBuffers, TerrainQuery, Vec2 } from '../../core/types';
 import { SOLDIER_ANIM, SOLDIER_FLAG, SOLDIER_LOD, UNIT_CLASS_INDEX } from '../../core/types';
 import { Rng, deriveSeed } from '../../core/rng';
-import { SpatialHash2D } from '../../core/spatial';
 import { approachAngle, dcos, dsin, facingOf } from '../../core/math';
 import { UNITS } from '../../data/units';
 import { shapeMods } from './stats';
@@ -80,6 +79,85 @@ const ROLE_MASK = SOLDIER_FLAG.commander | SOLDIER_FLAG.standardBearer | SOLDIER
 const neighbors = new Int32Array(24);
 const tmp: Vec2 = { x: 0, z: 0 };
 
+/**
+ * Uniform grid around the camera focus holding only the soldiers that need neighbour queries (near LOD). Rebuilt each
+ * step with a counting sort over a fixed small cell array - O(n + cells) with ~1/40 of the cells of a map-wide hash.
+ */
+class LocalGrid {
+  readonly cell = 3;
+  readonly cols: number;
+  readonly half: number;
+  private originX = 0;
+  private originZ = 0;
+  private readonly start: Int32Array;
+  private readonly fill: Int32Array;
+  private readonly items: Int32Array;
+  private readonly cellOf: Int32Array;
+
+  constructor(maxHalf: number, capacity: number) {
+    this.half = maxHalf;
+    this.cols = Math.ceil((2 * maxHalf) / this.cell) + 1;
+    this.start = new Int32Array(this.cols * this.cols + 1);
+    this.fill = new Int32Array(this.cols * this.cols);
+    this.items = new Int32Array(capacity);
+    this.cellOf = new Int32Array(capacity);
+  }
+
+  private cellIndex(x: number, z: number): number {
+    const cx = Math.floor((x - this.originX) / this.cell);
+    const cz = Math.floor((z - this.originZ) / this.cell);
+    if (cx < 0 || cz < 0 || cx >= this.cols || cz >= this.cols) return -1;
+    return cz * this.cols + cx;
+  }
+
+  build(n: number, xs: Float32Array, zs: Float32Array, alive: Uint8Array, cx: number, cz: number, half: number): void {
+    const h = Math.min(half, this.half);
+    this.originX = cx - h;
+    this.originZ = cz - h;
+    const start = this.start;
+    start.fill(0);
+    const cells = this.cols * this.cols;
+    for (let i = 0; i < n; i++) {
+      const c = alive[i] ? this.cellIndex(xs[i]!, zs[i]!) : -1;
+      this.cellOf[i] = c;
+      if (c >= 0) start[c + 1]++;
+    }
+    for (let c = 0; c < cells; c++) start[c + 1] += start[c]!;
+    for (let c = 0; c < cells; c++) this.fill[c] = start[c]!;
+    for (let i = 0; i < n; i++) {
+      const c = this.cellOf[i]!;
+      if (c >= 0) this.items[this.fill[c]!++] = i;
+    }
+  }
+
+  /** Indices within r of (x, z) (capped at out.length). Points outside the grid find nothing. */
+  query(x: number, z: number, r: number, out: Int32Array, xs: Float32Array, zs: Float32Array): number {
+    const cs = this.cell;
+    const cx0 = Math.max(0, Math.floor((x - r - this.originX) / cs));
+    const cx1 = Math.min(this.cols - 1, Math.floor((x + r - this.originX) / cs));
+    const cz0 = Math.max(0, Math.floor((z - r - this.originZ) / cs));
+    const cz1 = Math.min(this.cols - 1, Math.floor((z + r - this.originZ) / cs));
+    const r2 = r * r;
+    let n = 0;
+    for (let cz = cz0; cz <= cz1; cz++) {
+      for (let cx = cx0; cx <= cx1; cx++) {
+        const c = cz * this.cols + cx;
+        const end = this.start[c + 1]!;
+        for (let k = this.start[c]!; k < end; k++) {
+          const i = this.items[k]!;
+          const dx = xs[i]! - x;
+          const dz = zs[i]! - z;
+          if (dx * dx + dz * dz <= r2) {
+            out[n++] = i;
+            if (n >= out.length) return n;
+          }
+        }
+      }
+    }
+    return n;
+  }
+}
+
 export class SoldierSim {
   readonly buffers: SoldierBuffers;
   private readonly fStart: Int32Array;
@@ -94,7 +172,15 @@ export class SoldierSim {
   private readonly slotMap: Int32Array;
   /** Banner role holder lost (dropped standard) - per formation, to restore on rally. */
   private readonly fDropped: Uint8Array;
-  private readonly hash: SpatialHash2D;
+  /** Per-step layout cache (no trig / table lookups per soldier): sin, cos, spacing, half extents, shape kind. */
+  private readonly lSin: Float64Array;
+  private readonly lCos: Float64Array;
+  private readonly lSpX: Float64Array;
+  private readonly lSpZ: Float64Array;
+  private readonly lHalfF: Float64Array;
+  private readonly lHalfR: Float64Array;
+  private readonly lWedge: Float64Array;
+  private readonly hash: LocalGrid;
   private readonly rng: Rng;
   private stepIndex = 0;
 
@@ -112,8 +198,17 @@ export class SoldierSim {
     this.fRouting = new Uint8Array(n);
     this.fVolley = new Float64Array(n).fill(-1);
     this.fDropped = new Uint8Array(n);
+    this.lSin = new Float64Array(n);
+    this.lCos = new Float64Array(n);
+    this.lSpX = new Float64Array(n);
+    this.lSpZ = new Float64Array(n);
+    this.lHalfF = new Float64Array(n);
+    this.lHalfR = new Float64Array(n);
+    this.lWedge = new Float64Array(n);
     this.slotMap = new Int32Array(Math.max(2, total * 2 + n * 2)).fill(-1);
-    this.hash = new SpatialHash2D(bounds, 4, this.buffers.capacity);
+    // Near-LOD separation radius up to 'ultra' (100 m) + margin; `bounds` kept for API compatibility.
+    void bounds;
+    this.hash = new LocalGrid(112, this.buffers.capacity);
     this.rng = new Rng(deriveSeed(state.setup.seed, 'soldiers'));
   }
 
@@ -169,6 +264,40 @@ export class SoldierSim {
     return 2 * (this.fStart[fi] as number) + 2 * fi;
   }
 
+  /** Cache a formation's layout constants for this step. */
+  private cacheLayout(f: FormationState): void {
+    const fi = f.index;
+    const st = UNITS[f.unitClass].stats;
+    const spread = shapeMods(f.shape).spread;
+    const files = Math.max(1, f.files);
+    const ranks = Math.max(1, f.ranks);
+    this.lSin[fi] = dsin(f.facing);
+    this.lCos[fi] = dcos(f.facing);
+    this.lSpX[fi] = st.spacingX * spread;
+    this.lSpZ[fi] = st.spacingZ * spread;
+    this.lHalfF[fi] = (files - 1) / 2;
+    this.lHalfR[fi] = (ranks - 1) / 2;
+    this.lWedge[fi] = f.shape === 'wedge' ? files * st.spacingX * spread * 0.15 : -1;
+  }
+
+  /** Slot position from the cached layout (block shapes; wedge and circle fall back to slotPosition). */
+  private slotFast(f: FormationState, s: number, out: Vec2): Vec2 {
+    const fi = f.index;
+    if (f.shape === 'circle' && f.soldiers > 6) return this.slotPosition(f, s, out);
+    const files = Math.max(1, f.files);
+    const file = s % files;
+    const rank = (s - file) / files;
+    const lx = (file - this.lHalfF[fi]!) * this.lSpX[fi]!;
+    let lz = (this.lHalfR[fi]! - rank) * this.lSpZ[fi]!;
+    const w = this.lWedge[fi]!;
+    if (w >= 0) lz -= Math.abs(lx) * 0.6 - w;
+    const sn = this.lSin[fi]!;
+    const cs = this.lCos[fi]!;
+    out.x = f.x + lx * -cs + lz * sn;
+    out.z = f.z + lx * sn + lz * cs;
+    return out;
+  }
+
   /** World position of slot `s` of f (same convention as formations.ts slotWorldPosition, inlined constants). */
   private slotPosition(f: FormationState, s: number, out: Vec2): Vec2 {
     const st = UNITS[f.unitClass].stats;
@@ -210,9 +339,10 @@ export class SoldierSim {
       this.syncLayout(f);
       this.syncCasualties(state, f);
       this.syncRoles(f);
+      this.cacheLayout(f);
     }
     this.markVolleys(state);
-    this.hash.build(b.count, b.posX, b.posZ, b.alive);
+    this.hash.build(b.count, b.posX, b.posZ, b.alive, focusX, focusZ, opts.lodNear + 12);
     const near2 = opts.lodNear * opts.lodNear;
     const mid2 = opts.lodMid * opts.lodMid;
     const far2 = opts.lodFar * opts.lodFar;
@@ -238,15 +368,9 @@ export class SoldierSim {
       const bracing = !engaged && canBraceVisual(f) && chargedBy(state, f);
       const spearWall = engaged && canBraceVisual(f);
       let enemyFacing = f.facing;
-      let ex = f.x;
-      let ez = f.z;
       if (engaged) {
         const e = state.formations[f.engagedWith[0]!];
-        if (e) {
-          enemyFacing = facingOf(e.x - f.x, e.z - f.z);
-          ex = e.x;
-          ez = e.z;
-        }
+        if (e) enemyFacing = facingOf(e.x - f.x, e.z - f.z);
       }
       const files = Math.max(1, f.files);
       const sn = dsin(enemyFacing);
@@ -272,7 +396,7 @@ export class SoldierSim {
         // --- Target position.
         let tx: number;
         let tz: number;
-        this.slotPosition(f, slot, tmp);
+        this.slotFast(f, slot, tmp);
         if (routing) {
           const v = b.variant[i]! / 255;
           const jitter = (v - 0.5) * 1.4;
@@ -294,7 +418,7 @@ export class SoldierSim {
         let vz = (tz - b.posZ[i]!) * 2.2;
         if (lod === SOLDIER_LOD.near) {
           const r = st.radius * 2.2;
-          const nn = this.hash.queryRadius(b.posX[i]!, b.posZ[i]!, r, neighbors, b.posX, b.posZ);
+          const nn = this.hash.query(b.posX[i]!, b.posZ[i]!, r, neighbors, b.posX, b.posZ);
           for (let q = 0; q < nn; q++) {
             const j = neighbors[q] as number;
             if (j === i) continue;
@@ -323,7 +447,7 @@ export class SoldierSim {
         b.posZ[i] = b.posZ[i]! + vz * sdt;
         b.posY[i] = terrain.heightAt(b.posX[i]!, b.posZ[i]!);
         const speed = Math.min(sp, maxSpeed);
-        const wantFacing = speed > 0.6 && !engaged ? facingOf(vx, vz) : engaged ? facingOf(ex - b.posX[i]!, ez - b.posZ[i]!) : f.facing;
+        const wantFacing = engaged ? enemyFacing : speed > 0.6 ? facingOf(vx, vz) : f.facing;
         b.facing[i] = approachAngle(b.facing[i]!, wantFacing, 6 * sdt);
 
         // --- Animation.
@@ -492,7 +616,7 @@ export class SoldierSim {
     }
     if (melee) {
       // Neighbours flinch.
-      const n = this.hash.queryRadius(b.posX[i]!, b.posZ[i]!, 1.6, neighbors, b.posX, b.posZ);
+      const n = this.hash.query(b.posX[i]!, b.posZ[i]!, 1.6, neighbors, b.posX, b.posZ);
       for (let q = 0; q < n && q < 3; q++) {
         const j = neighbors[q] as number;
         if (j !== i && b.alive[j] && b.formation[j] === fi && b.anim[j] !== SOLDIER_ANIM.hit) this.setAnim(j, SOLDIER_ANIM.hit, 0, state.time, state.time);

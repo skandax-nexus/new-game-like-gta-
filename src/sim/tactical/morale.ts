@@ -165,20 +165,6 @@ function weight(ctx: BattleContext, f: FormationState): number {
   return f.soldiers * (ctx.stats[f.index]!.hp / 10);
 }
 
-/** Charge events in the log against `f` by elephants within the last `sec` seconds. */
-function chargedByElephants(state: BattleState, f: FormationState, sec: number): boolean {
-  const evs = state.events;
-  for (let i = evs.length - 1; i >= 0; i--) {
-    const e = evs[i]!;
-    if (state.time - e.time > sec) return false;
-    if ((e.kind === 'charge' || e.kind === 'elephant_rampage') && e.other === f.index && e.formation !== null) {
-      const a = state.formations[e.formation];
-      if (a && a.unitClass === 'war_elephants') return true;
-    }
-  }
-  return false;
-}
-
 /** Index of the formation f reasons about for height / tactical position: target, else first enemy in contact, else nearest enemy within 250 m. */
 export function referenceEnemy(state: BattleState, ctx: BattleContext, f: FormationState): FormationState | null {
   const t = f.target >= 0 ? state.formations[f.target] : undefined;
@@ -198,50 +184,103 @@ export function referenceEnemy(state: BattleState, ctx: BattleContext, f: Format
   return best;
 }
 
-/** Fill `out` with the seven morale inputs of f (§6.7). `supplyHit[side]` = side supply train engaged / lost. */
-export function computeMoraleInputs(state: BattleState, ctx: BattleContext, f: FormationState, supplyHit: Uint8Array, out: MoraleInputs): MoraleInputs {
-  const n = ctx.n;
-  const row = f.index * n;
-  const terrain = ctx.terrain;
-  // --- P perceived risk + flank/surround geometry in one pass ---
-  let friends = weight(ctx, f);
-  let enemies = 0;
-  let coveredL = false;
-  let coveredR = false;
-  let aspects = 0;
-  let mountedFlank = false;
-  const rf = ctx.radius[f.index]!;
+/** Flank cover: friend `o` within 30 m beside `f` (left bit 1 / right bit 2), in f's frame. */
+function coverBit(ctx: BattleContext, f: FormationState, o: FormationState): number {
+  localOf(ctx, f, o.x, o.z, loc);
+  if (Math.abs(loc.z) > Math.max(f.depth, o.depth) / 2 + 25) return 0;
+  if (Math.abs(loc.x) - f.width / 2 - o.width / 2 > 30) return 0;
+  return loc.x < 0 ? 1 : 2;
+}
+
+/** Enemy `o` within 60 m of `f`: aspect bit (within 30 m) and mounted-on-flank bit. */
+function threatBits(ctx: BattleContext, f: FormationState, o: FormationState, gap: number, mountedO: boolean): void {
+  const asp = aspectOf(ctx, f, o.x, o.z);
+  if (gap <= 30) ctx.mAspects[f.index] = ctx.mAspects[f.index]! | (1 << asp);
+  if (asp !== 0 && mountedO) ctx.mBits[f.index] = ctx.mBits[f.index]! | 4;
+}
+
+/**
+ * Per-tick morale preparation: one symmetric pass over formation pairs within 160 m accumulates, for every formation,
+ * the friend / enemy weights within 80 m (P), flank cover (T), enemy aspects within 30 m (surrounded) and mounted
+ * enemies on a flank (P); one scan of the log tail marks formations charged by elephants in the last 10 s (P).
+ * Routing formations do not count as friends, enemies, cover or threats.
+ */
+export function prepareMorale(state: BattleState, ctx: BattleContext): void {
   const fs = state.formations;
-  for (let k = 0; k < n; k++) {
-    const o = fs[k]!;
-    if (o === f || o.soldiers <= 0 || o.activity === 'surrendered') continue;
-    const d2 = ctx.d2[row + k]!;
-    if (d2 > 160 * 160) continue;
-    const routing = o.activity === 'routing';
-    if (d2 <= 80 * 80 && !routing) {
-      if (o.side === f.side) friends += weight(ctx, o);
-      else enemies += weight(ctx, o);
-    }
-    if (routing) continue;
-    const gap = Math.sqrt(d2) - rf - ctx.radius[k]!;
-    if (o.side === f.side) {
-      if (gap > 30 || (coveredL && coveredR)) continue;
-      localOf(ctx, f, o.x, o.z, loc);
-      if (Math.abs(loc.z) > Math.max(f.depth, o.depth) / 2 + 25) continue;
-      if (Math.abs(loc.x) - f.width / 2 - o.width / 2 > 30) continue;
-      if (loc.x < 0) coveredL = true;
-      else coveredR = true;
-    } else if (gap <= 60) {
-      const asp = aspectOf(ctx, f, o.x, o.z);
-      if (gap <= 30) aspects |= 1 << asp;
-      if (asp !== 0 && isMounted(o.unitClass)) mountedFlank = true;
+  const n = ctx.n;
+  const W = ctx.weight;
+  const F = ctx.mflags;
+  for (const o of fs) {
+    const present = o.soldiers > 0 && o.activity !== 'surrendered' && o.activity !== 'destroyed';
+    const w = present ? weight(ctx, o) : 0;
+    W[o.index] = w;
+    F[o.index] = (present ? 1 : 0) | (o.activity === 'routing' ? 2 : 0) | (isMounted(o.unitClass) ? 4 : 0);
+    ctx.mFriends[o.index] = w;
+    ctx.mEnemies[o.index] = 0;
+    ctx.mAspects[o.index] = 0;
+    ctx.mBits[o.index] = 0;
+  }
+  for (let i = 0; i < n; i++) {
+    const fi = F[i]!;
+    if (!(fi & 1)) continue;
+    const a = fs[i]!;
+    const ri = (fi & 2) !== 0;
+    const row = i * n;
+    for (let j = i + 1; j < n; j++) {
+      const fj = F[j]!;
+      if (!(fj & 1)) continue;
+      const d2 = ctx.d2[row + j]!;
+      if (d2 > 160 * 160) continue;
+      const rj = (fj & 2) !== 0;
+      if (ri && rj) continue;
+      const b = fs[j]!;
+      const same = a.side === b.side;
+      if (d2 <= 80 * 80) {
+        if (same) {
+          if (!rj) ctx.mFriends[i] += W[j]!;
+          if (!ri) ctx.mFriends[j] += W[i]!;
+        } else {
+          if (!rj) ctx.mEnemies[i] += W[j]!;
+          if (!ri) ctx.mEnemies[j] += W[i]!;
+        }
+      }
+      const gap = Math.sqrt(d2) - ctx.radius[i]! - ctx.radius[j]!;
+      if (same) {
+        if (gap > 30) continue;
+        if (!rj) ctx.mBits[i] = ctx.mBits[i]! | coverBit(ctx, a, b);
+        if (!ri) ctx.mBits[j] = ctx.mBits[j]! | coverBit(ctx, b, a);
+      } else if (gap <= 60) {
+        if (!rj) threatBits(ctx, a, b, gap, (fj & 4) !== 0);
+        if (!ri) threatBits(ctx, b, a, gap, (fi & 4) !== 0);
+      }
     }
   }
+  const evs = state.events;
+  for (let k = evs.length - 1; k >= 0; k--) {
+    const e = evs[k]!;
+    if (state.time - e.time > 10) break;
+    if ((e.kind === 'charge' || e.kind === 'elephant_rampage') && e.other !== null && e.formation !== null && e.other < n) {
+      if (fs[e.formation]?.unitClass === 'war_elephants') ctx.mBits[e.other] = ctx.mBits[e.other]! | 8;
+    }
+  }
+}
+
+/** Fill `out` with the seven morale inputs of f (§6.7); reads the prepareMorale accumulators of this tick. */
+export function computeMoraleInputs(state: BattleState, ctx: BattleContext, f: FormationState, supplyHit: Uint8Array, out: MoraleInputs): MoraleInputs {
+  const terrain = ctx.terrain;
+  const i = f.index;
+  const friends = ctx.mFriends[i]!;
+  const enemies = ctx.mEnemies[i]!;
+  const bits = ctx.mBits[i]!;
+  const aspects = ctx.mAspects[i]!;
+  const coveredL = (bits & 1) !== 0;
+  const coveredR = (bits & 2) !== 0;
+  const mountedFlank = (bits & 4) !== 0;
   let aspectCount = 0;
   for (let k = 0; k < 4; k++) if (aspects & (1 << k)) aspectCount++;
   const losses = 1 - f.soldiers / Math.max(1, f.maxSoldiers);
   let p = enemies / Math.max(1, friends + enemies) - 0.2 + 0.7 * losses;
-  if (chargedByElephants(state, f, 10)) p += 0.2;
+  if (bits & 8) p += 0.2;
   if (mountedFlank) p += 0.15;
   // --- T tactical position ---
   let t = 0;
