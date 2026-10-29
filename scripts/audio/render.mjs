@@ -111,6 +111,29 @@ function write(group, id, chans, subtitle, extra = {}) {
 const want = (group, id) => (!ONLY || ONLY.has(group)) && (!FILTER || FILTER.test(id));
 const t0 = Date.now();
 
+// ---------------------------------------------------------------------------------------------- MUSIC
+const MOODS = ['menu', 'world', 'city', 'hero_explore', 'hero_combat', 'duel', 'battle', 'siege', 'victory', 'defeat'];
+if (!ONLY || ONLY.has('music')) {
+  for (const mood of MOODS) {
+    if (!want('music', mood)) continue;
+    const t1 = Date.now();
+    const r = A.renderMood(mood, SECONDS, SR, SEED);
+    const ms = Date.now() - t1;
+    const s = r.stats;
+    write('music', mood, [r.L, r.R], `${s.raga.toUpperCase()}  ${s.tala.toUpperCase()}  ${s.section.toUpperCase()}  ${s.bpm} BPM  I=${s.intensity}  RENDER ${(ms / 1000 / SECONDS).toFixed(3)}X RT`, { ...s, renderMsPerSec: Math.round(ms / SECONDS) });
+  }
+}
+
+// ------------------------------------------------------------------------------------------- STINGERS
+const STINGERS = ['age_up', 'landmark_complete', 'construction_complete', 'harvest', 'battle_start', 'duel_phase', 'mission_success', 'mission_failure', 'victory', 'defeat'];
+if (!ONLY || ONLY.has('stingers')) {
+  for (const id of STINGERS) {
+    if (!want('stingers', id)) continue;
+    const s = A.renderStinger(id, SR, SEED);
+    write('stingers', id, [s.L, s.R], 'STINGER');
+  }
+}
+
 // ------------------------------------------------------------------------------------------------ SFX
 if (!ONLY || ONLY.has('sfx')) {
   for (const id of A.ALL_SFX) {

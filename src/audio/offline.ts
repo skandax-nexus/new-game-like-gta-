@@ -7,8 +7,11 @@ import { ALL_SFX, SFX_META, type SfxSoundId } from './sfx/meta';
 import { renderSfx } from './sfx/render';
 import { AMBIENCE_DEFS, AMBIENCE_KEYS, ambienceDef, worldBedLayers } from './ambience/meta';
 import { renderBed, renderSpot, simulateAmbience } from './ambience/render';
+import { renderMood, ScoreEngine } from './music/engine';
+import { TYPICAL_INTENSITY } from './music/moods';
+import { renderStinger } from './music/stingers';
 
-export { ALL_SFX, SFX_META, renderSfx, AMBIENCE_DEFS, AMBIENCE_KEYS, ambienceDef, worldBedLayers, renderBed, renderSpot, simulateAmbience };
+export { ALL_SFX, SFX_META, renderSfx, AMBIENCE_DEFS, AMBIENCE_KEYS, ambienceDef, worldBedLayers, renderBed, renderSpot, simulateAmbience, renderMood, ScoreEngine, TYPICAL_INTENSITY, renderStinger };
 export type { SfxSoundId };
 
 /** All variants of one SFX at the `high` tier count. */
