@@ -39,7 +39,7 @@ import {
 import { agingHealthLoss, designateHeir, DYNASTY_REASONS, handleDeath, lawfulSuccessor, updateCharactersYearly } from '../../../src/sim/strategic/dynasty';
 import { appointCouncil, computeCouncilAdvice, COUNCIL_REASONS, ignoreAdvisor, noteCommandForCouncil, updateCouncilMonthly } from '../../../src/sim/strategic/council';
 import { factionMod } from '../../../src/sim/strategic/modifiers';
-import { campaign, cmd, issue, quiet, runDays } from './helpers';
+import { campaign, cmd, issue, quiet, runDays, sandbox } from './helpers';
 
 const scope = { factionId: 'heartland', settlementId: null, provinceId: null, characterId: null, armyId: null };
 
@@ -432,6 +432,69 @@ describe('dynasty (DESIGN_SPEC §7.12)', () => {
     expect(child!.dynastyId).toBe('dyn_suvarna');
     expect(child!.factionId).toBe('heartland');
   });
+
+  it('every sandbox realm starts with a court: a ruler at court, a spouse, an adult heir of the house and a general leading the host (review B4)', () => {
+    for (const seed of [1, 2, 3]) {
+      for (const player of ['heartland', 'highland', 'forest', 'frontier']) {
+        const w = sandbox(seed, { playerFactionId: player, rivalFactionIds: ['heartland', 'highland', 'forest', 'frontier'].filter((x) => x !== player) });
+        for (const f of Object.values(w.factions)) {
+          const ruler = w.characters[f.rulerId!]!;
+          const court = Object.values(w.characters).filter((c) => c.factionId === f.id);
+          expect(court.length, f.id).toBeGreaterThanOrEqual(3);
+          // The ruling house: the dynasty exists, ruler and heir belong to it.
+          const dyn = w.dynasties[f.dynastyId!]!;
+          expect(dyn, f.id).toBeDefined();
+          expect(dyn.headId).toBe(ruler.id);
+          expect(ruler.dynastyId).toBe(dyn.id);
+          // An adult heir of the house, 16-30, the ruler's child.
+          const heir = w.characters[f.heirId!]!;
+          expect(heir, f.id).toBeDefined();
+          expect(heir.roles).toContain('heir');
+          expect(heir.dynastyId).toBe(dyn.id);
+          expect(heir.parentIds).toContain(ruler.id);
+          const age = w.calendar.year - heir.birthYear;
+          expect(age).toBeGreaterThanOrEqual(RULES.dynasty.adultAge);
+          expect(age).toBeLessThanOrEqual(30);
+          expect(lawfulSuccessor(w, f.id, ruler.id), f.id).not.toBeNull();
+          // The ruler does not command; a general leads the starting host and sits on the council.
+          const hosts = Object.values(w.armies).filter((a) => a.factionId === f.id);
+          expect(hosts.length).toBe(1);
+          expect(ruler.armyId).toBeNull();
+          const general = w.characters[hosts[0]!.commanderId!]!;
+          expect(general.roles).toContain('general');
+          expect(general.id).not.toBe(ruler.id);
+          expect(general.armyId).toBe(hosts[0]!.id);
+          expect(f.council.commander).toBe(general.id);
+          // A spouse; names never repeat at one court.
+          expect(w.characters[ruler.spouseId!]!.spouseId).toBe(ruler.id);
+          expect(new Set(court.map((c) => c.name)).size).toBe(court.length);
+        }
+      }
+    }
+  });
+
+  it('a sandbox realm survives the death of its general and of its ruler (the heir succeeds; no line_ended)', () => {
+    const w = sandbox(1, { playerFactionId: 'highland', rivalFactionIds: ['heartland', 'forest', 'frontier'] });
+    const f = w.factions.highland!;
+    const host = Object.values(w.armies).find((a) => a.factionId === 'highland')!;
+    const out: SimEvent[] = [];
+    handleDeath(w, host.commanderId!, out);
+    expect(f.alive).toBe(true);
+    expect(w.victory.status).toBe('ongoing');
+    const heirId = f.heirId!;
+    const expected = lawfulSuccessor(w, 'highland', f.rulerId);
+    f.legitimacy = 1; // no crisis
+    handleDeath(w, f.rulerId!, out);
+    expect(w.victory.status).toBe('ongoing');
+    expect(f.rulerId).toBe(expected!.id);
+    expect(w.characters[f.rulerId!]!.alive).toBe(true);
+    expect(out.some((e) => e.kind === 'succession')).toBe(true);
+    void heirId;
+    // The default sandbox runs a year without any realm's line ending.
+    const w2 = sandbox(1);
+    runDays(w2, 360);
+    expect(w2.victory.outcomeId).not.toBe('line_ended');
+  }, 120_000);
 
   it('designate_heir validates the person', () => {
     const w = campaign(5);

@@ -50,7 +50,7 @@ import { BUILDINGS } from '../../data/buildings';
 import { FACTIONS } from '../../data/factions';
 import { REGION } from '../../data/region';
 import { DEFAULT_SCENARIO_ID, SCENARIOS } from '../../data/campaign';
-import { PERSON_NAMES } from '../../data/names';
+import { DYNASTY_NAMES, NAME_POOLS, PERSON_NAMES, TITLES } from '../../data/names';
 import { advanceCalendar, createCalendar, floodLevel, makeWeather, seasonOf, totalDays, updateMonsoonDaily, updateWeatherDaily, type CalendarAdvance } from './seasons';
 import { addChronicle, pushBattleHistory, regionTerrain, stableKeys, withWorldRng } from './state';
 import { updateRoadBlocks } from './network';
@@ -219,16 +219,32 @@ function provinceBoundary(center: Vec2, points: Vec2[], rng: Rng): Vec2[] {
   return out;
 }
 
-function generatedCharacter(world: WorldState, rng: Rng, factionId: FactionId, role: CharacterState['roles'][number], year: number): CharacterState {
-  const gender = rng.chance(0.75) ? 'male' : 'female';
-  const pool = PERSON_NAMES[gender];
+interface GeneratedCharacterOptions {
+  gender?: CharacterState['gender'];
+  /** Age range in years (inclusive); default 25-55. */
+  age?: readonly [number, number];
+  dynastyId?: string | null;
+  /** Names already used at this court (a generated court never repeats a name). */
+  usedNames?: Set<string>;
+  title?: string;
+}
+
+function generatedCharacter(world: WorldState, rng: Rng, factionId: FactionId, role: CharacterState['roles'][number], year: number, opts: GeneratedCharacterOptions = {}): CharacterState {
+  const gender = opts.gender ?? (rng.chance(0.75) ? 'male' : 'female');
+  const arch = FACTIONS[factionId]?.archetype;
+  const regional = arch ? NAME_POOLS[arch]?.[gender] : undefined;
+  const pool = regional && regional.length > 0 ? regional : PERSON_NAMES[gender];
+  const free = opts.usedNames ? pool.filter((n) => !opts.usedNames!.has(n)) : pool;
+  const name = rng.pick(free.length > 0 ? free : pool);
+  opts.usedNames?.add(name);
+  const [minAge, maxAge] = opts.age ?? [25, 55];
   return {
     id: nextWorldId(world, 'char'),
-    name: rng.pick(pool),
-    dynastyId: null,
+    name: opts.title ? `${opts.title} ${name}` : name,
+    dynastyId: opts.dynastyId ?? null,
     factionId,
     gender,
-    birthYear: year - rng.int(25, 55),
+    birthYear: year - rng.int(minAge, maxAge),
     alive: true,
     deathYear: null,
     health: rng.range(0.6, 1),
@@ -250,6 +266,85 @@ function generatedCharacter(world: WorldState, rng: Rng, factionId: FactionId, r
     prestige: role === 'ruler' ? 50 : 10,
     captiveOf: null,
   };
+}
+
+/** Age gap between a generated ruler and the heir (years). */
+const COURT_PARENT_GAP: readonly [number, number] = [18, 30];
+/** Age of a generated adult heir (DESIGN_SPEC §7.12: adult, so no regency). */
+const COURT_HEIR_AGE: readonly [number, number] = [RULES.dynasty.adultAge, 30];
+
+/**
+ * A minimal court for a realm the scenario gives no characters (every sandbox realm; SIM-01 review B4): the ruling
+ * house (the realm's house and succession law from the campaign data, else a free DYNASTY_NAMES entry and
+ * primogeniture), a ruler who stays at court, the ruler's spouse, an adult heir of the house (16-30, FactionState.heirId)
+ * and a general who commands the starting host and holds the commander's council seat. The first battle death no
+ * longer ends the dynasty, and §7.12 succession / adoption have real candidates. Names come from data/names.ts.
+ */
+function generateCourt(world: WorldState, rng: Rng, factionId: FactionId, year: number, capitalId: string | null): void {
+  const def = FACTIONS[factionId];
+  let house: { name: string; successionLaw: DynastyState['successionLaw'] } | null = null;
+  for (const sid of Object.keys(SCENARIOS).sort()) {
+    const d = SCENARIOS[sid as keyof typeof SCENARIOS]?.dynasties.find((x) => x.factionId === factionId);
+    if (d) {
+      house = { name: d.name, successionLaw: d.successionLaw };
+      break;
+    }
+  }
+  if (!house) {
+    const taken = new Set(Object.values(world.dynasties).map((d) => d.name));
+    const free = DYNASTY_NAMES.filter((n) => !taken.has(n));
+    house = { name: free.length > 0 ? rng.pick(free) : `House of ${def?.shortName ?? factionId}`, successionLaw: 'primogeniture' };
+  }
+  const dynastyId = `dyn_${factionId}`;
+  const used = new Set<string>();
+  const heirAge = rng.int(COURT_HEIR_AGE[0], COURT_HEIR_AGE[1]);
+  const rulerAge = heirAge + rng.int(COURT_PARENT_GAP[0], COURT_PARENT_GAP[1]);
+  const ruler = generatedCharacter(world, rng, factionId, 'ruler', year, { age: [rulerAge, rulerAge], dynastyId, usedNames: used });
+  const spouseAge = Math.max(heirAge + COURT_PARENT_GAP[0], rulerAge + rng.int(-6, 3));
+  const spouse = generatedCharacter(world, rng, factionId, 'courtier', year, {
+    gender: ruler.gender === 'male' ? 'female' : 'male',
+    age: [spouseAge, spouseAge],
+    usedNames: used,
+  });
+  const heir = generatedCharacter(world, rng, factionId, 'heir', year, { age: [heirAge, heirAge], dynastyId, usedNames: used });
+  const general = generatedCharacter(world, rng, factionId, 'general', year, { gender: rng.chance(0.85) ? 'male' : 'female', age: [28, 50], usedNames: used, title: rng.pick(TITLES.general) });
+  ruler.spouseId = spouse.id;
+  spouse.spouseId = ruler.id;
+  spouse.loyalty = rng.range(0.7, 0.95);
+  heir.parentIds = ruler.gender === 'male' ? [ruler.id, spouse.id] : [spouse.id, ruler.id];
+  heir.loyalty = rng.range(0.7, 0.95);
+  ruler.childIds.push(heir.id);
+  spouse.childIds.push(heir.id);
+  general.roles.push('advisor');
+  general.councilSeat = 'commander';
+  general.skills.martial = rng.int(11, 17);
+  general.loyalty = rng.range(0.6, 0.9);
+  for (const c of [spouse, heir, general]) c.opinionOfRuler = Math.round((c.loyalty - 0.5) * 120);
+  for (const c of [ruler, spouse, heir, general]) {
+    c.locationSettlementId = capitalId;
+    world.characters[c.id] = c;
+  }
+  world.dynasties[dynastyId] = {
+    id: dynastyId,
+    name: house.name,
+    factionId,
+    headId: ruler.id,
+    memberIds: [ruler.id, heir.id],
+    prestige: 100,
+    legitimacy: 0.6,
+    successionLaw: house.successionLaw,
+    founderYear: year - 80,
+    generation: 1,
+  };
+}
+
+/** The realm's field commander for a generated host: its general, else the ruler. */
+function hostCommander(world: WorldState, f: FactionState): string | null {
+  for (const id of Object.keys(world.characters).sort()) {
+    const c = world.characters[id]!;
+    if (c.factionId === f.id && c.alive && c.roles.includes('general') && c.id !== f.rulerId && !c.armyId) return c.id;
+  }
+  return f.rulerId;
 }
 
 /** Build a fresh world for a scenario or sandbox. Deterministic for a given setup. */
@@ -443,6 +538,7 @@ export function createWorld(setup: WorldSetup): WorldState {
     const owned = Object.values(world.settlements).filter((s) => s.ownerFactionId === fid);
     const capital =
       owned.find((s) => s.kind === 'capital') ?? owned.find((s) => s.kind === 'city' || s.kind === 'fort') ?? owned[0] ?? null;
+    if (!Object.values(world.characters).some((c) => c.factionId === fid)) generateCourt(world, rng, fid, startYear, capital?.id ?? null);
     let ruler = Object.values(world.characters).find((c) => c.factionId === fid && c.roles.includes('ruler')) ?? null;
     if (!ruler) {
       ruler = generatedCharacter(world, rng, fid, 'ruler', startYear);
@@ -529,8 +625,10 @@ export function createWorld(setup: WorldSetup): WorldState {
           { unitClass: 'cavalry', formations: 1 },
           { unitClass: 'supply_train', formations: 1 },
         ],
-        f.rulerId,
+        hostCommander(world, f),
       );
+      const cmdr = world.armies[id]!.commanderId;
+      if (cmdr && world.characters[cmdr]) world.characters[cmdr]!.armyId = id;
     }
   }
 
