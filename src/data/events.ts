@@ -426,7 +426,9 @@ const BROKEN_CROWN: EventDef[] = [
     body: 'Kumari Meghavati herself rides down from the plateau under a white banner. "Our granaries are as empty as yours," she says. "Let this be the last season our peoples starve for a bridge."',
     illustration: 'messenger',
     scope: 'faction',
-    trigger: NEVER,
+    // From day 430 (DESIGN_SPEC §9.4), only while the war goes on and the clans still hold Giridurg - not after a
+    // truce or marriage, nor once the Confederacy has fallen apart.
+    trigger: all(BC, dayAtLeast(430), atWar(PLAYER, HIGHLAND), owns('giridurg', HIGHLAND)),
     autoResolveDays: 20,
     choices: [
       { id: 'refuse', label: 'Refuse: the war ends on our terms', description: 'Giridurga opinion -15; prestige +5.', effects: [opinion(PLAYER, HIGHLAND, -15), addF(PLAYER, 'prestige', 5)], requires: null, aiWeight: 1, advisorSeat: 'commander' },
@@ -489,7 +491,7 @@ const SEVEN_HILLS: EventDef[] = [
     scope: 'faction',
     trigger: NEVER,
     choices: [
-      { id: 'ration', label: 'Ration the clans', description: 'Stability -0.03.', effects: [addF(PLAYER, 'stability', -0.03)], requires: null, aiWeight: 1, advisorSeat: 'chief_minister' },
+      { id: 'ration', label: 'Ration the clans', description: 'Stability -0.03; the clans eat 15% less for 120 days (rationing rule).', effects: [setFlag('rationing'), addF(PLAYER, 'stability', -0.03)], requires: null, aiWeight: 1, advisorSeat: 'chief_minister' },
       { id: 'raid', label: 'Raid the plains granaries', description: 'Reserve +2,000; prestige +5; Suvarna opinion -10.', effects: [setFlag('raid_plains'), addF(PLAYER, 'foodReserve', 2000), addF(PLAYER, 'prestige', 5), opinion(PLAYER, HEARTLAND, -10)], requires: null, aiWeight: 1, advisorSeat: 'commander' },
       { id: 'forest_rice', label: 'Buy rice from the forest traders', description: 'Treasury -700; reserve +4,000; Nilavana opinion +5.', effects: [addF(PLAYER, 'treasury', -700), addF(PLAYER, 'foodReserve', 4000), opinion(PLAYER, FOREST, 5)], requires: fv(PLAYER, 'treasury', '>=', 700), aiWeight: 1, advisorSeat: null },
     ],
@@ -554,7 +556,8 @@ const SEVEN_HILLS: EventDef[] = [
     body: 'An envoy from Rajapura climbs the escarpment road with grain carts behind him: an end to the war, and the bridge open to hill traders, if the clans will swear on the water at Tirthaghat.',
     illustration: 'messenger',
     scope: 'faction',
-    trigger: NEVER,
+    // From day 430 (DESIGN_SPEC §9.8), only while still at war with a crown that holds Rajapura.
+    trigger: all(SH, dayAtLeast(430), atWar(PLAYER, HEARTLAND), owns('rajapura', HEARTLAND)),
     autoResolveDays: 20,
     choices: [
       { id: 'refuse', label: 'Refuse: the bridge or nothing', description: 'Suvarna opinion -15; prestige +5.', effects: [opinion(PLAYER, HEARTLAND, -15), addF(PLAYER, 'prestige', 5)], requires: null, aiWeight: 1, advisorSeat: 'commander' },

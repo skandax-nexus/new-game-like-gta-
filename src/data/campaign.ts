@@ -159,7 +159,6 @@ export const SCENARIOS: Readonly<Record<ScenarioId, ScenarioDef>> = {
       { eventId: 'evt_bc_lean_months', day: 245 },
       { eventId: 'evt_bc_monsoon_omens', day: 300 },
       { eventId: 'evt_bc_port_charter', day: 330 },
-      { eventId: 'evt_bc_last_envoy', day: 430 },
       { eventId: 'evt_bc_year_turns', day: 515 },
     ],
     victoryTypes: ['scenario', 'unification', 'diplomatic_hegemony', 'prosperity'],
@@ -223,7 +222,6 @@ export const SCENARIOS: Readonly<Record<ScenarioId, ScenarioDef>> = {
       { eventId: 'evt_sh_act2', day: 140 },
       { eventId: 'evt_sh_salt_riders', day: 170 },
       { eventId: 'evt_bc_monsoon_omens', day: 300 },
-      { eventId: 'evt_sh_last_offer', day: 430 },
     ],
     victoryTypes: ['scenario', 'unification', 'diplomatic_hegemony', 'prosperity'],
     hints: [

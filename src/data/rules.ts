@@ -56,8 +56,12 @@ export const RULES = {
   },
   /** Moving grain inside a realm (DESIGN_SPEC §7.3 distribution). Only along owned, unblocked roads with condition >= 0.5. */
   distribution: {
-    /** Settlements above this many reserve days export a share of the excess per day to the realm pool. */
-    exportAboveDays: 120,
+    /**
+     * Settlements above this many reserve days export a share of the excess per day to the realm pool. 75 (was 120,
+     * SIM-01 review CD-2): at 120 the grain villages almost never shipped and Rajapura - break-even on its own fields -
+     * starved every lean season (The Broken Crown default run lost the capital on day 252; 75 keeps it 10/10 seeds).
+     */
+    exportAboveDays: 75,
     exportSharePerDay: 0.05,
     /** Settlements below this many reserve days import from the pool (proportionally to need). */
     importBelowDays: 60,
@@ -168,8 +172,13 @@ export const RULES = {
      * Giridurga -9%, Nilavana +3%, Marudesha -8%, free towns -4% (DESIGN_SPEC §13.2).
      */
     overcrowdingGrowthPenalty: 2,
-    /** Labor = population x BALANCE.economy.laborPerPopulation x (0.5 + 0.5 x health). */
-    laborHealthWeight: 0.5,
+    /**
+     * Labor = population x BALANCE.economy.laborPerPopulation x ((1 - w) + w x health). 0 (was 0.5, SIM-01 review
+     * CD-1): the §13.2 grain bands and every worked example (Granary at Dhanyagram: 126 builders) assume labor =
+     * population x 0.45; at 0.5 the ordinary health of 0.6-0.8 silently removed 10-18% of farm labor. Sickness still
+     * costs people (growth x health, famine deaths).
+     */
+    laborHealthWeight: 0,
     /** Emigration per day when loyalty < 0.3 and price > 2 (to the nearest same-owner settlement). */
     emigrationPerDay: 0.0005,
     defaultLabor: {
@@ -240,6 +249,11 @@ export const RULES = {
     scoutRadius: 350,
     scoutsBonusRadius: 250,
     watchtowerRadius: 900,
+  },
+  /** Road upkeep (SIM-01 review CD-6; moved out of commands.ROAD_REPAIR_WEALTH_PER_KM). */
+  roads: {
+    /** repair_road cost = this x edge length (km) x missing condition (1 - condition, 0..1). */
+    repairWealthPerKm: 20,
   },
   supply: {
     /** Days of rations every soldier carries (soldiers x upkeepFood x days). */
@@ -316,10 +330,24 @@ export const RULES = {
     offers: {
       relief: { foodDays: 30, wealthPer100Pop: 2, unrest: -0.25, loyalty: 0.1 },
       tax_cut: { rateDelta: -0.05, days: 180, unrest: -0.15, loyalty: 0.05 },
-      autonomy: { autonomy: 0.25, unrest: -0.3, taxShare: -0.25, governorLoyalty: 0.2, legitimacy: -0.02 },
+      /** taxShare is informational: the §7.5 tax formula (x (1 - 0.5 x province autonomy)) applies, so +0.25 autonomy
+       *  = -12.5% tax (SIM-01 review CD-5). */
+      autonomy: { autonomy: 0.25, unrest: -0.3, taxShare: -0.125, governorLoyalty: 0.2, legitimacy: -0.02 },
       coercion: { unrest: -0.35, loyalty: -0.15, backfireChanceBelowLoyalty: 0.3, backfireChance: 0.3, garrisonPerCapita: 0.02 },
     },
-    governor: { stewardshipTaxPerPoint: 0.01, interestLoyalty: 0.05, demandBelowLoyalty: 0.3, secedeBelowLoyalty: 0.15, demandAmbitionAbove: 0.6 },
+    governor: {
+      stewardshipTaxPerPoint: 0.01,
+      interestLoyalty: 0.05,
+      demandBelowLoyalty: 0.3,
+      secedeBelowLoyalty: 0.15,
+      demandAmbitionAbove: 0.6,
+      /**
+       * Governor loyalty drifts monthly by perMonth of the gap toward base + (interest met ? interestMet : interestUnmet)
+       * + provinceUnrest x province unrest + legitimacy x (faction legitimacy - 0.5) (SIM-01 review CD-6; the values
+       * the sim shipped with, moved out of politics.governorLoyaltyTarget).
+       */
+      loyaltyDrift: { perMonth: 0.1, base: 0.5, interestMet: 0.15, interestUnmet: -0.1, provinceUnrest: -0.2, legitimacy: 0.2 },
+    },
     /** Legitimacy per month for each governor above the age's governor slots. */
     overSlotLegitimacyPerMonth: -0.02,
     /** Faction stability drifts toward its target by driftPerMonth of the gap (DESIGN_SPEC §7.9). */
