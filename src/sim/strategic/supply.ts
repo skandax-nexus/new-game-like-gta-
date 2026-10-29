@@ -209,6 +209,11 @@ function resupply(world: WorldState, a: ArmyState, threatCache: Map<string, Set<
   return true;
 }
 
+/**
+ * Forage for a day (§7.8). A player whose town is plundered hears of it when the raid grievance is recorded - the
+ * first day of a raider's plunder, then at most once per 30 days per raider - not every day of a long stay (the
+ * Broken Crown default run used to toast "Enemy foragers are plundering Setupur." 158-249 times).
+ */
 function forage(world: WorldState, a: ArmyState, need: number, out: SimEvent[]): number {
   const s0 = seasonOf(world.calendar);
   const pid = provinceAtPoint(world, a.x, a.z);
@@ -230,8 +235,8 @@ function forage(world: WorldState, a: ArmyState, need: number, out: SimEvent[]):
     const plunder = yieldFood * SUP.plunderMultiplier;
     s.foodStored = Math.max(0, s.foodStored - plunder);
     s.damage = Math.min(1, s.damage + 0.01);
-    if (s.ownerFactionId) raidGrievance(world, s.ownerFactionId, a.factionId);
-    if (s.ownerFactionId && world.factions[s.ownerFactionId]?.isPlayer) notifyPlayer(world, out, s.ownerFactionId, 'danger', `Enemy foragers are plundering ${s.name}.`, { x: s.x, z: s.z });
+    const newGrievance = s.ownerFactionId ? raidGrievance(world, s.ownerFactionId, a.factionId) : false;
+    if (s.ownerFactionId && newGrievance && world.factions[s.ownerFactionId]?.isPlayer) notifyPlayer(world, out, s.ownerFactionId, 'danger', `Enemy foragers are plundering ${s.name}.`, { x: s.x, z: s.z });
     return plunder;
   }
   // Neutral land of another realm: take the produce without plunder.
@@ -240,14 +245,15 @@ function forage(world: WorldState, a: ArmyState, need: number, out: SimEvent[]):
   return yieldFood;
 }
 
-/** A `raid` grievance (-10 opinion) held by `victim` against `raider`, at most one per 30 days. */
-export function raidGrievance(world: WorldState, victim: FactionId, raider: FactionId): void {
-  if (isRebelFaction(raider) || !world.factions[raider]) return;
+/** A `raid` grievance (-10 opinion) held by `victim` against `raider`, at most one per 30 days. True when one is recorded. */
+export function raidGrievance(world: WorldState, victim: FactionId, raider: FactionId): boolean {
+  if (isRebelFaction(raider) || !world.factions[raider]) return false;
   const rel = relationOf(world, victim, raider);
-  if (!rel) return;
+  if (!rel) return false;
   const d = today(world);
-  if (rel.grievances.some((g) => g.kind === 'raid' && d - g.day < 30)) return;
+  if (rel.grievances.some((g) => g.kind === 'raid' && d - g.day < 30)) return false;
   rel.grievances.push({ kind: 'raid', day: d, amount: -10 });
+  return true;
 }
 
 function attritionShare(world: WorldState, a: ArmyState, terrain: TerrainQuery): number {

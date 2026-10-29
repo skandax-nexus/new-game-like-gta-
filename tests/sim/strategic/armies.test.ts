@@ -445,4 +445,25 @@ describe('daily supply (DESIGN_SPEC §7.8)', () => {
     expect(s.foodStored).toBeLessThan(store);
     expect(s.damage).toBeGreaterThan(dmg);
   });
+
+  it('a plundered player town is reported on the first day and with each new raid grievance, not every day', () => {
+    const w = campaign(5);
+    setWar(w, 'heartland', 'highland', true);
+    for (const r of Object.values(w.diplomacy.relations)) r.grievances = r.grievances.filter((g) => g.kind !== 'raid');
+    const s = w.settlements.dhanyagram!;
+    expect(s.ownerFactionId).toBe(w.playerFactionId);
+    const a = place(w, 'army_raider', 'highland', s.x + s.radius + 100, s.z, [{ unitClass: 'spearmen', formations: 3 }]);
+    a.order = { kind: 'forage' };
+    const text = `Enemy foragers are plundering ${s.name}.`;
+    const toastDays: number[] = [];
+    for (let d = 0; d < 40; d++) {
+      const out: SimEvent[] = [];
+      updateArmiesDaily(w, out);
+      if (out.some((e) => e.kind === 'notification' && e.text === text)) toastDays.push(d);
+      w.calendar.totalHours += 24;
+    }
+    expect(w.armies.army_raider).toBeDefined();
+    // Day 0: the plunder starts (and the raid grievance is recorded); day 30: the next grievance (one per 30 days).
+    expect(toastDays).toEqual([0, 30]);
+  });
 });
