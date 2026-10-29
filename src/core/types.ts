@@ -944,6 +944,11 @@ export interface BattleSideState {
   groups: FormationIndex[][];
   /** Battle time (s) when the commander's Rally is available again (cooldown 90 s, DESIGN_SPEC §6.11). 0 = ready. @sprint1 GP-01 */
   rallyCooldownUntil: number;
+  /**
+   * Persistent battle-AI scratch memory for this side (plan id, reserve committed, next re-plan time...), so a
+   * battle resumed from a save thinks exactly like the uninterrupted one. Plain values only. @sprint1 SIM-02
+   */
+  aiMemory: Record<string, number | string | boolean>;
 }
 
 /** 'active' = the fighting phase (the spec's "battle"); kept from v1 (no renames). */
@@ -1968,6 +1973,8 @@ export interface FactionState {
   protectCourtUntilDay: number | null;
   /** Consecutive ignored recommendations per council seat (3 in a row -> grievance, §7.12). */
   advisorIgnored: Record<CouncilSeat, number>;
+  /** This month's council recommendations (at most one per seat, §7.12): shown by the council screen, scored at month end. */
+  councilAdvice: AdvisorRecommendation[];
   /** Accumulated cultural-legacy points (culture effects x10 per month; victory at RULES.victory.cultural_legacy). */
   culturePoints: number;
   /** Consecutive days the prosperity victory conditions held (sustainDays = 180). */
@@ -2802,6 +2809,8 @@ export interface QualitySettings {
   bakedAoBoost: number;
   /** Single merged post pass (grade + vignette + FXAA) instead of the full stack (low). */
   postMerged: boolean;
+  /** Audio voices (pool cap 16 / 32 / 48) and HRTF panning (high+, else equal-power) - AUD-01. */
+  audio: { voices: number; hrtf: boolean };
 }
 
 export interface QualityDetection {

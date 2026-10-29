@@ -1,7 +1,8 @@
 # SAMRAJYA - Technical Architecture
 
-Owner: CTO. Status: v1 (MVP architecture). Source of truth for module boundaries, contracts, timing,
-determinism, rendering, persistence, QA hooks and performance budgets. Change requests go to the CTO.
+Owner: CTO. Status: v2 (Contracts v2 landed by CORE-01 for Sprint 1, see §21). Source of truth for module
+boundaries, contracts, timing, determinism, rendering, persistence, QA hooks and performance budgets. Change
+requests go to the CTO.
 
 ## 1. Goals and constraints
 
@@ -57,7 +58,7 @@ Dependency rules (enforced by `tests/core/purity.test.ts` for the sim side):
 
 | Layer | May import | Must not import |
 |---|---|---|
-| `core/types, constants, ids, rng, math, events, loop, spatial, save, params, terrain/*` | each other | `three`, DOM-only modules, render/ui/scenes/app |
+| `core/types, constants, ids, rng, math, events, loop, spatial, save, params, terrain/*` | each other; `core/save` also reads `data/*` (migration defaults, §21.3) | `three`, DOM-only modules, render/ui/scenes/app; `core/terrain/*` never imports `core/save` (worker bundles stay small) |
 | `data/*` | core | everything else |
 | `sim/*` | core, data, sim | three, DOM, render, ui, scenes, input, audio, app |
 | `render/*` | three, core, data, sim (pure helpers e.g. `volleyPoint`) | ui, scenes, app |
@@ -223,19 +224,21 @@ cores, WebGL renderer string - SwiftShader/llvmpipe -> low, entry GPUs -> medium
 `old.exit()` (must dispose all GPU/DOM/bus resources) -> `ui.hideAll()` -> `new.enter(params)` (async,
 reports `scene:loading`) -> binds `loop.fixedStep` -> after 3 rendered frames sets `sceneReady`,
 emits `scene:ready`, hides loading. Enter errors are reported and fall back to the menu.
-`GameScene` contract: `app/contracts.ts`. `SceneParams`: `menu | world | battle(setup, state?) | hero`.
+`GameScene` contract: `app/contracts.ts`. `SceneParams`: `menu | world | battle(setup, state?) | hero |
+assetviewer(assetId) | lab(labId)` (feature labs, §21.6). Optional v2 hook: `debugCommand(name, args)`.
 
 ## 10. UI
 
 `ui/ui.ts` `UIManager`: layers (fullscreen, hud, panel, modal, toast, loading), lazy screen factories
-(`ui/screens/index.ts`), `show/update/hide`. Screens are typed by `ScreenPropsMap` (`app/contracts.ts`);
+(`ui/screens/index.ts`: static v1 screens + discovered `*.screen.ts` modules + themed placeholder, §21.5),
+`show/update/hide`; UI services discovered from `*.service.ts` (`UI_SERVICES`). Screens are typed by `ScreenPropsMap` (`app/contracts.ts`);
 scenes push read-only state; screens call `GameActions` (session) or emit `ui:*` bus events. Theme
 tokens (`ui/theme.css`, Art Director) + components (`ui/base.css`): saffron/indigo/gold carved-frame
 panels, ornament corners, 44 px touch targets, safe areas, `--ui-scale`.
 
 ## 11. Input
 
-`input/input.ts`: contexts (`menu | world | battle | hero`) with key bindings (`input/bindings.ts`,
+`input/input.ts`: contexts (`menu | world | battle | hero | lab`) with key bindings (`input/bindings.ts`,
 user overrides in settings). Produces a per-frame `InputFrame` (pan, grab-drag, rotate, tilt,
 zoom + anchor, hero move/look, run, hover pointer, actions). Touch: tap select, drag pan, pinch zoom,
 twist rotate, two-finger tilt, long-press = context command + radial menu, double-tap focus, hero
@@ -255,16 +258,19 @@ verifies, runs registered migrations `v -> v+1` up to `SAVE_VERSION`, validates.
 `LocalStorageSaveStore` (slots + index), `MemorySaveStore` (tests); export/import text for files.
 Mid-battle saves keep the formation-level `BattleState` (inside the world engagement for campaign
 battles). Autosave on each new month. Bump `SAVE_VERSION`/`WORLD_SCHEMA_VERSION` + add a migration for
-any state shape change.
+any state shape change. Current: save format **2** / world schema **2**; the v1 -> v2 migration and the
+`describeSaveProblems()` shape check are described in §21.3; frozen v1 fixtures live in `tests/fixtures/saves/`.
 
 ## 14. Debug, QA and crash reporting
 
 - URL deep links (`core/params.ts`): scene, mode, scenario, seed, quality, soldiers, preset, faction,
   enemy, hour, season, weather, freeze, speed, paused, settlement, camera, aivsai, debug, profiler,
-  noaudio, noui.
+  noaudio, noui, asset, assets, hdri, lod; v2 (§21.2): lab, mission, mood, district, camdist, cine, colorblind,
+  reducedmotion, keypreset, bench, age, deploy, csm, splat, clip, count, kit.
 - `window.__SAMRAJYA__` (`core/debug.ts`, impl `app/debugApi.ts`): ready flags, state, scene/mode
   control, sim stepping, environment/quality control, commands, profile, errors, frames, freeze,
-  screenshot, save/load, state hash.
+  screenshot, save/load, state hash; v2: `call(name, ...args)` -> scene `debugCommand`, `showScreen` /
+  `hideScreen` / `screens()`, `labs()` (§21.7).
 - Profiler (`core/profiler.ts`): FPS, frame ms avg/p95/max, per-system timings
   (`sim`, `sim.tactical`, `sim.soldiers`, `render`, `render.prep`, `frame`), draw calls, triangles,
   textures, programs, counters (visible soldiers), overlay on F3 / `?profiler=1`.
@@ -478,3 +484,132 @@ Goal: thousands of soldiers with real skeletal animation at InstancedMesh cost (
 5. **Budget**: 700 verts x 12 clips x 24 frames ~ 200k texels x 2 (pos + normal) in RGBA16F ~ 3.2 MB per
    class; keep textures <= 4096 wide (mobile) by wrapping vertex columns. Faction colors via a tint mask
    in vertex color + per-instance color.
+
+## 21. Contracts v2 (Sprint 1)
+
+Landed in one reviewed batch by CORE-01 so the other 23 Sprint-1 tickets work in parallel against stable
+interfaces. Nothing here changes gameplay or visuals by itself: every new field holds a neutral default until
+its implementing ticket (right-hand column) gives it behaviour. After CORE-01, contract changes go to the CTO
+as exact diffs (STUDIO.md W2); never duplicate a contract type locally.
+
+### 21.1 Conventions
+
+- **Optional-member convention (app contracts).** New `GameActions`, `SessionView` and `GameScene` members are
+  OPTIONAL and tagged `@sprint1 implemented by <ticket>` in `app/contracts.ts`. Callers feature-detect:
+  `ctx.actions.startHeroMission?.(id)`, `if (scene.debugCommand) ...`. New screen props on existing screens
+  (`hero_hud.combat`, `battle_hud.anchors`, ...) are optional too, so today's scenes keep compiling.
+- **Required-state convention (domain state).** New persistent fields in `core/types.ts` are REQUIRED, set
+  where the object is created (CORE-01 compile-fix initialisers: neutral values) and defaulted by the v1 -> v2
+  migration with the value a fresh object would get. `?` only where absence means something: placement
+  `cell` / `rot`, `ConstructionJob.landmarkId` / `repair`, `SettlementState.rallyPoint`,
+  `ArmyState.rebelSettlementId`, `SkirmishSetup.compositions`. Fields marked `@sprint1 <ticket>` in a doc
+  comment are contract-only until that ticket lands.
+- **Grid placement.** `GridCell = [i, j]` on the settlement's 4 m grid: cell (0, 0) spans
+  `[s.x, s.x + 4) x [s.z, s.z + 4)`, +i east, +j south; a footprint's `cell` is its minimum (north-west) cell and
+  covers `w/4 x d/4` cells (swapped for odd `rot`); `rot` = quarter turns, facing `rot x PI/2` (0 = +Z).
+- **Rebels.** `REBEL_FACTION_ID = 'rebels'` (+ `isRebelFaction()`) is legal as `ArmyState.factionId` with
+  `rebelSettlementId`; it is never a `WorldState.factions` key (the save validator rejects it).
+- **Landmark jobs.** A `ConstructionJob` with `landmarkId` raises a landmark; its `type` is only a presentation
+  hint ('palace'): check `landmarkId` before looking a job up in `BUILDINGS`.
+
+### 21.2 Members and implementing tickets
+
+| Area | Member (file) | Implemented by | Main consumers |
+|---|---|---|---|
+| Scenes | `SCENE_IDS` + `'lab'`, `SceneParams { scene: 'lab'; labId }`, `LabScene` (types.ts, contracts.ts, scenes/LabScene.ts) | CORE-01 (done) | GFX-01..06, GP tickets (labs) |
+| Scenes | `GameScene.debugCommand?(name, args)`, `DEBUG_UNHANDLED` (contracts.ts) | GP-03 (world), GP-04 (battle, `bench.report`), GP-02 (hero), CORE-01 (lab) | QA-01, every shots script |
+| Actions | `startHeroMission?`, `completeHeroMission?(HeroMissionResult)`, `abandonHeroMission?`, `decidePrisoners?`, `decideCapture?`, `skipDeployment?` (contracts.ts) | GP-03 | UI-01, UI-02, GP-02, GP-04 |
+| Session | `SessionView.heroMission?` (`HeroMissionSession`), `pendingEngagements?`, `difficulty?` | GP-03 | UI-02, GP-02 |
+| Screens | `build_placement`, `market`, `age_panel`, `economy_panel` (+ props) | UI-02 (GP-03 pushes) | GP-03 |
+| Screens | `mission_card`, `hero_dialogue`, `hero_negotiation`, `mission_result`, `game_stats`, `hint_card` (+ props) | UI-01 (GP-02 / GP-03 push) | GP-02, GP-03 |
+| Screens | `hero_hud` optional `combat` (`HeroCombatHud`: hp, stamina, salves, lock-on, enemy bars), `objective`, `compassHeading`, `caption`, `promptAnchor`, `touchControls` | UI-02 renders, GP-02 pushes | - |
+| Screens | `battle_hud` optional `deployment`, `rally`, `anchors` (`FormationScreenAnchor[]`); `battle_results.engagementId?` | UI-02 renders, GP-04 pushes | - |
+| Screens | `SCREEN_IDS`, `isScreenId()` (contracts.ts) | CORE-01 (done) | registry, debug API |
+| World state | `WorldState.monsoon` (`MonsoonState`), `statistics` (END_GAME_STATS counters) | SIM-01 | UI-02 (forecast), UI-01 (game_stats) |
+| Faction state | `age`, `landmarks`, `materials`, `policies`, `marketPrices`, `ghosts` (`ArmyGhost`), `counterIntel`, `counterIntelUntilDay`, `protectCourtUntilDay`, `advisorIgnored`, `councilAdvice`, `culturePoints`, `prosperityDays`; `ai.memory` | SIM-01 (`ai.memory`: SIM-02) | UI-02, GFX-06 (age variants), GFX-04 (ghost tokens), GP-03 |
+| Settlement state | `initialOwnerFactionId`, `occupiedSinceDay`, `pendingCapture`, `starvationDays`, `revoltSinceDay`, `taxRelief`, `reliefThisMonth`, `ladderProgress`, `landmarks` (`LandmarkInstance`), `rallyPoint?`; `CropState.laborAtSowing` | SIM-01 | UI-02, GFX-06, GP-03 |
+| Placement & jobs | `BuildingInstance.cell?/rot?`; `ConstructionJob.cell?/rot?/landmarkId?/repair?/paid/crew` | SIM-01 (placement.ts) | GFX-06 (layout v2, construction stages), GP-03 (ghost) |
+| Armies | `ArmyState.forcedMarch`, `rebelSettlementId?`; `ArmyOrder` `resupply`, `assault`; `SupplyDepotState.readyOnDay`; `Engagement.prisonerDecision` | SIM-01 | UI-02, GP-03, SIM-02 |
+| Characters | `CharacterState.captiveOf` | SIM-01 | UI-02 |
+| Diplomacy, espionage | `RelationState.warWeariness`, `truceUntilDay`; `IntelState.armiesVisibleUntilDay` | SIM-01 | SIM-02, UI-02 |
+| Battle state | `BattleState.deploymentEndsAt`, `siege` (`BattleSiegeState`: 12 `segments`, `gates`, `towers`, `breaches`, `breachHold`), `works: EngineerWorkState[]` (+ `maxHp`, `progress`, `formation`); `wallHp` deprecated | GP-01 | GFX-06 (walls), GP-04, SIM-02 |
+| Battle state | `BattleSideState.rallyCooldownUntil`; `aiMemory` | GP-01; `aiMemory`: SIM-02 | UI-02 (rally ring), GP-04 |
+| Battle state | `FormationState.rallies`, `shapeChangeUntil`, `panicUntil`, `rallyingUntil`, `disengageUntil`, `chargeRun`, `orderTime`, `hidden` | GP-01 | SIM-02, GFX-04, UI-02 |
+| Battle setup | `BattleSideSetup.aggression` (autoresolve stance 0.75 / 0.5 / 0.3) | SIM-01 sets, SIM-02 reads | - |
+| Outcome | `BattleOutcome.warScore`, `chronicle`, `placeName`, `day`; `BattleSideResult.prisoners`, `routs`, `capturedSupply`, `commanderId`; `FormationResult.routedEnemies` | GP-01 fills, SIM-01 writes back (stamps `day`) | UI-02 (results), UI-01 (stats) |
+| Soldiers | `SoldierBuffers.animVariant` (Uint8), `animStart` (Float32); `SOLDIER_ANIM.reload/charge`; `SOLDIER_ANIM_VARIANTS`; `SOLDIER_FLAG.mounted/conch` | GP-01 writes | GFX-04 (VAT clip mapping), AUD-01 |
+| Hero | `HeroMissionResult` (types.ts), `HERO_MOODS` | GP-02 builds, GP-03 applies via SIM-01 `applyHeroMissionResult` | UI-01 (mission_result) |
+| Commands | `StrategicCommand` `market_trade`, `start_landmark`, `set_policy`, `forced_march`, `prisoners`, `capture_decision`, `set_rally_point`, `repair_building`; `build.cell?/rot?`; `cancel_construction.jobIndex?` | SIM-01 | UI-02, GP-03, SIM-02 |
+| Commands | `BattleCommand { kind: 'rally' }` | GP-01 | GP-04, UI-02, SIM-02 |
+| Conditions | `age_at_least`, `landmark_built` | SIM-01 (events.ts) | Creative Director data |
+| Sim events | `construction_started`, `landmark_started`, `age_advanced`, `monsoon_roll`, `spoilage`, `market_trade`, `rebels_spawned`, `secession`, `governor_demand`, `siege_breach`, `depot_raided`, `army_sighted`, `hero_mission_available` | SIM-01 emits | GP-03 (flow, alerts), UI-02 (feed), AUD-01 |
+| Bus | `ui:hint {key}` | GP-03 / GP-04 / GP-02 emit, UI-01 hints service | - |
+| Bus | `hero:mission_end`, `hero:combat {kind, x, y, z, strength}` | GP-02 / GP-03 emit | AUD-01, GFX-05 |
+| Bus | `world:alert {kind, x, z, severity}` | GP-03 emits | UI-02 (minimap), GFX-05 (3D pings) |
+| Bus | `camera:shake {amplitude, durationSec}` | GP-02 / GP-04 emit | GFX-05 (honours reducedMotion) |
+| Bus | `audio:listener`, `audio:ambience`, `audio:stinger`; `audio:sfx.position?`; `audio:mood` + `hero_explore`, `hero_combat`, `duel`, `siege` (`AUDIO_MOODS`, `AUDIO_STINGERS`) | scenes emit | AUD-01 |
+| Audio | `SFX_KINDS` + `sword_light`, `sword_heavy`, `parry_ring`, `block_thud`, `roll_cloth`, `body_hit`, `stagger_grunt`, `salve`, `bell_temple`, `construction_complete`, `landmark_complete`, `age_up_fanfare`, `market_coins`, `gate_break`, `wall_crumble`, `ram_hit`, `fire_crackle`, `river_splash`, `footstep_stone`, `footstep_dirt` | AUD-01 | GP-02, GP-03, GP-04 |
+| Input | `INPUT_ACTIONS` + `shape_loose`, `shape_circle`, `order_stance`, `commander_rally`, `idle_builders_next`, `idle_army_next`, `select_capital`, `placement_rotate`, `card_next_tab`, `card_slot_0..14`, `camera_rotate_left/right`, `hero_attack_light/heavy`, `hero_roll`, `hero_guard`, `hero_salve`, `hero_lock_on`, `hero_skip_cinematic`, `dialogue_choice_1..5` | UI-02 (Classic / Grid bindings) | GP-02, GP-03, GP-04 |
+| Settings | `keyPreset` ('classic' / 'grid', `KEY_PRESETS`), `autoPause{battleStart, commanderFallen, formationRouted, narrativeEvents}`, `hintsSeen`, `simpleMode` (boolean / 'auto'), `relationColoring`, `minimapNorthUp`, `holdToToggle{guard, run}`, `subtitles` (defaults + `normalizeSettings` in settings.ts) | UI-01 (settings screen), UI-02 (input, HUD) | GP-02, GP-03, GP-04, GFX-04 |
+| Quality | `shadows.contact/pcss`, `ssr`, `dof` ('off' / 'hero' / 'close'), `shaftsSamples`, `shaftsHalfRes`, `heightFog`, `lensEffects`, `grassDensity`, `practicalLights`, `treeImpostorDistance`, `villagerCap`, `crowdLod{vat0, vat1, impostor}`, `emissiveBoost`, `bakedAoBoost`, `postMerged`, `audio{voices, hrtf}`, `antialias` + 'taa' | GFX-01 (owns core/quality.ts, tunes the presets) | GFX-02..06, AUD-01 |
+| URL params | `lab`, `mission`, `mood`, `district`, `camdist`, `cine`, `colorblind`, `reducedmotion`, `keypreset`, `bench`, `age`, `deploy` (0 = skip deployment), `csm`, `splat`, `clip`, `count`, `kit` (params.ts) | consumer named in params.ts | all shots scripts |
+| Debug API | `call(name, ...args)`, `showScreen(id, props)`, `hideScreen`, `screens()`, `labs()`, `goto('lab')` (core/debug.ts, app/debugApi.ts) | CORE-01 (done) | QA-01, every shots script |
+| Terrain | `primeHeightfield(spec, grids)`, `heightfieldFromGrids`, `extractHeightfieldGrids`, `heightfieldTransferList`, `peekHeightfield` (core/terrain/cache.ts) | CORE-01 (done); GFX-02 `loadHeightfieldAsync` uses it | GP-03, GP-04 |
+| UI scaffolding | screen registry + placeholder, `UI_SERVICES` (ui/screens/index.ts, registry.ts, placeholder.ts) | CORE-01 (done); UIManager starts services: UI-02 | UI-01, UI-02 |
+| Boot | `index.html` splash: Tiro Devanagari Sanskrit (preloaded, Palatino fallback), radial indigo (ART_BIBLE §17) | CORE-01 (done) | - |
+
+### 21.3 Save format 2 and the v1 -> v2 migration
+
+`SAVE_VERSION = 2`, `WORLD_SCHEMA_VERSION = 2`. `core/save.ts` registers `migrateSave` step 1 -> 2:
+`migrateWorldV1toV2` / `migrateBattleV1toV2` add every v2 field only where absent (`fill`), with the value a fresh
+v2 object gets: faction `age` = `ScenarioDef.startingAges > FactionDef.startingAge > 'janapada'`, `materials` =
+`ScenarioDef.materials`, `monsoon.strength` = scenario (start year) / sandbox `monsoonStrength` else 1,
+`initialOwnerFactionId` = createWorld's owner rule, a revolt in progress starts its secession clock on load,
+`warWeariness` from months at war, v1 jobs were charged nothing (`paid` zero, `crew` 0 = derive from the
+definition), outcomes get `prisoners` = the other side's `captured`, `routs`, `chronicle` = first summary line and
+the engagement `day`. `SaveSession.hero` (hero-scene autosaves) is added. After migration `validateSave` runs
+`describeSaveProblems()` (every v2 field present with the right type, no `rebels` faction entry, schema 2).
+Guards (`tests/contracts/migration.test.ts`): the four frozen v1 fixtures (campaign day 30 with jobs in flight,
+skirmish saved in melee, sandbox month 6, campaign field battle saved in melee inside its engagement) load,
+keep every v1 value, round-trip byte-identically, keep simulating deterministically; a fresh v2 world / battle
+stripped of its v2 fields migrates back to an identical hash (migration defaults == creation defaults).
+
+### 21.4 Parallel-work rule (who edits what)
+
+New capabilities arrive as NEW FILES discovered by name, never as edits of a shared registry:
+
+| Kind | File | Export | Discovery |
+|---|---|---|---|
+| UI screen | `src/ui/screens/<area>/<name>.screen.ts` | `SCREENS: ScreenRegistration[]` (`defineScreen(id, factory)`) | eager `import.meta.glob('./**/*.screen.ts')` in ui/screens/index.ts |
+| UI service | `src/ui/<area>/<name>.service.ts` | `SERVICES: UiService[]` (`{ id, start(ctx, ui) => stop }`) | eager glob -> `UI_SERVICES`; the UIManager starts / stops them (UI-02) |
+| Feature lab | `src/<your dirs>/<id>.lab.ts` | `LAB: LabModule` (`{ id, title, setup(ctx, host) }`) | lazy `import.meta.glob('/src/**/*.lab.ts')`, one chunk per lab, none in the single-file build |
+
+### 21.5 Screen registry rules
+
+The 18 v1 screens are static (their owners edit them in place). A discovered module may register only ids that
+are neither static nor registered by another module - violations are reported (console.error at startup,
+`UI_REGISTRY_ERRORS`, failing `tests/contracts/registry.test.ts`) and the first registration wins. Every ScreenId
+without a factory resolves to the themed placeholder (`ui/screens/placeholder.ts`): a carved panel with a torana
+title, the owner ticket and a parchment sheet listing every prop key with a value summary, so scenes and QA can
+show a screen before it exists (`__SAMRAJYA__.showScreen('market', {...})`). `__SAMRAJYA__.screens()` reports
+`static | discovered | placeholder` per id.
+
+### 21.6 Feature labs
+
+`?scene=lab&lab=<id>` (LabScene) loads `<id>.lab.ts` and calls `LAB.setup(ctx, host)`. The host
+(`scenes/lab/types.ts`) provides the scene, a perspective camera with OrbitControls, the regular `EnvironmentRig`
+(URL `?hour/season/weather` applied), an 800 m ground disc, `addTerrain()` (region-terrain window with the
+terrain and water renderers), `setEnvironment`, `frame(target, distance, yaw, pitch)`, `own(resource)` (disposed
+on exit), `setInfo(lines)` (HUD) and `progress()`. The lab returns `{ update(dt), dispose(), debugCommand? }`.
+Labs reach `sceneReady`, freeze and screenshot like every scene; `call('noop' | 'lab.info' | 'lab.list' |
+'lab.frame' | 'lab.env')` are built in, other names go to the lab. Unknown ids show a themed error panel listing
+the available labs and fall back to the main menu. Example: `src/scenes/lab/example.lab.ts`.
+
+### 21.7 Debug API v2
+
+`__SAMRAJYA__.call(name, ...args)` awaits the active scene's `debugCommand(name, args)`; when the scene has none or
+returns `DEBUG_UNHANDLED`, the API answers its built-ins (`noop`, `scene.info`, `ui.screens`, `labs`) or rejects
+with "Unknown debug command". Results must be plain, structured-cloneable data. Namespaces in use: `world.*`,
+`settlement.*`, `session.*` (GP-03), `bench.*` (GP-04), `hero.*` (GP-02), `lab.*` + lab-specific (labs).
+`showScreen(id, props)` / `hideScreen(id)` drive any screen for UI captures.
+

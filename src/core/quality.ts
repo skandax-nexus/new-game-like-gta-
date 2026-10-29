@@ -49,6 +49,7 @@ export const QUALITY_PRESETS: Readonly<Record<QualityTier, QualitySettings>> = {
     emissiveBoost: 1.3,
     bakedAoBoost: 1.2,
     postMerged: true,
+    audio: { voices: 16, hrtf: false },
   },
   medium: {
     tier: 'medium',
@@ -89,6 +90,7 @@ export const QUALITY_PRESETS: Readonly<Record<QualityTier, QualitySettings>> = {
     emissiveBoost: 1,
     bakedAoBoost: 1,
     postMerged: false,
+    audio: { voices: 32, hrtf: false },
   },
   high: {
     tier: 'high',
@@ -129,6 +131,7 @@ export const QUALITY_PRESETS: Readonly<Record<QualityTier, QualitySettings>> = {
     emissiveBoost: 1,
     bakedAoBoost: 1,
     postMerged: false,
+    audio: { voices: 48, hrtf: true },
   },
   ultra: {
     tier: 'ultra',
@@ -169,6 +172,7 @@ export const QUALITY_PRESETS: Readonly<Record<QualityTier, QualitySettings>> = {
     emissiveBoost: 1,
     bakedAoBoost: 1,
     postMerged: false,
+    audio: { voices: 48, hrtf: true },
   },
 };
 
@@ -190,6 +194,7 @@ export function buildQualitySettings(tier: QualityTier, overrides: Partial<Quali
     vegetation: { ...base.vegetation, ...(overrides.vegetation ?? {}) },
     soldierLod: { ...base.soldierLod, ...(overrides.soldierLod ?? {}) },
     crowdLod: { ...base.crowdLod, ...(overrides.crowdLod ?? {}) },
+    audio: { ...base.audio, ...(overrides.audio ?? {}) },
   };
   return merged;
 }

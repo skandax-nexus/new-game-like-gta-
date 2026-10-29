@@ -230,6 +230,7 @@ function makeSide(setup: BattleSetup, side: SideIndex, formations: FormationStat
     surrendered: false,
     groups: Array.from({ length: 10 }, () => []),
     rallyCooldownUntil: 0,
+    aiMemory: {},
   };
 }
 

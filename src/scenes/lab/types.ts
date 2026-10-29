@@ -52,7 +52,10 @@ export interface LabHost {
   readonly controls: OrbitControls;
   /** The regular environment rig (GFX-01 evolves it; labs get every improvement). */
   readonly env: EnvironmentRig;
-  /** 800 m ground disc at y = 0 (procedural dry earth). Hide it if the lab brings its own ground. */
+  /**
+   * 4 km ground disc at y = 0 that melts into the fog: the WP1 `ground_dry_earth` PBR set when assets are on,
+   * procedural dry earth otherwise. Hide it if the lab brings its own ground.
+   */
   readonly ground: THREE.Mesh;
   /** Lab id (file name) for HUD / logs. */
   readonly labId: string;
@@ -60,7 +63,10 @@ export interface LabHost {
   addTerrain(opts?: LabTerrainOptions): Promise<LabTerrain>;
   /** Time of day / season / weather (URL ?hour= ?season= ?weather= are applied at start). */
   setEnvironment(patch: EnvironmentOverride): void;
-  /** Orbit the camera around `target` at `distance` m, yaw (deg, 0 = from +Z) and pitch (deg above horizon). */
+  /**
+   * Orbit the camera around `target` at `distance` m, yaw (deg, 0 = from +Z) and pitch (deg above horizon).
+   * Distances are authored for a 16:9 view; portrait phones back off (up to 2.2x) so the subject stays in frame.
+   */
   frame(target: Vec3, distance: number, yawDeg?: number, pitchDeg?: number): void;
   /** Register a GPU / DOM resource disposed when the lab exits (returns it). */
   own<T extends { dispose(): void }>(resource: T): T;
@@ -88,5 +94,10 @@ export interface LabModule {
   title: string;
   /** One line shown in the lab HUD. */
   description?: string;
+  /**
+   * Extent (m) the lab looks at: sizes the sun's shadow frustum, its bias and the fog (EnvironmentRig sceneSize).
+   * Default 160 (object / district lookdev); use ~1,024 for terrain or battle-scale labs.
+   */
+  sceneSize?: number;
   setup(ctx: AppContext, host: LabHost): LabInstance | Promise<LabInstance>;
 }

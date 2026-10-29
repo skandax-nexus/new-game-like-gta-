@@ -81,25 +81,22 @@ function build(ctx: AppContext, host: LabHost): LabInstance {
   }
   root.add(wheel);
 
-  // Material probes on plinths, in an arc facing the camera.
+  // Material probes on plinths: two each side of the pillar, slightly forward, leaving its base in view.
   const probes = [
-    { name: 'polished sandstone', mat: sandstone },
-    { name: 'gold leaf', mat: gold },
-    { name: 'aged bronze', mat: bronze },
-    { name: 'lac-red lacquer', mat: lacquer },
+    { name: 'polished sandstone', mat: sandstone, x: -5.2, z: 1.6 },
+    { name: 'gold leaf', mat: gold, x: -3.2, z: 2.6 },
+    { name: 'aged bronze', mat: bronze, x: 3.2, z: 2.6 },
+    { name: 'lac-red lacquer', mat: lacquer, x: 5.2, z: 1.6 },
   ];
-  probes.forEach((p, i) => {
-    const a = (-0.42 + (i / (probes.length - 1)) * 0.84) * Math.PI * 0.5;
-    const x = Math.sin(a) * 4.6;
-    const z = 3.4 + Math.cos(a) * 0.9;
-    add(new THREE.CylinderGeometry(0.62, 0.7, 0.7, 32), plinthStone, x, 0.35, z);
-    add(new THREE.SphereGeometry(0.55, 64, 48), p.mat, x, 0.7 + 0.55, z);
-  });
+  for (const p of probes) {
+    add(new THREE.CylinderGeometry(0.62, 0.7, 0.7, 32), plinthStone, p.x, 0.35, p.z);
+    add(new THREE.SphereGeometry(0.55, 64, 48), p.mat, p.x, 0.7 + 0.55, p.z);
+  }
   scene.add(root);
 
   // Golden hour unless the URL picked one (?hour=, ?season=, ?weather= are applied by the host).
   if (ctx.params.hour === null) host.setEnvironment({ hour: 17.2 });
-  host.frame({ x: 0, y: 3.2, z: 0.8 }, 15.5, 28, 12);
+  host.frame({ x: 0, y: 4.1, z: 0.6 }, 16.5, 16, 8);
   let spin = 0.35;
   let angle = 0;
   const info = (): void => host.setInfo([`Probes: ${probes.map((p) => p.name).join(' · ')}`, `Wheel ${spin.toFixed(2)} rad/s - call('example.spin', v)`]);
@@ -131,5 +128,6 @@ export const LAB: LabModule = {
   id: 'example',
   title: 'Example lab - pillar and material probes',
   description: 'Host API demo: environment rig, orbit camera, owned resources, debug commands.',
+  sceneSize: 260,
   setup: (ctx, host) => build(ctx, host),
 };

@@ -20,6 +20,7 @@ import { EnvironmentRig } from '../render/environment/environment';
 import { TerrainRenderer } from '../render/environment/terrain';
 import { WaterRenderer } from '../render/environment/water';
 import { createDetailTexture, createNoiseNormalMap } from '../render/environment/textures';
+import { toGltfUv } from '../render/materials/pbr';
 import { MATERIALS } from '../render/style/palette';
 import { makeEnvironment, makeWeather } from '../sim/strategic/seasons';
 import { resolveRegionTerrain } from '../sim/strategic/world';
@@ -28,7 +29,15 @@ import type { LabHost, LabInstance, LabModule, LabTerrain, LabTerrainOptions } f
 
 const DEG = Math.PI / 180;
 const DEFAULT_HOUR = 16.6;
-const ERROR_PANEL_MS = 9000;
+const DEFAULT_SCENE_SIZE = 160;
+const GROUND_RADIUS = 2000;
+const GROUND_MATERIAL = 'ground_dry_earth';
+/** The error panel stays this long after the fallback menu is ready (and never longer than the cap). */
+const ERROR_PANEL_AFTER_MENU_MS = 8000;
+const ERROR_PANEL_CAP_MS = 60000;
+/** Framing distances are authored for 16:9; narrower (portrait) views back off by up to this factor. */
+const REF_ASPECT = 16 / 9;
+const MAX_FIT = 2.2;
 
 export class LabScene implements GameScene {
   readonly id = 'lab' as const;
@@ -42,6 +51,7 @@ export class LabScene implements GameScene {
   private terrain: TerrainRenderer | null = null;
   private water: WaterRenderer | null = null;
   private readonly owned: { dispose(): void }[] = [];
+  private readonly handles: { release(): void }[] = [];
   private lab: LabModule | null = null;
   private labPath = '';
   private instance: LabInstance | null = null;
@@ -63,6 +73,9 @@ export class LabScene implements GameScene {
     this.scene.background = new THREE.Color(MATERIALS.basalt).multiplyScalar(0.25);
     ctx.render.setView(this.scene, this.camera);
     ctx.render.resize();
+    // resize() skips unchanged sizes, so set the aspect of this new camera explicitly.
+    this.camera.aspect = Math.max(1, ctx.canvas.clientWidth) / Math.max(1, ctx.canvas.clientHeight);
+    this.camera.updateProjectionMatrix();
     const id = this.labId;
     if (!id || !LAB_INDEX.entries[id]) {
       this.fail(id ? `No lab named '${id}'.` : 'No lab id given (use ?scene=lab&lab=<id>).');
@@ -82,7 +95,7 @@ export class LabScene implements GameScene {
     }
     this.lab = loaded.lab;
     this.labPath = loaded.path;
-    this.buildHost();
+    await this.buildHost(loaded.lab.sceneSize ?? DEFAULT_SCENE_SIZE);
     if (!ctx.params.noUi) this.createHud();
     ctx.bus.emit('scene:loading', { scene: 'lab', progress: 0.35, label: loaded.lab.title });
     this.instance = await loaded.lab.setup(ctx, this.host);
@@ -94,16 +107,19 @@ export class LabScene implements GameScene {
 
   private host!: LabHost;
 
-  private buildHost(): void {
+  private async buildHost(sceneSize: number): Promise<void> {
     const ctx = this.ctx;
     const q = ctx.quality.settings;
-    this.env = new EnvironmentRig(ctx.render, this.scene, { sceneSize: 600 });
+    this.env = new EnvironmentRig(ctx.render, this.scene, { sceneSize });
+    // The rig's normal bias is tuned for terrain-scale scenes (0.6 m); scale it with the lab so small subjects
+    // keep their contact shadows.
+    this.env.sun.shadow.normalBias = Math.min(this.env.sun.shadow.normalBias, Math.max(0.02, sceneSize * 0.0004));
     const p = ctx.params;
     const season = p.season ?? 'sharad';
     const base = makeEnvironment(p.hour ?? DEFAULT_HOUR, season, 'clear');
     this.envState = p.weather ? { ...base, weather: makeWeather(p.weather, season, base.weather.windDirection) } : base;
     this.env.setEnvironment(this.envState);
-    this.ground = this.makeGround(q.anisotropy);
+    this.ground = await this.makeGround(q.anisotropy);
     this.scene.add(this.ground);
     this.controls = new OrbitControls(this.camera, ctx.canvas);
     this.controls.enableDamping = true;
@@ -135,24 +151,39 @@ export class LabScene implements GameScene {
     };
   }
 
-  private makeGround(anisotropy: number): THREE.Mesh {
-    const size = 800;
-    const geo = new THREE.CircleGeometry(size / 2, 96);
+  /** Ground disc large enough for the fog to melt its rim into the sky (no hard horizon line). */
+  private async makeGround(anisotropy: number): Promise<THREE.Mesh> {
+    const size = GROUND_RADIUS * 2;
+    const geo = new THREE.CircleGeometry(GROUND_RADIUS, 128);
     geo.rotateX(-Math.PI / 2);
-    const detail = createDetailTexture(256, 21);
-    const normal = createNoiseNormalMap(256, 23, 3.0, 8);
-    for (const t of [detail, normal]) {
-      t.repeat.set(size / 7, size / 7);
-      t.anisotropy = anisotropy;
+    this.owned.push(geo);
+    let mat: THREE.Material;
+    const assets = this.ctx.assets;
+    const entry = assets.entry(GROUND_MATERIAL);
+    if (entry?.kind === 'material' && assets.enabled) {
+      const tile = entry.tileSizeMeters[0] ?? 4;
+      const h = await assets.loadMaterial(GROUND_MATERIAL, { uvScale: [size / tile, size / tile] });
+      this.handles.push(h);
+      toGltfUv(geo);
+      mat = h.material;
+    } else {
+      // Procedural fallback (?assets=off, single-file build): fine-grained dry earth, gentle relief.
+      const detail = createDetailTexture(256, 21);
+      const normal = createNoiseNormalMap(256, 23, 2.2, 8);
+      for (const t of [detail, normal]) {
+        t.repeat.set(size / 3, size / 3);
+        t.anisotropy = anisotropy;
+      }
+      detail.colorSpace = THREE.NoColorSpace;
+      const m = new THREE.MeshStandardMaterial({ color: new THREE.Color(MATERIALS.roadDirt), roughness: 0.96, map: detail, normalMap: normal });
+      m.normalScale.set(0.35, 0.35);
+      this.owned.push(m, detail, normal);
+      mat = m;
     }
-    detail.colorSpace = THREE.NoColorSpace;
-    const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(MATERIALS.roadDirt), roughness: 0.96, map: detail, normalMap: normal });
-    mat.normalScale.set(0.6, 0.6);
     const ground = new THREE.Mesh(geo, mat);
     ground.name = 'lab_ground';
     ground.receiveShadow = true;
     ground.position.y = -0.01;
-    this.owned.push(geo, mat, detail, normal);
     return ground;
   }
 
@@ -191,7 +222,9 @@ export class LabScene implements GameScene {
   private frame(target: Vec3, distance: number, yawDeg = 35, pitchDeg = 18): void {
     const yaw = yawDeg * DEG;
     const pitch = pitchDeg * DEG;
-    const d = Math.max(0.2, distance);
+    const aspect = this.camera.aspect;
+    const fit = aspect < REF_ASPECT ? Math.min(MAX_FIT, Math.sqrt(REF_ASPECT / aspect)) : 1;
+    const d = Math.max(0.2, distance) * fit;
     this.camera.position.set(target.x + d * Math.cos(pitch) * Math.sin(yaw), target.y + d * Math.sin(pitch), target.z + d * Math.cos(pitch) * Math.cos(yaw));
     this.camera.near = Math.max(0.05, d * 0.004);
     this.camera.far = Math.max(2000, d * 60);
@@ -255,7 +288,9 @@ export class LabScene implements GameScene {
     btn.addEventListener('click', close);
     panel.append(title, body, chips, hint, btn);
     ctx.overlayRoot.appendChild(panel);
-    setTimeout(close, ERROR_PANEL_MS);
+    // Keep it readable over the menu: close a few seconds after the fallback scene is ready.
+    ctx.bus.once('scene:ready', () => setTimeout(close, ERROR_PANEL_AFTER_MENU_MS));
+    setTimeout(close, ERROR_PANEL_CAP_MS);
   }
 
   // ------------------------------------------------------------------ HUD
@@ -340,6 +375,7 @@ export class LabScene implements GameScene {
     } finally {
       this.instance = null;
       for (const o of this.owned.splice(0)) o.dispose();
+      for (const h of this.handles.splice(0)) h.release();
       this.terrain?.dispose();
       this.water?.dispose();
       this.env?.dispose();

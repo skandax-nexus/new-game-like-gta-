@@ -322,7 +322,7 @@ function checkBattle(c: ShapeChecker, b: BattleState, path: string): void {
   c.need(b, path, { deploymentEndsAt: 'number', siege: 'object|null', works: 'array', phase: 'string' });
   if (b.phase !== 'deployment' && b.phase !== 'active' && b.phase !== 'ended') c.problems.push(`${path}.phase '${String(b.phase)}' unknown`);
   (b.setup?.sides ?? []).forEach((s, i) => c.need(s, `${path}.setup.sides[${i}]`, { aggression: 'number|null' }));
-  (b.sides ?? []).forEach((s, i) => c.need(s, `${path}.sides[${i}]`, { rallyCooldownUntil: 'number' }));
+  (b.sides ?? []).forEach((s, i) => c.need(s, `${path}.sides[${i}]`, { rallyCooldownUntil: 'number', aiMemory: 'object' }));
   (b.formations ?? []).forEach((f, i) =>
     c.need(f, `${path}.formations[${i}]`, {
       rallies: 'number',
@@ -360,6 +360,7 @@ function checkWorld(c: ShapeChecker, w: WorldState): void {
       counterIntelUntilDay: 'number|null',
       protectCourtUntilDay: 'number|null',
       advisorIgnored: 'object',
+      councilAdvice: 'array',
       culturePoints: 'number',
       prosperityDays: 'number',
     });
@@ -470,7 +471,10 @@ export function migrateBattleV1toV2(b: BattleState): void {
   fill(b, 'deploymentEndsAt', b.setup.deploymentSec);
   fill(b, 'siege', null);
   for (const s of b.setup.sides) fill(s, 'aggression', null);
-  for (const s of b.sides) fill(s, 'rallyCooldownUntil', 0);
+  for (const s of b.sides) {
+    fill(s, 'rallyCooldownUntil', 0);
+    fill(s, 'aiMemory', {});
+  }
   for (const f of b.formations) {
     fill(f, 'rallies', 0);
     fill(f, 'shapeChangeUntil', 0);
@@ -512,6 +516,7 @@ export function migrateWorldV1toV2(w: WorldState): void {
     fill(f, 'counterIntelUntilDay', null);
     fill(f, 'protectCourtUntilDay', null);
     fill(f, 'advisorIgnored', Object.fromEntries(COUNCIL_SEATS.map((seat) => [seat, 0])) as Record<CouncilSeat, number>);
+    fill(f, 'councilAdvice', []);
     fill(f, 'culturePoints', 0);
     fill(f, 'prosperityDays', 0);
     fill(f.ai, 'memory', {});

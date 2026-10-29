@@ -117,7 +117,7 @@ describe('default settings', () => {
 });
 
 describe('quality presets', () => {
-  const REQUIRED_V2 = ['shadows.contact', 'shadows.pcss', 'ssr', 'dof', 'shaftsSamples', 'shaftsHalfRes', 'heightFog', 'lensEffects', 'grassDensity', 'practicalLights', 'treeImpostorDistance', 'villagerCap', 'crowdLod.vat0', 'crowdLod.vat1', 'crowdLod.impostor', 'emissiveBoost', 'bakedAoBoost', 'postMerged'];
+  const REQUIRED_V2 = ['shadows.contact', 'shadows.pcss', 'ssr', 'dof', 'shaftsSamples', 'shaftsHalfRes', 'heightFog', 'lensEffects', 'grassDensity', 'practicalLights', 'treeImpostorDistance', 'villagerCap', 'crowdLod.vat0', 'crowdLod.vat1', 'crowdLod.impostor', 'emissiveBoost', 'bakedAoBoost', 'postMerged', 'audio.voices', 'audio.hrtf'];
 
   it('define every QualitySettings field for all 4 tiers (same structure, no holes)', () => {
     const ref = paths(QUALITY_PRESETS.ultra as unknown as Record<string, unknown>);
@@ -154,6 +154,8 @@ describe('quality presets', () => {
     expect(pick((q) => q.emissiveBoost)).toEqual([1.3, 1, 1, 1]);
     expect(pick((q) => q.bakedAoBoost)).toEqual([1.2, 1, 1, 1]);
     expect(pick((q) => q.postMerged)).toEqual([true, false, false, false]);
+    expect(pick((q) => q.audio.voices)).toEqual([16, 32, 48, 48]);
+    expect(pick((q) => q.audio.hrtf)).toEqual([false, false, true, true]);
     for (const t of QUALITY_TIERS) {
       const c = QUALITY_PRESETS[t].crowdLod;
       expect(c.vat0 <= c.vat1 && c.vat1 <= c.impostor, t).toBe(true);

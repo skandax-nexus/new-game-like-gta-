@@ -1,0 +1,230 @@
+{
+  "port": 4401,
+  "dist": ".build/core-01",
+  "checks": [
+    {
+      "name": "splash: title font Tiro Devanagari Sanskrit loaded",
+      "ok": true,
+      "observed": "\"Tiro Devanagari Sanskrit\", \"Palatino Linotype\", \"Book Antiqua\", Palatino, Georgia, serif"
+    },
+    {
+      "name": "splash: radial indigo background (#2a2546 -> #17142a -> #0d0b18)",
+      "ok": true,
+      "observed": "radial-gradient(at 50% 40%, rgb(42, 37, 70) 0%, rgb(23, 20, 42) 55%, rgb(13, 11, 24) 100%)"
+    },
+    {
+      "name": "splash-mobile: title font Tiro Devanagari Sanskrit loaded",
+      "ok": true,
+      "observed": "\"Tiro Devanagari Sanskrit\", \"Palatino Linotype\", \"Book Antiqua\", Palatino, Georgia, serif"
+    },
+    {
+      "name": "splash-mobile: radial indigo background (#2a2546 -> #17142a -> #0d0b18)",
+      "ok": true,
+      "observed": "radial-gradient(at 50% 40%, rgb(42, 37, 70) 0%, rgb(23, 20, 42) 55%, rgb(13, 11, 24) 100%)"
+    },
+    {
+      "name": "placeholders: market and game_stats resolve to the placeholder",
+      "ok": true,
+      "observed": [
+        "build_placement",
+        "market",
+        "age_panel",
+        "economy_panel",
+        "mission_card",
+        "hero_dialogue",
+        "hero_negotiation",
+        "mission_result",
+        "game_stats",
+        "hint_card"
+      ]
+    },
+    {
+      "name": "placeholders: market prints its prop keys",
+      "ok": true,
+      "observed": "world,factionId"
+    },
+    {
+      "name": "placeholders: game_stats prints its prop keys",
+      "ok": true,
+      "observed": "world,from"
+    },
+    {
+      "name": "call(noop) on the world scene answers (API built-in until GP-03 adds debugCommand)",
+      "ok": true,
+      "observed": {
+        "scene": "world",
+        "handledBy": "api",
+        "args": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "call(unknown) rejects with a readable error",
+      "ok": true,
+      "observed": "Unknown debug command 'no.such.command' for scene 'world'"
+    },
+    {
+      "name": "showScreen(unknown id) throws",
+      "ok": true,
+      "observed": "page.evaluate: Error: Unknown screen id 'not_a_screen' (see SCREEN_IDS in src/app/contracts.ts)"
+    },
+    {
+      "name": "placeholders: no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "placeholders-mobile: market and game_stats resolve to the placeholder",
+      "ok": true,
+      "observed": [
+        "build_placement",
+        "market",
+        "age_panel",
+        "economy_panel",
+        "mission_card",
+        "hero_dialogue",
+        "hero_negotiation",
+        "mission_result",
+        "game_stats",
+        "hint_card"
+      ]
+    },
+    {
+      "name": "placeholders-mobile: market prints its prop keys",
+      "ok": true,
+      "observed": "world,factionId"
+    },
+    {
+      "name": "placeholders-mobile: no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "lab-example: reaches sceneReady in the lab scene",
+      "ok": true,
+      "observed": {
+        "scene": "lab",
+        "lab": "example",
+        "title": "Example lab - pillar and material probes",
+        "path": "/src/scenes/lab/example.lab.ts",
+        "failure": null,
+        "hour": 17.2
+      }
+    },
+    {
+      "name": "lab: call('noop') round-trips to the scene's debugCommand",
+      "ok": true,
+      "observed": {
+        "scene": "lab",
+        "lab": "example",
+        "handledBy": "scene",
+        "args": [
+          "ping"
+        ]
+      }
+    },
+    {
+      "name": "lab: call('lab.info')",
+      "ok": true,
+      "observed": {
+        "id": "example",
+        "title": "Example lab - pillar and material probes",
+        "path": "/src/scenes/lab/example.lab.ts",
+        "info": [
+          "Probes: polished sandstone · gold leaf · aged bronze · lac-red lacquer",
+          "Wheel 0.35 rad/s - call('example.spin', v)"
+        ],
+        "failure": null
+      }
+    },
+    {
+      "name": "lab: lab-specific call('example.spin') reaches the lab instance",
+      "ok": true,
+      "observed": {
+        "spin": 0.6
+      }
+    },
+    {
+      "name": "lab: __SAMRAJYA__.labs() lists the example",
+      "ok": true,
+      "observed": [
+        "example"
+      ]
+    },
+    {
+      "name": "lab-example: no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "lab-example-mobile: reaches sceneReady in the lab scene",
+      "ok": true,
+      "observed": {
+        "scene": "lab",
+        "lab": "example",
+        "title": "Example lab - pillar and material probes",
+        "path": "/src/scenes/lab/example.lab.ts",
+        "failure": null,
+        "hour": 17.2
+      }
+    },
+    {
+      "name": "lab-example-mobile: no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "lab-unknown: themed error panel shown",
+      "ok": true,
+      "observed": "Lab not foundNo lab named 'no-such-lab'. Returning to the main menu.exampleAvailable labs above. Add one as <id>.lab.ts exporting LAB (src/scenes/lab/types.ts).Dismiss"
+    },
+    {
+      "name": "lab-unknown: fell back to the main menu",
+      "ok": true
+    },
+    {
+      "name": "lab-unknown: no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    }
+  ],
+  "shots": [
+    {
+      "name": "splash.png",
+      "note": "boot splash 1280x720"
+    },
+    {
+      "name": "splash-mobile.png",
+      "note": "boot splash 390x844"
+    },
+    {
+      "name": "placeholder-market.png",
+      "note": "showScreen(market) over the world scene: themed placeholder listing its props"
+    },
+    {
+      "name": "placeholder-game_stats.png",
+      "note": "showScreen(game_stats) - statistics placeholder (UI-01)"
+    },
+    {
+      "name": "placeholder-market-mobile.png",
+      "note": "showScreen(market) over the world scene: themed placeholder listing its props"
+    },
+    {
+      "name": "lab-example.png",
+      "note": "?scene=lab&lab=example @high 1280x720"
+    },
+    {
+      "name": "lab-example-mobile.png",
+      "note": "?scene=lab&lab=example @low 390x844"
+    },
+    {
+      "name": "lab-unknown.png",
+      "note": "?scene=lab&lab=no-such-lab: error panel listing the available labs over the main menu"
+    }
+  ],
+  "labProfile": {
+    "drawCalls": 134,
+    "triangles": 110734
+  }
+}

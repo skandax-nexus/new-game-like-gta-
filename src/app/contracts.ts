@@ -290,7 +290,13 @@ export interface ScreenPropsMap {
     /** Floating formation cards / hover bars anchors (own and visible enemy formations). */
     anchors?: readonly FormationScreenAnchor[];
   };
-  battle_results: { outcome: BattleOutcome; playerSide: SideIndex; continueLabel: string };
+  battle_results: {
+    outcome: BattleOutcome;
+    playerSide: SideIndex;
+    continueLabel: string;
+    /** v2: world engagement of this battle (prisoners decision via decidePrisoners); null/absent for skirmish. */
+    engagementId?: EngagementId | null;
+  };
   hero_hud: {
     settlementName: string;
     prompt: string | null;

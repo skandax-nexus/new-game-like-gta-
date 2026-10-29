@@ -172,7 +172,7 @@ describe('v1 save fixtures', () => {
 // ---------------------------------------------------------------------------------------------------
 
 const V2_WORLD = ['monsoon', 'statistics'] as const;
-const V2_FACTION = ['age', 'landmarks', 'materials', 'policies', 'marketPrices', 'ghosts', 'counterIntel', 'counterIntelUntilDay', 'protectCourtUntilDay', 'advisorIgnored', 'culturePoints', 'prosperityDays'] as const;
+const V2_FACTION = ['age', 'landmarks', 'materials', 'policies', 'marketPrices', 'ghosts', 'counterIntel', 'counterIntelUntilDay', 'protectCourtUntilDay', 'advisorIgnored', 'councilAdvice', 'culturePoints', 'prosperityDays'] as const;
 const V2_SETTLEMENT = ['initialOwnerFactionId', 'occupiedSinceDay', 'pendingCapture', 'starvationDays', 'revoltSinceDay', 'taxRelief', 'reliefThisMonth', 'ladderProgress', 'landmarks'] as const;
 const V2_FORMATION = ['rallies', 'shapeChangeUntil', 'panicUntil', 'rallyingUntil', 'disengageUntil', 'chargeRun', 'orderTime', 'hidden'] as const;
 
@@ -208,7 +208,7 @@ function toV1Battle(b: BattleState): BattleState {
   const v1 = decodeJson<BattleState>(encodeJson(b));
   strip(v1, ['deploymentEndsAt', 'siege']);
   for (const s of v1.setup.sides) strip(s, ['aggression']);
-  for (const s of v1.sides) strip(s, ['rallyCooldownUntil']);
+  for (const s of v1.sides) strip(s, ['rallyCooldownUntil', 'aiMemory']);
   for (const f of v1.formations) strip(f, V2_FORMATION);
   for (const w of v1.works) strip(w, ['maxHp', 'progress', 'formation']);
   if (v1.outcome) {

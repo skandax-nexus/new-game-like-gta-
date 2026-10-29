@@ -34,6 +34,7 @@ const CSS = `
 .ph-screen .title-torana { margin: 0; font-size: var(--fs-xl); letter-spacing: 0.06em; }
 .ph-screen .ph-sub { text-align: center; font-size: var(--fs-sm); color: var(--ui-text-dim); letter-spacing: 0.08em; text-transform: uppercase; }
 .ph-screen .ph-ids { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.ph-screen .divider-lotus { width: min(320px, 80%); margin: 2px auto; flex: none; }
 .ph-screen .ph-sheet { padding: 12px 16px; border-radius: var(--radius-md); }
 .ph-screen .ph-sheet-title { font-family: var(--font-display); font-size: var(--fs-md); margin-bottom: 6px; }
 .ph-screen .ph-row { display: grid; grid-template-columns: minmax(110px, 34%) 1fr; gap: 12px; padding: 5px 0; border-top: 1px solid rgba(90, 70, 50, 0.22); font-size: var(--fs-sm); }

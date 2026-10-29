@@ -86,7 +86,11 @@ export interface SamrajyaDebugApi {
    * unknown names.
    */
   call(name: string, ...args: unknown[]): Promise<unknown>;
-  /** Show a UI screen with raw props (throws for an unknown ScreenId). Placeholder screens print their props. */
+  /**
+   * Show a UI screen with raw props (throws for an unknown ScreenId). Placeholder screens print their props.
+   * Top-level prop values '$world' / '$faction' are replaced by the live session world and the player faction id,
+   * e.g. showScreen('game_stats', { world: '$world', from: 'pause_menu' }).
+   */
   showScreen(id: string, props?: Record<string, unknown>): void;
   hideScreen(id: string): void;
   /** Every ScreenId and how it resolves: a static screen, a discovered *.screen.ts module or the placeholder. */

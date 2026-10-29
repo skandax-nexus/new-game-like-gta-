@@ -144,7 +144,12 @@ export function createDebugApi(ctx: AppContext, session: GameSession): SamrajyaD
     },
     showScreen(id: string, props: Record<string, unknown> = {}) {
       if (!isScreenId(id)) throw new Error(`Unknown screen id '${id}' (see SCREEN_IDS in src/app/contracts.ts)`);
-      ctx.ui.show(id, props as never);
+      const live: Record<string, unknown> = {
+        $world: session.world,
+        $faction: session.world?.playerFactionId ?? session.skirmish?.playerFactionId ?? null,
+      };
+      const resolved = Object.fromEntries(Object.entries(props).map(([k, v]) => [k, typeof v === 'string' && v in live ? live[v] : v]));
+      ctx.ui.show(id, resolved as never);
     },
     hideScreen(id: string) {
       if (isScreenId(id)) ctx.ui.hide(id);

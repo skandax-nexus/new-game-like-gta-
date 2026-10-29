@@ -452,6 +452,7 @@ export function createWorld(setup: WorldSetup): WorldState {
       counterIntelUntilDay: null,
       protectCourtUntilDay: null,
       advisorIgnored: { chief_minister: 0, commander: 0, treasurer: 0, spymaster: 0, court_scholar: 0 },
+      councilAdvice: [],
       culturePoints: 0,
       prosperityDays: 0,
     };
