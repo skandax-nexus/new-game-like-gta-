@@ -17,6 +17,9 @@
  *                          'audio' system timing (main thread ms / frame) is printed and checked < 1 ms
  *   world-audio.png        campaign world map with audio enabled (world score + environment beds)
  *   hero-audio.png         hero exploration with audio enabled (district ambience)
+ *   (gesture, no shot)     DEFAULT autoplay policy (own browser, no --autoplay-policy flag): the context starts
+ *                          suspended and the first click on the shielded main-menu UI resumes it and the score
+ *                          streams (desktop click and mobile tap)
  *   shots-report.json      every check with its observed value, the audio stats of each capture
  * Exit 1 on any failed check, console error, page error, failed request or crash report.
  */
@@ -242,6 +245,51 @@ async function captureBattle(browser, base) {
   await finish(ctx, 'battle-audio');
 }
 
+/** Default autoplay policy: the first click / tap on the (shielded) main-menu UI must start the audio. */
+async function captureGesture(base) {
+  const { chromium } = requirePlaywright();
+  const browser = await chromium.launch({ args: LAUNCH_ARGS.filter((a) => !a.startsWith('--autoplay-policy')) });
+  try {
+    for (const [label, viewport, mobile, quality] of [['gesture-desktop', [1280, 720], false, 'high'], ['gesture-mobile', [390, 844], true, 'low']]) {
+      const ctx = await newPage(browser, viewport, mobile);
+      const { page } = ctx;
+      // Autoplay-policy notices are expected before the first gesture; anything else still fails the run.
+      await page.goto(`${base}?scene=menu&quality=${quality}&debug=1`, { waitUntil: 'load', timeout: TIMEOUT });
+      await waitReady(page);
+      await page.waitForFunction('!!window.__SAMRAJYA_AUDIO__', null, { timeout: TIMEOUT, polling: 250 });
+      await sleep(1000);
+      const before = (await stats(page)).state;
+      // A point on the menu UI that is not a button (so nothing navigates), preferring a shielded panel.
+      const pt = await page.evaluate(() => {
+        const W = innerWidth;
+        const H = innerHeight;
+        for (let y = H - 12; y > 0; y -= 24) {
+          for (let x = W / 2; x > 0 && x < W; x += x <= W / 2 ? -37 : 37) {
+            const el = document.elementFromPoint(x, y);
+            if (el && el !== document.body && el.tagName !== 'CANVAS' && !el.closest('button,a,input,select,[role=button]')) return { x, y, tag: el.tagName, cls: String(el.className).slice(0, 40) };
+            if (x <= 37) break;
+          }
+        }
+        return { x: W / 2, y: H - 12, tag: 'none', cls: '' };
+      });
+      if (mobile) await page.touchscreen.tap(pt.x, pt.y);
+      else await page.mouse.click(pt.x, pt.y);
+      const ok = await page
+        .waitForFunction(() => { const s = window.__SAMRAJYA_AUDIO__.stats(); return s.state === 'running' && s.music.bufferedSec >= 0.3; }, null, { timeout: 60000, polling: 250 })
+        .then(() => true)
+        .catch(() => false);
+      const s = await stats(page);
+      report.audio[label] = { before, after: s.state, clicked: pt, stream: s.music.stream, bufferedSec: s.music.bufferedSec };
+      check(`${label}: context ${before} before any gesture, ${s.state} after the first ${mobile ? 'tap' : 'click'} on the menu UI (<${pt.tag.toLowerCase()} class="${pt.cls}">), score streaming`, before === 'suspended' && ok, report.audio[label]);
+      // The browser's own autoplay notice before the first gesture is the expected path here, not a worker error.
+      ctx.warnings.splice(0, ctx.warnings.length, ...ctx.warnings.filter((w) => !/not allowed to start|user gesture/i.test(w)));
+      await finish(ctx, label);
+    }
+  } finally {
+    await browser.close();
+  }
+}
+
 async function captureScene(browser, base, name, query, expectMood) {
   const ctx = await newPage(browser, [1280, 720], false);
   const { page } = ctx;
@@ -275,6 +323,7 @@ async function captureScene(browser, base, name, query, expectMood) {
     if (want('battle')) await captureBattle(browser, base);
     if (want('world')) await captureScene(browser, base, 'world-audio', 'scene=world&quality=medium', ['world', 'city']);
     if (want('hero')) await captureScene(browser, base, 'hero-audio', 'scene=hero&quality=medium', ['hero_explore', 'city']);
+    if (want('gesture')) await captureGesture(base);
   } catch (e) {
     check(`run completed without exceptions`, false, String(e && e.stack ? e.stack : e));
   } finally {

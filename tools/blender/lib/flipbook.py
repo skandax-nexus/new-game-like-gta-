@@ -172,6 +172,219 @@ class ParticleVolume:
         return dens, temp
 
 
+# =========================================================================================== Eulerian fluid
+class FluidSim:
+    """Eulerian smoke / fire / dust solver ("stable fluids") over a box `extent` (x, y, z meters; x / y centred, z
+    from 0), cubic voxels, cell-centred fields indexed [x, y, z] like ParticleVolume:
+      vel (3, nx, ny, nz) m/s, dens (soot / dust density), temp (normalized temperature 0..1+).
+    Per step: buoyancy (temp lifts, dens sinks) + vorticity confinement (keeps the small curls that make flame
+    tongues and cauliflower billows) -> RK2 semi-Lagrangian advection (velocity and scalars, optional uniform wind)
+    -> exact spectral pressure projection (divergence-free) -> dissipation and a sponge layer near the open borders.
+    Boundaries: periodic in x / y (keep the content inside the sponge margin); `floor=True` makes z = 0 a free-slip
+    wall (mirror extension of the projection), else z is periodic too. Deterministic (pure numpy, fixed order).
+    Typical cost: ~1 s per step at 96 x 72 x 144 on one CPU."""
+
+    def __init__(self, shape: Sequence[int], extent: Sequence[float], *, floor: bool = False, vorticity: float = 2.0,
+                 sponge: float = 0.1, sponge_top: float = 0.12) -> None:
+        self.n = tuple(int(v) for v in shape)
+        self.extent = np.array(extent, F)
+        hs = self.extent / np.array(self.n, F)
+        if float(hs.max() - hs.min()) > 1e-4 * float(hs.max()):
+            raise ValueError(f"FluidSim needs cubic voxels: extent {tuple(extent)} / shape {self.n}")
+        self.h = float(hs[0])
+        nx, ny, nz = self.n
+        self.floor = floor
+        self.eps = vorticity
+        self.vel = np.zeros((3, nx, ny, nz), F)
+        self.dens = np.zeros(self.n, F)
+        self.temp = np.zeros(self.n, F)
+        self.t = 0.0
+        I, J, K = np.meshgrid(np.arange(nx, dtype=F), np.arange(ny, dtype=F), np.arange(nz, dtype=F), indexing="ij")
+        self._I, self._J, self._K = I, J, K
+        self._stride = (ny * nz, nz, 1)
+        nze = 2 * nz if floor else nz
+        kx = (2 * np.pi * np.fft.fftfreq(nx, d=self.h)).astype(F)[:, None, None]
+        ky = (2 * np.pi * np.fft.fftfreq(ny, d=self.h)).astype(F)[None, :, None]
+        kz = (2 * np.pi * np.fft.rfftfreq(nze, d=self.h)).astype(F)[None, None, :]
+        k2 = kx * kx + ky * ky + kz * kz
+        k2[0, 0, 0] = 1.0
+        self._k = (kx, ky, kz)
+        self._ik2 = (1.0 / k2).astype(F)
+        self._nze = nze
+        # sponge: 1 inside, -> 0 over `sponge` (fraction) of the x / y borders and `sponge_top` of the top
+        x, y, z = self.world()
+        ex, ey, ez = (float(v) for v in self.extent)
+
+        def ramp(d: np.ndarray, w: float) -> np.ndarray:
+            t = np.clip(d / max(w, 1e-6), 0, 1)
+            return t * t * (3 - 2 * t)
+
+        m = ramp(ex / 2 - np.abs(x), sponge * ex) * ramp(ey / 2 - np.abs(y), sponge * ey) * ramp(ez - z, sponge_top * ez)
+        if not floor:
+            m = m * ramp(z, sponge * ez)
+        self.sponge = m.astype(F)
+
+    # --------------------------------------------------------------------------------- geometry
+    def world(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """World coordinates (meters) of the cell centres."""
+        h = self.h
+        ex, ey, _ = (float(v) for v in self.extent)
+        return ((self._I + 0.5) * h - ex / 2).astype(F), ((self._J + 0.5) * h - ey / 2).astype(F), ((self._K + 0.5) * h).astype(F)
+
+    # --------------------------------------------------------------------------------- interpolation
+    def _weights(self, px: np.ndarray, py: np.ndarray, pz: np.ndarray) -> list[tuple[np.ndarray, np.ndarray]]:
+        nx, ny, nz = self.n
+        px = np.clip(px, 0, nx - 1.0001)
+        py = np.clip(py, 0, ny - 1.0001)
+        pz = np.clip(pz, 0, nz - 1.0001)
+        i0 = px.astype(np.int64)
+        j0 = py.astype(np.int64)
+        k0 = pz.astype(np.int64)
+        fx = (px - i0).astype(F)
+        fy = (py - j0).astype(F)
+        fz = (pz - k0).astype(F)
+        sx, sy, sz = self._stride
+        base = (i0 * sx + j0 * sy + k0 * sz).ravel()
+        out = []
+        for dx in (0, 1):
+            wx = fx if dx else 1 - fx
+            for dy in (0, 1):
+                wy = fy if dy else 1 - fy
+                for dz in (0, 1):
+                    wz = fz if dz else 1 - fz
+                    out.append((base + (dx * sx + dy * sy + dz * sz), (wx * wy * wz).ravel()))
+        return out
+
+    def _gather(self, f: np.ndarray, iw: list[tuple[np.ndarray, np.ndarray]]) -> np.ndarray:
+        flat = f.ravel()
+        acc = np.zeros(flat.shape, F)
+        for idx, w in iw:
+            acc += flat[idx] * w
+        return acc.reshape(self.n)
+
+    # --------------------------------------------------------------------------------- operators
+    def project(self, divergence: np.ndarray | None = None) -> None:
+        """Make the velocity divergence-free (spectral Helmholtz projection; free-slip floor by mirroring), or give
+        it the prescribed `divergence` field (1/s: hot gas expanding - incompressible smoke cannot billow out)."""
+        nz = self.n[2]
+        u, v, w = self.vel
+        dv = divergence
+        if self.floor:
+            u = np.concatenate([u, u[:, :, ::-1]], axis=2)
+            v = np.concatenate([v, v[:, :, ::-1]], axis=2)
+            w = np.concatenate([w, -w[:, :, ::-1]], axis=2)
+            if dv is not None:
+                dv = np.concatenate([dv, dv[:, :, ::-1]], axis=2)
+        ax = (0, 1, 2)
+        U = np.fft.rfftn(u, axes=ax)
+        V = np.fft.rfftn(v, axes=ax)
+        W = np.fft.rfftn(w, axes=ax)
+        kx, ky, kz = self._k
+        d = (kx * U + ky * V + kz * W) * self._ik2
+        U -= kx * d
+        V -= ky * d
+        W -= kz * d
+        if dv is not None:
+            Dh = np.fft.rfftn(dv.astype(F), axes=ax) * self._ik2 * (-1j)
+            U += kx * Dh
+            V += ky * Dh
+            W += kz * Dh
+        U[0, 0, 0] = 0
+        V[0, 0, 0] = 0
+        W[0, 0, 0] = 0
+        shp = (self.n[0], self.n[1], self._nze)
+        self.vel[0] = np.fft.irfftn(U, s=shp, axes=ax)[:, :, :nz].astype(F)
+        self.vel[1] = np.fft.irfftn(V, s=shp, axes=ax)[:, :, :nz].astype(F)
+        self.vel[2] = np.fft.irfftn(W, s=shp, axes=ax)[:, :, :nz].astype(F)
+
+    def vorticity_force(self, eps: float) -> np.ndarray:
+        """Vorticity confinement acceleration eps * h * (N x omega), N = normalized grad |omega|."""
+        h = self.h
+        u, v, w = self.vel
+        g = lambda a, i: np.gradient(a, h, axis=i)  # noqa: E731
+        ox = g(w, 1) - g(v, 2)
+        oy = g(u, 2) - g(w, 0)
+        oz = g(v, 0) - g(u, 1)
+        mag = np.sqrt(ox * ox + oy * oy + oz * oz)
+        nx_, ny_, nz_ = g(mag, 0), g(mag, 1), g(mag, 2)
+        nl = np.sqrt(nx_ * nx_ + ny_ * ny_ + nz_ * nz_) + 1e-6
+        nx_ /= nl
+        ny_ /= nl
+        nz_ /= nl
+        k = eps * h
+        return np.stack([(ny_ * oz - nz_ * oy) * k, (nz_ * ox - nx_ * oz) * k, (nx_ * oy - ny_ * ox) * k]).astype(F)
+
+    def advect(self, dt: float, wind: Sequence[float] = (0.0, 0.0, 0.0)) -> None:
+        h = self.h
+        u, v, w = self.vel
+        wx, wy, wz = (float(c) for c in wind)
+        I, J, K = self._I, self._J, self._K
+        iw = self._weights(I - 0.5 * dt * (u + wx) / h, J - 0.5 * dt * (v + wy) / h, K - 0.5 * dt * (w + wz) / h)
+        um = self._gather(u, iw) + wx
+        vm = self._gather(v, iw) + wy
+        wm = self._gather(w, iw) + wz
+        iw = self._weights(I - dt * um / h, J - dt * vm / h, K - dt * wm / h)
+        self.vel = np.stack([self._gather(u, iw), self._gather(v, iw), self._gather(w, iw)])
+        self.dens = self._gather(self.dens, iw)
+        self.temp = self._gather(self.temp, iw)
+
+    def step(self, dt: float, *, buoyancy: float = 1.0, weight: float = 0.0, vorticity: float | None = None,
+             cooling: float = 0.0, dissipation: float = 0.0, damping: float = 0.0, wind: Sequence[float] = (0.0, 0.0, 0.0),
+             expansion: float = 0.0, substeps: int = 1) -> None:
+        """Advance `dt` seconds: temp lifts (buoyancy m/s^2 per unit temp), dens sinks (weight), vorticity
+        confinement, advection (+ uniform wind), projection (divergence = expansion x temp: hot gas expands),
+        exponential cooling / dissipation / damping."""
+        hdt = dt / substeps
+        eps = self.eps if vorticity is None else vorticity
+        for _ in range(substeps):
+            if buoyancy or weight:
+                self.vel[2] += hdt * (buoyancy * self.temp - weight * self.dens)
+            if eps > 0:
+                self.vel += hdt * self.vorticity_force(eps)
+            div = (self.temp * expansion).astype(F) if expansion else None
+            self.project(div)
+            self.advect(hdt, wind)
+            self.project(div)
+            if cooling:
+                self.temp *= math.exp(-cooling * hdt)
+            if dissipation:
+                self.dens *= math.exp(-dissipation * hdt)
+            if damping:
+                self.vel *= math.exp(-damping * hdt)
+            self.dens *= self.sponge
+            self.temp *= self.sponge
+            self.vel *= self.sponge[None]
+            np.maximum(self.dens, 0.0, out=self.dens)
+            np.maximum(self.temp, 0.0, out=self.temp)
+            self.t += hdt
+
+
+def value_noise3(shape: Sequence[int], cell: float, seed: int, octaves: int = 4, gain: float = 0.5) -> np.ndarray:
+    """Smooth fractal value noise on a grid (cell = feature size in voxels), in [0, 1], deterministic."""
+    rng = np.random.default_rng(seed)
+    out = np.zeros(tuple(shape), F)
+    amp, tot, c = 1.0, 0.0, float(cell)
+    for _ in range(octaves):
+        cs = [max(2, int(math.ceil(n / c)) + 2) for n in shape]
+        lat = rng.random(cs).astype(F)
+        coords = [np.arange(n, dtype=F) / c for n in shape]
+        g = np.meshgrid(*coords, indexing="ij")
+        i0 = [np.floor(a).astype(np.int64) for a in g]
+        f = [a - b for a, b in zip(g, i0)]
+        f = [t * t * (3 - 2 * t) for t in f]
+        acc = np.zeros(tuple(shape), F)
+        for dx in (0, 1):
+            for dy in (0, 1):
+                for dz in (0, 1):
+                    w = (f[0] if dx else 1 - f[0]) * (f[1] if dy else 1 - f[1]) * (f[2] if dz else 1 - f[2])
+                    acc += lat[i0[0] + dx, i0[1] + dy, i0[2] + dz] * w
+        out += acc * amp
+        tot += amp
+        amp *= gain
+        c = max(1.0, c / 2)
+    return (out / tot).astype(F)
+
+
 def _box1(a: np.ndarray, r: int, axis: int) -> np.ndarray:
     if r <= 0:
         return a
@@ -410,6 +623,135 @@ def render_volumes(frames: Sequence[tuple[np.ndarray, np.ndarray]], extent: Sequ
         for s, r in frames:
             out.append(vr.render(s, r))
     return out
+
+
+# =========================================================================================== exact integration
+def integrate_volume(sigma: np.ndarray, radiance: np.ndarray, extent: Sequence[float], px: int, *, view: str = "front",
+                     frame: Sequence[float] | None = None, centered: bool = True, supersample: int = 2,
+                     normals: np.ndarray | None = None, normal_strength: float = 1.0) -> tuple[np.ndarray, np.ndarray | None]:
+    """Noise-free emission-absorption render of a grid (the same integral Cycles estimates, evaluated exactly):
+    front-to-back compositing of piecewise-constant voxels along the view axis (`supersample` sub-slices per voxel,
+    linear between slices), then bilinear resampling of the composited image to a px x px frame.
+      sigma (1/m) and radiance (per unit extinction, rgb) grids indexed [x, y, z]; `centered` = cell-centred
+      (FluidSim) vs vertex grids (ParticleVolume); view "front" (camera at -y looking +y, image up = +z) or
+      "top" (camera above looking down, image up = +y); `frame` = (centre u, centre v, side) of the square window
+      in meters (front: x, z; top: x, y), default = the box like VolumeRenderer.
+      normals: optional unit outward normal grid (3, nx, ny, nz) -> also returns the transmittance-weighted
+      surface normal per pixel in tangent space (x right, y up, z towards the camera), encoded * 0.5 + 0.5.
+    Returns (premultiplied linear rgba (px, px, 4), row 0 = top; encoded normals or None)."""
+    ex = np.array(extent, F)
+    n = sigma.shape
+    if view == "front":
+        order = (0, 2, 1)  # -> [x, z, depth], depth index 0 nearest the camera (y min)
+        flip_depth = False
+    elif view == "top":
+        order = (0, 1, 2)  # -> [x, y, depth], camera above: nearest = z max
+        flip_depth = True
+    else:
+        raise ValueError(f"unknown view {view}")
+    s = np.transpose(sigma, order)
+    r = np.transpose(radiance, order + (3,))
+    nm = np.transpose(normals, (0,) + tuple(o + 1 for o in order)) if normals is not None else None
+    if flip_depth:
+        s = s[:, :, ::-1]
+        r = r[:, :, ::-1]
+        if nm is not None:
+            nm = nm[:, :, :, ::-1]
+    depth_axis_len = float(ex[1] if view == "front" else ex[2])
+    nd = s.shape[2]
+    dz = depth_axis_len / (nd if centered else max(nd - 1, 1)) / supersample
+    T = np.ones(s.shape[:2], np.float64)
+    C = np.zeros(s.shape[:2] + (3,), np.float64)
+    Nacc = np.zeros(s.shape[:2] + (3,), np.float64) if nm is not None else None
+    Wacc = np.zeros(s.shape[:2], np.float64)
+    for i in range(nd):
+        j = min(i + 1, nd - 1)
+        for k in range(supersample):
+            t = k / supersample
+            si = s[:, :, i] * (1 - t) + s[:, :, j] * t
+            ri = r[:, :, i] * (1 - t) + r[:, :, j] * t
+            a = 1.0 - np.exp(-np.maximum(si, 0.0) * dz)
+            wgt = T * a
+            C += wgt[..., None] * ri
+            if Nacc is not None:
+                ni = nm[:, :, :, i] * (1 - t) + nm[:, :, :, j] * t
+                Nacc += wgt[..., None] * np.moveaxis(ni, 0, -1)
+            Wacc += wgt
+            T *= 1.0 - a
+    A = 1.0 - T
+    # resample the composited [u, v] image to the output frame
+    if view == "front":
+        u_len, v_len, u0, v0 = float(ex[0]), float(ex[2]), -float(ex[0]) / 2, 0.0
+    else:
+        u_len, v_len, u0, v0 = float(ex[0]), float(ex[1]), -float(ex[0]) / 2, -float(ex[1]) / 2
+    if frame is None:
+        side = max(u_len, v_len)
+        frame = (u0 + u_len / 2, v0 + v_len / 2, side)
+    cu, cv, side = (float(v) for v in frame)
+    pc = (np.arange(px, dtype=np.float64) + 0.5) / px
+    wu = cu - side / 2 + pc * side  # columns
+    wv = cv + side / 2 - pc * side  # rows (top = high v)
+    nu, nv = s.shape[0], s.shape[1]
+    if centered:
+        gu = (wu - u0) / (u_len / nu) - 0.5
+        gv = (wv - v0) / (v_len / nv) - 0.5
+    else:
+        gu = (wu - u0) / u_len * (nu - 1)
+        gv = (wv - v0) / v_len * (nv - 1)
+
+    def sample(img: np.ndarray) -> np.ndarray:
+        """Bilinear sample img[u, v, ...] at (gv rows, gu cols); zero outside the grid."""
+        U, V = np.meshgrid(gu, gv)
+        inside = (U >= -0.5) & (U <= nu - 0.5) & (V >= -0.5) & (V <= nv - 0.5)
+        Uc = np.clip(U, 0, nu - 1.0001)
+        Vc = np.clip(V, 0, nv - 1.0001)
+        u0i = Uc.astype(np.int64)
+        v0i = Vc.astype(np.int64)
+        fu = Uc - u0i
+        fv = Vc - v0i
+        if img.ndim == 3:
+            fu = fu[..., None]
+            fv = fv[..., None]
+        out = (img[u0i, v0i] * (1 - fu) * (1 - fv) + img[u0i + 1, v0i] * fu * (1 - fv)
+               + img[u0i, v0i + 1] * (1 - fu) * fv + img[u0i + 1, v0i + 1] * fu * fv)
+        m = inside[..., None] if img.ndim == 3 else inside
+        return np.where(m, out, 0.0)
+
+    rgba = np.concatenate([sample(C), sample(A)[..., None]], axis=-1).astype(F)
+    nrm_out = None
+    if Nacc is not None:
+        Nw = Nacc / np.maximum(Wacc, 1e-9)[..., None]
+        # world -> tangent: front (right +x, up +z, towards camera -y); top (right +x, up +y, towards camera +z)
+        if view == "front":
+            tn = np.stack([Nw[..., 0], Nw[..., 2], -Nw[..., 1]], axis=-1)
+        else:
+            tn = np.stack([Nw[..., 0], Nw[..., 1], Nw[..., 2]], axis=-1)
+        img = sample(tn)
+        wimg = sample(Wacc)
+        flat = np.array([0.0, 0.0, 1.0])
+        k = np.clip(wimg / 0.02, 0, 1)[..., None] * normal_strength
+        img = img * k + flat * (1 - k)
+        img /= np.maximum(np.linalg.norm(img, axis=-1, keepdims=True), 1e-9)
+        nrm_out = (img * 0.5 + 0.5).astype(F)
+    return rgba, nrm_out
+
+
+def density_normals(sigma: np.ndarray, blur_vox: float = 1.5) -> np.ndarray:
+    """Outward unit normals of a density field (-grad of the blurred density), shape (3, nx, ny, nz); 0 where flat."""
+    b = blur3(sigma, blur_vox) if blur_vox > 0 else sigma.astype(F)
+    g = np.stack(np.gradient(b))
+    l = np.sqrt((g * g).sum(axis=0)) + 1e-12
+    return (-g / l[None]).astype(F)
+
+
+def frame_window(px: int, margin: float = 0.03, fade: float = 0.08) -> np.ndarray:
+    """Safety window for a square frame: exactly 0 within `margin` (fraction of the frame) of every border,
+    smooth to 1 over the next `fade` - multiply coverage / emission by it so no frame can touch its border."""
+    c = (np.arange(px, dtype=F) + 0.5) / px
+    d = np.minimum(c, 1 - c)
+    t = np.clip((d - margin) / max(fade, 1e-6), 0, 1)
+    w = t * t * (3 - 2 * t)
+    return (w[:, None] * w[None, :]).astype(F)
 
 
 def loop_blend(seq: Sequence[np.ndarray], period: int, blend: int) -> list[np.ndarray]:
@@ -682,7 +1024,8 @@ def write(ctx: AssetContext, color: Sequence[np.ndarray], cols: int, rows: int, 
     return meta
 
 
-__all__ = ["BORDER_LIMIT", "BORDER_PX", "CurlNoise", "EDGES", "ParticleVolume", "VolumeRenderer", "begin", "blackbody_ramp",
-           "blur2", "blur3", "border_levels", "border_signal", "check_borders", "contact_sheet",
+__all__ = ["BORDER_LIMIT", "BORDER_PX", "CurlNoise", "EDGES", "FluidSim", "ParticleVolume", "VolumeRenderer", "begin",
+           "blackbody_ramp", "blur2", "blur3", "border_levels", "border_signal", "check_borders", "contact_sheet",
+           "density_normals", "frame_window", "integrate_volume", "value_noise3",
            "draw_text", "gaussian", "grid2", "light_volume", "loop_blend", "normal_from_alpha", "pack", "polygon_sdf",
            "render_volumes", "segment_distance", "to_straight", "write"]

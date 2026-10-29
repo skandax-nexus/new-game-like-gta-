@@ -20,13 +20,14 @@
  * reverb impulse response. The main thread only schedules nodes: bus handlers enqueue into a ring buffer,
  * update() (own rAF, measured as profiler system 'audio') drains it. No allocation per SFX trigger besides
  * the unavoidable AudioBufferSourceNode.
- * The AudioContext starts suspended and resumes on the first user gesture; ?noaudio=1 disables all of it.
+ * The AudioContext starts suspended and resumes on the first user gesture (capture-phase listeners, so shielded
+ * UI panels count too); ?noaudio=1 disables all of it.
  */
 import { AUDIO_STINGERS, type AudioMood, type AudioStinger, type GameBus, type SfxKind } from '../core/events';
 import { SEASONS, type EnvironmentState, type GameSettings, type QualitySettings, type QualityTier } from '../core/types';
 import type { Profiler } from '../core/profiler';
 import { type AmbienceLayer, ambienceDef, worldBedLayers } from './ambience/meta';
-import { battleBedLayers, heroCombatCues, type SfxCue } from './cues';
+import { battleBedLayers, type SfxCue, writeHeroCombatCues } from './cues';
 import { flavourFromAmbience, type MusicContext } from './music/moods';
 import type { ScoreStats } from './music/engine';
 import { ALL_SFX, SFX_GROUPS, SFX_META, type SfxGroup, type SfxSoundId, variantsForTier } from './sfx/meta';
@@ -73,6 +74,8 @@ export interface AudioStats {
 }
 
 const RING = 128;
+/** User-activation events that may resume the AudioContext (Chrome / Safari autoplay policy). */
+const GESTURES = ['pointerdown', 'pointerup', 'keydown', 'touchend'] as const;
 const AUDIO_STINGER_LIST: readonly AudioStinger[] = AUDIO_STINGERS;
 const SFX_INDEX = new Map<string, number>(ALL_SFX.map((k, i) => [k, i]));
 const SFX_KEYS: readonly string[] = ALL_SFX.map((k) => `sfx:${k}`);
@@ -194,8 +197,14 @@ export class AudioManager {
       bus.on('audio:ambience', (e) => this.setAmbience(e.layers)),
       bus.on('audio:listener', (e) => this.setListener(e)),
       bus.on('hero:combat', (e) => {
-        for (const c of heroCombatCues(e.kind, e.strength, this.cueScratch)) this.enqueue(c.sfx, c.volume, 0, e, c.delay);
-        if (e.kind === 'perfect_dodge') this.mixer?.slowmo(0.6);
+        const cues = this.cueScratch;
+        const n = writeHeroCombatCues(e.kind, e.strength, cues);
+        for (let i = 0; i < n; i++) {
+          const c = cues[i] as SfxCue;
+          this.enqueue(c.sfx, c.volume, 0, e, c.delay);
+        }
+        // The muffle is the audio half of the perfect-dodge slow motion: off with reducedMotion (DESIGN_SPEC §12.5).
+        if (e.kind === 'perfect_dodge' && !this.settings.reducedMotion) this.mixer?.slowmo(0.6);
       }),
       bus.on('battle:events', (e) => {
         let contacts = 0;
@@ -213,13 +222,12 @@ export class AudioManager {
     const resume = (): void => {
       void this.resume();
     };
-    window.addEventListener('pointerdown', resume, { passive: true });
-    window.addEventListener('keydown', resume);
-    window.addEventListener('touchend', resume, { passive: true });
+    // Capture phase: UI panels are shield()ed (they stop pointerdown / click propagation), so a bubbling
+    // window listener never hears the first click on the main menu and the context stays suspended.
+    const listen: AddEventListenerOptions = { capture: true, passive: true };
+    for (const ev of GESTURES) window.addEventListener(ev, resume, listen);
     this.offs.push(() => {
-      window.removeEventListener('pointerdown', resume);
-      window.removeEventListener('keydown', resume);
-      window.removeEventListener('touchend', resume);
+      for (const ev of GESTURES) window.removeEventListener(ev, resume, listen);
     });
     const vis = (): void => this.onVisibility();
     document.addEventListener('visibilitychange', vis);
@@ -451,10 +459,15 @@ export class AudioManager {
   stinger(id: AudioStinger): void {
     if (this.disabled) return;
     this.musicPort?.post({ t: 'cue', stinger: id });
-    if (!this.playStinger(id) && this.ctx) {
-      this.bank?.request(this.stingerKey(id), 1, 99);
-      this.pendingStinger = { id, until: this.ctx.currentTime + 2 };
+    if (!this.ctx) return;
+    if (this.bank?.get(this.stingerKey(id), 0)) {
+      // Rendered: play it. A repeat inside the min interval (every settlement harvesting on the same day) is
+      // merged by the voice pool and must not be queued for a retry - that played the stinger twice.
+      this.playStinger(id);
+      return;
     }
+    this.bank?.request(this.stingerKey(id), 1, 99);
+    this.pendingStinger = { id, until: this.ctx.currentTime + 2 };
   }
 
   /** Low / medium tiers (phones, small laptops) keep stingers at half rate: half the memory. */
@@ -543,7 +556,10 @@ export class AudioManager {
     }
     this.stream?.update();
     if (this.pendingStinger && ctx.currentTime < this.pendingStinger.until) {
-      if (this.playStinger(this.pendingStinger.id)) this.pendingStinger = null;
+      if (this.bank?.get(this.stingerKey(this.pendingStinger.id), 0)) {
+        this.playStinger(this.pendingStinger.id);
+        this.pendingStinger = null;
+      }
     } else this.pendingStinger = null;
     // Ambience.
     this.engagement *= 0.995;
@@ -616,31 +632,36 @@ export class AudioManager {
     if (!amb) return;
     const t = this.mergedTargets;
     t.clear();
-    const add = (k: string, g: number): void => {
-      t.set(k, Math.max(t.get(k) ?? 0, g));
-    };
-    for (const l of this.sceneLayers) add(l.key, l.gain);
+    for (const l of this.sceneLayers) this.addTarget(l.key, l.gain);
     // World beds: outdoors in the world, the battle and the hero scenes (scenes may override).
-    if (this.mood !== 'menu') for (const l of this.envLayers) add(l.key, l.gain * (this.mood === 'world' ? 0.8 : 1));
+    if (this.mood !== 'menu') for (const l of this.envLayers) this.addTarget(l.key, l.gain * (this.mood === 'world' ? 0.8 : 1));
     // Automatic battle bed unless the scene drives it.
     if ((this.mood === 'battle' || this.mood === 'siege') && !t.has('battle_roar')) {
       const engaged = Math.max(this.engagement, this.intensity * 0.6);
       battleBedLayers(engaged, 1, 120, this.battleLayers);
-      for (const l of this.battleLayers) add(l.key, l.gain);
+      for (const l of this.battleLayers) this.addTarget(l.key, l.gain);
     }
     this.keepSet.clear();
-    for (const [k, g] of t) {
-      if (!amb.setTarget(k, g)) {
-        if (!this.warnedKeys.has(k)) {
-          this.warnedKeys.add(k);
-          console.warn(`[audio] unknown ambience key "${k}" (see src/audio/ambience/meta.ts AMBIENCE_DEFS)`);
-        }
-        continue;
-      }
-      this.keepSet.add(k);
-    }
+    t.forEach(this.applyTarget);
     amb.fadeAllExcept(this.keepSet);
   }
+
+  private addTarget(k: string, g: number): void {
+    const t = this.mergedTargets;
+    t.set(k, Math.max(t.get(k) ?? 0, g));
+  }
+
+  /** Map.forEach callback, allocated once (the battle bed re-mixes at 4 Hz). */
+  private readonly applyTarget = (g: number, k: string): void => {
+    if (!this.ambience?.setTarget(k, g)) {
+      if (this.ambience && !this.warnedKeys.has(k)) {
+        this.warnedKeys.add(k);
+        console.warn(`[audio] unknown ambience key "${k}" (see src/audio/ambience/meta.ts AMBIENCE_DEFS)`);
+      }
+      return;
+    }
+    this.keepSet.add(k);
+  };
 
   private onWorldTick(hour: number, month: number): void {
     if (this.envExplicit || hour === this.lastHour) return;

@@ -8,7 +8,7 @@
  * A stolen slot fades its old source out over ~15 ms and starts the new one right after.
  * OWNER: Audio Developer (AUD-01).
  */
-import { VoicePool } from '../spatial/voices';
+import { VoicePool, type VoiceRequest } from '../spatial/voices';
 
 export interface PlayParams {
   kind: string;
@@ -56,6 +56,8 @@ export class VoicePlayer {
   readonly pool: VoicePool;
   private chains: Chain[] = [];
   private hrtf: boolean;
+  /** Reused for every allocation (no object per trigger). */
+  private readonly req: VoiceRequest = { kind: '', priority: 0, now: 0, at: 0, duration: 0, gain: 0, maxInstances: 1, minIntervalMs: 0 };
   /** Triggers that were played / merged or refused. */
   played = 0;
 
@@ -130,7 +132,16 @@ export class VoicePlayer {
     const now = ctx.currentTime;
     const when = Math.max(now, p.when);
     const dur = buf.duration / Math.max(0.05, p.rate);
-    const slot = this.pool.allocate({ kind: p.kind, priority: p.priority, now: when, duration: dur, gain: p.gain, maxInstances: p.maxInstances, minIntervalMs: p.minIntervalMs });
+    const r = this.req;
+    r.kind = p.kind;
+    r.priority = p.priority;
+    r.now = now;
+    r.at = when;
+    r.duration = dur;
+    r.gain = p.gain;
+    r.maxInstances = p.maxInstances;
+    r.minIntervalMs = p.minIntervalMs;
+    const slot = this.pool.allocate(r);
     if (slot < 0) return false;
     const c = this.chains[slot] as Chain;
     let start = when;

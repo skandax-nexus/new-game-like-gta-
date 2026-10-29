@@ -31,6 +31,8 @@ interface Layer {
 
 export class AmbiencePlayer {
   private readonly layers = new Map<string, Layer>();
+  /** The same layers as an array: the per-frame update walks it without allocating a Map iterator. */
+  private readonly list: Layer[] = [];
   private readonly params = makePlayParams();
   /** Spot variants requested per spot (tier). */
   spotVariants = 3;
@@ -68,6 +70,7 @@ export class AmbiencePlayer {
       const now = this.ctx.currentTime;
       def.spots.forEach((s, i) => (l!.nextSpot[i] = now + firstSpotDelay(s, Math.random())));
       this.layers.set(key, l);
+      this.list.push(l);
       if (def.bed) this.bank.request(l.bedKey, 1, 82);
       l.spotKeys.forEach((k, i) => this.bank.request(k, Math.min(this.spotVariants, (def.spots[i] as { variants: number }).variants), 70));
     }
@@ -84,24 +87,28 @@ export class AmbiencePlayer {
 
   /** Every layer not in `keep` fades out. */
   fadeAllExcept(keep: ReadonlySet<string>): void {
-    for (const l of this.layers.values()) if (!keep.has(l.key) && l.target > 0) this.setTarget(l.key, 0);
+    for (let i = 0; i < this.list.length; i++) {
+      const l = this.list[i] as Layer;
+      if (!keep.has(l.key) && l.target > 0) this.setTarget(l.key, 0);
+    }
   }
 
   get activeLayers(): number {
     let n = 0;
-    for (const l of this.layers.values()) if (l.target > 0.001) n++;
+    for (const l of this.list) if (l.target > 0.001) n++;
     return n;
   }
 
   /** For stats / the lab: current targets. */
   snapshot(out: { key: string; gain: number }[]): void {
     out.length = 0;
-    for (const l of this.layers.values()) if (l.target > 0.001) out.push({ key: l.key, gain: +l.target.toFixed(3) });
+    for (const l of this.list) if (l.target > 0.001) out.push({ key: l.key, gain: +l.target.toFixed(3) });
   }
 
   update(listener: ListenerPose): void {
     const now = this.ctx.currentTime;
-    for (const l of this.layers.values()) {
+    for (let li = this.list.length - 1; li >= 0; li--) {
+      const l = this.list[li] as Layer;
       // Bed.
       if (l.def.bed && !l.srcA && l.target > 0.001) this.startBed(l);
       // Spots.
@@ -122,6 +129,7 @@ export class AmbiencePlayer {
           this.bank.release(l.bedKey);
           for (const k of l.spotKeys) this.bank.release(k);
           this.layers.delete(l.key);
+          this.list.splice(li, 1);
         }
       }
     }
@@ -154,14 +162,24 @@ export class AmbiencePlayer {
   private stopBed(l: Layer): void {
     if (!l.srcA) return;
     const now = this.ctx.currentTime;
+    // The fade-out (time constant 1.4 s) is only ~25 dB down after the 4 s silence wait: ramp the rest of the
+    // way before stopping, so a loud bed (rain, river) never ends with an audible cut.
+    const g = l.gain;
+    if (g) {
+      g.gain.cancelScheduledValues(now);
+      g.gain.setValueAtTime(g.gain.value, now);
+      g.gain.linearRampToValueAtTime(0, now + 0.25);
+    }
+    const end = now + 0.27;
     for (const s of [l.srcA, l.srcB]) {
       try {
-        s?.stop(now);
+        s?.stop(end);
       } catch {
         /* stopped */
       }
     }
-    l.gain?.disconnect();
+    if (g && l.srcA) l.srcA.onended = () => g.disconnect();
+    else g?.disconnect();
     l.srcA = null;
     l.srcB = null;
     l.panA = null;
@@ -198,7 +216,8 @@ export class AmbiencePlayer {
   }
 
   dispose(): void {
-    for (const l of this.layers.values()) this.stopBed(l);
+    for (const l of this.list) this.stopBed(l);
     this.layers.clear();
+    this.list.length = 0;
   }
 }

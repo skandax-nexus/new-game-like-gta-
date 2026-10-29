@@ -9,7 +9,7 @@ import { BATTLE_EVENT_KINDS, type BattleEventRecord, QUALITY_TIERS, type SimEven
 import { SFX_KINDS } from '../../src/core/events';
 import { splitVoiceCap, VoicePool } from '../../src/audio/spatial/voices';
 import { airAbsorptionHz, distanceGain, relativeAzimuth, reverbSend, thunderDelaySec } from '../../src/audio/spatial/model';
-import { battleBedLayers, cuesForBattleEvent, cuesForSimEvent, heroCombatCues } from '../../src/audio/cues';
+import { battleBedLayers, cuesForBattleEvent, cuesForSimEvent, heroCombatCues, type SfxCue, writeHeroCombatCues } from '../../src/audio/cues';
 import { ambienceDef } from '../../src/audio/ambience/meta';
 import { ALL_SFX, SFX_GROUPS, SFX_META } from '../../src/audio/sfx/meta';
 import { renderSoundKey, WorkerHost } from '../../src/audio/runtime/workerHost';
@@ -96,10 +96,13 @@ class FakeSource extends FakeNode {
   playbackRate = new FakeParam();
   loop = false;
   startedAt = -1;
+  stoppedAt = -1;
   start(t: number): void {
     this.startedAt = t;
   }
-  stop(): void {}
+  stop(t?: number): void {
+    this.stoppedAt = t ?? 0;
+  }
 }
 
 class FakeContext {
@@ -206,6 +209,27 @@ describe('voice pool', () => {
     const c = pool.allocate(r(0.2));
     expect(c).toBe(a); // third instance recycles the oldest clash
     expect(pool.active(0.2)).toBe(2);
+  });
+
+  it('a delayed request (thunder after lightning) never frees or steals voices that are still sounding', () => {
+    const pool = new VoicePool(3);
+    const req = (kind: string, priority: number, now: number, duration: number, at?: number) => ({ kind, priority, now, at, duration, gain: 1, maxInstances: 9, minIntervalMs: 0 });
+    // Three voices ending at 1, 2 and 3 s.
+    pool.allocate(req('a', 90, 0, 1));
+    pool.allocate(req('b', 90, 0, 2));
+    pool.allocate(req('c', 90, 0, 3));
+    // Thunder at t=0.1 scheduled for t=3.5: all three still sound at 0.1, so it must not take a slot from them
+    // as if they were free (it may only compete by priority).
+    expect(pool.allocate(req('thunder', 40, 0.1, 5, 3.5))).toBe(-1);
+    expect(pool.lastReject).toBe('busy');
+    expect(pool.active(0.1)).toBe(3);
+    // Once a voice has really ended, the delayed request books its slot from its scheduled start.
+    const s = pool.allocate(req('thunder', 40, 1.2, 5, 3.5));
+    expect(s).toBe(0);
+    expect(pool.lastStolen).toBe(false);
+    expect(pool.active(2.5)).toBe(2); // 'c' and the booked thunder; 'b' ended at 2
+    // An immediate low-priority sound at 1.3 finds no free slot: 'b' and 'c' still sound, the thunder is booked.
+    expect(pool.allocate(req('step', 10, 1.3, 0.2))).toBe(-1);
   });
 });
 
@@ -427,6 +451,18 @@ describe('cues', () => {
       expect(cues.length, k).toBeGreaterThan(0);
       for (const c of cues) expect(ALL_SFX).toContain(c.sfx);
     }
+    // The audio director's path reuses its scratch cue objects (no allocation per hero:combat event).
+    const scratch: SfxCue[] = [];
+    expect(writeHeroCombatCues('guard_break', 1, scratch)).toBe(3);
+    const first = scratch.slice();
+    expect(writeHeroCombatCues('parry', 0.5, scratch)).toBe(1);
+    expect(scratch[0]!.sfx).toBe('parry_ring');
+    expect(writeHeroCombatCues('guard_break', 1, scratch)).toBe(3);
+    for (let i = 0; i < 3; i++) expect(scratch[i]).toBe(first[i]);
+    expect(scratch.map((c) => c.sfx)).toEqual(['block_thud', 'fx_hit_metal', 'stagger_grunt']);
+    const bed = battleBedLayers(10, 100, 50);
+    const roar = bed[0];
+    expect(battleBedLayers(90, 100, 50, bed)[0]).toBe(roar);
     for (const kind of BATTLE_EVENT_KINDS) {
       const e: BattleEventRecord = { time: 0, kind, side: 0, formation: 0, other: null, x: 0, z: 0, value: null, text: null };
       const c = cuesForBattleEvent(e, 0);
@@ -436,6 +472,19 @@ describe('cues', () => {
     const age: SimEvent = { kind: 'age_advanced', factionId: 'heartland', age: 'mahajanapada', landmarkId: null, settlementId: null };
     expect(cuesForSimEvent(age, 'heartland').stinger).toBe('age_up');
     expect(cuesForSimEvent(age, 'highland').stinger).toBeNull();
+    // Settlement events are cued for the player's own settlements only (AI construction across the map is silent).
+    const scope = { ownsSettlement: (id: string) => id === 's_mine', ownsArmy: (id: string) => id === 'a_mine' };
+    const built = (settlementId: string): SimEvent => ({ kind: 'construction_complete', settlementId, building: 'granary', level: 1 }) as SimEvent;
+    expect(cuesForSimEvent(built('s_mine'), 'heartland', scope).stinger).toBe('construction_complete');
+    expect(cuesForSimEvent(built('s_ai'), 'heartland', scope)).toEqual({ sfx: null, volume: 1, stinger: null });
+    expect(cuesForSimEvent(built('s_ai'), 'heartland').stinger).toBe('construction_complete'); // no scope: unchanged
+    const siege = { kind: 'siege_started', settlementId: 's_ai', armyId: 'a_mine' } as SimEvent;
+    expect(cuesForSimEvent(siege, 'heartland', scope).sfx).toBe('ram_hit'); // the player's army besieges
+    const aiWar = { kind: 'war_declared', a: 'highland', b: 'coast' } as SimEvent;
+    expect(cuesForSimEvent(aiWar, 'heartland').sfx).toBeNull();
+    expect(cuesForSimEvent({ kind: 'war_declared', a: 'highland', b: 'heartland' } as SimEvent, 'heartland').sfx).toBe('conch');
+    expect(cuesForSimEvent(aiWar, null).sfx).toBe('conch'); // spectator hears everything
+    expect(cuesForSimEvent({ kind: 'event_fired', instanceId: 'e1', factionId: 'highland' } as SimEvent, 'heartland').sfx).toBeNull();
     for (const l of battleBedLayers(400, 1000, 80)) expect(ambienceDef(l.key)).toBeDefined();
     expect(battleBedLayers(1000, 1000, 10)[0]!.gain).toBeGreaterThan(battleBedLayers(50, 1000, 10)[0]!.gain);
     for (const id of ALL_SFX) expect(SFX_GROUPS[id].length, id).toBeGreaterThan(0);
@@ -492,5 +541,33 @@ describe('WebAudio adapters (fake context)', () => {
     expect(ctx.created.source).toBe(20);
     // Cap 8: the pool never holds more than 8 voices.
     expect(player.active(ctx.currentTime)).toBeLessThanOrEqual(8);
+  });
+
+  it('a delayed trigger (thunder 1-4 s after lightning) does not cut voices that are still playing', () => {
+    const ctx = new FakeContext();
+    const bus = new FakeNode();
+    const player = new VoicePlayer(ctx as unknown as AudioContext, 'flat', 3, bus as unknown as AudioNode, bus as unknown as AudioNode, false);
+    const p = makePlayParams();
+    p.maxInstances = 9;
+    p.priority = 90;
+    for (const [kind, sec] of [['a', 1], ['b', 2], ['c', 3]] as const) {
+      p.kind = kind;
+      p.buffer = ctx.createBuffer(1, 48000 * sec, 48000) as unknown as AudioBuffer;
+      expect(player.play(p)).toBe(true);
+    }
+    const playing = ctx.sources.slice();
+    ctx.currentTime = 0.1;
+    p.kind = 'thunder';
+    p.priority = 40;
+    p.when = 3.5;
+    p.buffer = ctx.createBuffer(1, 48000 * 5, 48000) as unknown as AudioBuffer;
+    expect(player.play(p)).toBe(false); // every voice still sounds now; thunder may not pretend they are free
+    ctx.currentTime = 0.2;
+    p.kind = 'step';
+    p.priority = 10;
+    p.when = 0;
+    p.buffer = ctx.createBuffer(1, 9600, 48000) as unknown as AudioBuffer;
+    expect(player.play(p)).toBe(false);
+    for (const src of playing) expect(src.stoppedAt).toBe(-1);
   });
 });

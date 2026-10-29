@@ -1,0 +1,668 @@
+{
+  "port": 4473,
+  "dist": ".build/aud-01-review",
+  "checks": [
+    {
+      "name": "audio-lab: AudioContext running, workers up, score streaming (worklet, 1.057s buffered)",
+      "ok": true,
+      "observed": {
+        "state": "running",
+        "workers": "worker",
+        "stream": "worklet",
+        "sampleRate": 44100
+      }
+    },
+    {
+      "name": "audio-lab: score streams through the AudioWorklet (main-thread hitches cannot starve it)",
+      "ok": true,
+      "observed": "worklet"
+    },
+    {
+      "name": "audio-lab: high tier = 48 voices, HRTF panning",
+      "ok": true,
+      "observed": {
+        "cap": 48,
+        "hrtf": true
+      }
+    },
+    {
+      "name": "audio-lab: audible master output (max RMS -24.5 dBFS, peak -16.14 dBFS)",
+      "ok": true,
+      "observed": {
+        "rmsDb": -24.5,
+        "peakDb": -16.14
+      }
+    },
+    {
+      "name": "audio-lab: district + dawn ambience layers active",
+      "ok": true,
+      "observed": [
+        "wind",
+        "dawn_birds",
+        "temple_bells",
+        "chanting_low",
+        "water_drip"
+      ]
+    },
+    {
+      "name": "audio-lab: 80-sound burst stays within the voice cap (25/48 live, 4 stolen, 69 merged/rejected)",
+      "ok": true,
+      "observed": {
+        "sfx": 23,
+        "ambience": 2,
+        "flat": 0,
+        "cap": 48,
+        "stolen": 4,
+        "rejected": 69
+      }
+    },
+    {
+      "name": "audio-lab: main-thread audio update 0.474 ms avg (< 1 ms)",
+      "ok": true,
+      "observed": {
+        "last": 0,
+        "avg": 0.474,
+        "max": 5.685
+      }
+    },
+    {
+      "name": "audio-lab: no console errors, page errors, failed requests or crash reports (audio enabled)",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "audio-lab: no audio warnings (worker errors)",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "audio-lab-mobile: AudioContext running, workers up, score streaming (worklet, 1.109s buffered)",
+      "ok": true,
+      "observed": {
+        "state": "running",
+        "workers": "worker",
+        "stream": "worklet",
+        "sampleRate": 44100
+      }
+    },
+    {
+      "name": "audio-lab-mobile: low tier = 16 voices, equal-power panning",
+      "ok": true,
+      "observed": {
+        "cap": 16,
+        "hrtf": false
+      }
+    },
+    {
+      "name": "audio-lab-mobile: 40-sound burst within the 16-voice cap (7 live)",
+      "ok": true,
+      "observed": {
+        "sfx": 5,
+        "ambience": 2,
+        "flat": 0,
+        "cap": 16,
+        "stolen": 4,
+        "rejected": 5
+      }
+    },
+    {
+      "name": "audio-lab-mobile: monsoon beds active",
+      "ok": true,
+      "observed": [
+        "wind",
+        "rain_monsoon",
+        "thunder_far",
+        "day_birds"
+      ]
+    },
+    {
+      "name": "audio-lab-mobile: no console errors, page errors, failed requests or crash reports (audio enabled)",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "audio-lab-mobile: no audio warnings (worker errors)",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "battle-audio (lab boot): AudioContext running, workers up, score streaming (worklet, 1.021s buffered)",
+      "ok": true,
+      "observed": {
+        "state": "running",
+        "workers": "worker",
+        "stream": "worklet",
+        "sampleRate": 44100
+      }
+    },
+    {
+      "name": "battle-audio: the lines are in melee (t=86.9s, 60 lost)",
+      "ok": true,
+      "observed": {
+        "tick": 1739,
+        "lost": 60
+      }
+    },
+    {
+      "name": "battle-audio: profiler 'audio' system < 1 ms per frame on the main thread (avg 0.084 ms)",
+      "ok": true,
+      "observed": {
+        "avg": 0.08385452712980186,
+        "max": 3.399999998509884,
+        "last": 0.10000000149011612
+      }
+    },
+    {
+      "name": "battle-audio: battle score + battle bed (mood battle, layers wind, day_birds, battle_roar, battle_drums)",
+      "ok": true,
+      "observed": {
+        "mood": "battle",
+        "ambience": [
+          {
+            "key": "wind",
+            "gain": 0.336
+          },
+          {
+            "key": "day_birds",
+            "gain": 0.04
+          },
+          {
+            "key": "battle_roar",
+            "gain": 0.578
+          },
+          {
+            "key": "battle_drums",
+            "gain": 0.557
+          }
+        ]
+      }
+    },
+    {
+      "name": "battle-audio: battle SFX triggered (5)",
+      "ok": true,
+      "observed": 5
+    },
+    {
+      "name": "battle-audio: no console errors, page errors, failed requests or crash reports (audio enabled)",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "battle-audio: no audio warnings (worker errors)",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "world-audio: AudioContext running, workers up, score streaming (worklet, 1.165s buffered)",
+      "ok": true,
+      "observed": {
+        "state": "running",
+        "workers": "worker",
+        "stream": "worklet",
+        "sampleRate": 44100
+      }
+    },
+    {
+      "name": "world-audio: score mood world (expected world / city), output -26.32 dBFS RMS",
+      "ok": true,
+      "observed": {
+        "mood": "world",
+        "level": {
+          "rmsDb": -26.32,
+          "peakDb": -19.05
+        },
+        "ambience": [
+          "wind",
+          "night_crickets"
+        ]
+      }
+    },
+    {
+      "name": "world-audio: no console errors, page errors, failed requests or crash reports (audio enabled)",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "world-audio: no audio warnings (worker errors)",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero-audio: AudioContext running, workers up, score streaming (worklet, 1.065s buffered)",
+      "ok": true,
+      "observed": {
+        "state": "running",
+        "workers": "worker",
+        "stream": "worklet",
+        "sampleRate": 44100
+      }
+    },
+    {
+      "name": "hero-audio: score mood city (expected hero_explore / city), output -27.16 dBFS RMS",
+      "ok": true,
+      "observed": {
+        "mood": "city",
+        "level": {
+          "rmsDb": -27.16,
+          "peakDb": -21.64
+        },
+        "ambience": []
+      }
+    },
+    {
+      "name": "hero-audio: no console errors, page errors, failed requests or crash reports (audio enabled)",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero-audio: no audio warnings (worker errors)",
+      "ok": true,
+      "observed": []
+    }
+  ],
+  "shots": [
+    {
+      "name": "audio-lab.png",
+      "note": "audio lab @high: world score (Bhairav / Chautal (12, pakhawaj) / jor), dawn + temple district ambience, 80-sound burst, age-up stinger; bank 51.21 MB, 0 underruns"
+    },
+    {
+      "name": "audio-lab-mobile.png",
+      "note": "audio lab 390x844 @low: hero_explore score, monsoon environment; 16 voices, bank 23.32 MB"
+    },
+    {
+      "name": "battle-audio.png",
+      "note": "plains seed 2, 1,000 soldiers AI vs AI in the melee with audio enabled; profiler 'audio' 0.084 ms avg / 3.400 ms max per frame; Kirwani War march (8, dhol / nagara) gat; bank 32.41 MB; 0 underruns"
+    },
+    {
+      "name": "world-audio.png",
+      "note": "scene=world&quality=medium with audio enabled: mood world, ambience wind, night_crickets, worklet stream, bank 23.21 MB"
+    },
+    {
+      "name": "hero-audio.png",
+      "note": "scene=hero&quality=medium with audio enabled: mood city, ambience none, worklet stream, bank 19.8 MB"
+    }
+  ],
+  "audio": {
+    "lab": {
+      "enabled": true,
+      "state": "running",
+      "sampleRate": 44100,
+      "tier": "high",
+      "hrtf": true,
+      "voices": {
+        "sfx": 20,
+        "ambience": 1,
+        "flat": 0,
+        "cap": 48,
+        "stolen": 4,
+        "rejected": 69
+      },
+      "triggers": 53,
+      "bank": {
+        "keys": 65,
+        "mb": 51.21,
+        "renders": 169,
+        "renderMs": 18793
+      },
+      "music": {
+        "mood": "world",
+        "intensity": 0.4,
+        "stream": "worklet",
+        "bufferedSec": 1.013,
+        "underruns": 0,
+        "chunks": 143,
+        "workerMsPerChunk": 32.07,
+        "latencyMs": 61,
+        "maxLatencyMs": 1169.7,
+        "score": {
+          "mood": "world",
+          "arrangement": "world:bhairav",
+          "raga": "Bhairav",
+          "tala": "Chautal (12, pakhawaj)",
+          "section": "jor",
+          "bpm": 72,
+          "intensity": 0.4,
+          "performers": 1,
+          "cacheBytes": 26975376,
+          "agcDb": -0.87
+        }
+      },
+      "ambience": [
+        {
+          "key": "wind",
+          "gain": 0.303
+        },
+        {
+          "key": "dawn_birds",
+          "gain": 0.8
+        },
+        {
+          "key": "temple_bells",
+          "gain": 1
+        },
+        {
+          "key": "chanting_low",
+          "gain": 1
+        },
+        {
+          "key": "water_drip",
+          "gain": 1
+        }
+      ],
+      "mainMs": {
+        "last": 0,
+        "avg": 0.474,
+        "max": 5.685
+      },
+      "messages": {
+        "sound": 169,
+        "chunk": 0,
+        "soundMs": 249.4,
+        "chunkMs": 0,
+        "maxMs": 88.3
+      },
+      "workers": "worker"
+    },
+    "labMobile": {
+      "enabled": true,
+      "state": "running",
+      "sampleRate": 44100,
+      "tier": "low",
+      "hrtf": false,
+      "voices": {
+        "sfx": 5,
+        "ambience": 2,
+        "flat": 0,
+        "cap": 16,
+        "stolen": 4,
+        "rejected": 5
+      },
+      "triggers": 13,
+      "bank": {
+        "keys": 61,
+        "mb": 23.32,
+        "renders": 95,
+        "renderMs": 6286
+      },
+      "music": {
+        "mood": "hero_explore",
+        "intensity": 0.3,
+        "stream": "worklet",
+        "bufferedSec": 1.286,
+        "underruns": 0,
+        "chunks": 37,
+        "workerMsPerChunk": 54.8,
+        "latencyMs": 40.6,
+        "maxLatencyMs": 1419.3,
+        "score": {
+          "mood": "hero_explore",
+          "arrangement": "hero:megh:ghat",
+          "raga": "Megh",
+          "tala": "Rupak (7)",
+          "section": "alap",
+          "bpm": 59,
+          "intensity": 0.283,
+          "performers": 1,
+          "cacheBytes": 17304912,
+          "agcDb": 0.15
+        }
+      },
+      "ambience": [
+        {
+          "key": "wind",
+          "gain": 0.593
+        },
+        {
+          "key": "rain_monsoon",
+          "gain": 0.925
+        },
+        {
+          "key": "thunder_far",
+          "gain": 0.5
+        },
+        {
+          "key": "day_birds",
+          "gain": 0.256
+        }
+      ],
+      "mainMs": {
+        "last": 0.1,
+        "avg": 0.228,
+        "max": 3.152
+      },
+      "messages": {
+        "sound": 95,
+        "chunk": 0,
+        "soundMs": 49.8,
+        "chunkMs": 0,
+        "maxMs": 12.2
+      },
+      "workers": "worker"
+    },
+    "battle": {
+      "enabled": true,
+      "state": "running",
+      "sampleRate": 44100,
+      "tier": "high",
+      "hrtf": true,
+      "voices": {
+        "sfx": 0,
+        "ambience": 0,
+        "flat": 0,
+        "cap": 48,
+        "stolen": 0,
+        "rejected": 10
+      },
+      "triggers": 5,
+      "bank": {
+        "keys": 40,
+        "mb": 32.41,
+        "renders": 114,
+        "renderMs": 11298
+      },
+      "music": {
+        "mood": "battle",
+        "intensity": 0.4666666666666667,
+        "stream": "worklet",
+        "bufferedSec": 0.976,
+        "underruns": 0,
+        "chunks": 153,
+        "workerMsPerChunk": 23.43,
+        "latencyMs": 23.2,
+        "maxLatencyMs": 1541.2,
+        "score": {
+          "mood": "battle",
+          "arrangement": "battle",
+          "raga": "Kirwani",
+          "tala": "War march (8, dhol / nagara)",
+          "section": "gat",
+          "bpm": 117,
+          "intensity": 0.467,
+          "performers": 1,
+          "cacheBytes": 20114920,
+          "agcDb": 3.15
+        }
+      },
+      "ambience": [
+        {
+          "key": "wind",
+          "gain": 0.336
+        },
+        {
+          "key": "day_birds",
+          "gain": 0.04
+        },
+        {
+          "key": "battle_roar",
+          "gain": 0.578
+        },
+        {
+          "key": "battle_drums",
+          "gain": 0.557
+        }
+      ],
+      "mainMs": {
+        "last": 0.1,
+        "avg": 0.105,
+        "max": 2.581
+      },
+      "messages": {
+        "sound": 114,
+        "chunk": 0,
+        "soundMs": 66.6,
+        "chunkMs": 0,
+        "maxMs": 26.5
+      },
+      "workers": "worker"
+    },
+    "battleProfile": {
+      "audio": {
+        "avg": 0.08385452712980186,
+        "max": 3.399999998509884,
+        "last": 0.10000000149011612
+      },
+      "frames": 51,
+      "fps": 1.5632663170082202,
+      "frameMs": 639.6862704198735,
+      "counters": {
+        "voices": 0,
+        "underruns": 0
+      }
+    },
+    "world-audio": {
+      "enabled": true,
+      "state": "running",
+      "sampleRate": 44100,
+      "tier": "medium",
+      "hrtf": false,
+      "voices": {
+        "sfx": 0,
+        "ambience": 0,
+        "flat": 0,
+        "cap": 32,
+        "stolen": 0,
+        "rejected": 0
+      },
+      "triggers": 1,
+      "bank": {
+        "keys": 42,
+        "mb": 23.21,
+        "renders": 79,
+        "renderMs": 9239
+      },
+      "music": {
+        "mood": "world",
+        "intensity": 0.3,
+        "stream": "worklet",
+        "bufferedSec": 1.138,
+        "underruns": 0,
+        "chunks": 30,
+        "workerMsPerChunk": 62.65,
+        "latencyMs": 40.6,
+        "maxLatencyMs": 1010.1,
+        "score": {
+          "mood": "world",
+          "arrangement": "world:malkauns",
+          "raga": "Malkauns",
+          "tala": "Chautal (12, pakhawaj)",
+          "section": "alap",
+          "bpm": 65,
+          "intensity": 0.28,
+          "performers": 1,
+          "cacheBytes": 29708772,
+          "agcDb": 0.8
+        }
+      },
+      "ambience": [
+        {
+          "key": "wind",
+          "gain": 0.337
+        },
+        {
+          "key": "night_crickets",
+          "gain": 0.8
+        }
+      ],
+      "mainMs": {
+        "last": 0,
+        "avg": 0.091,
+        "max": 0.873
+      },
+      "messages": {
+        "sound": 79,
+        "chunk": 0,
+        "soundMs": 59.2,
+        "chunkMs": 0,
+        "maxMs": 30.7
+      },
+      "workers": "worker",
+      "level": {
+        "rmsDb": -26.32,
+        "peakDb": -19.05
+      }
+    },
+    "hero-audio": {
+      "enabled": true,
+      "state": "running",
+      "sampleRate": 44100,
+      "tier": "medium",
+      "hrtf": false,
+      "voices": {
+        "sfx": 0,
+        "ambience": 0,
+        "flat": 0,
+        "cap": 32,
+        "stolen": 0,
+        "rejected": 0
+      },
+      "triggers": 0,
+      "bank": {
+        "keys": 33,
+        "mb": 19.8,
+        "renders": 75,
+        "renderMs": 7278
+      },
+      "music": {
+        "mood": "city",
+        "intensity": 0.2,
+        "stream": "worklet",
+        "bufferedSec": 1.025,
+        "underruns": 0,
+        "chunks": 39,
+        "workerMsPerChunk": 43.02,
+        "latencyMs": 20.3,
+        "maxLatencyMs": 1541.2,
+        "score": {
+          "mood": "city",
+          "arrangement": "city",
+          "raga": "Kafi",
+          "tala": "Keherwa (8)",
+          "section": "gat",
+          "bpm": 91,
+          "intensity": 0.195,
+          "performers": 1,
+          "cacheBytes": 10969124,
+          "agcDb": 1.19
+        }
+      },
+      "ambience": [],
+      "mainMs": {
+        "last": 0,
+        "avg": 0.02,
+        "max": 0.413
+      },
+      "messages": {
+        "sound": 75,
+        "chunk": 0,
+        "soundMs": 77,
+        "chunkMs": 0,
+        "maxMs": 59.2
+      },
+      "workers": "worker",
+      "level": {
+        "rmsDb": -27.16,
+        "peakDb": -21.64
+      }
+    }
+  }
+}

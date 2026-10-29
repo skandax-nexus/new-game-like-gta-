@@ -15,8 +15,14 @@ export interface VoiceRequest {
   /** Sound kind (instance limits and re-trigger merging are per kind). */
   kind: string;
   priority: number;
-  /** Seconds (any monotonic clock, e.g. AudioContext.currentTime). */
+  /** Seconds (any monotonic clock, e.g. AudioContext.currentTime): the clock right now. */
   now: number;
+  /**
+   * Scheduled start (same clock) when the sound is delayed (thunder after lightning, a grunt after a guard
+   * break); defaults to `now`. Slots are freed by `now` only, so a delayed request never frees (and then
+   * cuts) voices that are still sounding.
+   */
+  at?: number;
   /** Expected duration (s) at the playback rate. */
   duration: number;
   /** Linear playback gain (quiet voices are stolen first). */
@@ -84,9 +90,10 @@ export class VoicePool {
     this.lastReject = null;
     const n = this.kinds.length;
     const now = r.now;
+    const at = r.at === undefined ? now : Math.max(now, r.at);
     for (let i = 0; i < n; i++) if (this.kinds[i] !== null && this.end[i] <= now) this.kinds[i] = null;
     const last = this.lastStart.get(r.kind);
-    if (last !== undefined && now - last < r.minIntervalMs / 1000 && now >= last) return this.reject('interval');
+    if (last !== undefined && Math.abs(at - last) < r.minIntervalMs / 1000) return this.reject('interval');
     // Per-kind instance limit: recycle the kind's own oldest voice.
     let count = 0;
     let oldest = -1;
@@ -96,10 +103,10 @@ export class VoicePool {
       if (oldest < 0 || this.start[i] < this.start[oldest]) oldest = i;
     }
     if (count >= Math.max(1, r.maxInstances)) {
-      if (oldest >= 0 && this.prio[oldest] <= r.priority) return this.take(oldest, r, true);
+      if (oldest >= 0 && this.prio[oldest] <= r.priority) return this.take(oldest, r, at, true);
       return this.reject('limit');
     }
-    for (let i = 0; i < n; i++) if (this.kinds[i] === null) return this.take(i, r, false);
+    for (let i = 0; i < n; i++) if (this.kinds[i] === null) return this.take(i, r, at, false);
     // Steal the least important voice.
     let victim = -1;
     for (let i = 0; i < n; i++) {
@@ -117,7 +124,7 @@ export class VoicePool {
       }
     }
     if (victim < 0 || this.prio[victim] > r.priority) return this.reject('busy');
-    return this.take(victim, r, true);
+    return this.take(victim, r, at, true);
   }
 
   release(slot: number): void {
@@ -129,13 +136,13 @@ export class VoicePool {
     this.lastStart.clear();
   }
 
-  private take(i: number, r: VoiceRequest, stolen: boolean): number {
+  private take(i: number, r: VoiceRequest, at: number, stolen: boolean): number {
     this.kinds[i] = r.kind;
     this.prio[i] = r.priority;
-    this.start[i] = r.now;
-    this.end[i] = r.now + Math.max(0.001, r.duration);
+    this.start[i] = at;
+    this.end[i] = at + Math.max(0.001, r.duration);
     this.gain[i] = r.gain;
-    this.lastStart.set(r.kind, r.now);
+    this.lastStart.set(r.kind, at);
     this.lastStolen = stolen;
     if (stolen) this.stolen++;
     return i;
