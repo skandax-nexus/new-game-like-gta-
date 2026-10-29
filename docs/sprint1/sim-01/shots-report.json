@@ -15,14 +15,14 @@
    "ok": true,
    "observed": {
     "before": "61739231",
-    "after": "ec6be328"
+    "after": "a00f71e0"
    }
   },
   {
    "name": "world: 60 simulated days later the world has moved on",
    "ok": true,
    "observed": {
-    "hash": "363242f5",
+    "hash": "1f1fd4c9",
     "sceneState": {
      "world": {
       "day": 60,
@@ -30,7 +30,7 @@
        "year": -300,
        "month": 8,
        "day": 0,
-       "hour": 12
+       "hour": 11
       },
       "season": "hemanta",
       "weather": "light_rain",
@@ -89,7 +89,8 @@
    "name": "world-mobile: 10 days at low quality",
    "ok": true,
    "observed": {
-    "hash": "b81b44bf"
+    "hash": "3a24c262",
+    "day": 10
    }
   },
   {
@@ -249,197 +250,13 @@
   },
   {
    "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
-  },
-  {
-   "day": 9,
-   "clicked": "Repair what we canSetupur loses 20% of i"
+   "clicked": "Let the Generals Decide"
   }
  ],
  "march": {
   "scene": "world",
   "paused": false,
-  "hash": "ec6be328",
+  "hash": "a00f71e0",
   "sceneState": {
    "world": {
     "day": 6,
@@ -447,7 +264,7 @@
      "year": -300,
      "month": 6,
      "day": 6,
-     "hour": 10
+     "hour": 7
     },
     "season": "sharad",
     "weather": "clear",
@@ -499,7 +316,7 @@
  "day60": {
   "scene": "world",
   "paused": false,
-  "hash": "363242f5",
+  "hash": "1f1fd4c9",
   "sceneState": {
    "world": {
     "day": 60,
@@ -507,7 +324,7 @@
      "year": -300,
      "month": 8,
      "day": 0,
-     "hour": 12
+     "hour": 11
     },
     "season": "hemanta",
     "weather": "light_rain",

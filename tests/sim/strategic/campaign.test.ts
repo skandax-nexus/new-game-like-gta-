@@ -27,7 +27,7 @@ import { DYNASTY_REASONS } from '../../../src/sim/strategic/dynasty';
 import { DIPLOMACY_REASONS, emptyTerms, propose } from '../../../src/sim/strategic/diplomacy';
 import { ESPIONAGE_REASONS, startMission } from '../../../src/sim/strategic/espionage';
 import { PRISONER_REASONS } from '../../../src/sim/strategic/writeback';
-import { applyEffect, checkObjectives, resolveEventChoice, severityScaled } from '../../../src/sim/strategic/events';
+import { applyEffect, checkObjectives, evaluateEventsDaily, formatEventText, resolveEventChoice, severityScaled } from '../../../src/sim/strategic/events';
 import { armySoldiers, createEngagement, makeArmy } from '../../../src/sim/strategic/armies';
 import { battleSetupFromEngagement, decideEngagement, predictBattle, retreatLossShare, STANCE_AGGRESSION } from '../../../src/sim/strategic/autoresolve';
 import { computeScore, endGameStats } from '../../../src/sim/strategic/statistics';
@@ -113,6 +113,20 @@ describe('events (DESIGN_SPEC §7.13, §10.3)', () => {
     expect(run('easy').store).toBeCloseTo(1 - 0.2 * 0.75, 6);
     expect(run('very_hard').treasury).toBe(-300);
     expect(getEventDef('evt_monsoon_flood')!.category).toBe('disaster');
+  });
+
+  it('formatEventText fills {placeholders} in the body and in every choice label / description', () => {
+    const w = campaign(5);
+    w.events.scheduled.push({ eventId: 'evt_governor_demands', day: 0, scope: { factionId: 'heartland', settlementId: 'ratnapura', provinceId: w.settlements.ratnapura!.provinceId, characterId: null, armyId: null } });
+    evaluateEventsDaily(w, []);
+    const inst = w.events.pending.find((e) => e.defId === 'evt_governor_demands')!;
+    expect(inst).toBeDefined();
+    const t = formatEventText(w, inst);
+    expect(getEventDef('evt_governor_demands')!.choices.some((c) => c.description.includes('{settlement}'))).toBe(true);
+    expect(t.choices.map((c) => c.id)).toEqual(getEventDef('evt_governor_demands')!.choices.map((c) => c.id));
+    for (const c of t.choices) expect(`${c.label} ${c.description}`).not.toMatch(/[{}]/);
+    expect(t.choices.some((c) => c.description.includes(w.settlements.ratnapura!.name))).toBe(true);
+    expect(`${t.title} ${t.body}`).not.toMatch(/[{}]/);
   });
 
   it('severityScaled: harmful adds and muls only', () => {

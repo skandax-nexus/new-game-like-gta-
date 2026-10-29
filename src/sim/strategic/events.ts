@@ -437,13 +437,24 @@ export function resolveEventChoice(world: WorldState, instanceId: string, choice
   return true;
 }
 
-/** Event text with {placeholders} substituted. */
-export function formatEventText(world: WorldState, inst: EventInstance): { title: string; body: string } {
+/** One choice of an event instance with its {placeholders} substituted. */
+export interface FormattedEventChoice {
+  id: string;
+  label: string;
+  description: string;
+}
+
+/** Event text with {placeholders} substituted: title, body and every choice's label + description. */
+export function formatEventText(world: WorldState, inst: EventInstance): { title: string; body: string; choices: FormattedEventChoice[] } {
   const def = getEventDef(inst.defId);
-  if (!def) return { title: inst.defId, body: '' };
-  const body = def.body.replace(/\{(\w+)\}/g, (_m, k: string) => String(inst.params[k] ?? ''));
+  if (!def) return { title: inst.defId, body: '', choices: [] };
+  const fill = (text: string): string => text.replace(/\{(\w+)\}/g, (_m, k: string) => String(inst.params[k] ?? ''));
   void world;
-  return { title: def.title, body };
+  return {
+    title: fill(def.title),
+    body: fill(def.body),
+    choices: def.choices.map((c) => ({ id: c.id, label: fill(c.label), description: fill(c.description) })),
+  };
 }
 
 /** Daily objective + outcome evaluation for campaign scenarios. */

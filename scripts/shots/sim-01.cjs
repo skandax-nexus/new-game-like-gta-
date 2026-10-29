@@ -116,9 +116,11 @@ async function advanceDays(page, days) {
     if (st.world.day >= day0 + days || st.world.victory !== 'ongoing') break;
     if (st.blocked) {
       const clicked = await page.evaluate(() => {
-        const modal = document.querySelector('.panel.modal');
+        // An engagement prompt wins ("Let the Generals Decide" = autoresolve); otherwise the newest modal's first choice.
+        const auto = [...document.querySelectorAll('button')].find((b) => /generals decide|autoresolve|auto-resolve|auto resolve/i.test(b.textContent || ''));
+        const modals = [...document.querySelectorAll('.panel.modal')];
+        const modal = modals[modals.length - 1];
         const buttons = modal ? [...modal.querySelectorAll('button.btn')] : [];
-        const auto = [...document.querySelectorAll('button')].find((b) => /autoresolve|auto-resolve|auto resolve/i.test(b.textContent || ''));
         const target = auto || buttons[0];
         if (!target) return null;
         target.click();
@@ -173,9 +175,10 @@ async function captureMobile(browser, base) {
   const { page } = ctx;
   await page.goto(`${base}?scene=world&seed=7&paused=1&quality=low&noaudio=1`, { waitUntil: 'load', timeout: TIMEOUT });
   await waitReady(page);
+  const day0 = (await worldInfo(page)).sceneState.world.day;
   await advanceDays(page, 10);
   const info = await worldInfo(page);
-  check('world-mobile: 10 days at low quality', info.scene === 'world', { hash: info.hash });
+  check('world-mobile: 10 days at low quality', info.scene === 'world' && info.sceneState.world.day >= day0 + 10, { hash: info.hash, day: info.sceneState.world.day });
   await shot(page, 'world-mobile', '390x844 low quality, 10 days in');
   await finish(ctx, 'world-mobile');
 }
