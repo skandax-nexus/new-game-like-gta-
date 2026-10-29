@@ -982,7 +982,8 @@ flood event. The UI shows a monsoon forecast bar in month 3 (±0.15 accuracy; ex
 #### 7.3.4 Consumption, storage, spoilage
 
 - Consumption/day = `pop x 0.1 x (rationing ? 0.85 : 1)` + garrison soldiers x upkeepFood.
-- Capacity = `pop x 0.1 x (90 + Σ foodCapacity days x level)`; grain above capacity **spoils immediately**
+- Capacity = `pop x 0.1 x (120 + Σ foodCapacity days x level)` (`RULES.storage.baseDays` 120 - a balanced settlement
+  needs ~126 days to hold its kharif and carry the lean months; SIM-01 review CD-8); grain above capacity **spoils immediately**
   (toast: "312 measures spoiled at Kusumpur - build a granary").
 - Spoilage = `stored x 0.0008/day x (granary ? 0.6 : 1) x (Royal Granary landmark ? 0.5 : 1)`.
 - Reserve days `rd = foodStored / consumption` drive prices (§7.4) and the UI color (green > 90, amber 30-90,
@@ -1080,7 +1081,8 @@ progress/day   = min(1.25, buildersAssigned / crew) / days x faction constructio
 - Requirements: building `age` <= faction age, `requires` present (any level), `allowedIn` settlement kind,
   level cap of the age (`AgeDef.buildingLevelCaps` / `maxBuildingLevel`), a valid placement (§8.2).
 - *Example:* Granary L1 at Dhanyagram: 200 wealth + 120 timber + 40 stone, crew 100, builders 126 -> ratio 1.25
-  -> **20 days (40 s at 1x)**. Palace at Rajapura: crew 167, capped -> 144 days (≈5 min).
+  -> **20 days (40 s at 1x)**. Palace at Rajapura: crew 167, capped -> 144 days at constructionSpeed 1 (≈5 min;
+  131 days for Suvarna, constructionSpeed 1.1 - measured by SIM-01).
 
 **Recruitment:**
 - Needs: a building in the settlement that unlocks the class (`unlocksUnits`), the class in the faction roster,
@@ -1096,14 +1098,18 @@ progress/day   = min(1.25, buildersAssigned / crew) / days x faction constructio
 
 - **Path planning** [REQ]: A* over `world.roads`; edge cost (hours) = `length x travelScale / (marchKmPerDay[q] x
   1000 / 24) / roadCondition` where roadCondition = `0.5 + 0.5 x condition` (x0.25 below 0.3), blocked edges
-  excluded; off-road legs to/from the nearest node at off-road pace with terrain factors (forest/marsh 0.6 x
+  excluded (an edge is **blocked for faction F** while a stationary - camped, besieging or foraging - army hostile to
+  F stands within 120 m of it and no stationary army of F stands on the same edge: an escort keeps its road open; the
+  same test cuts grain distribution, relief and supply lines); off-road legs to/from the nearest node at off-road pace with terrain factors (forest/marsh 0.6 x
   forestMovement, hills/rough 0.7 x hillMovement, shallow water 0.4; deep water impassable except at fords and
   bridges; fords closed while flood > 0.5). Fallback: straight line [BASE].
 - **Speed** (km/day) = `marchKmPerDay[road|offroad]` (30/24/18/12) x pace(slowest category: infantry/ranged 1,
   mounted-only 1.5, elephants 0.95, support 0.85; chariots 0.6 off-road) x faction marchSpeed x monsoon (0.6; 0.8
   on royal roads) x `(1 - 0.3 x wetness x (road ? 0.4 : 1))` x `(1 - 0.3 x fatigue)` x forced march 1.3.
-  *Examples:* Rajapura -> Setupur (≈30 km of royal road) ≈ 1 day; Rajapura -> Giridurg (≈81 km) ≈ 3.4 days by road,
-  ≈ 6.8 days across country.
+  *Examples (measured on the shipped map by SIM-01, review CD-7):* Rajapura -> Setupur (≈30 km of royal road) ≈ 1
+  day; Rajapura -> Giridurg: the road climbs the escarpment for **114 km** -> ≈ 4.3 days; across country ≈ 9.2 days
+  (hills, forest and the river crossing). The formula check: 81 km of plain road = 3.4 days, 81 km of open ground =
+  6.75 days.
 - **Forced march** (army panel toggle): x1.3 speed, +0.1 fatigue/day, 0.2%/day attrition.
 - **Stances**: aggressive (contact radius x1.3, seeks battle), balanced (x1), cautious (x0.8; avoids contact when
   its strength ratio < 0.6 and it is at least 10% faster - "evades").
@@ -1123,10 +1129,14 @@ carried         = Σ soldiers x upkeepFood x 5 days  +  carts x 300
 ```
 
 *Example:* the Royal Host (≈820 soldiers incl. 8 elephants, 12 carts) eats **195 grain/day** and carries 4,575 ->
-**23 days** without resupply.
+**23.5 days** without resupply (27 days with Suvarna's supplyEfficiency 1.15).
 
 Resupply each day, first match [REQ]:
-1. An own settlement within 400 m (+ its radius): draw up to 20% of its store, never leaving it below 30 days.
+1. An own settlement within 400 m (+ its radius): draw up to 20% of its store, never leaving it below 30 days. An
+   army **garrisoned** in an own settlement is part of its garrison instead: it eats its daily need from the store
+   with no 30-day floor (besieged or not) and shares the town's hunger - garrisoning a host inside the walls is the
+   lean-season remedy when the town is below 30 days; a host camped outside keeps the floor (requisition is the
+   explicit way to take more).
 2. An own depot within 400 m.
 3. The royal reserve through a supply line: the army stands in an owned province and a road path of owned/
    neutral territory with no enemy army within 300 m connects it to an own settlement; deliveries lose 10% per
@@ -1147,9 +1157,14 @@ Resupply each day, first match [REQ]:
 
 **Sieges:**
 - `besiege` an enemy settlement with fort level >= 1: it becomes besieged (trade 0, production x0.3, no
-  resupply, no recruitment); its store feeds population + garrison.
+  resupply, no recruitment); its store feeds population + garrison, **including the field armies garrisoned in it**
+  (they eat from the store like its garrison units; the starve-out rule below starts when the store is empty).
+- **Siege logistics:** the besieger stands in enemy land, so supply rules 1 and 3 do not reach it; it eats from an own
+  depot within 400 m (rule 2 - `create_depot` beside the siege camp, filled by `requisition_grain` or
+  `transfer_supply`) and otherwise forages/plunders.
 - Wall damage/day = `Σ soldiers x siege x 0.5 x siegeStrength` (engineers 40 x 4 x 0.5 = 80/day); wallHp =
-  fortLevel x 1,000 x fortDefense (Giridurg: 3 x 1,000 x 1.4 = **4,200** -> ~52 days with one engineer formation;
+  fortLevel x 1,000 x fortDefense (Giridurg: 3 x 1,000 x 1.4 = **4,200** -> 52.5 days with one fed engineer formation
+  at siegeStrength 1, 48 for Suvarna at 1.1;
   Royal Elephant Corps adds 20/day).
 - Assault options: when wallHp <= 50% (breach) or after ladders (5 days with engineers): **Assault** = siege
   battle (§6.6.5). **Starve out:** once the store is empty, daily surrender chance `0.1 x starvationDays / 10`
@@ -2317,6 +2332,22 @@ support in the hero camera.
   peninsula are post-MVP.
 - *The Seven Hills* has no hero missions in the MVP (Meghavati explores only).
 - Province borders are Voronoi-ish circles [BASE]; authored borders would read better.
+- **Deficit realms in a failed-monsoon year** (SIM-01 review, measured with the real sim): Giridurga runs at about -26%
+  in an M = 0.7 year and the crisis lasts until the next kharif (~400 days). Rationing (-15%), the market (lots of 100
+  are top-ups, not a food supply: a realm's deficit costs several times its tax income) and the event grain (2,000-
+  4,000) do not close it, so *The Seven Hills* is currently conquer-or-starve even for a careful player (permanent
+  rationing, farm-heavy labor, forest rice and market buying: defeat on day 254; day 395 even without the prologue's
+  x0.6). Its peace outcomes (*The River Oath*, *The Full Cisterns*) need grain that comes with peace and trade - a
+  grain flow on trade treaties with a surplus realm, or scenario grain on the peace path. Re-tune with SIM-02's AI
+  (which must ration, buy and raid) before the QA autoplay per path (§13.4).
+- **Starvation unrest** (review request CD-3) stays a flat +0.02/day for now: a starving town gets only the trickle
+  (40-55% of its need), so scaling by the unmet share would move revolt from ~19 to ~27 days and not change who
+  survives; revisit together with the deficit-realm item above. Free towns in famine never recover (production is
+  linear in farm labor) - a land-limited yield or a labor shift to farming is the candidate rule.
+- **Armies camped beside a hungry own town** keep the 30-day floor and do not forage it (civilians first; the remedies
+  are garrisoning inside the walls, requisition, moving to a surplus town or "Hold the reserve"). The UI must say so
+  (army supply panel: source and why it is empty). Partial starvation (desertion x unmet share) is a candidate rule
+  once foraging is tuned.
 
 ---
 
