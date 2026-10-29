@@ -9,10 +9,9 @@
  * Grain bought goes to (and grain sold comes from) the royal reserve; timber/stone use the faction stockpile.
  */
 import type { FactionId, MarketResource, ResourceKind, SettlementState, SimEvent, WorldState } from '../../core/types';
-import { sortedKeys } from '../../core/ids';
 import { RULES } from '../../data/rules';
 import { activeTreaty } from './treaties';
-import { addMonthToDate, notifyPlayer } from './state';
+import { addMonthToDate, notifyPlayer, stableKeys } from './state';
 
 export const MARKET_RESOURCES: readonly MarketResource[] = ['grain', 'timber', 'stone'];
 
@@ -34,7 +33,7 @@ export const MARKET_REASONS = {
 export const MAX_LOTS_PER_TRADE = 20;
 
 export function hasMarket(world: WorldState, factionId: FactionId): boolean {
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id] as SettlementState;
     if (s.ownerFactionId !== factionId) continue;
     for (const b of s.buildings) if (b.type === 'market' && b.level > 0) return true;
@@ -46,7 +45,7 @@ export function hasMarket(world: WorldState, factionId: FactionId): boolean {
 export function realmGrainPrice(world: WorldState, factionId: FactionId): number {
   let w = 0;
   let p = 0;
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id] as SettlementState;
     if (s.ownerFactionId !== factionId) continue;
     w += s.population;
@@ -57,7 +56,7 @@ export function realmGrainPrice(world: WorldState, factionId: FactionId): number
 
 /** True when the faction has an active trade treaty with someone who owns a settlement producing `res`. */
 export function treatyDiscount(world: WorldState, factionId: FactionId, res: MarketResource): boolean {
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id] as SettlementState;
     const o = s.ownerFactionId;
     if (!o || o === factionId) continue;
@@ -162,7 +161,7 @@ export function executeMarketTrade(world: WorldState, factionId: FactionId, res:
 /** Daily: every price factor recovers 1% of base toward 1. */
 export function recoverMarketPrices(world: WorldState): void {
   const step = RULES.market.recoveryPerDay;
-  for (const id of sortedKeys(world.factions)) {
+  for (const id of stableKeys('factions', world.factions as Record<string, unknown>)) {
     const p = world.factions[id]!.marketPrices;
     for (const r of MARKET_RESOURCES) {
       const v = p[r];

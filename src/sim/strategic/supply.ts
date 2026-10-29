@@ -16,16 +16,15 @@
  */
 import type { ArmyState, DepotId, FactionId, RoadEdge, SettlementState, SimEvent, SupplyDepotState, TerrainQuery, WorldState } from '../../core/types';
 import { isRebelFaction } from '../../core/types';
-import { nextWorldId, sortedKeys } from '../../core/ids';
-import { getHeightfield } from '../../core/terrain/cache';
+import { nextWorldId } from '../../core/ids';
 import { BALANCE } from '../../data/balance';
 import { RULES } from '../../data/rules';
 import { carriedCapacity, rawFoodNeed, removeArmy } from './armies';
 import { factionMod } from './modifiers';
-import { distanceToEdge, nearestNode, provinceAtPoint } from './network';
+import { nearAnyRoad, nearEdge, nearestNode, provinceAtPoint } from './network';
 import { seasonOf } from './seasons';
 import { activeTreaty, relationOf } from './treaties';
-import { addMonthToDate, addStat, atWarWith, hostileToArmy, notifyPlayer, today, worldRandom } from './state';
+import { addMonthToDate, addStat, atWarWith, hostileToArmy, notifyPlayer, regionTerrain, stableKeys, today, worldRandom } from './state';
 
 const SUP = RULES.supply;
 /** An enemy army within this distance of a road breaks the supply line along it. */
@@ -70,8 +69,9 @@ export function supplyDays(world: WorldState, a: ArmyState): number {
 function settlementInRange(world: WorldState, a: ArmyState, extra: number, pred: (s: SettlementState) => boolean): SettlementState | null {
   let best: SettlementState | null = null;
   let bd = Infinity;
-  for (const id of sortedKeys(world.settlements)) {
-    const s = world.settlements[id]!;
+  const ids = stableKeys('settlements', world.settlements as Record<string, unknown>);
+  for (let i = 0; i < ids.length; i++) {
+    const s = world.settlements[ids[i] as string]!;
     if (!pred(s)) continue;
     const d = Math.sqrt((s.x - a.x) * (s.x - a.x) + (s.z - a.z) * (s.z - a.z));
     if (d <= s.radius + extra && d < bd) {
@@ -83,8 +83,7 @@ function settlementInRange(world: WorldState, a: ArmyState, extra: number, pred:
 }
 
 function onRoad(world: WorldState, a: ArmyState): boolean {
-  for (const id of sortedKeys(world.roads.edges)) if (distanceToEdge(world.roads.edges[id] as RoadEdge, a.x, a.z) <= ON_ROAD) return true;
-  return false;
+  return nearAnyRoad(world, a.x, a.z, ON_ROAD);
 }
 
 /** Remove `share` of every unit's soldiers (stochastic rounding). Returns soldiers lost. */
@@ -109,11 +108,11 @@ function threatenedEdges(world: WorldState, factionId: FactionId, cache: Map<str
   let s = cache.get(factionId);
   if (s) return s;
   s = new Set();
-  const armies = sortedKeys(world.armies).map((id) => world.armies[id]!).filter((o) => o.units.length > 0 && hostileToArmy(world, factionId, o));
-  for (const eid of sortedKeys(world.roads.edges)) {
+  const armies = stableKeys('armies', world.armies as Record<string, unknown>).map((id) => world.armies[id]!).filter((o) => o.units.length > 0 && hostileToArmy(world, factionId, o));
+  for (const eid of stableKeys('edges', world.roads.edges as Record<string, unknown>)) {
     const e = world.roads.edges[eid] as RoadEdge;
     for (const o of armies) {
-      if (distanceToEdge(e, o.x, o.z) <= SUPPLY_LINE_THREAT) {
+      if (nearEdge(e, o.x, o.z, SUPPLY_LINE_THREAT)) {
         s.add(eid);
         break;
       }
@@ -184,7 +183,7 @@ function resupply(world: WorldState, a: ArmyState, threatCache: Map<string, Set<
     }
   }
   // 2. Own depot nearby.
-  for (const id of sortedKeys(world.depots)) {
+  for (const id of stableKeys('depots', world.depots as Record<string, unknown>)) {
     const d = world.depots[id]!;
     if (d.factionId !== a.factionId || d.readyOnDay > today(world) || d.food <= 0) continue;
     if ((d.x - a.x) * (d.x - a.x) + (d.z - a.z) * (d.z - a.z) > SUP.resupplyRadius * SUP.resupplyRadius) continue;
@@ -273,9 +272,9 @@ function attritionShare(world: WorldState, a: ArmyState, terrain: TerrainQuery):
 
 /** Daily supply, foraging, starvation, attrition, fatigue and morale for every army; depots. */
 export function updateArmiesDaily(world: WorldState, out: SimEvent[]): void {
-  const terrain = getHeightfield(world.region.terrain);
+  const terrain = regionTerrain(world);
   const threatCache = new Map<string, Set<string>>();
-  for (const id of sortedKeys(world.armies)) {
+  for (const id of stableKeys('armies', world.armies as Record<string, unknown>)) {
     const a = world.armies[id];
     if (!a) continue;
     if (a.units.length === 0) {
@@ -343,17 +342,17 @@ export function updateArmiesDaily(world: WorldState, out: SimEvent[]): void {
 
 /** Depots become usable after 5 days; enemy armies in contact range raid them (food lost, grievance). */
 function updateDepotsDaily(world: WorldState, out: SimEvent[]): void {
-  for (const id of sortedKeys(world.depots)) {
+  for (const id of stableKeys('depots', world.depots as Record<string, unknown>)) {
     const d = world.depots[id]!;
     if (d.food <= 0 && d.raided) continue;
-    for (const aid of sortedKeys(world.armies)) {
+    for (const aid of stableKeys('armies', world.armies as Record<string, unknown>)) {
       const a = world.armies[aid]!;
       if (a.units.length === 0 || !hostileToArmy(world, d.factionId, a)) continue;
       const r = BALANCE.military.contactRadius * RULES.armies.stance[a.stance].contactRadius;
       if ((a.x - d.x) * (a.x - d.x) + (a.z - d.z) * (a.z - d.z) > r * r) continue;
       // An escort or any own army close by defends it (the armies will meet in battle instead).
       let defended = false;
-      for (const oid of sortedKeys(world.armies)) {
+      for (const oid of stableKeys('armies', world.armies as Record<string, unknown>)) {
         const o = world.armies[oid]!;
         if (o.factionId === d.factionId && (o.x - d.x) * (o.x - d.x) + (o.z - d.z) * (o.z - d.z) <= 150 * 150) defended = true;
       }
@@ -374,8 +373,7 @@ function updateDepotsDaily(world: WorldState, out: SimEvent[]): void {
 // Commands
 // ---------------------------------------------------------------------------------------------------
 
-/** requisition_grain: up to 60% of an own settlement's store to an army, a depot or the royal reserve. */
-export function requisitionGrain(world: WorldState, factionId: FactionId, settlementId: string, amount: number, toArmyId: string | null, toDepotId: string | null, out: SimEvent[]): string | null {
+export function validateRequisition(world: WorldState, factionId: FactionId, settlementId: string, amount: number, toArmyId: string | null, toDepotId: string | null): string | null {
   const R = SUPPLY_REASONS;
   const s = world.settlements[settlementId];
   if (!s) return R.noSettlement;
@@ -388,15 +386,24 @@ export function requisitionGrain(world: WorldState, factionId: FactionId, settle
     if (!a) return R.noTarget;
     if (a.factionId !== factionId) return R.notYourTarget;
     if ((a.x - s.x) * (a.x - s.x) + (a.z - s.z) * (a.z - s.z) > (s.radius + 600) * (s.radius + 600)) return R.tooFar;
-    a.supply.food += amount;
   } else if (toDepotId) {
     const d = world.depots[toDepotId];
     if (!d) return R.noTarget;
     if (d.factionId !== factionId) return R.notYourTarget;
-    d.food = Math.min(d.capacity, d.food + amount);
-  } else {
-    world.factions[factionId]!.foodReserve += amount;
   }
+  return null;
+}
+
+/** requisition_grain: up to 60% of an own settlement's store to an army, a depot or the royal reserve. */
+export function requisitionGrain(world: WorldState, factionId: FactionId, settlementId: string, amount: number, toArmyId: string | null, toDepotId: string | null, out: SimEvent[]): string | null {
+  const reason = validateRequisition(world, factionId, settlementId, amount, toArmyId, toDepotId);
+  if (reason) return reason;
+  const s = world.settlements[settlementId]!;
+  if (toArmyId) world.armies[toArmyId]!.supply.food += amount;
+  else if (toDepotId) {
+    const d = world.depots[toDepotId]!;
+    d.food = Math.min(d.capacity, d.food + amount);
+  } else world.factions[factionId]!.foodReserve += amount;
   s.foodStored -= amount;
   s.requisitionedFood += amount;
   s.loyalty = Math.max(0, s.loyalty + SUP.requisition.loyaltyPer1000 * (amount / 1000));
@@ -404,20 +411,28 @@ export function requisitionGrain(world: WorldState, factionId: FactionId, settle
   return null;
 }
 
-/** create_depot: 150 wealth + 50 timber, usable after 5 days, holds 6,000 grain. */
-export function createDepot(world: WorldState, factionId: FactionId, x: number, z: number, settlementId: string | null, out: SimEvent[]): { reason: string | null; depotId: DepotId | null } {
+export function validateCreateDepot(world: WorldState, factionId: FactionId, x: number, z: number): string | null {
   const R = SUPPLY_REASONS;
   const f = world.factions[factionId];
   const dc = SUP.depot;
-  if (!f) return { reason: R.notOwned, depotId: null };
-  const terrain = getHeightfield(world.region.terrain);
-  if (!terrain.inBounds(x, z) || terrain.isWater(x, z)) return { reason: R.depotWater, depotId: null };
-  for (const id of sortedKeys(world.armies)) {
+  if (!f) return R.notOwned;
+  const terrain = regionTerrain(world);
+  if (!terrain.inBounds(x, z) || terrain.isWater(x, z)) return R.depotWater;
+  for (const id of stableKeys('armies', world.armies as Record<string, unknown>)) {
     const a = world.armies[id]!;
-    if (hostileToArmy(world, factionId, a) && (a.x - x) * (a.x - x) + (a.z - z) * (a.z - z) < 300 * 300) return { reason: R.depotEnemy, depotId: null };
+    if (hostileToArmy(world, factionId, a) && (a.x - x) * (a.x - x) + (a.z - z) * (a.z - z) < 300 * 300) return R.depotEnemy;
   }
-  if (f.treasury < dc.costWealth) return { reason: R.noWealth(dc.costWealth), depotId: null };
-  if (f.materials.timber < dc.costTimber) return { reason: R.noTimber(dc.costTimber), depotId: null };
+  if (f.treasury < dc.costWealth) return R.noWealth(dc.costWealth);
+  if (f.materials.timber < dc.costTimber) return R.noTimber(dc.costTimber);
+  return null;
+}
+
+/** create_depot: 150 wealth + 50 timber, usable after 5 days, holds 6,000 grain. */
+export function createDepot(world: WorldState, factionId: FactionId, x: number, z: number, settlementId: string | null, out: SimEvent[]): { reason: string | null; depotId: DepotId | null } {
+  const reason = validateCreateDepot(world, factionId, x, z);
+  if (reason) return { reason, depotId: null };
+  const f = world.factions[factionId]!;
+  const dc = SUP.depot;
   f.treasury -= dc.costWealth;
   f.materials.timber -= dc.costTimber;
   addMonthToDate(world, factionId, 'other_cost', dc.costWealth);
@@ -456,8 +471,7 @@ function holder(world: WorldState, factionId: FactionId, id: string): Holder | s
   return R.noTarget;
 }
 
-/** transfer_supply between own armies / depots / settlements within 600 m of each other. */
-export function transferSupply(world: WorldState, factionId: FactionId, fromId: string, toId: string, amount: number): string | null {
+export function validateTransfer(world: WorldState, factionId: FactionId, fromId: string, toId: string, amount: number): string | null {
   const R = SUPPLY_REASONS;
   if (!(amount > 0)) return R.badAmount;
   const from = holder(world, factionId, fromId);
@@ -467,13 +481,23 @@ export function transferSupply(world: WorldState, factionId: FactionId, fromId: 
   if ((from.x - to.x) * (from.x - to.x) + (from.z - to.z) * (from.z - to.z) > 600 * 600) return R.tooFar;
   const n = Math.min(amount, from.get(), to.room());
   if (n <= 0) return from.get() <= 0 ? R.noSource : R.full;
+  return null;
+}
+
+/** transfer_supply between own armies / depots / settlements within 600 m of each other. */
+export function transferSupply(world: WorldState, factionId: FactionId, fromId: string, toId: string, amount: number): string | null {
+  const reason = validateTransfer(world, factionId, fromId, toId, amount);
+  if (reason) return reason;
+  const from = holder(world, factionId, fromId) as Holder;
+  const to = holder(world, factionId, toId) as Holder;
+  const n = Math.min(amount, from.get(), to.room());
   from.add(-n);
   to.add(n);
   return null;
 }
 
 /** send_relief: grain from the royal reserve and wealth from the treasury to an own settlement. */
-export function sendRelief(world: WorldState, factionId: FactionId, settlementId: string, food: number, wealth: number, out: SimEvent[]): string | null {
+export function validateSendRelief(world: WorldState, factionId: FactionId, settlementId: string, food: number, wealth: number): string | null {
   const R = SUPPLY_REASONS;
   const s = world.settlements[settlementId];
   const f = world.factions[factionId];
@@ -482,6 +506,14 @@ export function sendRelief(world: WorldState, factionId: FactionId, settlementId
   if (food < 0 || wealth < 0 || food + wealth <= 0) return R.badAmount;
   if (f.foodReserve < food) return R.noReserve(food);
   if (f.treasury < wealth) return R.noWealth(wealth);
+  return null;
+}
+
+export function sendRelief(world: WorldState, factionId: FactionId, settlementId: string, food: number, wealth: number, out: SimEvent[]): string | null {
+  const reason = validateSendRelief(world, factionId, settlementId, food, wealth);
+  if (reason) return reason;
+  const s = world.settlements[settlementId]!;
+  const f = world.factions[factionId]!;
   f.foodReserve -= food;
   f.treasury -= wealth;
   addMonthToDate(world, factionId, 'other_cost', wealth);

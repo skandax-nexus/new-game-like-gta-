@@ -13,8 +13,7 @@
  */
 import type { ArmyUnitState, FactionId, ResourceKind, SettlementState, SimEvent, UnitClass, WorldState } from '../../core/types';
 import { UNIT_CLASSES } from '../../core/types';
-import { nextWorldId, sortedKeys } from '../../core/ids';
-import { getHeightfield } from '../../core/terrain/cache';
+import { nextWorldId } from '../../core/ids';
 import { AGES } from '../../data/ages';
 import { BUILDINGS } from '../../data/buildings';
 import { DIFFICULTY_DEFS } from '../../data/difficulty';
@@ -25,7 +24,7 @@ import { unitAgeReason } from './ages';
 import { makeArmy, makeArmyUnit, orderArmy } from './armies';
 import { buildingLevel } from './modifiers';
 import { activeTreaty } from './treaties';
-import { addMonthToDate, addStat, notifyPlayer, today } from './state';
+import { addMonthToDate, addStat, notifyPlayer, regionTerrain, stableKeys, today } from './state';
 
 export const RECRUIT_REASONS = {
   noSettlement: 'No such settlement',
@@ -49,7 +48,7 @@ export const LM_ELEPHANT_GROVE = 'lm_elephant_grove';
 const ELEPHANT_GROVE_DAYS = 0.7;
 
 function ownsResource(world: WorldState, factionId: FactionId, res: ResourceKind): boolean {
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id]!;
     if (s.ownerFactionId === factionId && s.resources.includes(res)) return true;
   }
@@ -61,7 +60,7 @@ export function hasElephantSource(world: WorldState, factionId: FactionId): bool
   if (ownsResource(world, factionId, 'elephants')) return true;
   const until = world.factions[factionId]?.flags.elephant_source_until;
   if (typeof until === 'number' && until > today(world)) return true;
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id]!;
     const o = s.ownerFactionId;
     if (!o || o === factionId || !s.resources.includes('elephants')) continue;
@@ -72,7 +71,7 @@ export function hasElephantSource(world: WorldState, factionId: FactionId): bool
 
 function holdsLandmark(world: WorldState, factionId: FactionId, id: string): boolean {
   if (!world.factions[factionId]?.landmarks.includes(id)) return false;
-  for (const sid of sortedKeys(world.settlements)) {
+  for (const sid of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[sid]!;
     for (const l of s.landmarks) if (l.id === id && l.builtBy === factionId) return s.ownerFactionId === factionId;
   }
@@ -187,7 +186,7 @@ export function progressRecruitment(world: WorldState, s: SettlementState, out: 
     const id = nextWorldId(world, 'army');
     army = makeArmy(world, id, `Levy of ${s.name}`, fid, s.x + s.radius * 0.5, s.z + s.radius * 0.5, [], null);
     world.armies[id] = army;
-    orderArmy(world, id, { kind: 'move', x: s.rallyPoint.x, z: s.rallyPoint.z }, getHeightfield(world.region.terrain));
+    orderArmy(world, id, { kind: 'move', x: s.rallyPoint.x, z: s.rallyPoint.z }, regionTerrain(world));
   }
   if (army) {
     for (const u of units) army.units.push(u);

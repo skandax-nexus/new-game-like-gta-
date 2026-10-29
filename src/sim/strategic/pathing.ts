@@ -25,7 +25,7 @@ import { RULES } from '../../data/rules';
 import { UNITS } from '../../data/units';
 import { factionMod } from './modifiers';
 import { seasonOf } from './seasons';
-import { hostileToArmy } from './state';
+import { hostileToArmy, stableKeys } from './state';
 
 const M = BALANCE.military;
 /** Map meters between off-road terrain samples. */
@@ -113,7 +113,7 @@ export function crossingsOf(world: WorldState, terrain: TerrainQuery): Crossing[
   let c = crossingCache.get(world.roads);
   if (c) return c;
   c = [];
-  for (const id of sortedKeys(world.roads.edges)) {
+  for (const id of stableKeys('edges', world.roads.edges as Record<string, unknown>)) {
     const e = world.roads.edges[id] as RoadEdge;
     if (!e.bridge && !e.ford) continue;
     for (const p of e.points) if (terrain.isWater(p.x, p.z)) c.push({ x: p.x, z: p.z, edgeId: e.id });
@@ -360,7 +360,7 @@ function roadJoins(world: WorldState, army: Pick<ArmyState, 'factionId' | 'units
 export function planRoute(world: WorldState, army: Pick<ArmyState, 'factionId' | 'units'>, sx: number, sz: number, tx: number, tz: number, terrain: TerrainQuery, opts: RouteOptions = {}): RoutePlan {
   const useRoads = opts.roads !== false;
   const nodeIds = sortedKeys(world.roads.nodes);
-  const edgeIds = sortedKeys(world.roads.edges);
+  const edgeIds = stableKeys('edges', world.roads.edges as Record<string, unknown>);
   const N = nodeIds.length;
   const index = new Map<string, number>();
   nodeIds.forEach((id, i) => index.set(id, i));

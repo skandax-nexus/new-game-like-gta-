@@ -28,7 +28,7 @@ import type {
   WorldState,
 } from '../../core/types';
 import { isRebelFaction } from '../../core/types';
-import { nextWorldId, sortedKeys } from '../../core/ids';
+import { nextWorldId } from '../../core/ids';
 import { facingOf } from '../../core/math';
 import { BALANCE } from '../../data/balance';
 import { FACTIONS } from '../../data/factions';
@@ -41,6 +41,7 @@ import {
   isRoughTerrain,
   metersPerHourFromKmDay,
   planRoute,
+  plannerClassAt,
   roadConditionFactor,
   segmentEdge,
   terrainFactor,
@@ -219,7 +220,7 @@ function resupplyTarget(world: WorldState, a: ArmyState, sourceId: string | null
   }
   let best: Vec2 | null = null;
   let bd = Infinity;
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id]!;
     if (s.ownerFactionId !== a.factionId || s.besiegedBy) continue;
     const d = (s.x - a.x) * (s.x - a.x) + (s.z - a.z) * (s.z - a.z);
@@ -228,7 +229,7 @@ function resupplyTarget(world: WorldState, a: ArmyState, sourceId: string | null
       best = { x: s.x, z: s.z };
     }
   }
-  for (const id of sortedKeys(world.depots)) {
+  for (const id of stableKeys('depots', world.depots as Record<string, unknown>)) {
     const dp = world.depots[id]!;
     if (dp.factionId !== a.factionId || dp.food <= 0) continue;
     const d = (dp.x - a.x) * (dp.x - a.x) + (dp.z - a.z) * (dp.z - a.z);
@@ -293,7 +294,7 @@ function advance(world: WorldState, a: ArmyState, terrain: TerrainQuery): boolea
     if (edge) {
       mph = metersPerHourFromKmDay(BALANCE.military.marchKmPerDay[edge.quality]) * weatherFactor(world, edge.quality) * roadConditionFactor(edge.condition) * mul;
     } else {
-      const tc = terrain.inBounds(a.x, a.z) ? terrain.terrainClassAt(a.x, a.z) : 'open';
+      const tc = terrain.inBounds(a.x, a.z) ? plannerClassAt(terrain, a.x, a.z) : 'open';
       let f = terrainFactor(world, a.factionId, tc);
       if (f <= 0) f = 0.4; // crossing at a bridge / ford
       const rough = isRoughTerrain(tc);
@@ -500,7 +501,7 @@ export function createEngagement(world: WorldState, att: ArmyState, def: ArmySta
   const join = (lead: ArmyState): string[] => {
     const list = [lead.id];
     const r = contactRadius(lead) * 2;
-    for (const oid of sortedKeys(world.armies)) {
+    for (const oid of stableKeys('armies', world.armies as Record<string, unknown>)) {
       const o = world.armies[oid]!;
       if (o.id === lead.id || o.factionId !== lead.factionId || o.engagementId || o.units.length === 0 || o.status === 'in_battle') continue;
       if (isRebelFaction(o.factionId) && o.rebelSettlementId !== lead.rebelSettlementId) continue;
@@ -515,7 +516,7 @@ export function createEngagement(world: WorldState, att: ArmyState, def: ArmySta
   let near: string | null = settlementId;
   if (!near) {
     let bd = Infinity;
-    for (const sid of sortedKeys(world.settlements)) {
+    for (const sid of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
       const s = world.settlements[sid]!;
       const d = Math.sqrt((s.x - x) * (s.x - x) + (s.z - z) * (s.z - z));
       if (d <= s.radius + 300 && d < bd) {
@@ -653,7 +654,7 @@ export function removeArmy(world: WorldState, a: ArmyState, returnRecruits: bool
   if (returnRecruits) {
     let best: SettlementState | null = null;
     let bd = Infinity;
-    for (const id of sortedKeys(world.settlements)) {
+    for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
       const s = world.settlements[id]!;
       if (s.ownerFactionId !== a.factionId) continue;
       const d = (s.x - a.x) * (s.x - a.x) + (s.z - a.z) * (s.z - a.z);
@@ -668,7 +669,7 @@ export function removeArmy(world: WorldState, a: ArmyState, returnRecruits: bool
     const c = world.characters[a.commanderId];
     if (c && c.armyId === a.id) c.armyId = null;
   }
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id]!;
     if (s.besiegedBy === a.id) {
       s.besiegedBy = null;
@@ -677,8 +678,8 @@ export function removeArmy(world: WorldState, a: ArmyState, returnRecruits: bool
     }
     if (s.rallyPoint?.kind === 'army' && s.rallyPoint.armyId === a.id) delete s.rallyPoint;
   }
-  for (const id of sortedKeys(world.depots)) if (world.depots[id]!.escortArmyId === a.id) world.depots[id]!.escortArmyId = null;
-  for (const id of sortedKeys(world.roads.edges)) if (world.roads.edges[id]!.blockedBy === a.id) world.roads.edges[id]!.blockedBy = null;
+  for (const id of stableKeys('depots', world.depots as Record<string, unknown>)) if (world.depots[id]!.escortArmyId === a.id) world.depots[id]!.escortArmyId = null;
+  for (const id of stableKeys('edges', world.roads.edges as Record<string, unknown>)) if (world.roads.edges[id]!.blockedBy === a.id) world.roads.edges[id]!.blockedBy = null;
   delete world.armies[a.id];
 }
 

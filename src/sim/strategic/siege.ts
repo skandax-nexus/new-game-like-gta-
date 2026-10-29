@@ -16,17 +16,15 @@
  */
 import type { ArmyState, FactionId, SettlementState, SimEvent, TerrainQuery, WorldState } from '../../core/types';
 import { isRebelFaction } from '../../core/types';
-import { sortedKeys } from '../../core/ids';
 import { FACTIONS } from '../../data/factions';
 import { RULES } from '../../data/rules';
 import { UNITS } from '../../data/units';
 import { createEngagement, makeArmy, orderArmy, registerArrivalHooks, registerSiegeHooks, removeArmy, SIEGE_CAMP_OFFSET } from './armies';
 import { maxWallHp } from './construction';
 import { factionMod } from './modifiers';
-import { addChronicle, addStat, atWarWith, notifyPlayer, today, worldRandom } from './state';
+import { addChronicle, addStat, atWarWith, notifyPlayer, regionTerrain, stableKeys, today, worldRandom } from './state';
 import { relationOf } from './treaties';
 import { registerWritebackHooks } from './writeback';
-import { getHeightfield } from '../../core/terrain/cache';
 
 const SG = RULES.siege;
 /** Days a player has to choose occupy / plunder / liberate before Occupy applies. */
@@ -56,7 +54,7 @@ export function settlementHostile(world: WorldState, factionId: FactionId, s: Se
 /** Armies of `factionId` besieging `s` (status besieging with a besiege / assault order on it). */
 export function besiegers(world: WorldState, s: SettlementState, factionId: FactionId | null = null): ArmyState[] {
   const out: ArmyState[] = [];
-  for (const id of sortedKeys(world.armies)) {
+  for (const id of stableKeys('armies', world.armies as Record<string, unknown>)) {
     const a = world.armies[id]!;
     if (a.status !== 'besieging') continue;
     if (!('settlementId' in a.order) || a.order.settlementId !== s.id) continue;
@@ -99,7 +97,7 @@ export function assaultState(world: WorldState, s: SettlementState): AssaultStat
 
 function defendersOf(world: WorldState, s: SettlementState): ArmyState[] {
   const out: ArmyState[] = [];
-  for (const id of sortedKeys(world.armies)) {
+  for (const id of stableKeys('armies', world.armies as Record<string, unknown>)) {
     const a = world.armies[id]!;
     if (a.factionId !== s.ownerFactionId || a.engagementId) continue;
     if (a.status === 'garrisoned' && a.order.kind === 'garrison' && a.order.settlementId === s.id) out.push(a);
@@ -161,7 +159,7 @@ export function beginSiege(world: WorldState, a: ArmyState, s: SettlementState, 
 
 /** An army leaves a siege (new order, destroyed): the siege passes to another besieger or ends. */
 export function liftSiege(world: WorldState, a: ArmyState): void {
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id]!;
     if (s.besiegedBy !== a.id) continue;
     const others = besiegers(world, s, a.factionId).filter((o) => o.id !== a.id);
@@ -226,7 +224,7 @@ registerSiegeHooks({ lift: liftSiege });
 
 /** Daily: wall damage, ladders, starve-out, besieger checks, capture decision timeouts. */
 export function updateSiegesDaily(world: WorldState, out: SimEvent[]): void {
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id]!;
     if (s.pendingCapture && today(world) - s.pendingCapture.day >= CAPTURE_DECISION_DAYS) s.pendingCapture = null; // Occupy by default.
     if (!s.besiegedBy) continue;
@@ -277,7 +275,7 @@ export function updateSiegesDaily(world: WorldState, out: SimEvent[]): void {
 
 /** Faction's new capital after losing one: capital > city > fort > town > the largest. */
 export function chooseCapital(world: WorldState, factionId: FactionId): string | null {
-  const owned = sortedKeys(world.settlements).map((id) => world.settlements[id]!).filter((s) => s.ownerFactionId === factionId);
+  const owned = stableKeys('settlements', world.settlements as Record<string, unknown>).map((id) => world.settlements[id]!).filter((s) => s.ownerFactionId === factionId);
   const rank = (k: SettlementState['kind']): number => (k === 'capital' ? 0 : k === 'city' ? 1 : k === 'fort' ? 2 : k === 'town' || k === 'port' || k === 'temple_town' ? 3 : 4);
   owned.sort((a, b) => rank(a.kind) - rank(b.kind) || b.population - a.population || (a.id < b.id ? -1 : 1));
   return owned[0]?.id ?? null;
@@ -285,7 +283,7 @@ export function chooseCapital(world: WorldState, factionId: FactionId): string |
 
 /** Recompute province owners (owner of the capital settlement) and governors of foreign provinces. */
 export function refreshProvinces(world: WorldState): void {
-  for (const pid of sortedKeys(world.provinces)) {
+  for (const pid of stableKeys('provinces', world.provinces as Record<string, unknown>)) {
     const p = world.provinces[pid]!;
     const cap = world.settlements[p.capitalSettlementId];
     p.ownerFactionId = cap?.ownerFactionId ?? null;
@@ -311,8 +309,8 @@ export function transferOwnership(world: WorldState, s: SettlementState, to: Fac
   s.pendingCapture = null;
   s.requisitionedFood = 0;
   // Old owner's garrisoned armies leave.
-  const terrain = getHeightfield(world.region.terrain);
-  for (const id of sortedKeys(world.armies)) {
+  const terrain = regionTerrain(world);
+  for (const id of stableKeys('armies', world.armies as Record<string, unknown>)) {
     const a = world.armies[id]!;
     if (a.factionId !== from || a.status !== 'garrisoned' || a.order.kind !== 'garrison' || a.order.settlementId !== s.id) continue;
     a.status = 'camped';
@@ -324,9 +322,9 @@ export function transferOwnership(world: WorldState, s: SettlementState, to: Fac
   if (from && world.factions[from]) {
     const f = world.factions[from]!;
     if (f.capitalSettlementId === s.id) f.capitalSettlementId = chooseCapital(world, from);
-    if (!sortedKeys(world.settlements).some((id) => world.settlements[id]!.ownerFactionId === from)) {
+    if (!stableKeys('settlements', world.settlements as Record<string, unknown>).some((id) => world.settlements[id]!.ownerFactionId === from)) {
       f.alive = false;
-      for (const id of sortedKeys(world.armies)) if (world.armies[id]!.factionId === from) removeArmy(world, world.armies[id]!, false);
+      for (const id of stableKeys('armies', world.armies as Record<string, unknown>)) if (world.armies[id]!.factionId === from) removeArmy(world, world.armies[id]!, false);
       addChronicle(world, from, `${f.name} has fallen.`, 2);
       notifyPlayer(world, out, null, 'danger', `${f.name} has fallen.`);
     }
@@ -376,12 +374,21 @@ export function captureSettlement(world: WorldState, s: SettlementState, captor:
 }
 
 /** capture_decision: occupy / plunder / liberate a settlement just taken (§7.8). */
+export function validateCaptureDecision(world: WorldState, factionId: FactionId, settlementId: string, decision: 'occupy' | 'plunder' | 'liberate'): string | null {
+  const s = world.settlements[settlementId];
+  if (!s) return 'No such settlement';
+  if (!s.pendingCapture) return SIEGE_REASONS.noCapture;
+  if (s.pendingCapture.factionId !== factionId || s.ownerFactionId !== factionId) return SIEGE_REASONS.notCaptor;
+  if (decision === 'liberate' && s.initialOwnerFactionId !== null) return SIEGE_REASONS.noLiberate;
+  return null;
+}
+
 export function decideCapture(world: WorldState, factionId: FactionId, settlementId: string, decision: 'occupy' | 'plunder' | 'liberate', out: SimEvent[], force = false): string | null {
   const s = world.settlements[settlementId];
   if (!s) return 'No such settlement';
   if (!force) {
-    if (!s.pendingCapture) return SIEGE_REASONS.noCapture;
-    if (s.pendingCapture.factionId !== factionId || s.ownerFactionId !== factionId) return SIEGE_REASONS.notCaptor;
+    const reason = validateCaptureDecision(world, factionId, settlementId, decision);
+    if (reason) return reason;
   }
   if (decision === 'liberate' && s.initialOwnerFactionId !== null) return SIEGE_REASONS.noLiberate;
   s.pendingCapture = null;
@@ -395,7 +402,7 @@ export function decideCapture(world: WorldState, factionId: FactionId, settlemen
     }
     s.population *= 0.9;
     s.unrest = Math.min(1, s.unrest + 0.3);
-    for (const key of sortedKeys(world.diplomacy.relations)) {
+    for (const key of stableKeys('relations', world.diplomacy.relations as Record<string, unknown>)) {
       const r = world.diplomacy.relations[key]!;
       if (r.a === factionId || r.b === factionId) r.opinion = Math.max(-100, r.opinion - 10);
     }
@@ -404,7 +411,7 @@ export function decideCapture(world: WorldState, factionId: FactionId, settlemen
     transferOwnership(world, s, null, out);
     s.occupiedSinceDay = null;
     s.loyalty = 0.5;
-    for (const key of sortedKeys(world.diplomacy.relations)) {
+    for (const key of stableKeys('relations', world.diplomacy.relations as Record<string, unknown>)) {
       const r = world.diplomacy.relations[key]!;
       if (r.a === factionId || r.b === factionId) r.opinion = Math.min(100, r.opinion + 10);
     }

@@ -35,7 +35,7 @@ import type {
   WorldState,
 } from '../../core/types';
 import { isRebelFaction, REBEL_FACTION_ID, REBELLION_STAGES } from '../../core/types';
-import { nextWorldId, sortedKeys } from '../../core/ids';
+import { nextWorldId } from '../../core/ids';
 import { clamp01 } from '../../core/math';
 import { BALANCE } from '../../data/balance';
 import { RULES } from '../../data/rules';
@@ -44,7 +44,7 @@ import { makeArmy, makeArmyUnit, removeArmy, SIEGE_CAMP_OFFSET } from './armies'
 import { dailyConsumption, governorSlots } from './economy';
 import { buildingLevel, emptyMods, rebelliousness, settlementEffects, type ModRecord } from './modifiers';
 import { transferOwnership } from './siege';
-import { addChronicle, addStat, notifyPlayer, today, worldRandom } from './state';
+import { addChronicle, addStat, notifyPlayer, stableKeys, today, worldRandom } from './state';
 import { registerWritebackHooks } from './writeback';
 
 const P = RULES.politics;
@@ -120,8 +120,10 @@ export function occupationFactor(world: WorldState, s: SettlementState): number 
 export function garrisonSoldiers(world: WorldState, s: SettlementState): number {
   let n = 0;
   for (const u of s.garrison) n += u.soldiers;
-  for (const id of sortedKeys(world.armies)) {
-    const a = world.armies[id] as ArmyState;
+  const ids = stableKeys('armies', world.armies as Record<string, unknown>);
+  for (let i = 0; i < ids.length; i++) {
+    const a = world.armies[ids[i] as string] as ArmyState | undefined;
+    if (!a) continue;
     if (a.factionId !== s.ownerFactionId || a.status !== 'garrisoned' || a.order.kind !== 'garrison' || a.order.settlementId !== s.id) continue;
     for (const u of a.units) n += u.soldiers;
   }
@@ -209,6 +211,39 @@ export function loyaltyTarget(world: WorldState, s: SettlementState): number {
   return clamp01(t);
 }
 
+/** loyaltyTarget without the term list (daily hot path; same sum, same order). */
+function loyaltyTargetFast(world: WorldState, s: SettlementState, mods: ModRecord): number {
+  const f = s.ownerFactionId ? world.factions[s.ownerFactionId] : null;
+  const legit = f?.legitimacy ?? 0.5;
+  const reqShare = s.requisitionedFood / Math.max(1, s.population * 0.1 * 30);
+  let t = P.loyaltyBase;
+  t += P.loyaltyLegitimacyWeight * (legit - 0.5);
+  t += -P.loyaltyTaxWeight * Math.max(0, s.taxRate - 0.15);
+  t += f ? RULES.tax.policy[f.taxPolicy].loyalty : 0;
+  t += -P.loyaltyHungerWeight * Math.max(0, s.grainPrice - 1);
+  t += -Math.min(0.15, reqShare * 0.1);
+  t += mods.loyalty;
+  t += governorTerm(world, s);
+  t += -P.loyaltyUnrestWeight * s.unrest;
+  t += -0.2 * occupationFactor(world, s);
+  return clamp01(t);
+}
+
+/** unrestDelta without the term list (daily hot path; same sum, same order). */
+function unrestDeltaFast(world: WorldState, s: SettlementState, garrison: number): number {
+  const U = P.unrest;
+  const k = rebelliousness(world);
+  const pop = Math.max(1, s.population);
+  let d = s.starvationDays > 0 ? U.starving * k : 0;
+  d += 0.01 * Math.max(0, s.grainPrice - 1.3) * k;
+  d += s.loyalty < U.lowLoyaltyBelow ? U.lowLoyalty * k : 0;
+  d += U.overcrowding * Math.max(0, pop / Math.max(1, s.housing) - 1) * k;
+  d += s.sanitation < U.poorSanitationBelow ? U.poorSanitation * k : 0;
+  d += -U.orderRelief * s.publicOrder;
+  d += -Math.min(0.004, (garrison / (pop * 0.02)) * U.garrisonRelief);
+  return d;
+}
+
 /** Daily unrest terms (§7.9): gains already x sandbox rebelliousness. */
 export function unrestTerms(world: WorldState, s: SettlementState): PoliticsTerm[] {
   const U = P.unrest;
@@ -239,7 +274,7 @@ export function unrestDelta(world: WorldState, s: SettlementState): number {
 /** Rebel armies fighting for a settlement. */
 export function rebelArmiesOf(world: WorldState, settlementId: string): ArmyState[] {
   const out: ArmyState[] = [];
-  for (const id of sortedKeys(world.armies)) {
+  for (const id of stableKeys('armies', world.armies as Record<string, unknown>)) {
     const a = world.armies[id] as ArmyState;
     if (isRebelFaction(a.factionId) && a.rebelSettlementId === settlementId) out.push(a);
   }
@@ -386,7 +421,7 @@ export function forceRebellionStage(world: WorldState, s: SettlementState, stage
 
 export function updatePoliticsDaily(world: WorldState, out: SimEvent[]): void {
   const d = today(world);
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id] as SettlementState;
     if (!s.ownerFactionId) continue;
     // Expiring tax relief restores the rate.
@@ -398,15 +433,14 @@ export function updatePoliticsDaily(world: WorldState, out: SimEvent[]): void {
     const mods = settlementEffects(world, s, scratchMods);
     // Public order.
     const pop = Math.max(1, s.population);
-    const garrisoned = garrisonSoldiers(world, s) >= pop * P.offers.coercion.garrisonPerCapita;
+    const garrison = garrisonSoldiers(world, s);
+    const garrisoned = garrison >= pop * P.offers.coercion.garrisonPerCapita;
     const st = RULES.settlement;
     const orderTarget = clamp01(st.orderBase + mods.publicOrder + (garrisoned ? st.orderGarrison : 0) - st.orderUnrest * s.unrest);
     s.publicOrder = clamp01(s.publicOrder + (orderTarget - s.publicOrder) * st.driftPerDay);
     // Unrest, then loyalty toward its target.
-    s.unrest = clamp01(s.unrest + unrestDelta(world, s));
-    let target = 0;
-    for (const t of loyaltyTerms(world, s, mods)) target += t.value;
-    s.loyalty = clamp01(s.loyalty + (clamp01(target) - s.loyalty) * P.loyaltyApproachPerDay);
+    s.unrest = clamp01(s.unrest + unrestDeltaFast(world, s, garrison));
+    s.loyalty = clamp01(s.loyalty + (loyaltyTargetFast(world, s, mods) - s.loyalty) * P.loyaltyApproachPerDay);
     // Ladder.
     setStage(world, s, nextStage(s.rebellionStage, s.unrest), out);
     if (!s.ownerFactionId) continue;
@@ -419,7 +453,7 @@ export function updatePoliticsDaily(world: WorldState, out: SimEvent[]): void {
     }
   }
   // Province summaries (UI): worst stage and mean unrest of the owned settlements.
-  for (const pid of sortedKeys(world.provinces)) {
+  for (const pid of stableKeys('provinces', world.provinces as Record<string, unknown>)) {
     const p = world.provinces[pid] as ProvinceState;
     let n = 0;
     let u = 0;
@@ -450,7 +484,7 @@ export function reliefCost(world: WorldState, s: SettlementState): { food: numbe
 
 function forceAtHand(world: WorldState, s: SettlementState): boolean {
   if (garrisonSoldiers(world, s) >= s.population * P.offers.coercion.garrisonPerCapita) return true;
-  for (const id of sortedKeys(world.armies)) {
+  for (const id of stableKeys('armies', world.armies as Record<string, unknown>)) {
     const a = world.armies[id] as ArmyState;
     if (a.factionId !== s.ownerFactionId || a.units.length === 0) continue;
     const d2 = (a.x - s.x) * (a.x - s.x) + (a.z - s.z) * (a.z - s.z);
@@ -557,7 +591,7 @@ export function negotiateRebels(world: WorldState, factionId: FactionId, settlem
 
 export function governorsOf(world: WorldState, factionId: FactionId): ProvinceState[] {
   const out: ProvinceState[] = [];
-  for (const pid of sortedKeys(world.provinces)) {
+  for (const pid of stableKeys('provinces', world.provinces as Record<string, unknown>)) {
     const p = world.provinces[pid] as ProvinceState;
     if (p.ownerFactionId !== factionId || !p.governorId) continue;
     const g = world.characters[p.governorId];
@@ -614,7 +648,7 @@ export function appointGovernor(world: WorldState, factionId: FactionId, provinc
 
 /** A living, free claimant pressing against the ruler (role 'claimant', loyalty < 0.5). */
 export function pressingClaimant(world: WorldState, factionId: FactionId): CharacterState | null {
-  for (const id of sortedKeys(world.characters)) {
+  for (const id of stableKeys('characters', world.characters as Record<string, unknown>)) {
     const c = world.characters[id] as CharacterState;
     if (!c.alive || c.captiveOf || !c.roles.includes('claimant') || c.loyalty >= 0.5) continue;
     if (c.factionId === factionId) return c;
@@ -629,7 +663,7 @@ export function stabilityTerms(world: WorldState, factionId: FactionId): Politic
   let n = 0;
   let loyal = 0;
   let troubled = 0;
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id] as SettlementState;
     if (s.ownerFactionId !== factionId) continue;
     n++;
@@ -638,7 +672,7 @@ export function stabilityTerms(world: WorldState, factionId: FactionId): Politic
   }
   const d = today(world);
   let longWars = 0;
-  for (const key of sortedKeys(world.diplomacy.relations)) {
+  for (const key of stableKeys('relations', world.diplomacy.relations as Record<string, unknown>)) {
     const r = world.diplomacy.relations[key]!;
     if (!r.atWar || (r.a !== factionId && r.b !== factionId) || r.warStartDay === null) continue;
     if (d - r.warStartDay > S.warWearinessAfterMonths * 30) longWars++;
@@ -683,7 +717,7 @@ export function governorLoyaltyTarget(world: WorldState, g: CharacterState, p: P
 export function updatePoliticsMonthly(world: WorldState, out: SimEvent[]): void {
   const d = today(world);
   const G = P.governor;
-  for (const fid of sortedKeys(world.factions)) {
+  for (const fid of stableKeys('factions', world.factions as Record<string, unknown>)) {
     const f = world.factions[fid] as FactionState;
     if (!f.alive) continue;
     // Stability.

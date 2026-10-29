@@ -340,6 +340,29 @@ export interface CancelResult {
 }
 
 /** Cancel a job (queue index wins over type). Refunds paid x (1 - progress) x 0.9. */
+/** The queue index cancel_construction would cancel, or a refusal reason. */
+export function validateCancel(world: WorldState, factionId: FactionId, settlementId: string, type: BuildingType, jobIndex: number | undefined): { reason: string | null; index: number } {
+  const R = CONSTRUCTION_REASONS;
+  const s = world.settlements[settlementId];
+  if (!s) return { reason: R.noSettlement, index: -1 };
+  if (s.ownerFactionId !== factionId) return { reason: R.notOwned, index: -1 };
+  let idx = -1;
+  if (jobIndex !== undefined && jobIndex >= 0 && jobIndex < s.construction.length) idx = jobIndex;
+  else {
+    for (let i = s.construction.length - 1; i >= 0; i--) {
+      const j = s.construction[i]!;
+      if (!j.landmarkId && j.type === type) {
+        idx = i;
+        break;
+      }
+    }
+  }
+  if (idx < 0) return { reason: R.noJob, index: -1 };
+  const job = s.construction[idx]!;
+  if (job.landmarkId && job.progress >= RULES.ages.landmarkLockAt) return { reason: R.landmarkLocked, index: idx };
+  return { reason: null, index: idx };
+}
+
 export function cancelConstruction(world: WorldState, factionId: FactionId, settlementId: string, type: BuildingType, jobIndex: number | undefined, out: SimEvent[]): CancelResult {
   const R = CONSTRUCTION_REASONS;
   const zero: MaterialCost = { wealth: 0, timber: 0, stone: 0, labor: 0 };

@@ -8,18 +8,32 @@
  * and retreat; prediction lines; statistics and score; sandbox victory; hero results applied once.
  */
 import { describe, expect, it } from 'vitest';
-import type { HeroMissionResult, SimEvent, WorldState } from '../../../src/core/types';
+import type { HeroMissionResult, SimEvent, StrategicCommand, WorldState } from '../../../src/core/types';
+import { BUILDING_TYPES } from '../../../src/core/types';
 import { SANDBOX_PRESETS } from '../../../src/data/campaign';
 import { RULES } from '../../../src/data/rules';
 import { getEventDef } from '../../../src/data/events';
-import { getRegionHeightfield } from '../../../src/sim/strategic/world';
+import { applyStrategicCommand, getRegionHeightfield, validateStrategicCommand } from '../../../src/sim/strategic/world';
+import { COMMAND_REASONS } from '../../../src/sim/strategic/commands';
+import { ARMY_REASONS } from '../../../src/sim/strategic/armies';
+import { CONSTRUCTION_REASONS, validateLandmark, validateRepair } from '../../../src/sim/strategic/construction';
+import { RECRUIT_REASONS } from '../../../src/sim/strategic/recruitment';
+import { SIEGE_REASONS, captureSettlement } from '../../../src/sim/strategic/siege';
+import { SUPPLY_REASONS } from '../../../src/sim/strategic/supply';
+import { MARKET_REASONS } from '../../../src/sim/strategic/market';
+import { POLITICS_REASONS } from '../../../src/sim/strategic/politics';
+import { COUNCIL_REASONS } from '../../../src/sim/strategic/council';
+import { DYNASTY_REASONS } from '../../../src/sim/strategic/dynasty';
+import { DIPLOMACY_REASONS, emptyTerms, propose } from '../../../src/sim/strategic/diplomacy';
+import { ESPIONAGE_REASONS, startMission } from '../../../src/sim/strategic/espionage';
+import { PRISONER_REASONS } from '../../../src/sim/strategic/writeback';
 import { applyEffect, checkObjectives, resolveEventChoice, severityScaled } from '../../../src/sim/strategic/events';
 import { armySoldiers, createEngagement, makeArmy } from '../../../src/sim/strategic/armies';
 import { battleSetupFromEngagement, decideEngagement, predictBattle, retreatLossShare, STANCE_AGGRESSION } from '../../../src/sim/strategic/autoresolve';
 import { computeScore, endGameStats } from '../../../src/sim/strategic/statistics';
 import { victoryBreakdowns } from '../../../src/sim/strategic/victory';
 import { applyDialogueEffects, applyHeroMissionResult, availableHeroMissions, heroMissionDoneFlag } from '../../../src/sim/strategic/hero';
-import { campaign, quiet, runDays, sandbox, withPendingData } from './helpers';
+import { campaign, issue, quiet, runDays, sandbox, withPendingData } from './helpers';
 
 const scope = (fid = 'heartland', settlementId: string | null = null) => ({ factionId: fid, settlementId, provinceId: null, characterId: null, armyId: null });
 
@@ -303,4 +317,238 @@ describe('hero API (DESIGN_SPEC §11.9)', () => {
     const again = runDays(w, 3).filter((e) => e.kind === 'hero_mission_available' && announced.some((a) => a.kind === 'hero_mission_available' && a.missionId === (e as { missionId: string }).missionId));
     expect(again).toEqual([]);
   });
+});
+
+// ---------------------------------------------------------------------------------------------------
+// Every StrategicCommand kind: one accepted and one refused case with its reason (SIM-01 phase G).
+// ---------------------------------------------------------------------------------------------------
+
+interface CommandCase {
+  kind: StrategicCommand['kind'];
+  /** Prepare the world; return the accepted command, the refused one and the expected refusal. */
+  setup: (w: WorldState) => { ok: StrategicCommand; bad: StrategicCommand; reason: string };
+  faction?: string;
+}
+
+function rich(w: WorldState): WorldState {
+  const f = w.factions.heartland!;
+  f.treasury = 50000;
+  f.foodReserve = 50000;
+  f.materials.timber = 5000;
+  f.materials.stone = 5000;
+  return w;
+}
+
+function landPoint(w: WorldState, x: number, z: number, water: boolean): { x: number; z: number } {
+  const hf = getRegionHeightfield(w);
+  for (let r = 0; r < 3000; r += 20) {
+    for (let k = 0; k < 16; k++) {
+      const px = x + r * Math.cos((k / 16) * 2 * Math.PI);
+      const pz = z + r * Math.sin((k / 16) * 2 * Math.PI);
+      if (hf.inBounds(px, pz) && hf.isWater(px, pz) === water) return { x: px, z: pz };
+    }
+  }
+  throw new Error('no point');
+}
+
+const CASES: CommandCase[] = [
+  { kind: 'move_army', setup: (w) => ({ ok: { kind: 'move_army', armyId: 'army_royal', x: w.armies.army_royal!.x + 200, z: w.armies.army_royal!.z }, bad: { kind: 'move_army', armyId: 'army_giri', x: 0, z: 0 }, reason: ARMY_REASONS.notYours }) },
+  { kind: 'army_order', setup: () => ({ ok: { kind: 'army_order', armyId: 'army_royal', order: { kind: 'besiege', settlementId: 'giridurg' } }, bad: { kind: 'army_order', armyId: 'army_royal', order: { kind: 'besiege', settlementId: 'rajapura' } }, reason: SIEGE_REASONS.own }) },
+  { kind: 'set_army_stance', setup: () => ({ ok: { kind: 'set_army_stance', armyId: 'army_royal', stance: 'cautious' }, bad: { kind: 'set_army_stance', armyId: 'army_royal', stance: 'reckless' as never }, reason: COMMAND_REASONS.badStance }) },
+  { kind: 'forced_march', setup: () => ({ ok: { kind: 'forced_march', armyId: 'army_royal', on: true }, bad: { kind: 'forced_march', armyId: 'army_nope', on: true }, reason: ARMY_REASONS.noArmy }) },
+  { kind: 'split_army', setup: (w) => ({ ok: { kind: 'split_army', armyId: 'army_royal', unitIds: [w.armies.army_royal!.units[0]!.id] }, bad: { kind: 'split_army', armyId: 'army_royal', unitIds: [] }, reason: ARMY_REASONS.noUnits }) },
+  {
+    kind: 'merge_armies',
+    setup: (w) => {
+      const host = w.armies.army_royal!;
+      const det = makeArmy(w, 'army_det', 'Detachment', 'heartland', host.x + 30, host.z, [{ unitClass: 'spearmen', formations: 1 }], null);
+      w.armies[det.id] = det;
+      return { ok: { kind: 'merge_armies', armyId: 'army_royal', otherArmyId: 'army_det' }, bad: { kind: 'merge_armies', armyId: 'army_royal', otherArmyId: 'army_south' }, reason: ARMY_REASONS.tooFar };
+    },
+  },
+  { kind: 'disband_army', setup: () => ({ ok: { kind: 'disband_army', armyId: 'army_south' }, bad: { kind: 'disband_army', armyId: 'army_giri' }, reason: ARMY_REASONS.notYours }) },
+  { kind: 'recruit', setup: (w) => (rich(w), { ok: { kind: 'recruit', settlementId: 'rajapura', unitClass: 'spearmen', formations: 1, targetArmyId: null }, bad: { kind: 'recruit', settlementId: 'giridurg', unitClass: 'spearmen', formations: 1, targetArmyId: null }, reason: RECRUIT_REASONS.notOwned }) },
+  { kind: 'build', setup: (w) => (rich(w), { ok: { kind: 'build', settlementId: 'dhanyagram', building: 'granary' }, bad: { kind: 'build', settlementId: 'giridurg', building: 'granary' }, reason: CONSTRUCTION_REASONS.notOwned }) },
+  {
+    kind: 'cancel_construction',
+    setup: (w) => {
+      rich(w);
+      issue(w, { kind: 'build', settlementId: 'dhanyagram', building: 'granary' });
+      return { ok: { kind: 'cancel_construction', settlementId: 'dhanyagram', building: 'granary' }, bad: { kind: 'cancel_construction', settlementId: 'kusumpur', building: 'granary' }, reason: CONSTRUCTION_REASONS.noJob };
+    },
+  },
+  {
+    kind: 'repair_building',
+    setup: (w) => {
+      rich(w);
+      const b = w.settlements.rajapura!.buildings[0]!;
+      b.condition = 0.5;
+      const missing = BUILDING_TYPES.find((t) => !w.settlements.rajapura!.buildings.some((x) => x.type === t))!;
+      return { ok: { kind: 'repair_building', settlementId: 'rajapura', building: b.type }, bad: { kind: 'repair_building', settlementId: 'rajapura', building: missing }, reason: validateRepair(w, 'heartland', 'rajapura', missing).reason! };
+    },
+  },
+  {
+    kind: 'start_landmark',
+    setup: (w) => {
+      const bad: StrategicCommand = { kind: 'start_landmark', landmarkId: 'lm_edict_pillars', settlementId: 'rajapura', cell: [0, 0] };
+      const reason = validateLandmark(w, 'heartland', 'lm_edict_pillars', 'rajapura', [0, 0]).reason!;
+      for (const id of ['tirthaghat', 'naukapattana', 'shilapur']) w.settlements[id]!.ownerFactionId = 'heartland';
+      w.provinces.prov_tira!.ownerFactionId = 'heartland';
+      rich(w);
+      const chk = validateLandmark(w, 'heartland', 'lm_edict_pillars', 'rajapura', null);
+      return { ok: { kind: 'start_landmark', landmarkId: 'lm_edict_pillars', settlementId: 'rajapura', cell: chk.placement!.cell, rot: chk.placement!.rot }, bad: { ...bad, settlementId: 'giridurg' }, reason: reason === CONSTRUCTION_REASONS.notOwned ? reason : validateLandmark(w, 'heartland', 'lm_edict_pillars', 'giridurg', [0, 0]).reason! };
+    },
+  },
+  {
+    kind: 'repair_road',
+    setup: (w) => {
+      w.roads.edges.road_1!.condition = 0.5;
+      return { ok: { kind: 'repair_road', edgeId: 'road_1' }, bad: { kind: 'repair_road', edgeId: 'road_12' }, reason: COMMAND_REASONS.roadFine };
+    },
+  },
+  { kind: 'set_tax_rate', setup: () => ({ ok: { kind: 'set_tax_rate', settlementId: 'rajapura', rate: 0.2 }, bad: { kind: 'set_tax_rate', settlementId: 'rajapura', rate: 0.9 }, reason: COMMAND_REASONS.taxRange }) },
+  { kind: 'set_tax_policy', setup: () => ({ ok: { kind: 'set_tax_policy', policy: 'heavy' }, bad: { kind: 'set_tax_policy', policy: 'free' as never }, reason: COMMAND_REASONS.badPolicy }) },
+  { kind: 'set_labor', setup: () => ({ ok: { kind: 'set_labor', settlementId: 'rajapura', allocation: { farming: 0.6, construction: 0.1, crafts: 0.2, military: 0.1 } }, bad: { kind: 'set_labor', settlementId: 'rajapura', allocation: { farming: 0.9, construction: 0.3, crafts: 0.2, military: 0.1 } }, reason: COMMAND_REASONS.labor }) },
+  { kind: 'set_policy', setup: () => ({ ok: { kind: 'set_policy', policy: 'hold_reserve', on: true }, bad: { kind: 'set_policy', policy: 'tithe' as never, on: true }, reason: COMMAND_REASONS.badPolicy }) },
+  {
+    kind: 'set_rally_point',
+    setup: (w) => {
+      const r = w.settlements.rajapura!;
+      return { ok: { kind: 'set_rally_point', settlementId: 'rajapura', rallyPoint: { kind: 'point', x: r.x + 200, z: r.z } }, bad: { kind: 'set_rally_point', settlementId: 'rajapura', rallyPoint: { kind: 'point', x: r.x + 3000, z: r.z } }, reason: COMMAND_REASONS.rallyFar };
+    },
+  },
+  { kind: 'requisition_grain', setup: () => ({ ok: { kind: 'requisition_grain', settlementId: 'dhanyagram', amount: 100, toArmyId: null, toDepotId: null }, bad: { kind: 'requisition_grain', settlementId: 'dhanyagram', amount: 0, toArmyId: null, toDepotId: null }, reason: SUPPLY_REASONS.badAmount }) },
+  {
+    kind: 'send_relief',
+    setup: (w) => {
+      w.factions.heartland!.foodReserve = 1000;
+      return { ok: { kind: 'send_relief', settlementId: 'setupur', food: 500, wealth: 0 }, bad: { kind: 'send_relief', settlementId: 'setupur', food: 5000, wealth: 0 }, reason: SUPPLY_REASONS.noReserve(5000) };
+    },
+  },
+  {
+    kind: 'create_depot',
+    setup: (w) => {
+      rich(w);
+      const r = w.settlements.rajapura!;
+      const land = landPoint(w, r.x + 300, r.z, false);
+      const water = landPoint(w, r.x, r.z, true);
+      return { ok: { kind: 'create_depot', x: land.x, z: land.z, settlementId: null }, bad: { kind: 'create_depot', x: water.x, z: water.z, settlementId: null }, reason: SUPPLY_REASONS.depotWater };
+    },
+  },
+  { kind: 'transfer_supply', setup: () => ({ ok: { kind: 'transfer_supply', fromId: 'army_royal', toId: 'rajapura', amount: 100 }, bad: { kind: 'transfer_supply', fromId: 'army_royal', toId: 'rajapura', amount: 0 }, reason: SUPPLY_REASONS.badAmount }) },
+  {
+    kind: 'market_trade',
+    setup: (w) => {
+      rich(w);
+      if (!w.settlements.rajapura!.buildings.some((b) => b.type === 'market')) w.settlements.rajapura!.buildings.push({ type: 'market', level: 1, condition: 1 });
+      return { ok: { kind: 'market_trade', resource: 'grain', lots: 2, buy: true }, bad: { kind: 'market_trade', resource: 'grain', lots: 0, buy: true }, reason: MARKET_REASONS.badLots };
+    },
+  },
+  { kind: 'appoint_governor', setup: () => ({ ok: { kind: 'appoint_governor', provinceId: 'prov_tira', characterId: 'char_senapati' }, bad: { kind: 'appoint_governor', provinceId: 'prov_dakshinagiri', characterId: 'char_senapati' }, reason: POLITICS_REASONS.provinceNotOwned }) },
+  { kind: 'appoint_council', setup: () => ({ ok: { kind: 'appoint_council', seat: 'treasurer', characterId: 'char_claimant' }, bad: { kind: 'appoint_council', seat: 'treasurer', characterId: 'char_regent' }, reason: COUNCIL_REASONS.ruler }) },
+  { kind: 'designate_heir', setup: () => ({ ok: { kind: 'designate_heir', characterId: 'char_claimant' }, bad: { kind: 'designate_heir', characterId: 'char_regent' }, reason: DYNASTY_REASONS.ruler }) },
+  {
+    kind: 'arrange_marriage',
+    setup: (w) => {
+      const r = w.diplomacy.relations['heartland|highland']!;
+      r.atWar = false;
+      r.opinion = 60;
+      return { ok: { kind: 'arrange_marriage', characterId: 'char_heir', otherCharacterId: 'char_giri_kumari' }, bad: { kind: 'arrange_marriage', characterId: 'char_regent', otherCharacterId: 'char_giri_kumari' }, reason: DIPLOMACY_REASONS.marriage };
+    },
+  },
+  {
+    kind: 'propose',
+    setup: (w) => {
+      for (const t of Object.values(w.diplomacy.treaties)) if (t.type === 'trade') t.endDay = 0;
+      return { ok: { kind: 'propose', to: 'forest', type: 'trade', terms: emptyTerms() }, bad: { kind: 'propose', to: 'forest', type: 'peace', terms: emptyTerms() }, reason: DIPLOMACY_REASONS.notAtWar };
+    },
+  },
+  {
+    kind: 'respond_proposal',
+    setup: (w) => {
+      const res = propose(w, 'forest', 'heartland', 'non_aggression', emptyTerms(), []);
+      return { ok: { kind: 'respond_proposal', proposalId: res.proposalId!, accept: true }, bad: { kind: 'respond_proposal', proposalId: 'prop_none', accept: true }, reason: DIPLOMACY_REASONS.noProposal };
+    },
+  },
+  { kind: 'spy_mission', setup: () => ({ ok: { kind: 'spy_mission', targetFactionId: 'highland', mission: 'gather_intel', settlementId: null, agentCharacterId: null }, bad: { kind: 'spy_mission', targetFactionId: 'heartland', mission: 'gather_intel', settlementId: null, agentCharacterId: null }, reason: ESPIONAGE_REASONS.self }) },
+  {
+    kind: 'recall_agent',
+    setup: (w) => {
+      const r = startMission(w, 'heartland', 'highland', 'gather_intel', null, null);
+      return { ok: { kind: 'recall_agent', agentId: r.agentId! }, bad: { kind: 'recall_agent', agentId: 'agent_none' }, reason: ESPIONAGE_REASONS.noAgent };
+    },
+  },
+  {
+    kind: 'event_choice',
+    setup: (w) => {
+      runDays(w, 2, { autoEvents: false });
+      const inst = w.events.pending.find((p) => p.defId === 'evt_bc_prologue')!;
+      return { ok: { kind: 'event_choice', eventInstanceId: inst.id, choiceId: 'begin' }, bad: { kind: 'event_choice', eventInstanceId: 'evt_none', choiceId: 'begin' }, reason: COMMAND_REASONS.noEvent };
+    },
+  },
+  {
+    kind: 'negotiate_rebels',
+    setup: (w) => {
+      const s = w.settlements.ratnapura!;
+      s.unrest = 0.4;
+      s.rebellionStage = 'protest';
+      return { ok: { kind: 'negotiate_rebels', settlementId: 'ratnapura', offer: 'tax_cut' }, bad: { kind: 'negotiate_rebels', settlementId: 'rajapura', offer: 'tax_cut' }, reason: POLITICS_REASONS.calm };
+    },
+  },
+  {
+    kind: 'engagement_decision',
+    setup: (w) => {
+      quiet(w);
+      const a = makeArmy(w, 'army_p', 'Host', 'heartland', 0, 2000, [{ unitClass: 'spearmen', formations: 6 }], null);
+      const b = makeArmy(w, 'army_e', 'Foe', 'highland', 60, 2000, [{ unitClass: 'spearmen', formations: 1 }], null);
+      w.armies[a.id] = a;
+      w.armies[b.id] = b;
+      const e = createEngagement(w, a, b, [], getRegionHeightfield(w), 'field', null);
+      return { ok: { kind: 'engagement_decision', engagementId: e.id, decision: 'autoresolve' }, bad: { kind: 'engagement_decision', engagementId: 'eng_none', decision: 'autoresolve' }, reason: COMMAND_REASONS.noEngagement };
+    },
+  },
+  {
+    kind: 'prisoners',
+    setup: (w) => {
+      quiet(w);
+      const a = makeArmy(w, 'army_p', 'Host', 'heartland', 0, 2000, [{ unitClass: 'spearmen', formations: 6 }, { unitClass: 'cavalry', formations: 2 }], null);
+      const b = makeArmy(w, 'army_e', 'Foe', 'highland', 60, 2000, [{ unitClass: 'archers', formations: 1 }], null);
+      w.armies[a.id] = a;
+      w.armies[b.id] = b;
+      const e = createEngagement(w, a, b, [], getRegionHeightfield(w), 'field', null);
+      issue(w, { kind: 'engagement_decision', engagementId: e.id, decision: 'autoresolve' });
+      return { ok: { kind: 'prisoners', engagementId: e.id, decision: 'release' }, bad: { kind: 'prisoners', engagementId: 'eng_none', decision: 'release' }, reason: PRISONER_REASONS.noBattle };
+    },
+  },
+  {
+    kind: 'capture_decision',
+    setup: (w) => {
+      captureSettlement(w, w.settlements.pashanagram!, 'heartland', [], 'assault');
+      return { ok: { kind: 'capture_decision', settlementId: 'pashanagram', decision: 'occupy' }, bad: { kind: 'capture_decision', settlementId: 'giridurg', decision: 'occupy' }, reason: SIEGE_REASONS.noCapture };
+    },
+  },
+];
+
+describe('every strategic command is accepted or refused with its reason (SIM-01 phase G)', () => {
+  it('covers every StrategicCommand kind', () => {
+    const kinds = new Set(CASES.map((c) => c.kind));
+    const all: StrategicCommand['kind'][] = ['move_army', 'army_order', 'set_army_stance', 'split_army', 'merge_armies', 'disband_army', 'recruit', 'build', 'cancel_construction', 'repair_road', 'set_tax_rate', 'set_tax_policy', 'set_labor', 'requisition_grain', 'send_relief', 'create_depot', 'transfer_supply', 'appoint_governor', 'appoint_council', 'designate_heir', 'arrange_marriage', 'propose', 'respond_proposal', 'spy_mission', 'recall_agent', 'event_choice', 'negotiate_rebels', 'engagement_decision', 'market_trade', 'start_landmark', 'set_policy', 'forced_march', 'prisoners', 'capture_decision', 'set_rally_point', 'repair_building'];
+    for (const k of all) expect(kinds.has(k), k).toBe(true);
+  });
+
+  for (const c of CASES) {
+    it(c.kind, () => {
+      const w = campaign(5);
+      const { ok, bad, reason } = c.setup(w);
+      const fid = c.faction ?? 'heartland';
+      const issuedBad = { factionId: fid, hour: w.calendar.totalHours, cmd: bad };
+      expect(validateStrategicCommand(w, issuedBad)).toBe(reason);
+      const out: SimEvent[] = [];
+      expect(applyStrategicCommand(w, issuedBad, out, getRegionHeightfield(w))).toBe(false);
+      expect(out.some((e) => e.kind === 'notification' && e.text === reason)).toBe(true);
+      const issuedOk = { factionId: fid, hour: w.calendar.totalHours, cmd: ok };
+      expect(validateStrategicCommand(w, issuedOk)).toBeNull();
+      expect(applyStrategicCommand(w, issuedOk, [], getRegionHeightfield(w))).toBe(true);
+    });
+  }
 });

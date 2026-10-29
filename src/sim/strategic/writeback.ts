@@ -16,13 +16,11 @@
  */
 import type { ArmyState, BattleOutcome, EngagementId, FactionId, SettlementState, SideIndex, SimEvent, Vec2, WorldState } from '../../core/types';
 import { isRebelFaction } from '../../core/types';
-import { sortedKeys } from '../../core/ids';
-import { getHeightfield } from '../../core/terrain/cache';
 import { FACTIONS } from '../../data/factions';
 import { REGION_FEATURES } from '../../data/region';
 import { RULES } from '../../data/rules';
 import { removeArmy, orderArmy } from './armies';
-import { addChronicle, addStat, maxStat, notifyPlayer, pushBattleHistory, today } from './state';
+import { addChronicle, addStat, maxStat, notifyPlayer, pushBattleHistory, regionTerrain, stableKeys, today } from './state';
 import { relationOf } from './treaties';
 
 type CaptureFn = (world: WorldState, s: SettlementState, captor: FactionId, out: SimEvent[], how: 'assault' | 'surrender' | 'undefended') => void;
@@ -51,7 +49,7 @@ export function featurePosition(world: WorldState, featureId: string): Vec2 | nu
   const s = world.settlements[f.nearSettlement];
   if (!s) return null;
   if (f.kind === 'bridge' || f.kind === 'ford') {
-    const terrain = getHeightfield(world.region.terrain);
+    const terrain = regionTerrain(world);
     let best: Vec2 | null = null;
     let bd = Infinity;
     for (const eid of world.roads.adjacency[`node_${s.id}`] ?? []) {
@@ -87,7 +85,7 @@ export function battlePlaceName(world: WorldState, x: number, z: number): string
   if (best) return best;
   let sn = 'the plains';
   let sd = Infinity;
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id]!;
     const d = (s.x - x) * (s.x - x) + (s.z - z) * (s.z - z);
     if (d < sd) {
@@ -127,7 +125,7 @@ export function retreatDestination(world: WorldState, a: ArmyState): { kind: 'ga
   let best: Vec2 | null = null;
   let bd = Infinity;
   const min2 = RETREAT_MIN_DISTANCE * RETREAT_MIN_DISTANCE;
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id]!;
     if (s.ownerFactionId !== a.factionId || s.besiegedBy) continue;
     const d = (s.x - a.x) * (s.x - a.x) + (s.z - a.z) * (s.z - a.z);
@@ -141,7 +139,7 @@ export function retreatDestination(world: WorldState, a: ArmyState): { kind: 'ga
     }
   }
   if (refuge) return { kind: 'garrison', settlementId: refuge.id };
-  for (const id of sortedKeys(world.depots)) {
+  for (const id of stableKeys('depots', world.depots as Record<string, unknown>)) {
     const d0 = world.depots[id]!;
     if (d0.factionId !== a.factionId) continue;
     const d = (d0.x - a.x) * (d0.x - a.x) + (d0.z - a.z) * (d0.z - a.z);
@@ -164,12 +162,27 @@ function aiPrisonerDecision(world: WorldState, factionId: FactionId): 'ransom' |
  * Prisoner decision for a won battle: ransom (the loser pays 5 per prisoner, capped at 30% of its treasury; opinion -5)
  * or release (opinion +5 per 100 released, max +20). Returns a reason when refused.
  */
-export function decidePrisoners(world: WorldState, factionId: FactionId, engagementId: string, decision: 'ransom' | 'release', out: SimEvent[]): string | null {
+export const PRISONER_REASONS = {
+  noBattle: 'No such battle',
+  notVictor: 'Only the victor decides the fate of prisoners',
+  done: 'The prisoners have already been dealt with',
+} as const;
+
+export function validatePrisoners(world: WorldState, factionId: FactionId, engagementId: string): string | null {
   const e = world.engagements[engagementId];
-  if (!e || !e.outcome) return 'No such battle';
+  if (!e || !e.outcome) return PRISONER_REASONS.noBattle;
   const o = e.outcome;
-  if (o.winner === null || o.sides[o.winner].factionId !== factionId) return 'Only the victor decides the fate of prisoners';
-  if (e.prisonerDecision !== null) return 'The prisoners have already been dealt with';
+  if (o.winner === null || o.sides[o.winner].factionId !== factionId) return PRISONER_REASONS.notVictor;
+  if (e.prisonerDecision !== null) return PRISONER_REASONS.done;
+  return null;
+}
+
+export function decidePrisoners(world: WorldState, factionId: FactionId, engagementId: string, decision: 'ransom' | 'release', out: SimEvent[]): string | null {
+  const reason = validatePrisoners(world, factionId, engagementId);
+  if (reason) return reason;
+  const e = world.engagements[engagementId]!;
+  const o = e.outcome!;
+  if (o.winner === null) return PRISONER_REASONS.notVictor;
   const loser = o.sides[(1 - o.winner) as SideIndex].factionId;
   const prisoners = o.sides[o.winner].prisoners;
   e.prisonerDecision = decision;
@@ -213,7 +226,7 @@ export function applyBattleOutcome(world: WorldState, engagementId: EngagementId
       : `The Battle of ${place}: ${capitalizeFirst(names[outcome.winner]!)} defeated ${names[1 - outcome.winner]}; ${killed} fell.`;
   pushBattleHistory(world, outcome);
   const engaged = outcome.sides[0].startSoldiers + outcome.sides[1].startSoldiers;
-  const terrain = getHeightfield(world.region.terrain);
+  const terrain = regionTerrain(world);
   // Rebel settlements involved (read before armies are removed).
   const rebelSettlement: [string | null, string | null] = [null, null];
   for (const side of [0, 1] as const) {

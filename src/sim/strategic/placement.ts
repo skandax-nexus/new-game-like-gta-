@@ -32,10 +32,10 @@ import type {
 } from '../../core/types';
 import { BUILDING_TYPES } from '../../core/types';
 import { dcos, dsin, facingOf, hash1, TWO_PI } from '../../core/math';
-import { getHeightfield } from '../../core/terrain/cache';
 import { BUILDINGS } from '../../data/buildings';
 import { RULES } from '../../data/rules';
 import { landmarkDef } from './modifiers';
+import { regionTerrain } from './state';
 
 export const GRID_CELL = RULES.construction.gridCell;
 /** Grid half-size beyond the settlement radius (m). */
@@ -188,7 +188,7 @@ export function getSettlementGrid(world: WorldState, s: SettlementState): Settle
   const key = gridKey(world, s);
   const hit = gridCache.get(key);
   if (hit) return hit;
-  const hf = getHeightfield(world.region.terrain);
+  const hf = regionTerrain(world);
   const n = Math.ceil((s.radius + GRID_MARGIN) / GRID_CELL);
   const size = n * 2;
   const total = size * size;

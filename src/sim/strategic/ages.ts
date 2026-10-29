@@ -10,10 +10,10 @@
  */
 import type { AgeId, BuildingType, ConstructionJob, FactionId, LandmarkDef, SettlementState, TreatyType, UnitClass, WorldState } from '../../core/types';
 import { AGE_IDS } from '../../core/types';
-import { sortedKeys } from '../../core/ids';
 import { AGES, LANDMARKS, nextAge } from '../../data/ages';
 import { BUILDINGS } from '../../data/buildings';
 import { UNITS } from '../../data/units';
+import { stableKeys } from './state';
 
 export function ageIdx(age: AgeId): number {
   return AGE_IDS.indexOf(age);
@@ -37,19 +37,19 @@ export interface AgeChecklist {
 
 export function ownedSettlementCount(world: WorldState, factionId: FactionId): number {
   let n = 0;
-  for (const id of sortedKeys(world.settlements)) if (world.settlements[id]!.ownerFactionId === factionId) n++;
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) if (world.settlements[id]!.ownerFactionId === factionId) n++;
   return n;
 }
 
 export function ownedProvinceCount(world: WorldState, factionId: FactionId): number {
   let n = 0;
-  for (const id of sortedKeys(world.provinces)) if (world.provinces[id]!.ownerFactionId === factionId) n++;
+  for (const id of stableKeys('provinces', world.provinces as Record<string, unknown>)) if (world.provinces[id]!.ownerFactionId === factionId) n++;
   return n;
 }
 
 export function realmPopulation(world: WorldState, factionId: FactionId): number {
   let n = 0;
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id]!;
     if (s.ownerFactionId === factionId) n += s.population;
   }
@@ -59,7 +59,7 @@ export function realmPopulation(world: WorldState, factionId: FactionId): number
 /** Distinct building types (any level) across the faction's settlements. */
 export function distinctBuildingTypes(world: WorldState, factionId: FactionId): number {
   const seen = new Set<BuildingType>();
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id]!;
     if (s.ownerFactionId !== factionId) continue;
     for (const b of s.buildings) if (b.level > 0) seen.add(b.type);
@@ -89,7 +89,7 @@ export function ageChecklist(world: WorldState, factionId: FactionId): AgeCheckl
 /** Landmark jobs of a faction currently queued anywhere. */
 export function landmarkJobs(world: WorldState, factionId: FactionId): { settlement: SettlementState; index: number; job: ConstructionJob }[] {
   const out: { settlement: SettlementState; index: number; job: ConstructionJob }[] = [];
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id]!;
     if (s.ownerFactionId !== factionId) continue;
     s.construction.forEach((job, index) => {
@@ -130,12 +130,12 @@ export function landmarkOptions(world: WorldState, factionId: FactionId): Landma
   const out: LandmarkOption[] = [];
   for (const lm of LANDMARKS) {
     if (lm.factionId !== factionId) continue;
-    const allowed = sortedKeys(world.settlements).filter((id) => world.settlements[id]!.ownerFactionId === factionId && lm.allowedIn.includes(world.settlements[id]!.kind));
+    const allowed = stableKeys('settlements', world.settlements as Record<string, unknown>).filter((id) => world.settlements[id]!.ownerFactionId === factionId && lm.allowedIn.includes(world.settlements[id]!.kind));
     const opt: LandmarkOption = { landmark: lm, status: 'locked', reason: null, settlementId: null, progress: 0, allowedSettlements: allowed };
     const job = jobs.find((j) => j.job.landmarkId === lm.id);
     if (f.landmarks.includes(lm.id)) {
       opt.status = 'completed';
-      for (const id of sortedKeys(world.settlements)) if (world.settlements[id]!.landmarks.some((l) => l.id === lm.id && l.builtBy === factionId)) opt.settlementId = id;
+      for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) if (world.settlements[id]!.landmarks.some((l) => l.id === lm.id && l.builtBy === factionId)) opt.settlementId = id;
       opt.progress = 1;
     } else if (job) {
       opt.status = 'in_progress';

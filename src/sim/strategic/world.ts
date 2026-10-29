@@ -13,7 +13,6 @@ import type {
   CharacterState,
   DiplomacyState,
   DynastyState,
-  EngagementId,
   EspionageState,
   FactionId,
   FactionLedger,
@@ -37,7 +36,7 @@ import type {
 } from '../../core/types';
 import { VICTORY_TYPES } from '../../core/types';
 import { STATS_SAMPLE_LIMIT, WORLD_SCHEMA_VERSION } from '../../core/constants';
-import { nextWorldId, relationKey, sortedKeys } from '../../core/ids';
+import { nextWorldId, relationKey } from '../../core/ids';
 import { Rng, rngStateFromSeed } from '../../core/rng';
 import { dcos, dsin, TWO_PI } from '../../core/math';
 import { getHeightfield } from '../../core/terrain/cache';
@@ -53,31 +52,26 @@ import { REGION } from '../../data/region';
 import { DEFAULT_SCENARIO_ID, SCENARIOS } from '../../data/campaign';
 import { PERSON_NAMES } from '../../data/names';
 import { advanceCalendar, createCalendar, floodLevel, makeWeather, seasonOf, totalDays, updateMonsoonDaily, updateWeatherDaily, type CalendarAdvance } from './seasons';
-import { addChronicle, pushBattleHistory, withWorldRng } from './state';
-import { executeMarketTrade } from './market';
+import { addChronicle, pushBattleHistory, regionTerrain, stableKeys, withWorldRng } from './state';
 import { updateRoadBlocks } from './network';
 import { factionMod } from './modifiers';
 import { laborFor } from './economy';
 import { assignMissingCells } from './placement';
-import { cancelConstruction, queueBuild, queueRepair, startLandmark } from './construction';
-import { queueRecruit } from './recruitment';
-import { disbandArmy, mergeArmies, splitArmy } from './armies';
-import { createDepot, requisitionGrain, sendRelief, transferSupply } from './supply';
-import { decideCapture, updateSiegesDaily } from './siege';
+import { updateSiegesDaily } from './siege';
 import { expireGhostsDaily, updateVisibilityHourly } from './visibility';
-import { decidePrisoners } from './writeback';
 import { updateEconomyDaily, updateEconomyMonthly } from './economy';
-import { orderArmy, updateArmiesDaily, updateArmiesHourly, armySoldiers, makeArmy, makeArmyUnit } from './armies';
-import { arrangeMarriage, declareWar, makePeace, propose, respondToProposal, updateDiplomacyDaily, updateDiplomacyMonthly, seedTreaty, validateResponse } from './diplomacy';
-import { appointGovernor, negotiateRebels, updatePoliticsDaily, updatePoliticsMonthly } from './politics';
-import { designateHeir, updateCharactersYearly } from './dynasty';
-import { appointCouncil, noteCommandForCouncil, updateCouncilMonthly } from './council';
+import { updateArmiesDaily, updateArmiesHourly, armySoldiers, makeArmy, makeArmyUnit } from './armies';
+import { declareWar, makePeace, updateDiplomacyDaily, updateDiplomacyMonthly, seedTreaty } from './diplomacy';
+import { updatePoliticsDaily, updatePoliticsMonthly } from './politics';
+import { updateCharactersYearly } from './dynasty';
+import { noteCommandForCouncil, updateCouncilMonthly } from './council';
+import { executeCommand, validateCommand } from './commands';
 import { updateVictoryDaily } from './victory';
 import { updateHeroAvailabilityDaily } from './hero';
-import { recallAgent, startMission, updateEspionageDaily } from './espionage';
-import { checkObjectives, evaluateEventsDaily, resolveEventChoice } from './events';
+import { updateEspionageDaily } from './espionage';
+import { checkObjectives, evaluateEventsDaily } from './events';
 import { runCampaignAI } from './ai';
-import { decideEngagement, stepDistantBattles } from './autoresolve';
+import { stepDistantBattles } from './autoresolve';
 
 // Shared helpers live in state.ts (no import cycles); re-exported for existing callers.
 export { addChronicle, pushBattleHistory, withWorldRng };
@@ -628,7 +622,7 @@ export function tickWorld(world: WorldState, commands: readonly IssuedStrategicC
     updateDiplomacyDaily(world, out);
     updateEspionageDaily(world, out);
     evaluateEventsDaily(world, out);
-    for (const fid of sortedKeys(world.factions)) {
+    for (const fid of stableKeys('factions', world.factions as Record<string, unknown>)) {
       const f = world.factions[fid] as FactionState;
       if (f.isPlayer || !f.alive) continue;
       const cmds = runCampaignAI(world, fid, terrain);
@@ -655,174 +649,23 @@ export function tickWorld(world: WorldState, commands: readonly IssuedStrategicC
 
 /** Region heightfield for this world (cached). */
 export function getRegionHeightfield(world: WorldState): Heightfield {
-  return getHeightfield(world.region.terrain);
+  return regionTerrain(world);
 }
 
 // ---------------------------------------------------------------------------------------------------
 // Commands
 // ---------------------------------------------------------------------------------------------------
 
-/** Validate a command; returns a human-readable reason if it cannot be applied, else null. */
+/** Validate a command; returns the player-facing reason it would be refused, else null (commands.ts). */
 export function validateStrategicCommand(world: WorldState, issued: IssuedStrategicCommand): string | null {
-  const c = issued.cmd;
-  const f = world.factions[issued.factionId];
-  if (!f || !f.alive) return 'Unknown or defeated faction';
-  switch (c.kind) {
-    case 'move_army':
-    case 'army_order':
-    case 'set_army_stance':
-    case 'split_army':
-    case 'disband_army': {
-      const a = world.armies[c.armyId];
-      if (!a) return 'No such army';
-      if (a.factionId !== issued.factionId) return 'Not your army';
-      if (a.status === 'in_battle') return 'Army is in battle';
-      return null;
-    }
-    case 'build':
-    case 'recruit':
-    case 'set_tax_rate':
-    case 'set_labor': {
-      const s = world.settlements[c.settlementId];
-      if (!s) return 'No such settlement';
-      if (s.ownerFactionId !== issued.factionId) return 'Not your settlement';
-      return null;
-    }
-    default:
-      return null;
-  }
+  return validateCommand(world, issued);
 }
 
 /** Apply one command. Returns true if accepted (refusals notify the player with the reason). */
 export function applyStrategicCommand(world: WorldState, issued: IssuedStrategicCommand, out: SimEvent[], terrain: TerrainQuery): boolean {
-  const ok = applyCommand(world, issued, out, terrain);
+  const ok = executeCommand(world, issued, out, terrain);
   if (ok) noteCommandForCouncil(world, issued);
   return ok;
-}
-
-function applyCommand(world: WorldState, issued: IssuedStrategicCommand, out: SimEvent[], terrain: TerrainQuery): boolean {
-  const reason = validateStrategicCommand(world, issued);
-  if (reason) {
-    if (world.factions[issued.factionId]?.isPlayer) out.push({ kind: 'notification', factionId: issued.factionId, severity: 'warning', text: reason, focus: null });
-    return false;
-  }
-  issued.hour = world.calendar.totalHours;
-  const c = issued.cmd;
-  switch (c.kind) {
-    case 'move_army':
-      return orderArmy(world, c.armyId, { kind: 'move', x: c.x, z: c.z }, terrain);
-    case 'army_order':
-      return orderArmy(world, c.armyId, c.order, terrain);
-    case 'set_army_stance': {
-      const a = world.armies[c.armyId];
-      if (a) a.stance = c.stance;
-      return !!a;
-    }
-    case 'forced_march': {
-      const a = world.armies[c.armyId];
-      if (!a || a.factionId !== issued.factionId) return report(world, issued, out, 'Not your army');
-      a.forcedMarch = c.on;
-      return true;
-    }
-    case 'split_army':
-      return report(world, issued, out, splitArmy(world, issued.factionId, c.armyId, c.unitIds).reason);
-    case 'merge_armies':
-      return report(world, issued, out, mergeArmies(world, issued.factionId, c.armyId, c.otherArmyId));
-    case 'disband_army':
-      return report(world, issued, out, disbandArmy(world, issued.factionId, c.armyId, out));
-    case 'requisition_grain':
-      return report(world, issued, out, requisitionGrain(world, issued.factionId, c.settlementId, c.amount, c.toArmyId, c.toDepotId, out));
-    case 'send_relief':
-      return report(world, issued, out, sendRelief(world, issued.factionId, c.settlementId, c.food, c.wealth, out));
-    case 'create_depot':
-      return report(world, issued, out, createDepot(world, issued.factionId, c.x, c.z, c.settlementId, out).reason);
-    case 'transfer_supply':
-      return report(world, issued, out, transferSupply(world, issued.factionId, c.fromId, c.toId, c.amount));
-    case 'prisoners':
-      return report(world, issued, out, decidePrisoners(world, issued.factionId, c.engagementId, c.decision, out));
-    case 'capture_decision':
-      return report(world, issued, out, decideCapture(world, issued.factionId, c.settlementId, c.decision, out));
-    case 'set_tax_rate': {
-      const s = world.settlements[c.settlementId];
-      if (s) s.taxRate = Math.min(0.6, Math.max(0, c.rate));
-      return !!s;
-    }
-    case 'set_tax_policy': {
-      const f = world.factions[issued.factionId];
-      if (f) f.taxPolicy = c.policy;
-      return !!f;
-    }
-    case 'set_labor': {
-      const s = world.settlements[c.settlementId];
-      if (s) s.laborAllocation = { ...c.allocation };
-      return !!s;
-    }
-    case 'build':
-      return report(world, issued, out, queueBuild(world, issued.factionId, c.settlementId, c.building, c.cell, c.rot, out).reason);
-    case 'recruit':
-      return report(world, issued, out, queueRecruit(world, issued.factionId, c.settlementId, c.unitClass, c.formations, c.targetArmyId).reason);
-    case 'cancel_construction':
-      return report(world, issued, out, cancelConstruction(world, issued.factionId, c.settlementId, c.building, c.jobIndex, out).reason);
-    case 'repair_building':
-      return report(world, issued, out, queueRepair(world, issued.factionId, c.settlementId, c.building, out).reason);
-    case 'start_landmark':
-      return report(world, issued, out, startLandmark(world, issued.factionId, c.landmarkId, c.settlementId, c.cell, c.rot, out).reason);
-    case 'set_rally_point': {
-      const s = world.settlements[c.settlementId];
-      if (!s || s.ownerFactionId !== issued.factionId) return false;
-      if (c.rallyPoint === null) delete s.rallyPoint;
-      else if (c.rallyPoint.kind === 'army') {
-        if (world.armies[c.rallyPoint.armyId]?.factionId !== issued.factionId) return report(world, issued, out, 'That army is not yours');
-        s.rallyPoint = { kind: 'army', armyId: c.rallyPoint.armyId };
-      } else s.rallyPoint = { kind: 'point', x: c.rallyPoint.x, z: c.rallyPoint.z };
-      return true;
-    }
-    case 'event_choice':
-      return resolveEventChoice(world, c.eventInstanceId, c.choiceId, out);
-    case 'propose':
-      return report(world, issued, out, propose(world, issued.factionId, c.to, c.type, c.terms, out).reason);
-    case 'respond_proposal': {
-      const r = validateResponse(world, issued.factionId, c.proposalId);
-      if (r) return report(world, issued, out, r);
-      respondToProposal(world, c.proposalId, c.accept, out);
-      return true;
-    }
-    case 'arrange_marriage':
-      return report(world, issued, out, arrangeMarriage(world, issued.factionId, c.characterId, c.otherCharacterId, out));
-    case 'appoint_council':
-      return report(world, issued, out, appointCouncil(world, issued.factionId, c.seat, c.characterId));
-    case 'spy_mission':
-      return report(world, issued, out, startMission(world, issued.factionId, c.targetFactionId, c.mission, c.settlementId, c.agentCharacterId).reason);
-    case 'recall_agent':
-      return report(world, issued, out, recallAgent(world, issued.factionId, c.agentId));
-    case 'engagement_decision':
-      return decideEngagement(world, c.engagementId as EngagementId, c.decision, out, terrain);
-    case 'designate_heir':
-      return report(world, issued, out, designateHeir(world, issued.factionId, c.characterId));
-    case 'market_trade':
-      return executeMarketTrade(world, issued.factionId, c.resource, c.lots, c.buy, out).ok;
-    case 'negotiate_rebels':
-      return report(world, issued, out, negotiateRebels(world, issued.factionId, c.settlementId, c.offer, out));
-    case 'appoint_governor':
-      return report(world, issued, out, appointGovernor(world, issued.factionId, c.provinceId, c.characterId, out));
-    case 'set_policy': {
-      const f = world.factions[issued.factionId];
-      if (!f) return false;
-      if (c.policy === 'hold_reserve') f.policies.holdReserve = c.on;
-      else f.policies.rationingUntilDay = c.on ? totalDays(world.calendar) + RULES.distribution.rationing.days : null;
-      return true;
-    }
-    default:
-      // TODO(Lead AI & Simulation): remaining commands (split/merge, depots, requisition, relief,
-      // marriages, governors, council, rebels, roads...). Keep validation in validateStrategicCommand.
-      return false;
-  }
-}
-
-/** Report a refusal reason to the player (AI reads reasons from validators). Returns true when `reason` is null. */
-function report(world: WorldState, issued: IssuedStrategicCommand, out: SimEvent[], reason: string | null): boolean {
-  if (reason && world.factions[issued.factionId]?.isPlayer) out.push({ kind: 'notification', factionId: issued.factionId, severity: 'warning', text: reason, focus: null });
-  return reason === null;
 }
 
 // Re-exported so callers (UI/AI) can declare war/peace without importing diplomacy directly.
@@ -836,7 +679,7 @@ export { declareWar, makePeace, makeArmy, makeArmyUnit };
 export function provinceAt(world: WorldState, x: number, z: number): string | null {
   let best: string | null = null;
   let bestD = Infinity;
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id] as SettlementState;
     const dx = s.x - x;
     const dz = s.z - z;
@@ -851,7 +694,7 @@ export function provinceAt(world: WorldState, x: number, z: number): string | nu
 
 function sampleStats(world: WorldState): void {
   const factions: WorldState['stats'][number]['factions'] = {};
-  for (const fid of sortedKeys(world.factions)) {
+  for (const fid of stableKeys('factions', world.factions as Record<string, unknown>)) {
     const f = world.factions[fid] as FactionState;
     let pop = 0;
     let food = 0;
@@ -889,7 +732,7 @@ export function summarizeWorld(world: WorldState): WorldSummary {
     date: { year: world.calendar.year, month: world.calendar.month, day: world.calendar.day, hour: world.calendar.hour },
     season: seasonOf(world.calendar),
     weather: world.weather.kind,
-    factions: sortedKeys(world.factions).map((id) => ({
+    factions: stableKeys('factions', world.factions as Record<string, unknown>).map((id) => ({
       id,
       treasury: Math.round(world.factions[id]!.treasury),
       settlements: Object.values(world.settlements).filter((s) => s.ownerFactionId === id).length,

@@ -23,7 +23,6 @@ import type {
   WorldState,
 } from '../../core/types';
 import { isRebelFaction } from '../../core/types';
-import { sortedKeys } from '../../core/ids';
 import { clamp01 } from '../../core/math';
 import { BALANCE } from '../../data/balance';
 import { BUILDINGS } from '../../data/buildings';
@@ -32,15 +31,7 @@ import { FACTIONS } from '../../data/factions';
 import { RULES } from '../../data/rules';
 import { UNITS } from '../../data/units';
 import { monsoonResult, monsoonYields, seasonOf } from './seasons';
-import {
-  addMonthToDate,
-  addStat,
-  foundingPopulation,
-  getStat,
-  MTD_PREFIX,
-  notifyPlayer,
-  today,
-} from './state';
+import { addMonthToDate, addStat, foundingPopulation, getStat, MTD_PREFIX, notifyPlayer, stableKeys, today } from './state';
 import { buildingLevel, emptyMods, factionMod, incomeMultiplier, sandboxFertility, settlementEffects, stageEffect, type ModRecord } from './modifiers';
 import { connectedRoadShare, realmComponents } from './network';
 import { countTreaties, paysTributeTo } from './treaties';
@@ -157,7 +148,7 @@ function holdsLandmarkId(world: WorldState, factionId: FactionId | null, id: str
   if (!factionId) return false;
   const f = world.factions[factionId];
   if (!f || !f.landmarks.includes(id)) return false;
-  for (const sid of sortedKeys(world.settlements)) {
+  for (const sid of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[sid] as SettlementState;
     for (const l of s.landmarks) if (l.id === id && l.builtBy === factionId) return s.ownerFactionId === factionId;
   }
@@ -230,7 +221,7 @@ interface DayScratch {
  */
 function deliverSandboxStockpiles(world: WorldState): void {
   if (world.mode !== 'sandbox') return;
-  for (const fid of sortedKeys(world.factions)) {
+  for (const fid of stableKeys('factions', world.factions as Record<string, unknown>)) {
     const f = world.factions[fid] as FactionState;
     if (f.flags.start_stockpile) continue;
     const m = SANDBOX_MATERIALS[fid];
@@ -300,7 +291,7 @@ function hostileArmyNear(world: WorldState, s: SettlementState, radius: number):
   const owner = s.ownerFactionId;
   if (!owner) return false;
   const r2 = radius * radius;
-  for (const id of sortedKeys(world.armies)) {
+  for (const id of stableKeys('armies', world.armies as Record<string, unknown>)) {
     const a = world.armies[id]!;
     if (a.status === 'marching' || a.units.length === 0) continue;
     if ((a.x - s.x) * (a.x - s.x) + (a.z - s.z) * (a.z - s.z) > r2) continue;
@@ -479,7 +470,7 @@ function settleStores(world: WorldState, s: SettlementState, mods: ModRecord, ou
 function nearestOwned(world: WorldState, s: SettlementState): SettlementState | null {
   let best: SettlementState | null = null;
   let bd = Infinity;
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const o = world.settlements[id] as SettlementState;
     if (o === s || o.ownerFactionId !== s.ownerFactionId) continue;
     const d = (o.x - s.x) * (o.x - s.x) + (o.z - s.z) * (o.z - s.z);
@@ -530,7 +521,7 @@ export function materialsProduction(world: WorldState, s: SettlementState): { ti
 /** The whole daily economy. */
 export function updateEconomyDaily(world: WorldState, out: SimEvent[]): void {
   deliverSandboxStockpiles(world);
-  const ids = sortedKeys(world.settlements);
+  const ids = stableKeys('settlements', world.settlements as Record<string, unknown>);
   const day: DayScratch = { produced: new Map() };
   const modsById = new Map<string, ModRecord>();
   // 1. Derived variables, crops, production, consumption.
@@ -546,7 +537,7 @@ export function updateEconomyDaily(world: WorldState, out: SimEvent[]): void {
     s.foodStored -= s.foodConsumption;
   }
   // 2. Distribution inside each realm.
-  for (const fid of sortedKeys(world.factions)) if (world.factions[fid]!.alive) distribute(world, fid);
+  for (const fid of stableKeys('factions', world.factions as Record<string, unknown>)) if (world.factions[fid]!.alive) distribute(world, fid);
   // 3. Storage, prices, population, local wealth, materials, jobs.
   for (const id of ids) {
     const s = world.settlements[id] as SettlementState;
@@ -575,7 +566,7 @@ export function updateEconomyDaily(world: WorldState, out: SimEvent[]): void {
 function expirePolicies(world: WorldState, out: SimEvent[]): void {
   const d = today(world);
   let anyRationing = false;
-  for (const fid of sortedKeys(world.factions)) {
+  for (const fid of stableKeys('factions', world.factions as Record<string, unknown>)) {
     const f = world.factions[fid] as FactionState;
     const until = f.policies.rationingUntilDay;
     if (until !== null && until <= d) {
@@ -667,12 +658,12 @@ export function armyUpkeep(world: WorldState, factionId: FactionId): number {
   const variants = FACTIONS[factionId]?.unitVariants;
   const unitCost = (cls: UnitClass, soldiers: number): number => soldiers * UNITS[cls].stats.upkeepWealth * (variants?.[cls]?.multipliers.upkeepWealth ?? 1);
   let sum = 0;
-  for (const aid of sortedKeys(world.armies)) {
+  for (const aid of stableKeys('armies', world.armies as Record<string, unknown>)) {
     const a = world.armies[aid]!;
     if (a.factionId !== factionId) continue;
     for (const u of a.units) sum += unitCost(u.unitClass, u.soldiers);
   }
-  for (const sid of sortedKeys(world.settlements)) {
+  for (const sid of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[sid]!;
     if (s.ownerFactionId !== factionId) continue;
     for (const u of s.garrison) sum += unitCost(u.unitClass, u.soldiers);
@@ -698,7 +689,7 @@ export function computeLedger(world: WorldState, factionId: FactionId): LedgerCo
   if (!f) return res;
   const mods = emptyMods();
   let owned = 0;
-  for (const sid of sortedKeys(world.settlements)) {
+  for (const sid of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[sid] as SettlementState;
     if (s.ownerFactionId !== factionId) continue;
     owned++;
@@ -718,7 +709,7 @@ export function computeLedger(world: WorldState, factionId: FactionId): LedgerCo
   const gov = factionMod(world, factionId, 'governanceCost');
   ledger.administration = owned * RULES.tax.adminPerSettlement * gov + Math.max(0, owned - 2 * governorSlots(world, factionId)) * RULES.tax.adminOverextension;
   // Tribute (payer -> overlord).
-  for (const tid of sortedKeys(world.diplomacy.treaties)) {
+  for (const tid of stableKeys('treaties', world.diplomacy.treaties as Record<string, unknown>)) {
     const t = world.diplomacy.treaties[tid]!;
     if (t.type !== 'tributary' || t.brokenBy !== null || (t.endDay !== null && t.endDay <= today(world))) continue;
     const payer = t.terms.payer;
@@ -747,8 +738,8 @@ export function projectLedger(world: WorldState, factionId: string): FactionLedg
 export function updateEconomyMonthly(world: WorldState, out: SimEvent[]): void {
   // Compute every ledger first so tribute uses last month's ledgers consistently.
   const comps = new Map<string, LedgerComputation>();
-  for (const fid of sortedKeys(world.factions)) if (world.factions[fid]!.alive) comps.set(fid, computeLedger(world, fid));
-  for (const fid of sortedKeys(world.factions)) {
+  for (const fid of stableKeys('factions', world.factions as Record<string, unknown>)) if (world.factions[fid]!.alive) comps.set(fid, computeLedger(world, fid));
+  for (const fid of stableKeys('factions', world.factions as Record<string, unknown>)) {
     const f = world.factions[fid] as FactionState;
     const c = comps.get(fid);
     if (!c) continue;
@@ -778,7 +769,7 @@ export function updateEconomyMonthly(world: WorldState, out: SimEvent[]): void {
       notifyPlayer(world, out, fid, 'danger', 'The treasury is empty - soldiers and officials go unpaid.');
     }
     let manpower = 0;
-    for (const sid of sortedKeys(world.settlements)) {
+    for (const sid of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
       const s = world.settlements[sid] as SettlementState;
       if (s.ownerFactionId !== fid) continue;
       if (pol.unrestPerMonth !== 0) s.unrest = clamp01(s.unrest + pol.unrestPerMonth);
@@ -787,7 +778,7 @@ export function updateEconomyMonthly(world: WorldState, out: SimEvent[]): void {
     f.manpower = manpower;
   }
   // Settlement monthly: recruit pool regen, requisition memory decay, relief counter, tax relief expiry.
-  for (const sid of sortedKeys(world.settlements)) {
+  for (const sid of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[sid] as SettlementState;
     const cap = s.recruitmentPotential;
     const regen = cap * RULES.recruitment.regenPerMonth * (0.5 + 0.5 * s.loyalty) * (1 / Math.max(0.5, s.grainPrice)) * stageEffect(s).recruitment;

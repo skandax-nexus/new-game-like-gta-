@@ -20,13 +20,13 @@ import type {
   WorldState,
 } from '../../core/types';
 import { AGE_IDS, isRebelFaction } from '../../core/types';
-import { sortedKeys } from '../../core/ids';
 import { AGES, LANDMARKS } from '../../data/ages';
 import { BUILDINGS } from '../../data/buildings';
 import { DIFFICULTY_DEFS } from '../../data/difficulty';
 import { FACTIONS } from '../../data/factions';
 import { RULES } from '../../data/rules';
 import type { RebellionStageEffect } from '../../data/rules';
+import { stableKeys } from './state';
 
 export type ModKey = keyof Required<SettlementModifiers>;
 export const MOD_KEYS: readonly ModKey[] = [
@@ -100,7 +100,7 @@ export function buildingCondition(s: SettlementState, type: BuildingType): numbe
 
 /** True when the faction holds the settlement where its landmark `id` stands. */
 export function holdsLandmark(world: WorldState, factionId: FactionId, landmarkId: string): boolean {
-  for (const sid of sortedKeys(world.settlements)) {
+  for (const sid of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[sid] as SettlementState;
     for (const l of s.landmarks) if (l.id === landmarkId && l.builtBy === factionId) return s.ownerFactionId === factionId;
   }
@@ -125,7 +125,7 @@ export function settlementEffects(world: WorldState, s: SettlementState, out: Mo
   }
   const owner = s.ownerFactionId;
   if (owner) {
-    for (const sid of sortedKeys(world.settlements)) {
+    for (const sid of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
       const host = world.settlements[sid] as SettlementState;
       if (host.ownerFactionId !== owner) continue;
       for (const l of host.landmarks) {

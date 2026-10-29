@@ -25,12 +25,12 @@ import type {
   WorldState,
 } from '../../core/types';
 import { REBELLION_STAGES } from '../../core/types';
-import { nextWorldId, sortedKeys } from '../../core/ids';
+import { nextWorldId } from '../../core/ids';
 import { EVENT_HISTORY_LIMIT } from '../../core/constants';
 import { EVENTS, getEventDef } from '../../data/events';
 import { SCENARIOS } from '../../data/campaign';
 import { seasonOf, totalDays } from './seasons';
-import { addChronicle, addStat, notifyPlayer, withWorldRng } from './state';
+import { addChronicle, addStat, notifyPlayer, stableKeys, withWorldRng } from './state';
 import { clamp01 } from '../../core/math';
 import { DIFFICULTY_DEFS } from '../../data/difficulty';
 import { armySoldiers, makeArmy } from './armies';
@@ -85,7 +85,7 @@ function resolveSettlements(world: WorldState, ref: ScopeRef, scope: EventScope)
       return c ? [c] : [];
     }
     case 'any_owned_settlement':
-      return sortedKeys(world.settlements)
+      return stableKeys('settlements', world.settlements as Record<string, unknown>)
         .map((id) => world.settlements[id]!)
         .filter((s) => s.ownerFactionId === scope.factionId);
     default:
@@ -390,7 +390,7 @@ export function evaluateEventsDaily(world: WorldState, out: SimEvent[]): void {
     fireEvent(world, def, s.scope, out);
   }
   // Triggered.
-  for (const fid of sortedKeys(world.factions)) {
+  for (const fid of stableKeys('factions', world.factions as Record<string, unknown>)) {
     const f = world.factions[fid]!;
     if (!f.alive) continue;
     for (const def of EVENTS) {

@@ -25,7 +25,7 @@ import { NAME_POOLS, PERSON_NAMES } from '../../data/names';
 import { RULES } from '../../data/rules';
 import { forceRebellionStage, rebelArmiesOf } from './politics';
 import { totalDays } from './seasons';
-import { addChronicle, notifyPlayer, worldRandom } from './state';
+import { addChronicle, notifyPlayer, stableKeys, worldRandom } from './state';
 import { registerWritebackHooks } from './writeback';
 
 const DY = RULES.dynasty;
@@ -64,7 +64,7 @@ export function successionLaw(world: WorldState, f: FactionState): SuccessionLaw
 
 function living(world: WorldState, pred: (c: CharacterState) => boolean): CharacterState[] {
   const out: CharacterState[] = [];
-  for (const id of sortedKeys(world.characters)) {
+  for (const id of stableKeys('characters', world.characters as Record<string, unknown>)) {
     const c = world.characters[id] as CharacterState;
     if (c.alive && !c.captiveOf && pred(c)) out.push(c);
   }
@@ -228,7 +228,7 @@ export function handleDeath(world: WorldState, characterId: string, out: SimEven
     if (a && a.commanderId === c.id) a.commanderId = null;
     c.armyId = null;
   }
-  for (const id of sortedKeys(world.armies)) if (world.armies[id]!.commanderId === c.id) world.armies[id]!.commanderId = null;
+  for (const id of stableKeys('armies', world.armies as Record<string, unknown>)) if (world.armies[id]!.commanderId === c.id) world.armies[id]!.commanderId = null;
   if (c.spouseId) {
     const sp = world.characters[c.spouseId];
     if (sp && sp.spouseId === c.id) sp.spouseId = null;
@@ -354,7 +354,7 @@ export function checkSuccession(world: WorldState, factionId: FactionId, out: Si
 export function updateCharactersYearly(world: WorldState, out: SimEvent[]): void {
   const year = world.calendar.year;
   // Aging and deaths.
-  for (const id of sortedKeys(world.characters)) {
+  for (const id of stableKeys('characters', world.characters as Record<string, unknown>)) {
     const c = world.characters[id]!;
     if (!c.alive) continue;
     c.health = Math.max(0, c.health - agingHealthLoss(year - c.birthYear));
@@ -362,7 +362,7 @@ export function updateCharactersYearly(world: WorldState, out: SimEvent[]): void
   }
   // Births: one roll per married couple with a wife of 18-40.
   const [lo, hi] = DY.fertileAges;
-  for (const id of sortedKeys(world.characters)) {
+  for (const id of stableKeys('characters', world.characters as Record<string, unknown>)) {
     const c = world.characters[id]!;
     if (!c.alive || c.gender !== 'female' || !c.spouseId) continue;
     const h = world.characters[c.spouseId];
@@ -385,7 +385,7 @@ export function updateCharactersYearly(world: WorldState, out: SimEvent[]): void
     if (f && !f.heirId) refreshHeir(world, f);
   }
   // Regencies end at the ruler's majority.
-  for (const fid of sortedKeys(world.factions)) {
+  for (const fid of stableKeys('factions', world.factions as Record<string, unknown>)) {
     const f = world.factions[fid]!;
     const until = f.flags.regency_until_year;
     if (typeof until === 'number' && year >= until) {

@@ -11,7 +11,7 @@
 import type { ArmyState, FactionId, RoadEdge, SettlementId, SettlementState, Vec2, WorldState } from '../../core/types';
 import { sortedKeys } from '../../core/ids';
 import { distToSegment } from '../../core/math';
-import { hostileToArmy } from './state';
+import { hostileToArmy, stableKeys } from './state';
 
 /** Map meters from a road polyline within which a stationary army blocks it. */
 export const ROAD_BLOCK_RADIUS = 120;
@@ -36,6 +36,58 @@ export function edgeEnds(world: WorldState, edge: RoadEdge): [SettlementId | nul
   return [world.roads.nodes[edge.a]?.settlementId ?? null, world.roads.nodes[edge.b]?.settlementId ?? null];
 }
 
+/** Polyline bounding box of an edge (cached per points array). */
+const boundsCache = new WeakMap<Vec2[], { minX: number; maxX: number; minZ: number; maxZ: number }>();
+export function edgeBounds(edge: RoadEdge): { minX: number; maxX: number; minZ: number; maxZ: number } {
+  let b = boundsCache.get(edge.points);
+  if (b) return b;
+  b = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity };
+  for (const p of edge.points) {
+    if (p.x < b.minX) b.minX = p.x;
+    if (p.x > b.maxX) b.maxX = p.x;
+    if (p.z < b.minZ) b.minZ = p.z;
+    if (p.z > b.maxZ) b.maxZ = p.z;
+  }
+  boundsCache.set(edge.points, b);
+  return b;
+}
+
+/** Is (x, z) within `r` map m of the edge's polyline? (bounding-box early out) */
+export function nearEdge(edge: RoadEdge, x: number, z: number, r: number): boolean {
+  const b = edgeBounds(edge);
+  if (x < b.minX - r || x > b.maxX + r || z < b.minZ - r || z > b.maxZ + r) return false;
+  return distanceToEdge(edge, x, z) <= r;
+}
+
+/** Map meters cell of the lazily filled "near a road" grid (army attrition: on a road or off it). */
+const ROAD_CELL = 30;
+const nearRoadCache = new WeakMap<WorldState['roads'], Map<number, boolean>>();
+
+/** Is (x, z) within `r` (60) map m of any road? Cached per 30 m cell (cell centre test) for the daily systems. */
+export function nearAnyRoad(world: WorldState, x: number, z: number, r: number): boolean {
+  let m = nearRoadCache.get(world.roads);
+  if (!m) {
+    m = new Map();
+    nearRoadCache.set(world.roads, m);
+  }
+  const i = Math.floor(x / ROAD_CELL);
+  const j = Math.floor(z / ROAD_CELL);
+  const key = (i + 100000) * 200003 + (j + 100000) + r * 1e12;
+  const hit = m.get(key);
+  if (hit !== undefined) return hit;
+  const cx = (i + 0.5) * ROAD_CELL;
+  const cz = (j + 0.5) * ROAD_CELL;
+  let near = false;
+  for (const id of stableKeys('edges', world.roads.edges as Record<string, unknown>)) {
+    if (nearEdge(world.roads.edges[id] as RoadEdge, cx, cz, r)) {
+      near = true;
+      break;
+    }
+  }
+  m.set(key, near);
+  return near;
+}
+
 /** Is the edge blocked for `factionId` (an army hostile to it holds the road)? */
 export function blockedFor(world: WorldState, edge: RoadEdge, factionId: FactionId): boolean {
   if (!edge.blockedBy) return false;
@@ -53,14 +105,14 @@ function stationary(a: ArmyState): boolean {
 
 /** Daily: recompute RoadEdge.blockedBy from stationary armies near each polyline. */
 export function updateRoadBlocks(world: WorldState): void {
-  const armyIds = sortedKeys(world.armies);
-  for (const eid of sortedKeys(world.roads.edges)) {
+  const armyIds = stableKeys('armies', world.armies as Record<string, unknown>);
+  for (const eid of stableKeys('edges', world.roads.edges as Record<string, unknown>)) {
     const e = world.roads.edges[eid] as RoadEdge;
     let blocker: string | null = null;
     for (const aid of armyIds) {
       const a = world.armies[aid] as ArmyState;
       if (!stationary(a) || a.units.length === 0) continue;
-      if (distanceToEdge(e, a.x, a.z) <= ROAD_BLOCK_RADIUS) {
+      if (nearEdge(e, a.x, a.z, ROAD_BLOCK_RADIUS)) {
         blocker = a.id;
         break;
       }
@@ -75,7 +127,7 @@ export function updateRoadBlocks(world: WorldState): void {
  */
 export function realmComponents(world: WorldState, factionId: FactionId): Map<SettlementId, number> {
   const ids: SettlementId[] = [];
-  for (const id of sortedKeys(world.settlements)) if ((world.settlements[id] as SettlementState).ownerFactionId === factionId) ids.push(id);
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) if ((world.settlements[id] as SettlementState).ownerFactionId === factionId) ids.push(id);
   const parent = new Map<SettlementId, SettlementId>();
   for (const id of ids) parent.set(id, id);
   const find = (x: SettlementId): SettlementId => {
@@ -89,7 +141,7 @@ export function realmComponents(world: WorldState, factionId: FactionId): Map<Se
     }
     return r;
   };
-  for (const eid of sortedKeys(world.roads.edges)) {
+  for (const eid of stableKeys('edges', world.roads.edges as Record<string, unknown>)) {
     const e = world.roads.edges[eid] as RoadEdge;
     const [sa, sb] = edgeEnds(world, e);
     if (!sa || !sb || !parent.has(sa) || !parent.has(sb)) continue;
@@ -131,7 +183,7 @@ export function connectedRoadShare(world: WorldState, s: SettlementState): numbe
 export function nearestSettlement(world: WorldState, x: number, z: number, pred: (s: SettlementState) => boolean): SettlementState | null {
   let best: SettlementState | null = null;
   let bestD = Infinity;
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id] as SettlementState;
     if (!pred(s)) continue;
     const d = (s.x - x) * (s.x - x) + (s.z - z) * (s.z - z);

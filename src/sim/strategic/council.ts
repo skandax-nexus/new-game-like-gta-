@@ -13,10 +13,10 @@
  */
 import type { AdvisorRecommendation, CharacterState, CouncilSeat, EventChoiceDef, FactionId, FactionState, IssuedStrategicCommand, SimEvent, StrategicCommand, WorldState } from '../../core/types';
 import { COUNCIL_SEATS } from '../../core/types';
-import { sortedKeys } from '../../core/ids';
 import { RULES } from '../../data/rules';
-import { landmarkOptions } from './ages';
-import { validateBuild } from './construction';
+import { ageIdx, buildingAge, landmarkOptions } from './ages';
+import { BUILDINGS } from '../../data/buildings';
+import { buildingLevel } from './modifiers';
 import { areAtWar, effectiveOpinion, factionStrength, getRelation, validateProposal, emptyTerms } from './diplomacy';
 import { dailyConsumption, projectLedger, reserveDays } from './economy';
 import { activeAgents, leakIntel, validateSpyMission } from './espionage';
@@ -24,7 +24,7 @@ import { lawfulSuccessor } from './dynasty';
 import { validateNegotiation } from './politics';
 import { validateRecruit } from './recruitment';
 import { monsoonForecastFor } from './seasons';
-import { addChronicle, notifyPlayer, today } from './state';
+import { addChronicle, notifyPlayer, stableKeys, today } from './state';
 
 const CR = RULES.council;
 
@@ -77,7 +77,7 @@ export function appointCouncil(world: WorldState, factionId: FactionId, seat: Co
 type Advice = Omit<AdvisorRecommendation, 'advisorId' | 'seat'>;
 
 function owned(world: WorldState, fid: FactionId): string[] {
-  return sortedKeys(world.settlements).filter((id) => world.settlements[id]!.ownerFactionId === fid);
+  return stableKeys('settlements', world.settlements as Record<string, unknown>).filter((id) => world.settlements[id]!.ownerFactionId === fid);
 }
 
 function chiefMinister(world: WorldState, f: FactionState): Advice | null {
@@ -108,7 +108,7 @@ function chiefMinister(world: WorldState, f: FactionState): Advice | null {
     if (f.foodReserve >= food) return { topic: 'order', text: `${s.name} has less than a month of grain. Send it relief from the royal granaries.`, suggestion: { kind: 'send_relief', settlementId: id, food, wealth: 0 }, urgency: 0.7 };
   }
   // A long, losing war: sue for peace.
-  for (const oid of sortedKeys(world.factions)) {
+  for (const oid of stableKeys('factions', world.factions as Record<string, unknown>)) {
     const rel = getRelation(world, f.id, oid);
     if (!rel || !rel.atWar || rel.warStartDay === null || today(world) - rel.warStartDay < 180) continue;
     const score = rel.a === f.id ? rel.warScore : -rel.warScore;
@@ -123,7 +123,7 @@ function commander(world: WorldState, f: FactionState): Advice | null {
   // An enemy host near one of our settlements: raise spears there.
   for (const id of owned(world, f.id)) {
     const s = world.settlements[id]!;
-    for (const aid of sortedKeys(world.armies)) {
+    for (const aid of stableKeys('armies', world.armies as Record<string, unknown>)) {
       const a = world.armies[aid]!;
       if (a.factionId === f.id || !areAtWar(world, f.id, a.factionId)) continue;
       const d2 = (a.x - s.x) * (a.x - s.x) + (a.z - s.z) * (a.z - s.z);
@@ -134,12 +134,12 @@ function commander(world: WorldState, f: FactionState): Advice | null {
     }
   }
   // Stronger than an enemy: take the war to him.
-  for (const oid of sortedKeys(world.factions)) {
+  for (const oid of stableKeys('factions', world.factions as Record<string, unknown>)) {
     if (!areAtWar(world, f.id, oid)) continue;
     if (factionStrength(world, f.id) < 1.3 * factionStrength(world, oid)) continue;
     let army: string | null = null;
     let soldiers = 0;
-    for (const aid of sortedKeys(world.armies)) {
+    for (const aid of stableKeys('armies', world.armies as Record<string, unknown>)) {
       const a = world.armies[aid]!;
       const n = a.units.reduce((t, u) => t + u.soldiers, 0);
       if (a.factionId === f.id && a.status === 'camped' && n > soldiers) {
@@ -163,9 +163,13 @@ function treasurer(world: WorldState, f: FactionState): Advice | null {
   }
   const cap = f.capitalSettlementId;
   if (cap) {
+    const s = world.settlements[cap];
     for (const b of ['market', 'granary'] as const) {
-      const chk = validateBuild(world, f.id, cap, b);
-      if (chk.ok && !chk.upgrade && f.treasury > chk.cost.wealth * 3) {
+      // A cheap check (monthly hot path): not built yet, the age allows it, three times the price in the treasury.
+      // The "Do it" button re-validates the full build (placement, queue) through commandReason.
+      const cost = BUILDINGS[b].cost;
+      if (!s || buildingLevel(s, b) > 0 || ageIdx(buildingAge(b)) > ageIdx(f.age)) continue;
+      if (f.treasury > cost.wealth * 3 && f.materials.timber >= (cost.timber ?? 0) && f.materials.stone >= (cost.stone ?? 0)) {
         const why = b === 'market' ? 'A market in the capital will bring silver and grain when we need it.' : 'A granary will stop our grain from rotting.';
         return { topic: 'economy', text: why, suggestion: { kind: 'build', settlementId: cap, building: b }, urgency: 0.4 };
       }
@@ -177,7 +181,7 @@ function treasurer(world: WorldState, f: FactionState): Advice | null {
 function spymaster(world: WorldState, f: FactionState): Advice | null {
   let target: FactionId | null = null;
   let best = 0;
-  for (const oid of sortedKeys(world.factions)) {
+  for (const oid of stableKeys('factions', world.factions as Record<string, unknown>)) {
     if (oid === f.id || !world.factions[oid]!.alive) continue;
     const hostile = areAtWar(world, f.id, oid) || effectiveOpinion(world, f.id, oid) < -20;
     if (!hostile) continue;
@@ -328,7 +332,7 @@ export function noteEventChoice(world: WorldState, factionId: FactionId, choices
 
 /** Month end: unheeded advice counts as ignored; then each seat speaks again. */
 export function updateCouncilMonthly(world: WorldState, out: SimEvent[]): void {
-  for (const fid of sortedKeys(world.factions)) {
+  for (const fid of stableKeys('factions', world.factions as Record<string, unknown>)) {
     const f = world.factions[fid]!;
     if (!f.alive || !f.isPlayer) {
       if (f.councilAdvice.length > 0) f.councilAdvice = [];

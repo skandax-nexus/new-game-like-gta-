@@ -7,31 +7,30 @@
  *    (FactionState.prosperityDays counts the streak).
  *  - Diplomatic hegemony: peace + trade with every surviving rival, >= 2 tributaries (as overlord) or marriage
  *    alliances, every opinion >= 40.
- *  - Cultural legacy: 1,500 culture points (Σ culture effects of owned settlements x 10 a month), 2 landmarks and the
- *    Samrajya Age.
+ *  - Cultural legacy: 1,500 culture points (Σ culture effects of owned settlements x 10, added at each month start),
+ *    2 landmarks and the Samrajya Age.
  * Progress bars (0..1): the mean of each path's clamped components (prosperity: half conditions, half streak).
  * Sandbox: the player wins on reaching 1 in an enabled path; loses with no settlement left (or the dynasty ending,
  * dynasty.ts). Scenarios use their own outcomes (events.checkObjectives).
  */
 import type { FactionId, FactionState, SimEvent, VictoryType, WorldState } from '../../core/types';
-import { sortedKeys } from '../../core/ids';
 import { RULES } from '../../data/rules';
 import { ageIdx } from './ages';
 import { areAtWar, effectiveOpinion, hasTreaty } from './diplomacy';
 import { reserveDays } from './economy';
 import { emptyMods, settlementEffects } from './modifiers';
 import { activeTreaties } from './treaties';
-import { addChronicle, today } from './state';
+import { addChronicle, stableKeys, today } from './state';
 
 const V = RULES.victory;
 const scratch = emptyMods();
 
 function owned(world: WorldState, fid: FactionId): string[] {
-  return sortedKeys(world.settlements).filter((id) => world.settlements[id]!.ownerFactionId === fid);
+  return stableKeys('settlements', world.settlements as Record<string, unknown>).filter((id) => world.settlements[id]!.ownerFactionId === fid);
 }
 
 function rivals(world: WorldState, fid: FactionId): FactionState[] {
-  return sortedKeys(world.factions)
+  return stableKeys('factions', world.factions as Record<string, unknown>)
     .map((id) => world.factions[id]!)
     .filter((f) => f.id !== fid && f.alive);
 }
@@ -134,12 +133,14 @@ export function culturePerMonth(world: WorldState, fid: FactionId): number {
 
 /** Daily: culture points, prosperity streak, progress bars; sandbox victory / defeat for the player. */
 export function updateVictoryDaily(world: WorldState, out: SimEvent[]): void {
-  for (const fid of sortedKeys(world.factions)) {
+  const monthStart = world.calendar.day === 0;
+  for (const fid of stableKeys('factions', world.factions as Record<string, unknown>)) {
     const f = world.factions[fid]!;
     if (!f.alive) continue;
-    f.culturePoints += culturePerMonth(world, fid) / 30;
+    // Culture accrues monthly; the prosperity streak counts days; bars refresh every 5 days (the player's daily).
+    if (monthStart) f.culturePoints += culturePerMonth(world, fid);
     f.prosperityDays = prosperityConditions(world, fid).met ? f.prosperityDays + 1 : 0;
-    for (const b of victoryBreakdowns(world, fid)) f.victoryProgress[b.type] = b.progress;
+    if (f.isPlayer || world.calendar.day % 5 === 0) for (const b of victoryBreakdowns(world, fid)) f.victoryProgress[b.type] = b.progress;
   }
   if (world.mode !== 'sandbox' || world.victory.status !== 'ongoing') return;
   const p = world.factions[world.playerFactionId];

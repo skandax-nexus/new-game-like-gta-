@@ -80,20 +80,78 @@ export function estimatedSoldiers(world: WorldState, observer: FactionId, a: Arm
   return Math.max(1, Math.round((n * (1 + rng.range(-spread, spread))) / 10) * 10);
 }
 
-/** Hourly visibility + ghosts for every faction. */
+// Observer scratch (reused every hour; transient, not state): per faction a run of circles (x, z, r^2).
+let obsX = new Float64Array(64);
+let obsZ = new Float64Array(64);
+let obsR2 = new Float64Array(64);
+let obsCount = 0;
+
+function pushObserver(x: number, z: number, r: number): void {
+  if (obsCount >= obsX.length) {
+    const n = obsX.length * 2;
+    const nx = new Float64Array(n);
+    const nz = new Float64Array(n);
+    const nr = new Float64Array(n);
+    nx.set(obsX);
+    nz.set(obsZ);
+    nr.set(obsR2);
+    obsX = nx;
+    obsZ = nz;
+    obsR2 = nr;
+  }
+  obsX[obsCount] = x;
+  obsZ[obsCount] = z;
+  obsR2[obsCount] = r * r;
+  obsCount++;
+}
+
+/** Fill the observer circles of faction `fid` (its armies, settlements and watchtowers) - same rules as `sees`. */
+function collectObservers(world: WorldState, fid: FactionId, armyIds: readonly string[], sIds: readonly string[]): void {
+  obsCount = 0;
+  const range = factionMod(world, fid, 'scoutRange');
+  for (let i = 0; i < armyIds.length; i++) {
+    const o = world.armies[armyIds[i] as string];
+    if (!o || o.factionId !== fid || o.units.length === 0) continue;
+    pushObserver(o.x, o.z, (A.scoutRadius + (hasScouts(o) ? A.scoutsBonusRadius : 0)) * range);
+  }
+  for (let i = 0; i < sIds.length; i++) {
+    const s = world.settlements[sIds[i] as string]!;
+    if (s.ownerFactionId !== fid) continue;
+    pushObserver(s.x, s.z, A.scoutRadius * range + s.radius);
+    for (const b of s.buildings) {
+      if (b.type === 'watchtower' && b.level > 0) {
+        pushObserver(s.x, s.z, A.watchtowerRadius);
+        break;
+      }
+    }
+  }
+}
+
+function observed(x: number, z: number): boolean {
+  for (let k = 0; k < obsCount; k++) {
+    const dx = (obsX[k] as number) - x;
+    const dz = (obsZ[k] as number) - z;
+    if (dx * dx + dz * dz <= (obsR2[k] as number)) return true;
+  }
+  return false;
+}
+
+/** Hourly visibility + ghosts for every faction (observer circles gathered once per faction). */
 export function updateVisibilityHourly(world: WorldState, out: SimEvent[]): void {
   const fIds = stableKeys('factions', world.factions as Record<string, unknown>);
   const aIds = stableKeys('armies', world.armies as Record<string, unknown>);
+  const sIds = stableKeys('settlements', world.settlements as Record<string, unknown>);
   const d = today(world);
-  for (let i = 0; i < aIds.length; i++) {
-    const a = world.armies[aIds[i] as string];
-    if (!a) continue;
-    for (let k = 0; k < fIds.length; k++) {
-      const fid = fIds[k] as string;
-      const f = world.factions[fid];
-      if (!f || !f.alive) continue;
+  for (let k = 0; k < fIds.length; k++) {
+    const fid = fIds[k] as string;
+    const f = world.factions[fid];
+    if (!f || !f.alive) continue;
+    collectObservers(world, fid, aIds, sIds);
+    for (let i = 0; i < aIds.length; i++) {
+      const a = world.armies[aIds[i] as string];
+      if (!a) continue;
       const prev = a.visibility[fid] ?? 0;
-      const now = a.units.length > 0 && sees(world, fid, a) ? 1 : 0;
+      const now = a.units.length > 0 && (a.factionId === fid || revealed(world, fid, a.factionId) || observed(a.x, a.z)) ? 1 : 0;
       if (prev !== now || a.visibility[fid] === undefined) a.visibility[fid] = now;
       if (a.factionId === fid) continue;
       if (prev > 0 && now === 0) {
@@ -112,7 +170,7 @@ export function updateVisibilityHourly(world: WorldState, out: SimEvent[]): void
 /** Daily: drop ghosts older than 5 days or of armies that no longer exist (they are gone, not hidden). */
 export function expireGhostsDaily(world: WorldState): void {
   const d = today(world);
-  for (const fid of sortedKeys(world.factions)) {
+  for (const fid of stableKeys('factions', world.factions as Record<string, unknown>)) {
     const g = world.factions[fid]!.ghosts;
     for (const id of sortedKeys(g)) if (d - g[id]!.day > GHOST_DAYS) delete g[id];
   }

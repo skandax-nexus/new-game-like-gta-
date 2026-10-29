@@ -18,6 +18,8 @@ import type {
   Vec2,
   WorldState,
 } from '../../core/types';
+import { getHeightfield } from '../../core/terrain/cache';
+import type { Heightfield } from '../../core/terrain/heightfield';
 import { BATTLE_HISTORY_LIMIT, CHRONICLE_LIMIT } from '../../core/constants';
 import { relationKey, sortedKeys } from '../../core/ids';
 import { isRebelFaction } from '../../core/types';
@@ -134,6 +136,26 @@ export function naturalFortLevel(id: SettlementId): number {
   let walls = 0;
   for (const b of def.buildings) walls += (BUILDINGS[b.type].effects.fortLevel ?? 0) * b.level;
   return Math.max(0, def.fortLevel - walls);
+}
+
+// ---------------------------------------------------------------------------------------------------
+// Region terrain
+// ---------------------------------------------------------------------------------------------------
+
+const terrainCache = new WeakMap<object, Heightfield>();
+
+/**
+ * The region heightfield of a world, cached by the terrain spec object (getHeightfield keys its own cache by a
+ * stable-JSON hash of the spec, which is too slow for daily / hourly code).
+ */
+export function regionTerrain(world: WorldState): Heightfield {
+  const spec = world.region.terrain;
+  let hf = terrainCache.get(spec);
+  if (!hf) {
+    hf = getHeightfield(spec);
+    terrainCache.set(spec, hf);
+  }
+  return hf;
 }
 
 // ---------------------------------------------------------------------------------------------------

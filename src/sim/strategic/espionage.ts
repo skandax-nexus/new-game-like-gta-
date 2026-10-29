@@ -23,7 +23,7 @@ import { RULES } from '../../data/rules';
 import { addGrievance, addOpinion } from './diplomacy';
 import { factionMod } from './modifiers';
 import { totalDays } from './seasons';
-import { addChronicle, notifyPlayer, worldRandom } from './state';
+import { addChronicle, notifyPlayer, stableKeys, worldRandom } from './state';
 import { estimatedSoldiers } from './visibility';
 
 const E = RULES.espionage;
@@ -74,7 +74,7 @@ export function maxAgents(world: WorldState, factionId: FactionId): number {
 }
 
 export function activeAgents(world: WorldState, factionId: FactionId): SpyAgent[] {
-  return sortedKeys(world.espionage.agents)
+  return stableKeys('agents', world.espionage.agents as Record<string, unknown>)
     .map((id) => world.espionage.agents[id] as SpyAgent)
     .filter((a) => a.ownerFactionId === factionId && a.status === 'active');
 }
@@ -175,7 +175,7 @@ export function plotLegitimacyLoss(world: WorldState, factionId: FactionId, loss
 function largestArmy(world: WorldState, factionId: FactionId): ArmyState | null {
   let best: ArmyState | null = null;
   let food = -1;
-  for (const id of sortedKeys(world.armies)) {
+  for (const id of stableKeys('armies', world.armies as Record<string, unknown>)) {
     const a = world.armies[id] as ArmyState;
     if (a.factionId === factionId && a.supply.food > food) {
       food = a.supply.food;
@@ -208,7 +208,7 @@ function succeed(world: WorldState, a: SpyAgent, out: SimEvent[]): string {
     }
     case 'sabotage_supply': {
       const fx = E.effects.sabotage_supply;
-      for (const id of sortedKeys(world.depots)) {
+      for (const id of stableKeys('depots', world.depots as Record<string, unknown>)) {
         const dp = world.depots[id]!;
         if (dp.factionId === target && dp.food > 0) {
           dp.food *= 1 - fx.foodLoss;
@@ -232,7 +232,7 @@ function succeed(world: WorldState, a: SpyAgent, out: SimEvent[]): string {
     case 'incite_unrest': {
       const s = a.targetSettlementId ? world.settlements[a.targetSettlementId] : null;
       if (!s) return 'The agitators found no audience.';
-      const claimant = sortedKeys(world.characters).some((cid) => {
+      const claimant = stableKeys('characters', world.characters as Record<string, unknown>).some((cid) => {
         const c = world.characters[cid]!;
         return c.alive && c.roles.includes('claimant') && (c.locationSettlementId === s.id || (c.governsProvinceId !== null && c.governsProvinceId === s.provinceId));
       });
@@ -246,7 +246,7 @@ function succeed(world: WorldState, a: SpyAgent, out: SimEvent[]): string {
         f.legitimacy = Math.max(0, f.legitimacy + plotLegitimacyLoss(world, target, fx.legitimacy));
         f.stability = Math.max(0, f.stability + fx.stability);
       }
-      for (const cid of sortedKeys(world.factions)) if (cid !== target) addOpinion(world, cid, target, fx.opinion);
+      for (const cid of stableKeys('factions', world.factions as Record<string, unknown>)) if (cid !== target) addOpinion(world, cid, target, fx.opinion);
       return `Rumours about the court of ${tName} spread in every bazaar.`;
     }
     case 'protect_court': {
@@ -277,7 +277,7 @@ function capture(world: WorldState, a: SpyAgent, out: SimEvent[]): void {
 
 export function updateEspionageDaily(world: WorldState, out: SimEvent[]): void {
   const d = today(world);
-  for (const id of sortedKeys(world.espionage.agents)) {
+  for (const id of stableKeys('agents', world.espionage.agents as Record<string, unknown>)) {
     const a = world.espionage.agents[id]!;
     if (a.status !== 'active') continue;
     if (!world.factions[a.targetFactionId]?.alive || !world.factions[a.ownerFactionId]?.alive) {
@@ -300,7 +300,7 @@ export function updateEspionageDaily(world: WorldState, out: SimEvent[]): void {
     }
   }
   // Expiring counter-intelligence.
-  for (const fid of sortedKeys(world.factions)) {
+  for (const fid of stableKeys('factions', world.factions as Record<string, unknown>)) {
     const f = world.factions[fid]!;
     if (f.counterIntelUntilDay !== null && f.counterIntelUntilDay <= d) {
       f.counterIntel = 0;
@@ -318,7 +318,7 @@ export function updateEspionageDaily(world: WorldState, out: SimEvent[]): void {
     }
   }
   // Keep the agent table small: drop finished agents after 90 days.
-  for (const id of sortedKeys(world.espionage.agents)) {
+  for (const id of stableKeys('agents', world.espionage.agents as Record<string, unknown>)) {
     const a = world.espionage.agents[id]!;
     if (a.status !== 'active' && d - a.startedDay > 120) delete world.espionage.agents[id];
   }
@@ -326,7 +326,7 @@ export function updateEspionageDaily(world: WorldState, out: SimEvent[]): void {
 
 /** Raise every rival's intel on `factionId` (a leaking advisor, §7.12). */
 export function leakIntel(world: WorldState, factionId: FactionId, amount: number): void {
-  for (const fid of sortedKeys(world.factions)) {
+  for (const fid of stableKeys('factions', world.factions as Record<string, unknown>)) {
     if (fid === factionId) continue;
     const st = intelRow(world, fid, factionId);
     st.level = Math.min(1, st.level + amount);
@@ -371,7 +371,7 @@ export function intelView(world: WorldState, observer: FactionId, target: Factio
   const tier: IntelTier = level >= 0.6 || observer === target ? 2 : level >= 0.3 ? 1 : 0;
   const f = world.factions[target];
   const armies: IntelView['armies'] = [];
-  for (const id of sortedKeys(world.armies)) {
+  for (const id of stableKeys('armies', world.armies as Record<string, unknown>)) {
     const a = world.armies[id] as ArmyState;
     if (a.factionId !== target) continue;
     const seen = (a.visibility[observer] ?? 0) > 0;
@@ -380,7 +380,7 @@ export function intelView(world: WorldState, observer: FactionId, target: Factio
   }
   const governors: NonNullable<IntelView['governors']> = [];
   if (tier === 2) {
-    for (const pid of sortedKeys(world.provinces)) {
+    for (const pid of stableKeys('provinces', world.provinces as Record<string, unknown>)) {
       const p = world.provinces[pid]!;
       if (p.ownerFactionId !== target || !p.governorId) continue;
       const g = world.characters[p.governorId];

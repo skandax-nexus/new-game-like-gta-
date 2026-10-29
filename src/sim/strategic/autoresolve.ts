@@ -44,6 +44,7 @@ import { RULES } from '../../data/rules';
 import { loseShare } from './supply';
 import { retreatDestination } from './writeback';
 import { getEnvironmentState } from './seasons';
+import { regionTerrain } from './state';
 
 /** Max simulated battle time for autoresolve (s). */
 export const AUTORESOLVE_MAX_SEC = 60 * 30;
@@ -194,7 +195,7 @@ export function predictBattle(world: WorldState, engagementId: EngagementId): Ba
   if (hasClass(att, ['war_elephants']) && hasClass(def, ['cavalry', 'chariots'])) terms.push({ value: 0.1, text: `${your(0)} elephants outweigh ${playerSide === 1 ? 'your' : 'their'} horse` });
   if (hasClass(def, ['war_elephants']) && hasClass(att, ['cavalry', 'chariots'])) terms.push({ value: -0.1, text: `${your(1)} elephants outweigh ${playerSide === 0 ? 'your' : 'their'} horse` });
   // High ground.
-  const hf = getHeightfield(world.region.terrain);
+  const hf = regionTerrain(world);
   const pos = (xs: readonly ArmyState[]): { x: number; z: number } => (xs[0] ? { x: xs[0].x, z: xs[0].z } : { x: e.x, z: e.z });
   const pa = pos(att);
   const pd = pos(def);

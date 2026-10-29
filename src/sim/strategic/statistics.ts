@@ -12,12 +12,11 @@
  * treaties_signed, treaties_broken, wars, marriages (+ helper counters).
  */
 import type { FactionId, WorldState } from '../../core/types';
-import { sortedKeys } from '../../core/ids';
 import { AGES } from '../../data/ages';
 import { RULES } from '../../data/rules';
 import { END_GAME_STATS, type StatDef } from '../../data/statistics';
 import { totalDays } from './seasons';
-import { getStat } from './state';
+import { getStat, stableKeys } from './state';
 
 export interface ScoreBreakdown {
   total: number;
@@ -26,13 +25,13 @@ export interface ScoreBreakdown {
 
 function ownedSettlements(world: WorldState, fid: FactionId): number {
   let n = 0;
-  for (const id of sortedKeys(world.settlements)) if (world.settlements[id]!.ownerFactionId === fid) n++;
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) if (world.settlements[id]!.ownerFactionId === fid) n++;
   return n;
 }
 
 function population(world: WorldState, fid: FactionId): number {
   let p = 0;
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id]!;
     if (s.ownerFactionId === fid) p += s.population;
   }
@@ -121,7 +120,7 @@ function valueOf(world: WorldState, fid: FactionId, id: string): { value: number
 
 /** The statistics screen: one row per END_GAME_STATS entry, the player first, then every other faction. */
 export function endGameStats(world: WorldState): StatRow[] {
-  const ids = [world.playerFactionId, ...sortedKeys(world.factions).filter((id) => id !== world.playerFactionId)];
+  const ids = [world.playerFactionId, ...stableKeys('factions', world.factions as Record<string, unknown>).filter((id) => id !== world.playerFactionId)];
   return END_GAME_STATS.map((def) => {
     const cells = ids.map((fid) => ({ factionId: fid, ...valueOf(world, fid, def.id), best: false }));
     const nums = cells.filter((c) => !Number.isNaN(c.value)).map((c) => c.value);

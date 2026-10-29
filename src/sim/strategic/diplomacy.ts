@@ -34,7 +34,7 @@ import type {
   TreatyType,
   WorldState,
 } from '../../core/types';
-import { nextWorldId, relationKey, sortedKeys } from '../../core/ids';
+import { nextWorldId, relationKey } from '../../core/ids';
 import { AGES } from '../../data/ages';
 import { BALANCE } from '../../data/balance';
 import { FACTIONS } from '../../data/factions';
@@ -43,7 +43,7 @@ import { treatyAge, treatyUnlocked } from './ages';
 import { armyStrength } from './armies';
 import { factionMod } from './modifiers';
 import { totalDays } from './seasons';
-import { addChronicle, addStat, notifyPlayer } from './state';
+import { addChronicle, addStat, notifyPlayer, stableKeys } from './state';
 import { activeTreaties, activeTreaty, isTreatyActive, relationOf } from './treaties';
 
 const DR = RULES.diplomacy;
@@ -230,7 +230,7 @@ export function breakTreaty(world: WorldState, by: FactionId, treatyId: string, 
   t.endDay = today(world);
   addOpinion(world, by, other, breakCost(t.type));
   addGrievance(world, by, other, 'broken_treaty', -10);
-  for (const key of sortedKeys(world.diplomacy.relations)) {
+  for (const key of stableKeys('relations', world.diplomacy.relations as Record<string, unknown>)) {
     const r = world.diplomacy.relations[key]!;
     if (r.a === by || r.b === by) r.trust = Math.max(0, r.trust + DR.breakTreatyTrustAll);
   }
@@ -290,7 +290,7 @@ export function declareWar(world: WorldState, a: FactionId, b: FactionId, out: S
   addChronicle(world, a, `${FACTIONS[a]?.shortName ?? a} declared war on ${FACTIONS[b]?.shortName ?? b}.`, 2);
   notifyPlayer(world, out, b, 'danger', `${FACTIONS[a]?.shortName ?? a} has declared war on us!`);
   // Allies of the defender: mutual defense partners and the overlord of a tributary.
-  for (const cid of sortedKeys(world.factions)) {
+  for (const cid of stableKeys('factions', world.factions as Record<string, unknown>)) {
     if (cid === a || cid === b) continue;
     const c = world.factions[cid] as FactionState;
     if (!c.alive) continue;
@@ -325,11 +325,11 @@ export function makePeace(world: WorldState, a: FactionId, b: FactionId, out: Si
 /** Total army strength of a faction (field armies + garrisons). */
 export function factionStrength(world: WorldState, factionId: FactionId): number {
   let p = 0;
-  for (const id of sortedKeys(world.armies)) {
+  for (const id of stableKeys('armies', world.armies as Record<string, unknown>)) {
     const a = world.armies[id] as ArmyState;
     if (a.factionId === factionId) p += armyStrength(a);
   }
-  for (const id of sortedKeys(world.settlements)) {
+  for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id]!;
     if (s.ownerFactionId !== factionId || s.garrison.length === 0) continue;
     p += armyStrength({ units: s.garrison } as unknown as ArmyState);
@@ -338,7 +338,7 @@ export function factionStrength(world: WorldState, factionId: FactionId): number
 }
 
 function sharedEnemy(world: WorldState, a: FactionId, b: FactionId): boolean {
-  for (const cid of sortedKeys(world.factions)) {
+  for (const cid of stableKeys('factions', world.factions as Record<string, unknown>)) {
     if (cid === a || cid === b || !world.factions[cid]!.alive) continue;
     if (areAtWar(world, a, cid) && areAtWar(world, b, cid)) return true;
   }
@@ -349,7 +349,7 @@ function sharedEnemy(world: WorldState, a: FactionId, b: FactionId): boolean {
 function sharedThreat(world: WorldState, a: FactionId, b: FactionId): number {
   let best = 0;
   const sb = Math.max(1, factionStrength(world, b));
-  for (const cid of sortedKeys(world.factions)) {
+  for (const cid of stableKeys('factions', world.factions as Record<string, unknown>)) {
     if (cid === a || cid === b || !world.factions[cid]!.alive) continue;
     const hostileA = areAtWar(world, a, cid) || effectiveOpinion(world, a, cid) < -20;
     const hostileB = areAtWar(world, b, cid) || effectiveOpinion(world, b, cid) < -20;
@@ -660,7 +660,7 @@ export function updateDiplomacyDaily(world: WorldState, out: SimEvent[]): void {
   for (const p of world.diplomacy.proposals) if (p.status === 'pending' && day - p.day > DR.proposalDays) p.status = 'expired';
   if (world.diplomacy.proposals.length > 100) world.diplomacy.proposals.splice(0, world.diplomacy.proposals.length - 100);
   // Marriage alliances end when a spouse dies.
-  for (const id of sortedKeys(world.diplomacy.treaties)) {
+  for (const id of stableKeys('treaties', world.diplomacy.treaties as Record<string, unknown>)) {
     const t = world.diplomacy.treaties[id] as Treaty;
     if (t.type !== 'marriage_alliance' || !isTreatyActive(world, t) || !t.terms.marriage) continue;
     const [x, y] = t.terms.marriage;
@@ -671,7 +671,7 @@ export function updateDiplomacyDaily(world: WorldState, out: SimEvent[]): void {
 
 export function updateDiplomacyMonthly(world: WorldState, out: SimEvent[]): void {
   const d = BALANCE.diplomacy;
-  for (const key of sortedKeys(world.diplomacy.relations)) {
+  for (const key of stableKeys('relations', world.diplomacy.relations as Record<string, unknown>)) {
     const rel = world.diplomacy.relations[key]!;
     if (!world.factions[rel.a]?.alive || !world.factions[rel.b]?.alive) continue;
     // Drift toward the baseline (+10 with a shared enemy).
@@ -685,7 +685,7 @@ export function updateDiplomacyMonthly(world: WorldState, out: SimEvent[]): void
       rel.warWeariness += d.warWearinessPerMonth;
       // Occupation: +2 a month for every settlement of the enemy's starting lands held.
       let net = 0;
-      for (const sid of sortedKeys(world.settlements)) {
+      for (const sid of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
         const s = world.settlements[sid]!;
         if (s.ownerFactionId === rel.a && s.initialOwnerFactionId === rel.b) net += DR.warScore.occupationPerMonth;
         else if (s.ownerFactionId === rel.b && s.initialOwnerFactionId === rel.a) net -= DR.warScore.occupationPerMonth;
