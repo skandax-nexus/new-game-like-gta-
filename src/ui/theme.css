@@ -1,80 +1,714 @@
 /*
- * SAMRAJYA UI design tokens. OWNER: Art Director. Placeholder tokens by the CTO.
- * Direction: Indian-art inspired - saffron, indigo, vermilion, gold leaf, carved sandstone and
- * dark lacquered wood; ornamental borders; high contrast for readability on phones.
- * Components (src/ui/base.css, Lead UI/UX) MUST use these variables, never raw colors.
+ * SAMRAJYA UI theme: design tokens, fonts and component skins. OWNER: Art Director.
+ * Spec: docs/ART_BIBLE.md §11 (UI art style). Components in src/ui/base.css (Lead UI/UX) and screens use
+ * these variables, never raw colors.
+ *
+ * Look: lacquered indigo-black panels framed in gold leaf with early-historic ornament (lotus medallions,
+ * bead-and-reel, torana arches, jali lattice - never Mughal or later motifs), saffron for the primary action,
+ * parchment for documents (events, chronicle, dialogue), ivory text. Readability first: body text >= 14 px
+ * on phones, prose >= 16 px, contrast >= 4.5:1 (body) / 3:1 (large display), touch targets >= 44 px.
+ *
+ * Load order: theme.css then base.css (src/ui/ui.ts). Skins below only style classes base.css does not
+ * (tooltips, scrollbars, focus, parchment and carved panels, icons, emblems, meters, kbd, cards, tabs).
  */
+
+/* ------------------------------------------------------------------------------------------- fonts */
+/* Shipped with the build (src/render/style/fonts, SIL OFL 1.1) - no third-party font requests. */
+@font-face {
+  font-family: 'Tiro Devanagari Sanskrit';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../render/style/fonts/tiro-devanagari-sanskrit-latin-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Tiro Devanagari Sanskrit';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../render/style/fonts/tiro-devanagari-sanskrit-latin-400-italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Mukta';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../render/style/fonts/mukta-latin-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Mukta';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../render/style/fonts/mukta-latin-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Mukta';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../render/style/fonts/mukta-latin-700.woff2') format('woff2');
+}
+
 :root {
-  /* Palette */
+  /* ----------------------------------------------------------------------------------- palette (raw) */
   --c-saffron: #e8892b;
+  --c-saffron-bright: #f3a24a;
   --c-saffron-deep: #b9561c;
   --c-gold: #e9b949;
   --c-gold-soft: #d9b46a;
   --c-gold-dim: #8a6a2e;
-  --c-indigo: #2c2f6b;
-  --c-indigo-deep: #191a40;
+  --c-gold-deep: #6b4f1e;
+  --c-indigo: #2c3470;
+  --c-indigo-deep: #191c40;
+  --c-indigo-night: #0f1026;
+  --c-lacquer: #1b1830;
+  --c-lacquer-high: #2a2546;
   --c-vermilion: #d4452b;
+  --c-madder: #9c2f25;
   --c-lotus: #d98aa6;
   --c-peacock: #1f7a7a;
+  --c-turmeric: #e3a82b;
+  --c-leaf: #6f9a4a;
   --c-ivory: #f6ecd6;
   --c-parchment: #efe0bd;
+  --c-parchment-deep: #e0c995;
   --c-sandstone: #c9a272;
+  --c-sandstone-red: #a8604a;
   --c-ink: #24160f;
-  --c-shadow: rgba(12, 6, 18, 0.55);
+  --c-ink-soft: #5a4632;
+  --c-shadow: rgba(8, 6, 16, 0.55);
 
-  /* Semantic */
-  --ui-bg: rgba(24, 16, 36, 0.86);
-  --ui-bg-solid: #1d1430;
-  --ui-panel: linear-gradient(180deg, rgba(48, 30, 62, 0.94), rgba(26, 17, 38, 0.94));
-  --ui-panel-light: linear-gradient(180deg, #f6ecd6, #e7d2a6);
+  /* ----------------------------------------------------------------------------------- semantic */
+  --ui-bg: rgba(20, 17, 36, 0.88);
+  --ui-bg-solid: #17142a;
+  --ui-panel: linear-gradient(180deg, rgba(40, 35, 68, 0.95) 0%, rgba(25, 22, 44, 0.95) 38%, rgba(18, 15, 32, 0.96) 100%);
+  --ui-panel-light: linear-gradient(180deg, #f4e7c8 0%, #ecdab2 60%, #e2cc9c 100%);
   --ui-border: #c99a3b;
   --ui-border-soft: rgba(201, 154, 59, 0.45);
-  --ui-text: #f6ecd6;
-  --ui-text-dim: #cbb994;
+  --ui-border-faint: rgba(201, 154, 59, 0.2);
+  --ui-text: #f3e8cf;
+  --ui-text-dim: #c9b994;
+  --ui-text-faint: #9a8c70;
   --ui-text-dark: #2a1a10;
+  --ui-text-dark-dim: #5a4632;
   --ui-accent: var(--c-saffron);
-  --ui-positive: #7fbf6a;
+  --ui-positive: #8ccf72;
   --ui-warning: #e9b949;
-  --ui-danger: #e0533d;
-  --ui-info: #7fb2e5;
+  --ui-danger: #ec5a40;
+  --ui-info: #86b8ea;
   --ui-player: #e8892b;
   --ui-enemy: #e0533d;
+  --ui-overlay: rgba(8, 6, 16, 0.5);
 
-  /* Type */
-  --font-display: 'Palatino Linotype', 'Book Antiqua', Palatino, 'Noto Serif', Georgia, serif;
-  --font-body: 'Segoe UI', 'Noto Sans', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --fs-xs: 11px;
+  /* Relations (mirror render/style/factions.ts RELATION_STYLES) */
+  --rel-own: #ffd36b;
+  --rel-ally: #6fb7e8;
+  --rel-enemy: #e0533d;
+  --rel-neutral: #d8cdb5;
+
+  /* Resources (mirror src/data/resources.ts RESOURCE_DISPLAY.color) */
+  --res-grain: #e3b341;
+  --res-timber: #b07a45;
+  --res-stone: #b3aea4;
+  --res-wealth: #f2cf63;
+  --res-labor: #d98c5f;
+  --res-manpower: #d0605a;
+
+  /* Faction team colors for UI chips (src/data/factions.ts; colorblind remaps below) */
+  --faction-heartland: #e0801f;
+  --faction-highland: #2c4fa3;
+  --faction-forest: #2f8f5b;
+  --faction-frontier: #7d3c98;
+  --faction-maritime: #1c8c99;
+  --faction-citystates: #b03a2e;
+  --faction-independent: #d8cdb5;
+  --faction-rebels: #3a2a26;
+
+  /* Morale / strength meters */
+  --meter-strength: linear-gradient(90deg, #b9561c, #e8892b 55%, #f3c25a);
+  --meter-morale: linear-gradient(90deg, #4f7a9a, #86b8ea);
+  --meter-fatigue: linear-gradient(90deg, #8a6a2e, #c9a272);
+  --meter-track: rgba(255, 255, 255, 0.1);
+
+  /* ----------------------------------------------------------------------------------- type */
+  --font-display: 'Tiro Devanagari Sanskrit', 'Palatino Linotype', 'Book Antiqua', Palatino, 'Noto Serif', Georgia, serif;
+  --font-body: 'Mukta', 'Segoe UI', 'Noto Sans', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --fs-xs: 12px;
   --fs-sm: 13px;
   --fs-md: 15px;
+  --fs-text: 16px;
   --fs-lg: 19px;
   --fs-xl: 26px;
-  --fs-title: clamp(34px, 6.5vw, 76px);
-  --letter-title: 0.28em;
+  --fs-2xl: 34px;
+  --fs-title: clamp(36px, 7vw, 80px);
+  --lh-tight: 1.15;
+  --lh-body: 1.4;
+  --lh-prose: 1.55;
+  --letter-title: 0.26em;
+  --letter-caps: 0.12em;
+  --weight-body: 400;
+  --weight-strong: 600;
+  --text-shadow-on-scene: 0 1px 2px rgba(0, 0, 0, 0.75), 0 0 10px rgba(0, 0, 0, 0.35);
 
-  /* Shape */
+  /* ----------------------------------------------------------------------------------- shape */
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 14px;
+  --radius-pill: 999px;
   --border-w: 2px;
-  --shadow-panel: 0 10px 34px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 220, 150, 0.08);
-  --glow-gold: 0 0 0 1px rgba(233, 185, 73, 0.6), 0 0 14px rgba(233, 185, 73, 0.35);
+  --shadow-panel: 0 12px 36px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 220, 150, 0.08), inset 0 1px 0 rgba(255, 230, 170, 0.12);
+  --shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 230, 170, 0.16);
+  --shadow-pressed: inset 0 2px 5px rgba(0, 0, 0, 0.45);
+  --glow-gold: 0 0 0 1px rgba(233, 185, 73, 0.65), 0 0 16px rgba(233, 185, 73, 0.32);
+  --glow-saffron: 0 0 0 1px rgba(243, 162, 74, 0.7), 0 0 18px rgba(232, 137, 43, 0.4);
+  --glow-danger: 0 0 0 1px rgba(236, 90, 64, 0.7), 0 0 16px rgba(236, 90, 64, 0.35);
+  --focus-ring: 0 0 0 2px #15122a, 0 0 0 4px #ffd36b;
 
-  /* Spacing / touch */
+  /* ----------------------------------------------------------------------------------- component tokens */
+  /* Buttons (base.css .btn should read these; see ART_BIBLE §11.6) */
+  --btn-text: var(--ui-text);
+  --btn-bg: linear-gradient(180deg, #3a3260 0%, #262043 55%, #1d1935 100%);
+  --btn-bg-hover: linear-gradient(180deg, #463d72 0%, #2e2750 55%, #221d3e 100%);
+  --btn-bg-active: linear-gradient(180deg, #6a4a1c 0%, #4c3412 100%);
+  --btn-border: var(--ui-border);
+  --btn-primary-text: #fff6e2;
+  --btn-primary-bg: linear-gradient(180deg, #f3a24a 0%, #e8892b 45%, #b9561c 100%);
+  --btn-primary-border: #f2cf63;
+  --btn-danger-bg: linear-gradient(180deg, #c8442d 0%, #9c2f25 100%);
+  --btn-stone-bg: linear-gradient(180deg, #d8b98a 0%, #c9a272 50%, #a8845a 100%);
+  --btn-stone-text: #2a1a10;
+  --btn-disabled-opacity: 0.45;
+  /* Panels */
+  --panel-bg: var(--ui-panel);
+  --panel-border: var(--ui-border);
+  --panel-pad: var(--sp-4);
+  --panel-blur: 6px;
+  /* Tooltips */
+  --tooltip-bg: linear-gradient(180deg, rgba(34, 30, 58, 0.98), rgba(17, 14, 30, 0.98));
+  --tooltip-border: var(--ui-border-soft);
+  --tooltip-text: var(--ui-text);
+  --tooltip-max-w: 320px;
+  /* Scrollbars */
+  --scroll-thumb: linear-gradient(180deg, #d9b46a, #8a6a2e);
+  --scroll-thumb-flat: #a8823c;
+  --scroll-track: rgba(255, 255, 255, 0.05);
+  --scroll-size: 8px;
+
+  /* ----------------------------------------------------------------------------------- motion */
+  --dur-fast: 120ms;
+  --dur-med: 220ms;
+  --dur-slow: 420ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.6, 0, 0.3, 1);
+
+  /* ----------------------------------------------------------------------------------- spacing / touch */
   --sp-1: 4px;
   --sp-2: 8px;
   --sp-3: 12px;
   --sp-4: 16px;
   --sp-5: 24px;
+  --sp-6: 32px;
   --touch-min: 44px;
+  --touch-comfort: 48px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
 
-  /* Ornament: lotus/mandala corner motif (inline SVG, gold) */
-  --ornament-corner: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><g fill='none' stroke='%23e9b949' stroke-width='1.6'><path d='M2 38 L2 2 L38 2'/><path d='M6 34 L6 6 L34 6' opacity='.55'/><circle cx='12' cy='12' r='4'/><path d='M12 4 Q15 9 12 12 Q9 9 12 4 Z M4 12 Q9 9 12 12 Q9 15 4 12 Z'/></g></svg>");
-  --ornament-divider: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12'><g fill='none' stroke='%23c99a3b' stroke-width='1.2'><path d='M0 6 H84'/><path d='M116 6 H200'/><path d='M100 1 L106 6 L100 11 L94 6 Z' fill='%23e9b949'/><circle cx='88' cy='6' r='2'/><circle cx='112' cy='6' r='2'/></g></svg>");
-  --pattern-jali: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><g fill='none' stroke='%23e9b949' stroke-opacity='.08' stroke-width='1'><circle cx='12' cy='12' r='8'/><path d='M12 0 V24 M0 12 H24'/></g></svg>");
+  /* ----------------------------------------------------------------------------------- ornaments + icons */
+  /* Generated from src/render/style/emblems.ts (ORNAMENTS, ICON_PATHS, EMBLEMS). Do not edit by hand. */
+  /* @generated icons:begin (docs/art/tools/gen-theme-icons.ts) */
+  --ornament-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg fill='none' stroke='%23e9b949' stroke-linecap='round'%3E%3Cpath stroke-width='1.5' d='M2 38V11Q2 2 11 2H38'/%3E%3Cpath stroke-width='1' opacity='.55' d='M6 38V15Q6 6 15 6H38'/%3E%3C/g%3E%3Cpath fill='%23e9b949' d='M11.3 9L11.1 8.4L11 7.8L11 7.2L11.1 6.7L11.4 6.3L11.8 5.9L12.3 5.5L12.9 5.2L13.5 4.9L13.8 5.6L13.9 6.2L14 6.8L14 7.4L13.9 7.9L13.6 8.3L13.3 8.7L12.7 9.1L12.2 9.4L11.5 9.7ZM12.6 9.8L12.9 9.3L13.3 8.7L13.7 8.4L14.1 8.1L14.6 8L15.2 8L15.8 8.1L16.4 8.2L17.1 8.5L16.8 9.1L16.5 9.7L16.1 10.2L15.7 10.6L15.3 10.9L14.8 11L14.2 11L13.6 10.9L13 10.7L12.3 10.5ZM13 11.3L13.6 11.1L14.2 11L14.8 11L15.3 11.1L15.7 11.4L16.1 11.8L16.5 12.3L16.8 12.9L17.1 13.5L16.4 13.8L15.8 13.9L15.2 14L14.6 14L14.1 13.9L13.7 13.6L13.3 13.3L12.9 12.7L12.6 12.2L12.3 11.5ZM12.2 12.6L12.7 12.9L13.3 13.3L13.6 13.7L13.9 14.1L14 14.6L14 15.2L13.9 15.8L13.8 16.4L13.5 17.1L12.9 16.8L12.3 16.5L11.8 16.1L11.4 15.7L11.1 15.3L11 14.8L11 14.2L11.1 13.6L11.3 13L11.5 12.3ZM10.7 13L10.9 13.6L11 14.2L11 14.8L10.9 15.3L10.6 15.7L10.2 16.1L9.7 16.5L9.1 16.8L8.5 17.1L8.2 16.4L8.1 15.8L8 15.2L8 14.6L8.1 14.1L8.4 13.7L8.7 13.3L9.3 12.9L9.8 12.6L10.5 12.3ZM9.4 12.2L9.1 12.7L8.7 13.3L8.3 13.6L7.9 13.9L7.4 14L6.8 14L6.2 13.9L5.6 13.8L4.9 13.5L5.2 12.9L5.5 12.3L5.9 11.8L6.3 11.4L6.7 11.1L7.2 11L7.8 11L8.4 11.1L9 11.3L9.7 11.5ZM9 10.7L8.4 10.9L7.8 11L7.2 11L6.7 10.9L6.3 10.6L5.9 10.2L5.5 9.7L5.2 9.1L4.9 8.5L5.6 8.2L6.2 8.1L6.8 8L7.4 8L7.9 8.1L8.3 8.4L8.7 8.7L9.1 9.3L9.4 9.8L9.7 10.5ZM9.8 9.4L9.3 9.1L8.7 8.7L8.4 8.3L8.1 7.9L8 7.4L8 6.8L8.1 6.2L8.2 5.6L8.5 4.9L9.1 5.2L9.7 5.5L10.2 5.9L10.6 6.3L10.9 6.7L11 7.2L11 7.8L10.9 8.4L10.7 9L10.5 9.7Z'/%3E%3Cpath fill='%2315122a' d='M9.1 11a1.9 1.9 0 1 1 3.8 0a1.9 1.9 0 1 1 -3.8 0Z'/%3E%3Cpath fill='%23e9b949' d='M10.1 11a0.9 0.9 0 1 1 1.8 0a0.9 0.9 0 1 1 -1.8 0Z'/%3E%3Cpath fill='%23e9b949' d='M0.8 19a1.3 1.3 0 1 1 2.5 0a1.3 1.3 0 1 1 -2.5 0ZM1 25a1.1 1.1 0 1 1 2.1 0a1.1 1.1 0 1 1 -2.1 0ZM1.2 30.5a0.9 0.9 0 1 1 1.7 0a0.9 0.9 0 1 1 -1.7 0ZM17.8 2a1.3 1.3 0 1 1 2.5 0a1.3 1.3 0 1 1 -2.5 0ZM24 2a1.1 1.1 0 1 1 2.1 0a1.1 1.1 0 1 1 -2.1 0ZM29.7 2a0.9 0.9 0 1 1 1.7 0a0.9 0.9 0 1 1 -1.7 0Z'/%3E%3C/svg%3E");
+  --ornament-divider: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 16'%3E%3Cdefs%3E%3ClinearGradient id='l' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%23c99a3b' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23c99a3b'/%3E%3C/linearGradient%3E%3ClinearGradient id='r' x1='1' x2='0'%3E%3Cstop offset='0' stop-color='%23c99a3b' stop-opacity='0'/%3E%3Cstop offset='1' stop-color='%23c99a3b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath stroke='url(%23l)' stroke-width='1.2' d='M0 9H100'/%3E%3Cpath stroke='url(%23r)' stroke-width='1.2' d='M140 9H240'/%3E%3Cpath fill='%23e9b949' d='M122.4 6.4L122.3 8.1L121.9 9.7L121.4 10.9L120.7 11.7L120 12L119.3 11.7L118.6 10.9L118.1 9.7L117.7 8.1L117.6 6.4L117.7 4.7L118.1 3.1L118.6 1.9L119.3 1.1L120 0.8L120.7 1.1L121.4 1.9L121.9 3.1L122.3 4.7ZM116.7 7.1L117.7 8.1L118.5 9.2L119 10.2L119.1 11.1L118.8 11.7L118.2 12L117.4 12L116.3 11.6L115.2 11L114.1 10.1L113.1 9.1L112.3 8L111.8 7L111.7 6.1L112 5.5L112.6 5.2L113.4 5.2L114.5 5.6L115.6 6.2ZM125.9 10.1L124.8 11L123.7 11.6L122.6 12L121.8 12L121.2 11.7L120.9 11.1L121 10.2L121.5 9.2L122.3 8.1L123.3 7.1L124.4 6.2L125.5 5.6L126.6 5.2L127.4 5.2L128 5.5L128.3 6.1L128.2 7L127.7 8L126.9 9.1ZM111.9 9.1L112.9 9.4L113.8 9.8L114.5 10.3L114.9 10.8L114.9 11.3L114.7 11.7L114.1 12L113.3 12.2L112.3 12.2L111.3 12.1L110.3 11.8L109.4 11.4L108.7 10.9L108.3 10.4L108.3 9.9L108.5 9.5L109.1 9.2L109.9 9L110.9 9ZM128.7 12.1L127.7 12.2L126.7 12.2L125.9 12L125.3 11.7L125.1 11.3L125.1 10.8L125.5 10.3L126.2 9.8L127.1 9.4L128.1 9.1L129.1 9L130.1 9L130.9 9.2L131.5 9.5L131.7 9.9L131.7 10.4L131.3 10.9L130.6 11.4L129.7 11.8ZM129.5 13.4L129 13.8L127.7 14.2L125.6 14.5L122.9 14.6L120 14.7L117.1 14.6L114.4 14.5L112.3 14.2L111 13.8L110.5 13.4L111 13L112.3 12.6L114.4 12.3L117.1 12.2L120 12.1L122.9 12.2L125.6 12.3L127.7 12.6L129 13Z'/%3E%3Cpath fill='%23e9b949' d='M102.4 9a1.6 1.6 0 1 1 3.2 0a1.6 1.6 0 1 1 -3.2 0ZM97.3 9a1.2 1.2 0 1 1 2.4 0a1.2 1.2 0 1 1 -2.4 0ZM93.1 9a0.9 0.9 0 1 1 1.8 0a0.9 0.9 0 1 1 -1.8 0ZM134.4 9a1.6 1.6 0 1 1 3.2 0a1.6 1.6 0 1 1 -3.2 0ZM140.3 9a1.2 1.2 0 1 1 2.4 0a1.2 1.2 0 1 1 -2.4 0ZM145.1 9a0.9 0.9 0 1 1 1.8 0a0.9 0.9 0 1 1 -1.8 0Z'/%3E%3C/svg%3E");
+  --ornament-torana: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 38'%3E%3Cg fill='none' stroke='%23e9b949' stroke-linecap='round'%3E%3Cpath stroke-width='3' d='M34 13Q130 3 226 13'/%3E%3Cpath stroke-width='2.2' d='M42 24Q130 16 218 24'/%3E%3Cpath stroke-width='2.4' d='M52 12V36M208 12V36'/%3E%3Cpath stroke-width='1.6' d='M92 8V20M130 6V18M168 8V20'/%3E%3C/g%3E%3Cpath fill='%23e9b949' d='M24.8 14a5.2 5.2 0 1 1 10.4 0a5.2 5.2 0 1 1 -10.4 0ZM27.4 14a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0 -5.2 0ZM224.8 14a5.2 5.2 0 1 1 10.4 0a5.2 5.2 0 1 1 -10.4 0ZM227.4 14a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0 -5.2 0ZM35.2 25a3.8 3.8 0 1 1 7.6 0a3.8 3.8 0 1 1 -7.6 0ZM37.2 25a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0ZM217.2 25a3.8 3.8 0 1 1 7.6 0a3.8 3.8 0 1 1 -7.6 0ZM219.2 25a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0Z'/%3E%3Cpath fill='%23e9b949' d='M129.7 2.7L129.5 2.5L129.3 2.2L129.1 2L129.1 1.7L129.1 1.4L129.3 1.2L129.5 0.9L129.7 0.7L130 0.4L130.3 0.7L130.5 0.9L130.7 1.2L130.9 1.4L130.9 1.7L130.9 2L130.7 2.2L130.5 2.5L130.3 2.7L130 3ZM130.6 2.9L130.7 2.6L130.8 2.3L131 2L131.2 1.9L131.4 1.8L131.7 1.8L132.1 1.8L132.4 1.9L132.8 2L132.7 2.4L132.6 2.7L132.5 3L132.3 3.3L132.1 3.4L131.8 3.5L131.6 3.5L131.2 3.5L130.9 3.4L130.5 3.3ZM130.9 3.8L131.2 3.7L131.6 3.7L131.8 3.7L132.1 3.8L132.3 3.9L132.5 4.2L132.6 4.5L132.7 4.8L132.8 5.2L132.4 5.3L132.1 5.4L131.7 5.4L131.4 5.4L131.2 5.3L131 5.2L130.8 4.9L130.7 4.6L130.6 4.3L130.5 3.9ZM130.3 4.5L130.5 4.7L130.7 5L130.9 5.2L130.9 5.5L130.9 5.8L130.7 6L130.5 6.3L130.3 6.5L130 6.8L129.7 6.5L129.5 6.3L129.3 6L129.1 5.8L129.1 5.5L129.1 5.2L129.3 5L129.5 4.7L129.7 4.5L130 4.2ZM129.4 4.3L129.3 4.6L129.2 4.9L129 5.2L128.8 5.3L128.6 5.4L128.3 5.4L127.9 5.4L127.6 5.3L127.2 5.2L127.3 4.8L127.4 4.5L127.5 4.2L127.7 3.9L127.9 3.8L128.2 3.7L128.4 3.7L128.8 3.7L129.1 3.8L129.5 3.9ZM129.1 3.4L128.8 3.5L128.4 3.5L128.2 3.5L127.9 3.4L127.7 3.3L127.5 3L127.4 2.7L127.3 2.4L127.2 2L127.6 1.9L127.9 1.8L128.3 1.8L128.6 1.8L128.8 1.9L129 2L129.2 2.3L129.3 2.6L129.4 2.9L129.5 3.3ZM49.7 9.5a2.3 2.3 0 1 1 4.6 0a2.3 2.3 0 1 1 -4.6 0ZM205.7 9.5a2.3 2.3 0 1 1 4.6 0a2.3 2.3 0 1 1 -4.6 0Z'/%3E%3C/svg%3E");
+  --ornament-jali: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg fill='none' stroke='%23e9b949' stroke-opacity='.07' stroke-width='1'%3E%3Ccircle cx='16' cy='16' r='11.3'/%3E%3Ccircle cx='0' cy='0' r='11.3'/%3E%3Ccircle cx='32' cy='0' r='11.3'/%3E%3Ccircle cx='0' cy='32' r='11.3'/%3E%3Ccircle cx='32' cy='32' r='11.3'/%3E%3C/g%3E%3Ccircle cx='16' cy='16' r='1.2' fill='%23e9b949' fill-opacity='.09'/%3E%3C/svg%3E");
+  --ornament-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .33 0 0 0 0 .22 0 0 0 0 .1 0 0 0 .13 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  --ornament-bullet: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23e9b949' d='M8.6 6.6L8.6 5.9L8.7 5.2L9 4.6L9.3 4.1L9.8 3.8L10.4 3.6L11 3.5L11.8 3.4L12.6 3.4L12.6 4.2L12.5 5L12.4 5.6L12.2 6.2L11.9 6.7L11.4 7L10.8 7.3L10.1 7.4L9.4 7.4L8.6 7.4ZM9.4 8.6L10.1 8.6L10.8 8.7L11.4 9L11.9 9.3L12.2 9.8L12.4 10.4L12.5 11L12.6 11.8L12.6 12.6L11.8 12.6L11 12.5L10.4 12.4L9.8 12.2L9.3 11.9L9 11.4L8.7 10.8L8.6 10.1L8.6 9.4L8.6 8.6ZM7.4 9.4L7.4 10.1L7.3 10.8L7 11.4L6.7 11.9L6.2 12.2L5.6 12.4L5 12.5L4.2 12.6L3.4 12.6L3.4 11.8L3.5 11L3.6 10.4L3.8 9.8L4.1 9.3L4.6 9L5.2 8.7L5.9 8.6L6.6 8.6L7.4 8.6ZM6.6 7.4L5.9 7.4L5.2 7.3L4.6 7L4.1 6.7L3.8 6.2L3.6 5.6L3.5 5L3.4 4.2L3.4 3.4L4.2 3.4L5 3.5L5.6 3.6L6.2 3.8L6.7 4.1L7 4.6L7.3 5.2L7.4 5.9L7.4 6.6L7.4 7.4Z'/%3E%3C/svg%3E");
+  --icon-sheaf: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M11.2 9L12.8 9L12.8 22.5L11.2 22.5ZM9.6 9.5L11.1 9L14.8 22L13.3 22.4ZM12.9 9L14.4 9.5L10.7 22.4L9.2 22ZM14.1 5.6L14 7L13.7 8.2L13.2 9.2L12.6 9.8L12 10L11.4 9.8L10.8 9.2L10.3 8.2L10 7L9.9 5.6L10 4.2L10.3 3L10.8 2L11.4 1.4L12 1.2L12.6 1.4L13.2 2L13.7 3L14 4.2ZM9.1 6.5L9.4 7.7L9.6 8.8L9.5 9.8L9.3 10.5L8.8 10.9L8.2 10.9L7.5 10.6L6.8 10L6.1 9L5.5 7.9L5.2 6.7L5 5.6L5.1 4.6L5.3 3.9L5.8 3.5L6.4 3.5L7.1 3.8L7.8 4.4L8.5 5.4ZM18.5 7.9L17.9 9L17.2 10L16.5 10.6L15.8 10.9L15.2 10.9L14.7 10.5L14.5 9.8L14.4 8.8L14.6 7.7L14.9 6.5L15.5 5.4L16.2 4.4L16.9 3.8L17.6 3.5L18.2 3.5L18.7 3.9L18.9 4.6L19 5.6L18.8 6.7ZM8 14.2L16 14.2L16 16.4L8 16.4Z'/%3E%3C/svg%3E");
+  --icon-logs: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M2.2 17a4.6 4.6 0 1 1 9.2 0a4.6 4.6 0 1 1 -9.2 0ZM5.2 17a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0ZM12.6 17a4.6 4.6 0 1 1 9.2 0a4.6 4.6 0 1 1 -9.2 0ZM15.6 17a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0ZM7.4 8.4a4.6 4.6 0 1 1 9.2 0a4.6 4.6 0 1 1 -9.2 0ZM10.4 8.4a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0Z'/%3E%3C/svg%3E");
+  --icon-block: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M12 2.5L21.5 7.2L12 12L2.5 7.2ZM2.5 8.8L11.2 13.3L11.2 22.5L2.5 18ZM21.5 18L12.8 22.5L12.8 13.3L21.5 8.8Z'/%3E%3C/svg%3E");
+  --icon-coins: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M20.5 18.5L20.1 19.3L18.9 20L17 20.6L14.6 21L12 21.1L9.4 21L7 20.6L5.1 20L3.9 19.3L3.5 18.5L3.9 17.7L5.1 17L7 16.4L9.4 16L12 15.9L14.6 16L17 16.4L18.9 17L20.1 17.7ZM20.5 15L20.1 15.8L18.9 16.5L17 17.1L14.6 17.5L12 17.6L9.4 17.5L7 17.1L5.1 16.5L3.9 15.8L3.5 15L3.9 14.2L5.1 13.5L7 12.9L9.4 12.5L12 12.4L14.6 12.5L17 12.9L18.9 13.5L20.1 14.2ZM4.4 8.5a7.6 7.6 0 1 1 15.2 0a7.6 7.6 0 1 1 -15.2 0ZM6.2 8.5a5.8 5.8 0 1 0 11.6 0a5.8 5.8 0 1 0 -11.6 0ZM12 4.1L12.4 6.9L11.6 6.9ZM15.1 5.4L13.4 7.7L12.8 7.1ZM16.4 8.5L13.6 8.9L13.6 8.1ZM15.1 11.6L12.8 9.9L13.4 9.3ZM12 12.9L11.6 10.1L12.4 10.1ZM8.9 11.6L10.6 9.3L11.2 9.9ZM7.6 8.5L10.4 8.1L10.4 8.9ZM8.9 5.4L11.2 7.1L10.6 7.7ZM10.6 8.5a1.4 1.4 0 1 1 2.8 0a1.4 1.4 0 1 1 -2.8 0Z'/%3E%3C/svg%3E");
+  --icon-villager: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M9.4 7.4a2.6 2.6 0 1 1 5.2 0a2.6 2.6 0 1 1 -5.2 0ZM7.2 1.6L16.8 1.6L15.8 4.2L8.2 4.2ZM8.4 10.6L15.6 10.6L17 16.8L15 16.8L15 22.6L12.9 22.6L12 17.4L11.1 22.6L9 22.6L9 16.8L7 16.8ZM7.4 4.2L8.8 4L9.8 11.4L8.4 10.6ZM15.6 10.6L14.2 11.4L15.2 4L16.6 4.2Z'/%3E%3C/svg%3E");
+  --icon-spear: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M13.6 8.8L14.9 9.8L5.5 20.9L4.3 19.9ZM19.2 3.4L18 8.9L13.3 10.5L14 5.6Z'/%3E%3C/svg%3E");
+  --icon-wheel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M1.5 12a10.5 10.5 0 1 1 21 0a10.5 10.5 0 1 1 -21 0ZM3.6 12a8.4 8.4 0 1 0 16.8 0a8.4 8.4 0 1 0 -16.8 0ZM9.6 12a2.4 2.4 0 1 1 4.8 0a2.4 2.4 0 1 1 -4.8 0ZM11.3 3.4L12.8 3.4L12.8 10L11.3 10ZM17.6 5.4L18.6 6.4L13.9 11.1L12.9 10.1ZM20.6 11.3L20.6 12.8L14 12.8L14 11.3ZM18.6 17.6L17.6 18.6L12.9 13.9L13.9 12.9ZM12.8 20.6L11.3 20.6L11.3 14L12.8 14ZM6.4 18.6L5.4 17.6L10.1 12.9L11.1 13.9ZM3.4 12.8L3.4 11.3L10 11.3L10 12.8ZM5.4 6.4L6.4 5.4L11.1 10.1L10.1 11.1Z'/%3E%3C/svg%3E");
+  --icon-sword: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M18.2 3.2L17.9 6.1L11.6 15.2L9.2 13.4L15.5 4.4ZM6.5 11.5L14.3 17L13.2 18.7L5.3 13.2ZM8.4 15.4L10.1 16.5L7.9 19.6L6.2 18.5ZM5.9 18.2L8.2 19.8L7.1 21.5L4.8 19.9Z'/%3E%3C/svg%3E");
+  --icon-lotus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M14.7 10.2L14.6 12.5L14.2 14.5L13.6 16.2L12.8 17.2L12 17.6L11.2 17.2L10.4 16.2L9.8 14.5L9.4 12.5L9.3 10.2L9.4 7.9L9.8 5.9L10.4 4.2L11.2 3.2L12 2.8L12.8 3.2L13.6 4.2L14.2 5.9L14.6 7.9ZM9.6 11.3L10.6 12.9L11.2 14.5L11.6 16L11.5 17.1L11.1 17.7L10.3 17.9L9.2 17.5L8 16.7L6.8 15.5L5.6 13.9L4.6 12.3L4 10.7L3.6 9.2L3.7 8.1L4.1 7.5L4.9 7.3L6 7.7L7.2 8.5L8.4 9.7ZM18.4 13.9L17.2 15.5L16 16.7L14.8 17.5L13.7 17.9L12.9 17.7L12.5 17.1L12.4 16L12.8 14.5L13.4 12.9L14.4 11.3L15.6 9.7L16.8 8.5L18 7.7L19.1 7.3L19.9 7.5L20.3 8.1L20.4 9.2L20 10.7L19.4 12.3ZM5.4 14.3L6.6 14.9L7.7 15.7L8.5 16.5L8.8 17.2L8.8 17.9L8.4 18.3L7.5 18.5L6.4 18.5L5.2 18.2L3.8 17.7L2.6 17.1L1.5 16.3L0.7 15.5L0.4 14.8L0.4 14.1L0.8 13.7L1.7 13.5L2.8 13.5L4 13.8ZM20.2 17.7L18.8 18.2L17.6 18.5L16.5 18.5L15.6 18.3L15.2 17.9L15.2 17.2L15.5 16.5L16.3 15.7L17.4 14.9L18.6 14.3L20 13.8L21.2 13.5L22.3 13.5L23.2 13.7L23.6 14.1L23.6 14.8L23.3 15.5L22.5 16.3L21.4 17.1ZM19.6 19.6L19.2 20.2L18.1 20.7L16.5 21.1L14.3 21.3L12 21.4L9.7 21.3L7.5 21.1L5.9 20.7L4.8 20.2L4.4 19.6L4.8 19L5.9 18.5L7.5 18.1L9.7 17.9L12 17.8L14.3 17.9L16.5 18.1L18.1 18.5L19.2 19Z'/%3E%3C/svg%3E");
+  --icon-eye: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M1.5 12Q12 1.5 22.5 12Q12 22.5 1.5 12ZM4.6 12Q12 18.6 19.4 12Q12 5.4 4.6 12ZM8.4 12a3.6 3.6 0 1 1 7.2 0a3.6 3.6 0 1 1 -7.2 0Z'/%3E%3C/svg%3E");
+  --icon-crown: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M3 17.5L3 7.5L7.6 11.8L12 4L16.4 11.8L21 7.5L21 17.5ZM3 18.8L21 18.8L21 21.4L3 21.4ZM10.6 2.8a1.4 1.4 0 1 1 2.8 0a1.4 1.4 0 1 1 -2.8 0ZM1.8 6.2a1.2 1.2 0 1 1 2.4 0a1.2 1.2 0 1 1 -2.4 0ZM19.8 6.2a1.2 1.2 0 1 1 2.4 0a1.2 1.2 0 1 1 -2.4 0Z'/%3E%3C/svg%3E");
+  --icon-scroll: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M6.5 5L17.5 5L17.5 19L6.5 19ZM19.4 4.4L19 5L18 5.6L16.3 6L14.3 6.3L12 6.4L9.7 6.3L7.7 6L6 5.6L5 5L4.6 4.4L5 3.8L6 3.2L7.7 2.8L9.7 2.5L12 2.4L14.3 2.5L16.3 2.8L18 3.2L19 3.8ZM19.4 19.6L19 20.2L18 20.8L16.3 21.2L14.3 21.5L12 21.6L9.7 21.5L7.7 21.2L6 20.8L5 20.2L4.6 19.6L5 19L6 18.4L7.7 18L9.7 17.7L12 17.6L14.3 17.7L16.3 18L18 18.4L19 19ZM8.5 9.6L15.5 9.6L15.5 8.2L8.5 8.2ZM8.5 12.6L15.5 12.6L15.5 11.2L8.5 11.2ZM8.5 15.6L13.5 15.6L13.5 14.2L8.5 14.2Z'/%3E%3C/svg%3E");
+  --icon-unit-spearmen: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M13.6 8.8L14.9 9.8L5.5 20.9L4.3 19.9ZM19.2 3.4L18 8.9L13.3 10.5L14 5.6ZM11.4 14L11.2 16.7L10.6 19.2L9.6 21.1L8.4 22.4L7 22.8L5.6 22.4L4.4 21.1L3.4 19.2L2.8 16.7L2.6 14L2.8 11.3L3.4 8.8L4.4 6.9L5.6 5.6L7 5.2L8.4 5.6L9.6 6.9L10.6 8.8L11.2 11.3ZM5.3 14a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0 -3.4 0Z'/%3E%3C/svg%3E");
+  --icon-unit-archers: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M8.4 1.4Q22.4 12 8.4 22.6L7 21.5Q19.5 12 7 2.5ZM7.6 1.9L8.8 1.9L8.8 22.1L7.6 22.1ZM3 11.3L18.5 11.3L18.5 12.7L3 12.7ZM18 9.4L22.4 12L18 14.6Z'/%3E%3C/svg%3E");
+  --icon-unit-elite-guards: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M2 12a10 10 0 1 1 20 0a10 10 0 1 1 -20 0ZM3.8 12a8.2 8.2 0 1 0 16.4 0a8.2 8.2 0 1 0 -16.4 0ZM9 12a3 3 0 1 1 6 0a3 3 0 1 1 -6 0ZM13.4 4.7L14.4 5L13.7 7.9L12.6 7.6ZM16.8 6.4L17.6 7.2L15.5 9.3L14.7 8.5ZM19 9.6L19.3 10.6L16.4 11.4L16.1 10.3ZM19.3 13.4L19 14.4L16.1 13.7L16.4 12.6ZM17.6 16.8L16.8 17.6L14.7 15.5L15.5 14.7ZM14.4 19L13.4 19.3L12.6 16.4L13.7 16.1ZM10.6 19.3L9.6 19L10.3 16.1L11.4 16.4ZM7.2 17.6L6.4 16.8L8.5 14.7L9.3 15.5ZM5 14.4L4.7 13.4L7.6 12.6L7.9 13.7ZM4.7 10.6L5 9.6L7.9 10.3L7.6 11.4ZM6.4 7.2L7.2 6.4L9.3 8.5L8.5 9.3ZM9.6 5L10.6 4.7L11.4 7.6L10.3 7.9Z'/%3E%3C/svg%3E");
+  --icon-unit-cavalry: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M6.5 22.5L7.5 15L5.2 12.2L8.6 5.8L12.2 2.2L13.4 4.8L16.4 6.4L21.6 11.4L20.2 13.8L17.4 12.6L14.6 11.8L15 15.2L17.4 22.5Z'/%3E%3C/svg%3E");
+  --icon-unit-chariots: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M1.7 15.5a6.8 6.8 0 1 1 13.6 0a6.8 6.8 0 1 1 -13.6 0ZM3.3 15.5a5.2 5.2 0 1 0 10.4 0a5.2 5.2 0 1 0 -10.4 0ZM7 15.5a1.5 1.5 0 1 1 3 0a1.5 1.5 0 1 1 -3 0ZM8 9.9L9 9.9L9 14.3L8 14.3ZM13.1 12.3L13.6 13.1L9.8 15.3L9.3 14.5ZM13.6 17.9L13.1 18.7L9.3 16.5L9.8 15.7ZM9 21.1L8 21.1L8 16.7L9 16.7ZM3.9 18.7L3.4 17.9L7.2 15.7L7.7 16.5ZM3.4 13.1L3.9 12.3L7.7 14.5L7.2 15.3ZM8.5 7.5L20 7.5L20 13.6L15.6 13.6L14.2 9.6L8.5 9.6ZM19 13L23 13L23 14.4L19 14.4Z'/%3E%3C/svg%3E");
+  --icon-unit-war-elephants: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M3 13.5Q3 5 11.5 4Q19 3.6 20.6 10Q21.6 13.8 20.4 18.6Q20 21.6 22.2 21.4L22.4 23Q18.2 23.6 18.4 19Q18.6 15.2 16.8 14.2L16.2 21.5H12.6L12.4 16.4H8.4L8 21.5H4.4L4.6 16.6Q3 15.2 3 13.5ZM15.8 8.1L15.3 7.2L14.6 6.5L13.8 6.1L13 6.1L12.2 6.4L11.6 7L11.2 7.9L11 8.9L11 10.1L11.4 11.1L11.9 12L12.6 12.7L13.4 13.1L14.2 13.1L15 12.8L15.6 12.2L16 11.3L16.2 10.3L16.2 9.1Z'/%3E%3C/svg%3E");
+  --icon-unit-engineers: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M8.8 9.4L10.2 8.3L19.5 20.1L18.1 21.2ZM1.6 8.2L10.8 1L12 2.6L13.1 6.9L6.8 11.8L2.9 9.7Z'/%3E%3C/svg%3E");
+  --icon-unit-scouts: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M5 2L6.8 2L6.8 23L5 23ZM6.8 2.5L20.5 6.2L6.8 10.5ZM6.8 10.5L15.5 12.4L6.8 14.6Z'/%3E%3C/svg%3E");
+  --icon-unit-supply-train: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M3.1 18a4.4 4.4 0 1 1 8.8 0a4.4 4.4 0 1 1 -8.8 0ZM4.5 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0ZM6.4 18a1.1 1.1 0 1 1 2.2 0a1.1 1.1 0 1 1 -2.2 0ZM12.6 18a4.4 4.4 0 1 1 8.8 0a4.4 4.4 0 1 1 -8.8 0ZM14 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0ZM15.9 18a1.1 1.1 0 1 1 2.2 0a1.1 1.1 0 1 1 -2.2 0ZM2.5 11L21.5 11L21.5 14.4L2.5 14.4ZM11.1 8L10.9 8.9L10.4 9.8L9.6 10.4L8.6 10.9L7.5 11L6.4 10.9L5.4 10.4L4.6 9.8L4.1 8.9L3.9 8L4.1 7.1L4.6 6.2L5.4 5.6L6.4 5.1L7.5 5L8.6 5.1L9.6 5.6L10.4 6.2L10.9 7.1ZM17.8 8.2L17.6 9.1L17.2 9.8L16.4 10.5L15.5 10.9L14.4 11L13.3 10.9L12.4 10.5L11.6 9.8L11.2 9.1L11 8.2L11.2 7.3L11.6 6.6L12.4 5.9L13.3 5.5L14.4 5.4L15.5 5.5L16.4 5.9L17.2 6.6L17.6 7.3Z'/%3E%3C/svg%3E");
+  --emblem-sun: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23000' d='M37 40a13 13 0 1 1 26 0a13 13 0 1 1 -26 0ZM50 9L52.2 23.6L47.8 23.6ZM65.5 13.2L60 26.9L56.3 24.8ZM76.8 24.5L65.2 33.7L63.1 30ZM81 40L66.4 42.2L66.4 37.8ZM76.8 55.5L63.1 50L65.2 46.3ZM65.5 66.8L56.3 55.2L60 53.1ZM50 71L47.8 56.4L52.2 56.4ZM34.5 66.8L40 53.1L43.7 55.2ZM23.2 55.5L34.8 46.3L36.9 50ZM19 40L33.6 37.8L33.6 42.2ZM23.2 24.5L36.9 30L34.8 33.7ZM34.5 13.2L43.7 24.8L40 26.9ZM0 78L4.2 76L8.3 74.5L12.5 74L16.7 74.5L20.8 76L25 78L29.2 80L33.3 81.5L37.5 82L41.7 81.5L45.8 80L50 78L54.2 76L58.3 74.5L62.5 74L66.7 74.5L70.8 76L75 78L79.2 80L83.3 81.5L87.5 82L91.7 81.5L95.8 80L100 78L100 108L95.8 109.4L91.7 110.4L87.5 110.8L83.3 110.4L79.2 109.4L75 108L70.8 106.6L66.7 105.6L62.5 105.2L58.3 105.6L54.2 106.6L50 108L45.8 109.4L41.7 110.4L37.5 110.8L33.3 110.4L29.2 109.4L25 108L20.8 106.6L16.7 105.6L12.5 105.2L8.3 105.6L4.2 106.6L0 108Z'/%3E%3C/svg%3E");
+  --emblem-mountain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23000' d='M8 67L29 96L-13 96ZM22 58L44 96L0 96ZM36 48L59 96L13 96ZM50 33L77 96L23 96ZM64 48L87 96L41 96ZM78 58L100 96L56 96ZM92 67L113 96L71 96ZM40 20L60 20L55.5 25.5L44.5 25.5ZM50 6L53.6 11.5L53 16.5L50 18.5L47 16.5L46.4 11.5Z'/%3E%3C/svg%3E");
+  --emblem-elephant: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23000' d='M8 48L14 30L26 18L40 12L50 11L60 12L74 18L86 30L92 48L86 48L80 33L70 23L58 18L50 17.5L42 18L30 23L20 33L14 48ZM10 33a4 4 0 1 1 8 0a4 4 0 1 1 -8 0ZM21 21a4 4 0 1 1 8 0a4 4 0 1 1 -8 0ZM34 14.5a4 4 0 1 1 8 0a4 4 0 1 1 -8 0ZM45.8 13a4.2 4.2 0 1 1 8.4 0a4.2 4.2 0 1 1 -8.4 0ZM58 14.5a4 4 0 1 1 8 0a4 4 0 1 1 -8 0ZM71 21a4 4 0 1 1 8 0a4 4 0 1 1 -8 0ZM82 33a4 4 0 1 1 8 0a4 4 0 1 1 -8 0ZM66 60L65 64.2L62 67.9L57.3 70.9L51.5 72.8L45 73.5L38.5 72.8L32.7 70.9L28 67.9L25 64.2L24 60L25 55.8L28 52.1L32.7 49.1L38.5 47.2L45 46.5L51.5 47.2L57.3 49.1L62 52.1L65 55.8ZM56.5 53a11.5 11.5 0 1 1 23 0a11.5 11.5 0 1 1 -23 0ZM74 56L80 62L81 72L80.5 80L83 84L87 82L88.5 85L84 89.5L78 88L76.5 80L76.5 70L72 63ZM27 64L34.5 64L34.5 85L27 85ZM37.5 66L45 66L45 85L37.5 85ZM51 66L58.5 66L58.5 85L51 85ZM60 62L67.5 62L67.5 85L60 85ZM25 55L27.5 56L23 72L20.5 71.5ZM72 64L78 67.5L82 66L79.5 69.5L73.5 67.5Z'/%3E%3C/svg%3E");
+  --emblem-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23000' d='M0 86Q25 56 50 48Q75 56 100 86L100 100Q75 72 50 66Q25 72 0 100ZM34 25a16 16 0 1 1 32 0a16 16 0 1 1 -32 0ZM38.5 25a11.5 11.5 0 1 0 23 0a11.5 11.5 0 1 0 -23 0ZM45.8 25a4.2 4.2 0 1 1 8.4 0a4.2 4.2 0 1 1 -8.4 0ZM53.2 12.8L56.4 14.1L52.9 22.4L49.8 21.1ZM60.9 18.6L62.2 21.8L53.9 25.2L52.6 22.1ZM62.2 28.2L60.9 31.4L52.6 27.9L53.9 24.8ZM56.4 35.9L53.2 37.2L49.8 28.9L52.9 27.6ZM46.8 37.2L43.6 35.9L47.1 27.6L50.2 28.9ZM39.1 31.4L37.8 28.2L46.1 24.8L47.4 27.9ZM37.8 21.8L39.1 18.6L47.4 22.1L46.1 25.2ZM43.6 14.1L46.8 12.8L50.2 21.1L47.1 22.4Z'/%3E%3C/svg%3E");
+  --emblem-wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23000' d='M0 74L2.8 72L5.6 70.5L8.3 70L11.1 70.5L13.9 72L16.7 74L19.4 76L22.2 77.5L25 78L27.8 77.5L30.6 76L33.3 74L36.1 72L38.9 70.5L41.7 70L44.4 70.5L47.2 72L50 74L52.8 76L55.6 77.5L58.3 78L61.1 77.5L63.9 76L66.7 74L69.4 72L72.2 70.5L75 70L77.8 70.5L80.6 72L83.3 74L86.1 76L88.9 77.5L91.7 78L94.4 77.5L97.2 76L100 74L100 81L97.2 82.4L94.4 83.4L91.7 83.8L88.9 83.4L86.1 82.4L83.3 81L80.6 79.6L77.8 78.6L75 78.2L72.2 78.6L69.4 79.6L66.7 81L63.9 82.4L61.1 83.4L58.3 83.8L55.6 83.4L52.8 82.4L50 81L47.2 79.6L44.4 78.6L41.7 78.2L38.9 78.6L36.1 79.6L33.3 81L30.6 82.4L27.8 83.4L25 83.8L22.2 83.4L19.4 82.4L16.7 81L13.9 79.6L11.1 78.6L8.3 78.2L5.6 78.6L2.8 79.6L0 81ZM0 87L2.8 85L5.6 83.5L8.3 83L11.1 83.5L13.9 85L16.7 87L19.4 89L22.2 90.5L25 91L27.8 90.5L30.6 89L33.3 87L36.1 85L38.9 83.5L41.7 83L44.4 83.5L47.2 85L50 87L52.8 89L55.6 90.5L58.3 91L61.1 90.5L63.9 89L66.7 87L69.4 85L72.2 83.5L75 83L77.8 83.5L80.6 85L83.3 87L86.1 89L88.9 90.5L91.7 91L94.4 90.5L97.2 89L100 87L100 94L97.2 95.4L94.4 96.4L91.7 96.8L88.9 96.4L86.1 95.4L83.3 94L80.6 92.6L77.8 91.6L75 91.2L72.2 91.6L69.4 92.6L66.7 94L63.9 95.4L61.1 96.4L58.3 96.8L55.6 96.4L52.8 95.4L50 94L47.2 92.6L44.4 91.6L41.7 91.2L38.9 91.6L36.1 92.6L33.3 94L30.6 95.4L27.8 96.4L25 96.8L22.2 96.4L19.4 95.4L16.7 94L13.9 92.6L11.1 91.6L8.3 91.2L5.6 91.6L2.8 92.6L0 94ZM45.5 32L54.5 32L57 69L43 69ZM41.5 27L58.5 27L58.5 32L41.5 32ZM50 9L54 16L53 22L50 24.5L47 22L46 16Z'/%3E%3C/svg%3E");
+  --emblem-tower: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23000' d='M29 30L71 30L71 90L29 90ZM29 21L36 21L36 31L29 31ZM38.5 21L45.5 21L45.5 31L38.5 31ZM54.5 21L61.5 21L61.5 31L54.5 31ZM64 21L71 21L71 31L64 31ZM47.5 18L52.5 18L52.5 31L47.5 31ZM44 75a6 6 0 1 1 12 0a6 6 0 1 1 -12 0ZM46.4 75a3.6 3.6 0 1 0 7.2 0a3.6 3.6 0 1 0 -7.2 0ZM48.4 75a1.6 1.6 0 1 1 3.2 0a1.6 1.6 0 1 1 -3.2 0Z'/%3E%3C/svg%3E");
+  --emblem-lotus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23000' d='M52.3 38.3L51.4 35L50.9 31.9L51 29L51.7 26.3L53.1 24L55.1 21.9L57.6 20L60.6 18.3L63.8 16.7L64.9 20.1L65.8 23.4L66.3 26.5L66.2 29.4L65.5 32.1L64.2 34.4L62.1 36.5L59.6 38.4L56.6 40.1L53.4 41.7ZM59.9 43.4L61.6 40.4L63.5 37.9L65.6 35.8L67.9 34.5L70.6 33.8L73.5 33.7L76.6 34.2L79.9 35.1L83.3 36.2L81.7 39.4L80 42.4L78.1 44.9L76 46.9L73.7 48.3L71 49L68.1 49.1L65 48.6L61.7 47.7L58.3 46.6ZM61.7 52.3L65 51.4L68.1 50.9L71 51L73.7 51.7L76 53.1L78.1 55.1L80 57.6L81.7 60.6L83.3 63.8L79.9 64.9L76.6 65.8L73.5 66.3L70.6 66.2L67.9 65.5L65.6 64.2L63.5 62.1L61.6 59.6L59.9 56.6L58.3 53.4ZM56.6 59.9L59.6 61.6L62.1 63.5L64.2 65.6L65.5 67.9L66.2 70.6L66.3 73.5L65.8 76.6L64.9 79.9L63.8 83.3L60.6 81.7L57.6 80L55.1 78.1L53.1 76L51.7 73.7L51 71L50.9 68.1L51.4 65L52.3 61.7L53.4 58.3ZM47.7 61.7L48.6 65L49.1 68.1L49 71L48.3 73.7L46.9 76L44.9 78.1L42.4 80L39.4 81.7L36.2 83.3L35.1 79.9L34.2 76.6L33.7 73.5L33.8 70.6L34.5 67.9L35.8 65.6L37.9 63.5L40.4 61.6L43.4 59.9L46.6 58.3ZM40.1 56.6L38.4 59.6L36.5 62.1L34.4 64.2L32.1 65.5L29.4 66.2L26.5 66.3L23.4 65.8L20.1 64.9L16.7 63.8L18.3 60.6L20 57.6L21.9 55.1L24 53.1L26.3 51.7L29 51L31.9 50.9L35 51.4L38.3 52.3L41.7 53.4ZM38.3 47.7L35 48.6L31.9 49.1L29 49L26.3 48.3L24 46.9L21.9 44.9L20 42.4L18.3 39.4L16.7 36.2L20.1 35.1L23.4 34.2L26.5 33.7L29.4 33.8L32.1 34.5L34.4 35.8L36.5 37.9L38.4 40.4L40.1 43.4L41.7 46.6ZM43.4 40.1L40.4 38.4L37.9 36.5L35.8 34.4L34.5 32.1L33.8 29.4L33.7 26.5L34.2 23.4L35.1 20.1L36.2 16.7L39.4 18.3L42.4 20L44.9 21.9L46.9 24L48.3 26.3L49 29L49.1 31.9L48.6 35L47.7 38.3L46.6 41.7ZM48.3 41.3L46.8 39.6L45.6 37.9L44.8 36.2L44.5 34.5L44.8 32.8L45.6 31.1L46.8 29.4L48.3 27.7L50 26L51.7 27.7L53.2 29.4L54.4 31.1L55.2 32.8L55.5 34.5L55.2 36.2L54.4 37.9L53.2 39.6L51.7 41.3L50 43ZM55 42.6L55.1 40.4L55.4 38.3L56.1 36.5L57.1 35.2L58.5 34.1L60.2 33.5L62.3 33.1L64.6 33L67 33L67 35.4L66.9 37.7L66.5 39.8L65.9 41.5L64.8 42.9L63.5 43.9L61.7 44.6L59.6 44.9L57.4 45L54.9 45.1ZM58.7 48.3L60.4 46.8L62.1 45.6L63.8 44.8L65.5 44.5L67.2 44.8L68.9 45.6L70.6 46.8L72.3 48.3L74 50L72.3 51.7L70.6 53.2L68.9 54.4L67.2 55.2L65.5 55.5L63.8 55.2L62.1 54.4L60.4 53.2L58.7 51.7L57 50ZM57.4 55L59.6 55.1L61.7 55.4L63.5 56.1L64.8 57.1L65.9 58.5L66.5 60.2L66.9 62.3L67 64.6L67 67L64.6 67L62.3 66.9L60.2 66.5L58.5 65.9L57.1 64.8L56.1 63.5L55.4 61.7L55.1 59.6L55 57.4L54.9 54.9ZM51.7 58.7L53.2 60.4L54.4 62.1L55.2 63.8L55.5 65.5L55.2 67.2L54.4 68.9L53.2 70.6L51.7 72.3L50 74L48.3 72.3L46.8 70.6L45.6 68.9L44.8 67.2L44.5 65.5L44.8 63.8L45.6 62.1L46.8 60.4L48.3 58.7L50 57ZM45 57.4L44.9 59.6L44.6 61.7L43.9 63.5L42.9 64.8L41.5 65.9L39.8 66.5L37.7 66.9L35.4 67L33 67L33 64.6L33.1 62.3L33.5 60.2L34.1 58.5L35.2 57.1L36.5 56.1L38.3 55.4L40.4 55.1L42.6 55L45.1 54.9ZM41.3 51.7L39.6 53.2L37.9 54.4L36.2 55.2L34.5 55.5L32.8 55.2L31.1 54.4L29.4 53.2L27.7 51.7L26 50L27.7 48.3L29.4 46.8L31.1 45.6L32.8 44.8L34.5 44.5L36.2 44.8L37.9 45.6L39.6 46.8L41.3 48.3L43 50ZM42.6 45L40.4 44.9L38.3 44.6L36.5 43.9L35.2 42.9L34.1 41.5L33.5 39.8L33.1 37.7L33 35.4L33 33L35.4 33L37.7 33.1L39.8 33.5L41.5 34.1L42.9 35.2L43.9 36.5L44.6 38.3L44.9 40.4L45 42.6L45.1 45.1ZM43 50a7 7 0 1 1 14 0a7 7 0 1 1 -14 0Z'/%3E%3C/svg%3E");
+  --emblem-wheel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23000' d='M16 50a34 34 0 1 1 68 0a34 34 0 1 1 -68 0ZM22.5 50a27.5 27.5 0 1 0 55 0a27.5 27.5 0 1 0 -55 0ZM42 50a8 8 0 1 1 16 0a8 8 0 1 1 -16 0ZM47.9 22L52.1 22L52.1 43L47.9 43ZM68.3 28.7L71.3 31.7L56.4 46.5L53.5 43.6ZM78 47.9L78 52.1L57 52.1L57 47.9ZM71.3 68.3L68.3 71.3L53.5 56.4L56.4 53.5ZM52.1 78L47.9 78L47.9 57L52.1 57ZM31.7 71.3L28.7 68.3L43.6 53.5L46.5 56.4ZM22 52.1L22 47.9L43 47.9L43 52.1ZM28.7 31.7L31.7 28.7L46.5 43.6L43.6 46.5ZM47 50a3 3 0 1 1 6 0a3 3 0 1 1 -6 0Z'/%3E%3C/svg%3E");
+  --emblem-tree: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23000' d='M33 33a17 17 0 1 1 34 0a17 17 0 1 1 -34 0ZM23 42a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM53 42a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM38 46a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM46.5 46L53.5 46L53.5 76L46.5 76ZM18 74L82 74L82 78.5L18 78.5ZM18 84L82 84L82 88.5L18 88.5ZM17.8 70L22.2 70L22.2 96L17.8 96ZM29.8 70L34.2 70L34.2 96L29.8 96ZM41.8 70L46.2 70L46.2 96L41.8 96ZM53.8 70L58.2 70L58.2 96L53.8 96ZM65.8 70L70.2 70L70.2 96L65.8 96ZM77.8 70L82.2 70L82.2 96L77.8 96Z'/%3E%3C/svg%3E");
+  /* @generated icons:end */
+  --pattern-jali: var(--ornament-jali);
+  --texture-paper: var(--ornament-paper);
 
   --ui-scale: 1;
+}
+
+/* Colorblind team-color remaps (set data-colorblind on <html>; mirrors FACTION_ART.colorblind). */
+:root[data-colorblind='protan'],
+:root[data-colorblind='deutan'] {
+  --faction-heartland: #e69f00;
+  --faction-highland: #0072b2;
+  --faction-forest: #006e50;
+  --faction-frontier: #cc79a7;
+  --faction-maritime: #56b4e9;
+  --faction-citystates: #7f2704;
+  --ui-player: #e69f00;
+}
+:root[data-colorblind='tritan'] {
+  --faction-heartland: #e0442b;
+  --faction-highland: #1b3f8b;
+  --faction-forest: #7fd1a0;
+  --faction-frontier: #f2a2c0;
+  --faction-maritime: #2c2c2c;
+  --faction-citystates: #8c510a;
+  --ui-player: #e0442b;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-med: 0ms;
+    --dur-slow: 0ms;
+  }
+}
+
+/* Phones: slightly larger small text, comfort targets. */
+@media (max-width: 640px), (max-height: 480px) {
+  :root {
+    --fs-xs: 12px;
+    --fs-sm: 13.5px;
+    --fs-text: 16px;
+    --tooltip-max-w: min(300px, 86vw);
+  }
+}
+
+/* =========================================================================================== skins */
+
+#ui-root,
+#overlay-root {
+  font-variant-numeric: lining-nums tabular-nums;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+#ui-root ::selection {
+  background: rgba(233, 185, 73, 0.35);
+  color: #fff6e2;
+}
+
+/* Keyboard focus: always visible, never on mouse click. */
+#ui-root :focus-visible,
+#overlay-root :focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Scrollbars: thin gold-leaf thumb on a dark track. */
+#ui-root,
+#ui-root * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb-flat) var(--scroll-track);
+}
+#ui-root ::-webkit-scrollbar {
+  width: var(--scroll-size);
+  height: var(--scroll-size);
+}
+#ui-root ::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+  border-radius: var(--radius-pill);
+}
+#ui-root ::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(0, 0, 0, 0.35);
+}
+#ui-root ::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Display type helpers */
+.display {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+.caps {
+  text-transform: uppercase;
+  letter-spacing: var(--letter-caps);
+}
+.epigraph {
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--ui-text-dim);
+  line-height: var(--lh-prose);
+}
+.prose {
+  font-size: var(--fs-text);
+  line-height: var(--lh-prose);
+}
+.on-scene {
+  text-shadow: var(--text-shadow-on-scene);
+}
+
+/* Torana arch above a heading (modal titles, screen titles, mission cards). */
+.title-torana {
+  position: relative;
+  padding-top: 40px;
+  text-align: center;
+  font-family: var(--font-display);
+  color: var(--c-gold);
+}
+.title-torana::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: min(260px, 90%);
+  height: 38px;
+  transform: translateX(-50%);
+  background: var(--ornament-torana) no-repeat center top / contain;
+  pointer-events: none;
+}
+
+/* Lotus divider variant (wider, for headers). */
+.divider-lotus {
+  height: 16px;
+  margin: var(--sp-2) auto;
+  max-width: 320px;
+  background: var(--ornament-divider) no-repeat center / contain;
+}
+
+/* Parchment panel: documents (events, chronicle, dialogue choices, statistics tables). */
+.panel.parchment,
+.parchment {
+  color: var(--ui-text-dark);
+  background: var(--texture-paper), var(--ui-panel-light);
+  border-color: var(--c-gold-dim);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.35), inset 0 0 40px rgba(120, 80, 30, 0.22);
+  backdrop-filter: none;
+}
+.parchment .panel-title,
+.parchment .title-torana {
+  color: var(--c-madder);
+  text-shadow: none;
+}
+.parchment .muted,
+.parchment .k {
+  color: var(--ui-text-dark-dim);
+}
+
+/* Carved sandstone variant (age-up card, landmark panel, title cards). */
+.panel.carved {
+  background: linear-gradient(180deg, rgba(255, 240, 210, 0.08), rgba(0, 0, 0, 0.18)), linear-gradient(180deg, #8f6a48 0%, #6e4d34 100%);
+  border-color: #d8b98a;
+  box-shadow: var(--shadow-panel), inset 0 0 0 3px rgba(40, 24, 12, 0.35), inset 0 0 0 4px rgba(255, 228, 180, 0.25);
+}
+
+/* Tooltip (desktop hover, touch long-press - shown by the UI layer, styled here). */
+.tooltip {
+  position: absolute;
+  z-index: 60;
+  max-width: var(--tooltip-max-w);
+  padding: 10px 12px;
+  color: var(--tooltip-text);
+  background: var(--tooltip-bg);
+  border: 1px solid var(--tooltip-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 230, 170, 0.1);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-body);
+  pointer-events: none;
+  animation: tooltip-in var(--dur-fast) var(--ease-out);
+}
+.tooltip .tt-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  color: var(--c-gold);
+}
+.tooltip .tt-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.tooltip .tt-row > :first-child {
+  color: var(--ui-text-dim);
+}
+.tooltip .tt-hint {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--ui-border-faint);
+  color: var(--ui-text-faint);
+  font-style: italic;
+}
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+/* Icons: single-color masks that take currentColor.  <i class="icon icon-sheaf"></i> */
+.icon {
+  display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+  vertical-align: -0.2em;
+  background-color: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
+.icon-sheaf { --icon: var(--icon-sheaf); }
+.icon-logs { --icon: var(--icon-logs); }
+.icon-block { --icon: var(--icon-block); }
+.icon-coins { --icon: var(--icon-coins); }
+.icon-villager { --icon: var(--icon-villager); }
+.icon-spear { --icon: var(--icon-spear); }
+.icon-wheel { --icon: var(--icon-wheel); }
+.icon-sword { --icon: var(--icon-sword); }
+.icon-lotus { --icon: var(--icon-lotus); }
+.icon-eye { --icon: var(--icon-eye); }
+.icon-crown { --icon: var(--icon-crown); }
+.icon-scroll { --icon: var(--icon-scroll); }
+.icon-unit-spearmen { --icon: var(--icon-unit-spearmen); }
+.icon-unit-archers { --icon: var(--icon-unit-archers); }
+.icon-unit-elite-guards { --icon: var(--icon-unit-elite-guards); }
+.icon-unit-cavalry { --icon: var(--icon-unit-cavalry); }
+.icon-unit-chariots { --icon: var(--icon-unit-chariots); }
+.icon-unit-war-elephants { --icon: var(--icon-unit-war-elephants); }
+.icon-unit-engineers { --icon: var(--icon-unit-engineers); }
+.icon-unit-scouts { --icon: var(--icon-unit-scouts); }
+.icon-unit-supply-train { --icon: var(--icon-unit-supply-train); }
+
+/* Resource colors for icons and values. */
+.res-grain { color: var(--res-grain); }
+.res-timber { color: var(--res-timber); }
+.res-stone { color: var(--res-stone); }
+.res-wealth { color: var(--res-wealth); }
+.res-labor { color: var(--res-labor); }
+.res-manpower { color: var(--res-manpower); }
+
+/* Faction emblems as masks (team color via --faction).  <i class="emblem emblem-sun"></i> */
+.emblem {
+  display: inline-block;
+  width: 1.4em;
+  height: 1.4em;
+  flex: none;
+  vertical-align: -0.3em;
+  background-color: var(--faction, currentColor);
+  -webkit-mask: var(--emblem) center / contain no-repeat;
+  mask: var(--emblem) center / contain no-repeat;
+}
+.emblem-sun { --emblem: var(--emblem-sun); }
+.emblem-mountain { --emblem: var(--emblem-mountain); }
+.emblem-elephant { --emblem: var(--emblem-elephant); }
+.emblem-chevron { --emblem: var(--emblem-chevron); }
+.emblem-wave { --emblem: var(--emblem-wave); }
+.emblem-tower { --emblem: var(--emblem-tower); }
+.emblem-lotus { --emblem: var(--emblem-lotus); }
+.emblem-wheel { --emblem: var(--emblem-wheel); }
+.emblem-tree { --emblem: var(--emblem-tree); }
+.f-heartland { --faction: var(--faction-heartland); }
+.f-highland { --faction: var(--faction-highland); }
+.f-forest { --faction: var(--faction-forest); }
+.f-frontier { --faction: var(--faction-frontier); }
+.f-maritime { --faction: var(--faction-maritime); }
+.f-citystates { --faction: var(--faction-citystates); }
+
+/* Faction chip: colored disc + emblem, used in diplomacy lists and the score bar. */
+.faction-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--faction, var(--faction-independent));
+  box-shadow: 0 0 0 1.5px var(--c-gold), 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+.faction-chip > .emblem {
+  --faction: #f6ecd6;
+  width: 20px;
+  height: 20px;
+}
+
+/* Hotkey hint chip.  <kbd class="kbd">Q</kbd> */
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6em;
+  height: 1.6em;
+  padding: 0 0.35em;
+  font: 600 var(--fs-xs) / 1 var(--font-body);
+  color: var(--c-gold-soft);
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--ui-border-soft);
+  border-bottom-width: 2px;
+  border-radius: 3px;
+}
+
+/* Count badge (idle workers, alerts). */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font: 700 11px / 1 var(--font-body);
+  color: #1b0f08;
+  background: var(--c-saffron-bright);
+  border-radius: var(--radius-pill);
+  box-shadow: 0 0 0 1.5px #15122a;
+}
+.badge.danger {
+  color: #fff;
+  background: var(--ui-danger);
+}
+
+/* Meters with notches every 25% (shape coding for strength/morale, readable without color). */
+.meter {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--meter-track);
+  overflow: hidden;
+}
+.meter > i {
+  display: block;
+  height: 100%;
+  background: var(--meter-strength);
+  transition: width var(--dur-med) var(--ease-out);
+}
+.meter.morale > i {
+  background: var(--meter-morale);
+}
+.meter.fatigue > i {
+  background: var(--meter-fatigue);
+}
+.meter::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(25% - 1px), rgba(0, 0, 0, 0.55) calc(25% - 1px) 25%);
+  pointer-events: none;
+}
+
+/* Button variants that base.css does not define. */
+.btn.danger {
+  color: #fff3ea;
+  background: var(--btn-danger-bg);
+  border-color: #f08a6e;
+}
+.btn.danger:hover {
+  box-shadow: var(--glow-danger);
+}
+.btn.stone {
+  color: var(--btn-stone-text);
+  background: var(--btn-stone-bg);
+  border-color: #6b4f1e;
+  text-shadow: 0 1px 0 rgba(255, 240, 210, 0.45);
+}
+.btn.tab {
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  border-bottom-color: transparent;
+  background: rgba(0, 0, 0, 0.25);
+}
+.btn.tab.active {
+  background: var(--btn-bg);
+  border-bottom-color: transparent;
+  box-shadow: inset 0 2px 0 var(--c-gold);
+}
+
+/* Command-card slot (AoE-style grid button): icon over a short label, hotkey in the corner. */
+.btn.slot {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: var(--slot-size, 56px);
+  height: var(--slot-size, 56px);
+  padding: 4px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.btn.slot > .icon {
+  width: 26px;
+  height: 26px;
+  color: var(--c-gold-soft);
+}
+.btn.slot > .kbd {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 14px;
+  height: 14px;
+  font-size: 9px;
+  border-bottom-width: 1px;
+}
+
+/* Character / event card frame (portrait + text). */
+.card {
+  position: relative;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--ui-border-soft);
+  background: linear-gradient(180deg, rgba(255, 230, 170, 0.06), rgba(0, 0, 0, 0.2));
+  padding: var(--sp-3);
+}
+.card.selected {
+  border-color: var(--c-gold);
+  box-shadow: var(--glow-gold);
+}
+
+/* Lotus bullet list for objectives. */
+.list-lotus {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.list-lotus > li {
+  position: relative;
+  padding-left: 22px;
+  margin: 4px 0;
+}
+.list-lotus > li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 0.35em;
+  width: 13px;
+  height: 13px;
+  background: var(--ornament-bullet) no-repeat center / contain;
+}
+.list-lotus > li.done {
+  color: var(--ui-text-faint);
+  text-decoration: line-through;
+  text-decoration-color: rgba(233, 185, 73, 0.6);
 }

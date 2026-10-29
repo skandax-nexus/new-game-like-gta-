@@ -244,7 +244,7 @@ export const METALS = {
 export const GRADE_PRESETS: Readonly<
   Record<'day' | 'golden' | 'dusk' | 'night' | 'monsoon' | 'menu' | 'dawn' | 'haze' | 'fog' | 'interior' | 'cinematic', GradeParams>
 > = {
-  day: { contrast: 1.05, saturation: 1.0, warmth: 0.08, lift: 0.012, vignette: 0.24, tint: [1.0, 0.995, 0.98] },
+  day: { contrast: 1.05, saturation: 1.03, warmth: 0.08, lift: 0.012, vignette: 0.24, tint: [1.0, 0.995, 0.98] },
   dawn: { contrast: 1.02, saturation: 0.95, warmth: 0.1, lift: 0.028, vignette: 0.3, tint: [0.99, 0.98, 1.02] },
   golden: { contrast: 1.1, saturation: 1.07, warmth: 0.3, lift: 0.014, vignette: 0.32, tint: [1.03, 1.0, 0.95] },
   dusk: { contrast: 1.08, saturation: 1.0, warmth: 0.12, lift: 0.024, vignette: 0.38, tint: [1.0, 0.95, 1.04] },

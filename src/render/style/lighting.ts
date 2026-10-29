@@ -92,15 +92,25 @@ export interface LightingPreset {
   id: LightingPresetId;
   label: string;
   sun: SunParams;
-  /** Baked sky to use when assets are on, plus the parameters it was / should be baked with. */
-  sky: { hdri: SkyHdriId; nishita: NishitaParams; preetham: PreethamParams; envIntensity: number; envRotationDeg: number };
+  /**
+   * Baked sky to use when assets are on, the parameters it was / should be baked with, and the target
+   * horizontal sky irradiance (sun excluded, game units). The IBL is calibrated to it whatever the source:
+   * scene.environmentIntensity = irradiance / sourceIrradiance (manifest `ambientIrradiance` for baked
+   * skies; for the procedural Preetham sky measure it once per PMREM bake with the sun disc masked - the
+   * raw Preetham dome is ~8x too bright for this light scale and is invalid below the horizon).
+   */
+  sky: { hdri: SkyHdriId; nishita: NishitaParams; preetham: PreethamParams; irradiance: number; envRotationDeg: number };
   /** Hemisphere fill. With IBL on, multiply intensity by 0.35 (IBL carries most of the sky fill). */
   hemi: { sky: Hex; ground: Hex; intensity: number };
   fog: FogParams;
   /** Screen-space god rays / volumetric shafts (0 = off). decay 0.9-0.98, density 0.5-1. */
   shafts: { strength: number; decay: number; density: number };
   exposure: number;
-  /** UnrealBloom: strength, radius, HDR threshold (linear luminance before tone mapping). */
+  /**
+   * UnrealBloom strength, radius and threshold. The threshold is EXPOSED luminance (scene-linear x
+   * exposure): pass threshold / exposure to UnrealBloomPass. ~1 = a sunlit white wall, so day values of
+   * 4-4.5 keep bloom on the sun, glints, fire and lamps only (never on the sky or plaster).
+   */
   bloom: { strength: number; radius: number; threshold: number };
   /** GTAO intensity multiplier and world radius (m). */
   ao: { intensity: number; radiusM: number };
@@ -113,7 +123,7 @@ export interface LightingPreset {
   practicals: number;
   /** Ambient VFX densities 0..1 (render/fx): dust motes in shafts, low mist, fireflies, falling leaves. */
   ambientFx: { dustMotes: number; mist: number; fireflies: number; leaves: number };
-  /** QA target: sunlit/shadowed luminance ratio on a neutral grey card (key:fill). */
+  /** QA target key:fill = sun luminance (normal incidence) / horizontal sky irradiance (= sun.lum / sky.irradiance). */
   keyFill: number;
 }
 
@@ -134,26 +144,26 @@ export const LIGHTING_PRESETS: Readonly<Record<LightingPresetId, LightingPreset>
   dawn: {
     id: 'dawn',
     label: 'Dawn - mist on the ghats',
-    sun: { elevationDeg: 6, azimuthDeg: 95, color: '#ffc49a', intensity: 1.5, softnessDeg: 0.7 },
+    sun: { elevationDeg: 6, azimuthDeg: 95, color: '#ffc49a', intensity: 1.9, softnessDeg: 0.7 },
     sky: {
       hdri: 'sky_dawn',
       nishita: { sunElevationDeg: 6, sunAzimuthDeg: 95, altitude: 0, air: 1.1, aerosol: 2.4, ozone: 1.4, clouds: 0.25, cloudScale: 0.9, groundAlbedo: [0.2, 0.18, 0.15] },
       preetham: { turbidity: 6, rayleigh: 2.2, mieCoefficient: 0.012, mieDirectionalG: 0.86 },
-      envIntensity: 0.75,
+      irradiance: 0.38,
       envRotationDeg: 0,
     },
     hemi: { sky: '#97a8c8', ground: '#6d5e56', intensity: 0.32 },
-    fog: { color: '#b4b2bd', inscatter: '#ffcfa6', density: 0.0011, heightFalloff: 0.03, baseHeight: 0, inscatterPower: 6, maxOpacity: 0.9, mist: { topM: 2.5, density: 0.03 } },
+    fog: { color: '#b4b2bd', inscatter: '#ffcfa6', density: 0.0008, heightFalloff: 0.03, baseHeight: 0, inscatterPower: 6, maxOpacity: 0.88, mist: { topM: 2, density: 0.012 } },
     shafts: { strength: 0.55, decay: 0.95, density: 0.85 },
     exposure: 1.3,
-    bloom: { strength: 0.4, radius: 0.6, threshold: 0.9 },
+    bloom: { strength: 0.4, radius: 0.6, threshold: 3.0 },
     ao: { intensity: 0.9, radiusM: 1.4 },
     grade: grade('dawn'),
     lut: 'lut_dawn',
     wetness: 0.25,
     practicals: 0.25,
     ambientFx: { dustMotes: 0.2, mist: 0.85, fireflies: 0, leaves: 0.2 },
-    keyFill: 2.5,
+    keyFill: 3,
   },
   noon: {
     id: 'noon',
@@ -163,14 +173,14 @@ export const LIGHTING_PRESETS: Readonly<Record<LightingPresetId, LightingPreset>
       hdri: 'sky_day',
       nishita: { sunElevationDeg: 62, sunAzimuthDeg: 170, altitude: 0, air: 1.0, aerosol: 1.6, ozone: 1.0, clouds: 0.18, cloudScale: 1.0, groundAlbedo: [0.24, 0.2, 0.15] },
       preetham: { turbidity: 3.2, rayleigh: 1.6, mieCoefficient: 0.005, mieDirectionalG: 0.82 },
-      envIntensity: 1.0,
+      irradiance: 0.75,
       envRotationDeg: 0,
     },
     hemi: { sky: '#a9c0e2', ground: '#8a7458', intensity: 0.38 },
     fog: { color: '#c3c6c2', inscatter: '#fff0d4', density: 0.00018, heightFalloff: 0.0025, baseHeight: 0, inscatterPower: 8, maxOpacity: 0.72, mist: NO_MIST },
     shafts: { strength: 0, decay: 0.95, density: 0.7 },
     exposure: 0.8,
-    bloom: { strength: 0.22, radius: 0.4, threshold: 1.1 },
+    bloom: { strength: 0.22, radius: 0.4, threshold: 4.5 },
     ao: { intensity: 1.0, radiusM: 1.5 },
     grade: grade('day'),
     lut: null,
@@ -187,21 +197,21 @@ export const LIGHTING_PRESETS: Readonly<Record<LightingPresetId, LightingPreset>
       hdri: 'sky_golden',
       nishita: { sunElevationDeg: 7, sunAzimuthDeg: 258, altitude: 0, air: 1.3, aerosol: 3.2, ozone: 1.2, clouds: 0.38, cloudScale: 0.8, groundAlbedo: [0.26, 0.19, 0.12] },
       preetham: { turbidity: 8, rayleigh: 2.6, mieCoefficient: 0.009, mieDirectionalG: 0.88 },
-      envIntensity: 0.8,
+      irradiance: 0.45,
       envRotationDeg: 0,
     },
     hemi: { sky: '#8ea2cc', ground: '#7a5a3e', intensity: 0.3 },
-    fog: { color: '#c9a582', inscatter: '#ffbe78', density: 0.00034, heightFalloff: 0.006, baseHeight: 0, inscatterPower: 5, maxOpacity: 0.8, mist: NO_MIST },
+    fog: { color: '#c9a582', inscatter: '#ffbe78', density: 0.0005, heightFalloff: 0.006, baseHeight: 0, inscatterPower: 5, maxOpacity: 0.8, mist: NO_MIST },
     shafts: { strength: 0.45, decay: 0.96, density: 0.8 },
-    exposure: 0.95,
-    bloom: { strength: 0.45, radius: 0.55, threshold: 0.85 },
+    exposure: 1.05,
+    bloom: { strength: 0.45, radius: 0.55, threshold: 3.2 },
     ao: { intensity: 1.05, radiusM: 1.5 },
     grade: grade('golden'),
     lut: 'lut_golden',
     wetness: 0,
     practicals: 0.15,
     ambientFx: { dustMotes: 0.65, mist: 0, fireflies: 0, leaves: 0.3 },
-    keyFill: 6,
+    keyFill: 5,
   },
   dusk: {
     id: 'dusk',
@@ -211,38 +221,38 @@ export const LIGHTING_PRESETS: Readonly<Record<LightingPresetId, LightingPreset>
       hdri: 'sky_dusk',
       nishita: { sunElevationDeg: -2, sunAzimuthDeg: 280, altitude: 0, air: 1.2, aerosol: 2.6, ozone: 1.6, clouds: 0.3, cloudScale: 0.9, groundAlbedo: [0.2, 0.16, 0.13] },
       preetham: { turbidity: 7, rayleigh: 3, mieCoefficient: 0.008, mieDirectionalG: 0.85 },
-      envIntensity: 0.65,
+      irradiance: 0.16,
       envRotationDeg: 0,
     },
     hemi: { sky: '#62719f', ground: '#4b3b3a', intensity: 0.28 },
     fog: { color: '#7b6f82', inscatter: '#ff9d70', density: 0.0005, heightFalloff: 0.01, baseHeight: 0, inscatterPower: 4, maxOpacity: 0.82, mist: { topM: 1.5, density: 0.008 } },
     shafts: { strength: 0.2, decay: 0.95, density: 0.7 },
-    exposure: 1.6,
-    bloom: { strength: 0.6, radius: 0.6, threshold: 0.8 },
+    exposure: 1.8,
+    bloom: { strength: 0.5, radius: 0.55, threshold: 2.2 },
     ao: { intensity: 0.9, radiusM: 1.4 },
     grade: grade('dusk'),
     lut: 'lut_dusk',
     wetness: 0.05,
     practicals: 0.6,
     ambientFx: { dustMotes: 0.25, mist: 0.2, fireflies: 0.35, leaves: 0.1 },
-    keyFill: 2,
+    keyFill: 1.6,
   },
   night: {
     id: 'night',
     label: 'Night - moon and torches',
-    sun: { elevationDeg: 42, azimuthDeg: 150, color: '#9fb6e3', intensity: 0.32, softnessDeg: 0.4 },
+    sun: { elevationDeg: 42, azimuthDeg: 150, color: '#9fb6e3', intensity: 0.55, softnessDeg: 0.4 },
     sky: {
       hdri: 'sky_night',
       nishita: { sunElevationDeg: -18, sunAzimuthDeg: 300, altitude: 0, air: 1.0, aerosol: 1.2, ozone: 1.0, clouds: 0.15, cloudScale: 1.0, groundAlbedo: [0.05, 0.05, 0.06] },
       preetham: { turbidity: 2, rayleigh: 0.6, mieCoefficient: 0.002, mieDirectionalG: 0.7 },
-      envIntensity: 0.22,
+      irradiance: 0.08,
       envRotationDeg: 0,
     },
     hemi: { sky: '#2b3654', ground: '#1b1813', intensity: 0.14 },
     fog: { color: '#1c2434', inscatter: '#43506e', density: 0.0004, heightFalloff: 0.008, baseHeight: 0, inscatterPower: 3, maxOpacity: 0.85, mist: { topM: 1.2, density: 0.006 } },
     shafts: { strength: 0, decay: 0.95, density: 0.7 },
-    exposure: 2.1,
-    bloom: { strength: 0.8, radius: 0.7, threshold: 0.7 },
+    exposure: 2.5,
+    bloom: { strength: 0.6, radius: 0.55, threshold: 1.4 },
     ao: { intensity: 0.8, radiusM: 1.2 },
     grade: grade('night'),
     lut: 'lut_night',
@@ -259,14 +269,14 @@ export const LIGHTING_PRESETS: Readonly<Record<LightingPresetId, LightingPreset>
       hdri: 'sky_overcast',
       nishita: { sunElevationDeg: 50, sunAzimuthDeg: 180, altitude: 0, air: 1.4, aerosol: 4, ozone: 1.0, clouds: 0.95, cloudScale: 0.7, groundAlbedo: [0.12, 0.13, 0.1] },
       preetham: { turbidity: 14, rayleigh: 0.9, mieCoefficient: 0.02, mieDirectionalG: 0.6 },
-      envIntensity: 1.25,
+      irradiance: 0.5,
       envRotationDeg: 0,
     },
     hemi: { sky: '#a2abaf', ground: '#4c5040', intensity: 0.55 },
     fog: { color: '#8c989a', inscatter: '#c6cecc', density: 0.0011, heightFalloff: 0.004, baseHeight: 0, inscatterPower: 2, maxOpacity: 0.88, mist: { topM: 3, density: 0.006 } },
     shafts: { strength: 0, decay: 0.95, density: 0.7 },
-    exposure: 1.15,
-    bloom: { strength: 0.2, radius: 0.4, threshold: 1.15 },
+    exposure: 1.3,
+    bloom: { strength: 0.2, radius: 0.4, threshold: 4.0 },
     ao: { intensity: 1.15, radiusM: 1.8 },
     grade: grade('monsoon'),
     lut: 'lut_monsoon',
@@ -283,14 +293,14 @@ export const LIGHTING_PRESETS: Readonly<Record<LightingPresetId, LightingPreset>
       hdri: 'sky_haze',
       nishita: { sunElevationDeg: 55, sunAzimuthDeg: 200, altitude: 0, air: 1.2, aerosol: 5, ozone: 0.9, clouds: 0.05, cloudScale: 1.0, groundAlbedo: [0.32, 0.26, 0.18] },
       preetham: { turbidity: 12, rayleigh: 1.0, mieCoefficient: 0.014, mieDirectionalG: 0.84 },
-      envIntensity: 0.9,
+      irradiance: 0.9,
       envRotationDeg: 0,
     },
     hemi: { sky: '#c4c2b4', ground: '#957a55', intensity: 0.42 },
-    fog: { color: '#cdb995', inscatter: '#fff0c8', density: 0.0007, heightFalloff: 0.0018, baseHeight: 0, inscatterPower: 4, maxOpacity: 0.78, mist: NO_MIST },
+    fog: { color: '#cdb995', inscatter: '#fff0c8', density: 0.0012, heightFalloff: 0.0018, baseHeight: 0, inscatterPower: 4, maxOpacity: 0.78, mist: NO_MIST },
     shafts: { strength: 0.1, decay: 0.95, density: 0.7 },
     exposure: 0.74,
-    bloom: { strength: 0.3, radius: 0.5, threshold: 1.0 },
+    bloom: { strength: 0.3, radius: 0.5, threshold: 4.2 },
     ao: { intensity: 1.0, radiusM: 1.5 },
     grade: grade('haze'),
     lut: 'lut_haze',
@@ -307,14 +317,14 @@ export const LIGHTING_PRESETS: Readonly<Record<LightingPresetId, LightingPreset>
       hdri: 'sky_fog',
       nishita: { sunElevationDeg: 12, sunAzimuthDeg: 125, altitude: 0, air: 1.0, aerosol: 6, ozone: 1.0, clouds: 0.5, cloudScale: 1.2, groundAlbedo: [0.2, 0.2, 0.18] },
       preetham: { turbidity: 16, rayleigh: 1.2, mieCoefficient: 0.03, mieDirectionalG: 0.9 },
-      envIntensity: 0.95,
+      irradiance: 0.55,
       envRotationDeg: 0,
     },
     hemi: { sky: '#b3b8bf', ground: '#5c5a50', intensity: 0.45 },
-    fog: { color: '#b5b9bd', inscatter: '#ffe2c4', density: 0.0028, heightFalloff: 0.02, baseHeight: 0, inscatterPower: 6, maxOpacity: 0.93, mist: { topM: 4, density: 0.02 } },
+    fog: { color: '#b5b9bd', inscatter: '#ffe2c4', density: 0.0022, heightFalloff: 0.02, baseHeight: 0, inscatterPower: 6, maxOpacity: 0.86, mist: { topM: 4, density: 0.02 } },
     shafts: { strength: 0.7, decay: 0.96, density: 0.9 },
     exposure: 1.05,
-    bloom: { strength: 0.35, radius: 0.6, threshold: 0.95 },
+    bloom: { strength: 0.35, radius: 0.6, threshold: 3.0 },
     ao: { intensity: 0.85, radiusM: 1.4 },
     grade: grade('fog'),
     lut: 'lut_fog',
@@ -332,6 +342,7 @@ export const LIGHTING_PRESETS: Readonly<Record<LightingPresetId, LightingPreset>
 export interface WeatherOverlay {
   sunIntensityMul: number;
   sunSoftnessDeg: number;
+  /** Multiplier on the sky irradiance (overcast domes are brighter relative to the dimmed sun). */
   envIntensityMul: number;
   fogColor: Hex;
   fogDensityMul: number;
@@ -380,7 +391,7 @@ export const HERO_MOODS: Readonly<Record<HeroMood, HeroMoodPreset>> = {
     label: 'Dawn mist (ghats, duel)',
     base: 'dawn',
     hour: 6.2,
-    overrides: { fog: { mist: { topM: 1.3, density: 0.06 }, density: 0.0016 }, shafts: { strength: 0.75 }, wetness: 0.45, ambientFx: { mist: 1, dustMotes: 0.3 } },
+    overrides: { fog: { mist: { topM: 1.3, density: 0.035 }, density: 0.0012 }, shafts: { strength: 0.75 }, wetness: 0.45, ambientFx: { mist: 1, dustMotes: 0.3 } },
     dof: { focusM: 4.2, fStop: 2.8, maxBlurPx: 10 },
     notes: 'Waist-deep mist on the water, wet stone steps, sun shafts between chhatris; silhouettes against the bright east.',
   },
@@ -449,7 +460,8 @@ export interface ResolvedLighting {
   sunColor: [number, number, number];
   sunIntensity: number;
   sunSoftnessDeg: number;
-  envIntensity: number;
+  /** Target horizontal sky irradiance (see LightingPreset.sky.irradiance). */
+  skyIrradiance: number;
   hemiSky: [number, number, number];
   hemiGround: [number, number, number];
   hemiIntensity: number;
@@ -534,7 +546,7 @@ export function presetToResolved(p: LightingPreset): ResolvedLighting {
     sunColor: lin(p.sun.color),
     sunIntensity: p.sun.intensity,
     sunSoftnessDeg: p.sun.softnessDeg,
-    envIntensity: p.sky.envIntensity,
+    skyIrradiance: p.sky.irradiance,
     hemiSky: lin(p.hemi.sky),
     hemiGround: lin(p.hemi.ground),
     hemiIntensity: p.hemi.intensity,
@@ -587,7 +599,7 @@ export function lerpResolved(a: ResolvedLighting, b: ResolvedLighting, t: number
     sunColor: mixLin(a.sunColor, b.sunColor, t),
     sunIntensity: lerp(a.sunIntensity, b.sunIntensity, t),
     sunSoftnessDeg: lerp(a.sunSoftnessDeg, b.sunSoftnessDeg, t),
-    envIntensity: lerp(a.envIntensity, b.envIntensity, t),
+    skyIrradiance: geo(a.skyIrradiance, b.skyIrradiance),
     hemiSky: mixLin(a.hemiSky, b.hemiSky, t),
     hemiGround: mixLin(a.hemiGround, b.hemiGround, t),
     hemiIntensity: lerp(a.hemiIntensity, b.hemiIntensity, t),
@@ -642,7 +654,7 @@ function applyOverlay(base: ResolvedLighting, o: WeatherOverlay, w: number): Res
   const r = { ...base };
   r.sunIntensity = base.sunIntensity * lerp(1, o.sunIntensityMul, w);
   r.sunSoftnessDeg = lerp(base.sunSoftnessDeg, Math.max(base.sunSoftnessDeg, o.sunSoftnessDeg), w);
-  r.envIntensity = base.envIntensity * lerp(1, o.envIntensityMul, w);
+  r.skyIrradiance = base.skyIrradiance * lerp(1, o.envIntensityMul, w);
   // Fog color: weather tints the time-of-day fog but keeps its brightness so night fog stays dark.
   const target = lin(o.fogColor);
   const baseLum = 0.2126 * base.fogColor[0] + 0.7152 * base.fogColor[1] + 0.0722 * base.fogColor[2];
@@ -664,9 +676,10 @@ function applyOverlay(base: ResolvedLighting, o: WeatherOverlay, w: number): Res
 /**
  * Resolve the lighting for a time of day + season + weather. Pure; allocates one small object - call
  * when the environment changes (not per frame). The renderer then applies:
- *   sun.color.setRGB(...r.sunColor); sun.intensity = r.sunIntensity; scene.environmentIntensity = r.envIntensity;
- *   hemi (x0.35 when IBL is on); fog uniforms; post.setGrade(r.grade); renderer.toneMappingExposure = r.exposure;
- *   MATERIAL_GLOBALS.wetness.value = max(r.wetness, weather.wetness).
+ *   sun.color.setRGB(...r.sunColor); sun.intensity = r.sunIntensity;
+ *   scene.environmentIntensity = environmentIntensityFor(r, sourceIrradiance); hemi (x0.35 when IBL is on);
+ *   fog uniforms with fogRadiance(); post.setGrade(r.grade); renderer.toneMappingExposure = r.exposure;
+ *   bloom threshold = r.bloomThreshold / r.exposure; MATERIAL_GLOBALS.wetness.value = max(r.wetness, weather.wetness).
  */
 export function resolveLighting(input: LightingInput): ResolvedLighting {
   const track = TIME_OF_DAY_TRACKS[input.hour < 12 ? 'morning' : 'evening'];
@@ -729,6 +742,23 @@ export function sunDirection(elevationDeg: number, azimuthDeg: number): [number,
   const az = azimuthDeg * DEG;
   const c = Math.cos(el);
   return [c * Math.sin(az), Math.sin(el), -c * Math.cos(az)];
+}
+
+/** scene.environmentIntensity that calibrates an IBL source of the given horizontal irradiance. */
+export function environmentIntensityFor(r: ResolvedLighting, sourceIrradiance: number): number {
+  return sourceIrradiance > 1e-6 ? r.skyIrradiance / sourceIrradiance : 0;
+}
+
+/**
+ * Fog colors are authored as DISPLAYED colors (what distant haze looks like on screen). Convert to the
+ * radiance the fog shader mixes in before tone mapping: ACES in three.js scales by exposure / 0.6.
+ */
+export function fogRadiance(colorLinear: readonly number[], exposure: number, out: [number, number, number] = [0, 0, 0]): [number, number, number] {
+  const k = 0.6 / Math.max(1e-3, exposure);
+  out[0] = colorLinear[0]! * k;
+  out[1] = colorLinear[1]! * k;
+  out[2] = colorLinear[2]! * k;
+  return out;
 }
 
 /**

@@ -1,0 +1,211 @@
+<!doctype html>
+<!--
+  SAMRAJYA UI kit - living style guide for src/ui/theme.css + src/ui/base.css. OWNER: Art Director.
+  Serve the repo root over HTTP (fonts need it), e.g. `python3 -m http.server 8765` then open
+  http://localhost:8765/docs/art/ui_kit.html  (add ?cb=protan|deutan|tritan to preview colorblind remaps).
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SAMRAJYA UI kit</title>
+    <link rel="stylesheet" href="../../src/ui/theme.css" />
+    <link rel="stylesheet" href="../../src/ui/base.css" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: radial-gradient(ellipse at 30% 20%, #5b6b4a 0%, #3a4433 40%, #1d2119 100%);
+      }
+      #ui-root {
+        position: relative;
+        padding: 16px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+        gap: 16px;
+        align-items: start;
+      }
+      .scene-strip {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin: 8px 0;
+      }
+      .swatch {
+        width: 34px;
+        height: 34px;
+        border-radius: 4px;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+      }
+      .grid5 {
+        display: grid;
+        grid-template-columns: repeat(5, 56px);
+        gap: 6px;
+      }
+      .hero-title {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 18px 0 4px;
+      }
+      .hero-title h1 {
+        margin: 0;
+        font: 400 var(--fs-title) / 1 var(--font-display);
+        letter-spacing: var(--letter-title);
+        padding-left: var(--letter-title);
+        color: var(--c-gold);
+        text-shadow: 0 2px 18px rgba(233, 185, 73, 0.35), 0 2px 2px rgba(0, 0, 0, 0.6);
+      }
+      .hero-title h2 {
+        margin: 6px 0 0;
+        font: 400 clamp(13px, 2.2vw, 19px) / 1 var(--font-display);
+        letter-spacing: 0.42em;
+        padding-left: 0.42em;
+        color: var(--c-ivory);
+        text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="ui-root">
+      <div class="hero-title">
+        <h1>SAMRAJYA</h1>
+        <h2>Echoes of Bharat</h2>
+        <div class="divider-lotus"></div>
+        <div class="epigraph on-scene">Build a kingdom. Unite a civilization. Rewrite history.</div>
+      </div>
+
+      <div class="panel scene-strip">
+        <span class="faction-chip f-heartland"><i class="emblem emblem-sun"></i></span>
+        <span class="display" style="color: var(--c-gold)">Suvarna</span>
+        <span class="chip"><i class="icon icon-sheaf res-grain"></i><b>2,82,000</b><span class="positive">+120</span></span>
+        <span class="chip"><i class="icon icon-logs res-timber"></i><b>1,240</b></span>
+        <span class="chip"><i class="icon icon-block res-stone"></i><b>380</b><span class="danger">-12</span></span>
+        <span class="chip"><i class="icon icon-coins res-wealth"></i><b>4,000</b></span>
+        <span class="chip"><i class="icon icon-villager res-labor"></i><b>37,600</b><span class="badge">3</span></span>
+        <span class="chip"><i class="icon icon-spear res-manpower"></i><b>8,200 / 12,000</b></span>
+        <span style="flex: 1"></span>
+        <button class="btn icon active" aria-label="Pause">&#10074;&#10074;</button><button class="btn">1&times;</button><button class="btn">2&times;</button><button class="btn">4&times;</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Buttons &amp; states</div>
+        <div class="row">
+          <button class="btn primary">Campaign</button><button class="btn">Sandbox</button><button class="btn ghost">Ghost</button>
+        </div>
+        <div class="row">
+          <button class="btn active">Active</button><button class="btn" disabled>Disabled</button><button class="btn danger">Retreat</button><button class="btn stone">Age up</button>
+        </div>
+        <div class="row" style="gap: 0; border-bottom: 1px solid var(--ui-border-soft)">
+          <button class="btn tab active">Economy</button><button class="btn tab">Military</button><button class="btn tab">Civic</button>
+        </div>
+        <div class="divider"></div>
+        <div class="panel-title">Command card</div>
+        <div class="grid5">
+          <button class="btn slot"><i class="icon icon-unit-spearmen"></i>SPR<kbd class="kbd">Q</kbd></button>
+          <button class="btn slot"><i class="icon icon-unit-archers"></i>ARC<kbd class="kbd">W</kbd></button>
+          <button class="btn slot"><i class="icon icon-unit-elite-guards"></i>GRD<kbd class="kbd">E</kbd></button>
+          <button class="btn slot active"><i class="icon icon-unit-cavalry"></i>CAV<kbd class="kbd">R</kbd></button>
+          <button class="btn slot"><i class="icon icon-unit-chariots"></i>CHR<kbd class="kbd">T</kbd></button>
+          <button class="btn slot"><i class="icon icon-unit-war-elephants"></i>ELE<kbd class="kbd">A</kbd></button>
+          <button class="btn slot"><i class="icon icon-unit-engineers"></i>ENG<kbd class="kbd">S</kbd></button>
+          <button class="btn slot"><i class="icon icon-unit-scouts"></i>SCT<kbd class="kbd">D</kbd></button>
+          <button class="btn slot"><i class="icon icon-unit-supply-train"></i>SUP<kbd class="kbd">F</kbd></button>
+          <button class="btn slot" disabled><i class="icon icon-crown"></i>&mdash;<kbd class="kbd">G</kbd></button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Formation card</div>
+        <div class="card selected">
+          <div class="row" style="margin: 0 0 6px; justify-content: space-between">
+            <span><i class="icon icon-unit-spearmen" style="color: var(--faction-heartland)"></i> <b class="display">Royal Levy</b></span>
+            <span class="muted">96 / 120</span>
+          </div>
+          <div class="meter"><i style="width: 80%"></i></div>
+          <div style="height: 6px"></div>
+          <div class="meter morale"><i style="width: 62%"></i></div>
+          <div class="row" style="font-size: var(--fs-sm)"><span class="muted">Morale 62% - flank attacked</span></div>
+        </div>
+        <div class="divider"></div>
+        <div class="panel-title">Factions</div>
+        <div class="row">
+          <span class="faction-chip f-heartland"><i class="emblem emblem-sun"></i></span>
+          <span class="faction-chip f-highland"><i class="emblem emblem-mountain"></i></span>
+          <span class="faction-chip f-forest"><i class="emblem emblem-elephant"></i></span>
+          <span class="faction-chip f-frontier"><i class="emblem emblem-chevron"></i></span>
+          <span class="faction-chip f-maritime"><i class="emblem emblem-wave"></i></span>
+          <span class="faction-chip f-citystates"><i class="emblem emblem-tower"></i></span>
+        </div>
+        <div class="row">
+          <div class="swatch" style="background: var(--c-saffron)"></div>
+          <div class="swatch" style="background: var(--c-gold)"></div>
+          <div class="swatch" style="background: var(--c-indigo)"></div>
+          <div class="swatch" style="background: var(--c-lacquer)"></div>
+          <div class="swatch" style="background: var(--c-vermilion)"></div>
+          <div class="swatch" style="background: var(--c-peacock)"></div>
+          <div class="swatch" style="background: var(--c-lotus)"></div>
+          <div class="swatch" style="background: var(--c-parchment)"></div>
+          <div class="swatch" style="background: var(--c-sandstone)"></div>
+        </div>
+        <div style="position: relative; height: 128px">
+          <div class="tooltip" style="left: 0; top: 8px">
+            <div class="tt-title"><i class="icon icon-sheaf res-grain"></i>Grain</div>
+            <div class="tt-row"><span>Rajapura</span><b>41 days</b></div>
+            <div class="tt-row"><span>Royal reserve</span><b>12,000</b></div>
+            <div class="tt-row"><span>Armies need</span><b class="danger">-860 / day</b></div>
+            <div class="tt-hint">Why is this red? The Setu bridge is damaged.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel parchment">
+        <div class="title-torana" style="font-size: var(--fs-xl)">The Grain Requisition</div>
+        <div class="divider-lotus"></div>
+        <p class="prose">The siege of Shilapur needs grain. Senapati Bhadrasena asks you to requisition the stores of Dhanyakshetra. The granary-keepers say the villages will go hungry before the rabi harvest.</p>
+        <div class="row" style="flex-direction: column; align-items: stretch">
+          <button class="btn primary">Requisition the grain</button>
+          <button class="btn">Buy grain from the guild (-1,500 wealth)</button>
+          <button class="btn ghost" style="color: var(--ui-text-dark); border-color: var(--c-gold-dim)">Lift the siege</button>
+        </div>
+      </div>
+
+      <div class="panel carved">
+        <div class="panel-title" style="color: #fff1d0">Mahajanapada Age</div>
+        <p class="epigraph" style="color: #f3e2c0">"The granary is the root of the kingdom."</p>
+        <ul class="list-lotus">
+          <li class="done">Hold three settlements</li>
+          <li>Twelve thousand people</li>
+          <li>Legitimacy at least 40%</li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Icons</div>
+        <div class="row" style="font-size: 22px; color: var(--c-gold-soft)">
+          <i class="icon icon-sheaf"></i><i class="icon icon-logs"></i><i class="icon icon-block"></i><i class="icon icon-coins"></i><i class="icon icon-villager"></i><i class="icon icon-spear"></i>
+          <i class="icon icon-wheel"></i><i class="icon icon-sword"></i><i class="icon icon-lotus"></i><i class="icon icon-eye"></i><i class="icon icon-crown"></i><i class="icon icon-scroll"></i>
+        </div>
+        <div class="row" style="font-size: 14px">
+          <i class="icon icon-sheaf"></i><i class="icon icon-logs"></i><i class="icon icon-block"></i><i class="icon icon-coins"></i><i class="icon icon-villager"></i><i class="icon icon-spear"></i>
+          <i class="icon icon-wheel"></i><i class="icon icon-sword"></i><i class="icon icon-lotus"></i><i class="icon icon-eye"></i><i class="icon icon-crown"></i><i class="icon icon-scroll"></i>
+        </div>
+        <div class="row"><span class="kbd">Ctrl</span>+<span class="kbd">1</span><span class="muted">assign group</span> <span class="kbd">.</span><span class="muted">idle builders</span></div>
+        <div class="toast success" style="position: static; margin-top: 8px">Granary complete at Dhanyagram</div>
+      </div>
+    </div>
+    <script>
+      const cb = new URLSearchParams(location.search).get('cb');
+      if (cb) document.documentElement.dataset.colorblind = cb;
+    </script>
+  </body>
+</html>
