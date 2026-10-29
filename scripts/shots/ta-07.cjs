@@ -186,8 +186,9 @@ async function main() {
       if (crowd)
         for (const l of crowd.lods)
           console.log(
-            `[ta-07] crowd LOD${l.lod}: ${l.instances} instances, ${l.main + l.shadow} draw calls for color + shadow (1 InstancedMesh color + 1 shadow); ` +
-              `GTAO normal pre-pass at high: ${l.prepass} posed draw (prepass 'replace' - VAT pose, not the rest pose); ${l.scenePasses} scene passes`,
+            `[ta-07] crowd LOD${l.lod}: ${l.instances} instances in ONE InstancedMesh -> 1 draw per pass: color ${l.main}, ` +
+              `GTAO normal pre-pass ${l.prepass} (posed: prepass 'replace' - VAT pose, not the rest pose), shadow ${l.shadow} ` +
+              `(three re-renders the shadow map in each of the ${l.scenePasses} renderer.render calls: main + GTAO pre-pass)`,
           );
     }
 

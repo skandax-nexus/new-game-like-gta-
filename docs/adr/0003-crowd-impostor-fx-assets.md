@@ -145,10 +145,15 @@ current level casts a shadow (no double shadow).
   frame size (a puff cut by its frame edge shows as a hard straight line on the particle quad). Sequences that
   must touch an edge opt out per edge with `"open_edges": ["left", ...]` (weapon-trail ribbons, ground-hitting
   bolts), published per sequence as `openEdges`. The runner repeats the check on every **encoded** tier atlas
-  after WebP compression (`publish.mjs flipbookBorderProblems`, fails the publish): lossy ringing and bleed from a
-  neighbouring frame's open edge only appear there (fx_lightning's ground strikes put 8-10/255 on the closed top
-  edge of the frames below them; fx_lightning and fx_weapon_trail therefore publish near-lossless). Covered by the
-  Blender selftest and `tests/assets/flipbook-borders.test.ts` (every published tier of every flipbook).
+  after WebP compression (`publish.mjs flipbookBorderProblems`; the encoded file replaces the published one only
+  when it passes): lossy ringing, lanczos down-sampling and bleed from a neighbouring frame's open edge only appear
+  there (fx_lightning's ground strikes put 8-10/255 on the closed top edge of the frames below them; fx_fire's base
+  reached the bottom edge of its 64 px mobile frames). **Layout rule:** an open edge must lie on the atlas border or
+  against another open edge - texture filtering and mipmaps blend across frame seams at runtime (the reference
+  material also insets its taps by half a texel). fx_lightning is one row of frames (bottoms on the atlas border),
+  fx_weapon_trail is [noise | trail] / [noise_b | trail_wide]; both publish near-lossless. Grounded books keep a
+  margin under the ground line (`groundLine`). Covered by the Blender selftest and
+  `tests/assets/flipbook-borders.test.ts` (every published tier of every flipbook).
 - **Runtime:** `frameAt(seq, t)`, `frameRect(entry, k)` are the contract for the particle system;
   `createFlipbookMaterial(handle, { sequence, lit, tint })` is the reference quad material (two-frame
   cross-fade, derivative-TBN normals, premultiplied blending via `CustomBlending` ONE / ONE_MINUS_SRC_ALPHA with

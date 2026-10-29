@@ -47,8 +47,6 @@ def trail(width_pow: float, edge_w: float, tail_pow: float, gain: float) -> np.n
     return kit.emissive_frame(i, "#fff2c0", "#e8892b", 0.8)
 
 
-seq("trail", trail(1.6, 0.05, 1.5, 1.2), open_edges=["left"])
-seq("trail_wide", trail(0.8, 0.1, 1.1, 0.85), open_edges=["left"])
 
 
 def streak_noise(seed: int, rows: int, stretch: float) -> np.ndarray:
@@ -66,11 +64,19 @@ def streak_noise(seed: int, rows: int, stretch: float) -> np.ndarray:
     return np.clip(acc * 1.3, 0, 1)
 
 
-for name, seed, rows, stretch in (("noise", 5, 44, 1.0), ("noise_b", 6, 80, 2.0)):
-    n = streak_noise(seed, rows, stretch)
+def noise_frame(seed: int, rows: int, stretch: float) -> np.ndarray:
     # grayscale multiplier stored as white-on-black emission with alpha = value (sampled as data, not drawn alone)
-    seq(name, np.concatenate([np.repeat(n[..., None], 3, axis=-1), n[..., None]], axis=-1), blend="additive", lit=False,
-        open_edges=["all"])
+    n = streak_noise(seed, rows, stretch)
+    return np.concatenate([np.repeat(n[..., None], 3, axis=-1), n[..., None]], axis=-1)
+
+
+# Layout [noise | trail] / [noise_b | trail_wide]: every open edge touches either the atlas border (clamped) or another
+# open edge - a trail's open left edge meets a noise's open right edge, a trail's closed right edge is the atlas
+# border - so neither lossy encoding nor texture filtering / mipmaps bleed bright content onto a closed edge.
+seq("noise", noise_frame(5, 44, 1.0), blend="additive", lit=False, open_edges=["all"])
+seq("trail", trail(1.6, 0.05, 1.5, 1.2), open_edges=["left"])
+seq("noise_b", noise_frame(6, 80, 2.0), blend="additive", lit=False, open_edges=["all"])
+seq("trail_wide", trail(0.8, 0.1, 1.1, 0.85), open_edges=["left"])
 
 meta = fb.write(ctx, frames, 2, 2, fps=1, loop=True, sequences=seqs, blend="additive", lit=False, emissive_intensity=3.0,
                 soft_fade_m=0.0, size_m=(1.2, 1.0), atlas_px={"ultra": 256, "high": 256, "mobile": 256},

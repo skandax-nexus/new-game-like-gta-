@@ -78,6 +78,40 @@ describe('published flipbook atlases keep their frame borders clear', () => {
   }
 });
 
+describe('atlas layout rule (tools/assets/publish.mjs flipbookLayoutProblems)', () => {
+  /** Runs the runner's layout check in a child node process. */
+  function layout(cols: number, rows: number, sequences: unknown): string[] {
+    const code = `
+      import('${join(ROOT, 'tools', 'assets', 'publish.mjs').replace(/\\/g, '/')}').then((m) => {
+        process.stdout.write(JSON.stringify(m.flipbookLayoutProblems({ cols: ${cols}, rows: ${rows}, sequences: ${JSON.stringify(sequences)} })));
+      });`;
+    const r = spawnSync(process.execPath, ['--input-type=module', '-e', code], { cwd: ROOT, encoding: 'utf8' });
+    if (r.status !== 0) throw new Error(r.stderr);
+    return JSON.parse(r.stdout) as string[];
+  }
+
+  it('an open edge against a closed neighbour fails; atlas borders and open-open seams pass', () => {
+    const bolt = (k: number) => ({ name: `bolt${k}`, start: k, count: 1, openEdges: ['bottom'] });
+    // the old 2 x 2 lightning: bolt0 / bolt1 strike into the closed tops of bolt2 / bolt3
+    expect(layout(2, 2, [0, 1, 2, 3].map(bolt))).toEqual([
+      'frame 0 (bolt0) bottom edge open meets frame 2 (bolt2) top edge closed',
+      'frame 1 (bolt1) bottom edge open meets frame 3 (bolt3) top edge closed',
+    ]);
+    expect(layout(4, 1, [0, 1, 2, 3].map(bolt))).toEqual([]);
+    const trail = [
+      { name: 'noise', start: 0, count: 1, openEdges: ['top', 'bottom', 'left', 'right'] },
+      { name: 'trail', start: 1, count: 1, openEdges: ['left'] },
+      { name: 'noise_b', start: 2, count: 1, openEdges: ['top', 'bottom', 'left', 'right'] },
+      { name: 'trail_wide', start: 3, count: 1, openEdges: ['left'] },
+    ];
+    expect(layout(2, 2, trail)).toEqual([]);
+  });
+
+  it('every published flipbook follows the layout rule', () => {
+    for (const fb of flipbooks) expect(layout(fb.cols, fb.rows, fb.sequences), fb.id).toEqual([]);
+  });
+});
+
 describe('runner check (tools/assets/publish.mjs flipbookBorderProblems)', () => {
   /** Runs the runner's function in a child node process on a synthetic 2 x 2 atlas of 8 px frames. */
   function runnerCheck(setup: string, sequences: unknown, signal: Signal): string[] {

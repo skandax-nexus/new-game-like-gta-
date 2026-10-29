@@ -65,351 +65,505 @@
     },
     {
       "name": "vat_crowd",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=high&noaudio=1&asset=vat_test_dummy&count=500&hdri=sky_golden&camera=overview&t=1.37&noui=1",
-      "ms": 38090,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=vat_test_dummy&count=500&hdri=sky_golden&camera=overview&t=1.37&noui=1",
+      "ms": 23711,
       "errors": [],
       "warnings": []
     },
     {
       "name": "vat_crowd_hud",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=high&noaudio=1&asset=vat_test_dummy&count=500&hdri=sky_golden&camera=overview&t=1.37",
-      "ms": 17068,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=vat_test_dummy&count=500&hdri=sky_golden&camera=overview&t=1.37",
+      "ms": 23423,
       "errors": [],
       "warnings": []
     },
     {
       "name": "vat_crowd_walk",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=high&noaudio=1&asset=vat_test_dummy&clip=walk&count=500&hdri=sky_day&camera=overview&t=0.61&noui=1",
-      "ms": 17302,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=vat_test_dummy&clip=walk&count=500&hdri=sky_day&camera=overview&t=0.61&noui=1",
+      "ms": 22937,
       "errors": [],
       "warnings": []
     },
     {
       "name": "vat_crowd_close",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=vat_test_dummy&count=60&hdri=sky_golden&camera=hero&t=2.1&noui=1",
-      "ms": 36576,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=vat_test_dummy&count=60&hdri=sky_golden&camera=hero&t=2.1&noui=1",
+      "ms": 21919,
       "errors": [],
       "warnings": []
     },
     {
       "name": "impostor_ab_60m",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=ab&dist=60&hdri=sky_day",
-      "ms": 13905,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=ab&dist=60&hdri=sky_day",
+      "ms": 10174,
       "errors": [],
       "warnings": []
     },
     {
       "name": "impostor_mesh_220m",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=mesh&dist=220&hdri=sky_day&noui=1",
-      "ms": 11521,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=mesh&dist=220&hdri=sky_day&noui=1",
+      "ms": 21529,
       "errors": [],
       "warnings": []
     },
     {
       "name": "impostor_imp_220m",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=impostor&dist=220&hdri=sky_day&noui=1",
-      "ms": 12368,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=impostor&dist=220&hdri=sky_day&noui=1",
+      "ms": 27139,
       "errors": [],
       "warnings": []
     },
     {
       "name": "impostor_none_220m",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=none&dist=220&hdri=sky_day&noui=1",
-      "ms": 16161,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=impostor_test_tree&mode=none&dist=220&hdri=sky_day&noui=1",
+      "ms": 23163,
       "errors": [],
       "warnings": []
     },
     {
       "name": "sky_dawn_stupa",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_dawn&camera=hero&noui=1",
-      "ms": 39272,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_dawn&camera=hero&noui=1",
+      "ms": 31595,
       "errors": [],
       "warnings": []
     },
     {
       "name": "sky_noon_stupa",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_noon&camera=hero&noui=1",
-      "ms": 36877,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_noon&camera=hero&noui=1",
+      "ms": 32641,
       "errors": [],
       "warnings": []
     },
     {
       "name": "sky_golden_stupa",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=hero&noui=1",
-      "ms": 41931,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=hero&noui=1",
+      "ms": 24444,
       "errors": [],
       "warnings": []
     },
     {
       "name": "sky_dusk_stupa",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_dusk&camera=hero&noui=1",
-      "ms": 33305,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_dusk&camera=hero&noui=1",
+      "ms": 31482,
       "errors": [],
       "warnings": []
     },
     {
       "name": "sky_night_stupa",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_night&camera=hero&noui=1",
-      "ms": 28088,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_night&camera=hero&noui=1",
+      "ms": 23981,
       "errors": [],
       "warnings": []
     },
     {
       "name": "sky_overcast_stupa",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_overcast&camera=hero&noui=1",
-      "ms": 31113,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_overcast&camera=hero&noui=1",
+      "ms": 26936,
       "errors": [],
       "warnings": []
     },
     {
       "name": "sky_haze_stupa",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_haze&camera=hero&noui=1",
-      "ms": 32104,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_haze&camera=hero&noui=1",
+      "ms": 26913,
       "errors": [],
       "warnings": []
     },
     {
       "name": "sky_fog_stupa",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_fog&camera=hero&noui=1",
-      "ms": 33264,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_fog&camera=hero&noui=1",
+      "ms": 30472,
       "errors": [],
       "warnings": []
     },
     {
       "name": "sky_day_stupa",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_day&camera=hero&noui=1",
-      "ms": 47203,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_day&camera=hero&noui=1",
+      "ms": 24368,
       "errors": [],
       "warnings": []
     },
     {
       "name": "fx_dust_playback",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_dust&hdri=sky_day&camera=front&phase=0.35",
-      "ms": 27374,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_dust&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 11395,
       "errors": [],
       "warnings": []
     },
     {
       "name": "fx_fire_playback",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_fire&hdri=sky_day&camera=front&phase=0.35",
-      "ms": 37029,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_fire&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 26449,
       "errors": [],
       "warnings": []
     },
     {
       "name": "fx_lightning_playback",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_lightning&hdri=sky_day&camera=front&phase=0.35",
-      "ms": 35065,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_lightning&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 43319,
       "errors": [],
       "warnings": []
     },
     {
       "name": "fx_mist_playback",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_mist&hdri=sky_day&camera=front&phase=0.35",
-      "ms": 15547,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_mist&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 31011,
       "errors": [],
       "warnings": []
     },
     {
       "name": "fx_nature_playback",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_nature&hdri=sky_day&camera=front&phase=0.35",
-      "ms": 14358,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_nature&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 29987,
       "errors": [],
       "warnings": []
     },
     {
       "name": "fx_rain_playback",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_rain&hdri=sky_day&camera=front&phase=0.35",
-      "ms": 14497,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_rain&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 24481,
       "errors": [],
       "warnings": []
     },
     {
       "name": "fx_smoke_playback",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_day&camera=front&phase=0.35",
-      "ms": 47757,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 36733,
       "errors": [],
       "warnings": []
     },
     {
       "name": "fx_sparks_embers_playback",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_sparks_embers&hdri=sky_day&camera=front&phase=0.35",
-      "ms": 36829,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_sparks_embers&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 32812,
       "errors": [],
       "warnings": []
     },
     {
       "name": "fx_weapon_trail_playback",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_weapon_trail&hdri=sky_day&camera=front&phase=0.35",
-      "ms": 33906,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_weapon_trail&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 28733,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_fire_day_fxclip",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_fire&hdri=sky_day&camera=front&phase=0.35&noui=1",
+      "ms": 23303,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_fire_day_fxclip_bg",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_fire&hdri=sky_day&camera=front&phase=0.35&noui=1&hidefx=1",
+      "ms": 30268,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_fire_night_fxclip",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_fire&hdri=sky_night&camera=front&phase=0.35&noui=1",
+      "ms": 27545,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_fire_night_fxclip_bg",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_fire&hdri=sky_night&camera=front&phase=0.35&noui=1&hidefx=1",
+      "ms": 29195,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_sparks_embers_day_fxclip",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_sparks_embers&hdri=sky_day&camera=front&phase=0.3&noui=1",
+      "ms": 16066,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_sparks_embers_day_fxclip_bg",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_sparks_embers&hdri=sky_day&camera=front&phase=0.3&noui=1&hidefx=1",
+      "ms": 33391,
       "errors": [],
       "warnings": []
     },
     {
       "name": "fx_smoke_sun_east",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_day&camera=front&sun=90,25&frame=20&tint=none&noui=1",
-      "ms": 42077,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_day&camera=front&sun=90,25&frame=20&tint=none&noui=1",
+      "ms": 33762,
       "errors": [],
       "warnings": []
     },
     {
       "name": "fx_smoke_sun_west",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_day&camera=front&sun=270,25&frame=20&tint=none&noui=1",
-      "ms": 35602,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_day&camera=front&sun=270,25&frame=20&tint=none&noui=1",
+      "ms": 22402,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_rain_tagged",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_rain&hdri=sky_golden&camera=front&phase=0.35&noui=1",
+      "ms": 36296,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_rain_backdrop",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_rain&hdri=sky_golden&camera=front&phase=0.35&noui=1&hidefx=1",
+      "ms": 43816,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_rain_untagged",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_rain&hdri=sky_golden&camera=front&phase=0.35&noui=1&prepass=off",
+      "ms": 38657,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_nature_tagged",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_nature&hdri=sky_golden&camera=front&phase=0.35&noui=1",
+      "ms": 25258,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_nature_backdrop",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_nature&hdri=sky_golden&camera=front&phase=0.35&noui=1&hidefx=1",
+      "ms": 25013,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_nature_untagged",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_nature&hdri=sky_golden&camera=front&phase=0.35&noui=1&prepass=off",
+      "ms": 35312,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_dust_tagged",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_dust&hdri=sky_golden&camera=front&phase=0.35&noui=1",
+      "ms": 13322,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_dust_backdrop",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_dust&hdri=sky_golden&camera=front&phase=0.35&noui=1&hidefx=1",
+      "ms": 23192,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_dust_untagged",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_dust&hdri=sky_golden&camera=front&phase=0.35&noui=1&prepass=off",
+      "ms": 24114,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_smoke_tagged",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_golden&camera=front&phase=0.35&noui=1",
+      "ms": 26385,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_smoke_backdrop",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_golden&camera=front&phase=0.35&noui=1&hidefx=1",
+      "ms": 28662,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_smoke_untagged",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_golden&camera=front&phase=0.35&noui=1&prepass=off",
+      "ms": 13890,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_mist_tagged",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_mist&hdri=sky_golden&camera=front&phase=0.35&noui=1",
+      "ms": 13306,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_mist_backdrop",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_mist&hdri=sky_golden&camera=front&phase=0.35&noui=1&hidefx=1",
+      "ms": 25904,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_mist_untagged",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_mist&hdri=sky_golden&camera=front&phase=0.35&noui=1&prepass=off",
+      "ms": 14867,
       "errors": [],
       "warnings": []
     },
     {
       "name": "lut_dawn_split",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=lut_dawn&hdri=sky_golden&split=0.5&camera=hero&noui=1",
-      "ms": 26798,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=lut_dawn&hdri=sky_golden&split=0.5&camera=hero&noui=1",
+      "ms": 27669,
       "errors": [],
       "warnings": []
     },
     {
       "name": "lut_dusk_split",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=lut_dusk&hdri=sky_golden&split=0.5&camera=hero&noui=1",
-      "ms": 31688,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=lut_dusk&hdri=sky_golden&split=0.5&camera=hero&noui=1",
+      "ms": 43863,
       "errors": [],
       "warnings": []
     },
     {
       "name": "lut_fog_split",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=lut_fog&hdri=sky_golden&split=0.5&camera=hero&noui=1",
-      "ms": 36128,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=lut_fog&hdri=sky_golden&split=0.5&camera=hero&noui=1",
+      "ms": 40644,
       "errors": [],
       "warnings": []
     },
     {
       "name": "lut_golden_split",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=lut_golden&hdri=sky_golden&split=0.5&camera=hero&noui=1",
-      "ms": 29049,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=lut_golden&hdri=sky_golden&split=0.5&camera=hero&noui=1",
+      "ms": 35424,
       "errors": [],
       "warnings": []
     },
     {
       "name": "lut_haze_split",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=lut_haze&hdri=sky_golden&split=0.5&camera=hero&noui=1",
-      "ms": 38314,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=lut_haze&hdri=sky_golden&split=0.5&camera=hero&noui=1",
+      "ms": 34360,
       "errors": [],
       "warnings": []
     },
     {
       "name": "lut_identity_split",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=lut_identity&hdri=sky_golden&split=0.5&camera=hero&noui=1",
-      "ms": 33193,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=lut_identity&hdri=sky_golden&split=0.5&camera=hero&noui=1",
+      "ms": 41521,
       "errors": [],
       "warnings": []
     },
     {
       "name": "lut_monsoon_split",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=lut_monsoon&hdri=sky_golden&split=0.5&camera=hero&noui=1",
-      "ms": 30247,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=lut_monsoon&hdri=sky_golden&split=0.5&camera=hero&noui=1",
+      "ms": 63712,
       "errors": [],
       "warnings": []
     },
     {
       "name": "lut_night_split",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=lut_night&hdri=sky_golden&split=0.5&camera=hero&noui=1",
-      "ms": 26986,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=lut_night&hdri=sky_golden&split=0.5&camera=hero&noui=1",
+      "ms": 53825,
       "errors": [],
       "warnings": []
     },
     {
       "name": "skinned_clones",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=skin_test_character&clip=walk&hdri=sky_golden&camera=front&t=0.4",
-      "ms": 32249,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=skin_test_character&clip=walk&hdri=sky_golden&camera=front&t=0.4",
+      "ms": 14243,
       "errors": [],
       "warnings": []
     },
     {
       "name": "skinned_memtest",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=high&noaudio=1&asset=skin_test_character&clip=walk&hdri=sky_day&memtest=1&noui=1",
-      "ms": 18472,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=skin_test_character&clip=walk&hdri=sky_day&memtest=1&noui=1",
+      "ms": 17000,
       "errors": [],
       "warnings": []
     },
     {
       "name": "banner_cloth_variants",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=banner_cloth&hdri=sky_golden&camera=front&noui=1",
-      "ms": 36004,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=banner_cloth&hdri=sky_golden&camera=front&noui=1",
+      "ms": 32377,
       "errors": [],
       "warnings": []
     },
     {
       "name": "kit_grid",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=high&noaudio=1&kit=stupa_sanchi,model_test_tree,skin_test_character&count=4&hdri=sky_day&camera=overview",
-      "ms": 15771,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&kit=stupa_sanchi,model_test_tree,skin_test_character&count=4&hdri=sky_day&camera=overview",
+      "ms": 14229,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "kit_grid_skinned",
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&kit=skin_test_character&count=4&hdri=sky_day&camera=overview",
+      "ms": 33522,
       "errors": [],
       "warnings": []
     },
     {
       "name": "splat_lookdev",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=high&noaudio=1&splat=ground_dry_earth,sandstone_carved_red&hdri=sky_golden&camera=hero",
-      "ms": 16753,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&splat=ground_dry_earth,sandstone_carved_red&hdri=sky_noon&camera=hero",
+      "ms": 23456,
       "errors": [],
       "warnings": []
     },
     {
       "name": "lens_dirt_view",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=lens_dirt&hdri=sky_day&camera=front&noui=1",
-      "ms": 30966,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=lens_dirt&hdri=sky_day&camera=front&noui=1",
+      "ms": 25771,
       "errors": [],
       "warnings": []
     },
     {
       "name": "sun_sprite_view",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=ultra&noaudio=1&asset=sun_sprite&hdri=sky_day&camera=front&noui=1",
-      "ms": 22994,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=sun_sprite&hdri=sky_day&camera=front&noui=1",
+      "ms": 34714,
       "errors": [],
       "warnings": []
     },
     {
       "name": "off_vat",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=medium&noaudio=1&asset=vat_test_dummy&assets=off",
-      "ms": 10379,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=medium&noaudio=1&asset=vat_test_dummy&assets=off",
+      "ms": 19333,
       "errors": [],
       "warnings": []
     },
     {
       "name": "off_impostor",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=medium&noaudio=1&asset=impostor_test_tree&assets=off",
-      "ms": 11755,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=medium&noaudio=1&asset=impostor_test_tree&assets=off",
+      "ms": 14266,
       "errors": [],
       "warnings": []
     },
     {
       "name": "off_flipbook",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=medium&noaudio=1&asset=fx_dust&assets=off",
-      "ms": 9323,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=medium&noaudio=1&asset=fx_dust&assets=off",
+      "ms": 14139,
       "errors": [],
       "warnings": []
     },
     {
       "name": "off_lut",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=medium&noaudio=1&asset=lut_golden&assets=off",
-      "ms": 11168,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=medium&noaudio=1&asset=lut_golden&assets=off",
+      "ms": 17997,
       "errors": [],
       "warnings": []
     },
     {
       "name": "off_image",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=medium&noaudio=1&asset=lens_dirt&assets=off",
-      "ms": 10104,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=medium&noaudio=1&asset=lens_dirt&assets=off",
+      "ms": 13311,
       "errors": [],
       "warnings": []
     },
     {
       "name": "off_skinned",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=medium&noaudio=1&asset=skin_test_character&assets=off",
-      "ms": 9664,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=medium&noaudio=1&asset=skin_test_character&assets=off",
+      "ms": 17677,
       "errors": [],
       "warnings": []
     },
     {
       "name": "vat_crowd_mobile",
-      "url": "http://127.0.0.1:4453/?scene=assetviewer&quality=low&noaudio=1&asset=vat_test_dummy&count=200&camera=overview&t=0.9",
-      "ms": 8007,
+      "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=low&noaudio=1&asset=vat_test_dummy&count=200&camera=overview&t=0.9",
+      "ms": 13167,
       "errors": [],
       "warnings": []
     }
@@ -422,13 +576,13 @@
         "w": 67,
         "h": 72
       },
-      "cropMeshLum": 0.11277365839399263,
-      "cropImpostorLum": 0.1139621424427256,
-      "cropDiff": 0.01053866714672684,
-      "objectMeshLum": 0.11805009416020004,
-      "objectImpostorLum": 0.12242735517130655,
-      "objectPixels": 1367,
-      "objectDiff": 0.037079690975649233
+      "cropMeshLum": 0.11280565898790075,
+      "cropImpostorLum": 0.11587745290995205,
+      "cropDiff": 0.027230849494711717,
+      "objectMeshLum": 0.11822949539325163,
+      "objectImpostorLum": 0.12920673637364516,
+      "objectPixels": 1362,
+      "objectDiff": 0.09284689022719195
     },
     "skies": [
       {
@@ -568,26 +722,28 @@
       "lods": [
         {
           "lod": 0,
-          "main": 2,
+          "main": 1,
+          "prepass": 1,
           "shadow": 2,
           "instances": 261,
           "scenePasses": 2,
-          "perPass": 2
+          "perPass": 3
         },
         {
           "lod": 1,
-          "main": 2,
+          "main": 1,
+          "prepass": 1,
           "shadow": 2,
           "instances": 239,
           "scenePasses": 2,
-          "perPass": 2
+          "perPass": 3
         }
       ],
       "instances": 500
     },
     "skinnedMemory": {
       "phase": "done",
-      "frames": 7,
+      "frames": 9,
       "baseline": {
         "geometries": 14,
         "textures": 31
@@ -615,7 +771,28 @@
       {
         "id": "skin_test_character",
         "meshes": 24,
-        "triangles": 3968
+        "triangles": 3968,
+        "box": [
+          104.9,
+          0,
+          0,
+          108.21,
+          2.72,
+          2.28
+        ]
+      },
+      {
+        "id": "skin_test_character (alone)",
+        "meshes": 24,
+        "triangles": 3968,
+        "box": [
+          0,
+          0,
+          0,
+          3.31,
+          2.72,
+          2.28
+        ]
       }
     ],
     "assetsOff": {
@@ -661,8 +838,69 @@
       }
     },
     "smokeLighting": {
-      "meanAbsDiff": 2.1126048900462964,
-      "changedPixels": 265651
-    }
+      "meanAbsDiff": 2.4681467013888887,
+      "changedPixels": 211507
+    },
+    "emissiveClip": [
+      {
+        "fx": "fx_fire",
+        "sky": "sky_day",
+        "effectPixels": 32596,
+        "nearWhite": 0,
+        "fraction": 0,
+        "paleCore": 2213,
+        "paleFraction": 0.06789176586084182
+      },
+      {
+        "fx": "fx_fire",
+        "sky": "sky_night",
+        "effectPixels": 39329,
+        "nearWhite": 0,
+        "fraction": 0,
+        "paleCore": 6846,
+        "paleFraction": 0.17407002466373414
+      },
+      {
+        "fx": "fx_sparks_embers",
+        "sky": "sky_day",
+        "effectPixels": 45053,
+        "nearWhite": 119,
+        "fraction": 0.002641333540496748,
+        "paleCore": 1502,
+        "paleFraction": 0.033338512418706855
+      }
+    ],
+    "gtaoCards": [
+      {
+        "fx": "fx_rain",
+        "quads": 4,
+        "worstCornerDiffTagged": 0.7407407407407407,
+        "worstCornerDiffUntagged": 10
+      },
+      {
+        "fx": "fx_nature",
+        "quads": 6,
+        "worstCornerDiffTagged": 0.3541666666666667,
+        "worstCornerDiffUntagged": 4.5625
+      },
+      {
+        "fx": "fx_dust",
+        "quads": 4,
+        "worstCornerDiffTagged": 0,
+        "worstCornerDiffUntagged": 10.287037037037036
+      },
+      {
+        "fx": "fx_smoke",
+        "quads": 1,
+        "worstCornerDiffTagged": 0,
+        "worstCornerDiffUntagged": 4.184
+      },
+      {
+        "fx": "fx_mist",
+        "quads": 4,
+        "worstCornerDiffTagged": 0,
+        "worstCornerDiffUntagged": 3.5102880658436213
+      }
+    ]
   }
 }

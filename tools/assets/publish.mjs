@@ -483,6 +483,33 @@ export function flipbookBorderProblems(data, width, height, channels, { cols, ro
   return problems;
 }
 
+/**
+ * Atlas layout rule: an OPEN frame edge (content reaches it) must lie on the atlas border or against another open
+ * edge - texture filtering and mipmaps blend across frame seams at runtime, so bright content on an open edge would
+ * bleed onto a neighbour's closed (clear) edge. Frames no sequence uses are ignored. Returns one message per seam.
+ */
+export function flipbookLayoutProblems({ cols, rows, sequences }) {
+  const open = new Map();
+  const owner = new Map();
+  for (const s of sequences ?? [])
+    for (let k = s.start; k < s.start + s.count; k++) {
+      open.set(k, new Set(s.openEdges ?? []));
+      owner.set(k, s.name);
+    }
+  const problems = [];
+  const seam = (k, edge, j, otherEdge) => {
+    if (!open.has(k) || !open.has(j)) return;
+    const a = open.get(k).has(edge);
+    const b = open.get(j).has(otherEdge);
+    if (a !== b) problems.push(`frame ${k} (${owner.get(k)}) ${edge} edge ${a ? 'open' : 'closed'} meets frame ${j} (${owner.get(j)}) ${otherEdge} edge ${b ? 'open' : 'closed'}`);
+  };
+  for (let k = 0; k < cols * rows; k++) {
+    if ((k % cols) + 1 < cols) seam(k, 'right', k + 1, 'left');
+    if (Math.floor(k / cols) + 1 < rows) seam(k, 'bottom', k + cols, 'top');
+  }
+  return problems;
+}
+
 async function checkEncodedBorders(asset, relPath, file, m, signal) {
   const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const sequences = m.sequences ?? [{ name: 'all', start: 0, count: m.frames ?? m.cols * m.rows }];
@@ -499,6 +526,9 @@ async function publishFlipbook(asset, srcDir, meta, outFiles, tiers) {
   const m = meta.flipbook ?? {};
   const { cols, rows } = m;
   if (!cols || !rows) throw new Error(`${asset.id}: flipbook needs cols and rows`);
+  const layout = flipbookLayoutProblems(m);
+  if (layout.length)
+    throw new Error(`${asset.id}: flipbook atlas layout - an open edge must lie on the atlas border or against another open edge:\n  ${layout.join('\n  ')}`);
   const maps = {};
   // Additive everywhere (no sequence overrides the blend): the color atlas is premultiplied emission, no alpha.
   const additiveOnly = m.blend === 'additive' && (m.sequences ?? []).every((s) => (s.blend ?? 'additive') === 'additive');

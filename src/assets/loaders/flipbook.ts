@@ -63,10 +63,12 @@ uniform float flipEmissive;
 #ifdef FLIP_NORMAL
 uniform sampler2D flipNormal;
 #endif
-vec2 flipUv( float k, vec2 uv ) {
+// hp = half a texel in frame units: bilinear taps stay inside the frame, so a neighbouring frame never bleeds across
+// the seam (e.g. a ground-strike bolt's open bottom edge into the closed top edge of the frame below)
+vec2 flipUv( float k, vec2 uv, vec2 hp ) {
   float c = mod( k, flipGrid.x );
   float r = floor( k / flipGrid.x );
-  return ( vec2( c, r ) + vec2( uv.x, 1.0 - uv.y ) ) / flipGrid;
+  return ( vec2( c, r ) + clamp( vec2( uv.x, 1.0 - uv.y ), hp, 1.0 - hp ) ) / flipGrid;
 }
 void flipFrames( out float k0, out float k1, out float a ) {
   float f = flipSeq.z > 0.5 ? mod( flipFrame, flipSeq.y ) : clamp( flipFrame, 0.0, flipSeq.y - 1.0 );
@@ -81,9 +83,13 @@ void flipFrames( out float k0, out float k1, out float a ) {
 const FLIP_COLOR = /* glsl */ `
   float flipK0; float flipK1; float flipA;
   flipFrames( flipK0, flipK1, flipA );
-  vec4 flipC = mix( texture2D( flipColor, flipUv( flipK0, vUv ) ), texture2D( flipColor, flipUv( flipK1, vUv ) ), flipA );
+  vec2 flipHp = 0.5 * flipGrid / vec2( textureSize( flipColor, 0 ) );
+  #ifdef FLIP_NORMAL
+    flipHp = max( flipHp, 0.5 * flipGrid / vec2( textureSize( flipNormal, 0 ) ) );
+  #endif
+  vec4 flipC = mix( texture2D( flipColor, flipUv( flipK0, vUv, flipHp ) ), texture2D( flipColor, flipUv( flipK1, vUv, flipHp ) ), flipA );
   #if defined( FLIP_PREMULTIPLIED )
-    // premultiplied books store emission + occlusion: x emissiveIntensity (fire 8); material opacity fades both
+    // premultiplied books store emission + occlusion: x emissiveIntensity (fire 6.5); material opacity fades both
     diffuseColor.rgb *= flipC.rgb * flipEmissive * diffuseColor.a;
     diffuseColor.a *= flipC.a;
   #elif defined( FLIP_ADDITIVE )
@@ -99,7 +105,7 @@ const FLIP_COLOR = /* glsl */ `
 const FLIP_NORMAL = /* glsl */ `
   #ifdef FLIP_NORMAL
   {
-    vec3 fn = mix( texture2D( flipNormal, flipUv( flipK0, vUv ) ).xyz, texture2D( flipNormal, flipUv( flipK1, vUv ) ).xyz, flipA ) * 2.0 - 1.0;
+    vec3 fn = mix( texture2D( flipNormal, flipUv( flipK0, vUv, flipHp ) ).xyz, texture2D( flipNormal, flipUv( flipK1, vUv, flipHp ) ).xyz, flipA ) * 2.0 - 1.0;
     vec3 fpos = -vViewPosition;
     vec3 fdx = dFdx( fpos );
     vec3 fdy = dFdy( fpos );

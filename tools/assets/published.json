@@ -350,7 +350,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_fire.py",
-      "inputHash": "5e5a2e8436d9aef773242aeb2fd5bb3f1238478139fdf91893428389bde68cdd",
+      "inputHash": "2ec07246ca596b37bb627d71ebf61ee2cda5ce3a0f9c69467c148bea695e0a0f",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -361,8 +361,8 @@
         },
         "blend": "premultiplied",
         "cols": 8,
-        "description": "Looping flame (Eulerian sim, licking tongues), premultiplied emission x8 + slight occlusion, no soot; 64 frames at 24 fps.",
-        "emissiveIntensity": 8,
+        "description": "Looping flame (Eulerian sim, licking tongues), premultiplied emission x6.5 + slight occlusion, no soot; 64 frames at 24 fps.",
+        "emissiveIntensity": 6.5,
         "fps": 24,
         "frames": 64,
         "groundLine": 0.13,
@@ -452,16 +452,16 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_lightning.py",
-      "inputHash": "2f3b1775a1a07dcedbbb2af04b3c691e4bf79794f8cc4cc7551dc1a531cdc6cb",
+      "inputHash": "2398faec8343b482ef860d5406b8dd234dbfecccc37d73e441dd115b79d5b6ae",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
         "atlasPx": {
-          "high": 512,
-          "ultra": 512
+          "high": 1024,
+          "ultra": 1024
         },
         "blend": "additive",
-        "cols": 2,
+        "cols": 4,
         "description": "Four forked lightning bolts, white core + violet glow, additive x10 (high / ultra only).",
         "emissiveIntensity": 10,
         "encoding": "near_lossless",
@@ -469,7 +469,7 @@
         "frames": 4,
         "lit": false,
         "loop": true,
-        "rows": 2,
+        "rows": 1,
         "sequences": [
           {
             "count": 1,
@@ -521,15 +521,15 @@
       },
       "files": [
         {
-          "path": "fx/fx_lightning/color_512.webp",
-          "bytes": 40650,
+          "path": "fx/fx_lightning/color_1024.webp",
+          "bytes": 40780,
           "tiers": [
             "ultra",
             "high"
           ],
           "kind": "flipbook",
           "map": "color",
-          "size": 512
+          "size": 1024
         }
       ],
       "publishKey": "tiers=ultra,high;fallback=",
@@ -542,23 +542,23 @@
         "maps": {
           "color": {
             "ultra": {
-              "path": "fx/fx_lightning/color_512.webp",
-              "bytes": 40650,
-              "width": 512,
-              "height": 512
+              "path": "fx/fx_lightning/color_1024.webp",
+              "bytes": 40780,
+              "width": 1024,
+              "height": 256
             },
             "high": {
-              "path": "fx/fx_lightning/color_512.webp",
-              "bytes": 40650,
-              "width": 512,
-              "height": 512
+              "path": "fx/fx_lightning/color_1024.webp",
+              "bytes": 40780,
+              "width": 1024,
+              "height": 256
             }
           }
         }
       },
       "bytes": {
-        "ultra": 40650,
-        "high": 40650,
+        "ultra": 40780,
+        "high": 40780,
         "mobile": 0
       }
     },
@@ -1265,7 +1265,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_weapon_trail.py",
-      "inputHash": "57890061c399d92fa86ade549cc584c36fbb8e417fe31c1b3bcdc4da225dc10b",
+      "inputHash": "8ac439649d45afcfa7e7b1e36ce42bb5fcd6aa21de24915ce33ae310172ecaa9",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -1286,26 +1286,6 @@
         "rows": 2,
         "sequences": [
           {
-            "count": 1,
-            "fps": 1,
-            "loop": true,
-            "name": "trail",
-            "openEdges": [
-              "left"
-            ],
-            "start": 0
-          },
-          {
-            "count": 1,
-            "fps": 1,
-            "loop": true,
-            "name": "trail_wide",
-            "openEdges": [
-              "left"
-            ],
-            "start": 1
-          },
-          {
             "blend": "additive",
             "count": 1,
             "fps": 1,
@@ -1318,7 +1298,17 @@
               "left",
               "right"
             ],
-            "start": 2
+            "start": 0
+          },
+          {
+            "count": 1,
+            "fps": 1,
+            "loop": true,
+            "name": "trail",
+            "openEdges": [
+              "left"
+            ],
+            "start": 1
           },
           {
             "blend": "additive",
@@ -1333,6 +1323,16 @@
               "left",
               "right"
             ],
+            "start": 2
+          },
+          {
+            "count": 1,
+            "fps": 1,
+            "loop": true,
+            "name": "trail_wide",
+            "openEdges": [
+              "left"
+            ],
             "start": 3
           }
         ],
@@ -1346,7 +1346,7 @@
       "files": [
         {
           "path": "fx/fx_weapon_trail/color_256.webp",
-          "bytes": 28266,
+          "bytes": 27976,
           "tiers": [
             "ultra",
             "high",
@@ -1362,19 +1362,19 @@
           "color": {
             "ultra": {
               "path": "fx/fx_weapon_trail/color_256.webp",
-              "bytes": 28266,
+              "bytes": 27976,
               "width": 256,
               "height": 256
             },
             "high": {
               "path": "fx/fx_weapon_trail/color_256.webp",
-              "bytes": 28266,
+              "bytes": 27976,
               "width": 256,
               "height": 256
             },
             "mobile": {
               "path": "fx/fx_weapon_trail/color_256.webp",
-              "bytes": 28266,
+              "bytes": 27976,
               "width": 256,
               "height": 256
             }
@@ -1382,9 +1382,9 @@
         }
       },
       "bytes": {
-        "ultra": 28266,
-        "high": 28266,
-        "mobile": 28266
+        "ultra": 27976,
+        "high": 27976,
+        "mobile": 27976
       }
     },
     "ground_dry_earth": {

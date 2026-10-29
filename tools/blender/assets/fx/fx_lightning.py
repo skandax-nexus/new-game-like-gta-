@@ -3,14 +3,16 @@
 @kind flipbook
 @tiers ultra,high
 
-Four lightning bolt sprites for monsoon storms (2 x 2 atlas of 256 px = 512, ASSET_LIST WP7-16, P2): recursive
+Four lightning bolt sprites for monsoon storms (4 x 1 atlas of 256 px = 1024 x 256, ASSET_LIST WP7-16, P2): recursive
 midpoint-displacement bolts with forking branches, a white core and a cool violet glow (ART_BIBLE §6 varsha storm
 light). Drawn on tall quads (~1-2 km in the distance) for 2-4 flicker frames while the weather system flashes the
 sky. Additive (premultiplied emission x emissiveIntensity 10). High / ultra only: the mobile tier keeps the
 procedural sky flash. The main channel strikes the ground: it runs to the bottom edge of its frame (`open_edges: bottom`, the quad's
-bottom sits on the horizon / terrain); the top (cloud base) and the sides fade to 0 before the border. Published
-near-lossless: lossy WebP bled the bright ground strike of bolt0 / bolt1 into the closed top edge of the frames below
-(8-10/255 there) and fringed the thin cores. OWNER: Technical Artist G (TA-07).
+bottom sits on the horizon / terrain); the top (cloud base) and the sides fade to 0 before the border. One ROW of
+frames, so every open bottom edge lies on the atlas border (clamped) and never touches another frame's closed edge:
+in the old 2 x 2 layout the strikes of bolt0 / bolt1 bled into the top edge of bolt2 / bolt3 (lossy WebP 8-10/255,
+and texture filtering / mipmaps at runtime - a white blip above those bolts). Published near-lossless (thin cores
+keep their colour). OWNER: Technical Artist G (TA-07).
 """
 import pathlib
 import sys
@@ -83,8 +85,8 @@ for k in range(4):
     frames.append(kit.emissive_frame(i, "#ffffff", "#9a8cff", 0.6))
 
 seqs = [{"name": f"bolt{k}", "start": k, "count": 1, "fps": 1, "loop": True, "open_edges": ["bottom"]} for k in range(4)]
-meta = fb.write(ctx, frames, 2, 2, fps=1, loop=True, sequences=seqs, blend="additive", lit=False, emissive_intensity=10.0,
-                soft_fade_m=0.0, size_m=(600.0, 1200.0), atlas_px={"ultra": 512, "high": 512},
+meta = fb.write(ctx, frames, 4, 1, fps=1, loop=True, sequences=seqs, blend="additive", lit=False, emissive_intensity=10.0,
+                soft_fade_m=0.0, size_m=(600.0, 1200.0), atlas_px={"ultra": 1024, "high": 1024},
                 labels=kit.label_sequences(seqs), srgb=True,
                 description="Four forked lightning bolts, white core + violet glow, additive x10 (high / ultra only).")
 meta["tint"] = "#ffffff"

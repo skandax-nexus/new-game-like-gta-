@@ -9,10 +9,11 @@ integration) with the Bible ramp `#fff2c0` core -> `#ffb040` body -> `#e2571e` t
 ignition temperature with a steep ramp, so flames have crisp, separating tongues; NO soot (fire is emission plus a
 slight occlusion - the smoke column above a fire is fx_smoke). Seamless loop: the last 16 simulated frames
 cross-fade into the first. Stored premultiplied (runtime blend ONE / ONE_MINUS_SRC_ALPHA, color x emissiveIntensity
-8). The core (white-yellow) stays a small fraction of the flame (logged); the base fades in over 16 cm, the ground
-line sits 13 % of the frame (25 cm) above its bottom edge (manifest `groundLine`: sink the quad by that much), and every
-frame keeps its border clear in the source and in every encoded tier down to 64 px frames (flipbook border guard). Building fires 3-8 m, torches 0.3 m (scale the 1.9 m
-sprite). Atlas 2048 / 1024 / 512 (256 px frames on ultra: Art Director decision, TA-07 review).
+6.5: at night <= ~12 % of the flame reads as the pale #fff2c0 core and none clips to white; logged at bake). The base
+fades in over 16 cm, the ground line sits 13 % of the frame (25 cm) above its bottom edge (manifest `groundLine`: sink
+the quad by that much), and every frame keeps its border clear in the source and in every encoded tier down to 64 px
+frames (flipbook border guard). Building fires 3-8 m, torches 0.3 m (scale the 1.9 m sprite). Atlas 2048 / 1024 /
+512 (256 px frames on ultra: Art Director decision, TA-07 review).
 OWNER: Technical Artist G (TA-07).
 """
 import pathlib
@@ -62,7 +63,7 @@ GROUND = 0.13  # ground line 13 % (25 cm) above the frame bottom: lanczos + loss
 frame = (0.0, S / 2 - GROUND * S, S)
 with timer("fire render (exact integration)"):
     hdr, worst = kit.fire_frames(temps, EXT, H, PX, frame=frame)
-# Normalize the HDR emission: the 99th percentile of flame pixels -> 1.0 in the 8-bit atlas (x emissiveIntensity 8).
+# Normalize the HDR emission: the 99th percentile of flame pixels -> 1.0 in the 8-bit atlas (x emissiveIntensity 6.5).
 lum = np.concatenate([f[..., :3].max(axis=-1).ravel() for f in hdr])
 pk = float(np.percentile(lum[lum > 0.02 * lum.max()], 99.0))
 color = [np.concatenate([np.clip(f[..., :3] / pk, 0, 1), np.clip(f[..., 3:4], 0, 1)], axis=-1).astype(np.float32) for f in hdr]
@@ -71,10 +72,10 @@ flame = sum(int((e.max(-1) > 0.25).sum()) for e in enc)
 core = sum(int(((e.min(-1) > 0.70) & (e.max(-1) > 0.25)).sum()) for e in enc)
 log(f"fire: core (#fff2c0-like, all channels > 70 %) {100.0 * core / max(flame, 1):.1f} % of the flame area; pre-window border "
     f"{worst / pk * 255:.2f}/255")
-meta = fb.write(ctx, color, 8, 8, fps=FPS, loop=True, blend="premultiplied", lit=False, emissive_intensity=8.0,
+meta = fb.write(ctx, color, 8, 8, fps=FPS, loop=True, blend="premultiplied", lit=False, emissive_intensity=6.5,
                 soft_fade_m=0.3, size_m=(S, S), atlas_px={"ultra": 2048, "high": 1024, "mobile": 512},
                 ground_line=GROUND,
-                description="Looping flame (Eulerian sim, licking tongues), premultiplied emission x8 + slight occlusion, "
+                description="Looping flame (Eulerian sim, licking tongues), premultiplied emission x6.5 + slight occlusion, "
                             "no soot; 64 frames at 24 fps.")
 meta["tint"] = "#ffffff"
 ctx.meta.update(meta)

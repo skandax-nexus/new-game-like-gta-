@@ -9,9 +9,9 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 13387338,
-    "high": 6305101,
-    "mobile": 3460584
+    "ultra": 13387178,
+    "high": 6304941,
+    "mobile": 3460294
   },
   "assets": {
     "banner_cloth": {
@@ -314,8 +314,8 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_fire",
       "category": "fx",
-      "hash": "5e5a2e8436",
-      "description": "Looping flame (Eulerian sim, licking tongues), premultiplied emission x8 + slight occlusion, no soot; 64 frames at 24 fps.",
+      "hash": "2ec07246ca",
+      "description": "Looping flame (Eulerian sim, licking tongues), premultiplied emission x6.5 + slight occlusion, no soot; 64 frames at 24 fps.",
       "bytes": {
         "ultra": 258380,
         "high": 119232,
@@ -368,7 +368,7 @@ export const ASSET_MANIFEST = {
       "blend": "premultiplied",
       "lit": false,
       "softFadeMeters": 0.3,
-      "emissiveIntensity": 8,
+      "emissiveIntensity": 6.5,
       "sizeMeters": [
         1.9,
         1.9
@@ -380,11 +380,11 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_lightning",
       "category": "fx",
-      "hash": "2f3b1775a1",
+      "hash": "2398faec83",
       "description": "Four forked lightning bolts, white core + violet glow, additive x10 (high / ultra only).",
       "bytes": {
-        "ultra": 40650,
-        "high": 40650,
+        "ultra": 40780,
+        "high": 40780,
         "mobile": 0
       },
       "tiers": [
@@ -392,8 +392,8 @@ export const ASSET_MANIFEST = {
         "high"
       ],
       "fallback": null,
-      "cols": 2,
-      "rows": 2,
+      "cols": 4,
+      "rows": 1,
       "fps": 1,
       "loop": true,
       "sequences": [
@@ -449,16 +449,16 @@ export const ASSET_MANIFEST = {
       "maps": {
         "color": {
           "ultra": {
-            "url": "fx/fx_lightning/color_512.webp",
-            "bytes": 40650,
-            "width": 512,
-            "height": 512
+            "url": "fx/fx_lightning/color_1024.webp",
+            "bytes": 40780,
+            "width": 1024,
+            "height": 256
           },
           "high": {
-            "url": "fx/fx_lightning/color_512.webp",
-            "bytes": 40650,
-            "width": 512,
-            "height": 512
+            "url": "fx/fx_lightning/color_1024.webp",
+            "bytes": 40780,
+            "width": 1024,
+            "height": 256
           }
         }
       },
@@ -1037,12 +1037,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_weapon_trail",
       "category": "fx",
-      "hash": "57890061c3",
+      "hash": "8ac439649d",
       "description": "Weapon trail: gradient (edge -> saffron -> tail), wide variant, two u-tileable streak noises.",
       "bytes": {
-        "ultra": 28266,
-        "high": 28266,
-        "mobile": 28266
+        "ultra": 27976,
+        "high": 27976,
+        "mobile": 27976
       },
       "tiers": [
         "ultra",
@@ -1056,19 +1056,22 @@ export const ASSET_MANIFEST = {
       "loop": true,
       "sequences": [
         {
-          "name": "trail",
+          "name": "noise",
           "start": 0,
           "count": 1,
           "fps": 1,
           "loop": true,
-          "blend": null,
-          "lit": null,
+          "blend": "additive",
+          "lit": false,
           "openEdges": [
-            "left"
+            "top",
+            "bottom",
+            "left",
+            "right"
           ]
         },
         {
-          "name": "trail_wide",
+          "name": "trail",
           "start": 1,
           "count": 1,
           "fps": 1,
@@ -1080,7 +1083,7 @@ export const ASSET_MANIFEST = {
           ]
         },
         {
-          "name": "noise",
+          "name": "noise_b",
           "start": 2,
           "count": 1,
           "fps": 1,
@@ -1095,18 +1098,15 @@ export const ASSET_MANIFEST = {
           ]
         },
         {
-          "name": "noise_b",
+          "name": "trail_wide",
           "start": 3,
           "count": 1,
           "fps": 1,
           "loop": true,
-          "blend": "additive",
-          "lit": false,
+          "blend": null,
+          "lit": null,
           "openEdges": [
-            "top",
-            "bottom",
-            "left",
-            "right"
+            "left"
           ]
         }
       ],
@@ -1114,19 +1114,19 @@ export const ASSET_MANIFEST = {
         "color": {
           "ultra": {
             "url": "fx/fx_weapon_trail/color_256.webp",
-            "bytes": 28266,
+            "bytes": 27976,
             "width": 256,
             "height": 256
           },
           "high": {
             "url": "fx/fx_weapon_trail/color_256.webp",
-            "bytes": 28266,
+            "bytes": 27976,
             "width": 256,
             "height": 256
           },
           "mobile": {
             "url": "fx/fx_weapon_trail/color_256.webp",
-            "bytes": 28266,
+            "bytes": 27976,
             "width": 256,
             "height": 256
           }

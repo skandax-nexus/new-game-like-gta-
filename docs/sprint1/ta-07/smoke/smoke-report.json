@@ -1,11 +1,11 @@
 {
-  "build": "0.1.0+d95e774",
+  "build": "0.1.0+f295dab",
   "quality": "high",
   "shots": [
     {
       "name": "menu",
       "url": "http://127.0.0.1:4402/?scene=menu&quality=high&noaudio=1",
-      "ms": 16025,
+      "ms": 14174,
       "errors": [],
       "state": {
         "scene": "menu",
@@ -20,14 +20,14 @@
             "z": -598.72
           }
         },
-        "fps": 1.7940795742336069,
+        "fps": 1.904072789235737,
         "errors": 0
       }
     },
     {
       "name": "world",
       "url": "http://127.0.0.1:4402/?scene=world&quality=high&noaudio=1&seed=7&paused=1",
-      "ms": 23871,
+      "ms": 26032,
       "errors": [],
       "state": {
         "scene": "world",
@@ -90,14 +90,14 @@
           },
           "blocked": false
         },
-        "fps": 6.2186292790505915,
+        "fps": 4.780738088809089,
         "errors": 0
       }
     },
     {
       "name": "world-overview",
       "url": "http://127.0.0.1:4402/?scene=world&quality=high&noaudio=1&seed=7&paused=1&camera=overview",
-      "ms": 22375,
+      "ms": 50766,
       "errors": [],
       "state": {
         "scene": "world",
@@ -160,14 +160,14 @@
           },
           "blocked": false
         },
-        "fps": 4.516031979259267,
+        "fps": 4.331683128693855,
         "errors": 0
       }
     },
     {
       "name": "battle",
       "url": "http://127.0.0.1:4402/?scene=battle&quality=high&noaudio=1&seed=7&soldiers=1000&preset=plains",
-      "ms": 30628,
+      "ms": 40615,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -177,48 +177,48 @@
         "quality": "high",
         "sceneState": {
           "battleId": "skirmish_7",
-          "time": 25.6,
-          "tick": 511,
-          "phase": "active",
+          "time": 25.7,
+          "tick": 513,
+          "phase": "deployment",
           "sides": [
             {
               "faction": "heartland",
               "soldiers": 500,
               "initial": 500,
               "routed": 0,
-              "morale": 82
+              "morale": 58
             },
             {
               "faction": "highland",
-              "soldiers": 499,
-              "initial": 501,
+              "soldiers": 500,
+              "initial": 500,
               "routed": 0,
-              "morale": 72
+              "morale": 60
             }
           ],
-          "formations": 15,
-          "soldierCapacity": 1001,
-          "visibleSoldiers": 808,
+          "formations": 14,
+          "soldierCapacity": 1000,
+          "visibleSoldiers": 821,
           "outcome": null,
           "selection": [
             0
           ],
           "camera": {
-            "x": 1773.5126794628586,
-            "z": 1006.1413659602291,
+            "x": 1777.1730226687075,
+            "z": 1007.6822609966783,
             "distance": 165,
-            "yaw": -0.08295356090102977,
+            "yaw": -0.125202261848514,
             "tilt": 0
           }
         },
-        "fps": 3.7480179261733397,
+        "fps": 3.2094010590799966,
         "errors": 0
       }
     },
     {
       "name": "battle-close",
       "url": "http://127.0.0.1:4402/?scene=battle&quality=high&noaudio=1&seed=7&soldiers=1000&preset=plains&camera=close",
-      "ms": 34876,
+      "ms": 31138,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -237,39 +237,39 @@
               "soldiers": 500,
               "initial": 500,
               "routed": 0,
-              "morale": 84
+              "morale": 79
             },
             {
               "faction": "highland",
-              "soldiers": 490,
-              "initial": 501,
-              "routed": 2,
-              "morale": 77
+              "soldiers": 500,
+              "initial": 500,
+              "routed": 0,
+              "morale": 81
             }
           ],
-          "formations": 15,
-          "soldierCapacity": 1001,
-          "visibleSoldiers": 825,
+          "formations": 14,
+          "soldierCapacity": 1000,
+          "visibleSoldiers": 800,
           "outcome": null,
           "selection": [
             0
           ],
           "camera": {
-            "x": 1769.011415508944,
-            "z": 1060.2792995988436,
+            "x": 1770.4755527912837,
+            "z": 1060.8956576134233,
             "distance": 55,
-            "yaw": -0.08295356090102977,
+            "yaw": -0.125202261848514,
             "tilt": -0.05
           }
         },
-        "fps": 1.1847909336408717,
+        "fps": 2.8935185438849467,
         "errors": 0
       }
     },
     {
       "name": "battle-river-5000",
       "url": "http://127.0.0.1:4402/?scene=battle&quality=high&noaudio=1&seed=11&soldiers=5000&preset=river_crossing&hour=17",
-      "ms": 33701,
+      "ms": 41042,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -279,48 +279,48 @@
         "quality": "high",
         "sceneState": {
           "battleId": "skirmish_11",
-          "time": 15.5,
-          "tick": 309,
-          "phase": "active",
+          "time": 15.6,
+          "tick": 311,
+          "phase": "deployment",
           "sides": [
             {
               "faction": "heartland",
-              "soldiers": 2499,
-              "initial": 2499,
+              "soldiers": 2500,
+              "initial": 2500,
               "routed": 0,
-              "morale": 81
+              "morale": 58
             },
             {
               "faction": "highland",
               "soldiers": 2500,
               "initial": 2500,
               "routed": 0,
-              "morale": 77
+              "morale": 60
             }
           ],
-          "formations": 75,
-          "soldierCapacity": 4999,
+          "formations": 70,
+          "soldierCapacity": 5000,
           "visibleSoldiers": 3306,
           "outcome": null,
           "selection": [
             0
           ],
           "camera": {
-            "x": -104.29501017561036,
-            "z": -181.3984194308585,
+            "x": -106.06290818634989,
+            "z": -179.47496894885086,
             "distance": 165,
-            "yaw": 0.260803873614263,
+            "yaw": 0.18558940084874082,
             "tilt": 0
           }
         },
-        "fps": 2.381622510727388,
+        "fps": 1.3059234150542767,
         "errors": 0
       }
     },
     {
       "name": "hero",
       "url": "http://127.0.0.1:4402/?scene=hero&quality=high&noaudio=1",
-      "ms": 17126,
+      "ms": 64751,
       "errors": [],
       "state": {
         "scene": "hero",
@@ -337,14 +337,14 @@
           "prompt": null,
           "pois": 10
         },
-        "fps": 1.8710473844971667,
+        "fps": 3.2933556129015873,
         "errors": 0
       }
     },
     {
       "name": "menu-mobile",
       "url": "http://127.0.0.1:4402/?scene=menu&quality=low&noaudio=1",
-      "ms": 3685,
+      "ms": 6671,
       "errors": [],
       "state": {
         "scene": "menu",
@@ -359,14 +359,14 @@
             "z": -598.72
           }
         },
-        "fps": 5.572755522438609,
+        "fps": 4.153168933316167,
         "errors": 0
       }
     },
     {
       "name": "battle-mobile",
       "url": "http://127.0.0.1:4402/?scene=battle&quality=low&noaudio=1&seed=7&soldiers=600&preset=plains",
-      "ms": 7570,
+      "ms": 8714,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -378,46 +378,46 @@
           "battleId": "skirmish_7",
           "time": 20.6,
           "tick": 411,
-          "phase": "active",
+          "phase": "deployment",
           "sides": [
             {
               "faction": "heartland",
               "soldiers": 300,
               "initial": 300,
               "routed": 0,
-              "morale": 82
+              "morale": 58
             },
             {
               "faction": "highland",
               "soldiers": 300,
               "initial": 300,
               "routed": 0,
-              "morale": 76
+              "morale": 60
             }
           ],
-          "formations": 15,
+          "formations": 14,
           "soldierCapacity": 600,
-          "visibleSoldiers": 488,
+          "visibleSoldiers": 502,
           "outcome": null,
           "selection": [
             0
           ],
           "camera": {
-            "x": 1773.6092908418075,
-            "z": 1006.1590376148199,
+            "x": 1777.2025330535503,
+            "z": 1007.6876588838988,
             "distance": 165,
-            "yaw": -0.08101075183934191,
+            "yaw": -0.12944774261857647,
             "tilt": 0
           }
         },
-        "fps": 4.808187576300111,
+        "fps": 3.6569756767541257,
         "errors": 0
       }
     },
     {
       "name": "assetviewer-stupa",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=hero&noui=1",
-      "ms": 33798,
+      "ms": 46091,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -459,16 +459,18 @@
           "kit": null,
           "lut": null,
           "flipbooks": 0,
+          "fxQuads": null,
+          "prepass": "tagged",
           "notes": []
         },
-        "fps": 14.600715259206607,
+        "fps": 18.799348229434123,
         "errors": 0
       }
     },
     {
       "name": "assetviewer-torana",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=close&noui=1",
-      "ms": 36788,
+      "ms": 58711,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -510,16 +512,18 @@
           "kit": null,
           "lut": null,
           "flipbooks": 0,
+          "fxQuads": null,
+          "prepass": "tagged",
           "notes": []
         },
-        "fps": 12.279235027030163,
+        "fps": 15.365148277864705,
         "errors": 0
       }
     },
     {
       "name": "assetviewer-sandstone",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=ultra&noaudio=1&asset=sandstone_carved_red&hdri=sky_day&noui=1",
-      "ms": 28756,
+      "ms": 48359,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -561,16 +565,18 @@
           "kit": null,
           "lut": null,
           "flipbooks": 0,
+          "fxQuads": null,
+          "prepass": "tagged",
           "notes": []
         },
-        "fps": 14.211451605842257,
+        "fps": 15.397155988429825,
         "errors": 0
       }
     },
     {
       "name": "assetviewer-mobile",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=low&noaudio=1&asset=stupa_sanchi&hdri=sky_day&camera=overview",
-      "ms": 9135,
+      "ms": 5710,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -612,16 +618,18 @@
           "kit": null,
           "lut": null,
           "flipbooks": 0,
+          "fxQuads": null,
+          "prepass": "tagged",
           "notes": []
         },
-        "fps": 36.0780986737026,
+        "fps": 32.840722685533855,
         "errors": 0
       }
     },
     {
       "name": "assetviewer-fallback",
       "url": "http://127.0.0.1:4402/?scene=assetviewer&quality=high&noaudio=1&asset=stupa_sanchi&assets=off",
-      "ms": 23406,
+      "ms": 15261,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -649,9 +657,11 @@
           "kit": null,
           "lut": null,
           "flipbooks": 0,
+          "fxQuads": null,
+          "prepass": "tagged",
           "notes": []
         },
-        "fps": 1.1199348175366484,
+        "fps": 16.949152344508825,
         "errors": 0
       }
     }
