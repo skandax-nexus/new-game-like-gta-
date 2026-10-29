@@ -30,7 +30,7 @@ import { EVENT_HISTORY_LIMIT } from '../../core/constants';
 import { EVENTS, getEventDef } from '../../data/events';
 import { SCENARIOS } from '../../data/campaign';
 import { seasonOf, totalDays } from './seasons';
-import { addChronicle, withWorldRng } from './world';
+import { addChronicle, withWorldRng } from './state';
 import { armySoldiers } from './armies';
 import { createTreaty, declareWar, hasTreaty } from './diplomacy';
 

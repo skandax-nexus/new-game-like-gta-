@@ -1,6 +1,6 @@
 /**
  * Strategic world: creation, the hourly tick and command application.
- * OWNER: Lead AI & Simulation Engineer. Baseline implementation by the CTO - extend, keep signatures.
+ * OWNER: Simulation Engineer - Strategic World Simulation (SIM-01). Baseline by the CTO; exported signatures kept.
  *
  * Contract (see docs/ARCHITECTURE.md §Simulation):
  *  - Pure, deterministic, three-free. All randomness from `world.rng` (via `withWorldRng`).
@@ -36,19 +36,28 @@ import type {
   WorldState,
 } from '../../core/types';
 import { VICTORY_TYPES } from '../../core/types';
-import { BATTLE_HISTORY_LIMIT, CHRONICLE_LIMIT, STATS_SAMPLE_LIMIT, WORLD_SCHEMA_VERSION } from '../../core/constants';
+import { STATS_SAMPLE_LIMIT, WORLD_SCHEMA_VERSION } from '../../core/constants';
 import { nextWorldId, relationKey, sortedKeys } from '../../core/ids';
 import { Rng, rngStateFromSeed } from '../../core/rng';
 import { dcos, dsin, TWO_PI } from '../../core/math';
 import { getHeightfield } from '../../core/terrain/cache';
 import type { Heightfield } from '../../core/terrain/heightfield';
 import { resolveSettlementSites, type ResolvedSite } from '../../core/terrain/sites';
-import { traceRoad } from '../../core/terrain/roads';
+import { traceRoad, type RoadTrace } from '../../core/terrain/roads';
+import { terrainKey } from '../../core/terrain/cache';
+import { RULES } from '../../data/rules';
+import { BALANCE } from '../../data/balance';
+import { BUILDINGS } from '../../data/buildings';
 import { FACTIONS } from '../../data/factions';
 import { REGION } from '../../data/region';
 import { DEFAULT_SCENARIO_ID, SCENARIOS } from '../../data/campaign';
 import { PERSON_NAMES } from '../../data/names';
-import { advanceCalendar, createCalendar, makeWeather, seasonOf, totalDays, updateWeatherDaily, type CalendarAdvance } from './seasons';
+import { advanceCalendar, createCalendar, floodLevel, makeWeather, seasonOf, totalDays, updateMonsoonDaily, updateWeatherDaily, type CalendarAdvance } from './seasons';
+import { addChronicle, pushBattleHistory, withWorldRng } from './state';
+import { executeMarketTrade } from './market';
+import { updateRoadBlocks } from './network';
+import { factionMod } from './modifiers';
+import { laborFor } from './economy';
 import { updateEconomyDaily, updateEconomyMonthly } from './economy';
 import { orderArmy, updateArmiesDaily, updateArmiesHourly, armySoldiers, makeArmy, makeArmyUnit } from './armies';
 import { declareWar, makePeace, respondToProposal, proposeTreaty, updateDiplomacyDaily, updateDiplomacyMonthly, createTreaty } from './diplomacy';
@@ -58,23 +67,16 @@ import { checkObjectives, evaluateEventsDaily, resolveEventChoice } from './even
 import { runCampaignAI } from './ai';
 import { decideEngagement, stepDistantBattles } from './autoresolve';
 
-// ---------------------------------------------------------------------------------------------------
-// RNG helper
-// ---------------------------------------------------------------------------------------------------
-
-/** Run `fn` with an Rng bound to world.rng and write the advanced state back. */
-export function withWorldRng<T>(world: WorldState, fn: (rng: Rng) => T): T {
-  const rng = new Rng(world.rng);
-  const r = fn(rng);
-  world.rng = rng.getState();
-  return r;
-}
+// Shared helpers live in state.ts (no import cycles); re-exported for existing callers.
+export { addChronicle, pushBattleHistory, withWorldRng };
 
 // ---------------------------------------------------------------------------------------------------
 // Creation
 // ---------------------------------------------------------------------------------------------------
 
 let regionCache: { terrain: TerrainSpec; sites: ResolvedSite[] } | null = null;
+/** Traced road geometry per terrain + endpoints (pure function of static data; saves ~0.3 s per createWorld). */
+const roadTraceCache = new Map<string, RoadTrace>();
 
 /**
  * The region terrain spec with settlement flatten pads + resolved settlement sites. Pure and
@@ -108,10 +110,26 @@ function zeroVictory(): Record<VictoryType, number> {
   return Object.fromEntries(VICTORY_TYPES.map((v) => [v, 0])) as Record<VictoryType, number>;
 }
 
+function defaultLabor(kind: SettlementDef['kind']): SettlementState['laborAllocation'] {
+  const d = RULES.population.defaultLabor;
+  const src = kind === 'village' ? d.village : kind === 'fort' ? d.fort : d.urban;
+  return { farming: src.farming, construction: src.construction, crafts: src.crafts, military: src.military };
+}
+
+/** Sum of a building effect x level over a settlement definition's starting buildings. */
+function defEffect(def: SettlementDef, key: 'foodCapacity' | 'housing' | 'irrigation' | 'waterAvailability' | 'sanitation'): number {
+  let v = 0;
+  for (const b of def.buildings) v += (BUILDINGS[b.type].effects[key] ?? 0) * b.level;
+  return v;
+}
+
+/** Initial settlement (DESIGN_SPEC §7.2 [BASE] values; storage capacity in days of consumption, §7.3.4). */
 function makeSettlement(def: SettlementDef, x: number, z: number, owner: FactionId | null, hf: Heightfield, seed: number): SettlementState {
   const pop = def.population;
-  const granary = def.buildings.find((b) => b.type === 'granary')?.level ?? 0;
-  const fields = def.buildings.find((b) => b.type === 'farm_fields')?.level ?? 0;
+  const st = RULES.settlement;
+  const moisture = hf.moistureAt(x, z);
+  const health = 0.8;
+  const daily = pop * BALANCE.economy.foodPerPersonPerDay;
   return {
     id: def.id,
     name: def.name,
@@ -123,34 +141,34 @@ function makeSettlement(def: SettlementDef, x: number, z: number, owner: Faction
     layoutSeed: seed,
     radius: def.kind === 'capital' ? 200 : def.kind === 'city' ? 150 : def.kind === 'village' ? 70 : 110,
     population: pop,
-    labor: Math.round(pop * 0.45),
-    laborAllocation: { farming: def.kind === 'village' ? 0.75 : 0.5, construction: 0.1, crafts: def.kind === 'village' ? 0.1 : 0.3, military: 0.05 },
+    labor: laborFor(pop, health),
+    laborAllocation: defaultLabor(def.kind),
     growthRate: 0.01,
     foodProduction: pop * 0.11,
-    foodConsumption: pop * 0.1,
-    foodStored: pop * 0.1 * 75,
-    foodCapacity: 3000 + pop * 0.6 + granary * 4000,
+    foodConsumption: daily,
+    foodStored: daily * 75,
+    foodCapacity: daily * (RULES.storage.baseDays + defEffect(def, 'foodCapacity')),
     kharif: { sown: 0, growth: 0, health: 1, laborAtSowing: 0 },
     rabi: { sown: 0, growth: 0, health: 1, laborAtSowing: 0 },
     lastHarvest: 0,
     grainPrice: 1,
-    waterAvailability: Math.min(1, 0.45 + hf.moistureAt(x, z) * 0.5),
-    irrigation: 0.2 + fields * 0.05,
+    waterAvailability: Math.min(1, st.waterBase + moisture * st.waterMoistureWeight + defEffect(def, 'waterAvailability')),
+    irrigation: Math.min(1, st.irrigationBase + defEffect(def, 'irrigation')),
     waterInfrastructure: 0.3,
-    housing: Math.round(pop * 1.1),
-    sanitation: 0.5,
+    housing: Math.round(pop * st.initialHousingPerCapita + defEffect(def, 'housing')),
+    sanitation: Math.min(1, st.sanitationBase + defEffect(def, 'sanitation')),
     publicOrder: 0.7,
-    health: 0.8,
+    health,
     wealth: pop * 0.05,
-    taxRate: 0.15,
+    taxRate: RULES.tax.defaultRate,
     taxIncome: 0,
     tradeIncome: 0,
     tradeVolume: 0,
-    recruitmentPotential: Math.round(pop * 0.06),
+    recruitmentPotential: Math.round(pop * RULES.recruitment.poolPerCapita),
     recruitPool: Math.round(pop * 0.03),
     loyalty: owner ? 0.65 : 0.5,
     infrastructure: 0.7,
-    disasterExposure: { flood: hf.riverDistanceAt(x, z) < 500 ? 0.5 : 0.1, drought: 1 - hf.moistureAt(x, z), fire: 0.15, epidemic: 0.1 },
+    disasterExposure: { flood: hf.riverDistanceAt(x, z) < 500 ? 0.5 : 0.1, drought: 1 - moisture, fire: 0.15, epidemic: 0.1 },
     damage: 0,
     buildings: def.buildings.map((b) => ({ type: b.type, level: b.level, condition: 1 })),
     construction: [],
@@ -158,14 +176,14 @@ function makeSettlement(def: SettlementDef, x: number, z: number, owner: Faction
     unrest: 0.05,
     rebellionStage: 'calm',
     fortLevel: def.fortLevel,
-    wallHp: def.fortLevel * 1000,
+    wallHp: def.fortLevel * RULES.siege.wallHpPerLevel,
     garrison: [],
     besiegedBy: null,
     siegeDays: 0,
     resources: def.resources.slice(),
     requisitionedFood: 0,
     ownerSinceDay: 0,
-    // Contracts v2 (CORE-01 compile-fix: neutral initial values; rules land with SIM-01).
+    // Contracts v2 (values equal to the v1 -> v2 migration defaults; SIM-01 rules evolve them).
     initialOwnerFactionId: owner,
     occupiedSinceDay: null,
     pendingCapture: null,
@@ -258,7 +276,7 @@ export function createWorld(setup: WorldSetup): WorldState {
     rng: rngStateFromSeed(seed),
     nextId: 1,
     calendar,
-    weather: makeWeather('clear', seasonOf(calendar)),
+    weather: { ...makeWeather('clear', seasonOf(calendar)), flood: floodLevel(calendar.month, scenario?.monsoonStrength ?? sandbox?.monsoonStrength ?? 1) },
     region: {
       id: REGION.id,
       name: REGION.name,
@@ -334,7 +352,12 @@ export function createWorld(setup: WorldSetup): WorldState {
     const a = world.settlements[rd.from];
     const b = world.settlements[rd.to];
     if (!a || !b) return;
-    const tr = traceRoad(hf, a.x, a.z, b.x, b.z);
+    const key = `${terrainKey(terrain)}|${a.id}|${b.id}`;
+    let tr = roadTraceCache.get(key);
+    if (!tr) {
+      tr = traceRoad(hf, a.x, a.z, b.x, b.z);
+      roadTraceCache.set(key, tr);
+    }
     const edge: RoadEdge = {
       id: `road_${i}`,
       a: `node_${a.id}`,
@@ -342,7 +365,7 @@ export function createWorld(setup: WorldSetup): WorldState {
       quality: rd.quality,
       condition: 1,
       length: tr.length,
-      points: tr.points,
+      points: tr.points.map((p) => ({ x: p.x, z: p.z })),
       bridge: tr.crossesWater && rd.quality !== 'track',
       ford: tr.crossesWater && rd.quality === 'track',
       blockedBy: null,
@@ -463,6 +486,11 @@ export function createWorld(setup: WorldSetup): WorldState {
   for (const c of Object.values(world.characters)) {
     if (c.governsProvinceId && world.provinces[c.governsProvinceId]) world.provinces[c.governsProvinceId]!.governorId = c.id;
   }
+  // Owner-dependent settlement values: wall HP (x fortDefense) and recruit pool cap (x recruitmentPool, age bonus).
+  for (const id of Object.keys(world.settlements).sort()) {
+    const s = world.settlements[id]!;
+    s.wallHp = s.fortLevel * RULES.siege.wallHpPerLevel * factionMod(world, s.ownerFactionId, 'fortDefense');
+  }
 
   // Armies.
   if (scenario) {
@@ -572,8 +600,10 @@ export function tickWorld(world: WorldState, commands: readonly IssuedStrategicC
   if (adv.newDay) {
     const day = totalDays(world.calendar);
     out.push({ kind: 'new_day', day });
+    updateMonsoonDaily(world, out);
     const changed = updateWeatherDaily(world);
     if (changed) out.push({ kind: 'weather_changed', weather: changed });
+    updateRoadBlocks(world);
     updateEconomyDaily(world, out);
     updateArmiesDaily(world, out);
     updatePoliticsDaily(world, out);
@@ -709,6 +739,15 @@ export function applyStrategicCommand(world: WorldState, issued: IssuedStrategic
       if (!ch.roles.includes('heir')) ch.roles.push('heir');
       return true;
     }
+    case 'market_trade':
+      return executeMarketTrade(world, issued.factionId, c.resource, c.lots, c.buy, out).ok;
+    case 'set_policy': {
+      const f = world.factions[issued.factionId];
+      if (!f) return false;
+      if (c.policy === 'hold_reserve') f.policies.holdReserve = c.on;
+      else f.policies.rationingUntilDay = c.on ? totalDays(world.calendar) + RULES.distribution.rationing.days : null;
+      return true;
+    }
     default:
       // TODO(Lead AI & Simulation): remaining commands (split/merge, depots, requisition, relief,
       // marriages, governors, council, rebels, roads...). Keep validation in validateStrategicCommand.
@@ -738,16 +777,6 @@ export function provinceAt(world: WorldState, x: number, z: number): string | nu
     }
   }
   return best;
-}
-
-export function addChronicle(world: WorldState, factionId: FactionId | null, text: string, importance: 0 | 1 | 2 = 1): void {
-  world.chronicle.push({ day: totalDays(world.calendar), factionId, text, importance });
-  if (world.chronicle.length > CHRONICLE_LIMIT) world.chronicle.splice(0, world.chronicle.length - CHRONICLE_LIMIT);
-}
-
-export function pushBattleHistory(world: WorldState, outcome: WorldState['battleHistory'][number]): void {
-  world.battleHistory.push(outcome);
-  if (world.battleHistory.length > BATTLE_HISTORY_LIMIT) world.battleHistory.splice(0, world.battleHistory.length - BATTLE_HISTORY_LIMIT);
 }
 
 function sampleStats(world: WorldState): void {

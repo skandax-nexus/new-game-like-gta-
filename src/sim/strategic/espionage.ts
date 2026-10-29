@@ -11,7 +11,7 @@ import type { AgentId, CharacterId, FactionId, SettlementId, SimEvent, SpyAgent,
 import { nextWorldId, sortedKeys } from '../../core/ids';
 import { BALANCE } from '../../data/balance';
 import { totalDays } from './seasons';
-import { withWorldRng } from './world';
+import { withWorldRng } from './state';
 
 export function startSpyMission(
   world: WorldState,

@@ -1,15 +1,15 @@
 /**
- * Calendar, seasons (six ritus), weather and environment state. OWNER: Lead AI & Simulation Engineer.
- * Baseline implementation by the CTO: calendar math + simple seasonal weather. Sim code: deterministic,
- * three-free, uses world.rng only.
- *
- * TODO(owner): monsoon strength/variability, droughts, floods raising `weather.flood`, sandbox
- * `monsoonStrength`/`droughtRisk`, forecasts for the UI.
+ * Calendar, seasons (six ritus), weather, the monsoon roll and floods (DESIGN_SPEC §7.1, §7.3.3).
+ * OWNER: Simulation Engineer - Strategic World Simulation (SIM-01). Baseline calendar math by the CTO.
+ * Sim code: deterministic, three-free; weather uses world.rng, the monsoon uses a per-year derived seed so the
+ * month-3 forecast and the month-4 roll agree (the forecast is computed from the same draw, +-0.15 noise).
  */
-import type { CalendarState, EnvironmentState, RoadQuality, Season, TerrainClass, WeatherKind, WeatherState, WorldState } from '../../core/types';
+import type { CalendarState, EnvironmentState, MonsoonState, RoadQuality, Season, SimEvent, TerrainClass, WeatherKind, WeatherState, WorldState } from '../../core/types';
 import { DAYS_PER_MONTH, DAYS_PER_YEAR, HOURS_PER_DAY, MONTHS_PER_YEAR, SEASONS } from '../../core/types';
-import { Rng } from '../../core/rng';
+import { deriveSeed, Rng } from '../../core/rng';
 import { BALANCE } from '../../data/balance';
+import { RULES } from '../../data/rules';
+import { SCENARIOS } from '../../data/campaign';
 
 export const MONTH_NAMES = [
   'Chaitra',
@@ -187,25 +187,146 @@ export function makeWeather(kind: WeatherKind, season: Season, windDirection = 0
   };
 }
 
-/** Roll new weather when the current spell ends (call once per day). */
+/** Varsha weather when the monsoon fails (M < 0.7) or floods (M > 1.2). */
+const VARSHA_FAILED: readonly [WeatherKind, number][] = [
+  ['hazy', 3],
+  ['clear', 3],
+  ['cloudy', 2],
+  ['light_rain', 2],
+  ['dust_storm', 1],
+];
+const VARSHA_FLOOD: readonly [WeatherKind, number][] = [
+  ['monsoon_rain', 6],
+  ['storm', 2],
+  ['overcast', 2],
+  ['light_rain', 1],
+];
+
+function weatherTable(world: WorldState, season: Season): readonly [WeatherKind, number][] {
+  if (season === 'varsha') {
+    const m = world.monsoon.strength;
+    if (m < RULES.harvest.monsoon.droughtBelow) return VARSHA_FAILED;
+    if (m > RULES.harvest.monsoon.floodAbove) return VARSHA_FLOOD;
+  }
+  return SEASON_WEATHER[season];
+}
+
+/** Roll new weather when the current spell ends (call once per day). Keeps wetness and the monsoon flood level. */
 export function updateWeatherDaily(world: WorldState): WeatherKind | null {
   const w = world.weather;
   w.daysRemaining -= 1;
   const season = seasonOf(world.calendar);
   // Ground slowly dries or soaks.
   w.wetness = Math.min(1, Math.max(0, w.wetness + (w.rain > 0 ? 0.15 * w.rain : -0.08)));
+  w.flood = floodLevel(world.calendar.month, world.monsoon.strength);
   if (w.daysRemaining > 0) return null;
   const rng = new Rng(world.rng);
-  const table = SEASON_WEATHER[season];
+  const table = weatherTable(world, season);
   const idx = rng.weightedIndex(table.map((t) => t[1]));
   const kind = (table[idx] as [WeatherKind, number])[0];
   const next = makeWeather(kind, season, w.windDirection + rng.range(-0.4, 0.4));
   next.daysRemaining = rng.int(2, 6);
   next.wetness = w.wetness;
+  next.flood = w.flood;
   world.rng = rng.getState();
   const changed = next.kind !== w.kind;
   Object.assign(w, next);
   return changed ? kind : null;
+}
+
+// ---------------------------------------------------------------------------------------------------
+// The monsoon (DESIGN_SPEC §7.3.2-§7.3.3)
+// ---------------------------------------------------------------------------------------------------
+
+/** Calendar month of the roll (varsha) and the day within it ("day 1 of month 4" = calendar.day 1). */
+export const MONSOON_ROLL_MONTH = 4;
+export const MONSOON_ROLL_DAY = 1;
+/** Flags are cleared on the first day of this month (after the kharif harvest). */
+export const MONSOON_FLAGS_CLEAR_MONTH = 8;
+
+/**
+ * River flood stage for a month given this year's monsoon M: `clamp01((M - 0.9) x 2)` at the varsha peak (month 5),
+ * rising in month 4 and receding in month 6. Fords close while flood > 0.5 (M > 1.15 at the peak).
+ */
+export function floodLevel(month: number, m: number): number {
+  const peak = Math.min(1, Math.max(0, (m - 0.9) * 2));
+  if (month === 5) return peak;
+  if (month === 4) return peak * 0.5;
+  if (month === 6) return peak * 0.25;
+  return 0;
+}
+
+/** Mean monsoon for the world: 1 x sandbox monsoonStrength (campaigns: 1). */
+export function monsoonMean(world: WorldState): number {
+  return 1 * (world.sandbox?.monsoonStrength ?? 1);
+}
+
+/**
+ * The monsoon strength M of display year `year`, drawn from a seed derived from (world seed, year) so the month-3
+ * forecast can quote it before the month-4 roll. A scenario's monsoonStrength fixes its start year; sandbox drought
+ * years (probability droughtRisk) draw M = U(0.45, 0.7); otherwise clamp(normal(mean, 0.18), 0.4, 1.4).
+ */
+export function monsoonStrengthFor(world: WorldState, year: number): number {
+  const sc = world.scenarioId ? SCENARIOS[world.scenarioId] : undefined;
+  if (sc && sc.monsoonStrength !== undefined && year === sc.startYear) return sc.monsoonStrength;
+  const r = RULES.harvest.monsoon;
+  const rng = new Rng(deriveSeed(world.seed, 'monsoon', year | 0));
+  const drought = world.sandbox ? rng.chance(world.sandbox.droughtRisk) : false;
+  const normal = rng.normal(r.mean * monsoonMean(world), r.sd);
+  const droughtM = rng.range(0.45, r.droughtBelow);
+  const m = drought ? droughtM : normal;
+  return Math.min(r.max, Math.max(r.min, m));
+}
+
+export function monsoonResult(m: number): 'failed' | 'normal' | 'flood' {
+  return m < RULES.harvest.monsoon.droughtBelow ? 'failed' : m > RULES.harvest.monsoon.floodAbove ? 'flood' : 'normal';
+}
+
+/** Forecast quoted in month 3: M +- 0.15 (exact when the player's court scholar has learning >= 12). */
+export function monsoonForecastFor(world: WorldState, year: number): number {
+  const m = monsoonStrengthFor(world, year);
+  const p = world.factions[world.playerFactionId];
+  const scholar = p?.council.court_scholar ? world.characters[p.council.court_scholar] : null;
+  if (scholar && scholar.alive && scholar.skills.learning >= 12) return m;
+  const rng = new Rng(deriveSeed(world.seed, 'monsoon_forecast', year | 0));
+  return Math.round((m + rng.range(-0.15, 0.15)) * 100) / 100;
+}
+
+/**
+ * Daily monsoon bookkeeping (call on every new day, before the economy): month-3 forecast, the month-4 day-1 roll
+ * (flags monsoon_failed / monsoon_flood + SimEvent), flag clearing in month 8, flood stage.
+ */
+export function updateMonsoonDaily(world: WorldState, out: SimEvent[]): void {
+  const cal = world.calendar;
+  const mon: MonsoonState = world.monsoon;
+  if (cal.month === 3 && cal.day === 0) mon.forecast = monsoonForecastFor(world, cal.year);
+  if (cal.month === MONSOON_ROLL_MONTH && cal.day === MONSOON_ROLL_DAY) {
+    mon.strength = monsoonStrengthFor(world, cal.year);
+    mon.year = cal.year;
+    mon.forecast = null;
+    const result = monsoonResult(mon.strength);
+    delete world.events.flags.monsoon_failed;
+    delete world.events.flags.monsoon_flood;
+    if (result === 'failed') world.events.flags.monsoon_failed = true;
+    if (result === 'flood') world.events.flags.monsoon_flood = true;
+    out.push({ kind: 'monsoon_roll', strength: mon.strength, year: mon.year, result });
+  }
+  if (cal.month === MONSOON_FLAGS_CLEAR_MONTH && cal.day === 0) {
+    delete world.events.flags.monsoon_failed;
+    delete world.events.flags.monsoon_flood;
+  }
+  world.weather.flood = floodLevel(cal.month, mon.strength);
+}
+
+/** Kharif / rabi yield multipliers for monsoon M and settlement irrigation (DESIGN_SPEC §7.3.2). */
+export function monsoonYields(m: number, irrigation: number): { ym: number; kharif: number; rabi: number } {
+  const e = BALANCE.economy;
+  const ym = m >= 1 ? 1 + (e.monsoonYieldBonus * (m - 1)) / 0.4 : Math.max(0.3, 1 - (e.droughtYieldPenalty * (1 - m)) / 0.3);
+  const irr = Math.min(1, Math.max(0, irrigation));
+  const shield = irr * RULES.harvest.irrigationShield;
+  const kharif = ym * (1 - shield) + shield * (1 + e.irrigationYieldBonus);
+  const rabi = (0.7 + 0.3 * Math.min(m, 1.2)) * (1 - irr * 0.5) + irr * 0.5 * (1 + e.irrigationYieldBonus);
+  return { ym, kharif, rabi };
 }
 
 /** Environment for render/audio from the world state (time of day, season, weather). */

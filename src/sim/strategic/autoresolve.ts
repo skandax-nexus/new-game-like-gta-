@@ -27,7 +27,7 @@ import { FACTIONS } from '../../data/factions';
 import { createBattle, deployZoneFor, forceOutcome, stepBattle } from '../tactical/battle';
 import { applyBattleOutcome, armyStrength } from './armies';
 import { getEnvironmentState } from './seasons';
-import { addChronicle, pushBattleHistory } from './world';
+import { addChronicle, pushBattleHistory } from './state';
 
 /** Max simulated battle time for autoresolve (s). */
 export const AUTORESOLVE_MAX_SEC = 60 * 30;
