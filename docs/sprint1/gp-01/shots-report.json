@@ -1,6 +1,6 @@
 {
-  "port": 4407,
-  "dist": ".build/gp-01",
+  "port": 4457,
+  "dist": ".build/gp-01-review",
   "checks": [
     {
       "name": "tactical-river: no formation centroid sampled in a deep-water cell",
@@ -56,8 +56,8 @@
       "name": "battle-melee-close: camera zoomed onto the melee (distance 45 m)",
       "ok": true,
       "observed": {
-        "x": -613.688604797203,
-        "z": -1032.7688041460783,
+        "x": -613.6885340221035,
+        "z": -1032.7684478599238,
         "distance": 44.96093663144529,
         "yaw": 0.1559181424452462,
         "tilt": 0
