@@ -1753,8 +1753,12 @@ protest), mixed **The Hills Endure**; defeats **The Citadel Falls**, **The Broke
 | Difficulty | §10.3 | Minister |
 | Spectate AI vs AI | toggle | off |
 
-Classes outside a faction's roster are skipped and the composition renormalized [BASE]; formations below half
-strength are not created except spearmen/archers [BASE].
+Classes outside a faction's roster are skipped and the composition renormalized [BASE]; the side budget is
+apportioned to classes by largest remainder; a class whose budget is below half a formation is dropped except
+spearmen/archers [BASE]. Each class budget is split evenly into `k = ceil(budget / (1.25 x menPerFormation))`
+formations [REQ GP-01]: a skirmish block may stand up to 25% over strength rather than splitting into two half-size
+ones (Riders spearmen 122 -> one block of 122, not 61 / 61; Elephant Shock elephants 18 -> 9 / 9, not 6 / 6 / 6), and
+with k >= 2 every formation holds at least 62.5% of `menPerFormation`. No separate remainder formation is ever made.
 
 ### 10.2 Sandbox setup
 
