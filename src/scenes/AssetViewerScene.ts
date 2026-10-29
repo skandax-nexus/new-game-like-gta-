@@ -17,9 +17,39 @@ import type { HdriHandle, MaterialHandle, ModelInstance, Releasable } from '../a
 import type { AssetEntry, ModelAssetEntry } from '../assets/types';
 import { createDetailTexture, createNoiseNormalMap } from '../render/environment/textures';
 import { toGltfUv } from '../render/materials/pbr';
-import { GRADE_PRESETS } from '../render/style/palette';
+import type { GradeParams } from '../render/post';
 
 const DEFAULT_HDRI = 'sky_day';
+const GROUND_MATERIAL = 'ground_dry_earth';
+/** Neutral lookdev grades (judge assets, not mood): mild contrast, near-neutral saturation and warmth. */
+const LOOKDEV_GRADE: Record<'day' | 'golden', GradeParams> = {
+  day: { contrast: 1.06, saturation: 1.03, warmth: 0.03, lift: 0.008, vignette: 0.26, tint: [1, 1, 1] },
+  golden: { contrast: 1.08, saturation: 0.98, warmth: 0.05, lift: 0.01, vignette: 0.32, tint: [1, 1, 1] },
+};
+
+/** Average linear radiance of the equirect band around the horizon (fog / haze color). */
+function horizonColor(tex: THREE.Texture): THREE.Color | null {
+  const img = tex.image as { data?: ArrayLike<number>; width?: number; height?: number } | undefined;
+  if (!img?.data || !img.width || !img.height) return null;
+  const { data, width: w, height: h } = img as { data: ArrayLike<number>; width: number; height: number };
+  const ch = Math.round(data.length / (w * h));
+  const half = data instanceof Uint16Array;
+  const read = (i: number): number => (half ? THREE.DataUtils.fromHalfFloat(data[i]!) : data[i]!);
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let n = 0;
+  for (let y = Math.floor(h * 0.47); y <= Math.floor(h * 0.53); y++) {
+    for (let x = 0; x < w; x += 3) {
+      const i = (y * w + x) * ch;
+      r += read(i);
+      g += read(i + 1);
+      b += read(i + 2);
+      n++;
+    }
+  }
+  return n ? new THREE.Color(r / n, g / n, b / n) : null;
+}
 
 export class AssetViewerScene implements GameScene {
   readonly id = 'assetviewer' as const;
@@ -64,7 +94,7 @@ export class AssetViewerScene implements GameScene {
       if (this.entry?.kind === 'material') await this.buildMaterialLookdev(this.assetId);
       else if (this.entry?.kind === 'hdri') this.buildHdriProbes();
       else await this.buildModel();
-      this.buildGround();
+      await this.buildGround();
     } finally {
       offProgress();
     }
@@ -77,7 +107,7 @@ export class AssetViewerScene implements GameScene {
     this.applyCameraPreset(ctx.params.camera ?? 'hero');
     ctx.render.setView(this.scene, this.camera);
     const golden = (this.hdri?.sun.elevationDeg ?? 40) < 15;
-    ctx.render.post.setGrade(golden ? GRADE_PRESETS.golden : GRADE_PRESETS.day);
+    ctx.render.post.setGrade(LOOKDEV_GRADE[golden ? 'golden' : 'day']);
     ctx.render.renderer.toneMappingExposure = golden ? 1.05 : 1.0;
     ctx.render.resize();
     if (!ctx.params.noUi) this.createHud();
@@ -114,8 +144,9 @@ export class AssetViewerScene implements GameScene {
     this.sun.shadow.normalBias = 0.03;
     this.sun.shadow.radius = 3;
     this.scene.add(this.sun, this.sun.target);
-    const fogColor = new THREE.Color(0xc9d4dc);
-    this.scene.fog = new THREE.FogExp2(fogColor, 0.0016);
+    // Aerial perspective: fog tinted with the sky's horizon radiance blends the ground into the haze.
+    const fogColor = (h && horizonColor(h.texture)) ?? new THREE.Color(0xc9d4dc);
+    this.scene.fog = new THREE.FogExp2(fogColor, 0.0032);
   }
 
   private async buildModel(): Promise<void> {
@@ -150,7 +181,7 @@ export class AssetViewerScene implements GameScene {
     add(new THREE.PlaneGeometry(4, 2), wallH.material, [-2, 1, 0]);
     add(new THREE.PlaneGeometry(4, 2), wallH.material, [0, 1, 2], -Math.PI / 2);
     add(new THREE.CylinderGeometry(1 / Math.PI, 1 / Math.PI, 2, 96, 1, false), unitH.material, [-2.4, 1, 1.4]);
-    add(new THREE.SphereGeometry(0.7, 96, 64), wallH.material, [-0.9, 0.7, 2.1]);
+    add(new THREE.SphereGeometry(0.6, 96, 64), wallH.material, [-1.0, 0.6, 1.3]);
     this.bounds.set(new THREE.Vector3(-4, 0, 0), new THREE.Vector3(0.2, 2, 4));
   }
 
@@ -171,10 +202,24 @@ export class AssetViewerScene implements GameScene {
     this.bounds.set(new THREE.Vector3(-3, 0, -1), new THREE.Vector3(3, 1.6, 1));
   }
 
-  private buildGround(): void {
+  private async buildGround(): Promise<void> {
     const size = Math.max(400, this.bounds.getSize(new THREE.Vector3()).length() * 12);
     const geo = new THREE.CircleGeometry(size / 2, 96);
     geo.rotateX(-Math.PI / 2);
+    const entry = this.ctx.assets.entry(GROUND_MATERIAL);
+    if (entry?.kind === 'material' && this.ctx.assets.enabled) {
+      const tile = entry.tileSizeMeters[0] ?? 4;
+      const h = await this.ctx.assets.loadMaterial(GROUND_MATERIAL, { uvScale: [size / tile, size / tile] });
+      this.handles.push(h);
+      toGltfUv(geo);
+      const ground = new THREE.Mesh(geo, h.material);
+      ground.receiveShadow = true;
+      ground.position.y = -0.02;
+      ground.name = 'viewer_ground';
+      this.scene.add(ground);
+      this.owned.push(geo);
+      return;
+    }
     const detail = createDetailTexture(256, 21);
     const normal = createNoiseNormalMap(256, 23, 3.0, 8);
     for (const t of [detail, normal]) t.repeat.set(size / 7, size / 7);
@@ -230,8 +275,9 @@ export class AssetViewerScene implements GameScene {
       case 'overview':
         pos.set(c.x - r * 1.6, b.min.y + r * 1.3, c.z + r * 2.1);
         break;
-      default: // hero 3/4 front-left view
-        pos.set(c.x - r * 0.95, b.min.y + size.y * 0.3, c.z + r * 1.55);
+      default: // hero 3/4 front-left view, the front (+Z) feature kept in frame
+        target.set(c.x + size.x * 0.06, b.min.y + size.y * 0.34, c.z + size.z * 0.16);
+        pos.set(c.x - r * 0.78, b.min.y + size.y * 0.26, c.z + r * 1.85);
         break;
     }
     this.camera.position.copy(pos);

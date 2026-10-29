@@ -9,16 +9,90 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 4867362,
-    "high": 1450017,
-    "mobile": 385177
+    "ultra": 10787000,
+    "high": 4256518,
+    "mobile": 2140135
   },
   "assets": {
+    "ground_dry_earth": {
+      "kind": "material",
+      "id": "ground_dry_earth",
+      "category": "materials",
+      "hash": "9c0389aba3",
+      "description": "Dry dusty plains earth with pebbles, drying cracks and straw litter (4 m tile).",
+      "bytes": {
+        "ultra": 3039774,
+        "high": 892768,
+        "mobile": 269520
+      },
+      "tileSizeMeters": [
+        4,
+        4
+      ],
+      "averageColor": "#6a4f36",
+      "roughness": 0.909,
+      "metalness": 0,
+      "normalScale": 1,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/ground_dry_earth/baseColor_2048.webp",
+            "bytes": 140542,
+            "size": 2048
+          },
+          "high": {
+            "url": "textures/ground_dry_earth/baseColor_1024.webp",
+            "bytes": 58006,
+            "size": 1024
+          },
+          "mobile": {
+            "url": "textures/ground_dry_earth/baseColor_512.webp",
+            "bytes": 19594,
+            "size": 512
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/ground_dry_earth/normal_2048.webp",
+            "bytes": 2655690,
+            "size": 2048
+          },
+          "high": {
+            "url": "textures/ground_dry_earth/normal_1024.webp",
+            "bytes": 739124,
+            "size": 1024
+          },
+          "mobile": {
+            "url": "textures/ground_dry_earth/normal_512.webp",
+            "bytes": 219870,
+            "size": 512
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/ground_dry_earth/orm_2048.webp",
+            "bytes": 243542,
+            "size": 2048
+          },
+          "high": {
+            "url": "textures/ground_dry_earth/orm_1024.webp",
+            "bytes": 95638,
+            "size": 1024
+          },
+          "mobile": {
+            "url": "textures/ground_dry_earth/orm_512.webp",
+            "bytes": 30056,
+            "size": 512
+          }
+        }
+      }
+    },
     "sandstone_carved_red": {
       "kind": "material",
       "id": "sandstone_carved_red",
       "category": "materials",
-      "hash": "2a5f4e183a",
+      "hash": "544c1d8383",
       "description": "Weathered carved red sandstone trim sheet: ashlar, creeper scroll, dentils, padma, bead-and-reel, lotus medallion frieze.",
       "bytes": {
         "ultra": 4603642,
@@ -135,29 +209,29 @@ export const ASSET_MANIFEST = {
       "kind": "hdri",
       "id": "sky_day",
       "category": "hdri",
-      "hash": "be539af11d",
+      "hash": "9680bf5520",
       "description": "Clear late-morning sky, sun 42 deg SE, light haze (lookdev / daytime IBL).",
       "bytes": {
-        "ultra": 123046,
-        "high": 45936,
-        "mobile": 17886
+        "ultra": 605148,
+        "high": 220713,
+        "mobile": 80958
       },
       "files": {
         "ultra": {
           "url": "hdri/sky_day_2048.exr",
-          "bytes": 123046,
+          "bytes": 605148,
           "width": 2048,
           "height": 1024
         },
         "high": {
           "url": "hdri/sky_day_1024.exr",
-          "bytes": 45936,
+          "bytes": 220713,
           "width": 1024,
           "height": 512
         },
         "mobile": {
           "url": "hdri/sky_day_512.exr",
-          "bytes": 17886,
+          "bytes": 80958,
           "width": 512,
           "height": 256
         }
@@ -177,35 +251,35 @@ export const ASSET_MANIFEST = {
         "elevationDeg": 42,
         "intensity": 3.9414
       },
-      "ambientIrradiance": 0.3354
+      "ambientIrradiance": 0.5766
     },
     "sky_golden": {
       "kind": "hdri",
       "id": "sky_golden",
       "category": "hdri",
-      "hash": "002bf07d10",
+      "hash": "b3fbb01b5f",
       "description": "Golden hour, sun 7 deg W, warm dusty haze (cinematic / hero mode).",
       "bytes": {
-        "ultra": 140674,
-        "high": 55145,
-        "mobile": 21183
+        "ultra": 617120,
+        "high": 228101,
+        "mobile": 83997
       },
       "files": {
         "ultra": {
           "url": "hdri/sky_golden_2048.exr",
-          "bytes": 140674,
+          "bytes": 617120,
           "width": 2048,
           "height": 1024
         },
         "high": {
           "url": "hdri/sky_golden_1024.exr",
-          "bytes": 55145,
+          "bytes": 228101,
           "width": 1024,
           "height": 512
         },
         "mobile": {
           "url": "hdri/sky_golden_512.exr",
-          "bytes": 21183,
+          "bytes": 83997,
           "width": 512,
           "height": 256
         }
@@ -225,7 +299,112 @@ export const ASSET_MANIFEST = {
         "elevationDeg": 7,
         "intensity": 5.791
       },
-      "ambientIrradiance": 0.5491
+      "ambientIrradiance": 0.7737
+    },
+    "stupa_sanchi": {
+      "kind": "model",
+      "id": "stupa_sanchi",
+      "category": "models",
+      "hash": "744157d566",
+      "description": "Sanchi-style stupa with carved torana, railings, drum, stairway, harmika and chhatras (trim-sheet sandstone, macro AO/grime).",
+      "bytes": {
+        "ultra": 1921316,
+        "high": 1566000,
+        "mobile": 1359552
+      },
+      "lods": [
+        {
+          "lod": 0,
+          "url": "models/stupa_sanchi/stupa_sanchi.lod0.glb",
+          "bytes": 827796,
+          "triangles": 45108,
+          "drawCalls": 3,
+          "distance": 0
+        },
+        {
+          "lod": 1,
+          "url": "models/stupa_sanchi/stupa_sanchi.lod1.glb",
+          "bytes": 349340,
+          "triangles": 12220,
+          "drawCalls": 3,
+          "distance": 120
+        }
+      ],
+      "minLod": {
+        "high": 0,
+        "mobile": 0,
+        "ultra": 0
+      },
+      "bounds": {
+        "center": [
+          0,
+          5.6688,
+          0
+        ],
+        "max": [
+          12.6,
+          11.3875,
+          12.6
+        ],
+        "min": [
+          -12.6,
+          -0.05,
+          -12.6
+        ],
+        "radius": 18.7143
+      },
+      "clips": [],
+      "materialSets": [
+        "sandstone_carved_red"
+      ],
+      "sets": {
+        "macro": {
+          "maps": {
+            "macro": {
+              "ultra": {
+                "url": "models/stupa_sanchi/macro.macro_2048.webp",
+                "bytes": 688864,
+                "size": 2048
+              },
+              "high": {
+                "url": "models/stupa_sanchi/macro.macro_1024.webp",
+                "bytes": 333548,
+                "size": 1024
+              },
+              "mobile": {
+                "url": "models/stupa_sanchi/macro.macro_512.webp",
+                "bytes": 127100,
+                "size": 512
+              }
+            }
+          }
+        },
+        "macro_lod1": {
+          "maps": {
+            "macro": {
+              "ultra": {
+                "url": "models/stupa_sanchi/macro_lod1.macro_512.webp",
+                "bytes": 55316,
+                "size": 512
+              },
+              "high": {
+                "url": "models/stupa_sanchi/macro_lod1.macro_512.webp",
+                "bytes": 55316,
+                "size": 512
+              },
+              "mobile": {
+                "url": "models/stupa_sanchi/macro_lod1.macro_512.webp",
+                "bytes": 55316,
+                "size": 512
+              }
+            }
+          }
+        }
+      },
+      "footprintMeters": [
+        25.2,
+        25.2
+      ]
     }
   }
 } as const satisfies AssetManifest;

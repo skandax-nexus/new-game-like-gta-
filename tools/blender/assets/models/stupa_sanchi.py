@@ -39,14 +39,14 @@ SOUTH = -math.pi / 2  # gateway direction (Blender -Y)
 
 # ------------------------------------------------------------------------------------- dimensions
 GROUND = 0.25  # top of the paved path
-R_PAVE = 11.4
-R_VED = 10.6
+R_PAVE = 12.6
+R_VED = 11.8
 VED_H = 1.75
-R_DRUM = 7.6
+R_DRUM = 8.5
 DRUM_TOP = 2.01
-R_DOME = 6.4
-DOME_H = 5.3
-R_DOME_TOP = 1.55
+R_DOME = 7.2
+DOME_H = 6.1
+R_DOME_TOP = 1.7
 GATE_HALF = 1.5  # torana pillar offset from the axis
 COURSE = 0.32  # ashlar course height of the trim sheet
 
@@ -148,7 +148,7 @@ def torana(tm: trim.TrimMesh, mat: str, detail: float) -> None:
     y = -R_VED
     hi = detail >= 0.75
     ch = 0.03 if hi else 0.0
-    pillar_top = GROUND + 4.0
+    pillar_top = GROUND + 2.9
     for sx in (-1, 1):
         x = sx * GATE_HALF
         tm.box(mat, (x, y, GROUND + 0.15), (0.66, 0.66, 0.3), bands={"+x": "ashlar_base", "-x": "ashlar_base",
@@ -160,16 +160,16 @@ def torana(tm: trim.TrimMesh, mat: str, detail: float) -> None:
         tm.path([Run(prof[k:k + 2], b) for k, b in bands], [(x, y, GROUND + 0.3), (x, y, pillar_top)], up=(0, 1, 0),
                 mat=mat, caps=False, u_start=0.05)
         # inverted lotus bell capital + abacus + capital block (where Sanchi has its elephant/lion groups)
-        tm.ring([Run([(0.25, pillar_top), (0.31, pillar_top + 0.18), (0.37, pillar_top + 0.36)], "padma", flip=True),
-                 Run([(0.37, pillar_top + 0.36), (0.0, pillar_top + 0.36)], "ashlar")],
+        tm.ring([Run([(0.23, pillar_top), (0.29, pillar_top + 0.14), (0.34, pillar_top + 0.28)], "padma", flip=True),
+                 Run([(0.34, pillar_top + 0.28), (0.0, pillar_top + 0.28)], "ashlar")],
                 24 if hi else 12, mat, center=(x, y, 0.0))
-        tm.box(mat, (x, y, pillar_top + 0.47), (0.82, 0.82, 0.22), bands={k: "dentil" for k in ("+x", "-x", "+y", "-y")})
-        tm.box(mat, (x, y, pillar_top + 0.86), (0.92, 0.92, 0.56), decals={"+y": "lotus_medallion", "-y": "lotus_medallion",
-                                                                            "+x": "lotus_medallion", "-x": "lotus_medallion"})
-        tm.box(mat, (x, y, pillar_top + 1.18), (1.0, 1.0, 0.08), bands={k: "bead_reel" for k in ("+x", "-x", "+y", "-y")})
-    z = pillar_top + 1.22
-    beams = [(2.45, "medallion_frieze"), (2.62, "split"), (2.8, "medallion_frieze")]
-    bh, bd, gap = 0.38, 0.34, 0.44
+        tm.box(mat, (x, y, pillar_top + 0.37), (0.74, 0.74, 0.18), bands={k: "dentil" for k in ("+x", "-x", "+y", "-y")})
+        tm.box(mat, (x, y, pillar_top + 0.68), (0.8, 0.8, 0.44), decals={"+y": "lotus_medallion", "-y": "lotus_medallion",
+                                                                          "+x": "lotus_medallion", "-x": "lotus_medallion"})
+        tm.box(mat, (x, y, pillar_top + 0.93), (0.88, 0.88, 0.06), bands={k: "bead_reel" for k in ("+x", "-x", "+y", "-y")})
+    z = pillar_top + 0.96
+    beams = [(2.4, "medallion_frieze"), (2.56, "split"), (2.72, "medallion_frieze")]
+    bh, bd, gap = 0.36, 0.32, 0.34
     for i, (half, kind) in enumerate(beams):
         zb = z + i * (bh + gap)
         n = 17 if hi else 7
@@ -177,9 +177,9 @@ def torana(tm: trim.TrimMesh, mat: str, detail: float) -> None:
         path = [(float(px), y, float(zb + 0.07 * (px / half) ** 2)) for px in xs]
         prof = rect(bd, bh, 0.0, 0.0)  # (side=+-Y, up=Z): right(+Y face) up, top, left(-Y face) down, bottom
         if kind == "split":
-            front = [Run([(-bd / 2, bh), (-bd / 2, 0.24)], "dentil" if False else (SHEET.trims["vine_scroll"][1], SHEET.trims["vine_scroll"][0])),
-                     Run([(-bd / 2, 0.24 - 0.0), (-bd / 2, 0.0)], (SHEET.trims["dentil"][1], SHEET.trims["dentil"][0]))]
-            back = [Run([(bd / 2, 0.0), (bd / 2, 0.14)], "dentil"), Run([(bd / 2, 0.14), (bd / 2, bh)], "vine_scroll")]
+            split = bh - 0.22  # lower dentil course, upper creeper scroll
+            front = [Run([(-bd / 2, bh), (-bd / 2, split)], "vine_scroll"), Run([(-bd / 2, split), (-bd / 2, 0.0)], "dentil")]
+            back = [Run([(bd / 2, 0.0), (bd / 2, split)], "dentil"), Run([(bd / 2, split), (bd / 2, bh)], "vine_scroll")]
             runs = back + [Run(prof[1:3], "ashlar")] + front + [Run(prof[3:5], "ashlar")]
         else:
             runs = [Run(prof[0:2], kind), Run(prof[1:3], "ashlar"), Run(prof[2:4], kind), Run(prof[3:5], "ashlar")]
@@ -197,7 +197,7 @@ def torana(tm: trim.TrimMesh, mat: str, detail: float) -> None:
             # dies above the pillars and struts in the span
             zd = zb + bh + gap / 2 + 0.035
             for sx in (-1, 1):
-                tm.box(mat, (sx * GATE_HALF, y, zd), (0.46, 0.42, gap + 0.04),
+                tm.box(mat, (sx * GATE_HALF, y, zd), (0.42, 0.38, gap + 0.04),
                        decals={"+y": "lotus_medallion", "-y": "lotus_medallion"}, bands={"+x": "ashlar", "-x": "ashlar"})
             if hi:
                 for px in (-0.75, 0.0, 0.75):
@@ -205,9 +205,9 @@ def torana(tm: trim.TrimMesh, mat: str, detail: float) -> None:
                             [(px, y, zb + bh + 0.02), (px, y, zb + bh + gap + 0.05)], up=(0, 1, 0), mat=mat, caps=False)
     ztop = z + 2 * (bh + gap) + bh
     # dharmachakra (wheel of law) on a pedestal
-    tm.box(mat, (0, y, ztop + 0.12), (0.5, 0.36, 0.24), bands={k: "bead_reel" for k in ("+x", "-x", "+y", "-y")})
-    wc = ztop + 0.24 + 0.66
-    R = 0.62
+    tm.box(mat, (0, y, ztop + 0.1), (0.42, 0.3, 0.2), bands={k: "bead_reel" for k in ("+x", "-x", "+y", "-y")})
+    wc = ztop + 0.2 + 0.5
+    R = 0.46
     seg = 40 if hi else 16
     circle = [(math.cos(t) * R, wc + math.sin(t) * R) for t in np.linspace(0, TAU, seg + 1)]
     # rim: sweep a small section around the circle (path in the XZ plane, profile in (radial, Y))
@@ -218,11 +218,11 @@ def torana(tm: trim.TrimMesh, mat: str, detail: float) -> None:
     spokes = 16 if hi else 8
     for k in range(spokes):
         t = TAU * k / spokes
-        a = (math.cos(t) * 0.16, wc + math.sin(t) * 0.16)
+        a = (math.cos(t) * 0.12, wc + math.sin(t) * 0.12)
         b = (math.cos(t) * (R - 0.05), wc + math.sin(t) * (R - 0.05))
         tm.path([Run(rect(0.05, 0.05, 0.0, -0.025)[j:j + 2], "ashlar") for j in range(4)],
                 [(a[0], y, a[1]), (b[0], y, b[1])], up=(0, 1, 0), mat=mat, caps=False)
-    hub = [(math.cos(t) * 0.17, math.sin(t) * 0.17) for t in np.linspace(0, TAU, 17)]
+    hub = [(math.cos(t) * 0.13, math.sin(t) * 0.13) for t in np.linspace(0, TAU, 17)]
     tm.path([Run(hub, "bead_reel")], [(0, y - 0.09, wc), (0, y + 0.09, wc)], up=(0, 0, 1), mat=mat, caps=True,
             cap_band=None, cap_decal="lotus_medallion")
     # triratna finials above the pillars: pedestal, disc and three prongs
@@ -230,12 +230,12 @@ def torana(tm: trim.TrimMesh, mat: str, detail: float) -> None:
         x = sx * GATE_HALF
         zt = ztop + 0.07 * (GATE_HALF / beams[2][0]) ** 2
         tm.box(mat, (x, y, zt + 0.1), (0.36, 0.3, 0.2), bands={k: "bead_reel" for k in ("+x", "-x", "+y", "-y")})
-        disc = [(math.cos(t) * 0.24, math.sin(t) * 0.24) for t in np.linspace(0, TAU, 21 if hi else 11)]
-        tm.path([Run(disc, "bead_reel")], [(x, y - 0.07, zt + 0.46), (x, y + 0.07, zt + 0.46)], up=(0, 0, 1), mat=mat,
+        disc = [(math.cos(t) * 0.2, math.sin(t) * 0.2) for t in np.linspace(0, TAU, 21 if hi else 11)]
+        tm.path([Run(disc, "bead_reel")], [(x, y - 0.06, zt + 0.4), (x, y + 0.06, zt + 0.4)], up=(0, 0, 1), mat=mat,
                 caps=True, cap_band=None, cap_decal="spiral_rosette")
-        for px, h, w in ((0.0, 0.72, 0.1), (-0.17, 0.46, 0.08), (0.17, 0.46, 0.08)):
-            tm.path([Run(rect(w, 0.1, 0.0, -0.05)[j:j + 2], "ashlar") for j in range(4)],
-                    [(x + px, y, zt + 0.62), (x + px * 1.4, y, zt + 0.62 + h)], up=(0, 1, 0), mat=mat, caps=True,
+        for px, h, w in ((0.0, 0.6, 0.09), (-0.15, 0.38, 0.07), (0.15, 0.38, 0.07)):
+            tm.path([Run(rect(w, 0.09, 0.0, -0.045)[j:j + 2], "ashlar") for j in range(4)],
+                    [(x + px, y, zt + 0.54), (x + px * 1.4, y, zt + 0.54 + h)], up=(0, 1, 0), mat=mat, caps=True,
                     cap_band="ashlar")
 
 
@@ -270,8 +270,8 @@ def dome(tm: trim.TrimMesh, mat: str, detail: float) -> None:
 
 def harmika_chhatra(tm: trim.TrimMesh, mat: str, z0: float, detail: float) -> None:
     hi = detail >= 0.75
-    half = 1.3
-    h = 1.05
+    half = 1.45
+    h = 1.1
     # corner + intermediate posts
     for i in range(4):
         for j in range(4):
@@ -292,7 +292,8 @@ def harmika_chhatra(tm: trim.TrimMesh, mat: str, z0: float, detail: float) -> No
         for zr in (z0 + 0.3, z0 + 0.58):
             tm.path([Run(lens(0.08, 0.18, 2)[:3], "medallion_frieze"), Run(lens(0.08, 0.18, 2)[2:], "medallion_frieze")],
                     [P(-half, -half, zr), P(half, -half, zr)], up=(0, 0, 1), mat=mat, caps=False, u_start=0.125)
-        tm.box(mat, P(0, -half, z0 + h - 0.1), (2 * half + 0.26, 0.26, 0.2), bands={"-y": "bead_reel", "+y": "bead_reel",
+        # copings run corner-centre to corner-centre: their ends sit inside the neighbours (no coplanar faces)
+        tm.box(mat, P(0, -half, z0 + h - 0.1), (2 * half, 0.26, 0.2), bands={"-y": "bead_reel", "+y": "bead_reel",
                                                                                     "+x": "ashlar", "-x": "ashlar"}, rot_z=rot)
     # yashti (shaft) and three chhatras (umbrellas) with lotus-petal tops
     tm.ring([Run([(0.1, z0 - 0.1), (0.09, z0 + 3.45)], "ashlar")], 12 if hi else 8, mat)
@@ -386,8 +387,8 @@ def grime_material(z_ground: float) -> bpy.types.Material:
     crev = nb.map_range(ao_local, 0.4, 1.0, 1.0, 0.0)
     # combine into an albedo multiplier (1 = clean)
     big = nb.noise(pos, scale=0.25, detail=3).outputs["Fac"]
-    dirt = nb.math("ADD", nb.math("MULTIPLY", damp, 0.32), nb.math("MULTIPLY", streak, 0.16))
-    dirt = nb.math("ADD", dirt, nb.math("MULTIPLY", crev, 0.22))
+    dirt = nb.math("ADD", nb.math("MULTIPLY", damp, 0.42), nb.math("MULTIPLY", streak, 0.22))
+    dirt = nb.math("ADD", dirt, nb.math("MULTIPLY", crev, 0.26))
     dirt = nb.math("ADD", dirt, nb.map_range(big, 0.3, 0.7, -0.04, 0.08))
     g = nb.map_range(dirt, 0.0, 1.0, 1.0, 0.0)
     comb = nb.node("ShaderNodeCombineColor")
@@ -461,16 +462,16 @@ for detail, tag, set_name, mres in LODS:
         render.setup_world(sun_elevation=24, sun_azimuth=230, strength=0.6, aerosol=2.2)
         render.add_sun(24, 230, 4.4, angle_deg=0.6, color="#ffe4c4")
         render.add_ground(500.0, "#6e5a44", 0.95, z=-0.05)
-        render.look_at_camera((-17.5, -24.0, 5.2), (0.0, -2.0, 4.6), lens=32)
+        render.look_at_camera((-15.5, -29.0, 4.4), (0.0, -3.5, 4.3), lens=32)
         ctx.add_file("preview", render.render(ctx.path("preview.png"), res, ctx.samples(96, 16)))
-        render.look_at_camera((-3.2, -16.6, 2.0), (0.0, -10.6, 5.6), lens=30)
+        render.look_at_camera((-2.6, -18.6, 1.8), (0.0, -11.8, 4.4), lens=30)
         ctx.add_file("preview_torana", render.render(ctx.path("preview_torana.png"), res, ctx.samples(96, 16)))
-        render.look_at_camera((5.5, -13.2, 1.7), (2.0, -9.0, 1.4), lens=40, fstop=5.6)
+        render.look_at_camera((6.2, -14.6, 1.7), (2.6, -10.2, 1.4), lens=40, fstop=5.6)
         ctx.add_file("preview_railing", render.render(ctx.path("preview_railing.png"), res, ctx.samples(96, 16)))
 
 ctx.meta.update(
     bounds=lod_info[0]["bounds"],
-    lodDistances=[0, 110],
+    lodDistances=[0, 120],
     minLod={"ultra": 0, "high": 0, "mobile": 0},
     materialSets=["sandstone_carved_red"],
     clips=[],

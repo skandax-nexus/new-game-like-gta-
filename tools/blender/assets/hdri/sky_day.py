@@ -15,6 +15,6 @@ from lib import core, sky  # noqa: E402
 
 ctx = core.begin(__file__, kind="hdri")
 ctx.meta.update(sky.bake_sky(ctx, sun_elevation=42.0, sun_azimuth=128.0, aerosol=1.8, air=1.0, ozone=1.0,
-                             ground_albedo=(0.24, 0.19, 0.14)))
+                             ground_albedo=(0.24, 0.19, 0.14), clouds=0.3))
 ctx.meta["description"] = "Clear late-morning sky, sun 42 deg SE, light haze (lookdev / daytime IBL)."
 ctx.finish()

@@ -15,7 +15,10 @@ determinism, rendering, persistence, QA hooks and performance budgets. Change re
 - **Three-level simulation** (GDD §9) with **deterministic, reproducible** results (GDD §15) so saves,
   replays, autoresolve and tests agree.
 - **Engine-agnostic simulation** so a future UE5 port can reuse the sim/data layers (ADR 0001).
-- **All content procedural** (no downloaded assets) - geometry, textures, audio generated at runtime.
+- **Content = code.** Runtime-procedural content (terrain, vegetation, settlement architecture, audio) plus
+  an offline **AAA content pipeline** (§18, ADR 0002): Blender-as-Python asset scripts -> Cycles bakes ->
+  gltf-transform / WebP tiers -> `public/assets/` + typed `src/assets/manifest.ts`. No hand-made binaries;
+  every pipeline asset has a procedural fallback so the game never breaks without it.
 
 ## 2. Module map
 
@@ -44,6 +47,10 @@ determinism, rendering, persistence, QA hooks and performance budgets. Change re
             +--------------------------------------------------------------------+
             | data/  factions, units, buildings, region, campaign, events, balance |
             +--------------------------------------------------------------------+
+
+ tools/blender (asset scripts) --npm run assets--> public/assets/ + src/assets/manifest.ts
+                                                       |
+                         src/assets/AssetManager (ctx.assets) --> render/materials --> scenes
 ```
 
 Dependency rules (enforced by `tests/core/purity.test.ts` for the sim side):
@@ -54,6 +61,7 @@ Dependency rules (enforced by `tests/core/purity.test.ts` for the sim side):
 | `data/*` | core | everything else |
 | `sim/*` | core, data, sim | three, DOM, render, ui, scenes, input, audio, app |
 | `render/*` | three, core, data, sim (pure helpers e.g. `volleyPoint`) | ui, scenes, app |
+| `assets/*` (AssetManager, manifest) | three, core, render/materials, render/architecture (fallbacks) | ui, scenes, app, sim |
 | `ui/*` | core, data, sim (read-only selectors), app/contracts | render internals, scenes |
 | `scenes/*` | everything | - |
 | `app/*` | everything | - |
@@ -263,8 +271,10 @@ any state shape change.
 - Crash reporter (`core/crash.ts`): `window.onerror` + `unhandledrejection` + loop/bus/scene errors +
   WebGL context loss -> ring buffer in `localStorage['samrajya.crashes']`, overlay with Copy /
   Download / Continue / Main menu / Reload; reports include build, scene, mode, quality, GPU, recent logs.
-- Tests: `npm test` (unit, purity, determinism). Smoke: `npm run smoke` (9 shots incl. 5,000-soldier
-  battle and phone viewports; fails on console errors, page errors, failed requests, crash reports).
+- Tests: `npm test` (unit, purity, determinism, asset manifest/budgets). Smoke: `npm run smoke` (14 shots
+  incl. 5,000-soldier battle, phone viewports and the asset viewer - stupa hero/close-up, sandstone
+  lookdev, mobile, `assets=off` fallback; fails on console errors, page errors, failed requests, crash
+  reports).
 
 ## 15. Performance budgets
 
@@ -308,9 +318,163 @@ formation sim 0.02 ms/step, soldier layer 0.3 ms/step.
 
 ## 17. Known gaps (owners' backlog)
 
+Content pipeline follow-ups (see §18-20): VAT baker (`tools/blender/lib/vat.py`) and crowd shader, impostor
+baker, KTX2/Basis textures (needs an encoder), sky bakes per hour + blending, character/animal assets,
+landmark set per faction, terrain material sets for the splat hook, Web Worker texture decode.
+
+
 Road-graph pathfinding for armies and flow-field pathing in battles (fords/bridges), cascaded shadows,
 vegetation/soldier LOD + impostors, grass and crops, battle-map apron beyond bounds, planar/SSR water,
 volumetric clouds + rain streaks, faction banner emblems, siege fortifications in battles, deeper
 economy (harvest cycles, prices, trade routes), politics (succession crises, rebellions spawning
 armies), diplomacy AI, espionage effects, campaign content (5 chapters), radial command wheel, terrain
 generation in a Web Worker, localization.
+
+## 18. AAA content pipeline (ADR 0002)
+
+```
+tools/blender/assets/<category>/<id>.py      deterministic asset script (imports tools/blender/lib)
+        |  npm run assets [-- <id>]           tools/assets/build.mjs: discover -> topo-sort deps -> content hash
+        v                                     (script + lib/*.py + dependency hashes + PIPELINE_VERSION)
+.asset-cache/<id>/                            Blender outputs: PNG/EXR/GLB + asset.json + build.log + previews
+        |  publish (tools/assets/publish.mjs)
+        v
+public/assets/textures/<material>/<map>_<size>.webp        sharp: lossy WebP (color, ORM, macro),
+public/assets/models/<model>/<model>.lod<N>.glb            near-lossless WebP (normals)
+public/assets/models/<model>/<set>.<map>_<size>.webp       gltf-transform: dedup, flatten, join, weld,
+public/assets/hdri/<sky>_<width>.exr                       prune(keep attributes), reorder, quantize, meshopt
+        |  record + codegen
+        v
+tools/assets/published.json (build record)  ->  src/assets/manifest.ts (typed, `as const satisfies AssetManifest`)
+        |
+        v
+src/assets/AssetManager.ts (ctx.assets)  ->  render/materials (PBR / splat)  ->  scenes
+```
+
+**Commands.** `npm run assets` (all, incremental) | `-- <id>` (one + dirty deps) | `--force` | `--draft`
+(quarter-res, few samples; refused for commits) | `--no-preview` | `--republish` (publish from cache, no
+Blender) | `--list` | `--check` (files, sizes, manifest freshness, budgets; CI-safe) | `--selftest`
+(library regression test, `tools/blender/selftest.py`). `BLENDER_PY` selects the interpreter
+(default `/root/.venvs/blender/bin/python`). Run a script directly for debugging:
+`SAMRAJYA_DRAFT=1 /root/.venvs/blender/bin/python tools/blender/assets/models/stupa_sanchi.py`.
+
+**Asset kinds.**
+
+| Kind | Script outputs (asset.json roles) | Published | Manifest entry |
+|---|---|---|---|
+| `material` | `baseColor` (sRGB), `normal` (16-bit, OpenGL +Y), `orm` (R AO, G rough, B metal), `height` (cache only) | WebP per tier | tile size, average color, roughness, trims (UV v ranges), decals |
+| `model` | `lod0`, `lod1`... GLB (texture-less proxy materials, UVMap + UVLightmap, tangents); `{set, map}` textures (e.g. `macro`) | meshopt GLBs + set WebPs | LODs (triangles, draw calls, switch distance), minLod per tier, bounds, clips, materialSets, sets |
+| `hdri` | `hdri_<tier>` EXR (half, DWAB, sun disc removed) | EXR per tier | sun direction / color / intensity, ambient irradiance |
+
+**Naming conventions.**
+- Asset ids: `snake_case`, `<subject>_<variant>` from general to specific (`sandstone_carved_red`,
+  `stupa_sanchi`, `sky_golden`); file name == id; categories = folders (`materials/`, `models/`, `hdri/`,
+  later `characters/`, `props/`, `vegetation/`, `fx/`). Dependencies via `@depends a, b` in the docstring.
+- Texture maps: `baseColor`, `normal`, `orm`, `macro`, `emissive`, `height`. Blender objects `<id>_lod<N>`;
+  UV layers `UVMap` (TEXCOORD_0: sets/trims) and `UVLightmap` (TEXCOORD_1: macro). Bones and clips use the
+  standard names in `lib/rig.py` / `lib/anim.py` (`idle walk run attack die ...`, custom = `x_<name>`).
+- Units meters; Blender +Z up and models face -Y, which exports to three.js +Y up / facing +Z (south).
+
+**Material binding contract** (`lib/export.py` -> `AssetManager.bindMaterials`): proxy material extras
+`samrajya_set` (`"<material id>"` or `"<model id>:<set>"`), `samrajya_tint`, `samrajya_uv_scale`,
+`samrajya_macro`, `samrajya_normal_scale`, `samrajya_roughness_scale`, `samrajya_detail_ao`. glTF factors
+hold average color x tint so the GLB is plausible without textures. Trim sheets: models map faces onto
+named bands (`lib/trim.py` sweeps with automatic band UVs and texture handedness) and decals (single
+motifs such as `lotus_medallion`, `spiral_rosette`).
+
+**Tiers and budgets** (enforced by `build.mjs` and `tests/core/assets.test.ts`).
+
+| Asset tier | Quality tiers | Max texture | Payload budget | Notes |
+|---|---|---|---|---|
+| ultra | ultra | 2048^2 | 80 MB | GTAO full, all LODs |
+| high | high | 1024^2 | 40 MB | |
+| mobile | medium, low | 512^2 | 15 MB | `minLod` may skip LOD0 |
+| off | `?assets=off`, single-file build | - | 0 | procedural fallbacks |
+
+Single shipped file <= 8 MB. Triangle guides: hero landmark LOD0 <= 120k / LOD1 <= 30k; props <= 5k;
+soldiers 0.3-0.8k. Measured (ultra / high / mobile): `sandstone_carved_red` 4.39 / 1.29 / 0.33 MB
+(normal map near-lossless = 70 %), `ground_dry_earth` 2.90 / 0.85 / 0.26 MB, `stupa_sanchi` 1.83 / 1.49 /
+1.30 MB (LOD0 45.1k tris 808 KB, LOD1 12.2k tris 341 KB, 3 draw calls each, + macro maps), skies 0.58 /
+0.21 / 0.08 MB each; whole library 10.3 / 4.1 / 2.0 MB. Normal-map WebP study (1024^2): lossy q90 = 4.8 deg
+mean / 130 deg max error (unusable), near-lossless 60 = 0.7 / 3.4 deg, lossless = 1.6 MB.
+
+**Blender library (`tools/blender/lib`).** `core` (begin/AssetContext, seeding, units, dependencies,
+asset.json), `texgen` (periodic numpy noise, blur, normals, AO, PNG IO, quick relief shading), `ornament`
+(carved motif height fields: ashlar, lotus medallion, padma, bead-and-reel, dentil, patra-lata scroll;
+sheet composition, trims, decals), `stone` (weathering + sandstone albedo/roughness), `nodes`
+(NodeBuilder, seamless 4D torus noise), `materials` (texture-set / material-set preview materials),
+`bake` (Cycles texture sets, selected-to-active normals/AO, heightfield AO, ORM packing), `mesh`
+(headless modifiers: bevel, solidify, array, subdivide, displace, weld, triangulate; box/cylinder/smart/
+lightmap UVs), `trim` (trim-sheet sweep modeling), `lod` (decimate / planar / make_lods), `rig`
+(armatures, humanoid/quadruped specs, proximity/heat skinning), `anim` (standard clips, loops, NLA
+stash), `export` (GLB + runtime proxies + bounds), `sky` (physical sky -> EXR tiers + sun), `render`
+(Cycles previews: sky, sun, camera framing, lookdev set, DoF).
+
+**Runtime API (`src/assets`).** `ctx.assets: AssetManager` - `loadModel(id, {lod, castShadow})` ->
+`{object (THREE.LOD), animations, release()}`; `loadMaterial(id, opts)`; `loadTextureSet(ref)`;
+`loadHdri(id)` -> `{texture, envMap (PMREM), sun, release()}`; `preload(ids, label)`; `onProgress(cb)`
+(+ bus `assets:progress`); `registerModelFallback(id, factory)` (`src/assets/fallbacks.ts`);
+`setTier(tier)`; typed getters `material(id)`, `model(id)`, `hdri(id)` with `MaterialAssetId` /
+`ModelAssetId` / `HdriAssetId`. Textures load via fetch + `createImageBitmap` (no premultiply/color
+conversion, `flipY = false` like glTF) and are uploaded during loading (`renderer.initTexture`).
+Everything is ref-counted; GPU memory is freed when the last handle is released. Built-in three.js
+geometries need `toGltfUv()` before using set textures.
+
+**Critique loop (mandatory).** Asset scripts render Cycles previews (`.asset-cache/<id>/preview*.png`).
+Inspect them with the Read tool, fix, re-run; then check in engine:
+`?scene=assetviewer&asset=<id>&hdri=sky_golden&camera=hero|close|detail|overview|turntable&quality=ultra`
+(`&assets=off` shows the fallback). Final images live in `docs/screenshots/pipeline/`.
+
+**Distribution.** `dist/` (index.html + `assets/` incl. the published content) is the shipped artifact.
+`npm run build:single` stays a lightweight fallback: it cannot inline tens of MB of assets, so it is built
+with `publicDir: false` and `__ASSETS_ENABLED__ = false` (procedural fallbacks only).
+
+## 19. AAA rendering pipeline (target: "best of WebGL2")
+
+Reference: AoE-level clarity at strategy zoom, Wukong-level fidelity up close. Status: **done** = in the
+codebase, **next** = owner ticket (Lead Graphics Engineer unless noted).
+
+| Feature | Status | Technique / owner notes |
+|---|---|---|
+| HDR image-based lighting | done (asset viewer), next: World/Battle/Hero | `loadHdri` -> PMREM env + DirectionalLight from the extracted sun (no double counting); per-hour sky bakes + blend for time of day |
+| PBR materials from baked sets | done | `render/materials/pbr.ts`: map/normal/ORM, detail AO (ORM.r, uv0) x macro AO (uv1), macro albedo, wetness hook (`MATERIAL_GLOBALS.wetness`) |
+| Terrain splatting | hook done, next: content | `render/materials/splat.ts`: 4 height-blended PBR layers, world planar UVs, macro variation; add triplanar cliffs + distance blend |
+| Shadows | next | CSM (`three/examples/jsm/csm`) 3-4 cascades on high/ultra with PCSS-style kernel; contact shadows (screen-space ray march) on ultra |
+| Ambient occlusion | done | GTAO (high: half res, ultra: full) |
+| Reflections | next | SSR for water/wet stone on ultra; planar reflections for rivers on high |
+| Volumetrics | next | height fog with sun in-scattering (analytic, in the grade pass), god rays (radial blur of occlusion) |
+| Anti-aliasing | done (SMAA/FXAA), next TAA | TAA with velocity for hero/cutscenes (needs motion vectors for instanced crowds) |
+| Bloom, grade | done | UnrealBloom (HDR threshold), grade pass; next: per time-of-day LUTs (`LUTPass`), AgX option |
+| Depth of field | next | BokehPass in hero mode / cutscenes (focus on the hero, aperture from camera framing) |
+| Lens | next | subtle chromatic aberration, vignette (done), lens dirt on bloom |
+| Vegetation | partial | instanced + wind (done); next: GPU grass field, tree LOD + octahedral impostors from Blender |
+| Weather | partial | rain particles (done); next: wetness (hook done), puddles, rain streaks on glass-like surfaces, lightning flashes |
+| Crowds | partial | GPU vertex animation (done); next: VAT (§20) |
+
+Frame order (target): depth pre-pass (ultra) -> opaque (IBL + CSM) -> GTAO -> SSR (ultra) -> transparent
+-> volumetric fog/god rays -> bloom -> DoF (hero) -> tone map (ACES/AgX) + LUT grade -> TAA/SMAA -> UI.
+Every knob comes from `QualitySettings`; low tier keeps a single merged post pass.
+
+## 20. Crowd rendering (VAT)
+
+Goal: thousands of soldiers with real skeletal animation at InstancedMesh cost (GDD §9, 1,000-5,000).
+
+1. **Author** characters as Blender scripts: modular body + kit meshes (faction gear), `rig.humanoid()`
+   skeleton (standard bone names), `rig.skin_proximity()` / `skin_auto()`, clips via `anim.cycle()` /
+   keys with the standard names (`idle walk run attack shoot hit die dead brace charge rout cheer work`).
+   Export a skinned GLB per unit class for hero/close-up use (already supported, see `selftest.py`).
+2. **Bake VAT** (next ticket: `tools/blender/lib/vat.py`): for each clip and frame (15-30 fps), evaluate
+   the deformed mesh and write object-space positions (and octahedral-packed normals) into a half-float
+   texture: one column per vertex, one row per frame, clips stacked; a clip table (start row, frames, fps,
+   loop) goes into the manifest (`clips`). Alternative for prototypes: bake at load time from the
+   SkinnedMesh with `AnimationMixer` (same layout, cached per unit class).
+3. **Runtime**: one `InstancedMesh` per unit class and LOD; per-instance attributes (clip, phase, speed,
+   faction tint index, LOD fade); the vertex shader `texelFetch`es frame N and N+1 by `gl_VertexID`
+   and lerps; `customDepthMaterial` uses the same VAT code for shadows. `SoldierBuffers` (SoA) maps each
+   soldier's animation state to clip/phase - the formation layer stays authoritative.
+4. **LOD chain**: VAT full mesh (0.6-0.8k tris) near -> VAT simplified mesh (150-250 tris, decimated with
+   `lod.decimate` so vertex ids are re-baked) mid -> impostor billboards (8 directions x clip frames,
+   baked in Blender) far; distances from `QualitySettings.soldierLod`, CPU compaction as today.
+5. **Budget**: 700 verts x 12 clips x 24 frames ~ 200k texels x 2 (pos + normal) in RGBA16F ~ 3.2 MB per
+   class; keep textures <= 4096 wide (mobile) by wrapping vertex columns. Faction colors via a tint mask
+   in vertex color + per-instance color.

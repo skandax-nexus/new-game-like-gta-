@@ -16,6 +16,7 @@ Modules
     nodes     shader node-tree builder (+ seamless 4D "torus" noise mapping for tiling textures)
     materials PBR material creation / texture-set materials / glTF proxy materials
     mesh      modeling utilities (bevel, solidify, array, displace, UVs, cleanup, normals)
+    trim      trim-sheet modeling: swept profiles / boxes / caps with automatic band + decal UVs
     bake      Cycles CPU baking (texture sets, selected-to-active normal/AO, heightfield tiles)
     lod       LOD generation (decimate ratios), triangle counts
     rig       armatures, bone chains, skinning
@@ -23,4 +24,7 @@ Modules
     export    glTF export (+Y up, separate clips, extras) and bounds
     render    Cycles preview renders (camera framing, sun + sky) -> PNG for the Read-tool critique loop
     sky       physical sky (Blender multiple-scattering sky) baked to equirect HDR (EXR) per time of day
+
+Regression test for the whole library: tools/blender/selftest.py (npm run assets -- --selftest).
+Conventions, naming, budgets and the runtime contract: docs/ARCHITECTURE.md section 18.
 """

@@ -127,6 +127,42 @@ def _save_exr(arr: np.ndarray, path: Path, codec: str = "DWAB") -> Path:
     return path
 
 
+def add_clouds(sky: np.ndarray, sun_dir_bl: tuple[float, float, float], sun_rgb: np.ndarray, coverage: float,
+               rng: np.random.Generator, scale: float = 1.0) -> np.ndarray:
+    """Composite a fair-weather cloud layer (flat layer projection, fBm density, forward-scattering sun
+    lighting, darker bases, horizon fade) into an equirect sky (Blender axes, top row = zenith)."""
+    if coverage <= 0:
+        return sky
+    H, W = sky.shape[:2]
+    lat = (0.5 - (np.arange(H) + 0.5) / H) * math.pi
+    phi = (0.5 - (np.arange(W) + 0.5) / W) * 2 * math.pi  # u = 0.5 -> +X, u = 0.25 -> +Y
+    LAT, PHI = np.meshgrid(lat, phi, indexing="ij")
+    dx, dy, dz = np.cos(LAT) * np.cos(PHI), np.cos(LAT) * np.sin(PHI), np.sin(LAT)
+    up = dz > 0.004
+    t = np.where(up, 1.0 / np.maximum(dz, 0.004), 0.0)
+    px, py = dx * t * 1.6 * scale, dy * t * 1.6 * scale
+    per = 4096
+    dens = np.zeros_like(px, dtype=F)
+    amp, freq, norm = 1.0, 1.0, 0.0
+    for _ in range(6):
+        dens += amp * tg.perlin(px * freq + 17.3, py * freq - 5.1, (per, per), rng)
+        norm += amp
+        amp *= 0.5
+        freq *= 2.0
+    dens = dens / norm * 0.5 + 0.5
+    lo = 0.62 - 0.32 * coverage
+    d = tg.smoothstep(lo, lo + 0.13, dens) * tg.smoothstep(0.015, 0.22, dz) * up
+    sdir = np.array(sun_dir_bl, F)
+    mu = dx * sdir[0] + dy * sdir[1] + dz * sdir[2]
+    phase = 0.55 + 1.6 * np.clip(mu, 0, 1) ** 8 + 0.25 * np.clip(mu, 0, 1) ** 2
+    sky_avg = sky[: H // 2].reshape(-1, 3).mean(axis=0)
+    lit = sun_rgb[None, None, :] * (0.32 * phase * (0.75 + 0.25 * (1 - d)))[..., None]
+    base_dark = (1.0 - 0.55 * d**1.3)[..., None]
+    cloud = (lit * base_dark + sky_avg[None, None, :] * 0.75).astype(F)
+    a = (0.92 * d)[..., None]
+    return (sky * (1 - a) + cloud * a).astype(F)
+
+
 def blender_to_three(v: tuple[float, float, float]) -> list[float]:
     return [v[0], v[2], -v[1]]
 
@@ -134,7 +170,8 @@ def blender_to_three(v: tuple[float, float, float]) -> list[float]:
 def bake_sky(ctx: AssetContext, sun_elevation: float = 35.0, sun_azimuth: float = 135.0,
              tiers: dict[str, int] | None = None, altitude: float = 300.0, air: float = 1.0, aerosol: float = 1.6,
              ozone: float = 1.0, ground_albedo: tuple[float, float, float] = (0.22, 0.18, 0.13),
-             sun_size_deg: float = 0.545, samples: int = 16, sun_target: float = SUN_TARGET) -> dict[str, Any]:
+             sun_size_deg: float = 0.545, samples: int = 16, sun_target: float = SUN_TARGET,
+             clouds: float = 0.0, cloud_scale: float = 1.0) -> dict[str, Any]:
     tiers = tiers or {"ultra": 2048, "high": 1024, "mobile": 512}
     W = max(tiers.values())
     if ctx.draft:
@@ -176,6 +213,9 @@ def bake_sky(ctx: AssetContext, sun_elevation: float = 35.0, sun_azimuth: float 
         # color (max component 1) * intensity == scaled sun irradiance
         sun_intensity = float(e_sun.max() * scale)
     sky = sky * scale
+    if clouds > 0:
+        with timer("clouds"):
+            sky = add_clouds(sky, d_bl, np.array(sun_color, F) * sun_intensity, clouds, ctx.rng, cloud_scale)
     # --- ground bounce below the horizon
     v_lat = (0.5 - (np.arange(H) + 0.5) / H) * math.pi
     lat_w = np.cos(v_lat)[:, None]
@@ -207,6 +247,7 @@ def bake_sky(ctx: AssetContext, sun_elevation: float = 35.0, sun_azimuth: float 
         "ambientIrradiance": round(ambient, 4),
         "scale": scale,
         "groundAlbedo": list(ground_albedo),
+        "clouds": clouds,
         "tiers": files,
     }
     log(f"sky: sun {sun_dir} intensity {sun_intensity:.3f} color {np.round(sun_color, 3)} ambient {ambient:.3f}")

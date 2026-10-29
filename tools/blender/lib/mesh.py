@@ -373,7 +373,11 @@ def lightmap_uv(obj: bpy.types.Object, uv_name: str = "UVLightmap", margin: floa
     def run() -> None:
         bpy.ops.uv.smart_project(angle_limit=math.radians(60.0), island_margin=margin, area_weight=0.0,
                                  correct_aspect=True, scale_to_bounds=False)
-        bpy.ops.uv.pack_islands(udim_source="CLOSEST_UDIM", rotate=True, margin_method="FRACTION", margin=margin)
+        try:  # concave packing nests islands inside rings/annuli (domes, copings, paving)
+            bpy.ops.uv.pack_islands(udim_source="CLOSEST_UDIM", rotate=True, margin_method="FRACTION", margin=margin,
+                                    shape_method="CONCAVE")
+        except TypeError:
+            bpy.ops.uv.pack_islands(udim_source="CLOSEST_UDIM", rotate=True, margin_method="FRACTION", margin=margin)
     _uv_operator(obj, uv_name, run)
 
 

@@ -1,12 +1,186 @@
 {
   "pipelineVersion": 1,
   "assets": {
+    "ground_dry_earth": {
+      "id": "ground_dry_earth",
+      "kind": "material",
+      "category": "materials",
+      "script": "tools/blender/assets/materials/ground_dry_earth.py",
+      "inputHash": "9c0389aba33dc37d389a5b25548493517c7a68d484bad8ecd5ba56003160881d",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "averageColor": "#6a4f36",
+        "decals": [],
+        "description": "Dry dusty plains earth with pebbles, drying cracks and straw litter (4 m tile).",
+        "metalness": 0,
+        "normalScale": 1,
+        "roughness": 0.909,
+        "tileSizeMeters": [
+          4,
+          4
+        ],
+        "trims": []
+      },
+      "files": [
+        {
+          "path": "textures/ground_dry_earth/baseColor_2048.webp",
+          "bytes": 140542,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "texture",
+          "map": "baseColor",
+          "size": 2048
+        },
+        {
+          "path": "textures/ground_dry_earth/baseColor_1024.webp",
+          "bytes": 58006,
+          "tiers": [
+            "high"
+          ],
+          "kind": "texture",
+          "map": "baseColor",
+          "size": 1024
+        },
+        {
+          "path": "textures/ground_dry_earth/baseColor_512.webp",
+          "bytes": 19594,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "texture",
+          "map": "baseColor",
+          "size": 512
+        },
+        {
+          "path": "textures/ground_dry_earth/normal_2048.webp",
+          "bytes": 2655690,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "texture",
+          "map": "normal",
+          "size": 2048
+        },
+        {
+          "path": "textures/ground_dry_earth/normal_1024.webp",
+          "bytes": 739124,
+          "tiers": [
+            "high"
+          ],
+          "kind": "texture",
+          "map": "normal",
+          "size": 1024
+        },
+        {
+          "path": "textures/ground_dry_earth/normal_512.webp",
+          "bytes": 219870,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "texture",
+          "map": "normal",
+          "size": 512
+        },
+        {
+          "path": "textures/ground_dry_earth/orm_2048.webp",
+          "bytes": 243542,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "texture",
+          "map": "orm",
+          "size": 2048
+        },
+        {
+          "path": "textures/ground_dry_earth/orm_1024.webp",
+          "bytes": 95638,
+          "tiers": [
+            "high"
+          ],
+          "kind": "texture",
+          "map": "orm",
+          "size": 1024
+        },
+        {
+          "path": "textures/ground_dry_earth/orm_512.webp",
+          "bytes": 30056,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "texture",
+          "map": "orm",
+          "size": 512
+        }
+      ],
+      "set": {
+        "maps": {
+          "baseColor": {
+            "ultra": {
+              "path": "textures/ground_dry_earth/baseColor_2048.webp",
+              "bytes": 140542,
+              "size": 2048
+            },
+            "high": {
+              "path": "textures/ground_dry_earth/baseColor_1024.webp",
+              "bytes": 58006,
+              "size": 1024
+            },
+            "mobile": {
+              "path": "textures/ground_dry_earth/baseColor_512.webp",
+              "bytes": 19594,
+              "size": 512
+            }
+          },
+          "normal": {
+            "ultra": {
+              "path": "textures/ground_dry_earth/normal_2048.webp",
+              "bytes": 2655690,
+              "size": 2048
+            },
+            "high": {
+              "path": "textures/ground_dry_earth/normal_1024.webp",
+              "bytes": 739124,
+              "size": 1024
+            },
+            "mobile": {
+              "path": "textures/ground_dry_earth/normal_512.webp",
+              "bytes": 219870,
+              "size": 512
+            }
+          },
+          "orm": {
+            "ultra": {
+              "path": "textures/ground_dry_earth/orm_2048.webp",
+              "bytes": 243542,
+              "size": 2048
+            },
+            "high": {
+              "path": "textures/ground_dry_earth/orm_1024.webp",
+              "bytes": 95638,
+              "size": 1024
+            },
+            "mobile": {
+              "path": "textures/ground_dry_earth/orm_512.webp",
+              "bytes": 30056,
+              "size": 512
+            }
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 3039774,
+        "high": 892768,
+        "mobile": 269520
+      }
+    },
     "sandstone_carved_red": {
       "id": "sandstone_carved_red",
       "kind": "material",
       "category": "materials",
       "script": "tools/blender/assets/materials/sandstone_carved_red.py",
-      "inputHash": "2a5f4e183a929dae849efc6168f94343eb2a589d62c8fccb420f0d1f394d1f4a",
+      "inputHash": "544c1d8383523e0b7926cc12439c5365e40d002e9f6436703edf38254952041d",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -312,11 +486,12 @@
       "kind": "hdri",
       "category": "hdri",
       "script": "tools/blender/assets/hdri/sky_day.py",
-      "inputHash": "be539af11dad8b5003b5a1cd9be515f30e87a79483d116f096ed05c138c12443",
+      "inputHash": "9680bf552028676ff8deae67fb97aecb5d833a6844b46395d74aa4e2f710d2a0",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
-        "ambientIrradiance": 0.3354,
+        "ambientIrradiance": 0.5766,
+        "clouds": 0.3,
         "description": "Clear late-morning sky, sun 42 deg SE, light haze (lookdev / daytime IBL).",
         "groundAlbedo": [
           0.24,
@@ -357,7 +532,7 @@
       "files": [
         {
           "path": "hdri/sky_day_2048.exr",
-          "bytes": 123046,
+          "bytes": 605148,
           "tiers": [
             "ultra"
           ],
@@ -367,7 +542,7 @@
         },
         {
           "path": "hdri/sky_day_1024.exr",
-          "bytes": 45936,
+          "bytes": 220713,
           "tiers": [
             "high"
           ],
@@ -377,7 +552,7 @@
         },
         {
           "path": "hdri/sky_day_512.exr",
-          "bytes": 17886,
+          "bytes": 80958,
           "tiers": [
             "mobile"
           ],
@@ -390,28 +565,28 @@
         "files": {
           "ultra": {
             "path": "hdri/sky_day_2048.exr",
-            "bytes": 123046,
+            "bytes": 605148,
             "width": 2048,
             "height": 1024
           },
           "high": {
             "path": "hdri/sky_day_1024.exr",
-            "bytes": 45936,
+            "bytes": 220713,
             "width": 1024,
             "height": 512
           },
           "mobile": {
             "path": "hdri/sky_day_512.exr",
-            "bytes": 17886,
+            "bytes": 80958,
             "width": 512,
             "height": 256
           }
         }
       },
       "bytes": {
-        "ultra": 123046,
-        "high": 45936,
-        "mobile": 17886
+        "ultra": 605148,
+        "high": 220713,
+        "mobile": 80958
       }
     },
     "sky_golden": {
@@ -419,11 +594,12 @@
       "kind": "hdri",
       "category": "hdri",
       "script": "tools/blender/assets/hdri/sky_golden.py",
-      "inputHash": "002bf07d1014cd12a900c7ecd3651f4b6626e5a4cef73a85c612562d693ff4a4",
+      "inputHash": "b3fbb01b5f89342e252fc5e1703cc641d1b3668a2017377c1c50666f37d28504",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
-        "ambientIrradiance": 0.5491,
+        "ambientIrradiance": 0.7737,
+        "clouds": 0.38,
         "description": "Golden hour, sun 7 deg W, warm dusty haze (cinematic / hero mode).",
         "groundAlbedo": [
           0.26,
@@ -464,7 +640,7 @@
       "files": [
         {
           "path": "hdri/sky_golden_2048.exr",
-          "bytes": 140674,
+          "bytes": 617120,
           "tiers": [
             "ultra"
           ],
@@ -474,7 +650,7 @@
         },
         {
           "path": "hdri/sky_golden_1024.exr",
-          "bytes": 55145,
+          "bytes": 228101,
           "tiers": [
             "high"
           ],
@@ -484,7 +660,7 @@
         },
         {
           "path": "hdri/sky_golden_512.exr",
-          "bytes": 21183,
+          "bytes": 83997,
           "tiers": [
             "mobile"
           ],
@@ -497,28 +673,212 @@
         "files": {
           "ultra": {
             "path": "hdri/sky_golden_2048.exr",
-            "bytes": 140674,
+            "bytes": 617120,
             "width": 2048,
             "height": 1024
           },
           "high": {
             "path": "hdri/sky_golden_1024.exr",
-            "bytes": 55145,
+            "bytes": 228101,
             "width": 1024,
             "height": 512
           },
           "mobile": {
             "path": "hdri/sky_golden_512.exr",
-            "bytes": 21183,
+            "bytes": 83997,
             "width": 512,
             "height": 256
           }
         }
       },
       "bytes": {
-        "ultra": 140674,
-        "high": 55145,
-        "mobile": 21183
+        "ultra": 617120,
+        "high": 228101,
+        "mobile": 83997
+      }
+    },
+    "stupa_sanchi": {
+      "id": "stupa_sanchi",
+      "kind": "model",
+      "category": "models",
+      "script": "tools/blender/assets/models/stupa_sanchi.py",
+      "inputHash": "744157d56677514d0620d6875bf4a7e2a0c7781bf0993055d544a26609dd6b21",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "bounds": {
+          "center": [
+            0,
+            5.6688,
+            0
+          ],
+          "max": [
+            12.6,
+            11.3875,
+            12.6
+          ],
+          "min": [
+            -12.6,
+            -0.05,
+            -12.6
+          ],
+          "radius": 18.7143
+        },
+        "clips": [],
+        "description": "Sanchi-style stupa with carved torana, railings, drum, stairway, harmika and chhatras (trim-sheet sandstone, macro AO/grime).",
+        "footprintMeters": [
+          25.2,
+          25.2
+        ],
+        "lodDistances": [
+          0,
+          120
+        ],
+        "materialSets": [
+          "sandstone_carved_red"
+        ],
+        "minLod": {
+          "high": 0,
+          "mobile": 0,
+          "ultra": 0
+        },
+        "triangles": [
+          45108,
+          12220
+        ]
+      },
+      "files": [
+        {
+          "path": "models/stupa_sanchi/stupa_sanchi.lod0.glb",
+          "bytes": 827796,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "model",
+          "lod": 0,
+          "triangles": 45108
+        },
+        {
+          "path": "models/stupa_sanchi/stupa_sanchi.lod1.glb",
+          "bytes": 349340,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "model",
+          "lod": 1,
+          "triangles": 12220
+        },
+        {
+          "path": "models/stupa_sanchi/macro.macro_2048.webp",
+          "bytes": 688864,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "texture",
+          "map": "macro",
+          "size": 2048
+        },
+        {
+          "path": "models/stupa_sanchi/macro.macro_1024.webp",
+          "bytes": 333548,
+          "tiers": [
+            "high"
+          ],
+          "kind": "texture",
+          "map": "macro",
+          "size": 1024
+        },
+        {
+          "path": "models/stupa_sanchi/macro.macro_512.webp",
+          "bytes": 127100,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "texture",
+          "map": "macro",
+          "size": 512
+        },
+        {
+          "path": "models/stupa_sanchi/macro_lod1.macro_512.webp",
+          "bytes": 55316,
+          "tiers": [
+            "ultra",
+            "high",
+            "mobile"
+          ],
+          "kind": "texture",
+          "map": "macro",
+          "size": 512
+        }
+      ],
+      "lods": [
+        {
+          "lod": 0,
+          "path": "models/stupa_sanchi/stupa_sanchi.lod0.glb",
+          "bytes": 827796,
+          "triangles": 45108,
+          "drawCalls": 3
+        },
+        {
+          "lod": 1,
+          "path": "models/stupa_sanchi/stupa_sanchi.lod1.glb",
+          "bytes": 349340,
+          "triangles": 12220,
+          "drawCalls": 3
+        }
+      ],
+      "sets": {
+        "macro": {
+          "maps": {
+            "macro": {
+              "ultra": {
+                "path": "models/stupa_sanchi/macro.macro_2048.webp",
+                "bytes": 688864,
+                "size": 2048
+              },
+              "high": {
+                "path": "models/stupa_sanchi/macro.macro_1024.webp",
+                "bytes": 333548,
+                "size": 1024
+              },
+              "mobile": {
+                "path": "models/stupa_sanchi/macro.macro_512.webp",
+                "bytes": 127100,
+                "size": 512
+              }
+            }
+          }
+        },
+        "macro_lod1": {
+          "maps": {
+            "macro": {
+              "ultra": {
+                "path": "models/stupa_sanchi/macro_lod1.macro_512.webp",
+                "bytes": 55316,
+                "size": 512
+              },
+              "high": {
+                "path": "models/stupa_sanchi/macro_lod1.macro_512.webp",
+                "bytes": 55316,
+                "size": 512
+              },
+              "mobile": {
+                "path": "models/stupa_sanchi/macro_lod1.macro_512.webp",
+                "bytes": 55316,
+                "size": 512
+              }
+            }
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 1921316,
+        "high": 1566000,
+        "mobile": 1359552
       }
     }
   }

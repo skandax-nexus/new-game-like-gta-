@@ -20,9 +20,8 @@
  *   factor-only PBR; HDRIs resolve to null (caller keeps its procedural sky). Failures are console.warn'ed.
  */
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
-import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
+import type { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import type { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import type { QualityTier } from '../core/types';
 import { configureSetTexture, createPbrMaterial, disposePbrMaterial, type PbrTextures } from '../render/materials/pbr';
@@ -154,8 +153,8 @@ export class AssetManager {
   private readonly modelFallbacks = new Map<string, () => THREE.Object3D>();
   private readonly listeners = new Set<(p: AssetProgress) => void>();
   private readonly warned = new Set<string>();
-  private readonly gltfLoader: GLTFLoader;
-  private readonly exrLoader: EXRLoader;
+  /** Loaders are imported lazily (own chunk) the first time a model / HDRI is requested. */
+  private loaders: Promise<{ gltf: GLTFLoader; exr: EXRLoader }> | null = null;
   private pmrem: THREE.PMREMGenerator | null = null;
   private progress = { loaded: 0, total: 0, bytesLoaded: 0, bytesTotal: 0, label: '' };
   private inflightBytes = new Map<number, number>();
@@ -168,10 +167,22 @@ export class AssetManager {
     this.anisotropy = opts.anisotropy ?? 4;
     const base = opts.baseUrl ?? `${typeof import.meta.env !== 'undefined' ? import.meta.env.BASE_URL : './'}assets/`;
     this.baseUrl = base.endsWith('/') ? base : `${base}/`;
-    this.gltfLoader = new GLTFLoader();
-    this.gltfLoader.setMeshoptDecoder(MeshoptDecoder);
-    this.exrLoader = new EXRLoader();
-    this.exrLoader.setDataType(THREE.HalfFloatType);
+  }
+
+  private getLoaders(): Promise<{ gltf: GLTFLoader; exr: EXRLoader }> {
+    this.loaders ??= (async () => {
+      const [g, e, m] = await Promise.all([
+        import('three/examples/jsm/loaders/GLTFLoader.js'),
+        import('three/examples/jsm/loaders/EXRLoader.js'),
+        import('three/examples/jsm/libs/meshopt_decoder.module.js'),
+      ]);
+      const gltf = new g.GLTFLoader();
+      gltf.setMeshoptDecoder(m.MeshoptDecoder);
+      const exr = new e.EXRLoader();
+      exr.setDataType(THREE.HalfFloatType);
+      return { gltf, exr };
+    })();
+    return this.loaders;
   }
 
   // ------------------------------------------------------------------ configuration / queries
@@ -390,7 +401,8 @@ export class AssetManager {
   private async fetchGltf(url: string, bytes: number): Promise<LoadedGltf> {
     const id = this.beginLoad(bytes);
     try {
-      const gltf = await this.gltfLoader.loadAsync(url, (e: ProgressEvent) => this.updateLoad(id, e.loaded));
+      const { gltf: loader } = await this.getLoaders();
+      const gltf = await loader.loadAsync(url, (e: ProgressEvent) => this.updateLoad(id, e.loaded));
       return { scene: gltf.scene, animations: gltf.animations };
     } finally {
       this.endLoad(id, bytes);
@@ -533,7 +545,8 @@ export class AssetManager {
         async () => {
           const lid = this.beginLoad(file.bytes);
           try {
-            const tex = await this.exrLoader.loadAsync(url, (e: ProgressEvent) => this.updateLoad(lid, e.loaded));
+            const { exr } = await this.getLoaders();
+            const tex = await exr.loadAsync(url, (e: ProgressEvent) => this.updateLoad(lid, e.loaded));
             tex.mapping = THREE.EquirectangularReflectionMapping;
             tex.colorSpace = THREE.LinearSRGBColorSpace;
             tex.minFilter = THREE.LinearFilter;

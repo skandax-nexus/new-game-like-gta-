@@ -11,6 +11,9 @@
  *   npm run assets -- --list             list assets, kinds, dependencies and state
  *   npm run assets -- --check            verify published files + manifest + budgets (no Blender, CI-safe)
  *   npm run assets -- --selftest         run tools/blender/selftest.py (library regression test)
+ *   npm run assets -- --previews [ids]   copy Cycles previews (.asset-cache/<id>/preview*.png) to docs/screenshots/pipeline/
+ *   npm run assets -- --restamp          maintenance: re-stamp caches + build record after a change to the
+ *                                        runner's hashing scheme only (asset inputs unchanged)
  *
  * Stages per asset:
  *   1. Blender  : BLENDER_PY tools/blender/assets/<category>/<id>.py  -> .asset-cache/<id>/ (+ asset.json)
@@ -103,9 +106,34 @@ function topoOrder(assets, roots) {
   return order;
 }
 
-function libHash() {
-  const files = fs.readdirSync(LIB_DIR).filter((f) => f.endsWith('.py')).sort();
-  return sha(...files.map((f) => f + fs.readFileSync(path.join(LIB_DIR, f), 'utf8')));
+/** Library modules imported by `src` ("from lib import a, b" / "from lib.x import" / "from . import"). */
+function importedLibModules(src) {
+  const mods = new Set();
+  for (const m of src.matchAll(/^\s*from\s+(?:lib|\.)\s+import\s+([^\n#]+)/gm))
+    for (const part of m[1].replace(/[()]/g, '').split(',')) {
+      const name = part.trim().split(/\s+as\s+/)[0]?.trim();
+      if (name) mods.add(name);
+    }
+  for (const m of src.matchAll(/^\s*from\s+(?:lib)?\.(\w+)\s+import/gm)) mods.add(m[1]);
+  return mods;
+}
+
+/** Hash of the library modules a script depends on (transitively) - edits elsewhere do not invalidate it. */
+function libHashFor(scriptSrc) {
+  const seen = new Set(['__init__']);
+  const queue = [...importedLibModules(scriptSrc)];
+  while (queue.length) {
+    const m = queue.pop();
+    if (seen.has(m)) continue;
+    const file = path.join(LIB_DIR, `${m}.py`);
+    if (!fs.existsSync(file)) continue;
+    seen.add(m);
+    for (const d of importedLibModules(fs.readFileSync(file, 'utf8'))) queue.push(d);
+  }
+  return sha(...[...seen].sort().map((m) => {
+    const f = path.join(LIB_DIR, `${m}.py`);
+    return fs.existsSync(f) ? m + fs.readFileSync(f, 'utf8') : m;
+  }));
 }
 
 // ------------------------------------------------------------------------------------ record
@@ -250,15 +278,43 @@ async function main() {
   }
 
   for (const id of ids) if (!assets.has(id)) throw new Error(`unknown asset "${id}". Known: ${[...assets.keys()].join(', ')}`);
+  if (flags.has('--previews')) {
+    const outDir = path.join(ROOT, 'docs', 'screenshots', 'pipeline');
+    fs.mkdirSync(outDir, { recursive: true });
+    for (const id of ids.length ? ids : [...assets.keys()]) {
+      const dir = path.join(CACHE_DIR, id);
+      if (!fs.existsSync(dir)) continue;
+      for (const f of fs.readdirSync(dir).filter((n) => /^preview.*\.png$/.test(n)).sort()) {
+        const name = `${id}_cycles${f.slice('preview'.length).replace(/^_/, '_')}`;
+        fs.copyFileSync(path.join(dir, f), path.join(outDir, name));
+        console.log(`[assets] ${rel(path.join(outDir, name))}`);
+      }
+    }
+    return;
+  }
+  if (flags.has('--restamp')) {
+    const hashes = new Map();
+    for (const id of topoOrder(assets, [...assets.keys()])) {
+      const a = assets.get(id);
+      const h = sha(String(PIPELINE_VERSION), libHashFor(a.src), a.src, ...a.depends.map((d) => hashes.get(d) ?? ''), 'final');
+      hashes.set(id, h);
+      const outDir = path.join(CACHE_DIR, id);
+      if (fs.existsSync(path.join(outDir, 'asset.json'))) fs.writeFileSync(path.join(outDir, '.inputhash'), h);
+      if (rec.assets[id]) rec.assets[id].inputHash = h;
+      console.log(`[assets] ${id}: restamped ${h.slice(0, 10)}`);
+    }
+    savePublished(rec);
+    writeManifest(rec);
+    return;
+  }
   const roots = ids.length ? ids : [...assets.keys()];
   const order = topoOrder(assets, roots);
-  const lib = libHash();
   const hashes = new Map();
   const t0 = Date.now();
   let built = 0;
   for (const id of order) {
     const a = assets.get(id);
-    const inputHash = sha(String(PIPELINE_VERSION), lib, a.src, ...a.depends.map((d) => hashes.get(d) ?? rec.assets[d]?.inputHash ?? ''), DRAFT ? 'draft' : 'final');
+    const inputHash = sha(String(PIPELINE_VERSION), libHashFor(a.src), a.src, ...a.depends.map((d) => hashes.get(d) ?? rec.assets[d]?.inputHash ?? ''), DRAFT ? 'draft' : 'final');
     hashes.set(id, inputHash);
     const outDir = path.join(CACHE_DIR, id);
     const stampPath = path.join(outDir, '.inputhash');

@@ -41,6 +41,8 @@ export default defineConfig(({ mode }) => {
         : {
             output: {
               manualChunks(id: string): string | undefined {
+                // Asset loaders are imported lazily by the AssetManager: keep them out of the eager three chunk.
+                if (/node_modules\/three\/examples\/jsm\/(loaders\/(GLTFLoader|EXRLoader)|libs\/meshopt_decoder)/.test(id)) return 'three-loaders';
                 if (id.includes('node_modules/three')) return 'three';
                 return undefined;
               },

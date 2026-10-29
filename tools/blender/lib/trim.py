@@ -169,7 +169,7 @@ class TrimMesh:
     def ring(self, runs: Iterable[Run], segments: int, mat: str, center: Sequence[float] = (0, 0, 0),
              a0: float = 0.0, a1: float = 2 * math.pi, integer_tiles: bool | None = None, caps: str | None = None,
              cap_band: str | tuple[float, float] = "ashlar", rot_offset: float = 0.0,
-             continuous: bool = False) -> None:
+             continuous: bool = False, sectors: int = 8) -> None:
         """Sweep (r, z) profile runs around the Z axis through `center`, from angle a0 to a1 (radians,
         CCW from +X seen from above). `integer_tiles` (default: closed rings) rounds U to whole tiles.
         `continuous`: runs form one smooth surface (custom normals averaged across run boundaries)."""
@@ -239,7 +239,16 @@ class TrimMesh:
                 Nv[..., 0] = n2[:, 0:1] * cos[None, :]
                 Nv[..., 1] = n2[:, 0:1] * sin[None, :]
                 Nv[..., 2] = n2[:, 1:2]
-            self._add_grid(mat, P, UV, closed, En, Nv)
+            # Flat (horizontal) closed rings become full annuli in a lightmap atlas, which pack badly:
+            # split them into sectors (duplicate seam vertices only - invisible in shading and UV0).
+            flat = abs(float(p2[-1, 1] - p2[0, 1])) < 1e-6 and closed and sectors > 1
+            if flat:
+                cuts = np.linspace(0, len(th) - 1, sectors + 1).round().astype(int)
+                for c0, c1 in zip(cuts[:-1], cuts[1:]):
+                    sl = slice(c0, c1 + 1)
+                    self._add_grid(mat, P[:, sl], UV[:, sl], False, En[:, c0:c1], None if Nv is None else Nv[:, sl])
+            else:
+                self._add_grid(mat, P, UV, closed, En, Nv)
         if caps and not closed:
             prof = np.concatenate([np.asarray(r.pts, F) for r in runs])
             for ang in ((a0 + rot_offset) if "start" in caps or caps == "both" else None,
