@@ -136,6 +136,9 @@ async function boot(): Promise<void> {
   }));
   crash.setReturnToMenu(() => void session.quitToMenu());
   bus.on('ui:notify', (n) => ui.toast(n.text, n.severity));
+  // Boot snapshot of the resolved tier for bus-only subscribers (AudioManager voices / HRTF, AUD-01);
+  // GameSession.setQuality emits every later change. Sent before any scene enters.
+  bus.emit('quality:changed', { settings: quality.settings });
   const api = createDebugApi(ctx, session);
   installDebugApi(api);
   loop.setTarget(scenes);

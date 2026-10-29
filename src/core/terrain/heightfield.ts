@@ -363,6 +363,18 @@ const BIOME_FERTILITY: Readonly<Record<Biome, number>> = {
   marsh: 0.3,
 };
 
+/** The sampled grids of a heightfield (what a terrain Web Worker posts back; all buffers transferable). */
+export interface HeightfieldGrids {
+  /** Row-major heights, resolution^2 (index = iz * resolution + ix). */
+  heights: Float32Array;
+  /** BIOME_INDEX per sample. */
+  biomes: Uint8Array;
+  /** Moisture 0..255 per sample. */
+  moistureGrid: Uint8Array;
+  minHeight: number;
+  maxHeight: number;
+}
+
 export class Heightfield implements TerrainQuery {
   readonly spec: TerrainSpec;
   readonly bounds: Rect;
@@ -380,7 +392,8 @@ export class Heightfield implements TerrainQuery {
   /** Detail cutoff used for this grid (m). */
   readonly minWavelength: number;
 
-  private constructor(spec: TerrainSpec, gen: TerrainGenerator) {
+  /** Samples the generator over the spec window, or adopts `grids` sampled elsewhere (see fromGrids). */
+  private constructor(spec: TerrainSpec, gen: TerrainGenerator, grids?: HeightfieldGrids) {
     this.spec = spec;
     this.generator = gen;
     this.resolution = spec.resolution;
@@ -389,6 +402,17 @@ export class Heightfield implements TerrainQuery {
     this.bounds = { minX: spec.centerX - half, minZ: spec.centerZ - half, maxX: spec.centerX + half, maxZ: spec.centerZ + half };
     this.minWavelength = Math.max(4, this.cellSize * 2.5);
     const n = spec.resolution * spec.resolution;
+    if (grids) {
+      if (grids.heights.length !== n || grids.biomes.length !== n || grids.moistureGrid.length !== n) {
+        throw new Error(`Heightfield.fromGrids: grids hold ${grids.heights.length} samples, spec needs ${n} (${spec.resolution}^2)`);
+      }
+      this.heights = grids.heights;
+      this.biomes = grids.biomes;
+      this.moistureGrid = grids.moistureGrid;
+      this.minHeight = grids.minHeight;
+      this.maxHeight = grids.maxHeight;
+      return;
+    }
     this.heights = new Float32Array(n);
     this.biomes = new Uint8Array(n);
     this.moistureGrid = new Uint8Array(n);
@@ -426,6 +450,17 @@ export class Heightfield implements TerrainQuery {
   /** Generate a heightfield for a spec. Pure function of the spec. */
   static generate(spec: TerrainSpec): Heightfield {
     return new Heightfield(spec, new TerrainGenerator(spec));
+  }
+
+  /**
+   * Rebuild a heightfield from grids sampled elsewhere (a terrain Web Worker running `generate(spec)`):
+   * identical to `generate(spec)` for the same spec. Adopts the arrays without copying and builds the
+   * analytic TerrainGenerator from the spec (cheap: noise tables only, no sampling) for the queries that
+   * use it (riverDistanceAt, fine height detail). Throws if the grid sizes do not match spec.resolution^2.
+   * Prefer core/terrain/cache.ts `primeHeightfield` so sim and render share the instance.
+   */
+  static fromGrids(spec: TerrainSpec, grids: HeightfieldGrids): Heightfield {
+    return new Heightfield(spec, new TerrainGenerator(spec), grids);
   }
 
   private gridSlope(ix: number, iz: number): number {

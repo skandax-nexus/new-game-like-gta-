@@ -203,6 +203,7 @@ export interface GameEventMap {
   'scene:ready': { scene: SceneId };
   'scene:exited': { scene: SceneId };
   'loop:speed': { timeScale: number; paused: boolean };
+  /** Once at boot (main.ts, initial tier, before any scene enters), then on every tier change. */
   'quality:changed': { settings: QualitySettings };
   'settings:changed': { settings: GameSettings };
   'input:action': InputActionEvent;

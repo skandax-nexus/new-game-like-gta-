@@ -11,7 +11,10 @@
  * (which pulls content data) so a terrain worker bundle stays small.
  */
 import type { TerrainSpec } from '../types';
-import { Heightfield, TerrainGenerator } from './heightfield';
+import { Heightfield, type HeightfieldGrids } from './heightfield';
+
+/** Defined beside Heightfield (Heightfield.fromGrids); re-exported here for the worker hand-off API. */
+export type { HeightfieldGrids } from './heightfield';
 
 const MAX_ENTRIES = 4;
 const cache = new Map<string, Heightfield>();
@@ -73,18 +76,6 @@ export function clearHeightfieldCache(): void {
 // Worker hand-off
 // ---------------------------------------------------------------------------------------------------
 
-/** The sampled grids of a heightfield: what a terrain Web Worker posts back (all buffers transferable). */
-export interface HeightfieldGrids {
-  /** Row-major heights, resolution^2 (index = iz * resolution + ix). */
-  heights: Float32Array;
-  /** BIOME_INDEX per sample. */
-  biomes: Uint8Array;
-  /** Moisture 0..255 per sample. */
-  moistureGrid: Uint8Array;
-  minHeight: number;
-  maxHeight: number;
-}
-
 /** Grids of a generated heightfield (worker side). Shares the arrays - transfer or copy as needed. */
 export function extractHeightfieldGrids(hf: Heightfield): HeightfieldGrids {
   return { heights: hf.heights, biomes: hf.biomes, moistureGrid: hf.moistureGrid, minHeight: hf.minHeight, maxHeight: hf.maxHeight };
@@ -95,33 +86,13 @@ export function heightfieldTransferList(g: HeightfieldGrids): ArrayBuffer[] {
   return [g.heights.buffer, g.biomes.buffer, g.moistureGrid.buffer].filter((b): b is ArrayBuffer => b instanceof ArrayBuffer);
 }
 
-type MutableHeightfield = { -readonly [K in keyof Heightfield]: Heightfield[K] };
-
 /**
  * Rebuild a Heightfield from grids produced elsewhere (identical to Heightfield.generate(spec) for the same
- * spec). Builds the analytic TerrainGenerator (cheap: noise tables only, no sampling) for the queries that
- * use it (riverDistanceAt, fine height detail). Throws if the grids do not match the spec.
+ * spec). Same as `Heightfield.fromGrids(spec, grids)`; kept as the CORE-01 hand-off entry point.
+ * Throws if the grids do not match the spec.
  */
 export function heightfieldFromGrids(spec: TerrainSpec, grids: HeightfieldGrids): Heightfield {
-  const n = spec.resolution * spec.resolution;
-  if (grids.heights.length !== n || grids.biomes.length !== n || grids.moistureGrid.length !== n) {
-    throw new Error(`heightfieldFromGrids: grids hold ${grids.heights.length} samples, spec needs ${n} (${spec.resolution}^2)`);
-  }
-  const hf = Object.create(Heightfield.prototype) as MutableHeightfield;
-  const half = spec.sizeMeters / 2;
-  const cellSize = spec.sizeMeters / (spec.resolution - 1);
-  hf.spec = spec;
-  hf.generator = new TerrainGenerator(spec);
-  hf.resolution = spec.resolution;
-  hf.cellSize = cellSize;
-  hf.bounds = { minX: spec.centerX - half, minZ: spec.centerZ - half, maxX: spec.centerX + half, maxZ: spec.centerZ + half };
-  hf.minWavelength = Math.max(4, cellSize * 2.5);
-  hf.heights = grids.heights;
-  hf.biomes = grids.biomes;
-  hf.moistureGrid = grids.moistureGrid;
-  hf.minHeight = grids.minHeight;
-  hf.maxHeight = grids.maxHeight;
-  return hf as unknown as Heightfield;
+  return Heightfield.fromGrids(spec, grids);
 }
 
 /**
