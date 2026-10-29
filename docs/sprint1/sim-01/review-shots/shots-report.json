@@ -6,7 +6,7 @@
    "name": "world: The Broken Crown loads paused with a state hash",
    "ok": true,
    "observed": {
-    "hash": "61739231",
+    "hash": "a803ad04",
     "paused": true
    }
   },
@@ -14,15 +14,15 @@
    "name": "world: the besiege order and six days change the authoritative state",
    "ok": true,
    "observed": {
-    "before": "61739231",
-    "after": "83dfc1e7"
+    "before": "a803ad04",
+    "after": "2cf3630b"
    }
   },
   {
    "name": "world: 60 simulated days later the world has moved on",
    "ok": true,
    "observed": {
-    "hash": "363242f5",
+    "hash": "e9e95708",
     "sceneState": {
      "world": {
       "day": 60,
@@ -30,32 +30,32 @@
        "year": -300,
        "month": 8,
        "day": 0,
-       "hour": 12
+       "hour": 0
       },
       "season": "hemanta",
-      "weather": "light_rain",
+      "weather": "fog",
       "factions": [
        {
         "id": "forest",
-        "treasury": 2225,
+        "treasury": 2228,
         "settlements": 2,
         "soldiers": 478
        },
        {
         "id": "frontier",
-        "treasury": 1519,
+        "treasury": 1521,
         "settlements": 2,
         "soldiers": 266
        },
        {
         "id": "heartland",
-        "treasury": 5403,
+        "treasury": 5098,
         "settlements": 5,
-        "soldiers": 1277
+        "soldiers": 1296
        },
        {
         "id": "highland",
-        "treasury": 3235,
+        "treasury": 3241,
         "settlements": 5,
         "soldiers": 1172
        }
@@ -89,7 +89,7 @@
    "name": "world-mobile: 10 days at low quality",
    "ok": true,
    "observed": {
-    "hash": "e7474ffd",
+    "hash": "936eff6f",
     "day": 10
    }
   },
@@ -112,8 +112,8 @@
    "name": "determinism: two browser runs with the same seed and commands hash alike",
    "ok": true,
    "observed": [
-    "89ff8297",
-    "89ff8297"
+    "97421a44",
+    "97421a44"
    ]
   }
  ],
@@ -128,7 +128,7 @@
   },
   {
    "name": "world-day60.png",
-   "note": "60 days: harvest, prices, events and AI moves (HUD values changed)"
+   "note": "60 days (+2 until the fog lifts): harvest, prices, events and AI moves (HUD values changed)"
   },
   {
    "name": "game-stats.png",
@@ -142,7 +142,7 @@
  "start": {
   "scene": "world",
   "paused": true,
-  "hash": "61739231",
+  "hash": "a803ad04",
   "sceneState": {
    "world": {
     "day": 0,
@@ -222,6 +222,10 @@
   },
   {
    "day": 32,
+   "clicked": "Watch and waitLet him show his hand. Som"
+  },
+  {
+   "day": 37,
    "clicked": "Hear their grievancesUnrest -0.08; tax r"
   },
   {
@@ -229,12 +233,16 @@
    "clicked": "Trust the winter cropNo cost now. The le"
   },
   {
-   "day": 49,
-   "clicked": "Let the villages deal with itInfrastruct"
+   "day": 50,
+   "clicked": "Buy salt for the granariesTreasury -300;"
   },
   {
    "day": 52,
    "clicked": "Repair what we canSetupur loses 20% of i"
+  },
+  {
+   "day": 61,
+   "clicked": "Negotiate lower taxesTax rate x0.6 for {"
   },
   {
    "day": 1,
@@ -255,8 +263,8 @@
  ],
  "march": {
   "scene": "world",
-  "paused": false,
-  "hash": "83dfc1e7",
+  "paused": true,
+  "hash": "2cf3630b",
   "sceneState": {
    "world": {
     "day": 6,
@@ -264,7 +272,7 @@
      "year": -300,
      "month": 6,
      "day": 6,
-     "hour": 6
+     "hour": 0
     },
     "season": "sharad",
     "weather": "clear",
@@ -315,8 +323,8 @@
  },
  "day60": {
   "scene": "world",
-  "paused": false,
-  "hash": "363242f5",
+  "paused": true,
+  "hash": "e9e95708",
   "sceneState": {
    "world": {
     "day": 60,
@@ -324,32 +332,32 @@
      "year": -300,
      "month": 8,
      "day": 0,
-     "hour": 12
+     "hour": 0
     },
     "season": "hemanta",
-    "weather": "light_rain",
+    "weather": "fog",
     "factions": [
      {
       "id": "forest",
-      "treasury": 2225,
+      "treasury": 2228,
       "settlements": 2,
       "soldiers": 478
      },
      {
       "id": "frontier",
-      "treasury": 1519,
+      "treasury": 1521,
       "settlements": 2,
       "soldiers": 266
      },
      {
       "id": "heartland",
-      "treasury": 5403,
+      "treasury": 5098,
       "settlements": 5,
-      "soldiers": 1277
+      "soldiers": 1296
      },
      {
       "id": "highland",
-      "treasury": 3235,
+      "treasury": 3241,
       "settlements": 5,
       "soldiers": 1172
      }
@@ -372,6 +380,11 @@
    },
    "blocked": false
   }
+ },
+ "day60Shot": {
+  "waitedDays": 2,
+  "day": 62,
+  "weather": "clear"
  },
  "screens": [
   "main_menu:static",
