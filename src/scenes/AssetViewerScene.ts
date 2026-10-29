@@ -942,11 +942,27 @@ export class AssetViewerScene implements GameScene {
         const r = Math.floor(k / per);
         mats.push(new THREE.Matrix4().makeTranslation(x + c * (size.x + gap) - box.min.x, 0, r * (size.z + gap) - box.min.z));
       }
-      const kit = instanceObject(inst.object, mats);
-      this.scene.add(kit.group);
-      this.kits.push(kit);
-      this.owned.push({ dispose: () => kit.dispose() });
-      this.kitDraws.push({ id, meshes: kit.meshes.length, triangles: inst.triangles * count });
+      if (inst.skinned) {
+        // Skinned meshes cannot share one InstancedMesh (per-copy skeletons): independent clones, one draw per
+        // primitive per copy - battle crowds use VAT instead (?asset=vat_test_dummy).
+        let prims = 0;
+        for (let k = 0; k < count; k++) {
+          const clone = k === 0 ? inst : await this.ctx.assets.loadModel(id, { lod: 0 });
+          if (k > 0) this.handles.push(clone);
+          clone.object.applyMatrix4(mats[k]!);
+          this.scene.add(clone.object);
+          clone.object.traverse((o) => {
+            if ((o as THREE.Mesh).isMesh && o.visible) prims++;
+          });
+        }
+        this.kitDraws.push({ id, meshes: prims, triangles: inst.triangles * count });
+      } else {
+        const kit = instanceObject(inst.object, mats);
+        this.scene.add(kit.group);
+        this.kits.push(kit);
+        this.owned.push({ dispose: () => kit.dispose() });
+        this.kitDraws.push({ id, meshes: kit.meshes.length, triangles: inst.triangles * count });
+      }
       x += per * (size.x + gap) + gap * 2;
       maxH = Math.max(maxH, size.y);
       depth = Math.max(depth, per * (size.z + gap));

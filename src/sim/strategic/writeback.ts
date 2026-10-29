@@ -112,28 +112,45 @@ export function battleWarScore(outcome: BattleOutcome): number {
   return Math.max(-20, Math.min(20, v));
 }
 
-function nearestRetreat(world: WorldState, a: ArmyState): Vec2 | null {
+/** Minimum distance (map m) of a retreat destination that is not a walled refuge. */
+export const RETREAT_MIN_DISTANCE = 300;
+/** A walled own settlement within this distance takes the beaten army inside its walls. */
+export const REFUGE_DISTANCE = 600;
+
+/**
+ * Where a beaten army falls back (§6.12 item 3): inside the walls of a nearby own fortified settlement, else the nearest
+ * own settlement or depot at least 300 m away (so it actually breaks contact). Null = nowhere (it disbands).
+ */
+export function retreatDestination(world: WorldState, a: ArmyState): { kind: 'garrison'; settlementId: string } | { kind: 'point'; x: number; z: number } | null {
+  let refuge: SettlementState | null = null;
+  let rd = REFUGE_DISTANCE * REFUGE_DISTANCE;
   let best: Vec2 | null = null;
   let bd = Infinity;
+  const min2 = RETREAT_MIN_DISTANCE * RETREAT_MIN_DISTANCE;
   for (const id of sortedKeys(world.settlements)) {
     const s = world.settlements[id]!;
     if (s.ownerFactionId !== a.factionId || s.besiegedBy) continue;
     const d = (s.x - a.x) * (s.x - a.x) + (s.z - a.z) * (s.z - a.z);
-    if (d < bd) {
+    if (s.fortLevel >= 1 && d <= rd) {
+      rd = d;
+      refuge = s;
+    }
+    if (d >= min2 && d < bd) {
       bd = d;
       best = { x: s.x + s.radius * 0.5, z: s.z + s.radius * 0.5 };
     }
   }
+  if (refuge) return { kind: 'garrison', settlementId: refuge.id };
   for (const id of sortedKeys(world.depots)) {
     const d0 = world.depots[id]!;
     if (d0.factionId !== a.factionId) continue;
     const d = (d0.x - a.x) * (d0.x - a.x) + (d0.z - a.z) * (d0.z - a.z);
-    if (d < bd) {
+    if (d >= min2 && d < bd) {
       bd = d;
       best = { x: d0.x, z: d0.z };
     }
   }
-  return best;
+  return best ? { kind: 'point', x: best.x, z: best.z } : null;
 }
 
 /** AI prisoner decision (§6.8): ransom if greedy / expansionist, else release. */
@@ -275,13 +292,14 @@ export function applyBattleOutcome(world: WorldState, engagementId: EngagementId
       // 3 the loser (or, on a draw, the attacker) falls back.
       const fallsBack = outcome.winner === null ? side === 0 : lost;
       if (fallsBack && !isRebelFaction(a.factionId)) {
-        const to = nearestRetreat(world, a);
+        const to = retreatDestination(world, a);
         if (!to) {
           removeArmy(world, a, false);
           notifyPlayer(world, out, a.factionId, 'danger', `${a.name} had nowhere to retreat and scattered.`);
           continue;
         }
-        orderArmy(world, a.id, { kind: 'retreat', x: to.x, z: to.z }, terrain);
+        if (to.kind === 'garrison') orderArmy(world, a.id, { kind: 'garrison', settlementId: to.settlementId }, terrain);
+        else orderArmy(world, a.id, { kind: 'retreat', x: to.x, z: to.z }, terrain);
       }
     }
     // Captured supply reported by the battle sim.

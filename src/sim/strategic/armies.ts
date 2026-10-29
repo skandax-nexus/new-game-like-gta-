@@ -445,6 +445,22 @@ function evades(world: WorldState, a: ArmyState, b: ArmyState): boolean {
   return sb > 0 && sa / sb < 0.6 && potentialSpeed(world, a) >= 1.1 * potentialSpeed(world, b);
 }
 
+/** Hours after a battle during which the same two armies do not re-engage (they disengage and regroup). */
+export const REENGAGE_COOLDOWN_HOURS = 24;
+
+/** Did these two armies fight each other within the cooldown? (derived from resolved engagements - save-safe) */
+export function recentlyFought(world: WorldState, a: string, b: string): boolean {
+  const now = world.calendar.totalHours;
+  for (const id in world.engagements) {
+    const e = world.engagements[id]!;
+    if (e.status !== 'resolved' || now - e.startedHour > REENGAGE_COOLDOWN_HOURS) continue;
+    const inA = e.sides[0].includes(a) || e.sides[1].includes(a);
+    const inB = e.sides[0].includes(b) || e.sides[1].includes(b);
+    if (inA && inB) return true;
+  }
+  return false;
+}
+
 /** Create engagements for hostile armies in contact range. */
 export function detectContacts(world: WorldState, out: SimEvent[], terrain?: TerrainQuery): void {
   const ids = stableKeys('armies', world.armies as Record<string, unknown>);
@@ -463,6 +479,7 @@ export function detectContacts(world: WorldState, out: SimEvent[], terrain?: Ter
       if (a.order.kind === 'retreat' && potentialSpeed(world, b) < 1.2 * potentialSpeed(world, a)) continue;
       if (b.order.kind === 'retreat' && potentialSpeed(world, a) < 1.2 * potentialSpeed(world, b)) continue;
       if (evades(world, a, b) || evades(world, b, a)) continue;
+      if (recentlyFought(world, a.id, b.id)) continue;
       const [att, def] = b.status === 'marching' && a.status !== 'marching' ? [b, a] : [a, b];
       createEngagement(world, att, def, out, terrain ?? null, 'field', null);
       break;

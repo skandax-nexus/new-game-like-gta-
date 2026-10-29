@@ -28,7 +28,7 @@ import {
 } from '../../../src/sim/strategic/construction';
 import { ageChecklist, landmarkOptions } from '../../../src/sim/strategic/ages';
 import { factionMod } from '../../../src/sim/strategic/modifiers';
-import { hasElephantSource, queueRecruit, recruitCost, validateRecruit } from '../../../src/sim/strategic/recruitment';
+import { hasElephantSource, newRecruit, queueRecruit, recruitCost, validateRecruit } from '../../../src/sim/strategic/recruitment';
 import { villagerAllocation } from '../../../src/sim/strategic/villagers';
 import { RULES } from '../../../src/data/rules';
 import { campaign, issue, runDays, sandbox } from './helpers';
@@ -404,7 +404,8 @@ describe('recruitment (DESIGN_SPEC §7.6, §5.7-§5.8)', () => {
     expect(army.units.length).toBe(units0 + 2);
     const spear = army.units[units0]!;
     expect(spear.experience).toBeCloseTo(0.1 + 0.1 + 0.05, 9); // barracks L2, Mahajanapada
-    expect(spear.morale).toBeCloseTo(60 * 0.95 + 3, 9); // Royal Levy x0.95, age +3
+    const fresh = newRecruit(w, 'heartland', raj, 'spearmen');
+    expect(fresh.morale).toBeCloseTo(60 * 0.95 + 3, 9); // Royal Levy x0.95, age +3
     expect(army.supply.foodCapacity).toBeGreaterThan(2 * 3600);
   });
 });
