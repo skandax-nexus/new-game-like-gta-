@@ -246,9 +246,85 @@ virtual stick (left half) + look (right half). HUD buttons inject the same actio
 
 ## 12. Audio
 
-`audio/audio.ts`: procedural WebAudio (no files). Buses master/sfx/ambience/music; wind bed, drone,
-battle drums driven by `audio:mood`; synthesized one-shots via `audio:sfx` (UI, orders, conch, horns,
-drums, volleys, clashes, elephant trumpets). Context resumes on first gesture; `?noaudio=1` disables.
+Everything is synthesized at runtime (no audio files); implementation and tuning: AUD-01 (`src/audio/**`).
+
+**Layers.** Pure DSP - `audio/synth/**` (oscillators, filters, modal / Karplus strings, FDN reverb, sources),
+`sfx/render`, `ambience/render`, `music/**` (raga / tala theory, composer, `ScoreEngine`, stingers) - works on
+numbers and `Float32Array` only: no WebAudio, DOM or three, so the same code runs in node (`tests/audio/**`,
+`scripts/audio/render.mjs` WAV + spectrogram renders) and inside the audio worker. `audio/runtime/**` holds the
+thin WebAudio adapters (mixer, voice pools, ambience player, sound bank, score stream); `*/meta.ts` is
+main-thread-safe metadata (no DSP). `audio/` imports only `core/` (labs excepted).
+
+**Threads.** One worker script, bundled `?worker&inline` (a Blob URL, so `dist/` and the single-file build behave
+the same), runs as two instances: **'music'** owns the `ScoreEngine` and answers chunk pulls at once; **'bank'**
+renders SFX variants, ambience beds / spots, stingers and the reverb impulse response from a priority queue (one
+job per tick, so urgent requests and cancellations get in between). Buffers travel as transferables. Without
+Worker support the same `WorkerHost` runs inline on the main thread (lazily imported).
+
+**Score stream.** 0.25 s stereo chunks. Preferred: an **AudioWorklet** (`streamWorklet.ts`, registered from a Blob
+URL) pulls chunks straight from the music worker over a **MessageChannel**, so main-thread hitches (scene loads,
+shader compiles) cannot starve the music; it recycles chunk arrays and reports buffer / underrun / latency stats.
+Fallback (no AudioWorklet / MessageChannel, inline port, worklet module failing or taking > 3 s to load, or
+`?audioworklet=0` -> `UrlParams.audioWorklet`, passed by `main.ts` as `AudioManagerOptions.worklet`):
+**buffers** mode schedules pooled AudioBuffers back to back on a sample-exact timeline ~1 s ahead of the
+context clock, with a pre-roll after start / underruns. The score follows
+`audio:mood` + intensity (alap -> jor -> gat, war layer), the hour / season / rain (raga of the hour), the hero
+lighting mood and district, and is cued by stingers; mood changes crossfade performers inside the engine.
+
+**Mix graph** (`runtime/mixer.ts`):
+
+```
+score stream -> musicDuck -+-> music --+
+stingers ------------------+           |
+spatial + flat SFX voices -> slow-mo LPF -> sfx --+-> master -> limiter -> analyser -> destination
+UI voices --------------------------------> ui ---+
+ambience beds + spots --------------------> ambience
+sfx / ambience sends -> convolver (procedural hall IR, 1.2 / 1.8 / 2.4 / 3 s by tier) -> reverb return
+```
+
+Bus gains follow `GameSettings`: `masterVolume`, `musicVolume`, `sfxVolume`, `uiVolume`, `ambienceVolume`
+(re-applied on `settings:changed`). Ducking keeps the deepest active request: dialogue -9 dB
+(`setDialogue`), stingers -7 dB, UI sounds -3 dB, per-SFX `duckMusicDb`. A perfect dodge dips the SFX low-pass
+(slow motion; off with `reducedMotion`).
+
+**Sound bank (mood-scoped).** Keys `sfx:<id>`, `bed:<ambience>`, `spot:<ambience>:<name>`,
+`stinger:<id>[:half]`, `ir:hall:<s>`. UI sounds are always resident; each mood keeps only its SFX groups
+(world / battle / hero) and its stingers rendered and releases the rest (re-rendered on demand: a miss requests
+the key and the next trigger plays). Variant counts scale with the tier (x0.5 low ... x1.25 ultra, min 2);
+low / medium keep stingers at half rate; silent ambience layers are torn down and their beds released.
+
+**Voices and space.** `QualitySettings.audio.voices` caps live voices at **16 low / 32 medium / 48 high and
+ultra**, split into flat (UI + non-positional, 20%), ambience spots (20%) and spatial SFX (the rest); stingers
+(own 3-voice pool) and the score stream are not voices. Pools (`spatial/voices.ts`, typed arrays) merge
+re-triggers inside a kind's min interval, recycle a kind's oldest instance at its instance limit, and steal the
+lowest-priority, quietest-nearly-done voice - never one of higher priority. Spatial voices: source -> air-absorption
+low-pass -> gain -> PannerNode, **HRTF on high / ultra** (`quality.audio.hrtf`), equal-power on low / medium;
+distance gain, air absorption and reverb send come from our own model (`spatial/model.ts`, PannerNode rolloff 0),
+widened per mood (the strategic camera hears a larger world). The listener is the camera pose from
+`audio:listener`. Thunder follows lightning by the speed of sound.
+
+**Bus events consumed:** `audio:sfx` (`SFX_KINDS`; `position` -> spatial, else `pan`), `audio:mood`,
+`audio:stinger`, `audio:ambience` (district keys; unlisted layers fade out), `audio:listener` (~10 Hz),
+`hero:combat` (hit / parry / dodge / guard break / stagger / finisher cues, `cues.ts`), `battle:events`
+(engagement meter for the automatic battle bed), `world:tick` (hour / month -> world beds and raga, unless a scene
+called `setEnvironment`), `settings:changed`, `quality:changed` (voice cap, HRTF, variants, IR; `main.ts` emits
+it once at boot, §21.2), `scene:entered` (clears scene layers). Direct API (`ctx.audio`): `setEnvironment`,
+`setMusicContext`, `setDialogue`, `play`, `playAt`, `stinger`, `stats`, `attachProfiler`, `resume`.
+
+**Lifecycle and debug.** The AudioContext starts suspended and resumes on the first user gesture
+(capture-phase listeners, so shielded UI panels count); a hidden tab suspends it; `?noaudio=1` disables
+everything. `main.ts` constructs the manager with the app profiler: system **`audio`** (own rAF, plus a 250 ms
+timer that keeps the stream fed while rAF is throttled) and counters `audio.voices` / `audio.underruns` on F3.
+`?debug=1` or `?profiler=1` exposes `window.__SAMRAJYA_AUDIO__` (read-only `stats()`: voices, bank keys / MB,
+stream mode / buffered seconds / underruns / latency, main-thread ms); `?scene=lab&lab=audio` is the listening lab.
+
+**Budgets.** Main-thread `audio` < 1 ms / frame on PC and < 2 ms on mobile (AUD-01 acceptance; it shares the
+§15 "UI + input + audio" row, so normal frames stay well below - measured 0.06 ms avg in a 1,000-soldier battle,
+0.29 ms in the lab under an 80-sound burst). No allocation per SFX trigger after warm-up besides the
+single-use AudioBufferSourceNode (bus handlers write a preallocated ring buffer that `update()` drains). All
+rendering happens in the workers; the score target is ~1 s buffered and zero underruns in normal play. Sound bank
+<= 64 MB on high / ultra and <= 32 MB on low / medium (measured 20-33 MB in the world / battle / hero scenes on
+high, 51 MB in the lab with everything warmed, 23 MB in the low-tier lab).
 
 ## 13. Persistence and versioning
 
@@ -266,13 +342,13 @@ any state shape change. Current: save format **2** / world schema **2**; the v1 
 - URL deep links (`core/params.ts`): scene, mode, scenario, seed, quality, soldiers, preset, faction,
   enemy, hour, season, weather, freeze, speed, paused, settlement, camera, aivsai, debug, profiler,
   noaudio, noui, asset, assets, hdri, lod; v2 (§21.2): lab, mission, mood, district, camdist, cine, colorblind,
-  reducedmotion, keypreset, bench, age, deploy, csm, splat, clip, count, kit.
+  reducedmotion, keypreset, bench, age, deploy, csm, splat, clip, count, kit; audioworklet (AUD-01, §12).
 - `window.__SAMRAJYA__` (`core/debug.ts`, impl `app/debugApi.ts`): ready flags, state, scene/mode
   control, sim stepping, environment/quality control, commands, profile, errors, frames, freeze,
   screenshot, save/load, state hash; v2: `call(name, ...args)` -> scene `debugCommand`, `showScreen` /
   `hideScreen` / `screens()`, `labs()` (§21.7).
 - Profiler (`core/profiler.ts`): FPS, frame ms avg/p95/max, per-system timings
-  (`sim`, `sim.tactical`, `sim.soldiers`, `render`, `render.prep`, `frame`), draw calls, triangles,
+  (`sim`, `sim.tactical`, `sim.soldiers`, `render`, `render.prep`, `audio`, `frame`), draw calls, triangles,
   textures, programs, counters (visible soldiers), overlay on F3 / `?profiler=1`.
 - Crash reporter (`core/crash.ts`): `window.onerror` + `unhandledrejection` + loop/bus/scene errors +
   WebGL context loss -> ring buffer in `localStorage['samrajya.crashes']`, overlay with Copy /
@@ -552,8 +628,11 @@ as exact diffs (STUDIO.md W2); never duplicate a contract type locally.
 | Audio | `SFX_KINDS` + `sword_light`, `sword_heavy`, `parry_ring`, `block_thud`, `roll_cloth`, `body_hit`, `stagger_grunt`, `salve`, `bell_temple`, `construction_complete`, `landmark_complete`, `age_up_fanfare`, `market_coins`, `gate_break`, `wall_crumble`, `ram_hit`, `fire_crackle`, `river_splash`, `footstep_stone`, `footstep_dirt` | AUD-01 | GP-02, GP-03, GP-04 |
 | Input | `INPUT_ACTIONS` + `shape_loose`, `shape_circle`, `order_stance`, `commander_rally`, `idle_builders_next`, `idle_army_next`, `select_capital`, `placement_rotate`, `card_next_tab`, `card_slot_0..14`, `camera_rotate_left/right`, `hero_attack_light/heavy`, `hero_roll`, `hero_guard`, `hero_salve`, `hero_lock_on`, `hero_skip_cinematic`, `dialogue_choice_1..5` | UI-02 (Classic / Grid bindings) | GP-02, GP-03, GP-04 |
 | Settings | `keyPreset` ('classic' / 'grid', `KEY_PRESETS`), `autoPause{battleStart, commanderFallen, formationRouted, narrativeEvents}`, `hintsSeen`, `simpleMode` (boolean / 'auto'), `relationColoring`, `minimapNorthUp`, `holdToToggle{guard, run}`, `subtitles` (defaults + `normalizeSettings` in settings.ts) | UI-01 (settings screen), UI-02 (input, HUD) | GP-02, GP-03, GP-04, GFX-04 |
+| Settings | `uiVolume` (UI bus, default 0.8; older stored settings gain it through `normalizeSettings`) | AUD-01 (mixer UI bus), UI-01 (settings slider) | - |
 | Quality | `shadows.contact/pcss`, `ssr`, `dof` ('off' / 'hero' / 'close'), `shaftsSamples`, `shaftsHalfRes`, `heightFog`, `lensEffects`, `grassDensity`, `practicalLights`, `treeImpostorDistance`, `villagerCap`, `crowdLod{vat0, vat1, impostor}`, `emissiveBoost`, `bakedAoBoost`, `postMerged`, `audio{voices, hrtf}`, `antialias` + 'taa' | GFX-01 (owns core/quality.ts, tunes the presets) | GFX-02..06, AUD-01 |
 | URL params | `lab`, `mission`, `mood`, `district`, `camdist`, `cine`, `colorblind`, `reducedmotion`, `keypreset`, `bench`, `age`, `deploy` (0 = skip deployment), `csm`, `splat`, `clip`, `count`, `kit` (params.ts) | consumer named in params.ts | all shots scripts |
+| URL params | `audioWorklet` (`?audioworklet=0` -> score buffers fallback; default true), passed by main.ts as `AudioManagerOptions.worklet`; the existing `debug` / `profiler` flags gate `window.__SAMRAJYA_AUDIO__` | AUD-01 | AUD-01 shots, QA-01 |
+| Boot | `main.ts` constructs `AudioManager(bus, settings, params.noAudio, { profiler, worklet })` - profiler system `audio` in normal play | CTO (main.ts) | AUD-01, QA-01 |
 | Debug API | `call(name, ...args)`, `showScreen(id, props)`, `hideScreen`, `screens()`, `labs()`, `goto('lab')` (core/debug.ts, app/debugApi.ts) | CORE-01 (done) | QA-01, every shots script |
 | Terrain | `primeHeightfield(spec, grids)`, `heightfieldFromGrids`, `extractHeightfieldGrids`, `heightfieldTransferList`, `peekHeightfield` (core/terrain/cache.ts); `Heightfield.fromGrids(spec, grids)` + `HeightfieldGrids` (core/terrain/heightfield.ts) | CORE-01 (done); GFX-02 `loadHeightfieldAsync` uses it | GP-03, GP-04 |
 | UI scaffolding | screen registry + placeholder, `UI_SERVICES` (ui/screens/index.ts, registry.ts, placeholder.ts) | CORE-01 (done); UIManager starts services: UI-02 | UI-01, UI-02 |

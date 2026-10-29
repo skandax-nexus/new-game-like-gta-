@@ -90,7 +90,9 @@ async function boot(): Promise<void> {
   const ui = new UIManager(el<HTMLElement>('ui-root'));
   ui.setScale(settings.uiScale);
   const input = new InputManager(canvas, bus, settings);
-  const audio = new AudioManager(bus, settings, params.noAudio);
+  // The app profiler shows main-thread audio as system 'audio' (+ audio.voices / audio.underruns) on F3 in
+  // normal play, not only in the audio lab; ?audioworklet=0 forces the buffers fallback for the score.
+  const audio = new AudioManager(bus, settings, params.noAudio, { profiler, worklet: params.audioWorklet });
   const saves = new SaveManager(createDefaultSaveStore());
   const scenes = new SceneManager();
   const session = new GameSession();

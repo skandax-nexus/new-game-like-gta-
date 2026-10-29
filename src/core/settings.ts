@@ -15,6 +15,7 @@ export const DEFAULT_SETTINGS: Readonly<GameSettings> = Object.freeze({
   musicVolume: 0.6,
   sfxVolume: 0.8,
   ambienceVolume: 0.7,
+  uiVolume: 0.8,
   uiScale: 1,
   edgeScroll: true,
   invertZoom: false,

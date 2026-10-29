@@ -37,6 +37,8 @@
  *   &splat=a,b,c,d                    4-layer terrain lookdev material ids (TA-07 viewer, GFX-02 lab)
  *   &clip=<name>  &count=N            VAT clip / instance count (TA-07 viewer, GFX-04 crowd lab)
  *   &kit=id1,id2,...                  multi-asset kit grid (TA-07 viewer; TA-02 / TA-03 evidence)
+ *   &audioworklet=0                   score streamed as scheduled AudioBuffers instead of the AudioWorklet (AUD-01;
+ *                                     default on). AUD-01 also reads `debug` / `profiler` (window.__SAMRAJYA_AUDIO__).
  */
 import type { AgeId, GameMode, HeroMood, KeyPreset, QualityTier, SceneId, Season, TerrainPreset, WeatherKind } from './types';
 import { AGE_IDS, GAME_MODES, HERO_MOODS, KEY_PRESETS, QUALITY_TIERS, SCENE_IDS, SEASONS, TERRAIN_PRESETS, WEATHER_KINDS } from './types';
@@ -93,6 +95,8 @@ export interface UrlParams {
   /** Instance count, 1..20000. */
   count: number | null;
   kit: string[] | null;
+  /** Score through the AudioWorklet stream (default true; ?audioworklet=0 or =false -> buffers fallback). */
+  audioWorklet: boolean;
 }
 
 function oneOf<T extends string>(v: string | null, allowed: readonly T[]): T | null {
@@ -183,6 +187,7 @@ export function parseUrlParams(search: string): UrlParams {
     clip: str('clip'),
     count: int(num(q.get('count'), 1, 20000)),
     kit: list(q.get('kit')),
+    audioWorklet: optFlag(q.get('audioworklet')) ?? true,
   };
 }
 

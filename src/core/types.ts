@@ -2994,6 +2994,8 @@ export interface GameSettings {
   musicVolume: number;
   sfxVolume: number;
   ambienceVolume: number;
+  /** UI bus volume 0..1 (clicks, panels, notifications, order acks); default 0.8. AUD-01 mixer, UI-01 settings slider. */
+  uiVolume: number;
   uiScale: number;
   edgeScroll: boolean;
   invertZoom: boolean;
