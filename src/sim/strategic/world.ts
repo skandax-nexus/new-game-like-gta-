@@ -68,9 +68,11 @@ import { expireGhostsDaily, updateVisibilityHourly } from './visibility';
 import { decidePrisoners } from './writeback';
 import { updateEconomyDaily, updateEconomyMonthly } from './economy';
 import { orderArmy, updateArmiesDaily, updateArmiesHourly, armySoldiers, makeArmy, makeArmyUnit } from './armies';
-import { declareWar, makePeace, respondToProposal, proposeTreaty, updateDiplomacyDaily, updateDiplomacyMonthly, createTreaty } from './diplomacy';
-import { appointGovernor, negotiateRebels, updateCharactersYearly, updatePoliticsDaily, updatePoliticsMonthly } from './politics';
-import { startSpyMission, updateEspionageDaily } from './espionage';
+import { arrangeMarriage, declareWar, makePeace, propose, respondToProposal, updateDiplomacyDaily, updateDiplomacyMonthly, createTreaty, validateResponse } from './diplomacy';
+import { appointGovernor, negotiateRebels, updatePoliticsDaily, updatePoliticsMonthly } from './politics';
+import { designateHeir, updateCharactersYearly } from './dynasty';
+import { appointCouncil, noteCommandForCouncil, updateCouncilMonthly } from './council';
+import { recallAgent, startMission, updateEspionageDaily } from './espionage';
 import { checkObjectives, evaluateEventsDaily, resolveEventChoice } from './events';
 import { runCampaignAI } from './ai';
 import { decideEngagement, stepDistantBattles } from './autoresolve';
@@ -637,6 +639,7 @@ export function tickWorld(world: WorldState, commands: readonly IssuedStrategicC
     updateEconomyMonthly(world, out);
     updatePoliticsMonthly(world, out);
     updateDiplomacyMonthly(world, out);
+    updateCouncilMonthly(world, out);
     sampleStats(world);
   }
   if (adv.seasonChanged) out.push({ kind: 'season_changed', season: seasonOf(world.calendar) });
@@ -686,8 +689,14 @@ export function validateStrategicCommand(world: WorldState, issued: IssuedStrate
   }
 }
 
-/** Apply one command. Returns true if accepted. Unknown/unimplemented kinds are ignored (false). */
+/** Apply one command. Returns true if accepted (refusals notify the player with the reason). */
 export function applyStrategicCommand(world: WorldState, issued: IssuedStrategicCommand, out: SimEvent[], terrain: TerrainQuery): boolean {
+  const ok = applyCommand(world, issued, out, terrain);
+  if (ok) noteCommandForCouncil(world, issued);
+  return ok;
+}
+
+function applyCommand(world: WorldState, issued: IssuedStrategicCommand, out: SimEvent[], terrain: TerrainQuery): boolean {
   const reason = validateStrategicCommand(world, issued);
   if (reason) {
     if (world.factions[issued.factionId]?.isPlayer) out.push({ kind: 'notification', factionId: issued.factionId, severity: 'warning', text: reason, focus: null });
@@ -767,23 +776,25 @@ export function applyStrategicCommand(world: WorldState, issued: IssuedStrategic
     case 'event_choice':
       return resolveEventChoice(world, c.eventInstanceId, c.choiceId, out);
     case 'propose':
-      proposeTreaty(world, issued.factionId, c.to, c.type, c.terms, out);
-      return true;
-    case 'respond_proposal':
+      return report(world, issued, out, propose(world, issued.factionId, c.to, c.type, c.terms, out).reason);
+    case 'respond_proposal': {
+      const r = validateResponse(world, issued.factionId, c.proposalId);
+      if (r) return report(world, issued, out, r);
       respondToProposal(world, c.proposalId, c.accept, out);
       return true;
+    }
+    case 'arrange_marriage':
+      return report(world, issued, out, arrangeMarriage(world, issued.factionId, c.characterId, c.otherCharacterId, out));
+    case 'appoint_council':
+      return report(world, issued, out, appointCouncil(world, issued.factionId, c.seat, c.characterId));
     case 'spy_mission':
-      return startSpyMission(world, issued.factionId, c.targetFactionId, c.mission, c.settlementId, c.agentCharacterId, out);
+      return report(world, issued, out, startMission(world, issued.factionId, c.targetFactionId, c.mission, c.settlementId, c.agentCharacterId).reason);
+    case 'recall_agent':
+      return report(world, issued, out, recallAgent(world, issued.factionId, c.agentId));
     case 'engagement_decision':
       return decideEngagement(world, c.engagementId as EngagementId, c.decision, out, terrain);
-    case 'designate_heir': {
-      const f = world.factions[issued.factionId];
-      const ch = world.characters[c.characterId];
-      if (!f || !ch || ch.factionId !== f.id) return false;
-      f.heirId = ch.id;
-      if (!ch.roles.includes('heir')) ch.roles.push('heir');
-      return true;
-    }
+    case 'designate_heir':
+      return report(world, issued, out, designateHeir(world, issued.factionId, c.characterId));
     case 'market_trade':
       return executeMarketTrade(world, issued.factionId, c.resource, c.lots, c.buy, out).ok;
     case 'negotiate_rebels':

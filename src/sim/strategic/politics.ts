@@ -23,7 +23,6 @@
  * Player / AI responses: negotiate_rebels (relief / tax cut / autonomy / coercion) and appoint_governor.
  */
 import type {
-  AdvisorRecommendation,
   ArmyState,
   ArmyUnitState,
   CharacterState,
@@ -728,63 +727,6 @@ export function updatePoliticsMonthly(world: WorldState, out: SimEvent[]): void 
   }
 }
 
-// ---------------------------------------------------------------------------------------------------
-// Characters / succession / council (baseline kept until the dynasty & council phase replaces it)
-// ---------------------------------------------------------------------------------------------------
-
-/** Aging, natural death. Called on new year. */
-export function updateCharactersYearly(world: WorldState, out: SimEvent[]): void {
-  for (const id of sortedKeys(world.characters)) {
-    const c = world.characters[id]!;
-    if (!c.alive) continue;
-    const age = world.calendar.year - c.birthYear;
-    if (age > 60) c.health = Math.max(0, c.health - 0.05);
-    if (c.health <= 0) {
-      c.alive = false;
-      c.deathYear = world.calendar.year;
-      out.push({ kind: 'character_died', characterId: c.id });
-      const f = world.factions[c.factionId];
-      if (f && f.rulerId === c.id) checkSuccession(world, f.id, out);
-    }
-  }
-}
-
-/** Resolve succession for a faction whose ruler died. Baseline: heir takes over. */
-export function checkSuccession(world: WorldState, factionId: FactionId, out: SimEvent[]): void {
-  const f = world.factions[factionId];
-  if (!f) return;
-  const ruler = f.rulerId ? world.characters[f.rulerId] : null;
-  if (ruler && ruler.alive) return;
-  const heir = f.heirId ? world.characters[f.heirId] : null;
-  if (heir && heir.alive) {
-    f.rulerId = heir.id;
-    f.heirId = null;
-    heir.roles = heir.roles.filter((r) => r !== 'heir').concat('ruler');
-    const dyn = f.dynastyId ? world.dynasties[f.dynastyId] : null;
-    if (dyn) {
-      dyn.headId = heir.id;
-      dyn.generation += 1;
-    }
-    out.push({ kind: 'succession', factionId, newRulerId: heir.id, crisis: false });
-  }
-}
-
-/** Competing advice from the council. Baseline: one generic line per seated advisor. */
-export function getCouncilRecommendations(world: WorldState, factionId: FactionId): AdvisorRecommendation[] {
-  const f = world.factions[factionId];
-  if (!f) return [];
-  const recs: AdvisorRecommendation[] = [];
-  for (const seat of Object.keys(f.council).sort() as (keyof typeof f.council)[]) {
-    const id = f.council[seat];
-    if (!id) continue;
-    recs.push({
-      advisorId: id,
-      seat,
-      topic: seat === 'commander' ? 'military' : seat === 'treasurer' ? 'economy' : seat === 'spymaster' ? 'espionage' : 'order',
-      text: seat === 'commander' ? 'Strengthen the southern crossings before the dry season.' : seat === 'treasurer' ? 'The granaries must be refilled before we march.' : 'Keep the nobles close and the people fed.',
-      suggestion: null,
-      urgency: 0.3,
-    });
-  }
-  return recs;
-}
+// Characters, succession and the council live in dynasty.ts / council.ts (re-exported for existing callers).
+export { checkSuccession, updateCharactersYearly } from './dynasty';
+export { getCouncilRecommendations } from './council';

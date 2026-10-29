@@ -32,9 +32,11 @@ import { SCENARIOS } from '../../data/campaign';
 import { seasonOf, totalDays } from './seasons';
 import { addChronicle, withWorldRng } from './state';
 import { armySoldiers } from './armies';
-import { createTreaty, declareWar, hasTreaty } from './diplomacy';
+import { createTreaty, declareWar, emptyTerms, hasTreaty } from './diplomacy';
 import { registerEffectRunner } from './construction';
 import { forceRebellionStage } from './politics';
+import { handleDeath } from './dynasty';
+import { noteEventChoice } from './council';
 import { transferOwnership } from './siege';
 
 function cmp(a: number, op: CompareOp, b: number): boolean {
@@ -224,7 +226,7 @@ export function applyEffect(world: WorldState, effect: Effect, scope: EventScope
     case 'sign_treaty': {
       const a = resolveFaction(world, effect.a, scope);
       const b = resolveFaction(world, effect.b, scope);
-      if (a && b && a.id !== b.id) createTreaty(world, effect.type, a.id, b.id);
+      if (a && b && a.id !== b.id) createTreaty(world, effect.type, a.id, b.id, emptyTerms(), out);
       return;
     }
     case 'declare_war': {
@@ -239,11 +241,7 @@ export function applyEffect(world: WorldState, effect: Effect, scope: EventScope
       return;
     case 'kill_character': {
       const c = resolveCharacter(world, effect.target, scope);
-      if (c && c.alive) {
-        c.alive = false;
-        c.deathYear = world.calendar.year;
-        out.push({ kind: 'character_died', characterId: c.id });
-      }
+      if (c && c.alive) handleDeath(world, c.id, out); // offices, heirs, succession (dynasty.ts)
       return;
     }
     case 'objective':
@@ -360,6 +358,7 @@ export function resolveEventChoice(world: WorldState, instanceId: string, choice
   if (!def || !choice) return false;
   if (choice.requires && !evalCondition(world, choice.requires, inst.scope)) return false;
   for (const e of choice.effects) applyEffect(world, e, inst.scope, out);
+  noteEventChoice(world, inst.scope.factionId, def.choices, choiceId, out);
   inst.status = 'resolved';
   inst.choiceId = choiceId;
   inst.resolvedDay = totalDays(world.calendar);
