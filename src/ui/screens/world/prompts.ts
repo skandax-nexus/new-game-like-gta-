@@ -43,10 +43,25 @@ export function eventModal(ctx: AppContext, ui: UIManager): Screen<'event_modal'
   frame.el.insertBefore(illus, frame.header);
   append(frame.body, h('div', { class: 'divider-lotus' }), body, meta, choices);
   let shownId = '';
+  // The choice cards print 1, 2, 3...: those keys pick them (before the world context turns digits into control
+  // groups), like dialogue choices in hero mode.
+  const onKey = (e: KeyboardEvent): void => {
+    if (!ui.isVisible('event_modal') || e.ctrlKey || e.altKey || e.metaKey || e.repeat) return;
+    const m = /^(?:Digit|Numpad)([1-9])$/.exec(e.code);
+    const btn = m ? (choices.children[Number(m[1]) - 1] as HTMLElement | undefined) : undefined;
+    if (!btn) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    btn.click();
+  };
+  if (typeof window !== 'undefined') window.addEventListener('keydown', onKey, true);
   return {
     id: 'event_modal',
     layer: 'modal',
     el: frame.el,
+    dispose() {
+      if (typeof window !== 'undefined') window.removeEventListener('keydown', onKey, true);
+    },
     update(p) {
       const w = p.world as WorldState;
       const inst = w.events.pending.find((e) => e.id === p.instanceId);
