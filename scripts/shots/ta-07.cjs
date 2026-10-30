@@ -114,16 +114,39 @@ async function main() {
   let browser;
   const run = (group) => !ONLY || ONLY.has(group);
 
-  /** Retry once when a capture comes back blank (SwiftShader occasionally loses the context under load). */
+  /**
+   * Why a capture is blank, or null. Two signatures: a flat frame (stdev < 1.5), and an empty canvas behind the
+   * HUD - the central region shows only the page background #0d0b18 (the canvas was resized / not presented when
+   * the screenshot ran; the HUD text keeps the whole-frame stdev high, so the stdev test alone misses it).
+   */
+  async function blankReason(file) {
+    const st = await sharp(file).stats();
+    const spread = Math.max(...st.channels.slice(0, 3).map((c) => c.stdev));
+    if (spread < 1.5) return `stdev ${spread.toFixed(2)}`;
+    const meta = await sharp(file).metadata();
+    const rect = { left: Math.round(meta.width * 0.25), top: Math.round(meta.height * 0.1), width: Math.round(meta.width * 0.5), height: Math.round(meta.height * 0.5) };
+    const { data, info } = await sharp(file).extract(rect).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+    let bg = 0;
+    for (let i = 0; i < info.width * info.height; i++) {
+      const r = data[i * 3];
+      const g = data[i * 3 + 1];
+      const b = data[i * 3 + 2];
+      if (Math.abs(r - 13) <= 3 && Math.abs(g - 11) <= 3 && Math.abs(b - 24) <= 3) bg++;
+    }
+    const share = bg / (info.width * info.height);
+    return share > 0.9 ? `canvas empty (${(share * 100).toFixed(0)} % page background)` : null;
+  }
+
+  /** Retry (twice) when a capture comes back blank (SwiftShader loses the context / a resize lands under load). */
   async function shoot(name, query, opts = {}) {
     let state = await shootOnce(name, query, opts);
     const file = path.join(OUT, `${name}.png`);
-    if (opts.allowBlank || !fs.existsSync(file)) return state;
-    const st = await sharp(file).stats();
-    const spread = Math.max(...st.channels.slice(0, 3).map((c) => c.stdev));
-    if (spread < 1.5) {
-      console.log(`[ta-07] ${name}: blank capture (stdev ${spread.toFixed(2)}), retrying`);
-      report.shots.pop();
+    if (opts.allowBlank) return state;
+    for (let attempt = 0; attempt < 2 && fs.existsSync(file); attempt++) {
+      const why = await blankReason(file);
+      if (!why) break;
+      console.log(`[ta-07] ${name}: blank capture (${why}), retrying`);
+      report.shots.pop(); // console errors of the blank attempt stay in `failures`: a retry never hides an error
       state = await shootOnce(name, query, opts);
     }
     return state;

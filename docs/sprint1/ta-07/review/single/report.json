@@ -1,0 +1,90 @@
+{
+  "shots": [
+    {
+      "name": "off_vat",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=medium&noaudio=1&asset=vat_test_dummy",
+      "ms": 11095,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "off_impostor",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=medium&noaudio=1&asset=impostor_test_tree",
+      "ms": 8860,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "off_flipbook",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=medium&noaudio=1&asset=fx_dust",
+      "ms": 8151,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "off_lut",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=medium&noaudio=1&asset=lut_golden",
+      "ms": 11666,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "off_image",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=medium&noaudio=1&asset=lens_dirt",
+      "ms": 10949,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "off_skinned",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=medium&noaudio=1&asset=skin_test_character",
+      "ms": 10974,
+      "errors": [],
+      "warnings": []
+    }
+  ],
+  "numbers": {
+    "assetsOff": {
+      "vat": {
+        "fallback": true,
+        "tier": "off",
+        "notes": [
+          "VAT unavailable (assets off / failed): no crowd"
+        ]
+      },
+      "impostor": {
+        "fallback": true,
+        "tier": "off",
+        "notes": [
+          "impostor unavailable (assets off / failed)"
+        ]
+      },
+      "flipbook": {
+        "fallback": true,
+        "tier": "off",
+        "notes": [
+          "flipbook unavailable (assets off / failed)"
+        ]
+      },
+      "lut": {
+        "fallback": true,
+        "tier": "off",
+        "notes": [
+          "LUT unavailable (assets off / failed / not shipped on this tier)"
+        ]
+      },
+      "image": {
+        "fallback": true,
+        "tier": "off",
+        "notes": [
+          "image unavailable (assets off / not shipped on this tier)"
+        ]
+      },
+      "skinned": {
+        "fallback": true,
+        "tier": "off",
+        "notes": []
+      }
+    }
+  }
+}
