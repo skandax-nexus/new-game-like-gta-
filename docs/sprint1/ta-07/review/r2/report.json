@@ -1,0 +1,782 @@
+{
+  "shots": [
+    {
+      "name": "fx_dust_playback",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_dust&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 27729,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_fire_playback",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_fire&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 41959,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_lightning_playback",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_lightning&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 55164,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_mist_playback",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_mist&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 47014,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_nature_playback",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_nature&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 26532,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_rain_playback",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_rain&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 41257,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_smoke_playback",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 35833,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_sparks_embers_playback",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_sparks_embers&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 55666,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_weapon_trail_playback",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_weapon_trail&hdri=sky_day&camera=front&phase=0.35",
+      "ms": 54470,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_fire_day_fxclip",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_fire&hdri=sky_day&camera=front&phase=0.35&noui=1",
+      "ms": 38004,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_fire_day_fxclip_bg",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_fire&hdri=sky_day&camera=front&phase=0.35&noui=1&hidefx=1",
+      "ms": 40822,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_fire_night_fxclip",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_fire&hdri=sky_night&camera=front&phase=0.35&noui=1",
+      "ms": 28006,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_fire_night_fxclip_bg",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_fire&hdri=sky_night&camera=front&phase=0.35&noui=1&hidefx=1",
+      "ms": 31679,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_sparks_embers_day_fxclip",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_sparks_embers&hdri=sky_day&camera=front&phase=0.3&noui=1",
+      "ms": 34827,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_sparks_embers_day_fxclip_bg",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_sparks_embers&hdri=sky_day&camera=front&phase=0.3&noui=1&hidefx=1",
+      "ms": 49244,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_smoke_sun_east",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_day&camera=front&sun=90,25&frame=20&tint=none&noui=1",
+      "ms": 36526,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_smoke_sun_west",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_day&camera=front&sun=270,25&frame=20&tint=none&noui=1",
+      "ms": 29038,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_rain_tagged",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_rain&hdri=sky_golden&camera=front&phase=0.35&noui=1",
+      "ms": 58332,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_rain_backdrop",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_rain&hdri=sky_golden&camera=front&phase=0.35&noui=1&hidefx=1",
+      "ms": 48209,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_rain_untagged",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_rain&hdri=sky_golden&camera=front&phase=0.35&noui=1&prepass=off",
+      "ms": 43364,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_nature_tagged",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_nature&hdri=sky_golden&camera=front&phase=0.35&noui=1",
+      "ms": 56385,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_nature_backdrop",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_nature&hdri=sky_golden&camera=front&phase=0.35&noui=1&hidefx=1",
+      "ms": 39458,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_nature_untagged",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_nature&hdri=sky_golden&camera=front&phase=0.35&noui=1&prepass=off",
+      "ms": 22577,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_dust_tagged",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_dust&hdri=sky_golden&camera=front&phase=0.35&noui=1",
+      "ms": 26758,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_dust_backdrop",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_dust&hdri=sky_golden&camera=front&phase=0.35&noui=1&hidefx=1",
+      "ms": 35408,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_dust_untagged",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_dust&hdri=sky_golden&camera=front&phase=0.35&noui=1&prepass=off",
+      "ms": 27046,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_smoke_tagged",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_golden&camera=front&phase=0.35&noui=1",
+      "ms": 33851,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_smoke_backdrop",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_golden&camera=front&phase=0.35&noui=1&hidefx=1",
+      "ms": 26298,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_smoke_untagged",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_golden&camera=front&phase=0.35&noui=1&prepass=off",
+      "ms": 24433,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_mist_tagged",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_mist&hdri=sky_golden&camera=front&phase=0.35&noui=1",
+      "ms": 27121,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_mist_backdrop",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_mist&hdri=sky_golden&camera=front&phase=0.35&noui=1&hidefx=1",
+      "ms": 27254,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "gtao_fx_mist_untagged",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_mist&hdri=sky_golden&camera=front&phase=0.35&noui=1&prepass=off",
+      "ms": 40082,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "r2_smoke_golden_ultra",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_golden&camera=front&frame=30&noui=1",
+      "ms": 26121,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "r2_dust_golden_ultra",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_dust&hdri=sky_golden&camera=front&phase=0.35&noui=1",
+      "ms": 22945,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "r2_smoke_golden_mobile",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=low&noaudio=1&asset=fx_smoke&hdri=sky_golden&camera=front&frame=30&noui=1",
+      "ms": 3366,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "r2_dust_golden_mobile",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=low&noaudio=1&asset=fx_dust&hdri=sky_golden&camera=front&phase=0.35&noui=1",
+      "ms": 3053,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "r2_smoke_noon_ultra",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_noon&camera=front&frame=30&noui=1",
+      "ms": 33950,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "r2_dust_noon_ultra",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_dust&hdri=sky_noon&camera=front&phase=0.35&noui=1",
+      "ms": 33589,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "r2_smoke_noon_mobile",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=low&noaudio=1&asset=fx_smoke&hdri=sky_noon&camera=front&frame=30&noui=1",
+      "ms": 3555,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "r2_dust_noon_mobile",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=low&noaudio=1&asset=fx_dust&hdri=sky_noon&camera=front&phase=0.35&noui=1",
+      "ms": 4082,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "r2_smoke_overcast_mobile",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=low&noaudio=1&asset=fx_smoke&hdri=sky_overcast&camera=front&frame=30&noui=1",
+      "ms": 5041,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_smoke_sun_east",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_day&camera=front&sun=90,25&frame=20&tint=none&noui=1",
+      "ms": 25930,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "fx_smoke_sun_west",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_smoke&hdri=sky_day&camera=front&sun=270,25&frame=20&tint=none&noui=1",
+      "ms": 31498,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "r2_fire_night_ultra",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_fire&hdri=sky_night&camera=front&phase=0.35&noui=1",
+      "ms": 28672,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "r2_fire_night_ultra_bg",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_fire&hdri=sky_night&camera=front&phase=0.35&noui=1&hidefx=1",
+      "ms": 30569,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "r2_fire_night_mobile",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=low&noaudio=1&asset=fx_fire&hdri=sky_night&camera=front&phase=0.35&noui=1",
+      "ms": 6460,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "r2_fire_night_mobile_bg",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=low&noaudio=1&asset=fx_fire&hdri=sky_night&camera=front&phase=0.35&noui=1&hidefx=1",
+      "ms": 7813,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "r2_fire_day_ultra",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_fire&hdri=sky_day&camera=front&phase=0.35&noui=1",
+      "ms": 28736,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "r2_fire_day_ultra_bg",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_fire&hdri=sky_day&camera=front&phase=0.35&noui=1&hidefx=1",
+      "ms": 39038,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "r2_weapon_trail_ultra",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_weapon_trail&hdri=sky_day&camera=front&phase=0.35&noui=1",
+      "ms": 30253,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "r2_sparks_parry_night",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=ultra&noaudio=1&asset=fx_sparks_embers&hdri=sky_night&camera=front&phase=0.3&noui=1",
+      "ms": 19568,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "off_vat",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=medium&noaudio=1&asset=vat_test_dummy&assets=off",
+      "ms": 12080,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "off_impostor",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=medium&noaudio=1&asset=impostor_test_tree&assets=off",
+      "ms": 10339,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "off_flipbook",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=medium&noaudio=1&asset=fx_dust&assets=off",
+      "ms": 11346,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "off_lut",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=medium&noaudio=1&asset=lut_golden&assets=off",
+      "ms": 12149,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "off_image",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=medium&noaudio=1&asset=lens_dirt&assets=off",
+      "ms": 12695,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "name": "off_skinned",
+      "url": "http://127.0.0.1:4452/?scene=assetviewer&quality=medium&noaudio=1&asset=skin_test_character&assets=off",
+      "ms": 15162,
+      "errors": [],
+      "warnings": []
+    }
+  ],
+  "numbers": {
+    "emissiveClip": [
+      {
+        "fx": "fx_fire",
+        "sky": "sky_day",
+        "effectPixels": 14273,
+        "nearWhite": 0,
+        "fraction": 0,
+        "paleCore": 129,
+        "paleFraction": 0.00903804385903454
+      },
+      {
+        "fx": "fx_fire",
+        "sky": "sky_night",
+        "effectPixels": 17600,
+        "nearWhite": 0,
+        "fraction": 0,
+        "paleCore": 811,
+        "paleFraction": 0.046079545454545456
+      },
+      {
+        "fx": "fx_sparks_embers",
+        "sky": "sky_day",
+        "effectPixels": 40634,
+        "nearWhite": 119,
+        "fraction": 0.0029285819756853866,
+        "paleCore": 1502,
+        "paleFraction": 0.03696411871831471
+      }
+    ],
+    "smokeLighting": {
+      "meanAbsDiff": 2.4674265769675925,
+      "changedPixels": 215104
+    },
+    "gtaoCards": [
+      {
+        "fx": "fx_rain",
+        "quads": 4,
+        "worstCornerDiffTagged": 0.7777777777777778,
+        "worstCornerDiffUntagged": 9.962962962962964
+      },
+      {
+        "fx": "fx_nature",
+        "quads": 6,
+        "worstCornerDiffTagged": 0.4791666666666667,
+        "worstCornerDiffUntagged": 4.208333333333333
+      },
+      {
+        "fx": "fx_dust",
+        "quads": 4,
+        "worstCornerDiffTagged": 0,
+        "worstCornerDiffUntagged": 10.289351851851851
+      },
+      {
+        "fx": "fx_smoke",
+        "quads": 1,
+        "worstCornerDiffTagged": 0,
+        "worstCornerDiffUntagged": 4.189333333333333
+      },
+      {
+        "fx": "fx_mist",
+        "quads": 4,
+        "worstCornerDiffTagged": 0,
+        "worstCornerDiffUntagged": 3.5020576131687244
+      }
+    ],
+    "r2atlas": {
+      "fireChroma": [
+        {
+          "tier": "ultra",
+          "size": 2048,
+          "r1": {
+            "emitting": 550646,
+            "greenOrBlueLeaning": 7866,
+            "storedTexelsNotGrey": 550635
+          },
+          "r2": {
+            "emitting": 341304,
+            "greenOrBlueLeaning": 0,
+            "storedTexelsNotGrey": 0
+          }
+        },
+        {
+          "tier": "high",
+          "size": 1024,
+          "r1": {
+            "emitting": 115267,
+            "greenOrBlueLeaning": 3723,
+            "storedTexelsNotGrey": 115262
+          },
+          "r2": {
+            "emitting": 52516,
+            "greenOrBlueLeaning": 0,
+            "storedTexelsNotGrey": 0
+          }
+        },
+        {
+          "tier": "mobile",
+          "size": 512,
+          "r1": {
+            "emitting": 34381,
+            "greenOrBlueLeaning": 1391,
+            "storedTexelsNotGrey": 34380
+          },
+          "r2": {
+            "emitting": 14794,
+            "greenOrBlueLeaning": 0,
+            "storedTexelsNotGrey": 0
+          }
+        }
+      ],
+      "litNormals": [
+        {
+          "id": "fx_smoke",
+          "r1": 0.6499811754251873,
+          "r2": 0.8807113296789031
+        },
+        {
+          "id": "fx_dust",
+          "r1": 0.5718751893707456,
+          "r2": 0.9178098537788039
+        }
+      ],
+      "trail": [
+        {
+          "sequence": "trail",
+          "r1": {
+            "meanFlatRun": 1.056941431670282,
+            "longestFlatRun": 3,
+            "greenwardHueSteps": 1171
+          },
+          "r2": {
+            "meanFlatRun": 1.1070028011204482,
+            "longestFlatRun": 2,
+            "greenwardHueSteps": 1
+          }
+        },
+        {
+          "sequence": "trail_wide",
+          "r1": {
+            "meanFlatRun": 1.0190820010314594,
+            "longestFlatRun": 2,
+            "greenwardHueSteps": 1251
+          },
+          "r2": {
+            "meanFlatRun": 1.1751412429378532,
+            "longestFlatRun": 3,
+            "greenwardHueSteps": 5
+          }
+        }
+      ]
+    },
+    "r2": {
+      "lit": [
+        {
+          "fx": "fx_smoke",
+          "sky": "sky_golden",
+          "tier": "ultra",
+          "pixels": 27845,
+          "corePixels": 13040,
+          "minValue": 0.12549019607843137,
+          "p2Value": 0.1411764705882353,
+          "medianValue": 0.2784313725490196,
+          "p2OverMedian": 0.5070422535211268,
+          "shadowOverLit": 0.3663366336633664,
+          "p10OverP90": 0.4421052631578947,
+          "coreP10Value": 0.16470588235294117,
+          "coreP90Value": 0.37254901960784315
+        },
+        {
+          "fx": "fx_dust",
+          "sky": "sky_golden",
+          "tier": "ultra",
+          "pixels": 9743,
+          "corePixels": 1143,
+          "minValue": 0.21568627450980393,
+          "p2Value": 0.2901960784313726,
+          "medianValue": 0.5647058823529412,
+          "p2OverMedian": 0.513888888888889,
+          "shadowOverLit": 0.507537688442211,
+          "p10OverP90": 0.5692307692307693,
+          "coreP10Value": 0.43529411764705883,
+          "coreP90Value": 0.7647058823529411
+        },
+        {
+          "fx": "fx_smoke",
+          "sky": "sky_golden",
+          "tier": "mobile",
+          "pixels": 9380,
+          "corePixels": 4542,
+          "minValue": 0.13725490196078433,
+          "p2Value": 0.15294117647058825,
+          "medianValue": 0.2823529411764706,
+          "p2OverMedian": 0.5416666666666667,
+          "shadowOverLit": 0.42553191489361697,
+          "p10OverP90": 0.4835164835164835,
+          "coreP10Value": 0.17254901960784313,
+          "coreP90Value": 0.3568627450980392
+        },
+        {
+          "fx": "fx_dust",
+          "sky": "sky_golden",
+          "tier": "mobile",
+          "pixels": 973,
+          "corePixels": 98,
+          "minValue": 0.47058823529411764,
+          "p2Value": 0.49019607843137253,
+          "medianValue": 0.6235294117647059,
+          "p2OverMedian": 0.7861635220125786,
+          "shadowOverLit": 0.6956521739130435,
+          "p10OverP90": 0.7475247524752475,
+          "coreP10Value": 0.592156862745098,
+          "coreP90Value": 0.792156862745098
+        },
+        {
+          "fx": "fx_smoke",
+          "sky": "sky_noon",
+          "tier": "ultra",
+          "pixels": 27845,
+          "corePixels": 13040,
+          "minValue": 0.1411764705882353,
+          "p2Value": 0.1568627450980392,
+          "medianValue": 0.23921568627450981,
+          "p2OverMedian": 0.6557377049180327,
+          "shadowOverLit": 0.5714285714285714,
+          "p10OverP90": 0.626865671641791,
+          "coreP10Value": 0.16470588235294117,
+          "coreP90Value": 0.2627450980392157
+        },
+        {
+          "fx": "fx_dust",
+          "sky": "sky_noon",
+          "tier": "ultra",
+          "pixels": 9743,
+          "corePixels": 1143,
+          "minValue": 0.23137254901960785,
+          "p2Value": 0.27450980392156865,
+          "medianValue": 0.4627450980392157,
+          "p2OverMedian": 0.5932203389830508,
+          "shadowOverLit": 0.5507246376811594,
+          "p10OverP90": 0.6793893129770993,
+          "coreP10Value": 0.34901960784313724,
+          "coreP90Value": 0.5137254901960784
+        },
+        {
+          "fx": "fx_smoke",
+          "sky": "sky_noon",
+          "tier": "mobile",
+          "pixels": 9380,
+          "corePixels": 4542,
+          "minValue": 0.1411764705882353,
+          "p2Value": 0.1607843137254902,
+          "medianValue": 0.24313725490196078,
+          "p2OverMedian": 0.6612903225806452,
+          "shadowOverLit": 0.5774647887323944,
+          "p10OverP90": 0.6323529411764707,
+          "coreP10Value": 0.16862745098039217,
+          "coreP90Value": 0.26666666666666666
+        },
+        {
+          "fx": "fx_dust",
+          "sky": "sky_noon",
+          "tier": "mobile",
+          "pixels": 973,
+          "corePixels": 98,
+          "minValue": 0.396078431372549,
+          "p2Value": 0.41568627450980394,
+          "medianValue": 0.5058823529411764,
+          "p2OverMedian": 0.8217054263565893,
+          "shadowOverLit": 0.7248322147651006,
+          "p10OverP90": 0.8068965517241379,
+          "coreP10Value": 0.4588235294117647,
+          "coreP90Value": 0.5686274509803921
+        },
+        {
+          "fx": "fx_smoke",
+          "sky": "sky_overcast",
+          "tier": "mobile",
+          "pixels": 9380,
+          "corePixels": 4542,
+          "minValue": 0.09411764705882353,
+          "p2Value": 0.10196078431372549,
+          "medianValue": 0.15294117647058825,
+          "p2OverMedian": 0.6666666666666666,
+          "shadowOverLit": 0.6341463414634145,
+          "p10OverP90": 0.6923076923076923,
+          "coreP10Value": 0.10588235294117647,
+          "coreP90Value": 0.15294117647058825
+        }
+      ],
+      "smokeEastWest": {
+        "pixels": 30246,
+        "meanAbsDiff": 32.467576979876156
+      },
+      "fireChroma": [
+        {
+          "sky": "sky_night",
+          "tier": "ultra",
+          "dimEmissionPixels": 13307,
+          "dimLeaning": 0,
+          "brightPixels": 6191,
+          "brightLeaning": 1706,
+          "occlusionDominated": 0
+        },
+        {
+          "sky": "sky_night",
+          "tier": "mobile",
+          "dimEmissionPixels": 2610,
+          "dimLeaning": 0,
+          "brightPixels": 2224,
+          "brightLeaning": 493,
+          "occlusionDominated": 0
+        },
+        {
+          "sky": "sky_day",
+          "tier": "ultra",
+          "dimEmissionPixels": 9220,
+          "dimLeaning": 0,
+          "brightPixels": 7267,
+          "brightLeaning": 1482,
+          "occlusionDominated": 221
+        }
+      ],
+      "trailRuns": [
+        {
+          "sequence": "trail",
+          "meanFlatRun": 1.0366288492706646,
+          "longestFlatRun": 3
+        },
+        {
+          "sequence": "trail_wide",
+          "meanFlatRun": 1.0426908150064682,
+          "longestFlatRun": 3
+        }
+      ]
+    },
+    "assetsOff": {
+      "vat": {
+        "fallback": true,
+        "tier": "off",
+        "notes": [
+          "VAT unavailable (assets off / failed): no crowd"
+        ]
+      },
+      "impostor": {
+        "fallback": true,
+        "tier": "off",
+        "notes": [
+          "impostor unavailable (assets off / failed)"
+        ]
+      },
+      "flipbook": {
+        "fallback": true,
+        "tier": "off",
+        "notes": [
+          "flipbook unavailable (assets off / failed)"
+        ]
+      },
+      "lut": {
+        "fallback": true,
+        "tier": "off",
+        "notes": [
+          "LUT unavailable (assets off / failed / not shipped on this tier)"
+        ]
+      },
+      "image": {
+        "fallback": true,
+        "tier": "off",
+        "notes": [
+          "image unavailable (assets off / not shipped on this tier)"
+        ]
+      },
+      "skinned": {
+        "fallback": true,
+        "tier": "off",
+        "notes": []
+      }
+    }
+  }
+}
