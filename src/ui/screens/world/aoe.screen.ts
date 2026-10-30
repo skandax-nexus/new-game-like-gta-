@@ -1,7 +1,8 @@
 /**
  * Contracts v2 AoE screens (DESIGN_SPEC §8.2, §8.4, §7.5, §12.2), discovered by the screen registry:
  *   build_placement  placement ghost info: building, cost (shortages red), validity reason, rotation, Shift repeat,
- *                    touch rotate / cross / tick buttons (HUD command 'placement' + input action placement_rotate)
+ *                    touch rotate / cross / tick buttons (HUD command 'placement' only; the R key is the input
+ *                    action placement_rotate - one rotation per press, the scene handles both paths)
  *   market           grain / timber / stone lots: price, buy / sell (Shift or x5 = five lots), price sparkline
  *   age_panel        current age banner, next-age requirements checklist, two landmark cards ('Choose site'),
  *                    unlock preview (buildings, units, treaties, bonuses)
@@ -39,7 +40,7 @@ function buildPlacement(ctx: AppContext, ui: UIManager): Screen<'build_placement
   const costs = h('div', { class: 'bp-costs' });
   const valid = h('div', { class: 'bp-valid', role: 'status', 'aria-live': 'polite' });
   const keys = h('div', { class: 'bp-keys' });
-  const rotateBtn = h('button', { class: 'btn icon big bp-rotate', type: 'button', 'aria-label': 'Rotate', onclick: () => (emitHud(ui.commands, { kind: 'placement', action: 'rotate' }), ctx.input.injectAction('placement_rotate'), sfx(ctx)) }, icon('rotate'));
+  const rotateBtn = h('button', { class: 'btn icon big bp-rotate', type: 'button', 'aria-label': 'Rotate', onclick: () => (emitHud(ui.commands, { kind: 'placement', action: 'rotate' }), sfx(ctx)) }, icon('rotate'));
   const cancelBtn = h('button', { class: 'btn icon big danger bp-cancel', type: 'button', 'aria-label': 'Cancel placement', onclick: () => (emitHud(ui.commands, { kind: 'placement', action: 'cancel' }), sfx(ctx, 'ui_close')) }, icon('cross'));
   const okBtn = h('button', { class: 'btn icon big primary bp-ok', type: 'button', 'aria-label': 'Place here', onclick: () => (emitHud(ui.commands, { kind: 'placement', action: 'confirm' }), sfx(ctx, 'ui_confirm')) }, icon('check'));
   const touchRow = h('div', { class: 'bp-touch' }, cancelBtn, rotateBtn, okBtn);
