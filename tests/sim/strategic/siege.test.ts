@@ -556,4 +556,50 @@ describe('siege logistics in the real tick (review S1, DESIGN_SPEC §7.8 rule 1,
     expect(royal.supply.starvationDays).toBe(0);
     expect(r.foodConsumption).toBeCloseTo(dailyConsumption(twin, twin.settlements.rajapura!) + armyFoodNeed(w, royal), -1);
   });
+
+  it("the player's conquest path by commands, campaign AI active: a depot by the camp feeds the Royal Host until Giridurg falls", () => {
+    // Lead review (round 2): the tests above clear Giridurga's armies; this one plays the path the player has - the
+    // Royal Host with one engineer formation is ordered to besiege, then create_depot behind the camp and
+    // requisition_grain from Rajapura (topped up when it runs low) - while every realm's AI and event keeps running.
+    const w = campaign(1);
+    const host = w.armies.army_royal!;
+    const eng = makeArmy(w, 'army_tmp', 'tmp', 'heartland', host.x, host.z, [{ unitClass: 'engineers', formations: 1 }], null);
+    host.units.push(...eng.units);
+    issue(w, { kind: 'army_order', armyId: host.id, order: { kind: 'besiege', settlementId: 'giridurg' } });
+    const g = w.settlements.giridurg!;
+    runDays(w, 10, { until: () => host.status === 'besieging' });
+    expect(host.status).toBe('besieging');
+    expect(g.besiegedBy).toBe(host.id);
+    // The depot 150 m behind the camp (away from the walls): an enemy army within 300 m would refuse it.
+    const len = Math.hypot(host.x - g.x, host.z - g.z);
+    const x = host.x + ((host.x - g.x) / len) * 150;
+    const z = host.z + ((host.z - g.z) / len) * 150;
+    issue(w, { kind: 'create_depot', x, z, settlementId: null });
+    const depotId = Object.keys(w.depots).find((id) => w.depots[id]!.factionId === 'heartland' && Math.hypot(w.depots[id]!.x - x, w.depots[id]!.z - z) < 1);
+    expect(depotId).toBeDefined();
+    const depot = w.depots[depotId as string]!;
+    let fedDays = 0;
+    let wallsDownDay = -1;
+    for (let day = 0; day < 90 && wallsDownDay < 0; day++) {
+      if (depot.food < 1500) {
+        const amount = Math.floor(Math.min(depot.capacity - depot.food, 0.5 * w.settlements.rajapura!.foodStored));
+        issue(w, { kind: 'requisition_grain', settlementId: 'rajapura', amount, toArmyId: null, toDepotId: depot.id });
+      }
+      runDays(w, 1);
+      expect(host.status).toBe('besieging');
+      if (depot.readyOnDay < w.calendar.totalHours / 24 && depot.food > 0) {
+        // Rule 2 every day the depot is ready and holds grain: the siege camp is fed, never hungry.
+        expect(host.supply.sourceId).toBe(depot.id);
+        expect(host.supply.foraging).toBe(false);
+        expect(host.supply.starvationDays).toBe(0);
+        fedDays++;
+      }
+      if (g.wallHp <= 0) wallsDownDay = day;
+    }
+    // Engineers (88/day for Suvarna) + 8 war elephants (22/day): ~40 days at full strength, more with siege attrition.
+    expect(wallsDownDay).toBeGreaterThan(30);
+    expect(wallsDownDay).toBeLessThan(70);
+    expect(fedDays).toBeGreaterThan(wallsDownDay - 8);
+    expect(host.units.some((u) => u.unitClass === 'engineers' && u.soldiers > 0)).toBe(true);
+  });
 });

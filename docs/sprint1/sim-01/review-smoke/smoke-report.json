@@ -1,33 +1,11 @@
 {
-  "build": "0.1.0+63a026f",
+  "build": "0.1.0+08fdaa4",
   "quality": "high",
   "shots": [
     {
-      "name": "menu",
-      "url": "http://127.0.0.1:4455/?scene=menu&quality=high&noaudio=1",
-      "ms": 49377,
-      "errors": [],
-      "state": {
-        "scene": "menu",
-        "mode": null,
-        "paused": false,
-        "timeScale": 1,
-        "quality": "high",
-        "sceneState": {
-          "scene": "menu",
-          "center": {
-            "x": -534.3999999999999,
-            "z": -598.72
-          }
-        },
-        "fps": 4.182059030917008,
-        "errors": 0
-      }
-    },
-    {
       "name": "world",
       "url": "http://127.0.0.1:4455/?scene=world&quality=high&noaudio=1&seed=7&paused=1",
-      "ms": 32390,
+      "ms": 40092,
       "errors": [],
       "state": {
         "scene": "world",
@@ -90,14 +68,14 @@
           },
           "blocked": false
         },
-        "fps": 3.7820381917919073,
+        "fps": 3.1191515422103566,
         "errors": 0
       }
     },
     {
       "name": "world-overview",
       "url": "http://127.0.0.1:4455/?scene=world&quality=high&noaudio=1&seed=7&paused=1&camera=overview",
-      "ms": 29349,
+      "ms": 39132,
       "errors": [],
       "state": {
         "scene": "world",
@@ -160,29 +138,7 @@
           },
           "blocked": false
         },
-        "fps": 2.977371958844579,
-        "errors": 0
-      }
-    },
-    {
-      "name": "menu-mobile",
-      "url": "http://127.0.0.1:4455/?scene=menu&quality=low&noaudio=1",
-      "ms": 5723,
-      "errors": [],
-      "state": {
-        "scene": "menu",
-        "mode": null,
-        "paused": false,
-        "timeScale": 1,
-        "quality": "low",
-        "sceneState": {
-          "scene": "menu",
-          "center": {
-            "x": -534.3999999999999,
-            "z": -598.72
-          }
-        },
-        "fps": 3.93287882455301,
+        "fps": 4.092909071574911,
         "errors": 0
       }
     }
