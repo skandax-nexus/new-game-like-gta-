@@ -3600,3 +3600,18 @@
 :root[data-layout='phone-landscape'] .eng-factors {
   margin: 4px 0;
 }
+/* Phones: with a modal open, toasts drop to the bottom edge instead of covering the modal's title. */
+:root[data-layout='phone'] .ui-layer-modal.has-modal ~ .ui-layer-toast,
+:root[data-layout='phone-landscape'] .ui-layer-modal.has-modal ~ .ui-layer-toast {
+  justify-content: flex-end;
+  padding-top: 0;
+  padding-bottom: calc(10px + var(--safe-bottom));
+}
+/* Landscape phones: a shorter illustration band keeps the event text and choices in view. */
+:root[data-layout='phone-landscape'] .event-illus {
+  height: 56px;
+}
+:root[data-layout='phone-landscape'] .event-illus > .icon {
+  width: 36px;
+  height: 36px;
+}
