@@ -367,3 +367,63 @@ describe("§6.8 / §6.6.5 [REQ GP-01]: a garrison's arrowless archers on their o
     expect(onWalls(b.ctx, arch)).toBe(true);
   });
 });
+
+describe('§6.6.5 garrison formations keep their post on intact walls (lead review, round 2)', () => {
+  // Segment 3 (no gate): the garrison archers stand on its wall walk (10 m inside the radius); an attacker spear block
+  // walks from 220 m out to the foot of that wall. Ranged formations default to the skirmish stance.
+  const A = ((3 + 0.5) / 12) * 2 * PI;
+
+  function wallArchers(): TestBattle {
+    const walk = at(A, R - 10);
+    const far = at(A, R + 220);
+    const b = testBattle({
+      kind: 'siege',
+      fortification: fort(),
+      attackerSide: 0,
+      timeLimitSec: 900,
+      sides: [[{ cls: 'spearmen', x: far.x, z: far.z, facing: A + PI }], [{ cls: 'archers', x: walk.x, z: walk.z, facing: A }]],
+    });
+    const foot = at(A, R + 15);
+    order(b, 0, 0, { type: 'move_to', x: foot.x, z: foot.z, facing: A + PI, run: false });
+    return b;
+  }
+
+  it('neither the skirmish stance (evading melee threats) nor the skirmish order (keeping range, closing on a far target) takes them off the wall walk', () => {
+    for (const how of ['hold', 'skirmish'] as const) {
+      const b = wallArchers();
+      const arch = b.state.formations[1]!;
+      const r0 = Math.hypot(arch.x, arch.z);
+      expect(arch.stance, how).toBe('skirmish');
+      if (how === 'skirmish') expect(order(b, 1, 1, { type: 'skirmish', target: 0 }), how).toBeNull();
+      let minR = r0;
+      let maxR = r0;
+      runFor(b, 130, (s) => {
+        const r = Math.hypot(s.formations[1]!.x, s.formations[1]!.z);
+        minR = Math.min(minR, r);
+        maxR = Math.max(maxR, r);
+        return false;
+      });
+      const spear = b.state.formations[0]!;
+      // The enemy stands before the wall, well inside 0.4 x range (the skirmish-stance evasion distance) ...
+      expect(Math.hypot(spear.x, spear.z), how).toBeLessThan(R + 40);
+      expect(Math.hypot(spear.x - arch.x, spear.z - arch.z), how).toBeLessThan(0.4 * effectiveRange(b.state, b.ctx, arch, null));
+      expect(wallBetween(b.state, b.ctx, arch, spear), how).toBe(true);
+      // ... and the archers never left their post: they shot from the walls the whole time.
+      expect(maxR - minR, how).toBeLessThan(0.5);
+      expect(onWalls(b.ctx, arch), how).toBe(true);
+      expect(arch.ammo, how).toBeLessThan(10);
+    }
+  });
+
+  it('a ladder up on that stretch ends the protection: the skirmish stance steps back from the climbers again', () => {
+    const b = wallArchers();
+    const arch = b.state.formations[1]!;
+    runFor(b, 130);
+    expect(onWalls(b.ctx, arch)).toBe(true);
+    const r0 = Math.hypot(arch.x, arch.z);
+    b.state.siege!.segments[3]!.ladder = true;
+    expect(wallBetween(b.state, b.ctx, arch, b.state.formations[0]!)).toBe(false);
+    runFor(b, 5);
+    expect(Math.hypot(arch.x, arch.z)).toBeLessThan(r0 - 1);
+  });
+});

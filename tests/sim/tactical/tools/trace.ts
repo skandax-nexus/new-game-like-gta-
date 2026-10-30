@@ -6,7 +6,9 @@
  *   node_modules/.bin/vite-node tests/sim/tactical/tools/trace.ts <out.json>
  *
  * Traces: 'river' (1,000-soldier river crossing, AI vs AI), 'plains' (1,000-soldier balanced skirmish), 'siege'
- * (scripted assault: ram on the main gate, ladders on the east wall, elephants, defenders on the walls).
+ * (scripted assault: ram on the main gate, ladders on the east wall, elephants, defenders on the walls). The garrison
+ * archers keep their post on the intact walls (orders.ts holdsWallAgainst), so the elephants wait out of the fight
+ * until the gate archers have shot their quivers dry, then batter the main gate.
  */
 import { writeFileSync } from 'node:fs';
 import type { BattleEventRecord, BattleSetup, BattleState, TerrainQuery } from '../../../../src/core/types';
@@ -136,6 +138,7 @@ const traces: Record<string, unknown> = {};
     ],
   });
   let phase = 0;
+  let elephantsSent = false;
   traces.siege = run(setup, terrain, {
     maxSec: 600,
     every: 2,
@@ -144,7 +147,11 @@ const traces: Record<string, unknown> = {};
         issueBattleCommand(s, 0, { kind: 'order', formations: [0], order: { type: 'construct', work: 'ram', x: 35, z: 210, facing: Math.PI }, queue: false });
         issueBattleCommand(s, 0, { kind: 'order', formations: [1], order: { type: 'construct', work: 'ladder', x: 128, z: -22, facing: -Math.PI / 2 }, queue: false });
         issueBattleCommand(s, 0, { kind: 'order', formations: [5], order: { type: 'skirmish', target: 7 }, queue: false });
-        issueBattleCommand(s, 0, { kind: 'order', formations: [6], order: { type: 'move_to', x: 36, z: 142, facing: Math.PI + 0.26, run: false }, queue: false });
+      }
+      // The elephants go for the main gate once the archers above it are out of arrows (elephants panic under fire).
+      if (!elephantsSent && s.formations[7]!.ammo <= 0) {
+        elephantsSent = true;
+        issueBattleCommand(s, 0, { kind: 'order', formations: [6], order: { type: 'move_to', x: 34, z: 136, facing: Math.PI + 0.26, run: false }, queue: false });
       }
       if (phase === 0 && s.siege!.segments.some((g) => g.ladder)) {
         phase = 1;

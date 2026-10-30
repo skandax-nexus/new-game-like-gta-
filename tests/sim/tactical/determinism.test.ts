@@ -92,7 +92,9 @@ describe('tactical determinism: resume from serialized state', () => {
           { cls: 'archers', x: -40, z: 280, facing: Math.PI },
         ],
         [
-          { cls: 'archers', x: 30, z: 100, facing: 0 },
+          // On the wall walk beside the main gate. Garrison archers keep their post on intact walls (orders.ts
+          // holdsWallAgainst); here the elephants still reach the gate and break it (72.7 s) before the ram arrives.
+          { cls: 'archers', x: 20, z: 106, facing: 0 },
           { cls: 'spearmen', x: 0, z: 70, facing: 0 },
           { cls: 'spearmen', x: 0, z: -20, facing: 0 },
         ],

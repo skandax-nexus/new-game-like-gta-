@@ -24,6 +24,9 @@
  * Shift-queue: `queue: true` appends; the next order starts when the current one completes.
  * Stances: aggressive (engage within 30 m, pursue 60 m), defensive, skirmish (step back from melee threats within
  * 0.4 x range), hold_fire (as defensive, no fire at will).
+ * Walls (§6.6.5): a garrison formation on its own wall walk keeps its post against an enemy beyond the intact wall -
+ * it neither steps back (skirmish stance, keeping range) nor marches out through a gate after a target beyond range;
+ * a ladder, breach or broken gate on that stretch ends the protection (`holdsWallAgainst`).
  * Routing formations run for their own map edge and leave the battle there; panicking elephants run from the
  * shooter for 8 s ignoring orders; rallying formations regroup for 15 s.
  */
@@ -33,9 +36,9 @@ import { RULES } from '../../data/rules';
 import { UNITS } from '../../data/units';
 import type { BattleContext, RulesContext } from './context';
 import { formationSpeed, moveFormation, runAlong, setFrontage, turnInPlace } from './formations';
-import { standing } from './morale';
+import { onWalls, standing } from './morale';
 import { effectiveRange } from './projectiles';
-import { buildRate, completeWork, gateNear, repairGate, segmentNear, WORK_HP, WORK_SECONDS, workNear } from './siege';
+import { buildRate, completeWork, gateNear, repairGate, segmentNear, wallBetween, WORK_HP, WORK_SECONDS, workNear } from './siege';
 import { angleFromCenter, ringPoint } from './fort';
 import { canCharge, isMountedOrBeast, isShooter, shapeMods } from './stats';
 
@@ -176,13 +179,25 @@ function faceThreats(state: BattleState, ctx: BattleContext, f: FormationState, 
   if (Math.abs(angleDelta(f.facing, want)) > 0.05) turnInPlace(ctx, f, want, dt);
 }
 
-/** Skirmish-stance evasion: step back from melee threats within 0.4 x range. Returns true if it moved. */
+/**
+ * A garrison formation standing on its own walls (`onWalls`) with the intact wall between it and `e` (`wallBetween`:
+ * no breach, broken gate or ladder on that stretch) keeps its post (§6.6.5): it keeps the wall bonuses and, out of
+ * arrows, holds the walls (§6.8 [REQ GP-01]) instead of stepping back into the town or marching out of a gate.
+ */
+export function holdsWallAgainst(state: BattleState, ctx: BattleContext, f: FormationState, e: FormationState): boolean {
+  return onWalls(ctx, f) && wallBetween(state, ctx, f, e);
+}
+
+/**
+ * Skirmish-stance evasion: step back from melee threats within 0.4 x range - not from the wall walk while the intact
+ * wall stands between (`holdsWallAgainst`). Returns true if it moved.
+ */
 function evade(state: BattleState, ctx: BattleContext, f: FormationState, dt: number): boolean {
   const st = ctx.stats[f.index]!;
   if (f.stance !== 'skirmish' || !isShooter(st) || f.ammo <= 0) return false;
   const r = effectiveRange(state, ctx, f, null) * 0.4;
   const e = nearestEnemy(state, ctx, f, r, true);
-  if (!e) return false;
+  if (!e || holdsWallAgainst(state, ctx, f, e)) return false;
   const dx = f.x - e.x;
   const dz = f.z - e.z;
   const d = Math.sqrt(dx * dx + dz * dz) || 1;
@@ -190,17 +205,22 @@ function evade(state: BattleState, ctx: BattleContext, f: FormationState, dt: nu
   return true;
 }
 
-/** Move a ranged formation to keep `t` between 0.4 and 0.9 x range (skirmish order / ranged attack_target). */
+/**
+ * Move a ranged formation to keep `t` between 0.4 and 0.9 x range (skirmish order / ranged attack_target). A garrison
+ * formation on its walls with the intact wall between it and `t` stands, faces `t` and shoots when in range
+ * (`holdsWallAgainst`).
+ */
 function keepRange(state: BattleState, ctx: BattleContext, f: FormationState, t: FormationState, dt: number): boolean {
   const r = effectiveRange(state, ctx, f, t);
   const dx = t.x - f.x;
   const dz = t.z - f.z;
   const d = Math.sqrt(dx * dx + dz * dz);
-  if (d > r * 0.9) {
+  const post = holdsWallAgainst(state, ctx, f, t);
+  if (!post && d > r * 0.9) {
     moveFormation(ctx, f, t.x - (dx / d) * r * 0.8, t.z - (dz / d) * r * 0.8, false, null, false, 1, dt, state.formations);
     return true;
   }
-  if (d < r * 0.4) {
+  if (!post && d < r * 0.4) {
     moveFormation(ctx, f, f.x - (dx / d) * 20, f.z - (dz / d) * 20, true, null, true, 1, dt);
     return true;
   }
