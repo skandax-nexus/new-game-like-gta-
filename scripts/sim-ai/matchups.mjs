@@ -1,0 +1,145 @@
+#!/usr/bin/env node
+/**
+ * SIM-02 DESIGN_SPEC §13.3 matchup report - the full 200-run version of tests/sim/ai/matchups.test.ts.
+ * OWNER: AI Engineer - Battle AI, Intents & Campaign AI (SIM-02).
+ *
+ *   node scripts/sim-ai/matchups.mjs                  -> docs/sprint1/sim-02/matchups.{md,json} (200 runs per row)
+ *   node scripts/sim-ai/matchups.mjs --runs=60 --jobs=3 --rows=guards_vs_spears,balanced_mirror
+ *   MATCHUPS_OUT=some/dir node scripts/sim-ai/matchups.mjs
+ *
+ * Loads the real TypeScript simulation through Vite's SSR module loader (no extra dependencies) and plays every row of
+ * tests/sim/ai/harness/matchups.ts AI vs AI on the seed's plains map (autoresolve terrain resolution), seeds 1..runs.
+ * Rows run in parallel child processes (`--jobs`, default 2: the studio's 4 CPUs are shared). Writes the win rate, the
+ * 95% Wilson interval, the verdict against the §13.3 expectation, the median battle length and the end reasons of
+ * every row. Exit code 1 when a row misses its expectation.
+ */
+import { createServer } from 'vite';
+import { fork } from 'node:child_process';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const OUT = resolve(ROOT, process.env.MATCHUPS_OUT || 'docs/sprint1/sim-02');
+const arg = (name, def) => {
+  const a = process.argv.find((x) => x.startsWith(`--${name}=`));
+  return a ? a.slice(name.length + 3) : def;
+};
+const RUNS = Number(arg('runs', '200'));
+const JOBS = Math.max(1, Number(arg('jobs', '2')));
+const ROWS = arg('rows', '');
+
+async function loadHarness() {
+  const server = await createServer({
+    root: ROOT,
+    logLevel: 'error',
+    appType: 'custom',
+    server: { middlewareMode: true, hmr: false, ws: false, watch: null },
+    optimizeDeps: { noDiscovery: true, include: [] },
+  });
+  const mod = await server.ssrLoadModule('/tests/sim/ai/harness/matchups.ts');
+  return { server, mod };
+}
+
+// ---------------------------------------------------------------------------------------------------
+// Worker: one row, prints one JSON line.
+// ---------------------------------------------------------------------------------------------------
+if (process.argv.includes('--worker')) {
+  const id = arg('row', '');
+  const { server, mod } = await loadHarness();
+  try {
+    const row = mod.MATCHUPS.find((r) => r.id === id);
+    if (!row) throw new Error(`unknown row ${id}`);
+    const t0 = Date.now();
+    const runs = [];
+    const res = mod.runMatchup(row, RUNS, (seed, r) => runs.push({ seed, winner: r.winner, reason: r.reason, minutes: Number(r.minutes.toFixed(2)) }));
+    process.send({
+      id,
+      n: res.n,
+      k: res.k,
+      rate: res.rate,
+      ci: res.ci,
+      baseRate: res.baseRate ?? null,
+      baseCi: res.baseCi ?? null,
+      diff: res.diff ?? null,
+      medianMin: res.medianMin,
+      reasons: res.reasons,
+      pass: res.pass,
+      seconds: (Date.now() - t0) / 1000,
+      runs,
+    });
+  } finally {
+    await server.close();
+  }
+  process.exit(0);
+}
+
+// ---------------------------------------------------------------------------------------------------
+// Parent: schedule rows over JOBS children, then write the report.
+// ---------------------------------------------------------------------------------------------------
+const { server, mod } = await loadHarness();
+const rows = mod.MATCHUPS.filter((r) => !ROWS || ROWS.split(',').includes(r.id));
+const meta = rows.map((r) => ({ id: r.id, matchup: r.matchup, expected: r.expected, setup: r.setup, min: r.min ?? null, max: r.max ?? null, paired: !!r.baseline }));
+await server.close();
+
+const results = new Map();
+const queue = rows.map((r) => r.id);
+const started = Date.now();
+await new Promise((done) => {
+  let active = 0;
+  const next = () => {
+    if (queue.length === 0 && active === 0) return done();
+    while (active < JOBS && queue.length > 0) {
+      const id = queue.shift();
+      active++;
+      const child = fork(fileURLToPath(import.meta.url), ['--worker', `--row=${id}`, `--runs=${RUNS}`], { stdio: ['ignore', 'inherit', 'inherit', 'ipc'] });
+      child.on('message', (m) => {
+        results.set(m.id, m);
+        console.log(`${m.id.padEnd(28)} ${(m.rate * 100).toFixed(1)}% [${(m.ci[0] * 100).toFixed(1)}, ${(m.ci[1] * 100).toFixed(1)}]${m.diff !== null ? ` diff ${(m.diff * 100).toFixed(1)}` : ''} ${m.pass ? 'PASS' : 'FAIL'} (${m.seconds.toFixed(0)} s)`);
+      });
+      child.on('exit', () => {
+        active--;
+        next();
+      });
+    }
+  };
+  next();
+});
+
+const pct = (x) => `${(x * 100).toFixed(1)}%`;
+const band = (m) => (m.paired ? `difference ${m.min !== null ? `>= ${pct(m.min)}` : ''}` : m.max !== null ? `${pct(m.min)}-${pct(m.max)}` : `>= ${pct(m.min)}`);
+const lines = [];
+lines.push(`# SIM-02 battle matchups (DESIGN_SPEC §13.3), ${RUNS} runs each`);
+lines.push('');
+lines.push(`Generated by \`node scripts/sim-ai/matchups.mjs\` (${RUNS} runs per row, seeds 1-${RUNS}; ${((Date.now() - started) / 60000).toFixed(1)} min with ${JOBS} jobs). OWNER: AI Engineer - Battle AI, Intents & Campaign AI (SIM-02).`);
+lines.push('');
+lines.push('Method: every battle is the real tactical simulation (`createBattle` / `stepBattle`, the authoritative formation level),');
+lines.push('AI vs AI with the SIM-02 battle AI on both sides, through the skirmish setup (deploy zones, 30 s deployment in which');
+lines.push("the AI deploys) on the seed's *plains* map at the autoresolve terrain resolution (65 samples), Minister difficulty,");
+lines.push('40-minute limit. Kotanagara on both sides unless the row names factions. A win is the outcome winner; a side that');
+lines.push('withdraws (withdraw_all at its personality\'s `withdrawAt`) loses; a draw is nobody\'s win. Intervals are 95% Wilson');
+lines.push('score intervals. The CI-light version of this table is `tests/sim/ai/matchups.test.ts` (40 seeds).');
+lines.push('');
+lines.push('| # | Matchup (§13.3) | Expected | Measured | 95% CI | Verdict | Median length | Endings |');
+lines.push('|---|---|---|---|---|---|---|---|');
+meta.forEach((m, i) => {
+  const r = results.get(m.id);
+  if (!r) return;
+  const measured = r.diff !== null ? `${pct(r.rate)} defeated vs ${pct(r.baseRate)} untouched: **+${(r.diff * 100).toFixed(1)} points**` : `**${pct(r.rate)}**`;
+  const ci = r.diff !== null ? `${pct(r.ci[0])}-${pct(r.ci[1])} / ${pct(r.baseCi[0])}-${pct(r.baseCi[1])}` : `${pct(r.ci[0])}-${pct(r.ci[1])}`;
+  const endings = Object.entries(r.reasons).map(([k, v]) => `${k} ${v}`).join(', ');
+  lines.push(`| ${i + 1} | ${m.matchup} | ${m.expected} (${band(m)}) | ${measured} | ${ci} | ${r.pass ? 'PASS' : 'FAIL'} | ${r.medianMin.toFixed(2)} min | ${endings} |`);
+});
+lines.push('');
+lines.push('## Row setups');
+lines.push('');
+meta.forEach((m, i) => lines.push(`${i + 1}. **${m.matchup}** - ${m.setup}.`));
+lines.push('');
+const failed = meta.filter((m) => results.get(m.id) && !results.get(m.id).pass);
+lines.push(failed.length === 0 ? `All ${meta.length} rows meet their §13.3 expectation.` : `Rows missing their expectation: ${failed.map((m) => m.id).join(', ')}.`);
+lines.push('');
+mkdirSync(OUT, { recursive: true });
+writeFileSync(resolve(OUT, 'matchups.md'), `${lines.join('\n')}\n`);
+writeFileSync(resolve(OUT, 'matchups.json'), `${JSON.stringify({ runs: RUNS, rows: meta.map((m) => ({ ...m, result: results.get(m.id) ?? null })) }, null, 1)}\n`);
+console.log(`wrote ${resolve(OUT, 'matchups.md')}`);
+process.exit(failed.length === 0 ? 0 : 1);
