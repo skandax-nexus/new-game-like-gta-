@@ -39,6 +39,7 @@ import { recoverMarketPrices } from './market';
 import { progressConstruction, repairWallsDaily } from './construction';
 import { progressRecruitment } from './recruitment';
 import { assignMissingCells, footprintOf } from './placement';
+import { garrisonedArmyFood } from './supply';
 
 /** v1 saves (and buildings the layout could not place yet) lack cells. */
 function needsCells(s: SettlementState): boolean {
@@ -142,7 +143,7 @@ export function annualPotential(world: WorldState, s: SettlementState, mods: Mod
   );
 }
 
-/** Garrison soldiers stationed in the settlement (garrison units only; field armies supply themselves). */
+/** Garrison soldiers stationed in the settlement (garrison units only; garrisoned field armies: supply.garrisonedArmyFood). */
 export function garrisonSoldiers(s: SettlementState): number {
   let n = 0;
   for (const u of s.garrison) n += u.soldiers;
@@ -166,12 +167,15 @@ function holdsLandmarkId(world: WorldState, factionId: FactionId | null, id: str
   return false;
 }
 
-/** Daily grain consumption: pop x 0.1 (x0.85 rationing; x0.6 besieged with the Cliff Cistern) + garrison. */
+/**
+ * Daily grain consumption: pop x 0.1 (x0.85 rationing; x0.6 besieged with the Cliff Cistern) + garrison units + the
+ * field armies garrisoned there (§7.8 rule 1: they eat from the store with no 30-day floor, besieged or not).
+ */
 export function dailyConsumption(world: WorldState, s: SettlementState): number {
   let civ = s.population * BALANCE.economy.foodPerPersonPerDay;
   if (isRationing(world, s)) civ *= RULES.distribution.rationing.consumption;
   if (s.besiegedBy && holdsLandmarkId(world, s.ownerFactionId, LM_CLIFF_CISTERN)) civ *= CISTERN_SIEGE_CONSUMPTION;
-  return civ + garrisonFood(s);
+  return civ + garrisonFood(s) + garrisonedArmyFood(world, s);
 }
 
 /** Storage capacity in measures: pop x 0.1 x (baseDays + Σ foodCapacity days). */

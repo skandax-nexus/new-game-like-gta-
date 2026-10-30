@@ -4,15 +4,23 @@
  *
  *   consumption/day = Σ soldiers x upkeepFood x soldierFoodPerDay / faction supplyEfficiency
  *   carried         = Σ soldiers x upkeepFood x 5 days + carts x 300
- * Resupply each day, first match: (1) an own, unbesieged settlement within 400 m + its radius gives up to 20% of its
- * store, never below 30 days; (2) an own, ready depot within 400 m; (3) the royal reserve through a supply line - the
- * army stands in an owned (or military-access) province and roads through owned / neutral settlements with no enemy
- * army within 300 m connect it to an own settlement; deliveries lose 10% per 30 km (lineIntact). Otherwise (or on a
- * forage / raid order) it forages need x 0.35 x fertility x season from the nearest settlement within 600 m: own land
- * -> unrest +0.004/day and loyalty -0.002/day there; enemy / independent -> plunder x1.7, damage +0.01/day, a `raid`
- * grievance. Starvation: morale -6/day, desertion 1%/day after 3 days and 3%/day after 10. Attrition: monsoon
- * off-road 0.2%, hills/forest off-road 0.1%, dry plain in grishma away from settlements 0.3%, besieging 0.4%, forced
- * march 0.2%. Debt: morale -2/day and 0.5%/day desertion. Losses use stochastic rounding from the world RNG.
+ * Resupply each day, first match (`planResupply`, shared by the daily tick and the UI selector): (1) an own, unbesieged
+ * settlement within 400 m + its radius gives up to 20% of its store, never below 30 days; (2) an own, ready depot within
+ * 400 m; (3) the royal reserve through a supply line - the army stands in an owned (or military-access) province and
+ * roads through owned / neutral settlements with no enemy army within 300 m (an own stationary army on the road keeps it
+ * open, §7.7) connect it to an own settlement; deliveries lose 10% per 30 km (lineIntact). Otherwise (or on a forage /
+ * raid order) it forages need x 0.35 x fertility x season from the nearest settlement within 600 m: own land -> unrest
+ * +0.004/day and loyalty -0.002/day there; enemy / independent -> plunder x1.7, damage +0.01/day, a `raid` grievance.
+ *
+ * An army **garrisoned** in an own settlement is part of its garrison (SIM-01 review S1, DESIGN_SPEC §7.8 rule 1): the
+ * settlement's daily consumption includes the army's need (`garrisonedArmyFood`, economy.dailyConsumption), so it eats
+ * from the store with no 30-day floor, besieged or not, and shares the town's hunger - it starves only when the store is
+ * empty and its own train is spent. Besiegers stand in enemy land: rules 1 and 3 do not reach them, an own depot within
+ * 400 m of the siege camp (rule 2) does, and they forage / plunder only when nothing delivers.
+ *
+ * Starvation: morale -6/day, desertion 1%/day after 3 days and 3%/day after 10. Attrition: monsoon off-road 0.2%,
+ * hills/forest off-road 0.1%, dry plain in grishma away from settlements 0.3%, besieging 0.4%, forced march 0.2%. Debt:
+ * morale -2/day and 0.5%/day desertion. Losses use stochastic rounding from the world RNG.
  */
 import type { ArmyState, DepotId, FactionId, RoadEdge, SettlementState, SimEvent, SupplyDepotState, TerrainQuery, WorldState } from '../../core/types';
 import { isRebelFaction } from '../../core/types';
@@ -64,6 +72,29 @@ export function armyFoodNeed(world: WorldState, a: ArmyState): number {
 export function supplyDays(world: WorldState, a: ArmyState): number {
   const need = armyFoodNeed(world, a);
   return need > 0 ? a.supply.food / need : Infinity;
+}
+
+/**
+ * The own settlement an army is garrisoned in - it is then part of that settlement's garrison and eats from its store
+ * (§7.8 rule 1) - else null. Armies in a battle are not (they neither eat nor count until it ends).
+ */
+export function garrisonedIn(world: WorldState, a: ArmyState): SettlementState | null {
+  if (a.status !== 'garrisoned' || a.order.kind !== 'garrison' || a.engagementId || a.units.length === 0) return null;
+  const s = world.settlements[a.order.settlementId];
+  return s && s.ownerFactionId === a.factionId ? s : null;
+}
+
+/** Daily grain need of the field armies garrisoned in `s` (part of its consumption, economy.dailyConsumption). */
+export function garrisonedArmyFood(world: WorldState, s: SettlementState): number {
+  if (!s.ownerFactionId) return 0;
+  let f = 0;
+  const ids = stableKeys('armies', world.armies as Record<string, unknown>);
+  for (let i = 0; i < ids.length; i++) {
+    const a = world.armies[ids[i] as string];
+    if (!a || a.factionId !== s.ownerFactionId || isRebelFaction(a.factionId)) continue;
+    if (garrisonedIn(world, a) === s) f += armyFoodNeed(world, a);
+  }
+  return f;
 }
 
 function settlementInRange(world: WorldState, a: ArmyState, extra: number, pred: (s: SettlementState) => boolean): SettlementState | null {
@@ -168,44 +199,92 @@ export function supplyLine(world: WorldState, a: ArmyState, threatCache: Map<str
 // Daily
 // ---------------------------------------------------------------------------------------------------
 
-function resupply(world: WorldState, a: ArmyState, threatCache: Map<string, Set<string>>): boolean {
-  const room = a.supply.foodCapacity - a.supply.food;
-  // 1. Own settlement nearby.
+/** Where an army's grain comes from (ArmySupplyView.sourceKind). */
+export type SupplySourceKind = 'settlement' | 'depot' | 'reserve' | 'forage';
+
+/** What today's resupply step does for an army (§7.8, first match), computed without changing the world. */
+export interface ResupplyPlan {
+  /** settlement: rule 1 or the garrison's store; depot: rule 2; reserve: rule 3; null: no source (the army forages). */
+  kind: Exclude<SupplySourceKind, 'forage'> | null;
+  /** Settlement / depot id, or for `reserve` the own settlement the supply line reaches. */
+  sourceId: string | null;
+  /** Grain moved into the army's train. */
+  amount: number;
+  /** For `reserve`: grain taken from the royal reserve (amount / share kept after transport losses). */
+  reserveDraw: number;
+}
+
+/**
+ * Today's resupply for an army (§7.8): rules 1-3, first match; a garrisoned army is fed by its settlement's store (the
+ * economy charges its need there) and only tops up its train under rule 1 when the town is not besieged. Pure.
+ */
+export function planResupply(world: WorldState, a: ArmyState, threatCache: Map<string, Set<string>> = new Map()): ResupplyPlan {
+  const room = Math.max(0, a.supply.foodCapacity - a.supply.food);
+  const plan: ResupplyPlan = { kind: null, sourceId: null, amount: 0, reserveDraw: 0 };
+  const home = garrisonedIn(world, a);
+  if (home) {
+    plan.kind = 'settlement';
+    plan.sourceId = home.id;
+    if (!home.besiegedBy) plan.amount = settlementDraw(home, room);
+    return plan;
+  }
+  // 1. Own settlement nearby (never below its 30-day floor).
   const s = settlementInRange(world, a, SUP.resupplyRadius, (x) => x.ownerFactionId === a.factionId && !x.besiegedBy);
   if (s) {
-    const keep = RULES.storage.keepDays * Math.max(0, s.foodConsumption);
-    const give = Math.max(0, Math.min(room, s.foodStored * SUP.maxDrawPerDay, s.foodStored - keep));
+    const give = settlementDraw(s, room);
     if (give > 0 || room <= 1e-6) {
-      s.foodStored -= give;
-      a.supply.food += give;
-      a.supply.sourceId = s.id;
-      return true;
+      plan.kind = 'settlement';
+      plan.sourceId = s.id;
+      plan.amount = give;
+      return plan;
     }
   }
-  // 2. Own depot nearby.
+  // 2. Own depot nearby (the siege camp's only source: rules 1 and 3 do not reach enemy land).
   for (const id of stableKeys('depots', world.depots as Record<string, unknown>)) {
     const d = world.depots[id]!;
     if (d.factionId !== a.factionId || d.readyOnDay > today(world) || d.food <= 0) continue;
     if ((d.x - a.x) * (d.x - a.x) + (d.z - a.z) * (d.z - a.z) > SUP.resupplyRadius * SUP.resupplyRadius) continue;
-    const give = Math.min(room, d.food);
-    d.food -= give;
-    a.supply.food += give;
-    a.supply.sourceId = d.id;
-    return true;
+    plan.kind = 'depot';
+    plan.sourceId = d.id;
+    plan.amount = Math.min(room, d.food);
+    return plan;
   }
   // 3. Royal reserve through a supply line.
   const f = world.factions[a.factionId];
-  if (!f) return false;
+  if (!f) return plan;
   const line = supplyLine(world, a, threatCache);
-  if (!line) return false;
-  a.supply.sourceId = line.settlementId;
-  if (room <= 1e-6 || f.foodReserve <= 0) return true;
-  const km = (line.distance * BALANCE.military.travelScale) / 1000;
-  const keep = Math.max(0, 1 - 0.1 * (km / 30));
-  if (keep <= 0) return true;
-  const delivered = Math.min(room, armyFoodNeed(world, a) * RESERVE_CONVOY_DAYS, f.foodReserve * keep);
-  f.foodReserve -= delivered / keep;
-  a.supply.food += delivered;
+  if (!line) return plan;
+  plan.kind = 'reserve';
+  plan.sourceId = line.settlementId;
+  if (room <= 1e-6 || f.foodReserve <= 0) return plan;
+  const keep = reserveKeep(line.distance);
+  if (keep <= 0) return plan;
+  plan.amount = Math.min(room, armyFoodNeed(world, a) * RESERVE_CONVOY_DAYS, f.foodReserve * keep);
+  plan.reserveDraw = plan.amount / keep;
+  return plan;
+}
+
+/** Rule 1 draw: up to 20% of the store into `room`, never leaving the settlement below 30 days. */
+function settlementDraw(s: SettlementState, room: number): number {
+  const keep = RULES.storage.keepDays * Math.max(0, s.foodConsumption);
+  return Math.max(0, Math.min(room, s.foodStored * SUP.maxDrawPerDay, s.foodStored - keep));
+}
+
+/** Share of a reserve convoy that arrives over `distance` map m of road (10% lost per 30 km). */
+function reserveKeep(distance: number): number {
+  const km = (distance * BALANCE.military.travelScale) / 1000;
+  return Math.max(0, 1 - 0.1 * (km / 30));
+}
+
+/** Apply today's resupply. Returns true when a source (rules 1-3 or the garrison) serves the army. */
+function resupply(world: WorldState, a: ArmyState, threatCache: Map<string, Set<string>>): boolean {
+  const plan = planResupply(world, a, threatCache);
+  a.supply.sourceId = plan.sourceId;
+  if (plan.kind === null) return false;
+  if (plan.kind === 'settlement') world.settlements[plan.sourceId as string]!.foodStored -= plan.amount;
+  else if (plan.kind === 'depot') world.depots[plan.sourceId as string]!.food -= plan.amount;
+  else world.factions[a.factionId]!.foodReserve -= plan.reserveDraw;
+  a.supply.food += plan.amount;
   return true;
 }
 
@@ -298,13 +377,17 @@ export function updateArmiesDaily(world: WorldState, out: SimEvent[]): void {
     const need = armyFoodNeed(world, a);
     a.supply.dailyConsumption = need;
     a.supply.foraging = false;
-    const sourced = a.status === 'besieging' ? false : resupply(world, a, threatCache);
+    // Besiegers too: an own depot by the siege camp feeds them (SIM-01 review S1); they forage only when nothing delivers.
+    const sourced = resupply(world, a, threatCache);
     a.supply.lineIntact = sourced;
-    if (!sourced) a.supply.sourceId = null;
     if (!sourced || a.order.kind === 'forage' || a.order.kind === 'raid') a.supply.food += forage(world, a, need, out);
-    // Eat.
+    // Eat. A garrisoned army ate from its settlement's store in today's economy step (no 30-day floor); it falls back
+    // on its own train only when that store is empty.
     const f = world.factions[a.factionId];
-    if (a.supply.food >= need) {
+    const home = garrisonedIn(world, a);
+    if (home && !(home.foodStored <= 0 && home.starvationDays > 0)) {
+      a.supply.starvationDays = 0;
+    } else if (a.supply.food >= need) {
       a.supply.food -= need;
       a.supply.starvationDays = 0;
     } else {

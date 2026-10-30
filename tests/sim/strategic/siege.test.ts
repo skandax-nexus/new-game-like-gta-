@@ -4,11 +4,13 @@
  *
  * Giridurg's 4,200 wallHp against one engineer formation (~52 days at siegeStrength 1), breach + ladders -> assault
  * availability, the starve-out surrender curve, unwalled settlements taken at once, and the occupy / plunder /
- * liberate capture choices.
+ * liberate capture choices. Siege logistics in the real tick (review S1): a depot by the camp feeds the besiegers, a
+ * host garrisoned in a besieged town eats from its store with no floor, a host camped outside keeps the 30-day floor.
  */
 import { describe, expect, it } from 'vitest';
 import type { ArmyState, SimEvent, WorldState } from '../../../src/core/types';
 import { FACTIONS } from '../../../src/data/factions';
+import { BALANCE } from '../../../src/data/balance';
 import { RULES } from '../../../src/data/rules';
 import { UNITS } from '../../../src/data/units';
 import { getRegionHeightfield } from '../../../src/sim/strategic/world';
@@ -29,7 +31,9 @@ import {
   wallDamagePerDay,
 } from '../../../src/sim/strategic/siege';
 import { applyEffect } from '../../../src/sim/strategic/events';
-import { campaign, issue } from './helpers';
+import { dailyConsumption } from '../../../src/sim/strategic/economy';
+import { armyFoodNeed, garrisonedArmyFood } from '../../../src/sim/strategic/supply';
+import { campaign, issue, runDays } from './helpers';
 
 const scope = (fid = 'heartland') => ({ factionId: fid, settlementId: null, provinceId: null, characterId: null, armyId: null });
 
@@ -363,5 +367,193 @@ describe('capture: occupy / plunder / liberate (DESIGN_SPEC §7.8)', () => {
     for (const id of ['gajavana', 'nilavanapura']) captureSettlement(w, w.settlements[id]!, 'heartland', [], 'assault');
     expect(w.factions.forest!.alive).toBe(false);
     expect(Object.values(w.armies).some((a) => a.factionId === 'forest')).toBe(false);
+  });
+});
+
+describe('siege logistics in the real tick (review S1, DESIGN_SPEC §7.8 rule 1, rule 2 and "Siege logistics")', () => {
+  /** Seed 5, every highland field army removed (an uncontested siege), heartland engineers besieging Giridurg. */
+  function fedSiege(depotFood: number): { w: WorldState; a: ArmyState; depotId: string } {
+    const w = campaign(5);
+    for (const x of Object.values(w.armies)) if (x.factionId === 'highland') delete w.armies[x.id];
+    const a = engineersAt(w, 'giridurg');
+    w.factions.heartland!.foodReserve = 0;
+    const depotId = 'depot_siege';
+    // A depot 70 m from the siege camp (the reviewer's probe: a full one changed nothing).
+    w.depots[depotId] = { id: depotId, factionId: 'heartland', x: a.x + 70, z: a.z, settlementId: null, food: depotFood, capacity: RULES.supply.depot.capacity, condition: 1, escortArmyId: null, raided: false, readyOnDay: 0 };
+    return { w, a, depotId };
+  }
+
+  /** Run whole days of the real tick until the walls are down; returns the day count and the per-day record. */
+  function siegeUntilWallsDown(w: WorldState, a: ArmyState, depotId: string, maxDays = 120): { day: number; starvedDays: number; formulaDay: number; depotDraw: number[] } {
+    const g = w.settlements.giridurg!;
+    let day = 0;
+    let starvedDays = 0;
+    let formulaDay = -1;
+    let cumulative = 0;
+    const depotDraw: number[] = [];
+    while (g.wallHp > 0 && day < maxDays) {
+      const depot0 = w.depots[depotId]!.food;
+      runDays(w, 1);
+      day++;
+      expect(a.status).toBe('besieging');
+      expect(a.supply.sourceId).toBe(depotId);
+      expect(a.supply.lineIntact).toBe(true);
+      expect(a.supply.foraging).toBe(false);
+      if (a.supply.starvationDays > 0) starvedDays++;
+      depotDraw.push(depot0 - w.depots[depotId]!.food);
+      // Wall damage/day = Σ soldiers x siege x 0.5 x siegeStrength with the soldiers of that day (siege attrition included).
+      cumulative += wallDamagePerDay(w, a);
+      if (formulaDay < 0 && cumulative >= 4200 - 1e-6) formulaDay = day;
+    }
+    return { day, starvedDays, formulaDay, depotDraw };
+  }
+
+  it('one engineer formation fed by a depot brings Giridurg down with no starvation; the depot pays its daily need', () => {
+    const { w, a, depotId } = fedSiege(RULES.supply.depot.capacity);
+    const ss = factionMod(w, 'heartland', 'siegeStrength');
+    const r = siegeUntilWallsDown(w, a, depotId);
+    expect(r.starvedDays).toBe(0);
+    expect(a.units[0]!.soldiers).toBeGreaterThan(25);
+    // The walls fall on the day the §7.8 formula says, with the soldiers the 0.4%/day siege attrition leaves.
+    expect(r.day).toBe(r.formulaDay);
+    // 47.7 days at full strength for siegeStrength 1.1 (52.5 at 1); siege attrition thins the formation -> 49-55 days
+    // at 1.1 on seeds 1-6 (54-61 at siegeStrength 1). Seed 5: day 51.
+    expect(r.day).toBeGreaterThanOrEqual(Math.ceil(4200 / (80 * ss)));
+    expect(r.day * ss).toBeLessThan(61);
+    // The depot refills what the army ate the day before: never more than a full formation's need, and over the siege
+    // about the need of the soldiers left.
+    const fullNeed = (40 * UNITS.engineers.stats.upkeepFood * BALANCE.military.soldierFoodPerDay) / factionMod(w, 'heartland', 'supplyEfficiency');
+    let total = 0;
+    for (const draw of r.depotDraw) {
+      expect(draw).toBeGreaterThanOrEqual(0);
+      expect(draw).toBeLessThanOrEqual(fullNeed + 1e-6);
+      total += draw;
+    }
+    expect(total).toBeGreaterThan(0.8 * r.day * armyFoodNeed(w, a));
+  });
+
+  it('without the 0.4%/day siege attrition the fed formation takes exactly 4,200 / (80 x siegeStrength) days (52.5 at 1)', () => {
+    const att = RULES.supply.attrition as { siege: number };
+    const siegeAttrition = att.siege;
+    att.siege = 0;
+    try {
+      const { w, a, depotId } = fedSiege(RULES.supply.depot.capacity);
+      const ss = factionMod(w, 'heartland', 'siegeStrength');
+      const r = siegeUntilWallsDown(w, a, depotId);
+      expect(r.starvedDays).toBe(0);
+      expect(a.units[0]!.soldiers).toBe(40);
+      expect(r.day).toBe(Math.ceil(4200 / (80 * ss)));
+      expect(r.day * ss).toBeGreaterThan(52);
+      expect(r.day * ss).toBeLessThan(53);
+    } finally {
+      att.siege = siegeAttrition;
+    }
+  });
+
+  it('besiegers with no depot forage / plunder the town; an empty depot does not count as a source', () => {
+    const { w, a, depotId } = fedSiege(0);
+    const g = w.settlements.giridurg!;
+    const store = g.foodStored;
+    runDays(w, 1);
+    expect(a.supply.foraging).toBe(true);
+    expect(a.supply.lineIntact).toBe(false);
+    expect(a.supply.sourceId).toBeNull();
+    expect(w.depots[depotId]!.food).toBe(0);
+    expect(g.foodStored).toBeLessThan(store);
+  });
+
+  it('a host garrisoned in its besieged town eats from the store (no floor) and loses no one to hunger while it lasts', () => {
+    const run = (withHost: boolean): { w: WorldState; host: ArmyState; stores: number[] } => {
+      const w = campaign(5);
+      const g = w.settlements.giridurg!;
+      const host = w.armies.army_giri!; // Host of the Seven Peaks, 732
+      for (const x of Object.values(w.armies)) if (x.factionId === 'highland' && x.id !== host.id) delete w.armies[x.id];
+      if (withHost) {
+        Object.assign(host, { x: g.x, z: g.z, status: 'garrisoned', order: { kind: 'garrison', settlementId: g.id }, path: [], pathIndex: 0 });
+      } else delete w.armies[host.id];
+      const a = engineersAt(w, 'giridurg');
+      w.depots.depot_siege = { id: 'depot_siege', factionId: 'heartland', x: a.x + 70, z: a.z, settlementId: null, food: 6000, capacity: 6000, condition: 1, escortArmyId: null, raided: false, readyOnDay: 0 };
+      const stores: number[] = [];
+      for (let d = 0; d < 30; d++) {
+        runDays(w, 1);
+        stores.push(g.foodStored);
+      }
+      return { w, host, stores };
+    };
+    const A = run(true);
+    const B = run(false);
+    const g = A.w.settlements.giridurg!;
+    expect(g.besiegedBy).toBe('army_eng');
+    expect(A.host.status).toBe('garrisoned');
+    const need = armyFoodNeed(A.w, A.host);
+    expect(need).toBeGreaterThan(140);
+    // It is part of the town's consumption: reserve days, prices and starve-out all see it.
+    expect(garrisonedArmyFood(A.w, g)).toBeCloseTo(need, 6);
+    expect(dailyConsumption(A.w, g)).toBeCloseTo(dailyConsumption(B.w, B.w.settlements.giridurg!) + need, 3);
+    // No hunger and no losses while the store lasts; its own train is untouched.
+    expect(A.host.units.reduce((n, u) => n + u.soldiers, 0)).toBe(732);
+    expect(A.host.supply.starvationDays).toBe(0);
+    expect(A.host.supply.food).toBeCloseTo(A.host.supply.foodCapacity, 6);
+    // The store falls by the host's need each day (against the same siege without the host).
+    for (let d = 1; d < 30; d++) {
+      const extra = A.stores[d - 1]! - A.stores[d]! - (B.stores[d - 1]! - B.stores[d]!);
+      // (minus the spoilage the smaller store saves: 0.08%/day of the difference)
+      const saved = 0.001 * (B.stores[d - 1]! - A.stores[d - 1]!);
+      expect(extra).toBeLessThanOrEqual(need + 1e-6);
+      expect(extra).toBeGreaterThan(need - saved - 0.01);
+    }
+  });
+
+  it('when the besieged store runs out the garrisoned host lives on its train, then starves with the town', () => {
+    const w = campaign(5);
+    const g = w.settlements.giridurg!;
+    const host = w.armies.army_giri!;
+    for (const x of Object.values(w.armies)) if (x.factionId === 'highland' && x.id !== host.id) delete w.armies[x.id];
+    Object.assign(host, { x: g.x, z: g.z, status: 'garrisoned', order: { kind: 'garrison', settlementId: g.id }, path: [], pathIndex: 0 });
+    const a = engineersAt(w, 'giridurg');
+    w.depots.depot_siege = { id: 'depot_siege', factionId: 'heartland', x: a.x + 70, z: a.z, settlementId: null, food: 6000, capacity: 6000, condition: 1, escortArmyId: null, raided: false, readyOnDay: 0 };
+    g.foodStored = g.foodConsumption * 2;
+    const train = host.supply.food;
+    runDays(w, 4);
+    expect(g.foodStored).toBe(0);
+    expect(g.starvationDays).toBeGreaterThan(0);
+    expect(host.supply.starvationDays).toBe(0);
+    expect(host.supply.food).toBeLessThan(train);
+    host.supply.food = 0;
+    runDays(w, 1);
+    expect(g.ownerFactionId).toBe('highland');
+    expect(host.supply.starvationDays).toBeGreaterThan(0);
+  });
+
+  it('a host camped outside an own town keeps the 30-day floor (no draw below it); garrisoned inside, it eats', () => {
+    const w = campaign(1);
+    const r = w.settlements.rajapura!;
+    const royal = w.armies.army_royal!; // camped beside Rajapura
+    expect(royal.status).toBe('camped');
+    expect(Math.hypot(royal.x - r.x, royal.z - r.z)).toBeLessThanOrEqual(r.radius + RULES.supply.resupplyRadius);
+    w.events.scheduled = [];
+    w.factions.heartland!.foodReserve = 0;
+    r.foodStored = 25 * r.foodConsumption;
+    royal.supply.food = armyFoodNeed(w, royal) * 2;
+    const twin = campaign(1);
+    twin.events.scheduled = [];
+    twin.factions.heartland!.foodReserve = 0;
+    twin.settlements.rajapura!.foodStored = r.foodStored;
+    delete twin.armies.army_royal;
+    for (let d = 0; d < 4; d++) {
+      runDays(w, 1);
+      runDays(twin, 1);
+    }
+    // Below 30 days: the camped host takes nothing (the town's store moves as if it were not there) and starves.
+    expect(r.foodStored).toBeCloseTo(twin.settlements.rajapura!.foodStored, 3);
+    expect(royal.supply.food).toBe(0);
+    expect(royal.supply.starvationDays).toBeGreaterThan(0);
+    // Garrisoned inside the walls it is part of the garrison: it eats from the store and the hunger ends.
+    orderArmy(w, royal.id, { kind: 'garrison', settlementId: 'rajapura' }, getRegionHeightfield(w));
+    runDays(w, 2, { until: () => royal.status === 'garrisoned' });
+    expect(royal.status).toBe('garrisoned');
+    runDays(w, 1);
+    expect(royal.supply.starvationDays).toBe(0);
+    expect(r.foodConsumption).toBeCloseTo(dailyConsumption(twin, twin.settlements.rajapura!) + armyFoodNeed(w, royal), -1);
   });
 });

@@ -3,9 +3,12 @@
  * Simulation (SIM-01).
  *
  *  - `besiege` an enemy (or independent) settlement: with fort level >= 1 it becomes besieged (trade 0, production
- *    x0.3, no resupply or recruitment - economy.ts); an unwalled one is taken at once, or fought for if defended.
+ *    x0.3, no resupply or recruitment - economy.ts); its store feeds population, garrison units and the field armies
+ *    garrisoned in it (supply.garrisonedArmyFood); an unwalled one is taken at once, or fought for if defended.
+ *  - Siege logistics (supply.ts): besiegers eat from an own depot within 400 m of the camp, else forage / plunder.
  *  - Wall damage/day = Σ soldiers x siege x 0.5 x siegeStrength over the besieging armies (one engineer formation:
- *    40 x 4 x 0.5 = 80/day; Giridurg's 4,200 falls in ~52 days at siegeStrength 1).
+ *    40 x 4 x 0.5 = 80/day; Giridurg's 4,200 falls in 52.5 days at siegeStrength 1 at full strength; the 0.4%/day
+ *    siege attrition thins a fed formation to ~33 men and the walls fall on days 49-55 for Suvarna, 1.1).
  *  - Assault when wallHp <= 50% (breach, `siege_breach` event) or ladders are ready (engineers, 5 days): a siege
  *    battle against the garrison (garrison units fight as army `garrison_<id>`); undefended -> captured.
  *  - Starve-out: once the store is empty, daily surrender chance 0.1 x starvationDays / 10 (cap 0.6).
