@@ -85,6 +85,35 @@ async function luminance(file, y0 = 0, y1 = 1) {
   return { luma: luma / n, linear: linear / n };
 }
 
+/** Mean luminance of a box (fractions x0, x1, y0, y1 of the frame). */
+async function regionLuminance(file, box) {
+  const { data, info } = await sharp(file).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const [x0, x1, y0, y1] = [box[0] * info.width, box[1] * info.width, box[2] * info.height, box[3] * info.height].map(Math.floor);
+  const lin = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  let luma = 0;
+  let linear = 0;
+  let n = 0;
+  for (let y = y0; y < y1; y++)
+    for (let x = x0; x < x1; x++) {
+      const i = (y * info.width + x) * info.channels;
+      const r = data[i] / 255;
+      const g = data[i + 1] / 255;
+      const b = data[i + 2] / 255;
+      luma += 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      linear += 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+      n++;
+    }
+  return { luma: luma / n, linear: linear / n };
+}
+
+/** Hero frame regions (fractions of 1280x720, Rajapura default camera): lime plaster walls, red base, terrain. */
+const WET_REGIONS = {
+  plasterNear: [770 / 1280, 880 / 1280, 180 / 720, 215 / 720],
+  plasterFar: [600 / 1280, 740 / 1280, 110 / 720, 150 / 720],
+  redBase: [950 / 1280, 1250 / 1280, 150 / 720, 330 / 720],
+  terrain: [100 / 1280, 500 / 1280, 550 / 720, 700 / 720],
+};
+
 /** Largest row-to-row jump of the mean colour in a band (horizon seam check). */
 async function maxRowJump(file, y0, y1) {
   const { data, info } = await sharp(file).removeAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -124,6 +153,8 @@ async function maxRowJump(file, y0, y1) {
       const t0 = Date.now();
       await page.goto(`http://127.0.0.1:${PORT}/?${query}&paused=1&noaudio=1`);
       await page.waitForFunction(() => window.__SAMRAJYA__ && window.__SAMRAJYA__.sceneReady, null, { timeout: 600000, polling: 500 });
+      // Evidence hygiene (AD round 1): pin the resolution scale so non-ultra shots show the tier, not SwiftShader speed.
+      await page.evaluate((sc) => window.__SAMRAJYA_GFX__.pinResolutionScale && window.__SAMRAJYA_GFX__.pinResolutionScale(sc), opts.scale ?? 1);
       if (opts.advance) await page.evaluate((n) => window.__SAMRAJYA__.step(n), opts.advance);
       if (opts.before) await page.evaluate(opts.before);
       await page.evaluate(() => window.__SAMRAJYA__.waitFrames(4));
@@ -134,6 +165,13 @@ async function maxRowJump(file, y0, y1) {
       const file = path.join(OUT, `${name}.png`);
       if (!opts.noCapture) await page.screenshot({ path: file, timeout: 600000 });
       const extra = opts.after ? await page.evaluate(opts.after) : undefined;
+      // Optional A/B in the same frozen frame (e.g. wetness override): `alt = { suffix, before }`.
+      if (opts.alt) {
+        await page.evaluate(opts.alt.before);
+        await page.evaluate(() => window.__SAMRAJYA__.waitFrames(4));
+        await page.evaluate(() => void window.__SAMRAJYA__.screenshot());
+        await page.screenshot({ path: path.join(OUT, `${name}-${opts.alt.suffix}.png`), timeout: 600000 });
+      }
       await page.close();
       const r = {
         name,
@@ -160,7 +198,32 @@ async function maxRowJump(file, y0, y1) {
     if (want('presets')) {
       for (const p of PRESETS) {
         await shot(`battle-${p.id}-ultra`, `${BATTLE}&quality=ultra&noui=1&${p.env}`, { advance: 200 });
-        await shot(`hero-${p.id}-ultra`, `${HERO}&quality=ultra&noui=1&${p.env}`);
+        // Monsoon: the same frozen frame again with the surface wetness forced to 0 (AD round 1, blocker 1).
+        const alt = p.id === 'monsoon' ? { suffix: 'dry', before: () => window.__SAMRAJYA_GFX__.setWetnessOverride(0) } : undefined;
+        await shot(`hero-${p.id}-ultra`, `${HERO}&quality=ultra&noui=1&${p.env}`, { alt });
+      }
+    }
+    // Wetness (ART_BIBLE §4.1 monsoon 0.85): luminance of fixed regions of the hero frame (deterministic camera),
+    // monsoon wet / monsoon dry (same frame: only the surface wetness differs) and monsoon / noon (also the light).
+    {
+      const wet = path.join(OUT, 'hero-monsoon-ultra.png');
+      const dry = path.join(OUT, 'hero-monsoon-ultra-dry.png');
+      const noon = path.join(OUT, 'hero-noon-ultra.png');
+      if (fs.existsSync(wet) && fs.existsSync(dry)) {
+        const out = {};
+        for (const [id, box] of Object.entries(WET_REGIONS)) {
+          const w = await regionLuminance(wet, box);
+          const d = await regionLuminance(dry, box);
+          const n = fs.existsSync(noon) ? await regionLuminance(noon, box) : null;
+          out[id] = {
+            wetOverDry: { luma: +(w.luma / d.luma).toFixed(3), linear: +(w.linear / d.linear).toFixed(3) },
+            wetOverNoon: n ? { luma: +(w.luma / n.luma).toFixed(3), linear: +(w.linear / n.linear).toFixed(3) } : null,
+          };
+        }
+        report.checks.wetness = out;
+        console.log(JSON.stringify({ wetness: out }));
+        const pl = out.plasterNear.wetOverDry.linear;
+        if (!(pl <= 0.8)) failures.push(`wetness: plaster linear luminance only x${pl} wet vs dry`);
       }
     }
     if (want('low')) {

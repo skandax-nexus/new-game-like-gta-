@@ -13,6 +13,7 @@ import { blendResolvedInto, cloneResolved } from '../../../src/render/lighting/r
 import { LightningFlash } from '../../../src/render/lighting/lightning';
 import { PracticalLights } from '../../../src/render/lighting/practicals';
 import { MATERIAL_GLOBALS } from '../../../src/render/materials/pbr';
+import { surfaceWetnessFromWeather } from '../../../src/render/materials/chunks/wetness';
 import { createZoomLook, resolveZoomLook } from '../../../src/render/style/zoom';
 import { fakeRenderContext } from './fakeContext';
 
@@ -50,7 +51,7 @@ describe('EnvironmentRig applies resolveLighting exactly as ART_BIBLE §4.2 show
     expect(rig.hemi.intensity).toBeCloseTo(r.hemiIntensity * 0.35, 9);
     expect(fake.post.grade).toMatchObject({ contrast: r.grade.contrast, saturation: r.grade.saturation, warmth: r.grade.warmth });
     expect(fake.post.bloom![2]).toBeCloseTo(r.bloomThreshold / r.exposure, 9);
-    expect(MATERIAL_GLOBALS.wetness.value).toBeCloseTo(Math.max(r.wetness, e.weather.wetness), 9);
+    expect(MATERIAL_GLOBALS.wetness.value).toBeCloseTo(Math.max(r.wetness, surfaceWetnessFromWeather(e.weather.wetness)), 9);
     fake.frame(scene, camera);
     expect(fake.renderer.toneMappingExposure).toBeCloseTo(r.exposure, 9);
     expect(rig.resolved.dominant).toBe(r.dominant);

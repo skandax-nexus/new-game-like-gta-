@@ -15,7 +15,9 @@
  *
  * Global hooks (shared uniforms, driven by the weather/environment systems):
  *   MATERIAL_GLOBALS.wetness   0..1 rain wetness: darkens porous albedo, lowers roughness, more on
- *                              up-facing surfaces (monsoon look); puddles on flat porous ground (chunks/wetness.ts)
+ *                              up-facing surfaces (monsoon look); puddles on flat porous ground (chunks/wetness.ts).
+ *                              Plain MeshStandard/Physical materials get the same model from the global patch
+ *                              (porosity from roughness); these materials use their explicit porosity instead.
  *
  * GFX-01 surface features (src/render/materials/chunks/):
  *   clearcoat / sheen   MeshPhysicalMaterial from the option or the Art Director's MATERIAL_PRESETS entry whose
@@ -296,7 +298,8 @@ ${DETAIL_FADE_GLSL}
   }
 #endif`,
       );
-    const defines: Record<string, string> = {};
+    // This material applies wetness itself (explicit porosity + puddles): the global patch skips it.
+    const defines: Record<string, string> = { SAM_OWN_WETNESS: '' };
     if (macro) defines.SAMRAJYA_MACRO = '';
     if (useDetailWithMacro) defines.SAMRAJYA_DETAIL_AO = '';
     if (puddles) defines.SAM_PUDDLES = '';

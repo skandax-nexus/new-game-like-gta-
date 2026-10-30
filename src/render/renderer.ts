@@ -24,6 +24,7 @@ import { G, g, installShaderGlobals, resetShaderGlobals } from './materials/chun
 // Global shader patches (registered on import, applied by installShaderGlobals before any material compiles).
 import './lighting/shadowChunks';
 import './materials/chunks/surface';
+import { WETNESS_DEBUG } from './materials/chunks/wetness';
 import './post/ssr';
 import './environment/atmosphere/heightFog';
 
@@ -78,6 +79,8 @@ export class RenderContext {
   pixelRatio = 1;
   /** Dynamic resolution scale applied on top of the device pixel ratio. */
   resolutionScale = 1;
+  /** Resolution scale pinned by pinResolutionScale (null = dynamic). */
+  private pinnedScale: number | null = null;
   /** Set false to render without post (debug / low-end fallback). */
   usePost = true;
   private scene: THREE.Scene | null = null;
@@ -142,7 +145,15 @@ export class RenderContext {
     });
     if (typeof window !== 'undefined') {
       // QA / evidence scripts: lighting, post and memory state of the frame being rendered (plain data).
-      (window as unknown as { __SAMRAJYA_GFX__?: unknown }).__SAMRAJYA_GFX__ = { info: () => this.diagnostics() };
+      // pinResolutionScale(s | null): evidence scripts pin dynamic resolution (1 = show the tier, not SwiftShader speed);
+      // setWetnessOverride(w | null): A/B the surface wetness in the same frame (monsoon wet vs dry).
+      (window as unknown as { __SAMRAJYA_GFX__?: unknown }).__SAMRAJYA_GFX__ = {
+        info: () => this.diagnostics(),
+        pinResolutionScale: (scale: number | null) => this.pinResolutionScale(scale),
+        setWetnessOverride: (w: number | null) => {
+          WETNESS_DEBUG.override = w === null || !Number.isFinite(w) ? -1 : Math.min(1, Math.max(0, w));
+        },
+      };
     }
     this.resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => this.resize()) : null;
     this.resizeObserver?.observe(canvas);
@@ -161,7 +172,7 @@ export class RenderContext {
 
   setQuality(q: QualitySettings): void {
     this.quality = q;
-    this.resolutionScale = Math.min(this.resolutionScale, q.dynamicResolution.maxScale);
+    this.resolutionScale = this.pinnedScale ?? Math.min(this.resolutionScale, q.dynamicResolution.maxScale);
     this.applyRendererQuality();
     this.post.setQuality(q);
     this.resize();
@@ -251,9 +262,19 @@ export class RenderContext {
     }
   };
 
+  /** Pin the resolution scale (evidence captures, profiling); null returns control to the dynamic controller. */
+  pinResolutionScale(scale: number | null): void {
+    this.pinnedScale = scale === null || !Number.isFinite(scale) ? null : Math.min(2, Math.max(0.25, scale));
+    if (this.pinnedScale !== null && Math.abs(this.pinnedScale - this.resolutionScale) > 1e-3) {
+      this.resolutionScale = this.pinnedScale;
+      this.resize();
+    }
+  }
+
   /** Adjust resolution scale from the measured frame time (call once per frame; decisions at most every 750 ms). */
   updateDynamicResolution(avgFrameMs: number, nowMs: number): void {
     const d = this.quality.dynamicResolution;
+    if (this.pinnedScale !== null) return;
     if (!d.enabled || avgFrameMs <= 0 || nowMs - this.lastDynAdjust < 750) return;
     this.lastDynAdjust = nowMs;
     const s = dynamicResolutionStep(this.resolutionScale, avgFrameMs, 1000 / this.quality.targetFps, d.minScale, d.maxScale);

@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { createPbrMaterial, disposePbrMaterial } from '../../../src/render/materials/pbr';
 import { BAYER4, lodFadeKeeps, installInstancedLodDither, createLodFadeAttribute } from '../../../src/render/materials/chunks/lodDither';
-import { wetSurface, WETNESS } from '../../../src/render/materials/chunks/wetness';
+import { globalWetSurface, globalWetnessInstalled, porosityFrom, setWetnessClass, surfaceWetnessFromWeather, wetSurface, WETNESS } from '../../../src/render/materials/chunks/wetness';
 import { installShaderGlobals } from '../../../src/render/materials/chunks/globals';
 import '../../../src/render/materials/chunks/surface';
 
@@ -71,12 +71,80 @@ describe('wetness, puddles, ZoomLook fade', () => {
     expect(bronze.fragmentShader).toContain('geometryRoughness * samG[ SAM_G_MATERIAL_LOOK ].w');
   });
 
-  it('the CPU mirror darkens and glosses porous albedo (fully wet: x0.58, roughness toward 0.12)', () => {
+  it('the CPU mirror darkens and glosses porous albedo (fully wet: x0.52, roughness toward 0.12)', () => {
     const dry = wetSurface(0.5, 0.8, 0);
     expect(dry).toEqual({ albedo: 0.5, roughness: 0.8 });
     const wet = wetSurface(0.5, 0.8, 1);
     expect(wet.albedo).toBeCloseTo(0.5 * WETNESS.albedo, 6);
-    expect(wet.roughness).toBeCloseTo(0.8 + (0.12 - 0.8) * 0.85, 6);
+    expect(wet.roughness).toBeCloseTo(0.8 + (0.12 - 0.8) * WETNESS.roughnessWeight, 6);
+  });
+
+  it('createPbrMaterial applies its own wetness, so the global patch skips it (SAM_OWN_WETNESS)', () => {
+    const s = compile(createPbrMaterial({}, { name: 'plaster' }));
+    expect(s.defines?.SAM_OWN_WETNESS).toBe('');
+  });
+});
+
+describe('global wetness (AD round 1 blocker 1: monsoon reaches every MeshStandard/Physical)', () => {
+  it('is patched into metalnessmap_fragment for STANDARD programs, reads samG, skips own-wetness and lit flipbooks', () => {
+    installShaderGlobals();
+    expect(globalWetnessInstalled()).toBe(true);
+    const chunk = THREE.ShaderChunk.metalnessmap_fragment;
+    expect(chunk).toContain('float metalnessFactor = metalness;');
+    expect(chunk).toContain('#if defined( STANDARD ) && !defined( SAM_OWN_WETNESS ) && !defined( FLIP_NORMAL )');
+    expect(chunk).toContain('samG[ SAM_G_MATERIAL_BOOST ].w');
+    expect(chunk).toContain('samPorosityFrom( roughnessFactor, metalnessFactor )');
+    // The functions live at global scope of every fragment shader (common chunk, fragment-only guard).
+    expect(THREE.ShaderChunk.common).toContain('float samPorosityFrom( float roughness, float metalness )');
+    // meshphysical (= MeshStandard / Physical) includes the chunk; Lambert / Phong do not.
+    expect(THREE.ShaderLib.physical.fragmentShader).toContain('#include <metalnessmap_fragment>');
+    expect(THREE.ShaderLib.lambert.fragmentShader).not.toContain('#include <metalnessmap_fragment>');
+  });
+
+  it('meets the Art Director targets at wetness 0.85 (plaster / sandstone walls x0.60-0.70, roughness 0.35-0.45)', () => {
+    // Today's settlement material (roughness 0.78) and rougher lime plaster / sandstone, on vertical walls.
+    for (const rough of [0.78, 0.85, 0.9, 0.95, 1]) {
+      const w = globalWetSurface(1, rough, 0.02, 0.85, 0);
+      expect(w.albedo, `albedo factor @ roughness ${rough}`).toBeGreaterThanOrEqual(0.6);
+      expect(w.albedo, `albedo factor @ roughness ${rough}`).toBeLessThanOrEqual(0.7);
+      expect(w.roughness, `roughness @ ${rough}`).toBeGreaterThanOrEqual(0.35);
+      expect(w.roughness, `roughness @ ${rough}`).toBeLessThanOrEqual(0.45);
+    }
+    // Foliage (vegetation group, porosity 0.45, flat shaded = up-facing): 15-25% darker. Terrain keeps its own
+    // 0.28 x wetness (24% at 0.85).
+    const leaves = globalWetSurface(1, 0.85, 0, 0.85, 1, WETNESS.foliagePorosity);
+    expect(1 - leaves.albedo).toBeGreaterThanOrEqual(0.15);
+    expect(1 - leaves.albedo).toBeLessThanOrEqual(0.25);
+    expect(0.28 * 0.85).toBeGreaterThanOrEqual(0.15);
+    expect(0.28 * 0.85).toBeLessThanOrEqual(0.25);
+  });
+
+  it('no change at wetness 0, on metals, or on polished / glossy surfaces', () => {
+    for (const rough of [0.1, 0.5, 0.78, 1]) expect(globalWetSurface(0.7, rough, 0, 0, 0)).toEqual({ albedo: 0.7, roughness: rough });
+    expect(globalWetSurface(0.7, 0.9, 1, 0.85, 1)).toEqual({ albedo: 0.7, roughness: 0.9 });
+    expect(porosityFrom(0.3)).toBe(0);
+    expect(porosityFrom(0.95)).toBe(1);
+  });
+
+  it('weather dampness under 0.15 does not show; monsoon rain (0.85) reads as 0.85', () => {
+    expect(surfaceWetnessFromWeather(0.1)).toBe(0);
+    expect(surfaceWetnessFromWeather(0.85)).toBeCloseTo(0.85, 6);
+    expect(surfaceWetnessFromWeather(1)).toBe(1);
+  });
+
+  it('setWetnessClass writes the defines and only recompiles on a change', () => {
+    const m = new THREE.MeshStandardMaterial();
+    const v0 = m.version;
+    setWetnessClass(m, 'own');
+    expect(m.defines?.SAM_OWN_WETNESS).toBe('');
+    const v1 = m.version;
+    expect(v1).toBeGreaterThan(v0);
+    setWetnessClass(m, 'own');
+    expect(m.version).toBe(v1);
+    setWetnessClass(m, 0.45);
+    expect(m.defines?.SAM_OWN_WETNESS).toBeUndefined();
+    expect(m.defines?.SAM_WET_POROSITY).toBe('0.450');
+    m.dispose();
   });
 });
 

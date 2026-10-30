@@ -23,7 +23,8 @@
  * scene.backgroundIntensity = environmentIntensityFor(r, sourceIrradiance); hemisphere x0.35 when the IBL is on;
  * height fog with fogRadiance colours and density x ZoomLook fogDensityScale; renderer.toneMappingExposure =
  * r.exposure; post grade r.grade; bloom threshold r.bloomThreshold / r.exposure; MATERIAL_GLOBALS.wetness =
- * max(r.wetness, weather.wetness).
+ * max(r.wetness, surfaceWetnessFromWeather(weather.wetness)) -> every MeshStandard/Physical (chunks/wetness.ts global
+ * patch; the legacy 'terrain' group keeps its own wetness, 'vegetation' gets the foliage porosity).
  * Per-frame work runs in a RenderContext frame hook (right before this scene renders, with the real camera), so
  * scenes that never call update() still get fitted cascades, fog and post. Allocation-free per frame.
  */
@@ -36,6 +37,7 @@ import { SkySystem, sunDirection as solarDirection } from './sky';
 import { LIGHTING_PRESETS, resolveHeroMood, resolveLighting, environmentIntensityFor, type ResolvedLighting } from '../style/lighting';
 import { capZoomLook, createZoomLook, resolveZoomLook, type ZoomLook } from '../style/zoom';
 import { MATERIAL_GLOBALS } from '../materials/pbr';
+import { setWetnessClass, surfaceWetnessFromWeather, WETNESS, WETNESS_DEBUG } from '../materials/chunks/wetness';
 import { G, g, installShaderGlobals } from '../materials/chunks/globals';
 import { blendResolvedInto, cloneResolved, copyResolvedInto } from '../lighting/resolved';
 import { bloomThresholdLinear } from '../lighting/ibl';
@@ -91,6 +93,13 @@ const HEMI_WITH_IBL = 0.35;
 /** Weather that can bring lightning (GFX-02 calls triggerLightning in these): the flash light is added up front. */
 export const LIGHTNING_WEATHER: ReadonlySet<WeatherKind> = new Set<WeatherKind>(['storm', 'monsoon_rain']);
 
+const WET_TAG_FRAMES = 600;
+/** Legacy scene groups (by name) and their wetness class for the global patch (see tagLegacyWetness). */
+const LEGACY_WETNESS: readonly (readonly [string, 'own' | number])[] = [
+  ['terrain', 'own'],
+  ['vegetation', WETNESS.foliagePorosity],
+];
+
 export class EnvironmentRig {
   readonly sky: SkySystem;
   readonly hemi: THREE.HemisphereLight;
@@ -132,6 +141,11 @@ export class EnvironmentRig {
   private flash = 1;
   private bounds: { cx: number; cz: number; half: number } | null = null;
   private boundsSearch = 0;
+  /** Frames left to look for the legacy groups whose wetness class the rig sets ('terrain', 'vegetation'). */
+  private wetTagSearch = WET_TAG_FRAMES;
+  /** Surface wetness from the applied lighting + weather (MATERIAL_GLOBALS.wetness unless a debug override is set). */
+  private wetness = 0;
+  private readonly wetTagged = new Set<string>();
   private assets: RenderAssetSource | null = null;
   private sourceIrradiance = 1;
   private envYaw = 0;
@@ -456,8 +470,9 @@ export class EnvironmentRig {
     ps.keyShare = r.keyFill / (1 + r.keyFill);
     this.updatePostAssets();
     // Wetness and practicals.
-    MATERIAL_GLOBALS.wetness.value = Math.max(r.wetness, env?.weather.wetness ?? 0);
-    g(G.MATERIAL_BOOST).w = MATERIAL_GLOBALS.wetness.value;
+    this.wetness = Math.max(r.wetness, surfaceWetnessFromWeather(env?.weather.wetness ?? 0));
+    MATERIAL_GLOBALS.wetness.value = this.wetness;
+    g(G.MATERIAL_BOOST).w = this.wetness;
     this.practicals.weight = r.practicals;
   }
 
@@ -509,6 +524,7 @@ export class EnvironmentRig {
     this.sky.setFrame(environmentIntensityFor(r, this.sky.sourceIrradiance || 1), this.flash, this.time, this.wind.x, this.wind.z);
     // Fog / atmosphere slots.
     if (!this.bounds && this.boundsSearch < 240) this.findBounds();
+    if (this.wetTagSearch > 0) this.tagLegacyWetness();
     const a = this.atmosphere;
     a.fogDensityScale = this.look.atmosphere.fogDensityScale;
     a.aerialPerspective = this.look.atmosphere.aerialPerspective;
@@ -536,6 +552,7 @@ export class EnvironmentRig {
     // Practicals.
     this.practicals.update(step, this.camPos);
     // Material globals written per frame (the renderer zeroes samG before the hooks): wetness, ZoomLook detail.
+    MATERIAL_GLOBALS.wetness.value = WETNESS_DEBUG.override >= 0 ? WETNESS_DEBUG.override : this.wetness;
     g(G.MATERIAL_BOOST).w = MATERIAL_GLOBALS.wetness.value;
     const lm = this.look.material;
     g(G.MATERIAL_LOOK).set(1 - lm.detailNormal, 1 - lm.macro, lm.parallax, lm.specularAA);
@@ -543,6 +560,31 @@ export class EnvironmentRig {
     this.ctx.post.applyZoomLook(this.look, focusDist);
     this.postSun.elevationDeg = this.sunElevationDeg;
     this.ctx.post.setSun(this.postSun);
+  }
+
+  /**
+   * Legacy groups that predate the global wetness patch (W15 bridge, until GFX-02 / GFX-03 adopt the shared hook):
+   * 'terrain' darkens by its own 0.28 x weather wetness (-> 'own', no double darkening; 24% at monsoon 0.85), and
+   * 'vegetation' is leaves (waxy, shed water: fixed porosity 0.45 -> ~18% darker at 0.85). Checked every 30 frames
+   * for the first ~10 s; tagging recompiles those materials once.
+   */
+  private tagLegacyWetness(): void {
+    const k = this.wetTagSearch--;
+    if ((WET_TAG_FRAMES - k) % 30 !== 0) return;
+    for (const [name, cls] of LEGACY_WETNESS) {
+      if (this.wetTagged.has(name)) continue;
+      const o = this.scene.getObjectByName(name);
+      if (!o) continue;
+      this.wetTagged.add(name);
+      o.traverse((c) => {
+        const m = (c as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+        if (!m) return;
+        for (const mat of Array.isArray(m) ? m : [m]) {
+          if ((mat as THREE.MeshStandardMaterial).isMeshStandardMaterial && !mat.defines?.SAM_OWN_WETNESS) setWetnessClass(mat, cls);
+        }
+      });
+    }
+    if (this.wetTagged.size === LEGACY_WETNESS.length) this.wetTagSearch = 0;
   }
 
   /** Find the map bounds from the terrain group (GFX-02 names it 'terrain'); retried for a few seconds. */
