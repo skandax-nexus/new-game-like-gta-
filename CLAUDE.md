@@ -12,7 +12,9 @@ Content: runtime-procedural (terrain, vegetation, settlement architecture, WebAu
 content pipeline - Blender 5.2 as a Python module (asset scripts in `tools/blender/`) -> gltf-transform /
 meshoptimizer / sharp -> `public/assets/` + generated `src/assets/manifest.ts` (dev deps:
 `@gltf-transform/*` 4.5.1, `meshoptimizer` 1.2.0, `sharp` 0.35.5, `@pmndrs/assets` 1.7.0). Never
-hand-made or downloaded binaries. Post-processing uses `three/examples/jsm` passes. **Never add npm
+hand-made or downloaded binaries, except CC0 / public-domain SOURCE data vendored under `tools/vendor/<source>/`
+with a LICENSE copy and `PROVENANCE.md` (URL, version/commit, date, licence) and processed only by scripts (e.g. MakeHuman
+CC0 base mesh/targets for realistic humans, Natural Earth public-domain geodata for the real subcontinent map). Post-processing uses `three/examples/jsm` passes. **Never add npm
 dependencies** (ask the CTO).
 
 ## Commands

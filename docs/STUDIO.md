@@ -1453,3 +1453,18 @@ Prove the MVP works, stays deterministic and meets budgets, and leave automation
 - [ ] node scripts/bench.cjs produces docs/qa/perf/<date>.md/.json and passes the ARCHITECTURE §15 draw-call/triangle budgets for 1,000 and 5,000 soldiers at high and 600/1,000 at low/medium.
 - [ ] Balance report: §13.2 targets, §13.3 matchup rows and §13.4 campaign paths each marked pass/fail with numbers; failures filed to SIM-01/SIM-02/GP-01 with exact repro seeds.
 - [ ] npm run smoke (SMOKE_PORT=4424) passes with the extended SHOTS list; docs/qa/SPRINT1_QA.md maps every GDD §15 item to evidence.
+
+
+## 9. Client change request 2026-10-30 (Studio Head)
+
+Client: "Need real humans and maps should be like real country." Changes to Sprint 1:
+
+| ID | Change |
+|---|---|
+| **MAP-01** (new, pri 5, port 4425) | Real Indian subcontinent geodata pipeline (Natural Earth, public domain) -> strategic heightfield, rivers, coast, biome masks. Developer: Geodata & World Terrain Engineer; reviewer: CTO; co-signs: Art Director, Creative Director. Depends on CORE-01. |
+| **MAP-02** (new, pri 7, port 4426) | Real places: janapadas, ancient cities at real coordinates, trade routes, campaign/presets remapped; ruling houses stay fictional (GDD §7). Developer: World Designer (Creative Director team); reviewer: Lead AI & Simulation Engineer; co-sign: Creative Director. Depends on MAP-01, SIM-01. |
+| TA-05, TA-06 (amended) | Realistic humans from the MakeHuman CC0 base mesh/targets; crowd LOD0 4-6k tris, hero LOD0 40-70k with facial blendshapes, eyes, hair cards; realistic motion. |
+| GFX-04 (amended) | Human skin/cloth shading for VAT crowds; LOD policy and re-measured budgets. |
+| GFX-02, GFX-05, GFX-06, GP-03, GP-04, QA-01 | Now also depend on MAP-01/MAP-02; render/use the real map. |
+
+Source-data policy (CLAUDE.md): CC0 / public-domain source data may be vendored under `tools/vendor/<source>/` with LICENSE + PROVENANCE.md.
