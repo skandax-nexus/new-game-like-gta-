@@ -2,13 +2,18 @@
  * Road network queries shared by the economy (internal grain market, relief, trade road share), supply lines and
  * pathing (DESIGN_SPEC §3.4, §7.3.5, §7.5, §7.8). OWNER: Simulation Engineer - Strategic World Simulation (SIM-01).
  *
- *  - Edge usability for trade: condition >= 0.5 and not blocked by an army hostile to the faction.
- *  - `updateRoadBlocks`: daily, a stationary army (camped / besieging / foraging) within RoadBlockRadius of a road's
- *    polyline blocks it (RoadEdge.blockedBy = first such army by id).
+ *  - Road blocks (§7.7, SIM-01 review S3): an edge is **blocked for faction F** while a stationary army (camped,
+ *    besieging, or foraging in place) hostile to F stands within ROAD_BLOCK_RADIUS (120 m) of its polyline and no
+ *    stationary army of F stands on the same edge - an escort keeps its road open. `blockedFor` / `edgeBlocker` evaluate
+ *    the rule from the armies themselves, so the answer does not depend on army id order; it cuts grain distribution
+ *    (realm components), relief, the trade road share, pathing and repair_road (supply lines: supply.threatenedEdges).
+ *  - `updateRoadBlocks`: daily display field RoadEdge.blockedBy = the first army by id that blocks the edge for some
+ *    living realm (the map's "road held" marker); the rules never read it.
+ *  - Edge usability for trade: condition >= 0.5 and not blocked for the faction.
  *  - Realm components: owned settlements linked by usable roads whose both ends the faction owns.
  * Pure, deterministic, three-free.
  */
-import type { ArmyState, FactionId, RoadEdge, SettlementId, SettlementState, Vec2, WorldState } from '../../core/types';
+import type { ArmyId, ArmyState, FactionId, RoadEdge, SettlementId, SettlementState, Vec2, WorldState } from '../../core/types';
 import { sortedKeys } from '../../core/ids';
 import { distToSegment } from '../../core/math';
 import { hostileToArmy, stableKeys } from './state';
@@ -88,36 +93,64 @@ export function nearAnyRoad(world: WorldState, x: number, z: number, r: number):
   return near;
 }
 
-/** Is the edge blocked for `factionId` (an army hostile to it holds the road)? */
+/**
+ * A stationary army holds the roads near it (§7.7): camped, besieging, or foraging in place (not on the march).
+ * Garrisoned armies sit inside their walls and hold no road.
+ */
+export function holdsRoad(a: ArmyState): boolean {
+  if (a.units.length === 0) return false;
+  return a.status === 'camped' || a.status === 'besieging' || (a.supply.foraging && a.status !== 'marching');
+}
+
+/**
+ * The army that blocks `edge` for `factionId` (§7.7): the first by id of the stationary armies hostile to the faction
+ * within ROAD_BLOCK_RADIUS of the polyline - null when there is none, or when a stationary army of the faction stands on
+ * the same edge (an escort keeps its road open). Every army near the edge is considered, so no army hides another.
+ */
+export function edgeBlocker(world: WorldState, edge: RoadEdge, factionId: FactionId): ArmyId | null {
+  let blocker: ArmyId | null = null;
+  const ids = stableKeys('armies', world.armies as Record<string, unknown>);
+  for (let i = 0; i < ids.length; i++) {
+    const a = world.armies[ids[i] as string];
+    if (!a || !holdsRoad(a) || !nearEdge(edge, a.x, a.z, ROAD_BLOCK_RADIUS)) continue;
+    if (a.factionId === factionId) return null;
+    if (blocker === null && hostileToArmy(world, factionId, a)) blocker = a.id;
+  }
+  return blocker;
+}
+
+/** Is the edge blocked for `factionId` (a hostile stationary army holds it and no escort of the faction does)? */
 export function blockedFor(world: WorldState, edge: RoadEdge, factionId: FactionId): boolean {
-  if (!edge.blockedBy) return false;
-  const a = world.armies[edge.blockedBy];
-  return !!a && hostileToArmy(world, factionId, a);
+  return edgeBlocker(world, edge, factionId) !== null;
 }
 
 export function usableForTrade(world: WorldState, edge: RoadEdge, factionId: FactionId): boolean {
   return edge.condition >= TRADE_ROAD_MIN_CONDITION && !blockedFor(world, edge, factionId);
 }
 
-function stationary(a: ArmyState): boolean {
-  return a.status === 'camped' || a.status === 'besieging' || a.supply.foraging;
-}
-
-/** Daily: recompute RoadEdge.blockedBy from stationary armies near each polyline. */
+/**
+ * Daily: the display field RoadEdge.blockedBy = the first army (by id) that blocks the edge for some living realm, or
+ * null. Rules use blockedFor / edgeBlocker (per faction), never this field.
+ */
 export function updateRoadBlocks(world: WorldState): void {
   const armyIds = stableKeys('armies', world.armies as Record<string, unknown>);
+  const factionIds = stableKeys('factions', world.factions as Record<string, unknown>);
   for (const eid of stableKeys('edges', world.roads.edges as Record<string, unknown>)) {
     const e = world.roads.edges[eid] as RoadEdge;
-    let blocker: string | null = null;
-    for (const aid of armyIds) {
-      const a = world.armies[aid] as ArmyState;
-      if (!stationary(a) || a.units.length === 0) continue;
-      if (nearEdge(e, a.x, a.z, ROAD_BLOCK_RADIUS)) {
-        blocker = a.id;
-        break;
+    let shown: ArmyId | null = null;
+    for (let i = 0; i < armyIds.length && shown === null; i++) {
+      const a = world.armies[armyIds[i] as string];
+      if (!a || !holdsRoad(a) || !nearEdge(e, a.x, a.z, ROAD_BLOCK_RADIUS)) continue;
+      for (let j = 0; j < factionIds.length; j++) {
+        const fid = factionIds[j] as string;
+        if (!world.factions[fid]?.alive || !hostileToArmy(world, fid, a)) continue;
+        if (edgeBlocker(world, e, fid) !== null) {
+          shown = a.id;
+          break;
+        }
       }
     }
-    e.blockedBy = blocker;
+    e.blockedBy = shown;
   }
 }
 

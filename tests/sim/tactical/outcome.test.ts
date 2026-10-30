@@ -33,9 +33,9 @@ describe('§6.8 side broken: arrowless archers do not hold the field', () => {
     });
     expect(sideBroken(b.state, 0)).toBe(false);
     emptyQuivers(b, 0);
-    expect(holdsTheField(b.state.formations[0]!)).toBe(false);
-    expect(holdsTheField(b.state.formations[1]!)).toBe(false);
-    expect(holdsTheField(b.state.formations[3]!)).toBe(true);
+    expect(holdsTheField(b.state.formations[0]!, b.ctx)).toBe(false);
+    expect(holdsTheField(b.state.formations[1]!, b.ctx)).toBe(false);
+    expect(holdsTheField(b.state.formations[3]!, b.ctx)).toBe(true);
     expect(sideBroken(b.state, 0)).toBe(true);
     expect(sideBroken(b.state, 1)).toBe(false);
     runFor(b, BATTLE_DT);
@@ -83,7 +83,7 @@ describe('§6.8 side broken: arrowless archers do not hold the field', () => {
     emptyQuivers(melee, 0);
     runFor(melee, BATTLE_DT);
     expect(arch.engagedWith).toEqual([1]);
-    expect(holdsTheField(arch)).toBe(true);
+    expect(holdsTheField(arch, melee.ctx)).toBe(true);
     expect(sideBroken(melee.state, 0)).toBe(false);
     expect(melee.state.outcome).toBeNull();
   });

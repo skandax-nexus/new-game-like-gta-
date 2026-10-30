@@ -29,7 +29,7 @@ import { BALANCE } from '../../data/balance';
 import { RULES } from '../../data/rules';
 import { carriedCapacity, rawFoodNeed, removeArmy } from './armies';
 import { factionMod } from './modifiers';
-import { nearAnyRoad, nearEdge, nearestNode, provinceAtPoint } from './network';
+import { holdsRoad, nearAnyRoad, nearEdge, nearestNode, provinceAtPoint, ROAD_BLOCK_RADIUS } from './network';
 import { seasonOf } from './seasons';
 import { activeTreaty, relationOf } from './treaties';
 import { addMonthToDate, addStat, atWarWith, hostileToArmy, notifyPlayer, regionTerrain, stableKeys, today, worldRandom } from './state';
@@ -134,20 +134,23 @@ export function loseShare(world: WorldState, a: ArmyState, share: number): numbe
   return lost;
 }
 
-/** Supply-line threat per faction: edges with a hostile army within 300 m (computed once per day). */
-function threatenedEdges(world: WorldState, factionId: FactionId, cache: Map<string, Set<string>>): Set<string> {
+/**
+ * Supply-line threat per faction (§7.8 rule 3 + the §7.7 escort rule): edges with a hostile army within 300 m, unless a
+ * stationary army of the faction stands on the edge (within ROAD_BLOCK_RADIUS) - an escort keeps its road open. Every
+ * edge blocked for the faction (network.blockedFor) is threatened. Computed once per day per faction.
+ */
+export function threatenedEdges(world: WorldState, factionId: FactionId, cache: Map<string, Set<string>> = new Map()): Set<string> {
   let s = cache.get(factionId);
   if (s) return s;
   s = new Set();
-  const armies = stableKeys('armies', world.armies as Record<string, unknown>).map((id) => world.armies[id]!).filter((o) => o.units.length > 0 && hostileToArmy(world, factionId, o));
+  const all = stableKeys('armies', world.armies as Record<string, unknown>).map((id) => world.armies[id]!);
+  const hostile = all.filter((o) => o.units.length > 0 && hostileToArmy(world, factionId, o));
+  const escorts = all.filter((o) => o.factionId === factionId && holdsRoad(o));
   for (const eid of stableKeys('edges', world.roads.edges as Record<string, unknown>)) {
     const e = world.roads.edges[eid] as RoadEdge;
-    for (const o of armies) {
-      if (nearEdge(e, o.x, o.z, SUPPLY_LINE_THREAT)) {
-        s.add(eid);
-        break;
-      }
-    }
+    if (!hostile.some((o) => nearEdge(e, o.x, o.z, SUPPLY_LINE_THREAT))) continue;
+    if (escorts.some((o) => nearEdge(e, o.x, o.z, ROAD_BLOCK_RADIUS))) continue;
+    s.add(eid);
   }
   cache.set(factionId, s);
   return s;

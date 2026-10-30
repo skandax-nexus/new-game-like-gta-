@@ -4,7 +4,8 @@
  * chronicle, capture) is SIM-01's `applyBattleOutcome`; this module fills every outcome field it reads.
  *
  * Ends when: a side is broken (all combat formations routing / destroyed / surrendered; both = draw - archers out of
- * arrows and not in melee count as non-combat like engineers and carts, CD amendment to §6.8); a side has
+ * arrows and not in melee count as non-combat like engineers and carts, CD amendment to §6.8, except a besieged
+ * garrison's archers standing on their own walls, [REQ GP-01] in §6.8 / §6.6.5); a side has
  * withdrawn (withdraw_all) and disengaged; siege conditions (breach held 60 s -> siege_breach; attackers broken or
  * time limit -> siege_held); a scripted objective completes / fails; the time limit (stronger side, draw within 10%).
  * Pursuit when a side breaks: routing soldiers still on the field x (0.15 + 0.1 x winnerMountedShare) x
@@ -18,30 +19,42 @@ import { FACTIONS } from '../../data/factions';
 import { RULES } from '../../data/rules';
 import { SKIRMISH_MAPS } from '../../data/skirmish';
 import { UNITS } from '../../data/units';
+import type { BattleContext } from './context';
+import { rulesContext } from './context';
+import { onWalls } from './morale';
 import { variantStats, isCombatClass, isMounted } from './stats';
+
+/** The part of the battle context the side-broken rule reads: the siege fort geometry (null outside sieges). */
+export type FieldContext = Pick<BattleContext, 'fort'>;
 
 /**
  * Formation that keeps its side in the battle for the side-broken rule (§6.8): a combat class (not engineers or supply
  * trains), and not an archer-category formation that is out of arrows and not in melee (CD rules amendment to §6.8,
- * GP-01 review: arrowless archers standing idle no longer hold a battle open until the time limit).
+ * GP-01 review: arrowless archers standing idle no longer hold a battle open until the time limit) - unless it is a
+ * besieged garrison's formation standing on its own walls or towers (`onWalls`: inside the ring within
+ * WALL_WALK_DEPTH of the radius; [REQ GP-01] in §6.8 and §6.6.5). Those hold the walls with stones and spears until
+ * the attacker takes them: by melee over ladders or a breach, or by holding a breach 60 s (siege_breach).
+ * `ctx` is the battle context (or `rulesContext(state)`); null means no fortification.
  */
-export function holdsTheField(f: BattleState['formations'][number]): boolean {
+export function holdsTheField(f: BattleState['formations'][number], ctx: FieldContext | null): boolean {
   if (!isCombatClass(f.unitClass)) return false;
-  if (UNITS[f.unitClass].category === 'ranged' && f.ammo <= 0 && f.engagedWith.length === 0) return false;
+  if (UNITS[f.unitClass].category === 'ranged' && f.ammo <= 0 && f.engagedWith.length === 0) return !!ctx && !!ctx.fort && onWalls(ctx, f);
   return true;
 }
 
 /**
  * True if a side can no longer fight: it surrendered, or every formation that holds the field (`holdsTheField`) is
- * routing / destroyed / surrendered. A side left with only arrowless archers, engineers and carts is broken; both sides
- * at once is a draw (checkOutcome).
+ * routing / destroyed / surrendered. A side left with only arrowless archers (off their own walls), engineers and
+ * carts is broken; both sides at once is a draw (checkOutcome). `ctx` defaults to the battle's cached context (or a
+ * rules-only view built from the setup) when the battle has a fortification.
  */
-export function sideBroken(state: BattleState, side: SideIndex): boolean {
+export function sideBroken(state: BattleState, side: SideIndex, ctx?: FieldContext | null): boolean {
   const s = state.sides[side];
   if (s.surrendered) return true;
+  const c = ctx !== undefined ? ctx : state.setup.fortification ? rulesContext(state) : null;
   for (const f of state.formations) {
     if (f.side !== side || f.soldiers <= 0) continue;
-    if (!holdsTheField(f)) continue;
+    if (!holdsTheField(f, c)) continue;
     if (f.activity !== 'routing' && f.activity !== 'surrendered' && f.activity !== 'destroyed') return false;
   }
   return true;

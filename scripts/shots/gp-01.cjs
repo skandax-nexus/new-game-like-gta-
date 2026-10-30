@@ -20,9 +20,9 @@
  *                               contact / rout markers; soldiers and morale timelines; outcome
  *   tactical-river.png          the Ford: both hosts route through the shallow ford (never deep water)
  *   tactical-siege.png          scripted assault: elephants break the main gate, ram built, ladders on the east wall;
- *                               the attacker wins (DESIGN_SPEC 6.6.5: breach held 60 s -> siege_breach, or the
- *                               defenders broken - since the CD 6.8 amendment, wall archers out of arrows no longer
- *                               keep a broken garrison in the battle)
+ *                               the garrison's melee blocks rout but its arrowless archers still stand on their own
+ *                               walls and hold the field ([REQ GP-01] in DESIGN_SPEC 6.8 / 6.6.5), so the attacker
+ *                               wins by holding the breach 60 s (siege_breach)
  *   traces.json                 the trace data behind the three maps
  *   shots-report.json           every assertion with its observed value (full runs only; --only=maps|engine skips it)
  * Every in-engine shot is checked for a blank 3D view (a WebGL canvas that presented nothing, so the page background
@@ -491,9 +491,25 @@ async function captureMaps(browser) {
     check(`tactical-${key}: the 1,000-soldier skirmish ends in 3-8 min (or near it)`, !!o.outcome && m >= 2.5 && m <= 8, o.outcome && { winner: o.outcome.winner, reason: o.outcome.reason, minutes: Math.round(m * 100) / 100 });
   }
   const sg = traces.siege;
-  // §6.6.5: the attacker wins by holding a breach 60 s or because the defenders are broken (both capture the town).
-  const atk = sg.fort && typeof sg.fort.defenderSide === "number" ? 1 - sg.fort.defenderSide : 0;
-  check('tactical-siege: the main gate is broken, a ladder is up and the attacker wins (breach held or defenders broken)', sg.siege.gates.some((x) => x.hp <= 0) && sg.siege.segments.some((x) => x.ladder) && sg.outcome && sg.outcome.winner === atk && (sg.outcome.reason === 'siege_breach' || sg.outcome.reason === 'rout' || sg.outcome.reason === 'annihilation' || sg.outcome.reason === 'surrender'), { gates: sg.siege.gates.map((x) => Math.round(x.hp)), ladders: sg.siege.segments.map((x, i) => (x.ladder ? i : -1)).filter((i) => i >= 0), winner: sg.outcome && sg.outcome.winner, outcome: sg.outcome && sg.outcome.reason });
+  // §6.6.5 + §6.8 [REQ GP-01]: the garrison's arrowless archers standing on their own walls (inside the ring within
+  // WALL_WALK_DEPTH = 15 m of the radius) still hold the field after its melee blocks rout, so the attacker has to
+  // take the town by holding the breach 60 s (siege_breach), not by a rout of the garrison.
+  const def = sg.fort && typeof sg.fort.defenderSide === 'number' ? sg.fort.defenderSide : 1;
+  const atk = 1 - def;
+  const last = sg.frames[sg.frames.length - 1];
+  const dry = new Set(sg.events.filter((e) => e.kind === 'ammo_depleted' && e.side === def).map((e) => e.formation));
+  const wallArchers = sg.formations.filter((f) => {
+    if (f.side !== def || !dry.has(f.index)) return false;
+    const x = last.f[f.index];
+    const r = Math.hypot(x[0] - sg.fort.cx, x[1] - sg.fort.cz);
+    return x[5] > 0 && x[7] !== 7 && r <= sg.fort.r && r >= sg.fort.r - 15;
+  });
+  const meleeRouted = sg.formations.filter((f) => f.side === def && f.cls !== 'archers').every((f) => last.f[f.index][5] <= 0 || last.f[f.index][7] === 7);
+  check(
+    "tactical-siege: the main gate is broken, a ladder is up, the garrison's melee has routed but its dry archers still stand on their walls, and the attacker wins by holding the breach (siege_breach)",
+    sg.siege.gates.some((x) => x.hp <= 0) && sg.siege.segments.some((x) => x.ladder) && meleeRouted && wallArchers.length > 0 && sg.outcome && sg.outcome.winner === atk && sg.outcome.reason === 'siege_breach',
+    { gates: sg.siege.gates.map((x) => Math.round(x.hp)), ladders: sg.siege.segments.map((x, i) => (x.ladder ? i : -1)).filter((i) => i >= 0), meleeRouted, dryWallArchers: wallArchers.map((f) => `${f.index}:${last.f[f.index][5]}`), winner: sg.outcome && sg.outcome.winner, outcome: sg.outcome && sg.outcome.reason, minutes: sg.outcome && Math.round((sg.outcome.durationSec / 60) * 100) / 100 },
+  );
 
   const ctx = await newPage(browser, [1280, 800], false);
   const { page } = ctx;
@@ -501,7 +517,7 @@ async function captureMaps(browser) {
   const maps = [
     ['tactical-plains', traces.plains, 'The Open Plain - 1,000-soldier balanced skirmish, AI vs AI (seed 2)', 'Headless authoritative formation sim (20 Hz). Trails every 2 s; footprints at the moment the most soldiers are in melee.'],
     ['tactical-river', traces.river, 'The Ford - 1,000 soldiers, AI vs AI (seed 11, 17:00)', 'Flow-field pathing: both hosts route through the shallow ford; no formation enters deep water.'],
-    ['tactical-siege', traces.siege, 'Siege assault - town walls (level 2), ram, ladders, elephants (scripted orders, seed 77)', 'Elephants batter the main gate open while the ram is still being built; ladders go up on the east wall; the garrison breaks (its wall archers out of arrows).'],
+    ['tactical-siege', traces.siege, 'Siege assault - town walls (level 2), ram, ladders, elephants (scripted orders, seed 77)', 'Elephants batter the main gate open while the ram is still being built; ladders go up on the east wall; the garrison melee routs, its dry wall archers hold the walls until the breach is held 60 s.'],
   ];
   for (const [name, t, title, sub] of maps) {
     await page.evaluate(`(${drawTrace.toString()})(${JSON.stringify(t)}, ${JSON.stringify(title)}, ${JSON.stringify(sub)})`);

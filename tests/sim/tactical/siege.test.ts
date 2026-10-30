@@ -10,6 +10,7 @@ import { meleeAttackValue, meleeDefenseValue } from '../../../src/sim/tactical/c
 import { createFortificationSpec, gatesForSettlement, ringPoint } from '../../../src/sim/tactical/fort';
 import { onWalls } from '../../../src/sim/tactical/morale';
 import { effectiveRange, volleyHits } from '../../../src/sim/tactical/projectiles';
+import { holdsTheField, sideBroken } from '../../../src/sim/tactical/outcome';
 import { breachHeld, wallBetween } from '../../../src/sim/tactical/siege';
 import { moveProfile } from '../../../src/sim/tactical/stats';
 import { runFor, testBattle } from './helpers';
@@ -265,5 +266,104 @@ describe('siege victory', () => {
     expect(b.state.siege!.breachHold).toBeNull();
     expect(b.state.outcome?.winner).toBe(1);
     expect(b.state.outcome?.reason).toBe('siege_held');
+  });
+});
+
+/** Point at facing angle `a` (0 = +Z, PI/2 = +X) and distance `r` from the fort center (0, 0). */
+function at(a: number, r: number): { x: number; z: number } {
+  return ringPoint({ cx: 0, cz: 0, radius: R } as Parameters<typeof ringPoint>[0], a, r, { x: 0, z: 0 });
+}
+
+describe("§6.8 / §6.6.5 [REQ GP-01]: a garrison's arrowless archers on their own walls hold the field", () => {
+  // The attacker comes from +Z (main gate, segment 0); the garrison archers stand on the west wall walk (270 deg,
+  // 12 m inside the radius: onWalls), out of arrows; the garrison spear block is made to rout (morale 5).
+  const WEST = (3 * PI) / 2;
+
+  function garrison(archers: { x: number; z: number }, timeLimitSec: number | null): TestBattle {
+    const b = testBattle({
+      kind: 'siege',
+      fortification: fort(),
+      attackerSide: 0,
+      timeLimitSec,
+      sides: [
+        [{ cls: 'spearmen', x: 0, z: 320, facing: PI }],
+        [
+          { cls: 'archers', x: archers.x, z: archers.z, facing: WEST },
+          { cls: 'spearmen', x: 0, z: 30, facing: 0 },
+        ],
+      ],
+    });
+    b.state.formations[1]!.ammo = 0;
+    b.state.formations[2]!.morale = 5;
+    return b;
+  }
+
+  it('(a) the garrison melee all rout while its dry archers stand on intact walls: not broken, the battle goes on (siege_held at the time limit)', () => {
+    const b = garrison(at(WEST, R - 12), 120);
+    const arch = b.state.formations[1]!;
+    const spear = b.state.formations[2]!;
+    expect(onWalls(b.ctx, arch)).toBe(true);
+    runFor(b, 10);
+    expect(spear.activity).toBe('routing');
+    expect(arch.ammo).toBe(0);
+    expect(arch.engagedWith.length).toBe(0);
+    expect(arch.activity).not.toBe('routing');
+    expect(holdsTheField(arch, b.ctx)).toBe(true);
+    expect(sideBroken(b.state, 1)).toBe(false);
+    expect(b.state.siege!.breaches).toEqual([]);
+    expect(b.state.outcome).toBeNull();
+    // The walls are never taken (no breach, no ladder): the defender wins at the time limit.
+    runFor(b, 200);
+    expect(b.state.outcome?.winner).toBe(1);
+    expect(b.state.outcome?.reason).toBe('siege_held');
+    expect(b.state.outcome?.durationSec).toBeGreaterThanOrEqual(120);
+  });
+
+  it('(b) the same dry archers stepped off the walls (inside the town or outside the ring) are broken: the attacker wins by rout', () => {
+    for (const [where, p] of [
+      ['in the town square', at(WEST, 30)],
+      ['outside the ring', at(WEST, R + 30)],
+    ] as const) {
+      const b = garrison(p, 120);
+      const arch = b.state.formations[1]!;
+      expect(onWalls(b.ctx, arch), where).toBe(false);
+      expect(holdsTheField(arch, b.ctx), where).toBe(false);
+      runFor(b, 10);
+      const o = b.state.outcome;
+      expect(o, where).not.toBeNull();
+      expect(o!.winner, where).toBe(0);
+      expect(o!.reason, where).toBe('rout');
+      expect(o!.durationSec, where).toBeLessThan(10);
+      expect(arch.activity, where).not.toBe('routing');
+    }
+  });
+
+  it('(c) breach-hold victory still ends a siege whose dry wall archers stand elsewhere on the ring (siege_breach after 60 s)', () => {
+    const breachA = (1.5 / 12) * 2 * PI; // middle of segment 1 (45 deg)
+    const breach = at(breachA, R);
+    const inside = at(breachA, R - 25);
+    const wall = at(breachA + PI, R - 12); // the opposite wall walk, ~216 m from the breach
+    const b = siege([{ cls: 'spearmen', x: breach.x * 1.3, z: breach.z * 1.3, facing: PI }], [{ cls: 'archers', x: wall.x, z: wall.z, facing: breachA + PI }]);
+    const arch = b.state.formations[1]!;
+    arch.ammo = 0;
+    expect(onWalls(b.ctx, arch)).toBe(true);
+    expect(holdsTheField(arch, b.ctx)).toBe(true);
+    expect(sideBroken(b.state, 1)).toBe(false);
+    b.state.siege!.segments[1]!.hp = 0;
+    order(b, 0, 0, { type: 'move_to', x: inside.x, z: inside.z, facing: PI, run: false });
+    runFor(b, 120, (s) => !!s.siege!.breachHold);
+    const hold = b.state.siege!.breachHold!;
+    expect(hold.formation).toBe(0);
+    // The archers keep the garrison in the battle (without the exception it would have ended at once by rout) ...
+    expect(b.state.outcome).toBeNull();
+    runFor(b, 59);
+    expect(b.state.outcome).toBeNull();
+    // ... until the breach has been held 60 s.
+    runFor(b, 1.5);
+    expect(b.state.outcome?.winner).toBe(0);
+    expect(b.state.outcome?.reason).toBe('siege_breach');
+    expect(b.state.time - hold.since).toBeGreaterThanOrEqual(60);
+    expect(arch.activity).not.toBe('routing');
+    expect(onWalls(b.ctx, arch)).toBe(true);
   });
 });

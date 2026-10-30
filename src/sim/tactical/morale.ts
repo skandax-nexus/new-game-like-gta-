@@ -137,8 +137,11 @@ export function isNight(state: BattleState): boolean {
   return h < 5 || h > 20;
 }
 
-/** Defender standing on the walls of a siege (inside the ring within WALL_WALK_DEPTH of the radius). */
-export function onWalls(ctx: BattleContext, f: FormationState): boolean {
+/**
+ * Defender standing on the walls of a siege (inside the ring within WALL_WALK_DEPTH of the radius). Only the fort
+ * geometry is read, so a rules-only context (`rulesContext`) will do.
+ */
+export function onWalls(ctx: Pick<BattleContext, 'fort'>, f: FormationState): boolean {
   const g = ctx.fort;
   if (!g || f.side !== g.defenderSide) return false;
   const d = distFromCenter(g, f.x, f.z);

@@ -27,6 +27,7 @@ import { createDepot, requisitionGrain, sendRelief, transferSupply, validateCrea
 import { addMonthToDate, hostileToArmy, notifyPlayer, regionTerrain } from './state';
 import { decidePrisoners, validatePrisoners } from './writeback';
 import { setRationing } from './economy';
+import { blockedFor } from './network';
 
 export const COMMAND_REASONS = {
   faction: 'Unknown or defeated faction',
@@ -154,7 +155,7 @@ export function validateRepairRoad(world: WorldState, fid: string, edgeId: strin
   const sb = world.roads.nodes[e.b]?.settlementId;
   if (world.settlements[sa ?? '']?.ownerFactionId !== fid && world.settlements[sb ?? '']?.ownerFactionId !== fid) return COMMAND_REASONS.roadNotYours;
   if (e.condition >= 0.999) return COMMAND_REASONS.roadFine;
-  if (e.blockedBy && world.armies[e.blockedBy] && hostileToArmy(world, fid, world.armies[e.blockedBy]!)) return COMMAND_REASONS.roadHeld;
+  if (blockedFor(world, e, fid)) return COMMAND_REASONS.roadHeld;
   const cost = roadRepairCost(world, edgeId);
   if ((world.factions[fid]?.treasury ?? 0) < cost) return COMMAND_REASONS.noWealth(cost);
   return null;

@@ -988,7 +988,7 @@ function updateObjectives(state: BattleState, ctx: BattleContext, dt: number): v
       case 'destroy_army': {
         const enemy = state.sides[(1 - d.side) as SideIndex];
         o.progress = Math.min(1, 1 - enemy.soldiers / Math.max(1, enemy.initialSoldiers));
-        if (sideBroken(state, (1 - d.side) as SideIndex)) o.progress = 1;
+        if (sideBroken(state, (1 - d.side) as SideIndex, ctx)) o.progress = 1;
         break;
       }
       case 'protect_formation': {
@@ -1018,8 +1018,8 @@ function updateObjectives(state: BattleState, ctx: BattleContext, dt: number): v
 function checkOutcome(state: BattleState, ctx: BattleContext): BattleOutcome | null {
   const fort = state.setup.fortification;
   if (state.siege && fort && breachHeld(state)) return buildOutcome(state, (1 - fort.defenderSide) as SideIndex, 'siege_breach');
-  const b0 = sideBroken(state, 0);
-  const b1 = sideBroken(state, 1);
+  const b0 = sideBroken(state, 0, ctx);
+  const b1 = sideBroken(state, 1, ctx);
   if (b0 || b1) {
     if (b0 && b1) return buildOutcome(state, null, 'rout');
     const loser: SideIndex = b0 ? 0 : 1;
@@ -1034,7 +1034,8 @@ function checkOutcome(state: BattleState, ctx: BattleContext): BattleOutcome | n
       else if (f.activity === 'surrendered') anyCaptured = true;
       else if (f.soldiers > 0 && f.activity !== 'destroyed') anyStanding = true;
     }
-    // Arrowless archers still standing (they no longer hold the field, §6.8 amendment) mean a broken host, not a destroyed one.
+    // Arrowless archers still standing off their walls (they no longer hold the field, §6.8 amendment) mean a broken
+    // host, not a destroyed one.
     if (!state.sides[loser].surrendered && !anyRouting) reason = anyStanding ? 'rout' : anyCaptured ? 'surrender' : 'annihilation';
     if (state.siege && fort && loser !== fort.defenderSide) reason = 'siege_held';
     return buildOutcome(state, winner, reason);

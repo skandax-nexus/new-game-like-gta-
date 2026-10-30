@@ -25,7 +25,8 @@ import { RULES } from '../../data/rules';
 import { UNITS } from '../../data/units';
 import { factionMod } from './modifiers';
 import { seasonOf } from './seasons';
-import { hostileToArmy, stableKeys } from './state';
+import { blockedFor } from './network';
+import { stableKeys } from './state';
 
 const M = BALANCE.military;
 /** Map meters between off-road terrain samples. */
@@ -122,12 +123,9 @@ export function crossingsOf(world: WorldState, terrain: TerrainQuery): Crossing[
   return c;
 }
 
-/** Can this army use the edge right now (blocked roads, flooded fords, weak bridges)? */
+/** Can this army use the edge right now (roads blocked for its realm - §7.7 escort rule, flooded fords, weak bridges)? */
 export function edgeUsable(world: WorldState, army: Pick<ArmyState, 'factionId' | 'units'>, e: RoadEdge): boolean {
-  if (e.blockedBy) {
-    const b = world.armies[e.blockedBy];
-    if (b && hostileToArmy(world, army.factionId, b)) return false;
-  }
+  if (blockedFor(world, e, army.factionId)) return false;
   if (e.ford && world.weather.flood > FORD_FLOOD_LIMIT) return false;
   if (e.bridge && e.condition < BRIDGE_MIN_CONDITION && hasHeavyUnits(army)) return false;
   return true;
