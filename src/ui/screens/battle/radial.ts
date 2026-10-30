@@ -6,7 +6,7 @@
  */
 import { h, setAttr, setClass, setStyle } from '../../dom';
 import { icon } from '../../components/icons';
-import type { CardSlot } from '../../services/commandCards';
+import type { CardModel, CardSlot } from '../../services/commandCards';
 import type { TooltipService } from '../../components/tooltip';
 import { slotTooltip } from '../../components/commandGrid';
 
@@ -15,10 +15,23 @@ export interface RadialItems {
   outer: readonly CardSlot[];
 }
 
-export const RADIAL_INNER_R = 82;
-export const RADIAL_OUTER_R = 150;
-/** Half-size of the wheel incl. outer item radius (clamping on screen). */
-export const RADIAL_EXTENT = RADIAL_OUTER_R + 34;
+/** Ring radii (CSS px): 10 inner items (50 px) and up to 14 outer items (50 px) keep >= 8 px gaps. */
+export const RADIAL_INNER_R = 94;
+export const RADIAL_OUTER_R = 160;
+/** Half-size of the wheel incl. outer item radius (clamping on screen): 187 px fits a 390 px phone with no clip. */
+export const RADIAL_EXTENT = RADIAL_OUTER_R + 27;
+
+/**
+ * Wheel items from the three battle card pages: the nine orders + stance on the inner ring, the six shapes and the
+ * eight intents on the outer ring ("clear intent" stays on the card). Shared with tests (touch reachability).
+ */
+export function radialItemsFrom(orders: CardModel, shapes: CardModel, intents: CardModel): RadialItems {
+  const pick = (m: CardModel, ok: (id: string) => boolean): CardSlot[] => m.slots.filter((s): s is CardSlot => !!s && ok(s.id));
+  return {
+    inner: pick(orders, (id) => id.startsWith('order:') && !id.startsWith('order:shape_')),
+    outer: [...pick(shapes, (id) => id.startsWith('shape:')), ...pick(intents, (id) => id.startsWith('intent:') && id !== 'intent:clear')],
+  };
+}
 
 /** Positions of n items on a ring starting at the top, clockwise (px offsets from the centre). */
 export function ringPositions(n: number, r: number, start = -Math.PI / 2): { x: number; y: number }[] {
@@ -86,14 +99,24 @@ export class RadialWheel {
     setStyle(this.ring, 'left', `${c.x}px`);
     setStyle(this.ring, 'top', `${c.y}px`);
     this.el.classList.remove('ui-hidden');
+    if (!this.open && typeof window !== 'undefined') window.addEventListener('keydown', this.onKey, true);
     this.open = true;
     setClass(this.el, 'opening', true);
     requestAnimationFrame?.(() => setClass(this.el, 'opening', false));
   }
 
   close(): void {
+    if (this.open && typeof window !== 'undefined') window.removeEventListener('keydown', this.onKey, true);
     this.open = false;
     this.el.classList.add('ui-hidden');
     this.tooltips.hide();
   }
+
+  /** Esc closes the wheel only: swallowed before the game input sees it (no pause menu behind the wheel). */
+  private readonly onKey = (e: KeyboardEvent): void => {
+    if (e.key !== 'Escape') return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    this.close();
+  };
 }

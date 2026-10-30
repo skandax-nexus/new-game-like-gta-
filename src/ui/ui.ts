@@ -267,6 +267,11 @@ export class UIManager {
     if (s && p !== undefined && !s.el.classList.contains('ui-hidden')) this.render(id, s, p as never);
   }
 
+  /** A modal (event, engagement, market...) is open: transient toasts wait in the feed instead of covering it. */
+  get modalOpen(): boolean {
+    return this.layers.modal.classList.contains('has-modal');
+  }
+
   isVisible(id: ScreenId): boolean {
     const s = this.screens.get(id);
     return !!s && !s.el.classList.contains('ui-hidden');

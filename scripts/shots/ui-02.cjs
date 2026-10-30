@@ -235,21 +235,30 @@ function collectUi() {
     r.selectNodeContents(t);
     const tr = r.getBoundingClientRect();
     const er = el.getBoundingClientRect();
-    const x0 = Math.max(tr.left, er.left, 0);
-    const y0 = Math.max(tr.top, er.top, 0);
-    const x1 = Math.min(tr.right, er.right, vw);
-    const y1 = Math.min(tr.bottom, er.bottom, vh);
-    if (x1 - x0 < 2 || y1 - y0 < 4) continue;
-    // Clipped by a scrolling ancestor (panel body)?
-    let clipped = false;
+    let x0 = Math.max(tr.left, er.left, 0);
+    let y0 = Math.max(tr.top, er.top, 0);
+    let x1 = Math.min(tr.right, er.right, vw);
+    let y1 = Math.min(tr.bottom, er.bottom, vh);
+    // Intersect with every clipping ancestor (scrolling panel bodies, the cards strip); text inside a masked fade
+    // (compass strip edges) is intentionally faded and exempt.
+    let masked = false;
     for (let e = el.parentElement; e && e !== root; e = e.parentElement) {
       const cs = getComputedStyle(e);
       if (cs.overflowY !== 'visible' || cs.overflowX !== 'visible') {
         const pr = e.getBoundingClientRect();
-        if (y0 >= pr.bottom || y1 <= pr.top || x0 >= pr.right || x1 <= pr.left) clipped = true;
+        x0 = Math.max(x0, pr.left);
+        y0 = Math.max(y0, pr.top);
+        x1 = Math.min(x1, pr.right);
+        y1 = Math.min(y1, pr.bottom);
+      }
+      const mask = cs.maskImage || cs.webkitMaskImage || 'none';
+      if (mask && mask !== 'none') {
+        const pr = e.getBoundingClientRect();
+        const cx = (x0 + x1) / 2;
+        if (cx < pr.left + pr.width * 0.2 || cx > pr.right - pr.width * 0.2) masked = true;
       }
     }
-    if (clipped) continue;
+    if (masked || x1 - x0 < 6 || y1 - y0 < 4) continue;
     const cs = getComputedStyle(el);
     texts.push({
       text: t.nodeValue.trim().slice(0, 48),
@@ -519,7 +528,7 @@ async function worldSession(browser, base, vpName) {
 
   await step(s, async () => {
     if (phone) await click(s, '.minimap-toggle');
-    await elementShot(s, '.wh-minimap .minimap', 'minimap-world', 'world minimap: terrain bitmap, borders, roads, settlements by relation, armies, fog');
+    await elementShot(s, '.wh-minimap', 'minimap-world', 'world minimap: terrain bitmap, borders, roads, settlements by relation, armies, fog');
     if (phone) await click(s, '.minimap-toggle');
   }, 'world: minimap');
 
@@ -652,7 +661,10 @@ async function battleSession(browser, base, vpName, outcomeHolder) {
     const [W, H] = s.vp.size;
     await ev(s, ([x, y]) => window.__SAMRAJYA_UI__.action('radial_menu', { pointer: { x, y, ndcX: 0, ndcY: 0, kind: 'touch', button: 0 } }), [Math.round(W / 2), Math.round(H * 0.45)]);
     await shot(s, 'battle-radial', 'radial wheel (long press): inner ring orders, outer ring shapes / intents, cancel centre');
-    await ev(s, () => window.__SAMRAJYA_UI__.action('cancel'));
+    await s.page.keyboard.press('Escape');
+    await settle(s, 200);
+    const st = await ev(s, () => ({ radial: !!document.querySelector('.radial:not(.ui-hidden)'), pause: window.__SAMRAJYA_UI__.visible('pause_menu') }));
+    check(`battle (${s.vpName}): Esc closes the radial wheel without opening the pause menu`, !st.radial && !st.pause, st);
   }, 'battle: radial');
 
   if (!phone)
@@ -665,7 +677,7 @@ async function battleSession(browser, base, vpName, outcomeHolder) {
 
   await step(s, async () => {
     if (phone) await click(s, '.minimap-toggle');
-    await elementShot(s, '.bh-minimap .minimap', 'minimap-battle', 'battle minimap: terrain, deploy zones, formations by side with facing, selection');
+    await elementShot(s, '.bh-minimap', 'minimap-battle', 'battle minimap: terrain, deploy zones, formations by side with facing, selection');
     if (phone) await click(s, '.minimap-toggle');
   }, 'battle: minimap');
 
@@ -674,13 +686,17 @@ async function battleSession(browser, base, vpName, outcomeHolder) {
   await step(s, async () => {
     if (!outcomeHolder.outcome) {
       await ev(s, () => window.__SAMRAJYA_UI__.patch('battle_hud', null));
-      for (let i = 0; i < 120; i++) {
+      for (let i = 0; i < 160; i++) {
         await ev(s, () => window.__SAMRAJYA__.step(200));
         const st = await ev(s, () => window.__SAMRAJYA__.getState().sceneState);
         if (st.outcome) break;
       }
-      await frames(s, 6);
-      const p = await ev(s, () => window.__SAMRAJYA_UI__.props('battle_results') || null);
+      // The session shows the results a moment after the outcome (scene frames, not sim steps).
+      let p = null;
+      for (let i = 0; i < 40 && !p; i++) {
+        await frames(s, 2);
+        p = await ev(s, () => (window.__SAMRAJYA_UI__.visible('battle_results') ? window.__SAMRAJYA_UI__.props('battle_results') : null));
+      }
       check(`battle (${vpName}): the battle reaches an outcome and the results screen shows`, !!p, p && { winner: p.outcome.winner, reason: p.outcome.reason });
       if (p) outcomeHolder.outcome = p;
     } else {

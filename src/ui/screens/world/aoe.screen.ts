@@ -98,7 +98,7 @@ function market(ctx: AppContext, ui: UIManager): Screen<'market'> {
   const lotToggle = h('button', { class: 'btn small', type: 'button', 'aria-pressed': 'false', onclick: () => ((five = !five), sfx(ctx), render()) }, 'x5 lots');
   const reason = h('div', { class: 'danger market-reason ui-hidden' });
   const rows = h('div', { class: 'market-rows' });
-  append(frame.body, h('div', { class: 'market-top' }, h('span', { class: 'muted' }, 'Shift-click trades five lots.'), lotToggle), reason, rows);
+  append(frame.body, h('div', { class: 'market-top' }, h('span', { class: 'muted' }, ctx.input.touchMode ? 'Turn on x5 to trade five lots at once.' : 'Shift-click trades five lots.'), lotToggle), reason, rows);
   const views = new Map<MarketResource, { price: HTMLElement; sell: HTMLElement; stock: HTMLElement; buy: HTMLButtonElement; sellBtn: HTMLButtonElement; spark: ReturnType<typeof sparkline>; factor: HTMLElement }>();
   for (const r of ['grain', 'timber', 'stone'] as const) {
     const d = RESOURCE_DISPLAY[r];

@@ -20,12 +20,12 @@ import { icon, setIcon, unitIcon } from '../../components/icons';
 import { factionChip, meter, pips, ringProgress, setFactionChip, type Meter } from '../../components/widgets';
 import { CommandGrid } from '../../components/commandGrid';
 import { Minimap } from '../../components/minimap';
-import { BATTLE_PAGES, battleCard, battlePageIndex, nextBattlePage, type CardSlot } from '../../services/commandCards';
+import { BATTLE_PAGES, battleCard, battlePageIndex, nextBattlePage } from '../../services/commandCards';
 import { BATTLE_PRESETS, presetCommands } from '../../services/battlePresets';
 import { emitHud } from '../../services/hudCommands';
 import { cardSlotIndex } from '../../../input/bindings';
 import { runCardSlot } from '../world/cardActions';
-import { RadialWheel } from './radial';
+import { RadialWheel, radialItemsFrom, type RadialItems } from './radial';
 
 const SPEEDS = [0.5, 1, 2, 4];
 const SPEEDS_SKIRMISH = [0.5, 1, 2, 4, 8];
@@ -303,13 +303,10 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
     grid.set(battleCard(props.battle, props.playerSide, props.selection, page, { preset: ctx.input.preset, overrides: ctx.settings.keybindings }));
   };
 
-  const radialItems = (): { inner: CardSlot[]; outer: CardSlot[] } => {
+  const radialItems = (): RadialItems => {
     const p = props!;
     const c = { preset: ctx.input.preset, overrides: ctx.settings.keybindings };
-    const orders = battleCard(p.battle, p.playerSide, p.selection, 'orders', c).slots.filter((s): s is CardSlot => !!s && s.id.startsWith('order:'));
-    const shapes = battleCard(p.battle, p.playerSide, p.selection, 'shapes', c).slots.filter((s): s is CardSlot => !!s && s.id.startsWith('shape:'));
-    const intents = battleCard(p.battle, p.playerSide, p.selection, 'intents', c).slots.filter((s): s is CardSlot => !!s && s.id.startsWith('intent:') && s.id !== 'intent:clear');
-    return { inner: orders, outer: [...shapes, ...intents] };
+    return radialItemsFrom(battleCard(p.battle, p.playerSide, p.selection, 'orders', c), battleCard(p.battle, p.playerSide, p.selection, 'shapes', c), battleCard(p.battle, p.playerSide, p.selection, 'intents', c));
   };
 
   const renderFeed = (): void => {

@@ -1649,6 +1649,21 @@
   width: min(460px, 92%);
   padding: 10px 14px;
 }
+/* While placing on a phone the ghost needs the map: the card, groups and objectives step aside. */
+:root[data-layout='phone']:has(.screen-build-placement:not(.ui-hidden)) .wh-bottom,
+:root[data-layout='phone-landscape']:has(.screen-build-placement:not(.ui-hidden)) .wh-bottom,
+:root[data-layout='phone']:has(.screen-build-placement:not(.ui-hidden)) .wh-objectives,
+:root[data-layout='phone-landscape']:has(.screen-build-placement:not(.ui-hidden)) .wh-objectives {
+  display: none;
+}
+:root[data-layout='phone'] .screen-build-placement .bp-info {
+  top: calc(var(--safe-top) + 112px);
+  width: calc(100% - 12px);
+}
+:root[data-layout='phone-landscape'] .screen-build-placement .bp-info {
+  top: calc(var(--safe-top) + 58px);
+  width: min(420px, 60%);
+}
 .bp-head {
   display: flex;
   align-items: center;
@@ -2148,7 +2163,7 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
-  width: 132px;
+  width: 116px;
   min-height: 92px;
   padding: 6px 7px;
   font: inherit;
@@ -2358,15 +2373,15 @@
   transform: translate(-50%, -50%);
 }
 .radial-disc.outer {
-  width: 372px;
-  height: 372px;
-  background: radial-gradient(circle, transparent 112px, rgba(20, 17, 36, 0.86) 113px);
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, transparent 126px, rgba(20, 17, 36, 0.88) 127px);
   border: 2px solid var(--ui-border);
   box-shadow: var(--shadow-panel);
 }
 .radial-disc.inner {
-  width: 228px;
-  height: 228px;
+  width: 254px;
+  height: 254px;
   background: radial-gradient(circle, rgba(27, 24, 48, 0.9) 50px, rgba(40, 35, 68, 0.94) 51px);
   border: 1.5px solid var(--ui-border-soft);
 }
@@ -2380,10 +2395,10 @@
 }
 .radial-item {
   position: absolute;
-  left: -26px;
-  top: -26px;
-  width: 52px;
-  height: 52px;
+  left: -25px;
+  top: -25px;
+  width: 50px;
+  height: 50px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2510,9 +2525,10 @@
   align-items: flex-start;
   gap: 8px;
   max-width: 34%;
-  padding: 6px 12px;
+  padding: 6px 14px 6px 12px;
   border-left: 2px solid var(--c-gold);
-  background: linear-gradient(90deg, rgba(13, 11, 24, 0.7), transparent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: rgba(13, 11, 24, 0.78);
   text-shadow: var(--text-shadow-on-scene);
 }
 .hh-obj > .icon {
@@ -2536,6 +2552,8 @@
   -webkit-mask: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
   mask: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
   border-bottom: 1px solid rgba(233, 185, 73, 0.5);
+  /* Dark band: the marks stay readable over a bright sky. */
+  background: rgba(13, 11, 24, 0.86);
 }
 .hh-compass-strip {
   position: absolute;
@@ -2581,6 +2599,10 @@
   left: 50%;
   bottom: max(10px, var(--safe-bottom));
   transform: translateX(-50%);
+  padding: 3px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(13, 11, 24, 0.72);
+  white-space: nowrap;
   font-size: var(--fs-xs);
   color: var(--ui-text-dim);
   text-shadow: var(--text-shadow-on-scene);
@@ -2660,17 +2682,41 @@
   height: 16px;
   color: var(--c-ivory);
 }
+.hh-vrow .meter,
+.hh-enemy .meter,
+.hh-boss .meter {
+  background: rgba(13, 11, 24, 0.72);
+}
 .hh-vrow .meter {
   flex: 1;
   height: 9px;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+}
+.hh-vitals {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(13, 11, 24, 0.55);
+}
+.hh-vt {
+  color: var(--ui-text);
+}
+.hh-enemy .he-name {
+  padding: 0 5px;
+  border-radius: var(--radius-sm);
+  background: rgba(13, 11, 24, 0.72);
+}
+.hh-boss-name {
+  align-self: center;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(13, 11, 24, 0.86);
 }
 .hh-vrow .meter.stamina {
   height: 6px;
 }
 .hh-vt {
   font-size: var(--fs-xs);
-  color: var(--ui-text-dim);
+  color: var(--ui-text);
   font-variant-numeric: tabular-nums;
   min-width: 64px;
 }
@@ -2813,10 +2859,15 @@
   align-items: center;
   justify-content: center;
   pointer-events: none !important;
-  color: rgba(246, 236, 214, 0.35);
   font-size: var(--fs-xs);
   text-transform: uppercase;
   letter-spacing: var(--letter-caps);
+}
+.hh-look > span {
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  color: var(--c-ivory);
+  background: rgba(13, 11, 24, 0.6);
 }
 .in-combat .hh-look {
   display: none;
@@ -3380,7 +3431,7 @@
 }
 :root[data-layout='phone'] .bh-rally {
   right: max(10px, var(--safe-right));
-  bottom: calc(var(--safe-bottom) + 160px);
+  bottom: calc(var(--safe-bottom) + 232px);
 }
 :root[data-layout='phone-landscape'] .bh-rally {
   right: max(10px, var(--safe-right));
@@ -3444,4 +3495,7 @@
 :root[data-layout='phone-landscape'] .wh-speed .btn,
 :root[data-layout='phone-landscape'] .bh-speed .btn {
   min-width: var(--touch-min);
+}
+.dip-back .icon {
+  transform: scaleX(-1);
 }
