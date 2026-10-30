@@ -23,7 +23,10 @@ import { GRADE_PRESETS, hexToLinear, type Hex, type RGB } from './palette';
 export const LIGHTING_PRESET_IDS = ['dawn', 'noon', 'golden', 'dusk', 'night', 'monsoon', 'dry_haze', 'winter_fog'] as const;
 export type LightingPresetId = (typeof LIGHTING_PRESET_IDS)[number];
 
-/** Baked HDR skies (manifest ids). Existing: sky_day, sky_golden. Others are WP7 in docs/ASSET_LIST.md. */
+/**
+ * Baked HDR skies (manifest ids, WP7 in docs/ASSET_LIST.md). sky_noon is the noon key (WP7-02); sky_day (42 deg SE
+ * late morning) stays published as the lookdev / daytime IBL and is not any preset's key.
+ */
 export type SkyHdriId =
   | 'sky_day'
   | 'sky_golden'
@@ -170,7 +173,7 @@ export const LIGHTING_PRESETS: Readonly<Record<LightingPresetId, LightingPreset>
     label: 'Day - clear sharad noon',
     sun: { elevationDeg: 62, azimuthDeg: 170, color: '#fff3e3', intensity: 3.4, softnessDeg: 0.35 },
     sky: {
-      hdri: 'sky_day',
+      hdri: 'sky_noon',
       nishita: { sunElevationDeg: 62, sunAzimuthDeg: 170, altitude: 0, air: 1.0, aerosol: 1.6, ozone: 1.0, clouds: 0.18, cloudScale: 1.0, groundAlbedo: [0.24, 0.2, 0.15] },
       preetham: { turbidity: 3.2, rayleigh: 1.6, mieCoefficient: 0.005, mieDirectionalG: 0.82 },
       irradiance: 0.75,
