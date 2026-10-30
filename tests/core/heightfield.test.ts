@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Heightfield, createLocalTerrainSpec, createRegionTerrainSpec, findPresetSite } from '../../src/core/terrain/heightfield';
-import { resolveSettlementSites } from '../../src/core/terrain/sites';
+import { resolveSettlementSites, SETTLEMENT_PAD_RADIUS, WATERFRONT_KINDS } from '../../src/core/terrain/sites';
 import { traceRoad } from '../../src/core/terrain/roads';
 import { fnv1a } from '../../src/core/save';
 import { REGION } from '../../src/data/region';
@@ -70,5 +70,28 @@ describe('heightfield', () => {
     expect(road.points[0]).toEqual({ x: a.x, z: a.z });
     expect(road.points[road.points.length - 1]).toEqual({ x: b.x, z: b.z });
     expect(road.length).toBeGreaterThanOrEqual(Math.hypot(a.x - b.x, a.z - b.z) - 1e-6);
+  });
+
+  it('waterfront settlements keep their bank inside the placement grid; the Pilgrim Ford is a river crossing', () => {
+    const sites = resolveSettlementSites(REGION.terrain, REGION.settlements);
+    const h = Heightfield.generate({ ...REGION.terrain, pads: sites.map((s) => s.pad) });
+    const site = (id: string) => sites.find((s) => s.id === id)!;
+    const waterfront = REGION.settlements.filter((d) => WATERFRONT_KINDS.has(d.kind));
+    expect(waterfront.map((d) => d.id).sort()).toEqual(['naukapattana', 'tirthaghat']);
+    for (const d of waterfront) {
+      const s = site(d.id);
+      // Nearest water (4 m scan) inside the strategic placement grid: half-size pad radius + 60 m.
+      const reach = SETTLEMENT_PAD_RADIUS[d.kind] + 60;
+      let nearest = Infinity;
+      for (let dz = -reach; dz <= reach; dz += 4) for (let dx = -reach; dx <= reach; dx += 4) if (h.isWater(s.x + dx, s.z + dz)) nearest = Math.min(nearest, Math.hypot(dx, dz));
+      expect(nearest, d.id).toBeGreaterThan(SETTLEMENT_PAD_RADIUS[d.kind]);
+      expect(nearest, d.id).toBeLessThan(reach);
+    }
+    // DESIGN_SPEC §3.4: Tirthaghat - Ratnapura (track) fords the Rajavahini; Tirthaghat's roads to Setupur and
+    // Nilavanapura stay on the south bank (no bridge besides the Setu).
+    const cross = (a: string, b: string) => traceRoad(h, site(a).x, site(a).z, site(b).x, site(b).z).crossesWater;
+    expect(cross('tirthaghat', 'ratnapura')).toBe(true);
+    expect(cross('setupur', 'tirthaghat')).toBe(false);
+    expect(cross('tirthaghat', 'nilavanapura')).toBe(false);
   });
 });

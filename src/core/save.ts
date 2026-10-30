@@ -18,6 +18,7 @@
  */
 import type {
   AgeId,
+  BattleEventRecord,
   BattleOutcome,
   BattleState,
   CouncilSeat,
@@ -33,6 +34,7 @@ import { SCENARIOS } from '../data/campaign';
 import { FACTIONS } from '../data/factions';
 import { REGION } from '../data/region';
 import { BALANCE } from '../data/balance';
+import { RULES } from '../data/rules';
 
 // ---------------------------------------------------------------------------------------------
 // Base64 (works in browser and node without Buffer)
@@ -457,24 +459,63 @@ function initialOwner(w: WorldState, settlementId: string): FactionId | null {
   return owner;
 }
 
-function migrateOutcomeV1(o: BattleOutcome, setupSides: BattleState['setup']['sides'] | null, day: number | null): void {
-  fill(o, 'warScore', 0);
+/**
+ * War score of a battle from side 0's perspective, exactly as v2 derives it from the casualties (BattleOutcome.warScore:
+ * 20 x (side-1 losses - side-0 losses) / both starts, clamped to -20..20). `rounded`: the tactical outcome
+ * (sim/tactical outcome.ts) stores it to 0.01; the strategic write-back (writeback.ts battleWarScore) stores it unrounded.
+ */
+function outcomeWarScore(o: BattleOutcome, rounded: boolean): number {
+  const [s0, s1] = o.sides;
+  const lost0 = s0.startSoldiers - s0.survivors;
+  const lost1 = s1.startSoldiers - s1.survivors;
+  const both = Math.max(1, s0.startSoldiers + s1.startSoldiers);
+  const v = Math.max(-20, Math.min(20, (RULES.diplomacy.warScore.battlePerShare * (lost1 - lost0)) / both));
+  return rounded ? Math.round(v * 100) / 100 : v;
+}
+
+/**
+ * Enemy formations each formation routed, counted from the battle log the way the tactical outcome does
+ * (formation_routed events crediting `other`). v1 logged `other: null`, so a real v1 log credits nobody.
+ */
+function routedCredits(events: readonly BattleEventRecord[] | null): Map<number, number> {
+  const out = new Map<number, number>();
+  for (const e of events ?? []) {
+    if (e.kind !== 'formation_routed' || e.other === null || e.other < 0) continue;
+    out.set(e.other, (out.get(e.other) ?? 0) + 1);
+  }
+  return out;
+}
+
+/**
+ * Upgrade a v1 BattleOutcome in place. `battleLog` is the log of the battle that produced it (null when gone);
+ * `tactical` = the outcome still sits on its BattleState (rounded war score) rather than in the world's history.
+ */
+function migrateOutcomeV1(o: BattleOutcome, setupSides: BattleState['setup']['sides'] | null, day: number | null, battleLog: readonly BattleEventRecord[] | null, tactical: boolean): void {
+  fill(o, 'warScore', outcomeWarScore(o, tactical));
   fill(o, 'chronicle', o.summary?.[0] ?? '');
   fill(o, 'placeName', null);
   fill(o, 'day', day);
+  const credits = routedCredits(battleLog);
   o.sides.forEach((s, i) => {
     const other = o.sides[i === 0 ? 1 : 0];
     fill(s, 'prisoners', other?.captured ?? 0);
     fill(s, 'routs', s.formations.filter((f) => f.routed).length);
     fill(s, 'capturedSupply', 0);
     fill(s, 'commanderId', setupSides?.[i]?.commanderId ?? null);
-    for (const f of s.formations) fill(f, 'routedEnemies', 0);
+    for (const f of s.formations) fill(f, 'routedEnemies', credits.get(f.index) ?? 0);
   });
 }
 
-/** Upgrade a v1 BattleState in place (skirmish saves and world engagements). */
+/**
+ * Upgrade a v1 BattleState in place (skirmish saves and world engagements). Values a v1 battle never recorded take
+ * what the v2 rules would hold at load time: the fighting began at the logged deployment end (else at
+ * setup.deploymentSec, never after `time`), and once the fighting has begun every formation's current order starts
+ * its v2 clocks (flank timeout, withdraw step-back) at load - as endDeployment / startOrder stamp `orderTime`.
+ */
 export function migrateBattleV1toV2(b: BattleState): void {
-  fill(b, 'deploymentEndsAt', b.setup.deploymentSec);
+  const fighting = b.phase !== 'deployment';
+  const ended = fighting ? b.events.find((e) => e.kind === 'deployment_ended') : undefined;
+  fill(b, 'deploymentEndsAt', fighting ? Math.min(b.setup.deploymentSec, ended ? ended.time : b.time) : b.setup.deploymentSec);
   fill(b, 'siege', null);
   for (const s of b.setup.sides) fill(s, 'aggression', null);
   for (const s of b.sides) {
@@ -488,7 +529,7 @@ export function migrateBattleV1toV2(b: BattleState): void {
     fill(f, 'rallyingUntil', 0);
     fill(f, 'disengageUntil', 0);
     fill(f, 'chargeRun', 0);
-    fill(f, 'orderTime', 0);
+    fill(f, 'orderTime', fighting ? b.time : 0);
     fill(f, 'hidden', false);
   }
   for (const wk of b.works) {
@@ -496,7 +537,7 @@ export function migrateBattleV1toV2(b: BattleState): void {
     fill(wk, 'progress', 1);
     fill(wk, 'formation', -1);
   }
-  if (b.outcome) migrateOutcomeV1(b.outcome, b.setup.sides, null);
+  if (b.outcome) migrateOutcomeV1(b.outcome, b.setup.sides, null, b.events, true);
 }
 
 /** Upgrade a v1 WorldState in place with the values a fresh v2 world would hold. */
@@ -561,11 +602,11 @@ export function migrateWorldV1toV2(w: WorldState): void {
     fill(e, 'prisonerDecision', null);
     if (e.battle) migrateBattleV1toV2(e.battle);
     if (e.outcome) {
-      migrateOutcomeV1(e.outcome, e.battle?.setup.sides ?? null, day);
+      migrateOutcomeV1(e.outcome, e.battle?.setup.sides ?? null, day, e.battle?.events ?? null, false);
       dayOfBattle.set(e.outcome.battleId, day);
     }
   }
-  for (const o of w.battleHistory) migrateOutcomeV1(o, null, dayOfBattle.get(o.battleId) ?? null);
+  for (const o of w.battleHistory) migrateOutcomeV1(o, null, dayOfBattle.get(o.battleId) ?? null, null, false);
 }
 
 registerMigration(1, (raw: Raw): Raw => {

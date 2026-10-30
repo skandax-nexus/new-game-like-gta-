@@ -244,9 +244,16 @@ describe('migration defaults match creation defaults', () => {
     expect(hashState(v1)).toBe(hashState(fresh));
     const finished = autoresolveBattle(setup, terrain);
     expect(finished.outcome).not.toBeNull();
+    // The finished battle exercises the derived outcome fields (war score from casualties, routs credited in the log).
+    expect(finished.outcome!.warScore).not.toBe(0);
+    expect(finished.outcome!.sides.some((s) => s.formations.some((f) => f.routedEnemies > 0))).toBe(true);
     const done = toV1Battle(finished);
     expect(hashState(done)).not.toBe(hashState(finished));
     migrateBattleV1toV2(done);
+    // orderTime is when each formation's current order started - play state a v1 save never recorded. Past
+    // deployment the migration starts every order's clocks at load time; everything else must match exactly.
+    for (const f of done.formations) expect(f.orderTime).toBe(done.time);
+    done.formations.forEach((f, i) => (f.orderTime = finished.formations[i]!.orderTime));
     expect(hashState(done)).toBe(hashState(finished));
   });
 

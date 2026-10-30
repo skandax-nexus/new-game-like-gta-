@@ -2155,6 +2155,12 @@ export type Effect =
   | { kind: 'damage_road'; edgeId: RoadEdgeId | null; nearSettlement: SettlementId | null; amount: number }
   | { kind: 'transfer_settlement'; settlement: ScopeRef; to: ScopeRef }
   | { kind: 'kill_character'; target: ScopeRef }
+  /**
+   * The character goes over to faction `to` (e.g. a claimant let go, "Let him go"): he leaves his offices, council
+   * seat, heir role and governorship (as on death) but keeps his dynasty membership; with `withArmies` the armies he
+   * commands change owner with him. @sprint1 SIM-01 implements it in events.applyEffect (a no-op until then).
+   */
+  | { kind: 'defect_character'; character: ScopeRef; to: ScopeRef; withArmies: boolean }
   | { kind: 'objective'; objectiveId: ObjectiveId; status: 'complete' | 'failed' }
   | { kind: 'chronicle'; text: string };
 

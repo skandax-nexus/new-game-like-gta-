@@ -12,7 +12,8 @@
  *
  * Steps: vite build -> vite preview on a fixed port -> headless Chromium (SwiftShader WebGL2) ->
  * for each shot: open URL deep link, wait for window.__SAMRAJYA__.sceneReady, optionally advance
- * the sim, save a PNG. Fails (exit 1) on console errors, page errors, crash reports or timeouts.
+ * the sim, save a PNG. Fails (exit 1) on console errors, page errors, crash reports, timeouts or a
+ * blank 3D view (see BLANK below: a black / cleared / unpresented canvas fails even with a clean console).
  * Note: SwiftShader is a software renderer - FPS numbers here are NOT representative.
  */
 'use strict';
@@ -44,7 +45,8 @@ function requirePlaywright() {
 }
 
 /**
- * Shots. `advance` = sim steps to run (paused, deterministic) before the screenshot.
+ * Shots. `advance` = sim steps to run (paused, deterministic) before the screenshot. `allowBlank: true` exempts a
+ * shot whose 3D view is legitimately empty or flat from the blank-view guard (none today).
  * QA Lead: add shots here (keep names stable - docs reference them).
  */
 const SHOTS = [
@@ -64,6 +66,80 @@ const SHOTS = [
   { name: 'assetviewer-mobile', scene: 'assetviewer', query: 'asset=stupa_sanchi&hdri=sky_day&camera=overview', viewport: [390, 844], quality: 'low', mobile: true },
   { name: 'assetviewer-fallback', scene: 'assetviewer', query: 'asset=stupa_sanchi&assets=off', viewport: [1280, 720] },
 ];
+
+/**
+ * Blank-view guard. After the shot, the DOM layers above the WebGL canvas (#ui-root, #overlay-root, splash, overlays)
+ * are hidden for a second, unsaved capture, so HUD text cannot mask an empty canvas. The 3D view is blank when one
+ * exact colour covers >= `dominant` of it (black viewport, cleared-but-not-drawn frame, page background #0d0b18 showing
+ * through an unpresented canvas) or its luma spread is below `lumaStdev` (a flat frame). Rendered scenes measure far
+ * from both (terrain, sky gradients, fog, soldiers: a few % dominant colour). A blank view is re-rendered and retaken
+ * up to `retries` times (SwiftShader can present an empty frame after a resize under load); every blank attempt is
+ * kept in the report, and a view still blank after the retries fails the shot.
+ */
+const BLANK = { dominant: 0.5, lumaStdev: 3, retries: 2 };
+
+/** Pixel statistics of the canvas-only view: dominant colour share, luma stdev, page-background share. */
+async function view3dStats(page) {
+  const hidden = await page.evaluate(() => {
+    const out = [];
+    for (const el of Array.from(document.body.children)) {
+      if (el.id === 'game' || !(el instanceof HTMLElement)) continue;
+      out.push([el, el.style.visibility]);
+      el.style.visibility = 'hidden';
+    }
+    window.__smokeHidden = out;
+    return out.length;
+  });
+  let png;
+  try {
+    png = await page.screenshot({ timeout: TIMEOUT });
+  } finally {
+    await page.evaluate(() => {
+      for (const [el, v] of window.__smokeHidden || []) el.style.visibility = v;
+      delete window.__smokeHidden;
+    });
+  }
+  const stats = await page.evaluate(async (b64) => {
+    const img = new Image();
+    img.src = `data:image/png;base64,${b64}`;
+    await img.decode();
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth;
+    c.height = img.naturalHeight;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(img, 0, 0);
+    const d = g.getImageData(0, 0, c.width, c.height).data;
+    const counts = new Map();
+    let best = 0;
+    let bg = 0;
+    let sum = 0;
+    let sum2 = 0;
+    const n = d.length / 4;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i];
+      const gg = d[i + 1];
+      const b = d[i + 2];
+      const k = (r << 16) | (gg << 8) | b;
+      const m = (counts.get(k) || 0) + 1;
+      counts.set(k, m);
+      if (m > best) best = m;
+      if (Math.abs(r - 13) <= 3 && Math.abs(gg - 11) <= 3 && Math.abs(b - 24) <= 3) bg++;
+      const l = 0.2126 * r + 0.7152 * gg + 0.0722 * b;
+      sum += l;
+      sum2 += l * l;
+    }
+    const mean = sum / n;
+    return { dominantShare: best / n, lumaStdev: Math.sqrt(Math.max(0, sum2 / n - mean * mean)), pageBgShare: bg / n };
+  }, png.toString('base64'));
+  const round = (v) => Math.round(v * 1000) / 1000;
+  return { dominantShare: round(stats.dominantShare), lumaStdev: round(stats.lumaStdev), pageBgShare: round(stats.pageBgShare), layersHidden: hidden };
+}
+
+function blankReason(v) {
+  if (v.dominantShare >= BLANK.dominant) return `one colour covers ${(v.dominantShare * 100).toFixed(1)} % of the 3D view${v.pageBgShare >= BLANK.dominant ? ' (page background: canvas not presented)' : ''}`;
+  if (v.lumaStdev < BLANK.lumaStdev) return `flat 3D view (luma stdev ${v.lumaStdev})`;
+  return null;
+}
 
 function waitForServer(url, ms) {
   const t0 = Date.now();
@@ -126,6 +202,8 @@ async function main() {
       const q = shot.quality || QUALITY;
       const url = `${base}?scene=${shot.scene}&quality=${q}&noaudio=1${shot.query ? `&${shot.query}` : ''}`;
       let state = null;
+      let view = null;
+      const blankAttempts = [];
       try {
         await page.goto(url, { waitUntil: 'load', timeout: TIMEOUT });
         await page.waitForFunction(() => window.__SAMRAJYA__ && window.__SAMRAJYA__.ready && window.__SAMRAJYA__.sceneReady, null, { timeout: TIMEOUT, polling: 250 });
@@ -143,6 +221,18 @@ async function main() {
         const crash = await page.evaluate(() => window.__SAMRAJYA__.getErrors().map((r) => r.message));
         for (const c of crash) errors.push(`crash: ${c}`);
         await page.screenshot({ path: path.join(OUT, `${shot.name}.png`), timeout: TIMEOUT });
+        view = await view3dStats(page);
+        for (let attempt = 1; !shot.allowBlank && blankReason(view) && attempt <= BLANK.retries; attempt++) {
+          blankAttempts.push({ ...view, reason: blankReason(view) });
+          console.log(`[smoke] ${shot.name}: blank 3D view (${blankReason(view)}), re-rendering and retaking (retry ${attempt}/${BLANK.retries})`);
+          // Paused / frozen state: these frames re-render the same state (no sim step).
+          await page.evaluate(() => window.__SAMRAJYA__.freeze(false));
+          await page.evaluate(() => window.__SAMRAJYA__.waitFrames(30));
+          await page.evaluate(() => window.__SAMRAJYA__.freeze(true));
+          await page.screenshot({ path: path.join(OUT, `${shot.name}.png`), timeout: TIMEOUT });
+          view = await view3dStats(page);
+        }
+        if (!shot.allowBlank && blankReason(view)) errors.push(`blank: ${blankReason(view)} after ${BLANK.retries} re-renders (${JSON.stringify(view)})`);
         if (!report.build) report.build = await page.evaluate(() => window.__SAMRAJYA__.version);
       } catch (err) {
         errors.push(`smoke: ${err && err.message ? err.message : String(err)}`);
@@ -153,8 +243,9 @@ async function main() {
         }
       }
       const ms = Date.now() - t0;
-      report.shots.push({ name: shot.name, url, ms, errors, state });
-      console.log(`[smoke] ${errors.length ? 'FAIL' : 'ok  '} ${shot.name.padEnd(18)} ${String(ms).padStart(6)} ms  ${state ? `scene=${state.scene} quality=${state.quality}` : ''}`);
+      report.shots.push({ name: shot.name, url, ms, errors, state, view3d: view, blankAttempts });
+      const viewNote = view ? `  view3d dominant=${(view.dominantShare * 100).toFixed(1)}% lumaStdev=${view.lumaStdev.toFixed(1)}` : '';
+      console.log(`[smoke] ${errors.length ? 'FAIL' : 'ok  '} ${shot.name.padEnd(18)} ${String(ms).padStart(6)} ms  ${state ? `scene=${state.scene} quality=${state.quality}` : ''}${viewNote}`);
       for (const e of errors) console.log(`         ${e}`);
       if (errors.length) failures.push(shot.name);
       await context.close();

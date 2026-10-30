@@ -174,7 +174,10 @@ A `Heightfield` samples a square window into grids (height, biome, moisture):
 Because every window samples the same function (detail octaves filtered by cell size), battle terrain
 matches the strategic map (GDD §5). `heightAt()` (bilinear on the grid) is the canonical query for sim
 and render placement. Settlement sites are resolved from authored (u, v) positions
-(`terrain/sites.ts`), roads traced with slope/water-aware A* (`terrain/roads.ts`), heightfields cached
+(`terrain/sites.ts`; waterfront kinds - port, temple town - keep their first water between the pad edge and pad
+radius + 48 m, i.e. inside the SIM-01 placement grid, so harbors and ghats can be placed; other riverside / crossing
+sites keep ~120 m of bank beyond 0.6 x pad radius), roads traced with slope/water-aware A* (`terrain/roads.ts`;
+a crossing is a bridge on a road, a ford on a track - e.g. Tirthaghat - Ratnapura, the Pilgrim Ford), heightfields cached
 (`terrain/cache.ts`). Strategic travel uses `BALANCE.military.travelScale` (map meters are compressed).
 Generation: ~0.5 s for 513^2 in V8 (TODO: Web Worker).
 
@@ -356,7 +359,9 @@ any state shape change. Current: save format **2** / world schema **2**; the v1 
 - Tests: `npm test` (unit, purity, determinism, asset manifest/budgets). Smoke: `npm run smoke` (14 shots
   incl. 5,000-soldier battle, phone viewports and the asset viewer - stupa hero/close-up, sandstone
   lookdev, mobile, `assets=off` fallback; fails on console errors, page errors, failed requests, crash
-  reports).
+  reports and a blank 3D view: each shot is re-measured with the DOM layers over `#game` hidden, and one colour
+  covering >= 50 % of it or a luma stdev < 3 - black / cleared / unpresented canvas - is re-rendered and retaken up
+  to 2 times, then fails; `view3d` stats and any blank attempts are in `smoke-report.json`; `allowBlank` per shot).
 
 ## 15. Performance budgets
 
@@ -618,6 +623,7 @@ as exact diffs (STUDIO.md W2); never duplicate a contract type locally.
 | Commands | `StrategicCommand` `market_trade`, `start_landmark`, `set_policy`, `forced_march`, `prisoners`, `capture_decision`, `set_rally_point`, `repair_building`; `build.cell?/rot?`; `cancel_construction.jobIndex?` | SIM-01 | UI-02, GP-03, SIM-02 |
 | Commands | `BattleCommand { kind: 'rally' }` | GP-01 | GP-04, UI-02, SIM-02 |
 | Conditions | `age_at_least`, `landmark_built` | SIM-01 (events.ts) | Creative Director data |
+| Effects | `defect_character { character, to, withArmies }`: leaves offices, council seat, heir role, governorship; keeps dynasty; `withArmies` takes his commanded armies (no-op until implemented) | SIM-01 (events.applyEffect) | Creative Director data (`evt_bc_gates_of_ratnapura` 'let_go') |
 | Sim events | `construction_started`, `landmark_started`, `age_advanced`, `monsoon_roll`, `spoilage`, `market_trade`, `rebels_spawned`, `secession`, `governor_demand`, `siege_breach`, `depot_raided`, `army_sighted`, `hero_mission_available` | SIM-01 emits | GP-03 (flow, alerts), UI-02 (feed), AUD-01 |
 | Bus | `ui:hint {key}` | GP-03 / GP-04 / GP-02 emit, UI-01 hints service | - |
 | Bus | `hero:mission_end`, `hero:combat {kind, x, y, z, strength}` | GP-02 / GP-03 emit | AUD-01, GFX-05 |
@@ -646,13 +652,18 @@ v2 object gets: faction `age` = `ScenarioDef.startingAges > FactionDef.startingA
 `ScenarioDef.materials`, `monsoon.strength` = scenario (start year) / sandbox `monsoonStrength` else 1,
 `initialOwnerFactionId` = createWorld's owner rule, a revolt in progress starts its secession clock on load,
 `warWeariness` from months at war, v1 jobs were charged nothing (`paid` zero, `crew` 0 = derive from the
-definition), outcomes get `prisoners` = the other side's `captured`, `routs`, `chronicle` = first summary line and
-the engagement `day`. `SaveSession.hero` (hero-scene autosaves) is added. After migration `validateSave` runs
+definition), outcomes get `prisoners` = the other side's `captured`, `routs`, `chronicle` = first summary line,
+the engagement `day`, `warScore` from the casualties (the v2 formula; 0.01-rounded on a battle's own outcome as
+GP-01 stores it, unrounded in world history as the SIM-01 write-back stores it) and `routedEnemies` from the
+battle log's `formation_routed` credits (v1 logged none, so 0). Battles: `deploymentEndsAt` = the logged
+`deployment_ended` time, else `setup.deploymentSec`, never later than `time` once fighting; past deployment every
+formation's `orderTime` = load time (its current order starts the v2 flank / withdraw clocks then). `SaveSession.hero` (hero-scene autosaves) is added. After migration `validateSave` runs
 `describeSaveProblems()` (every v2 field present with the right type, no `rebels` faction entry, schema 2).
 Guards (`tests/contracts/migration.test.ts`): the four frozen v1 fixtures (campaign day 30 with jobs in flight,
 skirmish saved in melee, sandbox month 6, campaign field battle saved in melee inside its engagement) load,
 keep every v1 value, round-trip byte-identically, keep simulating deterministically; a fresh v2 world / battle
-stripped of its v2 fields migrates back to an identical hash (migration defaults == creation defaults).
+stripped of its v2 fields migrates back to an identical hash (migration defaults == creation defaults; a finished
+battle's `orderTime`, play state a v1 save never held, is the one field checked against its load-time rule instead).
 
 ### 21.4 Parallel-work rule (who edits what)
 
