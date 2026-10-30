@@ -93,6 +93,7 @@ export class RenderContext {
   private lost = false;
   private shadowDraws = 0;
   private lastShadowDraws = 0;
+  private readonly frameStats: RenderStats = { drawCalls: 0, triangles: 0, points: 0, lines: 0, geometries: 0, textures: 0, programs: 0, resolutionScale: 1, pixelRatio: 1, width: 0, height: 0 };
 
   constructor(canvas: HTMLCanvasElement, quality: QualitySettings, private readonly profiler: Profiler | null = null) {
     this.canvas = canvas;
@@ -280,27 +281,32 @@ export class RenderContext {
     this.profiler?.end('render.submit');
     this.lastShadowDraws = this.shadowDraws;
     if (this.profiler) {
-      this.profiler.setRenderStats(this.getStats());
+      // The profiler copies the fields (Object.assign): one reused object, no per-frame allocation.
+      this.profiler.setRenderStats(this.writeStats(this.frameStats));
       this.profiler.setCounter('render.shadowDraws', this.shadowDraws);
       this.profiler.setCounter('render.postPasses', this.usePost ? this.post.enabledPassCount() : 0);
     }
   }
 
+  /** Render stats of the last frame (a new object; the per-frame profiler feed reuses one). */
   getStats(): RenderStats {
+    return this.writeStats({ drawCalls: 0, triangles: 0, points: 0, lines: 0, geometries: 0, textures: 0, programs: 0, resolutionScale: 1, pixelRatio: 1, width: 0, height: 0 });
+  }
+
+  private writeStats(out: RenderStats): RenderStats {
     const i = this.renderer.info;
-    return {
-      drawCalls: i.render.calls,
-      triangles: i.render.triangles,
-      points: i.render.points,
-      lines: i.render.lines,
-      geometries: i.memory.geometries,
-      textures: i.memory.textures,
-      programs: i.programs?.length ?? 0,
-      resolutionScale: this.resolutionScale,
-      pixelRatio: this.pixelRatio,
-      width: Math.round(this.width * this.pixelRatio),
-      height: Math.round(this.height * this.pixelRatio),
-    };
+    out.drawCalls = i.render.calls;
+    out.triangles = i.render.triangles;
+    out.points = i.render.points;
+    out.lines = i.render.lines;
+    out.geometries = i.memory.geometries;
+    out.textures = i.memory.textures;
+    out.programs = i.programs?.length ?? 0;
+    out.resolutionScale = this.resolutionScale;
+    out.pixelRatio = this.pixelRatio;
+    out.width = Math.round(this.width * this.pixelRatio);
+    out.height = Math.round(this.height * this.pixelRatio);
+    return out;
   }
 
   /** Render now and return the canvas as a PNG data URL (QA screenshots). */
