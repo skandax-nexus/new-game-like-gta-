@@ -27,7 +27,9 @@ import {
   updateArmiesDaily,
   updateArmiesHourly,
 } from '../../../src/sim/strategic/armies';
-import { armyFoodNeed, supplyDays } from '../../../src/sim/strategic/supply';
+import { armyFoodNeed, supplyDays, threatenedEdges } from '../../../src/sim/strategic/supply';
+import { blockedFor, edgeBlocker, realmComponents, updateRoadBlocks } from '../../../src/sim/strategic/network';
+import { COMMAND_REASONS, validateRepairRoad } from '../../../src/sim/strategic/commands';
 import { estimatedSoldiers, expireGhostsDaily, GHOST_DAYS, sees, updateVisibilityHourly } from '../../../src/sim/strategic/visibility';
 import { factionMod } from '../../../src/sim/strategic/modifiers';
 import { resolveEngagementNow } from '../../../src/sim/strategic/autoresolve';
@@ -150,6 +152,110 @@ describe('travel times (DESIGN_SPEC §7.7 examples)', () => {
     expect(e.blockedBy).toBe('army_block');
     expect(edgeUsable(w, infantry(w), e)).toBe(false);
     expect(edgeUsable(w, infantry(w, 'highland'), e)).toBe(true);
+  });
+});
+
+describe('road blocks per faction (DESIGN_SPEC §7.7 as amended, review S3)', () => {
+  /** A point `t` (0..1) of the way along an edge polyline (by vertex index). */
+  function along(w: WorldState, edgeId: string, t: number): { x: number; z: number } {
+    const pts = w.roads.edges[edgeId]!.points;
+    return pts[Math.min(pts.length - 1, Math.round(t * (pts.length - 1)))]!;
+  }
+
+  /** Broken Crown seed 5 with no armies; Suvarna (heartland) at war with Giridurga (highland), at peace with Nilavana. */
+  function emptyRoads(): WorldState {
+    const w = campaign(5);
+    w.armies = {};
+    setWar(w, 'heartland', 'highland', true);
+    setWar(w, 'heartland', 'forest', false);
+    setWar(w, 'forest', 'highland', false);
+    return w;
+  }
+
+  const FACTIONS_SEEN = ['heartland', 'highland', 'forest'] as const;
+  const verdict = (w: WorldState): Record<string, boolean> => Object.fromEntries(FACTIONS_SEEN.map((f) => [f, blockedFor(w, w.roads.edges.road_1!, f)]));
+
+  it('a hostile and a friendly army on one edge give the same answer for every faction in both id orders', () => {
+    const results: Record<string, boolean>[][] = [];
+    for (const [hostileId, escortId, bystanderId] of [
+      ['army_a_hostile', 'army_b_escort', 'army_c_forest'],
+      ['army_c_hostile', 'army_b_escort', 'army_a_forest'],
+      ['army_b_hostile', 'army_a_escort', 'army_c_forest'],
+    ] as const) {
+      const w = emptyRoads();
+      const p1 = along(w, 'road_1', 0.25);
+      const p3 = along(w, 'road_1', 0.75);
+      // 250+ m apart (no contact), both within 120 m of the road.
+      place(w, hostileId, 'highland', p1.x, p1.z, [{ unitClass: 'spearmen', formations: 1 }]);
+      const escort = place(w, escortId, 'heartland', p3.x, p3.z, [{ unitClass: 'spearmen', formations: 1 }]);
+      const steps: Record<string, boolean>[] = [];
+      // 1. Hostile + escort: the escort keeps Suvarna's road open; the hostile army's own realm is not blocked either.
+      steps.push(verdict(w));
+      // 2. A bystander of a third realm (at peace with both) camps on the road too: nothing changes.
+      place(w, bystanderId, 'forest', p3.x, p3.z, [{ unitClass: 'spearmen', formations: 1 }]);
+      steps.push(verdict(w));
+      // 3. The escort marches off: the road is blocked for Suvarna only, whatever the ids.
+      escort.status = 'marching';
+      steps.push(verdict(w));
+      expect(edgeBlocker(w, w.roads.edges.road_1!, 'heartland')).toBe(hostileId);
+      results.push(steps);
+    }
+    expect(results[0]).toEqual([
+      { heartland: false, highland: false, forest: false },
+      { heartland: false, highland: false, forest: false },
+      { heartland: true, highland: false, forest: false },
+    ]);
+    for (const r of results) expect(r).toEqual(results[0]);
+  });
+
+  it('distribution, relief, pathing, supply lines and repair_road all follow the rule (a lower-id army no longer hides the blocker)', () => {
+    const w = emptyRoads();
+    const e = w.roads.edges.road_1!; // Rajapura - Setupur, both Suvarna's
+    const p1 = along(w, 'road_1', 0.25);
+    const p3 = along(w, 'road_1', 0.75);
+    // The reviewer's shape: a non-hostile army with the lower id beside the real blocker.
+    place(w, 'army_a_forest', 'forest', p1.x, p1.z, [{ unitClass: 'spearmen', formations: 1 }]);
+    place(w, 'army_z_giri', 'highland', p3.x, p3.z, [{ unitClass: 'spearmen', formations: 1 }]);
+    e.condition = 0.6;
+    updateRoadBlocks(w);
+    expect(e.blockedBy).toBe('army_z_giri'); // display field: the army that blocks it for some realm
+    expect(blockedFor(w, e, 'heartland')).toBe(true);
+    expect(edgeUsable(w, infantry(w), e)).toBe(false);
+    expect(edgeUsable(w, infantry(w, 'forest'), e)).toBe(true);
+    const comps = realmComponents(w, 'heartland');
+    expect(comps.get('setupur')).not.toBe(comps.get('rajapura')); // no internal market or relief across it
+    expect(validateRepairRoad(w, 'heartland', 'road_1')).toBe(COMMAND_REASONS.roadHeld);
+    expect(threatenedEdges(w, 'heartland').has('road_1')).toBe(true);
+    const r = route(w, 'rajapura', 'setupur');
+    expect(r.edges).not.toContain('road_1');
+    // A Suvarna escort camped on the road reopens it for every consumer.
+    const p2 = along(w, 'road_1', 0.5);
+    place(w, 'army_m_escort', 'heartland', p2.x, p2.z, [{ unitClass: 'spearmen', formations: 1 }]);
+    updateRoadBlocks(w);
+    expect(e.blockedBy).toBeNull();
+    expect(blockedFor(w, e, 'heartland')).toBe(false);
+    expect(edgeUsable(w, infantry(w), e)).toBe(true);
+    const comps2 = realmComponents(w, 'heartland');
+    expect(comps2.get('setupur')).toBe(comps2.get('rajapura'));
+    expect(validateRepairRoad(w, 'heartland', 'road_1')).toBeNull();
+    expect(threatenedEdges(w, 'heartland').has('road_1')).toBe(false);
+    expect(route(w, 'rajapura', 'setupur').edges).toEqual(['road_1']);
+  });
+
+  it('marching and garrisoned armies hold no road; camped (foraging in place) and besieging ones do', () => {
+    const w = emptyRoads();
+    const e = w.roads.edges.road_1!;
+    const p = along(w, 'road_1', 0.5);
+    const g = place(w, 'army_giri_x', 'highland', p.x, p.z, [{ unitClass: 'spearmen', formations: 1 }]);
+    g.status = 'marching';
+    g.supply.foraging = true;
+    expect(blockedFor(w, e, 'heartland')).toBe(false);
+    g.status = 'garrisoned';
+    expect(blockedFor(w, e, 'heartland')).toBe(false);
+    g.status = 'camped';
+    expect(blockedFor(w, e, 'heartland')).toBe(true);
+    g.status = 'besieging';
+    expect(blockedFor(w, e, 'heartland')).toBe(true);
   });
 });
 

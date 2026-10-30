@@ -2,8 +2,8 @@
  * Road network queries shared by the economy (internal grain market, relief, trade road share), supply lines and
  * pathing (DESIGN_SPEC §3.4, §7.3.5, §7.5, §7.8). OWNER: Simulation Engineer - Strategic World Simulation (SIM-01).
  *
- *  - Road blocks (§7.7, SIM-01 review S3): an edge is **blocked for faction F** while a stationary army (camped,
- *    besieging, or foraging in place) hostile to F stands within ROAD_BLOCK_RADIUS (120 m) of its polyline and no
+ *  - Road blocks (§7.7, SIM-01 review S3): an edge is **blocked for faction F** while a stationary army (camped -
+ *    foraging armies are camped - or besieging) hostile to F stands within ROAD_BLOCK_RADIUS (120 m) of its polyline and no
  *    stationary army of F stands on the same edge - an escort keeps its road open. `blockedFor` / `edgeBlocker` evaluate
  *    the rule from the armies themselves, so the answer does not depend on army id order; it cuts grain distribution
  *    (realm components), relief, the trade road share, pathing and repair_road (supply lines: supply.threatenedEdges).
@@ -94,12 +94,11 @@ export function nearAnyRoad(world: WorldState, x: number, z: number, r: number):
 }
 
 /**
- * A stationary army holds the roads near it (§7.7): camped, besieging, or foraging in place (not on the march).
- * Garrisoned armies sit inside their walls and hold no road.
+ * A stationary army holds the roads near it (§7.7): camped (which includes an army foraging or raiding in place) or
+ * besieging. Armies on the march, in battle or garrisoned inside their walls hold no road.
  */
 export function holdsRoad(a: ArmyState): boolean {
-  if (a.units.length === 0) return false;
-  return a.status === 'camped' || a.status === 'besieging' || (a.supply.foraging && a.status !== 'marching');
+  return a.units.length > 0 && (a.status === 'camped' || a.status === 'besieging');
 }
 
 /**
