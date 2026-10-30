@@ -3534,3 +3534,8 @@
   width: 22px;
   height: 22px;
 }
+/* Phones: the objectives button steps aside while the minimap is open (it would cover the map's corner). */
+:root[data-layout='phone']:has(.wh-minimap .minimap:not(.collapsed)) .wh-objectives,
+:root[data-layout='phone-landscape']:has(.wh-minimap .minimap:not(.collapsed)) .wh-objectives {
+  display: none;
+}

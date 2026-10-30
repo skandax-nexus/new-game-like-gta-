@@ -56,7 +56,7 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
   }
   const compass = h('div', { class: 'hh-compass', role: 'img', 'aria-label': 'Compass' }, compassStrip, h('i', { class: 'hh-compass-needle' }));
   const leave = h('button', { class: 'btn small hh-leave', type: 'button', onclick: () => (ui.sfx('ui_click'), ctx.input.injectAction('hero_exit')) }, icon('exit'), 'Leave');
-  const keysHint = h('div', { class: 'hh-keys' });
+  const keysHint = h('div', { class: 'hh-keys passive' });
 
   // --- prompt bubble + captions -------------------------------------------------------------------
   const promptText = h('span', { class: 'hh-prompt-text' });
@@ -64,20 +64,20 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
   const prompt = h('button', { class: 'hh-prompt ui-hidden', type: 'button', onclick: () => (ui.sfx('ui_click'), ctx.input.injectAction('hero_interact')) }, promptKey, promptText);
   const capSpeaker = h('b', { class: 'hh-cap-speaker' });
   const capText = h('span', { class: 'hh-cap-text' });
-  const caption = h('div', { class: 'hh-caption ui-hidden', role: 'status', 'aria-live': 'polite' }, capSpeaker, capText);
+  const caption = h('div', { class: 'hh-caption passive ui-hidden', role: 'status', 'aria-live': 'polite' }, capSpeaker, capText);
 
   // --- combat: vitals, boss, reticle, enemies, flash ----------------------------------------------
   const hp = meter('hp');
   const st = meter('stamina');
   const hpText = h('span', { class: 'hh-vt' });
   const salves = pips(3, 'salve-pips');
-  const vitals = h('div', { class: 'hh-vitals ui-hidden', dataset: { anchor: 'hero-vitals' } }, h('div', { class: 'hh-vrow' }, icon('heart'), hp.el, hpText), h('div', { class: 'hh-vrow' }, icon('breath'), st.el), h('div', { class: 'hh-vrow salves' }, icon('flask'), salves.el));
+  const vitals = h('div', { class: 'hh-vitals passive ui-hidden', dataset: { anchor: 'hero-vitals' } }, h('div', { class: 'hh-vrow' }, icon('heart'), hp.el, hpText), h('div', { class: 'hh-vrow' }, icon('breath'), st.el), h('div', { class: 'hh-vrow salves' }, icon('flask'), salves.el));
   const bossName = h('div', { class: 'hh-boss-name' });
   const bossHp = meter('enemy');
   const bossPoise = meter('poise');
-  const boss = h('div', { class: 'hh-boss ui-hidden' }, bossName, bossHp.el, bossPoise.el);
-  const flash = h('div', { class: 'hh-flash ui-hidden', 'aria-hidden': 'true' });
-  const slowmo = h('div', { class: 'hh-slowmo ui-hidden', 'aria-hidden': 'true' });
+  const boss = h('div', { class: 'hh-boss passive ui-hidden' }, bossName, bossHp.el, bossPoise.el);
+  const flash = h('div', { class: 'hh-flash passive ui-hidden', 'aria-hidden': 'true' });
+  const slowmo = h('div', { class: 'hh-slowmo passive ui-hidden', 'aria-hidden': 'true' });
   const anchorLayer = h('div', { class: 'hh-anchors' });
   const reticle = h('div', { class: 'hh-reticle ui-hidden' }, icon('target'));
   anchorLayer.append(reticle);
@@ -166,9 +166,9 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
     salveBtn,
     tapBtn('hero_lock_on', 'lock', 'Lock', 'lock'),
   );
-  const touch = h('div', { class: 'hh-touch' }, stick, lookHint, interactBtn, combatBtns);
+  const touch = h('div', { class: 'hh-touch passive' }, stick, lookHint, interactBtn, combatBtns);
 
-  const el = h('div', { class: 'screen-hero-hud hud-root' }, h('div', { class: 'hh-top' }, objBox, compass, leave), keysHint, prompt, caption, vitals, boss, touch, slowmo, flash);
+  const el = h('div', { class: 'screen-hero-hud hud-root' }, h('div', { class: 'hh-top passive' }, objBox, compass, leave), keysHint, prompt, caption, vitals, boss, touch, slowmo, flash);
 
   const renderEnemies = (enemies: readonly HeroEnemyBar[]): void => {
     const own = enemies.filter((e) => !e.boss && e.visible);

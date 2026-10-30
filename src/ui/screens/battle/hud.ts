@@ -265,7 +265,7 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
   const moreBtn = h('button', { class: 'btn small bh-more', type: 'button', 'aria-expanded': 'false', onclick: () => ((moreOpen = !moreOpen), ui.sfx('ui_click'), renderMode()) }, icon('more'), 'More');
   presets.append(moreBtn);
   const cardPanel = h('section', { class: 'bh-card panel', 'aria-label': 'Orders' }, grid.el, h('div', { class: 'bh-card-side' }, selAll));
-  const bottom = h('div', { class: 'bh-bottom' }, strip, presets, cardPanel);
+  const bottom = h('div', { class: 'bh-bottom passive' }, strip, presets, cardPanel);
 
   // --- feed + radial + floating ---------------------------------------------------------------
   const feed = h('div', { class: 'bh-feed', role: 'log', 'aria-live': 'polite', dataset: { anchor: 'battle-feed' } });

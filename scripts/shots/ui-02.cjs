@@ -353,6 +353,18 @@ async function elementShot(s, selector, name, note) {
   console.log(`[ui-02] shot ${name}-${s.vpName}.png  ${note}`);
 }
 
+/** Taps / clicks on open map areas reach the game (no transparent HUD container swallowing them). */
+async function passThrough(s, label, points) {
+  const hits = await ev(s, (pts) => {
+    const root = document.getElementById('ui-root') || document.body;
+    return pts.map(([fx, fy]) => {
+      const hit = document.elementFromPoint(innerWidth * fx, innerHeight * fy);
+      return { at: [fx, fy], ui: !!hit && root.contains(hit), el: hit ? `${hit.tagName}.${String(hit.className).slice(0, 40)}` : null };
+    });
+  }, points);
+  check(`${label} (${s.vpName}): open map areas pass pointer events through to the game`, hits.every((h) => !h.ui), hits.filter((h) => h.ui));
+}
+
 async function finish(s, label) {
   const crash = await s.page.evaluate(() => (window.__SAMRAJYA__ ? window.__SAMRAJYA__.getErrors().map((r) => r.message) : [])).catch(() => []);
   check(`${label} (${s.vpName}): no console errors, page errors, failed requests or crash reports`, s.errors.length === 0 && crash.length === 0, [...s.errors, ...crash].slice(0, 10));
@@ -468,6 +480,10 @@ async function worldSession(browser, base, vpName) {
     await selectCap();
     await settle(s, 600);
     await click(s, '.command-card .tabs .btn.tab', /economy/);
+    await passThrough(s, 'world HUD', [
+      [0.45, 0.35],
+      [0.3, 0.45],
+    ]);
     await shot(s, 'world-settlement-economy', 'world HUD, Rajapura selected: resource bar, date/season/forecast, speed, realm buttons, objectives, minimap, command card Economy tab');
     await click(s, '.command-card .tabs .btn.tab', /recruit/);
     await shot(s, 'world-settlement-recruit', 'command card Recruit tab (recruit slots by UnitDef.commandSlot, rally point slot 14)');
@@ -664,6 +680,10 @@ async function battleSession(browser, base, vpName, outcomeHolder) {
     await settle(s, 500);
     const anchors = await ev(s, computeAnchors);
     await ev(s, (a) => window.__SAMRAJYA_UI__.patch('battle_hud', { anchors: a }), anchors);
+    await passThrough(s, 'battle HUD', [
+      [0.5, 0.3],
+      [0.3, 0.25],
+    ]);
     await shot(s, 'battle-live', 'battle HUD in battle: cards strip (strength, morale + cause, fatigue, ammo), selection card, rally ring, floating formation cards (anchors from the camera model), feed');
   }, 'battle: live');
 
@@ -772,6 +792,10 @@ async function heroSession(browser, base, vpName) {
         }),
       [W, H, phone],
     );
+    await passThrough(s, 'hero HUD', [
+      [0.5, 0.55],
+      [0.25, 0.4],
+    ]);
     await shot(s, 'hero-combat', 'hero HUD in combat: HP / stamina / salves, boss bar (unblockable cue), enemy bars, lock-on reticle; phones: combat buttons');
   }, 'hero: combat');
   await finish(s, 'hero');

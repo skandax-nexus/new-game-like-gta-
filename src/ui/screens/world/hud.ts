@@ -183,7 +183,7 @@ export function worldHud(ctx: AppContext, ui: UIManager): Screen<'world_hud'> {
   });
   const groups = controlGroupRow(ctx);
   const cardPanel = h('section', { class: 'wh-card panel', 'aria-label': 'Selection and commands' }, h('button', { class: 'sheet-handle', type: 'button', 'aria-label': 'Expand', onclick: () => cardPanel.classList.toggle('sheet-full') }), selInfo, grid.el);
-  const bottom = h('div', { class: 'wh-bottom' }, groups.el, cardPanel);
+  const bottom = h('div', { class: 'wh-bottom passive' }, groups.el, cardPanel);
 
   // --- feed ----------------------------------------------------------------------------------
   const feed = h('div', { class: 'wh-feed', role: 'log', 'aria-live': 'polite', 'aria-label': 'Notifications', dataset: { anchor: 'feed' } });
