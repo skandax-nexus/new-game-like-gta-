@@ -55,7 +55,8 @@ from a quick save, because the debug state has no positions.
 - **battle-river-melee.png** - The Ford, seed 11, 17:00, overview camera, first clash at 1:24 (476 vs 466).
   - The river crosses the map east-west, with the lighter shallow ford in the middle.
   - The Suvarna blocks stand in the ford and meet the Giridurga line on its north lip. Nobody is in the deep water.
-  - Fading toasts ("The enemy wavers", "A formation is breaking!") overlap the speed buttons (noted for UI).
+  - In the lead re-review capture the toasts have faded; earlier captures showed "The enemy wavers" / "A formation is
+    breaking!" over the speed buttons (noted for UI).
 - **battle-result.png** - the plains battle stepped to its end (4:11 of fighting). The Victory screen shows the outcome
   chronicle from `outcome.ts`:
   - "The Battle of The Open Plain: Suvarna defeated Giridurga; 388 fell", and "carried the field after 4 minutes:
@@ -449,7 +450,7 @@ Re-run of the round-2 rework against HEAD `08fdaa4` (tactical code of `f00d04b` 
 did not apply in real sieges, because the archers left the walls before they ran dry.
 
 - Probe: AI vs AI sieges through the siege auto-deploy (baseline battle AI; 7 attacker formations with elephants
-  against 4 garrison formations; level-2 town). On 6 / 6 seeds the town fell by `rout` in about 2.3 min, with both
+  against 4 garrison formations; level-2 town). On 10 / 10 seeds the town fell by `rout` in 2.0-2.4 min, with both
   gates intact, no breach, and 100 dry garrison archers standing idle 10-25 m inside the wall walk.
 - Cause, in GP-01's own order execution (`orders.ts`):
   - The `skirmish` order's keep-range walked wall archers toward a target beyond range: inward to a gate and out of
@@ -473,13 +474,18 @@ did not apply in real sieges, because the archers left the walls before they ran
 
 | AI vs AI siege probe (10 seeds) | Before the fix | After |
 |---|---|---|
-| Town falls by `rout` | 10 / 10 (6 seeds run), about 2.3 min, no breach, dry archers idle off the walls | 8 / 10, 2.7-4.5 min (3 after the elephants break a gate) |
+| Town falls by `rout` | 10 / 10 in 2.0-2.4 min, gates intact, no breach; 100 garrison archers idle off the walls | 8 / 10 in 2.7-4.5 min (3 after the elephants break a gate) |
 | Garrison holds to the 40-minute limit (`siege_held`) | 0 | 2 / 10 (1.3 s of autoresolve CPU each) |
 
 After the fix: `tsc` clean; `npm test` 627 / 628 (only the CTO-owned migration test); tactical + purity + integration
 99 / 99; perf 1,000 soldiers 0.044 / 0.237 ms, 5,000 soldiers 0.271 / 0.962 ms (formation / soldier layer); new-order
 pathing median 0.81 ms. Builds from a clean export of `d884669` (normal; single-file 2.27 MB); `gp-01.cjs` 22 / 22,
-in-engine hash `a185ec15` on both loads (unchanged); SMOKE_RESULT.
+in-engine hash `a185ec15` on both loads (unchanged); smoke `--scenes=battle` on port 4457 4 / 4 with no console errors
+(`review-smoke/`, re-captured; every image looked at). Studio Head WIP snapshots `b0046c9` and `2874d77` swept part of
+this re-captured evidence (images, traces, `gp-01.cjs` subtitle, an earlier draft of this section) into their commits;
+the rest is in the lead's evidence commit. On the landscape phone shot (`battle-mobile.png`, 844 x 390) the
+default camera frames empty ground with the player's line under the order bar, as in `smoke/`; noted for the BattleScene
+camera.
 
 ## Known issues
 
