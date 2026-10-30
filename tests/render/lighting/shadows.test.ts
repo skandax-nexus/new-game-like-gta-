@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { buildQualitySettings } from '../../../src/core/quality';
-import { CascadedShadows, cascadeCountFor, practicalSplits, shadowDistanceFor, shadowFilterFor, CSM_BLEND } from '../../../src/render/lighting/csm';
+import { CascadedShadows, cascadeCountFor, cascadeMapSize, practicalSplits, shadowDistanceFor, shadowFilterFor, shadowMapBytes, CSM_BLEND } from '../../../src/render/lighting/csm';
 import { DIR_SHADOW_LINE, cascadeChunksInstalled } from '../../../src/render/lighting/shadowChunks';
 import { installShaderGlobals, G, g } from '../../../src/render/materials/chunks/globals';
 import { createZoomLook, resolveZoomLook, capZoomLook } from '../../../src/render/style/zoom';
@@ -33,6 +33,31 @@ describe('tiers (ART_BIBLE §13)', () => {
     expect(csm.lights.length).toBe(1);
     expect(csm.lights[0]!.shadow.mapSize.x).toBe(1024);
     csm.dispose();
+  });
+});
+
+describe('shadow-map memory (review: ARCHITECTURE §15 texture + RT budget)', () => {
+  it('cascade 0 keeps the tier map size; with 3+ cascades the outer ones are half size', () => {
+    const sizes = (t: 'low' | 'medium' | 'high' | 'ultra'): number[] => {
+      const q = buildQualitySettings(t);
+      return Array.from({ length: cascadeCountFor(q) }, (_, i) => cascadeMapSize(q, i));
+    };
+    expect(sizes('low')).toEqual([1024]);
+    expect(sizes('medium')).toEqual([2048, 2048]);
+    expect(sizes('high')).toEqual([4096, 2048, 2048]);
+    expect(sizes('ultra')).toEqual([4096, 2048, 2048, 2048]);
+    const csm = new CascadedShadows(buildQualitySettings('high'));
+    expect(csm.lights.map((l) => l.shadow.mapSize.x)).toEqual([4096, 2048, 2048]);
+    csm.dispose();
+  });
+
+  it('high never allocates more shadow memory than ultra and stays under a third of the PC-high budget', () => {
+    const mb = (t: 'low' | 'medium' | 'high' | 'ultra'): number => shadowMapBytes(buildQualitySettings(t)) / (1024 * 1024);
+    expect(mb('low')).toBeLessThan(mb('medium'));
+    expect(mb('medium')).toBeLessThan(mb('high'));
+    expect(mb('high')).toBeLessThanOrEqual(mb('ultra'));
+    expect(mb('high')).toBeLessThan(600 / 3);
+    expect(mb('medium')).toBeLessThan(250 / 3);
   });
 });
 

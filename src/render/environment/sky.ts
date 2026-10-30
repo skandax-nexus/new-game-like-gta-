@@ -53,6 +53,62 @@ export const MOON_VISUAL = { discRadiusDeg: 0.7, luminance: 3.2 } as const;
 export const BAKED_SKY_FADE_S = 2;
 /** Irradiance readback cube size (px per face). */
 export const IRRADIANCE_CUBE_SIZE = 32;
+/** Entries of the quantised bake key (sun xyz, Preetham x4, clouds, night, env map size). */
+const BAKE_KEY_LENGTH = 10;
+/** Baked-sky horizon ring: elevations (deg) and azimuth offsets (deg) averaged per ring entry. */
+const BAKED_RING_ELEVATIONS_DEG: readonly number[] = [0.5, 1.5, 3];
+const BAKED_RING_SPREAD_DEG: readonly number[] = [-10, -5, 0, 5, 10];
+const DEG_SKY = Math.PI / 180;
+/** Re-sample the baked ring when the sky's yaw moved more than this (rad, ~0.25 deg). */
+const BAKED_RING_YAW_EPS = 0.0044;
+
+/**
+ * Raw horizon radiance of an equirect HDR (three.js DataTexture data as EXRLoader returns it: row 0 = nadir, RGBA,
+ * Float32 or half-float Uint16) at the 8 ring azimuths (atan(z, x) = k x 45 deg - 180 deg, the samHorizon order),
+ * averaged over a small band just above the horizon. `yaw` is the rotation the dome applies (samEquirectUv).
+ * Writes 24 floats into `out`; returns false when the texture has no CPU data. Allocation-free.
+ */
+export function sampleEquirectHorizon(data: ArrayLike<number>, width: number, height: number, halfFloat: boolean, yaw: number, out: Float32Array): boolean {
+  if (width <= 0 || height <= 0 || data.length < width * height * 4) return false;
+  const c = Math.cos(yaw);
+  const s = Math.sin(yaw);
+  for (let k = 0; k < 8; k++) {
+    const a = (k / 8) * Math.PI * 2 - Math.PI;
+    let r = 0;
+    let gg = 0;
+    let b = 0;
+    let n = 0;
+    for (const e of BAKED_RING_ELEVATIONS_DEG) {
+      const ce = Math.cos(e * DEG_SKY);
+      const dy = Math.sin(e * DEG_SKY);
+      for (const da of BAKED_RING_SPREAD_DEG) {
+        const az = a + da * DEG_SKY;
+        const dx = Math.cos(az) * ce;
+        const dz = Math.sin(az) * ce;
+        // Same rotation as samEquirectUv.
+        const rx = c * dx + s * dz;
+        const rz = -s * dx + c * dz;
+        const u = Math.atan2(rz, rx) / (Math.PI * 2) + 0.5;
+        const v = Math.asin(dy) / Math.PI + 0.5;
+        const x = Math.min(width - 1, Math.max(0, Math.floor(u * width)));
+        const y = Math.min(height - 1, Math.max(0, Math.floor(v * height)));
+        const i = (y * width + x) * 4;
+        const vr = data[i] as number;
+        const vg = data[i + 1] as number;
+        const vb = data[i + 2] as number;
+        r += halfFloat ? THREE.DataUtils.fromHalfFloat(vr) : vr;
+        gg += halfFloat ? THREE.DataUtils.fromHalfFloat(vg) : vg;
+        b += halfFloat ? THREE.DataUtils.fromHalfFloat(vb) : vb;
+        n++;
+      }
+    }
+    out[k * 3] = r / n;
+    out[k * 3 + 1] = gg / n;
+    out[k * 3 + 2] = b / n;
+  }
+  for (let i = 0; i < 24; i++) if (!Number.isFinite(out[i]!)) return false;
+  return true;
+}
 
 const PRESET_WEIGHT_KEYS: readonly [keyof ResolvedLighting['weights'], LightingPresetId][] = [
   ['night', 'night'],
@@ -411,11 +467,25 @@ export class SkySystem {
   private pmremTarget: THREE.WebGLRenderTarget | null = null;
   private readonly faces: Float32Array[] = [];
   private readonly white: THREE.DataTexture;
-  private lastBakeKey = '';
+  /** Quantised bake key (numeric, compared per frame without allocating) and the key of the last bake. */
+  private readonly bakeKeyNow = new Int32Array(BAKE_KEY_LENGTH);
+  private readonly bakeKeyLast = new Int32Array(BAKE_KEY_LENGTH);
+  private bakeKeyValid = false;
+  /** Reused result objects (bake() / updateBaked() run every frame). */
+  private readonly bakeResult: SkyBake = { envMap: null, sourceIrradiance: 0, yaw: 0 };
+  private readonly bakedResult: SkyBake = { envMap: null, sourceIrradiance: 0, yaw: 0 };
   private measured = 0;
   /** Linear RGB of the raw (uncalibrated) env sky at 8 horizon azimuths, from the last readback. */
   readonly horizonRaw: Float32Array = new Float32Array(8 * 3);
   horizonValid = false;
+  /**
+   * Same ring for the active baked sky (raw EXR radiance, before calibration), sampled on the CPU from the equirect
+   * data at the current yaw, so aerial perspective and the map-edge fade keep working when assets are attached.
+   */
+  readonly bakedHorizonRaw: Float32Array = new Float32Array(8 * 3);
+  bakedHorizonValid = false;
+  private bakedHorizonId: string | null = null;
+  private bakedHorizonYaw = Number.NaN;
   private sprite: SkyImageHandle | null = null;
   // Baked skies.
   private assets: SkyAssetSource | null = null;
@@ -570,13 +640,27 @@ export class SkySystem {
 
   // ---------------------------------------------------------------- IBL bake
 
-  /** Key of everything that changes the env sky (bake when it differs; quantised to avoid churn). */
-  bakeKey(): string {
+  /** Write the quantised key of everything that changes the env sky into `out` (allocation-free). */
+  private writeBakeKey(out: Int32Array): void {
     const p = this.shared.uPreetham!.value as THREE.Vector4;
     const c = this.shared.uCloud!.value as THREE.Vector4;
-    const q = (v: number, s: number): number => Math.round(v * s);
     // Sun quantised to ~1 deg, clouds/night to 2 %.
-    return `${q(this.sunDir.x, 60)},${q(this.sunDir.y, 60)},${q(this.sunDir.z, 60)}|${q(p.x, 20)},${q(p.y, 20)},${q(p.z, 2000)},${q(p.w, 50)}|${q(c.x, 50)}|${q(this.night, 50)}|${this.envMapSize}`;
+    out[0] = Math.round(this.sunDir.x * 60);
+    out[1] = Math.round(this.sunDir.y * 60);
+    out[2] = Math.round(this.sunDir.z * 60);
+    out[3] = Math.round(p.x * 20);
+    out[4] = Math.round(p.y * 20);
+    out[5] = Math.round(p.z * 2000);
+    out[6] = Math.round(p.w * 50);
+    out[7] = Math.round(c.x * 50);
+    out[8] = Math.round(this.night * 50);
+    out[9] = this.envMapSize;
+  }
+
+  /** Key of everything that changes the env sky (bake when it differs; quantised to avoid churn). Diagnostics. */
+  bakeKey(): string {
+    this.writeBakeKey(this.bakeKeyNow);
+    return Array.from(this.bakeKeyNow).join(',');
   }
 
   get envMap(): THREE.Texture | null {
@@ -596,12 +680,12 @@ export class SkySystem {
     this.cubeCamera = null;
     this.pmremTarget?.dispose();
     this.pmremTarget = null;
-    this.lastBakeKey = '';
+    this.bakeKeyValid = false;
   }
 
   /** Force a re-bake next time (context restored, quality change). */
   invalidate(): void {
-    this.lastBakeKey = '';
+    this.bakeKeyValid = false;
   }
 
   /**
@@ -610,9 +694,13 @@ export class SkySystem {
    */
   bake(renderer: THREE.WebGLRenderer, force = false): SkyBake | null {
     if (!this.bakeEnabled) return null;
-    const key = this.bakeKey();
-    if (!force && key === this.lastBakeKey && (this.pmremTarget || this.envMapSize <= 0)) return null;
-    this.lastBakeKey = key;
+    const key = this.bakeKeyNow;
+    this.writeBakeKey(key);
+    let same = this.bakeKeyValid;
+    for (let i = 0; same && i < BAKE_KEY_LENGTH; i++) same = key[i] === this.bakeKeyLast[i];
+    if (!force && same && (this.pmremTarget || this.envMapSize <= 0)) return null;
+    this.bakeKeyLast.set(key);
+    this.bakeKeyValid = true;
     this.measureIrradiance(renderer);
     if (this.envMapSize > 0) {
       if (!this.cubeTarget) {
@@ -622,7 +710,11 @@ export class SkySystem {
       this.cubeCamera!.update(renderer, this.envScene);
       this.pmremTarget = this.pmrem.fromCubemap(this.cubeTarget.texture, this.pmremTarget);
     }
-    return { envMap: this.envMap, sourceIrradiance: this.measured, yaw: 0 };
+    const res = this.bakeResult;
+    res.envMap = this.envMap;
+    res.sourceIrradiance = this.measured;
+    res.yaw = 0;
+    return res;
   }
 
   private measureIrradiance(renderer: THREE.WebGLRenderer): void {
@@ -733,6 +825,8 @@ export class SkySystem {
     this.bakedWanted = null;
     this.bakedLoading = null;
     this.bakedFade = 1;
+    this.bakedHorizonValid = false;
+    this.bakedHorizonId = null;
     const b = this.visible.uBaked!.value as THREE.Vector4;
     b.set(0, 0, 0, 0);
     this.visible.uScale!.value.z = 1;
@@ -760,9 +854,12 @@ export class SkySystem {
     if (!cur) {
       b.set(0, 0, 0, 0);
       this.visible.uScale!.value.z = 1;
+      this.bakedHorizonValid = false;
+      this.bakedHorizonId = null;
       return null;
     }
     cur.yaw = this.yawFor(cur);
+    this.updateBakedHorizon(cur);
     const prev = this.bakedPrevious;
     if (prev) prev.yaw = this.yawFor(prev);
     this.bakedFade = Math.min(1, this.bakedFade + dt / BAKED_SKY_FADE_S);
@@ -790,11 +887,11 @@ export class SkySystem {
       }
       b.y = 0;
       this.visible.uScale!.value.z = 0;
-      return { envMap: cur.handle.envMap, sourceIrradiance: cur.handle.entry.ambientIrradiance, yaw: cur.yaw };
+      return this.bakedOut(cur.handle.envMap, cur.handle.entry.ambientIrradiance, cur.yaw);
     }
     // Procedural -> baked: both are calibrated to the same irradiance, so the IBL switches at once (no visible
     // change in light level) while the dome cross-fades per pixel.
-    if (!prev) return { envMap: cur.handle.envMap, sourceIrradiance: cur.handle.entry.ambientIrradiance, yaw: cur.yaw };
+    if (!prev) return this.bakedOut(cur.handle.envMap, cur.handle.entry.ambientIrradiance, cur.yaw);
     // Baked -> baked: blend the two (rotated, calibrated) equirects and re-PMREM at most 4x per second.
     this.bakedBlend.nextBakeIn -= dt;
     this.ensureBlend();
@@ -812,7 +909,32 @@ export class SkySystem {
       this.bakedBlend.pmrem = this.pmrem.fromEquirectangular(this.bakedBlend.rt!.texture, this.bakedBlend.pmrem);
     }
     // The blend already carries both calibrations: sourceIrradiance <= 0 means "use environmentIntensity 1".
-    return { envMap: this.bakedBlend.pmrem?.texture ?? cur.handle.envMap, sourceIrradiance: -1, yaw: 0 };
+    return this.bakedOut(this.bakedBlend.pmrem?.texture ?? cur.handle.envMap, -1, 0);
+  }
+
+  /** Fill the reused baked-sky result (updateBaked runs every frame). */
+  private bakedOut(envMap: THREE.Texture | null, sourceIrradiance: number, yaw: number): SkyBake {
+    const o = this.bakedResult;
+    o.envMap = envMap;
+    o.sourceIrradiance = sourceIrradiance;
+    o.yaw = yaw;
+    return o;
+  }
+
+  /** Horizontal irradiance (manifest ambientIrradiance) of the active baked sky, 0 when none. */
+  get bakedSourceIrradiance(): number {
+    return this.bakedCurrent?.handle.entry.ambientIrradiance ?? 0;
+  }
+
+  /** Re-sample the baked sky's horizon ring when the sky or its yaw changed (CPU, from the EXR data). */
+  private updateBakedHorizon(slot: BakedSlot): void {
+    if (slot.id === this.bakedHorizonId && Math.abs(slot.yaw - this.bakedHorizonYaw) < BAKED_RING_YAW_EPS) return;
+    this.bakedHorizonId = slot.id;
+    this.bakedHorizonYaw = slot.yaw;
+    const tex = slot.handle.texture;
+    const img = tex.image as { data?: ArrayLike<number> | null; width?: number; height?: number } | null;
+    this.bakedHorizonValid =
+      !!img?.data && sampleEquirectHorizon(img.data, img.width ?? 0, img.height ?? 0, tex.type === THREE.HalfFloatType, -slot.yaw, this.bakedHorizonRaw);
   }
 
   private ensureBlend(): THREE.WebGLRenderTarget {

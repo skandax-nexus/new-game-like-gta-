@@ -51,6 +51,29 @@ export function cascadeCountFor(q: QualitySettings): number {
   return Math.max(1, Math.min(4, Math.round(q.shadows.cascades)));
 }
 
+/**
+ * Shadow-map size (texels per side) of cascade `i`. The first cascade gets the tier's full
+ * QualitySettings.shadows.mapSize; with 3+ cascades the outer ones, which cover much larger and more distant slices,
+ * get half of it (min 1024). Without this, high (3 x 4096^2) would allocate ~400 MB of shadow maps - more than ultra
+ * and two thirds of the PC-high texture + render-target budget (ARCHITECTURE §15: < 600 MB).
+ */
+export function cascadeMapSize(q: QualitySettings, i: number): number {
+  const full = q.shadows.mapSize;
+  if (i === 0 || cascadeCountFor(q) < 3) return full;
+  return Math.max(1024, Math.floor(full / 2));
+}
+
+/** Bytes per shadow-map texel in three r170: RGBA8 colour (packed depth) + 32-bit depth renderbuffer. */
+export const SHADOW_BYTES_PER_TEXEL = 8;
+
+/** GPU memory (bytes) of every cascade shadow map of a tier (0 when shadows are off). */
+export function shadowMapBytes(q: QualitySettings): number {
+  if (!q.shadows.enabled) return 0;
+  let n = 0;
+  for (let i = 0; i < cascadeCountFor(q); i++) n += cascadeMapSize(q, i) ** 2 * SHADOW_BYTES_PER_TEXEL;
+  return n;
+}
+
 /** Filter for a tier: low hard, medium PCF, high / ultra PCSS. */
 export function shadowFilterFor(q: QualitySettings): ShadowFilter {
   if (!q.shadows.enabled) return 'hard';
@@ -147,7 +170,7 @@ export class CascadedShadows {
       const l = new THREE.DirectionalLight(this.color, this.intensity);
       l.name = i === 0 ? 'sun' : `sun_cascade_${i}`;
       l.castShadow = q.shadows.enabled;
-      const size = i === 0 || q.tier !== 'ultra' ? q.shadows.mapSize : Math.max(1024, q.shadows.mapSize / 2);
+      const size = cascadeMapSize(q, i);
       l.shadow.mapSize.set(size, size);
       l.shadow.bias = -0.0004;
       l.shadow.normalBias = 0.6;

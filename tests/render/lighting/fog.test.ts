@@ -10,7 +10,7 @@ import { EnvironmentRig } from '../../../src/render/environment/environment';
 import { atmosphereSnapshot, EXP2_DENSITY_SCALE, fogModeFor } from '../../../src/render/environment/atmosphere/atmosphere';
 import { fogOpticalDepth, skyDomeFogAlpha, SKY_FOG_CLAMP, SKY_FOG_DISTANCE_M, MIST_NOISE } from '../../../src/render/environment/atmosphere/fogMath';
 import { heightFogInstalled, injectHeightFog } from '../../../src/render/environment/atmosphere/heightFog';
-import { buildSkyShader } from '../../../src/render/environment/sky';
+import { buildSkyShader, sampleEquirectHorizon, type SkyHdriHandle } from '../../../src/render/environment/sky';
 import { buildQualitySettings } from '../../../src/core/quality';
 import { G, g, installShaderGlobals } from '../../../src/render/materials/chunks/globals';
 import { fakeRenderContext } from './fakeContext';
@@ -163,5 +163,76 @@ describe('fog maths', () => {
     expect(chunked.fragmentShader).toBe('#include <fog_fragment>');
     expect(THREE.ShaderLib.standard.uniforms.samG).toBeDefined();
     expect(THREE.UniformsLib.fog).toHaveProperty('samG');
+  });
+});
+
+/** Equirect test texture (rows bottom-up like EXRLoader): R / B follow the azimuth, G = 1. */
+function equirect(width: number, height: number, half: boolean, rgb?: [number, number, number]): { data: Float32Array | Uint16Array; width: number; height: number } {
+  const f = new Float32Array(width * height * 4);
+  for (let y = 0; y < height; y++)
+    for (let x = 0; x < width; x++) {
+      const u = (x + 0.5) / width;
+      const i = (y * width + x) * 4;
+      f[i] = rgb ? rgb[0] : 1 + 0.5 * Math.cos(2 * Math.PI * u);
+      f[i + 1] = rgb ? rgb[1] : 1;
+      f[i + 2] = rgb ? rgb[2] : 1 + 0.5 * Math.sin(2 * Math.PI * u);
+      f[i + 3] = 1;
+    }
+  if (!half) return { data: f, width, height };
+  const h = new Uint16Array(f.length);
+  for (let i = 0; i < f.length; i++) h[i] = THREE.DataUtils.toHalfFloat(f[i]!);
+  return { data: h, width, height };
+}
+
+describe('baked skies keep the horizon ring (review: no map-edge seam once assets are attached)', () => {
+  it('sampleEquirectHorizon reads the 8 ring azimuths in samHorizon order, with the dome yaw, float or half', () => {
+    const spread = (1 + 2 * Math.cos((5 * Math.PI) / 180) + 2 * Math.cos((10 * Math.PI) / 180)) / 5;
+    for (const half of [false, true]) {
+      for (const yaw of [0, 0.7, -2.1]) {
+        const t = equirect(256, 128, half);
+        const out = new Float32Array(24);
+        expect(sampleEquirectHorizon(t.data, t.width, t.height, half, yaw, out)).toBe(true);
+        for (let k = 0; k < 8; k++) {
+          const theta = (k / 8) * Math.PI * 2 - Math.PI - yaw;
+          // u = theta / 2pi + 0.5  =>  cos(2 pi u) = -cos(theta), sin(2 pi u) = -sin(theta).
+          expect(out[k * 3]!).toBeCloseTo(1 - 0.5 * spread * Math.cos(theta), 2);
+          expect(out[k * 3 + 1]!).toBeCloseTo(1, 2);
+          expect(out[k * 3 + 2]!).toBeCloseTo(1 - 0.5 * spread * Math.sin(theta), 2);
+        }
+      }
+    }
+    expect(sampleEquirectHorizon(new Float32Array(4), 0, 0, false, 0, new Float32Array(24))).toBe(false);
+  });
+
+  it('the rig feeds the baked sky ring (calibrated) to aerial perspective and the map-edge fade', async () => {
+    const ring = async (rgb: [number, number, number]): Promise<THREE.Vector4> => {
+      const t = equirect(128, 64, true, rgb);
+      const tex = new THREE.DataTexture(t.data, t.width, t.height, THREE.RGBAFormat, THREE.HalfFloatType);
+      const handle: SkyHdriHandle = { texture: tex, envMap: new THREE.Texture(), sun: { azimuthDeg: 170, elevationDeg: 62 }, entry: { id: 'sky_day', ambientIrradiance: 0.58 }, release: () => undefined };
+      const fake = fakeRenderContext('high');
+      const scene = new THREE.Scene();
+      const rig = new EnvironmentRig(fake.ctx, scene, { sceneSize: 1024, bounds: { minX: -512, minZ: -512, maxX: 512, maxZ: 512 }, assets: { enabled: true, has: () => true, loadHdri: async () => handle } });
+      rig.sky.bakeEnabled = false;
+      rigs.push(rig);
+      rig.setEnvironment(makeEnvironment(12.5, 'sharad', 'clear'));
+      await Promise.resolve();
+      await Promise.resolve();
+      const cam = new THREE.PerspectiveCamera(42, 16 / 9, 0.5, 12000);
+      cam.position.set(0, 600, 600);
+      cam.lookAt(0, 0, 0);
+      rig.update(1 / 60, new THREE.Vector3());
+      fake.frame(scene, cam);
+      expect(rig.sky.bakedActive).toBe(true);
+      expect(rig.sky.bakedHorizonValid).toBe(true);
+      const snap = atmosphereSnapshot();
+      expect(snap.horizonValid).toBe(true);
+      expect(snap.edge).not.toBeNull();
+      return g(G.HORIZON_RING + 2).clone();
+    };
+    const warm = await ring([3, 1, 0.3]);
+    const cool = await ring([0.3, 1, 3]);
+    // The ring carries the baked sky's own colour (through the 0.6-clamped sky-dome fog).
+    expect(warm.x).toBeGreaterThan(cool.x);
+    expect(warm.z).toBeLessThan(cool.z);
   });
 });

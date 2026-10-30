@@ -13,6 +13,7 @@ import { blendResolvedInto, cloneResolved } from '../../../src/render/lighting/r
 import { LightningFlash } from '../../../src/render/lighting/lightning';
 import { PracticalLights } from '../../../src/render/lighting/practicals';
 import { MATERIAL_GLOBALS } from '../../../src/render/materials/pbr';
+import { createZoomLook, resolveZoomLook } from '../../../src/render/style/zoom';
 import { fakeRenderContext } from './fakeContext';
 
 const rigs: EnvironmentRig[] = [];
@@ -232,5 +233,28 @@ describe('lifecycle', () => {
     expect(scene.children.length).toBe(0);
     expect(scene.fog).toBeNull();
     expect(MATERIAL_GLOBALS.wetness.value).toBe(0);
+  });
+});
+
+describe('caller-supplied ZoomLook (GFX-05 contract, review)', () => {
+  it('is copied, capped by tier and never aliased: dropping it later leaves the caller object untouched', () => {
+    const { rig, fake, scene, camera } = makeRig('high');
+    rig.setEnvironment(env(12.5));
+    const callers = resolveZoomLook(4.5, createZoomLook()); // hero band: CA > 0, contact shadows on
+    const snapshot = JSON.stringify(callers);
+    rig.update(1 / 60, camera, callers);
+    fake.frame(scene, camera);
+    expect(rig.look.id).toBe('hero');
+    expect(rig.look.post).not.toBe(callers.post);
+    expect(rig.look.post.dof).not.toBe(callers.post.dof);
+    expect(rig.look.shadows).not.toBe(callers.shadows);
+    // Tier caps apply to the copy (high: no chromatic aberration, no contact shadows), not to the caller's look.
+    expect(rig.look.post.chromaticAberration).toBe(0);
+    expect(rig.look.shadows.contact).toBe(false);
+    // Back to the rig's own camera-distance look (220 m tactical): the caller's object must not change.
+    rig.update(1 / 60, camera);
+    fake.frame(scene, camera);
+    expect(rig.look.id).not.toBe('hero');
+    expect(JSON.stringify(callers)).toBe(snapshot);
   });
 });

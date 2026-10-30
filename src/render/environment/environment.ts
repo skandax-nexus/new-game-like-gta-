@@ -58,6 +58,25 @@ export interface MoodWeight {
 }
 
 const DEG = Math.PI / 180;
+
+/** Deep copy of a ZoomLook into `out`, keeping `out`'s own nested objects (allocation-free, no aliasing). */
+export function copyZoomLookInto(out: ZoomLook, src: ZoomLook): ZoomLook {
+  out.id = src.id;
+  out.label = src.label;
+  out.distanceM = src.distanceM;
+  out.lodBias = src.lodBias;
+  Object.assign(out.camera, src.camera);
+  Object.assign(out.material, src.material);
+  Object.assign(out.readability, src.readability);
+  Object.assign(out.vegetation, src.vegetation);
+  Object.assign(out.atmosphere, src.atmosphere);
+  Object.assign(out.shadows, src.shadows);
+  const dof = out.post.dof;
+  Object.assign(out.post, src.post);
+  out.post.dof = Object.assign(dof, src.post.dof);
+  return out;
+}
+
 /** Key light never drops below this elevation (deg): grazing suns smear shadows across the whole map. */
 const MIN_KEY_ELEVATION_DEG = 3;
 /** Sun -> moon key-light hand-over (solar elevation, deg). */
@@ -124,6 +143,8 @@ export class EnvironmentRig {
   private dirtHandle: { texture: THREE.Texture; release(): void } | null = null;
   private dirtRequested = false;
   private disposed = false;
+  /** IBL calibration for a source irradiance under the current lighting (bound once: no per-frame closure). */
+  private readonly calibrate = (src: number): number => environmentIntensityFor(this.resolved, src);
 
   constructor(
     private readonly ctx: RenderContext,
@@ -445,7 +466,9 @@ export class EnvironmentRig {
       camera.getWorldDirection(this.camDir);
       focusDist = this.camDir.y < -0.05 ? Math.max(4.5, this.camPos.y / -this.camDir.y) : 220;
     }
-    if (this.lookOverride) Object.assign(this.look, this.lookOverride);
+    // A caller's look is copied field by field into the rig's own objects (Object.assign would alias its nested
+    // post / shadows / atmosphere objects, and the next resolveZoomLook would then write into the caller's look).
+    if (this.lookOverride) capZoomLook(copyZoomLookInto(this.look, this.lookOverride), q.tier);
     else capZoomLook(resolveZoomLook(focusDist, this.look), q.tier);
     // Exposure (eased for mood / override changes).
     if (this.easeExposure && Math.abs(this.exposure - this.exposureTarget) > 1e-4) {
@@ -455,7 +478,7 @@ export class EnvironmentRig {
     renderer.toneMappingExposure = this.exposure;
     // IBL: baked sky (fading) or the procedural sky (re-baked when the sun / weather moved).
     const r = this.resolved;
-    const baked = this.sky.updateBaked(renderer, step, (src) => environmentIntensityFor(r, src));
+    const baked = this.sky.updateBaked(renderer, step, this.calibrate);
     if (baked) {
       this.scene.environment = baked.envMap;
       this.sourceIrradiance = baked.sourceIrradiance;
@@ -485,8 +508,15 @@ export class EnvironmentRig {
     a.windSpeed = this.env?.weather.windSpeed ?? 2;
     a.time = this.time;
     a.cameraY = this.camPos.y;
-    a.horizonRaw = this.sky.horizonValid && !this.sky.bakedActive ? this.sky.horizonRaw : null;
-    a.calibration = environmentIntensityFor(r, this.sky.sourceIrradiance || 1);
+    // Horizon ring (aerial perspective + map-edge fade target): the baked sky's own ring when one is active (sampled
+    // from its EXR, calibrated like the dome), else the procedural readback.
+    if (this.sky.bakedActive) {
+      a.horizonRaw = this.sky.bakedHorizonValid ? this.sky.bakedHorizonRaw : null;
+      a.calibration = environmentIntensityFor(r, this.sky.bakedSourceIrradiance || 1);
+    } else {
+      a.horizonRaw = this.sky.horizonValid ? this.sky.horizonRaw : null;
+      a.calibration = environmentIntensityFor(r, this.sky.sourceIrradiance || 1);
+    }
     a.skyMultiplier = this.flash;
     writeAtmosphere(r, a);
     this.fog.density = r.fogDensity * EXP2_DENSITY_SCALE * this.look.atmosphere.fogDensityScale;
