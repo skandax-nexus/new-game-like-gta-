@@ -10,7 +10,7 @@ import type { ArmyStance, WorldState } from '../../../core/types';
 import { UNITS } from '../../../data/units';
 import { RESOURCE_KIND_FEEDS } from '../../../data/resources';
 import { armySupplyView, commandReason } from '../../../sim/strategic/selectors';
-import { append, clear, fmtDays, fmtInt, fmtPct, h, label, setClass, setHidden, setText, syncList } from '../../dom';
+import { append, clear, fmtDays, fmtInt, fmtPct, h, label, setAttr, setClass, setHidden, setText, syncList } from '../../dom';
 import type { Screen, UIManager } from '../../ui';
 import { icon, unitIcon } from '../../components/icons';
 import { factionChip, meter, panelFrame, portrait, section, setFactionChip, statCell } from '../../components/widgets';
@@ -22,9 +22,9 @@ const STANCES: readonly { id: ArmyStance; label: string; icon: string }[] = [
   { id: 'cautious', label: 'Wary', icon: 'a_stance_cautious' },
 ];
 
-function chevrons(exp: number): string {
-  const n = exp >= 0.75 ? 3 : exp >= 0.45 ? 2 : exp >= 0.2 ? 1 : 0;
-  return '^'.repeat(n);
+/** Experience rank 0..3 (drawn as stacked chevron icons by CSS from data-rank, like the battle cards). */
+function chevronRank(exp: number): number {
+  return exp >= 0.75 ? 3 : exp >= 0.45 ? 2 : exp >= 0.2 ? 1 : 0;
 }
 
 export function armyPanel(ctx: AppContext, ui: UIManager): Screen<'army_panel'> {
@@ -120,7 +120,7 @@ export function armyPanel(ctx: AppContext, ui: UIManager): Screen<'army_panel'> 
           'button',
           { class: 'ap-unit', type: 'button', 'aria-pressed': 'false' },
           icon(unitIcon(u.unitClass)),
-          h('div', { class: 'ap-unit-main' }, h('div', { class: 'ap-unit-line' }, h('span', { class: 'ap-unit-name' }), h('span', { class: 'ap-unit-n' }), h('span', { class: 'ap-chev' })), str.el, mor.el),
+          h('div', { class: 'ap-unit-main' }, h('div', { class: 'ap-unit-line' }, h('span', { class: 'ap-unit-name' }), h('span', { class: 'ap-unit-n' }), h('span', { class: 'ap-chev', role: 'img', dataset: { rank: '0' } }, icon('chevron_up'), icon('chevron_up'), icon('chevron_up'))), str.el, mor.el),
         );
         (row as unknown as { __m: [typeof str, typeof mor] }).__m = [str, mor];
         row.addEventListener('click', () => {
@@ -136,7 +136,10 @@ export function armyPanel(ctx: AppContext, ui: UIManager): Screen<'army_panel'> 
         const [str, mor] = (row as unknown as { __m: [ReturnType<typeof meter>, ReturnType<typeof meter>] }).__m;
         setText(row.querySelector('.ap-unit-name')!, UNITS[u.unitClass].name);
         setText(row.querySelector('.ap-unit-n')!, `${fmtInt(u.soldiers)} / ${fmtInt(u.maxSoldiers)}`);
-        setText(row.querySelector('.ap-chev')!, chevrons(u.experience));
+        const chev = row.querySelector('.ap-chev')!;
+        const rank = chevronRank(u.experience);
+        setAttr(chev, 'data-rank', String(rank));
+        setAttr(chev, 'aria-label', rank ? `Experience ${rank} of 3` : null);
         str.set(u.soldiers / Math.max(1, u.maxSoldiers));
         mor.set(u.morale / 100, { warn: u.morale < 40 });
         setClass(row, 'selected', splitSel.has(u.id));

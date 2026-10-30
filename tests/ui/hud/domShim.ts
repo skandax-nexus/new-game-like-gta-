@@ -310,6 +310,9 @@ export function installDom(): { document: { body: ShimElement }; uninstall: () =
     createTextNode: (s: string) => new ShimText(s),
     querySelector: (s: string) => documentElement.querySelector(s),
     querySelectorAll: (s: string) => documentElement.querySelectorAll(s),
+    // document-level listeners (tooltip service): the shim keeps them on <html>, one step below window.
+    addEventListener: (t: string, fn: Listener, o?: boolean | { capture?: boolean }) => documentElement.addEventListener(t, fn, o),
+    removeEventListener: (t: string, fn: Listener, o?: boolean | { capture?: boolean }) => documentElement.removeEventListener(t, fn, o),
   };
   const win = new ShimElement('window');
   // window is the root of the event path (capture listeners on window run first, bubble listeners last).

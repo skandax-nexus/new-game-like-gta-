@@ -193,7 +193,16 @@ function agePanel(ctx: AppContext, ui: UIManager): Screen<'age_panel'> {
       for (const it of av.checklist.items) {
         const pct = it.id === 'legitimacy' || it.id === 'stability';
         const fmt = (v: number): string => (pct ? `${Math.round(v * 100)}%` : it.id === 'previous' ? '' : fmtInt(v));
-        checklist.append(h('li', { class: it.met ? 'done met' : 'unmet' }, h('span', null, it.label), it.id === 'previous' ? null : h('span', { class: it.met ? 'positive req-v' : 'danger req-v' }, ` ${fmt(it.current)} / ${fmt(it.required)}`)));
+        // Met / unmet carry a check / cross icon too: colour is never the only signal (ART_BIBLE §11.6).
+        checklist.append(
+          h(
+            'li',
+            { class: it.met ? 'done met' : 'unmet', 'aria-label': `${it.label}: ${it.met ? 'met' : 'not met'}` },
+            icon(it.met ? 'check' : 'cross', `req-mark ${it.met ? 'positive' : 'danger'}`),
+            h('span', { class: 'req-label' }, it.label),
+            it.id === 'previous' ? null : h('span', { class: it.met ? 'positive req-v' : 'danger req-v' }, ` ${fmt(it.current)} / ${fmt(it.required)}`),
+          ),
+        );
       }
       setHidden(reqSection, !next);
       clear(cards);

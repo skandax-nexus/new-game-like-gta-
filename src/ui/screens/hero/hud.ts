@@ -91,11 +91,14 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
   let sx = 0;
   let sy = 0;
   let running = false;
+  // Stick geometry is read once per touch (pointerdown), not on every move: no forced layout while dragging.
+  let stickCx = 0;
+  let stickCy = 0;
+  let stickRad = 1;
   const stickMove = (e: PointerEvent): void => {
-    const r = stick.getBoundingClientRect();
-    const rad = r.width / 2;
-    let dx = (e.clientX - (r.left + rad)) / rad;
-    let dy = (e.clientY - (r.top + rad)) / rad;
+    const rad = stickRad;
+    let dx = (e.clientX - stickCx) / rad;
+    let dy = (e.clientY - stickCy) / rad;
     const len = Math.hypot(dx, dy);
     if (len > 1) ((dx /= len), (dy /= len));
     sx = dx;
@@ -112,6 +115,10 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
   stick.addEventListener('pointerdown', (e) => {
     stickId = e.pointerId;
     stick.setPointerCapture?.(e.pointerId);
+    const r = stick.getBoundingClientRect();
+    stickRad = Math.max(1, r.width / 2);
+    stickCx = r.left + stickRad;
+    stickCy = r.top + stickRad;
     stickMove(e);
   });
   stick.addEventListener('pointermove', (e) => {
@@ -170,6 +177,18 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
 
   const el = h('div', { class: 'screen-hero-hud hud-root' }, h('div', { class: 'hh-top passive' }, objBox, compass, leave), keysHint, prompt, caption, vitals, boss, touch, slowmo, flash);
 
+  const placeEnemy = (node: HTMLElement, e: HeroEnemyBar): void => {
+    setStyle(node, 'transform', `translate(${Math.round(e.x)}px, ${Math.round(e.y)}px) translate(-50%, -100%) scale(${(ui.scale || 1).toFixed(2)})`);
+  };
+  const placeReticle = (c: HeroCombatHud): void => {
+    if (c.lockOn) setStyle(reticle, 'transform', `translate(${Math.round(c.lockOn.x)}px, ${Math.round(c.lockOn.y)}px) translate(-50%, -50%) scale(${(ui.scale || 1).toFixed(2)})`);
+  };
+  const placePrompt = (p: ScreenPropsMap['hero_hud']): void => {
+    const a = p.promptAnchor;
+    setClass(prompt, 'anchored', !!a);
+    if (a) setStyle(prompt, 'transform', `translate(${Math.round(a.x / (ui.scale || 1))}px, ${Math.round(a.y / (ui.scale || 1))}px) translate(-50%, -120%)`);
+    else setStyle(prompt, 'transform', '');
+  };
   const renderEnemies = (enemies: readonly HeroEnemyBar[]): void => {
     const own = enemies.filter((e) => !e.boss && e.visible);
     syncList(
@@ -190,7 +209,7 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
         v.hp.set(e.hp / Math.max(1, e.hpMax));
         v.poise.set(e.poise / Math.max(1, e.poiseMax));
         setClass(node, 'unblockable', e.unblockable);
-        setStyle(node, 'transform', `translate(${Math.round(e.x)}px, ${Math.round(e.y)}px) translate(-50%, -100%) scale(${(ui.scale || 1).toFixed(2)})`);
+        placeEnemy(node, e);
       },
     );
     if (!anchorLayer.contains(reticle)) anchorLayer.append(reticle);
@@ -229,7 +248,7 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
     }
     renderEnemies(c.enemies);
     setHidden(reticle, !c.lockOn);
-    if (c.lockOn) setStyle(reticle, 'transform', `translate(${Math.round(c.lockOn.x)}px, ${Math.round(c.lockOn.y)}px) translate(-50%, -50%) scale(${(ui.scale || 1).toFixed(2)})`);
+    placeReticle(c);
     const unblock = c.enemies.some((e) => e.unblockable && e.visible);
     setHidden(flash, !unblock);
     if (unblock && !unblockSent) {
@@ -259,10 +278,7 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
         const key = hotkeyLabel(ctx.input.preset, { context: 'hero' }, 'hero_interact', ctx.settings.keybindings);
         setText(promptKey, ctx.input.touchMode ? 'Tap' : key || 'E');
         setText(promptText, p.prompt.replace(/\s*\(E\)$/, ''));
-        const a = p.promptAnchor;
-        setClass(prompt, 'anchored', !!a);
-        if (a) setStyle(prompt, 'transform', `translate(${Math.round(a.x / (ui.scale || 1))}px, ${Math.round(a.y / (ui.scale || 1))}px) translate(-50%, -120%)`);
-        else setStyle(prompt, 'transform', '');
+        placePrompt(p);
       }
       // Captions
       setHidden(caption, !p.caption);
@@ -283,6 +299,18 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
       setHidden(lookHint, tc === 'none');
       setClass(el, 'in-combat', !!combat);
       void props;
+    },
+    track(p) {
+      // Between throttled renders: enemy bars, the lock-on reticle and the prompt bubble follow the camera.
+      if (p.prompt) placePrompt(p);
+      const c = p.combat;
+      if (!c) return;
+      placeReticle(c);
+      for (let i = 0; i < c.enemies.length; i++) {
+        const e = c.enemies[i]!;
+        const v = enemyViews.get(e.id);
+        if (v && e.visible && !e.boss) placeEnemy(v.el, e);
+      }
     },
     dispose() {
       anchorLayer.remove();

@@ -3615,3 +3615,124 @@
   width: 36px;
   height: 36px;
 }
+
+/* ------------------------------------------------------------------ Lead UI/UX review (UI-02 round 1) */
+/* Experience chevrons: up to three stacked chevron icons (data-rank 0..3) instead of '^' text. */
+.fc-chev,
+.ap-chev {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 0;
+  letter-spacing: 0;
+}
+.fc-chev > .icon,
+.ap-chev > .icon {
+  width: 10px;
+  height: 10px;
+  color: var(--c-gold);
+}
+/* The chevron fills the middle 40% of its 24-unit box: overlap the boxes so the stack stays one text line tall. */
+.fc-chev > .icon + .icon,
+.ap-chev > .icon + .icon {
+  margin-top: -6px;
+}
+.fc-chev[data-rank='0'] > .icon,
+.fc-chev[data-rank='1'] > .icon:nth-child(n + 2),
+.fc-chev[data-rank='2'] > .icon:nth-child(n + 3),
+.ap-chev[data-rank='0'] > .icon,
+.ap-chev[data-rank='1'] > .icon:nth-child(n + 2),
+.ap-chev[data-rank='2'] > .icon:nth-child(n + 3) {
+  display: none;
+}
+/* Morale line of a formation card: lotus icon + number + dominant cause (no "Morale" word, so the cause fits). */
+.fc-morale {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+.fc-morale > .icon {
+  width: 11px;
+  height: 11px;
+  color: var(--meter-morale, var(--ui-info));
+}
+/* Ages: requirement rows carry a check / cross icon instead of the lotus bullet (colour is not the only signal). */
+.age-checklist > li {
+  padding-left: 0;
+  align-items: center;
+}
+.age-checklist > li::before {
+  display: none;
+}
+.age-checklist .req-mark {
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+}
+.age-checklist .req-label {
+  flex: 1;
+}
+/* Touch phones (portrait too, like landscape): no keyboard chips in the command-card corners. */
+:root[data-layout='phone'][data-touch='1'] .btn.slot > .kbd {
+  display: none;
+}
+/* Hero, portrait phones: vitals sit under the compass band instead of over it; the boss bar under the vitals. */
+:root[data-layout='phone'] .hh-vitals {
+  top: calc(var(--safe-top) + 126px);
+}
+:root[data-layout='phone'] .hh-boss {
+  top: calc(var(--safe-top) + 210px);
+}
+/*
+ * Battle HUD on PC (AoE IV layout): minimap bottom-left, formation cards bottom-centre, command card bottom-right,
+ * Rally in the corner beside it. The cards strip no longer floats mid-screen above the card: the centre of the
+ * battlefield stays clear and the HUD is one bottom band.
+ */
+:root[data-layout='pc'] .bh-bottom {
+  left: calc(max(8px, var(--safe-left)) + 244px);
+  right: calc(max(8px, var(--safe-right)) + 84px);
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 8px;
+}
+:root[data-layout='pc'] .bh-strip {
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-content: flex-end;
+  max-height: 196px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  touch-action: pan-y;
+  pointer-events: none;
+}
+:root[data-layout='pc'] .bh-strip > .fcard {
+  pointer-events: auto;
+}
+:root[data-layout='pc'] .bh-card,
+:root[data-layout='pc'] .bh-presets {
+  flex: none;
+}
+:root[data-layout='pc'] .bh-rally {
+  right: max(8px, var(--safe-right));
+  bottom: calc(max(8px, var(--safe-bottom)) + 4px);
+}
+/* Landscape phones: card tab labels in the narrower body face so "Economy" / "Military" fit their 52 px tabs. */
+:root[data-layout='phone-landscape'] .command-card .tabs .btn.tab {
+  font-family: var(--font-body);
+  font-weight: var(--weight-strong);
+  letter-spacing: 0;
+}
+/* Phones: the battle results' Continue / Return row stays pinned to the bottom of the scrolling modal (landscape
+   showed it below the fold at 844 x 390). */
+:root[data-layout='phone'] .battle-results .br-buttons,
+:root[data-layout='phone-landscape'] .battle-results .br-buttons {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin: 0 calc(-1 * var(--panel-pad, 12px));
+  padding: 8px var(--panel-pad, 12px) calc(8px + var(--safe-bottom));
+  background: linear-gradient(180deg, rgba(27, 24, 48, 0) 0%, var(--c-lacquer) 28%);
+}

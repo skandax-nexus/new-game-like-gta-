@@ -4,7 +4,10 @@
  * tooltips and the UI + input CPU budget. OWNER: UI Engineer - In-game HUD, Command Card, Minimap & Input (UI-02).
  *
  * Scenes push state with `ui.show(id, props)` / `ui.update(id, props)`; updates are diffed by the screens and
- * throttled here (HUD screens <= 10 Hz, panels <= 5 Hz; the latest props always win). Screens act through
+ * throttled here (HUD screens <= 10 Hz, panels <= 5 Hz; the latest props always win). Between full renders,
+ * `Screen.track(props)` moves screen-anchored elements on every push (scenes push anchors every frame). While a
+ * pointer is pressed inside a screen its re-renders wait for the release (a rebuild under a press would swallow the
+ * click), and keyboard focus survives re-renders that rebuild DOM. Screens act through
  * `ctx.actions.*` (GameActions), input actions (`ctx.input.injectAction`), `ui:*` bus events or `ui.commands`
  * (HUD -> scene requests such as building placement, ui/services/hudCommands.ts).
  *
@@ -32,6 +35,12 @@ export interface Screen<K extends ScreenId = ScreenId> {
   readonly layer: UILayer;
   readonly el: HTMLElement;
   update(props: ScreenPropsMap[K]): void;
+  /**
+   * Optional: position screen-anchored elements (floating formation cards, enemy bars, lock-on reticle, prompt
+   * bubble) from a props push that the throttle defers. Called on every push between full renders, so anchors follow
+   * the camera at frame rate when the scene pushes every frame; must only write transforms of existing nodes.
+   */
+  track?(props: ScreenPropsMap[K]): void;
   dispose?(): void;
 }
 
@@ -56,6 +65,30 @@ export function layoutFor(width: number, height: number, coarse: boolean): Layou
 
 const HUD_INTERVAL_MS = 100;
 const PANEL_INTERVAL_MS = 200;
+/** A press inside a screen defers its re-renders until release (at most this long, e.g. a lost pointerup). */
+const PRESS_HOLD_MAX_MS = 4000;
+
+/** Child-index path of `node` inside `root` (focus restore across a screen re-render). */
+function nodePath(root: Element, node: Element): number[] | null {
+  const path: number[] = [];
+  let n: Element | null = node;
+  while (n && n !== root) {
+    const p: Element | null = n.parentElement;
+    if (!p) return null;
+    path.push(Array.prototype.indexOf.call(p.children, n) as number);
+    n = p;
+  }
+  return n === root ? path.reverse() : null;
+}
+
+function nodeAt(root: Element, path: readonly number[]): HTMLElement | null {
+  let n: Element | undefined = root;
+  for (const i of path) {
+    n = n?.children[i];
+    if (!n) return null;
+  }
+  return n instanceof HTMLElement ? n : null;
+}
 
 export class UIManager {
   private readonly layers: Record<UILayer | 'anchors' | 'toast' | 'tooltip' | 'loading', HTMLElement>;
@@ -65,6 +98,8 @@ export class UIManager {
   private readonly lastUpdate = new Map<ScreenId, number>();
   private readonly timers = new Map<ScreenId, ReturnType<typeof setTimeout>>();
   private readonly patches = new Map<ScreenId, Record<string, unknown>>();
+  /** Screens with a pointer pressed inside them (their re-renders wait for the release, so no click is lost). */
+  private readonly pressed = new Map<ScreenId, number>();
   private ctx: AppContext | null = null;
   private loadingEl: HTMLElement | null = null;
   private loadingBar: HTMLElement | null = null;
@@ -108,8 +143,44 @@ export class UIManager {
     if (typeof window !== 'undefined') {
       window.addEventListener('resize', this.onResize);
       window.addEventListener('orientationchange', this.onResize);
+      // Capture phase: screens shield() their pointer events from window bubble listeners.
+      window.addEventListener('pointerup', this.onRelease, true);
+      window.addEventListener('pointercancel', this.onRelease, true);
+      window.addEventListener('blur', this.onRelease);
       this.onResize();
     }
+  }
+
+  /**
+   * Pointer released anywhere: screens pressed until now render their deferred props after the click that follows
+   * this pointerup has been dispatched (a rebuild between pointerdown and click would swallow the click).
+   */
+  private readonly onRelease = (): void => {
+    if (this.pressed.size === 0) return;
+    const ids = [...this.pressed.keys()];
+    this.pressed.clear();
+    setTimeout(() => {
+      for (const id of ids) this.flushPending(id);
+    }, 0);
+  };
+
+  private isPressed(id: ScreenId): boolean {
+    const t = this.pressed.get(id);
+    if (t === undefined) return false;
+    if (uiClock.now() - t <= PRESS_HOLD_MAX_MS) return true;
+    this.pressed.delete(id);
+    return false;
+  }
+
+  private flushPending(id: ScreenId): void {
+    const p = this.pending.get(id);
+    const s = this.screens.get(id);
+    if (p === undefined || !s || this.timers.has(id) || this.isPressed(id)) return;
+    this.pending.delete(id);
+    if (s.el.classList.contains('ui-hidden')) return;
+    const t0 = performance.now();
+    this.render(id, s, p as never);
+    this.uiMs += performance.now() - t0;
   }
 
   /** Late binding (the context is created after the UI): datasets, key preset override, services, profiler hook. */
@@ -202,6 +273,7 @@ export class UIManager {
       if (!factory || !this.ctx) throw new Error(`No screen factory for ${id}`);
       s = factory(this.ctx, this);
       shield(s.el);
+      s.el.addEventListener('pointerdown', () => this.pressed.set(id, uiClock.now()));
       this.screens.set(id, s as unknown as Screen);
       this.layers[s.layer].appendChild(s.el);
     }
@@ -222,24 +294,24 @@ export class UIManager {
     const now = uiClock.now();
     const minMs = s.layer === 'hud' ? HUD_INTERVAL_MS : PANEL_INTERVAL_MS;
     const last = this.lastUpdate.get(id) ?? 0;
-    if (now - last < minMs) {
+    const held = this.isPressed(id);
+    if (held || now - last < minMs) {
+      // Anchored elements follow every push (frame rate); the full render waits for the throttle / the release.
+      if (s.track) {
+        const patch = this.patches.get(id);
+        s.track(patch ? ({ ...(props as object), ...patch } as ScreenPropsMap[K]) : props);
+      }
       this.pending.set(id, props);
-      if (!this.timers.has(id)) {
+      if (!held && !this.timers.has(id)) {
         this.timers.set(
           id,
           setTimeout(() => {
             this.timers.delete(id);
-            const p = this.pending.get(id);
-            this.pending.delete(id);
-            const sc = this.screens.get(id);
-            if (p !== undefined && sc && !sc.el.classList.contains('ui-hidden')) {
-              const t0 = performance.now();
-              this.render(id, sc, p as ScreenPropsMap[K]);
-              this.uiMs += performance.now() - t0;
-            }
+            this.flushPending(id);
           }, minMs - (now - last)),
         );
       }
+      this.uiMs += performance.now() - t0;
       return;
     }
     this.render(id, s, props);
@@ -250,7 +322,11 @@ export class UIManager {
     this.lastUpdate.set(id, uiClock.now());
     this.lastProps.set(id, props);
     const patch = this.patches.get(id);
+    // Screens that rebuild parts of their DOM would drop keyboard focus: restore it on the node at the same place.
+    const active = typeof document !== 'undefined' ? document.activeElement : null;
+    const path = active && active !== s.el && s.el.contains(active) ? nodePath(s.el, active) : null;
     s.update(patch ? ({ ...(props as object), ...patch } as ScreenPropsMap[K]) : props);
+    if (path && !(document.activeElement && s.el.contains(document.activeElement))) nodeAt(s.el, path)?.focus({ preventScroll: true });
   }
 
   private clearPending(id: ScreenId): void {
@@ -296,6 +372,7 @@ export class UIManager {
   destroy(id: ScreenId): void {
     const s = this.screens.get(id);
     this.clearPending(id);
+    this.pressed.delete(id);
     if (!s) return;
     s.dispose?.();
     s.el.remove();
@@ -428,6 +505,9 @@ export class UIManager {
     if (typeof window !== 'undefined') {
       window.removeEventListener('resize', this.onResize);
       window.removeEventListener('orientationchange', this.onResize);
+      window.removeEventListener('pointerup', this.onRelease, true);
+      window.removeEventListener('pointercancel', this.onRelease, true);
+      window.removeEventListener('blur', this.onRelease);
     }
     this.hideAll();
     this.root.innerHTML = '';

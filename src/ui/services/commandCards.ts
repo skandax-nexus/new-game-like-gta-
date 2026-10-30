@@ -28,7 +28,7 @@ import { BUILDING_TYPES, UNIT_CLASSES } from '../../core/types';
 import type { ScreenId } from '../../app/contracts';
 import { BUILDINGS } from '../../data/buildings';
 import { UNITS } from '../../data/units';
-import { buildOptions, commandReason, recruitOptions } from '../../sim/strategic/selectors';
+import { buildOptions, commandReason, recruitOptions, type BuildOption } from '../../sim/strategic/selectors';
 import { canCharge, isMounted } from '../../sim/tactical/stats';
 import { CARD_SLOT_ACTIONS, hotkeyLabel, type BindingMap, type BindingScope } from '../../input/bindings';
 import type { ArmyTargetOrder, HudCommand } from './hudCommands';
@@ -154,6 +154,29 @@ export function buildingIcon(b: BuildingType): string {
   return `b_${b}`;
 }
 
+const buildOptsCache = new WeakMap<object, { key: string; opts: BuildOption[] }>();
+
+/**
+ * buildOptions (SIM-01) runs a placement search per building type (6-17 ms measured). The card refreshes up to twice
+ * a second while the game runs, so its options are memoized per world on everything validateBuild reads: settlement
+ * (owner, kind, radius, building and construction cells), faction age, treasury and materials, and the sim day as a
+ * staleness bound. Any command that changes one of them recomputes at the next refresh. (SIM-01 is asked to cache
+ * the placement search itself; this keeps the HUD from re-running it while nothing it depends on moved.)
+ */
+function cachedBuildOptions(w: WorldState, factionId: FactionId, settlementId: string): BuildOption[] {
+  const s = w.settlements[settlementId];
+  const f = w.factions[factionId];
+  if (!s || !f) return buildOptions(w, factionId, settlementId);
+  let key = `${settlementId}|${factionId}|${Math.floor(w.calendar.totalHours / 24)}|${s.ownerFactionId}|${s.kind}|${s.radius}|${f.age}|${f.treasury}|${f.materials.timber}|${f.materials.stone}`;
+  for (const b of s.buildings) key += `|${b.type}:${b.level}@${b.cell ? `${b.cell[0]},${b.cell[1]}` : ''}r${b.rot ?? ''}`;
+  for (const j of s.construction) key += `|+${j.type}:${j.targetLevel}${j.landmarkId ?? ''}@${j.cell ? `${j.cell[0]},${j.cell[1]}` : ''}r${j.rot ?? ''}`;
+  const hit = buildOptsCache.get(w);
+  if (hit && hit.key === key) return hit.opts;
+  const opts = buildOptions(w, factionId, settlementId);
+  buildOptsCache.set(w, { key, opts });
+  return opts;
+}
+
 /** Settlement command card. Player-owned settlements get the five tabs; others show an empty, explained card. */
 export function settlementCard(world: Readonly<WorldState>, settlementId: string, tab: string, ctx: CardContext): CardModel {
   const w = world as WorldState;
@@ -204,7 +227,7 @@ export function settlementCard(world: Readonly<WorldState>, settlementId: string
     model.slots[14] = rp;
     return model;
   }
-  const opts = buildOptions(w, factionId, settlementId);
+  const opts = cachedBuildOptions(w, factionId, settlementId);
   const f = w.factions[factionId];
   for (const b of BUILDING_TYPES) {
     const def = BUILDINGS[b];

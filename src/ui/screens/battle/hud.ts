@@ -187,10 +187,11 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
       cause: h('span', { class: 'fc-cause' }),
       fatigue: h('span', { class: 'fc-fatigue' }),
       ammo: pips(5, 'ammo-pips'),
-      chev: h('span', { class: 'fc-chev' }),
+      // Experience: up to three stacked chevrons (data-rank 0..3), drawn by CSS from the chevron icon.
+      chev: h('span', { class: 'fc-chev', role: 'img', dataset: { rank: '0' } }, icon('chevron_up'), icon('chevron_up'), icon('chevron_up')),
       order: h('span', { class: 'fc-order' }),
     };
-    append(v.el, h('div', { class: 'fc-head' }, v.icon, v.name, v.count), v.str.el, v.mor.el, h('div', { class: 'fc-line' }, v.cause, v.chev), h('div', { class: 'fc-line' }, v.fatigue, v.ammo.el), v.order);
+    append(v.el, h('div', { class: 'fc-head' }, v.icon, v.name, v.count), v.str.el, v.mor.el, h('div', { class: 'fc-line' }, h('span', { class: 'fc-morale' }, icon('lotus'), v.cause), v.chev), h('div', { class: 'fc-line' }, v.fatigue, v.ammo.el), v.order);
     v.el.addEventListener('click', (e) => {
       const now = performance.now();
       const dbl = now - (lastClick.get(f.index) ?? 0) < 320;
@@ -434,8 +435,15 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
   minimap.setCollapsed(ui.layout !== 'pc');
   ctx.input.setCardPage(0);
 
+  /** Move a floating card to its anchor (transform only: runs on every push, see track()). */
+  const placeFloat = (v: FloatView, a: FormationScreenAnchor): void => {
+    const s = Math.max(0.6, Math.min(1.2, a.scale)) * (ui.scale || 1);
+    setStyle(v.el, 'transform', `translate(${Math.round(a.x)}px, ${Math.round(a.y)}px) translate(-50%, -100%) scale(${s.toFixed(2)})`);
+  };
+  const seenFloats = new Set<number>();
   const renderFloats = (anchors: readonly FormationScreenAnchor[] | undefined, b: Readonly<BattleState>, ps: SideIndex, sel: ReadonlySet<number>): void => {
-    const seen = new Set<number>();
+    const seen = seenFloats;
+    seen.clear();
     for (const a of anchors ?? []) {
       const f = b.formations[a.index];
       if (!f || !a.visible || f.soldiers <= 0) continue;
@@ -457,8 +465,7 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
       setText(v.name, selected ? `${f.name} · ${fmtInt(f.soldiers)}` : '');
       v.str.set(f.soldiers / Math.max(1, f.maxSoldiers));
       v.mor.set(f.morale / 100, { warn: f.morale < 40 });
-      const s = Math.max(0.6, Math.min(1.2, a.scale)) * (ui.scale || 1);
-      setStyle(v.el, 'transform', `translate(${Math.round(a.x)}px, ${Math.round(a.y)}px) translate(-50%, -100%) scale(${s.toFixed(2)})`);
+      placeFloat(v, a);
       setHidden(v.el, false);
     }
     for (const [i, v] of floats) if (!seen.has(i)) setHidden(v.el, true);
@@ -517,7 +524,9 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
         v.str.set(f.soldiers / Math.max(1, f.maxSoldiers));
         v.mor.set(f.morale / 100, { warn: f.morale < 40 });
         const cause = moraleCause(f, b.time);
-        setText(v.cause, `Morale ${Math.round(f.morale)}${cause ? ` - ${cause}` : ''}`);
+        // The lotus icon names the number (morale) so the dominant cause fits the card instead of an ellipsis.
+        setText(v.cause, `${Math.round(f.morale)}${cause ? ` · ${cause}` : ''}`);
+        setAttr(v.cause, 'title', `Morale ${Math.round(f.morale)}${cause ? ` - ${cause}` : ''}`);
         const tier = fatigueTier(f.fatigue);
         setText(v.fatigue, label(tier));
         setClass(v.fatigue, 'warning', tier === 'tired' || tier === 'exhausted');
@@ -525,7 +534,9 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
         setHidden(v.ammo.el, stats.ammo <= 0);
         if (stats.ammo > 0) v.ammo.set(Math.ceil((f.ammo / stats.ammo) * 5), 5);
         const exp = f.experience;
-        setText(v.chev, exp >= 0.75 ? '^^^' : exp >= 0.45 ? '^^' : exp >= 0.2 ? '^' : '');
+        const ranks = exp >= 0.75 ? 3 : exp >= 0.45 ? 2 : exp >= 0.2 ? 1 : 0;
+        setAttr(v.chev, 'data-rank', String(ranks));
+        setAttr(v.chev, 'aria-label', ranks ? `Experience ${ranks} of 3` : null);
         setText(v.order, orderLabel(f));
         setClass(node, 'selected', sel.has(f.index));
         setClass(node, 'routing', f.activity === 'routing');
@@ -546,6 +557,16 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
       renderMode();
       minimap.setBattle(b, ps, p.selection, ui.feeds);
       renderFloats(p.anchors, b, ps, sel);
+    },
+    track(p) {
+      // Between throttled renders: floating cards follow the camera (GP-04 pushes anchors every frame).
+      const anchors = p.anchors;
+      if (!anchors) return;
+      for (let i = 0; i < anchors.length; i++) {
+        const a = anchors[i]!;
+        const v = floats.get(a.index);
+        if (v && a.visible) placeFloat(v, a);
+      }
     },
     dispose() {
       clearInterval(feedTimer);
