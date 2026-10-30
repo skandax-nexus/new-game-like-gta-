@@ -384,28 +384,35 @@ def flat_tops(v: np.ndarray, thresholds: Sequence[float] = (0.15, 0.3), min_px: 
     return worst, what
 
 
-def straight_top_edge(v: np.ndarray, edge: float = 0.05, lit: float = 0.2, wobble: int = 1) -> tuple[float, str]:
-    """Longest horizontal TOP edge of an emissive shape in one frame's intensity image `v` (encoded [0, 1], row 0 =
-    top): pixels where v rises by more than `edge` from the pixel above into an emitting pixel (> `lit`), collected
-    along each row (+-`wobble` rows) into runs of adjacent columns. Flame tongues have curved / slanted edges (short
-    runs); a flat-topped glowing block (the fuel-bed rim lobe, Art Director TA-07 R2-B2a) has one long run.
-    Returns (longest run as a fraction of the frame width, description)."""
-    up = np.zeros_like(v, dtype=bool)
-    up[:-1] = ((v[1:] - v[:-1]) > edge) & (v[1:] > lit)
-    band = up.copy()
-    for d in range(1, wobble + 1):
-        band[:-d] |= up[d:]
-        band[d:] |= up[:-d]
-    best, where = 0, "none"
-    for r in range(band.shape[0]):
-        row = band[r]
-        if not row.any():
+def straight_top_edge(v: np.ndarray, thr: float = 0.2, spread: float = 1.0, min_px: int = 12,
+                      detached_only: bool = False) -> tuple[float, str]:
+    """Longest FLAT top edge of an emissive shape in one frame's intensity image `v` (encoded [0, 1], row 0 = top), as
+    a fraction of the frame width (Art Director TA-07 R2-B2a: a flat-topped glowing block, target <= 10 %).
+    For each region of v > thr (4-connected, >= min_px) and each of its columns, the top edge is located at sub-pixel
+    precision (where v crosses thr between the first covered pixel and the one above it); the longest run of adjacent
+    columns whose top positions stay within `spread` px of each other is the flat top. A rounded crest of radius R px
+    stays within 1 px only over ~2 sqrt(2R) columns (a 30 px dome: ~15 px); a block's top stays flat over its whole
+    width. `detached_only` skips the largest region (the flame body). Returns (fraction, description)."""
+    regs = regions(v > thr)
+    best, where = 0.0, "none"
+    for k, pix in enumerate(regs):
+        if (detached_only and k == 0) or len(pix) < min_px:
             continue
-        x = np.concatenate([[0], row.astype(np.int8), [0]])
-        starts = np.nonzero(np.diff(x) == 1)[0]
-        ends = np.nonzero(np.diff(x) == -1)[0]
-        k = int(np.argmax(ends - starts))
-        if ends[k] - starts[k] > best:
-            best = int(ends[k] - starts[k])
-            where = f"row {r}, cols {int(starts[k])}-{int(ends[k]) - 1}"
-    return best / v.shape[1], where
+        cols = np.unique(pix[:, 1])
+        tops = []
+        for c in cols:
+            r = int(pix[pix[:, 1] == c, 0].min())
+            a, b = (float(v[r - 1, c]) if r > 0 else 0.0), float(v[r, c])
+            tops.append(r - (b - thr) / max(b - a, 1e-6))  # sub-pixel crossing between rows r - 1 and r
+        tops = np.array(tops)
+        i0 = 0
+        for i in range(len(cols)):
+            if i > 0 and cols[i] != cols[i - 1] + 1:
+                i0 = i
+            while tops[i0:i + 1].max() - tops[i0:i + 1].min() > spread:
+                i0 += 1
+            run = i - i0 + 1
+            if run / v.shape[1] > best:
+                best = run / v.shape[1]
+                where = f"region {k} ({len(pix)} px), top row ~{tops[i0:i + 1].mean():.1f}, cols {int(cols[i0])}-{int(cols[i])}"
+    return best, where
