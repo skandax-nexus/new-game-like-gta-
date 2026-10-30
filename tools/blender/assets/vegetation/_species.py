@@ -262,7 +262,8 @@ class TreeSpec:
 
 
 SPECIES: dict[str, TreeSpec] = {}
-PAGES: dict[str, list[str]] = {"a": ["banyan", "peepal", "mango", "neem", "sal", "teak", "palash", "amaltas"]}
+PAGES: dict[str, list[str]] = {"a": ["banyan", "peepal", "mango", "neem", "sal", "teak", "palash", "amaltas"],
+                                "b": ["babul", "bamboo", "palmyra", "date_palm", "coconut", "shrubs", "kash_reeds", "lotus_grass"]}
 WOOD_STD = dict(r_min=(0.03, 0.08, 0.18), step=(0.55, 1.3, 2.8), sides=((0.4, 14), (0.18, 9), (0.07, 6), (0.0, 4)))
 
 
@@ -328,8 +329,8 @@ SPECIES["banyan"] = TreeSpec(
     cards=dict(per_tip=4.0, along=5.0, outward=0.7, jitter_deg=35, droop=0.25, max_radius=0.07),
     wood=dict(r_min=(0.035, 0.09, 0.25), step=(0.6, 1.4, 3.0), sides=((0.6, 16), (0.25, 9), (0.08, 6), (0.0, 4))),
     flutter=0.5,
-    extras=dict(prop_roots=(10, 16), aerial_cards=(70, 22, 8)),
-    variants={"a": {}, "b": dict(scale=0.85, seed_offset=11, prop_roots=(6, 10)),
+    extras=dict(prop_roots=(8, 13), aerial_cards=(70, 22, 8)),
+    variants={"a": {}, "b": dict(scale=0.85, seed_offset=11, prop_roots=(5, 8)),
               "c": dict(scale=0.95, seed_offset=23, platform=True)},
 )
 
@@ -418,11 +419,11 @@ _neem_spray = compound(K.NEEM_LEAFLET, "#517431", rachis_len=0.24, pairs=6, leaf
 SPECIES["neem"] = TreeSpec(
     id="neem", page="a", block=3, bark_set="veg_bark_furrowed",
     regions=flowering_block(_neem_spray, 0.75, bark_region("#5a4a3c", fissure=0.85)),
-    growth=dict(envelope=dict(zc=8.8, rx=6.0, ry=5.8, rz=4.4, flat_bottom=0.08, lobes=7, lobe_size=0.52, lobe_dist=0.55,
-                              lobe_rise=(-0.3, 0.5), top_lobe=1.0),
-                attractors=2800, step=0.45, influence=4.0, kill=0.8, iterations=100, trunk_height=2.6,
-                trunk_lean=(0.3, 0.2), base_radius=0.4, tip_radius=0.008, tropism=(0, 0, 0.15),
-                seeds_on_trunk=(0.55, 1.0), limb_rise=0.35, limb_reach=0.7),
+    growth=dict(envelope=dict(zc=7.6, rx=6.2, ry=6.0, rz=4.4, flat_bottom=0.06, lobes=8, lobe_size=0.5, lobe_dist=0.58,
+                              lobe_rise=(-0.35, 0.45), top_lobe=0.95),
+                attractors=3200, step=0.42, influence=4.0, kill=0.8, iterations=110, trunk_height=2.2,
+                trunk_lean=(0.3, 0.2), base_radius=0.48, tip_radius=0.008, tropism=(0, 0, 0.12),
+                seeds_on_trunk=(0.4, 1.0), limb_rise=0.22, limb_reach=0.72),
     cards=dict(per_tip=3.5, along=4.5, outward=0.6, jitter_deg=35, droop=0.2, max_radius=0.05),
     wood=dict(r_min=(0.025, 0.06, 0.14), step=(0.45, 1.0, 2.0), sides=((0.3, 12), (0.12, 8), (0.05, 6), (0.0, 4))),
     flutter=0.7,
@@ -438,7 +439,7 @@ SPECIES["sal"] = TreeSpec(
     regions=flowering_block(_sal_spray, 1.1, bark_region("#4f4033", fissure=0.9)),
     growth=dict(envelope=dict(zc=23.0, rx=5.2, ry=5.0, rz=5.5, flat_bottom=0.15, lobes=6, lobe_size=0.55, lobe_dist=0.5,
                               lobe_rise=(-0.4, 0.5), top_lobe=1.1),
-                attractors=2400, step=0.5, influence=4.0, kill=0.85, iterations=100, trunk_height=17.0,
+                attractors=3200, step=0.45, influence=4.0, kill=0.8, iterations=110, trunk_height=17.0,
                 trunk_lean=(0.25, 0.15), trunk_wobble=0.08, base_radius=0.45, tip_radius=0.009, tropism=(0, 0, 0.3),
                 seeds_on_trunk=(0.82, 1.0), limb_rise=0.4, limb_reach=0.65, leader=True),
     cards=dict(per_tip=3.5, along=4.5, outward=0.65, jitter_deg=35, droop=0.2, max_radius=0.05),
@@ -518,4 +519,282 @@ SPECIES["amaltas"] = TreeSpec(
     variants={"a": {}, "b": dict(scale=0.88, seed_offset=53), "c": dict(scale=1.08, seed_offset=59)},
 )
 
-__all__ = ["BOTANY", "PAGES", "SPECIES", "TreeSpec", "bark_swatch", "broadleaf", "compound", "figs"]
+
+# ================================================================================================ page B
+# ---------------------------------------------------------------------------------------------------- babul
+def _babul_spray(cv: Canvas, rng: np.random.Generator, alt: bool) -> None:
+    """Thorn acacia twig: zigzag dark twigs with paired white spines and feathery bipinnate leaves (each pinna drawn
+    as a comb of tiny leaflets); the alternate adds yellow ball flowers (varsha-sharad)."""
+    col = "#566e3a" if alt else "#5a713c"
+    look = leaf_look(col, vein_light=0.05, rough=0.6, fold=0.02, bulge=0.0, value_jitter=0.12)
+    tw = K.twig_tree(cv, side=6, sub=2, r=0.007, side_angle=(35, 70), rng=rng)
+    tc = hexlin("#3a302a")
+    spine = hexlin("#d9d0bc")
+    pinna = K.outline([(0.0, 0.0), (0.05, 0.18), (0.5, 0.2), (0.95, 0.14), (1.0, 0.0)])
+
+    def dl(p, a, sc, depth):
+        # bipinnate leaf: short rachis with 3-4 pinna pairs; pinnae = combs (heavy serration reads as leaflets)
+        L = 0.075 * sc
+        d = np.array([math.cos(a), math.sin(a)], F)
+        cv.stroke(p, p + d * L, 0.0009, 0.0005, hexlin("#6d7a42"), z=0.01 * (depth + 1))
+        for k in range(4):
+            q = p + d * L * (0.25 + 0.25 * k)
+            for sg in (-1, 1):
+                aa = a + sg * math.radians(rng.uniform(55, 80))
+                cv.leaf(q, aa, rng.uniform(0.035, 0.05), pinna, look, Venation(spacing=1.0, strength=0.0),
+                        serration=(16, 0.85), roll=float(rng.normal(0, 0.3)), rng=rng, z=0.01 * (depth + 1) + 0.001)
+        if rng.uniform() < 0.5:  # paired stipular spines
+            for sg in (-1, 1):
+                aa = a + sg * 0.9
+                cv.stroke(p, p + np.array([math.cos(aa), math.sin(aa)], F) * 0.03, 0.0012, 0.0002, spine, rough=0.5)
+
+    K.cluster(cv, tw, dl, per_m=9, twig_color=tc, spread=(40, 80), rng=rng, leaf_len=0.12, tip_leaves=2)
+    if alt:
+        _babul_balls(cv, rng, [t.p1 for t in tw] + [t.p0 + (t.p1 - t.p0) * 0.5 for t in tw])
+
+
+def _thorn_twigs(cv: Canvas, rng: np.random.Generator, alt: bool) -> None:
+    bare_twigs("#3a302a", side=6, sub=2, r=0.008, crooked=0.1)(cv, rng, alt)
+
+
+# ---------------------------------------------------------------------------------------------------- bamboo
+def _bamboo_spray(dry: bool = False) -> Callable[[Canvas, np.random.Generator, bool], None]:
+    """Bamboo branchlet fan: thin wiry twigs from a node with drooping lanceolate leaves in fans."""
+
+    def paint(cv: Canvas, rng: np.random.Generator, alt: bool) -> None:
+        col = "#a0a05a" if dry else "#5f7c3c"
+        look = leaf_look(col, vein_light=0.12, rough=0.5, fold=0.06, yellow_tips=0.3 if dry else 0.08, value_jitter=0.12)
+        ven = Venation(spacing=0.03, angle=12, midrib=0.008, strength=0.5)  # parallel venation
+        tw = K.twig_tree(cv, side=5, sub=1, r=0.004, main_len=0.8, side_len=(0.35, 0.55), side_angle=(25, 55), rng=rng)
+        tc = hexlin("#8a8a4a")
+
+        def dl(p, a, sc, depth):
+            cv.leaf(p, a - 0.25 * math.copysign(1, math.cos(a)), rng.uniform(0.15, 0.22) * sc, K.BAMBOO, look, ven,
+                    roll=float(rng.normal(0, 0.4)), droop=float(rng.uniform(0.2, 0.7)), curve=0.02 * float(rng.choice([-1, 1])),
+                    rng=rng, z=0.01 * (depth + 1))
+
+        K.cluster(cv, tw, dl, per_m=12, twig_color=tc, spread=(30, 65), rng=rng, leaf_len=0.22, tip_leaves=3)
+
+    return paint
+
+
+def _culm_swatch(cv: Canvas, rng: np.random.Generator, alt: bool) -> None:
+    """Bamboo culm strip for far LODs: yellow-green culm with node rings (v along the culm)."""
+    H, W = cv.H, cv.W
+    y = np.arange(H, dtype=F)[:, None] / H
+    x = np.arange(W, dtype=F)[None, :] / W
+    nodes = (y * 6.0) % 1.0
+    ring = np.exp(-((nodes - 0.5) / 0.025) ** 2)
+    streak = 0.92 + 0.08 * np.sin(x * 40.0 + np.sin(y * 9.0))
+    base = hexlin("#8a8a4a")
+    c = base[None, None, :] * (streak * (1 - 0.35 * ring))[..., None]
+    c = c * (1 - 0.15 * (nodes < 0.48)[..., None] * (nodes > 0.3)[..., None])
+    cv.rgb[...] = c
+    cv.a[...] = 1.0
+    cv.rough[...] = 0.5
+    cv.layer = 1
+
+
+# ---------------------------------------------------------------------------------------------------- palms
+def _fan_leaf(dead: bool = False) -> Callable[[Canvas, np.random.Generator, bool], None]:
+    """Palmyra fan (costapalmate): 60-80 stiff pleated segments radiating from the hastula near the bottom centre,
+    split drooping tips; dead fans hang brown and ragged."""
+
+    def paint(cv: Canvas, rng: np.random.Generator, alt: bool) -> None:
+        W, H = cv.size
+        hub = np.array([W * 0.5, H * 0.16], F)
+        col = hexlin("#7a6a4e" if dead else "#47603b")
+        n = int(rng.integers(56, 70))
+        spread = math.radians(rng.uniform(230, 270))
+        a0 = math.pi / 2 - spread / 2
+        prof = K.outline([(0.0, 0.0), (0.08, 0.035), (0.5, 0.05), (0.85, 0.035), (0.95, 0.02), (1.0, 0.0)])
+        cv.stroke((W * 0.5, H * cv.margin), hub, W * 0.02, W * 0.016, hexlin("#3e3934") if not dead else hexlin("#5a4a3a"))
+        for k in range(n):
+            f = (k + 0.5) / n
+            a = a0 + spread * f + rng.normal(0, 0.01)
+            L = W * (0.42 + 0.04 * math.sin(f * math.pi)) * rng.uniform(0.92, 1.04)
+            if dead:
+                L *= rng.uniform(0.6, 1.0)
+            shade = 0.85 + 0.3 * (k % 2)  # pleats: alternating lit / shaded segments
+            look = LeafLook(color=col * shade, vein_light=0.0, margin_light=0.08, value_jitter=0.05, hue_jitter=0.01,
+                            rough=0.45 if not dead else 0.85, transl=0.5 if not dead else 0.1, fold=0.12, bulge=0.0)
+            cv.leaf(hub, a, L, prof, look, Venation(spacing=1.0, midrib=0.01, strength=0.5), roll=0.5 * (1 if k % 2 else -1),
+                    curve=-0.03 * math.cos(a), rng=rng, z=0.001 * k)
+            if rng.uniform() < 0.5:  # split, drooping tip
+                tip = hub + np.array([math.cos(a), math.sin(a)], F) * L * 0.95
+                cv.stroke(tip, tip + np.array([math.cos(a - 0.6), math.sin(a - 0.6) - 0.5], F) * L * 0.1,
+                          W * 0.003, W * 0.001, col * shade * 0.9)
+
+    return paint
+
+
+def _pinnate_frond(color: str, *, droop: float, leaflet: tuple[float, float], angle: float, dead: bool = False,
+                   density: int = 46) -> Callable[[Canvas, np.random.Generator, bool], None]:
+    """One side of a pinnate palm frond (date palm / coconut): the rachis runs along the bottom edge (u from base to
+    tip), leaflets leave it towards the tip at `angle` deg; geometry places two mirrored strips in a V."""
+
+    def paint(cv: Canvas, rng: np.random.Generator, alt: bool) -> None:
+        W, H = cv.size
+        col = hexlin("#7a6a4e" if dead else color)
+        y0 = H * 0.07
+        cv.stroke((W * 0.02, y0), (W * 0.98, y0), H * 0.025, H * 0.008, col * 0.8 if not dead else col, rough=0.7)
+        look = LeafLook(color=col, vein_light=0.08, margin_light=0.05, value_jitter=0.1, hue_jitter=0.02,
+                        rough=0.5 if not dead else 0.85, transl=0.55 if not dead else 0.1, fold=0.15, bulge=0.0)
+        prof = K.outline([(0.0, 0.0), (0.06, 0.04), (0.4, 0.05), (0.8, 0.035), (1.0, 0.0)])
+        for k in range(density):
+            f = 0.05 + 0.9 * (k + rng.uniform(0, 1)) / density
+            p = np.array([W * f, y0], F)
+            L = H * (leaflet[0] + (leaflet[1] - leaflet[0]) * math.sin(math.pi * min(1.0, f * 1.15)))
+            a = math.radians(angle + rng.normal(0, 6))
+            cv.leaf(p, a, L * (rng.uniform(0.6, 0.9) if dead else 1.0), prof, look,
+                    Venation(spacing=1.0, midrib=0.012, strength=0.7), roll=float(rng.normal(0, 0.4)),
+                    curve=-droop * (0.5 + f), rng=rng, z=0.001 * k)
+
+    return paint
+
+
+def _trunk_swatch(color: str, *, rings: float = 0.0, diamonds: float = 0.0) -> Callable[[Canvas, np.random.Generator, bool], None]:
+    def paint(cv: Canvas, rng: np.random.Generator, alt: bool) -> None:
+        bark_swatch(color, fissure=0.3, rings=rings)(cv, rng, alt)
+        if diamonds > 0:
+            H, W = cv.H, cv.W
+            y, x = np.mgrid[0:H, 0:W].astype(F)
+            u, v = x / W * 5, y / H * 8
+            d = np.abs(((u + v) % 1.0) - 0.5) + np.abs(((u - v) % 1.0) - 0.5)
+            cv.rgb *= (1 - diamonds * np.clip(1 - d / 0.25, 0, 1) ** 2)[..., None]
+
+    return paint
+
+
+def _fruit_cluster(color: str, r: float, n: int) -> Callable[[Canvas, np.random.Generator, bool], None]:
+    def paint(cv: Canvas, rng: np.random.Generator, alt: bool) -> None:
+        W, H = cv.size
+        top = np.array([W * 0.5, H * 0.9], F)
+        stem = hexlin("#6e5f4e")
+        for _ in range(8):
+            q = top + np.array([rng.normal(0, 0.15) * W, -rng.uniform(0.2, 0.5) * H], F)
+            cv.stroke(top, q, W * 0.006, W * 0.003, stem, bend=float(rng.normal(0, 0.1)))
+        for _ in range(n):
+            p = np.array([W * 0.5 + rng.normal(0, 0.13) * W, H * rng.uniform(0.25, 0.65)], F)
+            cv.disc(p, r * rng.uniform(0.85, 1.1), hexlin(color) * rng.uniform(0.8, 1.1), dome=0.9, rough=0.4, transl=0.05, rng=rng)
+
+    return paint
+
+
+# ---------------------------------------------------------------------------------------------------- shrubs
+def _shrub_spray(prof, color, *, leaf_len, per_m, look_kw, opposite=False, flowers=None, thorns=False, twig="#5d5146",
+                 sessile=False) -> Callable[[Canvas, np.random.Generator, bool], None]:
+    base = broadleaf(prof, color, leaf_len=leaf_len, per_m=per_m, ven=Venation(spacing=0.12, angle=50, palmate_base=1 if thorns else 0),
+                     look_kw=look_kw, petiole=0.0 if sessile else 0.012, back_frac=0.3, twig=twig, side=6, sub=2)
+
+    def paint(cv: Canvas, rng: np.random.Generator, alt: bool) -> None:
+        base(cv, rng, alt)
+        if thorns:  # ber: paired hooked thorns along the twigs - small light strokes
+            for _ in range(40):
+                p = np.array([rng.uniform(0.2, 0.8) * cv.size[0], rng.uniform(0.1, 0.8) * cv.size[1]], F)
+                a = rng.uniform(0, 2 * math.pi)
+                cv.stroke(p, p + np.array([math.cos(a), math.sin(a)], F) * 0.012, 0.0015, 0.0003, hexlin("#b8a888"))
+        if flowers is not None and (alt or flowers.get("always")):
+            fl = hexlin(flowers["color"])
+            for _ in range(flowers.get("n", 8)):
+                c = np.array([rng.uniform(0.25, 0.75) * cv.size[0], rng.uniform(0.45, 0.85) * cv.size[1]], F)
+                for _ in range(int(rng.integers(4, 9))):
+                    cv.disc(c + rng.normal(0, 0.018, 2), flowers.get("r", 0.012), fl * rng.uniform(0.9, 1.1), petals=5,
+                            petal_depth=0.45, phase=float(rng.uniform(0, 6)), center_color=hexlin(flowers.get("center", "#6a3a6e")),
+                            center_r=0.3, transl=0.6, rough=0.5, rng=rng)
+
+    return paint
+
+
+# ---------------------------------------------------------------------------------------------------- grasses
+def _grass_clump(color_base: str, color_tip: str, *, blades: tuple[int, int], height: float, width: float,
+                 plume: str | None = None, plume_alt_only: bool = True, cattail: bool = False, dry_tips: float = 0.0,
+                 spread: float = 0.35) -> Callable[[Canvas, np.random.Generator, bool], None]:
+    """Clump of grass / reed blades rising from the bottom centre (kash, phragmites, typha, doob); plumes (kash
+    silver-white, phragmites brown) and typha cattails on top; plumes only in the alternate (flowering) when
+    plume_alt_only."""
+
+    def paint(cv: Canvas, rng: np.random.Generator, alt: bool) -> None:
+        W, H = cv.size
+        cb, ct = hexlin(color_base), hexlin(color_tip)
+        n = int(rng.integers(*blades))
+        tops = []
+        for k in range(n):
+            x = W * 0.5 + rng.normal(0, W * 0.05)
+            a = math.pi / 2 + rng.normal(0, spread)
+            L = H * height * rng.uniform(0.55, 1.0)
+            wv = W * width * rng.uniform(0.7, 1.2)
+            curl = float(rng.normal(0, 0.12))
+            K.blade(cv, (x, H * cv.margin * 1.1), a, L, wv, cb, ct, curl=curl, tip_dry=dry_tips, rng=rng, z=0.001 * k)
+            tops.append((np.array([x, H * cv.margin], F) + np.array([math.cos(a), math.sin(a)], F) * L * 0.97, a))
+        if plume and (alt or not plume_alt_only):
+            pc = hexlin(plume)
+            for q, a in tops[: max(3, n // 3)]:
+                stalk_top = q + np.array([rng.normal(0, 0.02) * W, H * rng.uniform(0.05, 0.12)], F)
+                cv.stroke(q - np.array([0, H * 0.1], F), stalk_top, W * 0.004, W * 0.002, cb * 1.2)
+                for j in range(14):  # feathery plume: many fine drooping strands
+                    s0 = stalk_top - np.array([0, H * 0.012 * j], F)
+                    ang = math.pi / 2 + rng.normal(0, 0.5) + (0.6 if j % 2 else -0.6)
+                    ln = H * rng.uniform(0.06, 0.11) * (1 - j / 18)
+                    cv.petal(s0, ang - 0.5 * math.copysign(1, math.cos(ang)), ln, 0.18, pc * rng.uniform(0.92, 1.06),
+                             transl=0.95, rough=0.8)
+        if cattail:
+            for q, a in tops[: max(2, n // 5)]:
+                top = q + np.array([0, H * 0.06], F)
+                cv.stroke(q, top + np.array([0, H * 0.08], F), W * 0.004, W * 0.002, cb)
+                cv.stroke(top - np.array([0, H * 0.05], F), top + np.array([0, H * 0.04], F), W * 0.016, W * 0.016,
+                          hexlin("#5a3e26"), rough=0.9)
+
+    return paint
+
+
+def _lotus_pad(cv: Canvas, rng: np.random.Generator, alt: bool) -> None:
+    """Top view of a lotus pad: round, peltate (radial veins from the off-centre hub), a waxy blue-green surface with a
+    slightly upturned paler rim; an older yellowing pad in the alternate slot is drawn by the second region."""
+    W, H = cv.size
+    c = np.array([W * 0.5, H * 0.5], F)
+    r = W * 0.44
+    bb = cv._bbox(c[0] - r, c[1] - r, c[0] + r, c[1] + r)
+    win, X, Y = bb
+    dx, dy = X - c[0], Y - c[1]
+    rho = np.hypot(dx, dy)
+    ang = np.arctan2(dy, dx)
+    rr = r * (1 + 0.03 * np.sin(ang * 7 + float(rng.uniform(0, 6))))
+    cov = cv.aa(rr - rho)
+    q = np.clip(rho / rr, 0, 1)
+    veins = np.exp(-((((ang / (2 * math.pi)) * 22) % 1.0 - 0.5) / 0.06) ** 2) * (q > 0.08)
+    col = hexlin("#4c6b37") * (0.9 + 0.1 * q)[..., None] * (1 + 0.18 * veins)[..., None]
+    col = col * (1 - 0.15 * tg_smooth(q, 0.9, 1.0))[..., None] + hexlin("#7a8a50") * 0.15 * tg_smooth(q, 0.9, 1.0)[..., None]
+    nz = np.ones_like(q)
+    nrm = np.stack([dx / np.maximum(rho, 1e-6) * 0.25 * q ** 4, dy / np.maximum(rho, 1e-6) * 0.25 * q ** 4, nz], axis=-1)
+    nrm /= np.linalg.norm(nrm, axis=-1, keepdims=True)
+    cv._composite(win, cov, col, nrm, 0.35, 0.3, 0.0)
+
+
+def tg_smooth(x, a, b):
+    t = np.clip((x - a) / (b - a), 0, 1)
+    return t * t * (3 - 2 * t)
+
+
+def _lotus_flower(color: str) -> Callable[[Canvas, np.random.Generator, bool], None]:
+    """Lotus flower held above the water on its stalk: two tiers of broad pointed petals around a yellow seed pod;
+    the alternate is a closed bud."""
+
+    def paint(cv: Canvas, rng: np.random.Generator, alt: bool) -> None:
+        W, H = cv.size
+        base = np.array([W * 0.5, H * cv.margin], F)
+        top = np.array([W * 0.5 + rng.normal(0, 0.02) * W, H * 0.55], F)
+        cv.stroke(base, top, W * 0.012, W * 0.01, hexlin("#5a6e3e"), bend=0.05)
+        pc = hexlin(color)
+        if alt:  # bud
+            for k in range(5):
+                cv.petal(top, math.pi / 2 + (k - 2) * 0.12, H * 0.22, 0.32, pc * (0.9 + 0.05 * k), transl=0.7, rough=0.45)
+            return
+        for tier, (n, ln, sp) in enumerate(((8, 0.27, 1.25), (6, 0.22, 0.7))):
+            for k in range(n):
+                a = math.pi / 2 + (k - (n - 1) / 2) * sp / (n - 1) * 2
+                cv.petal(top, a, H * ln * rng.uniform(0.9, 1.05), 0.36, pc * (0.85 + 0.25 * tier), transl=0.75, rough=0.45,
+                         tip_color=pc * 1.2)
+        cv.disc(top + np.array([0, H * 0.04], F), W * 0.06, hexlin("#d9b54a"), dome=0.5, rough=0.6, rng=rng)
+
+    return paint

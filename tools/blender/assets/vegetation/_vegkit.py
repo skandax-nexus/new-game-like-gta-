@@ -156,14 +156,14 @@ class Envelope:
             r = np.array([self.rx, self.ry, self.rz], F) * self.lobe_size * rng.uniform(0.8, 1.2)
             self.centers.append((c, r))
 
-    def contains(self, q: np.ndarray) -> np.ndarray:
-        """Inside test for points (n, 3) in metres."""
+    def contains(self, q: np.ndarray, grow: float = 1.0) -> np.ndarray:
+        """Inside test for points (n, 3) in metres (`grow` scales every lobe / the ellipsoid)."""
         if not self.centers:
-            u = np.stack([q[:, 0] / self.rx, q[:, 1] / self.ry, (q[:, 2] - self.zc) / self.rz], axis=1)
+            u = np.stack([q[:, 0] / self.rx, q[:, 1] / self.ry, (q[:, 2] - self.zc) / self.rz], axis=1) / grow
             return np.sum(u * u, axis=1) <= 1.0
         inside = np.zeros(len(q), bool)
         for c, r in self.centers:
-            u = (q - c) / r
+            u = (q - c) / (r * grow)
             inside |= np.sum(u * u, axis=1) <= 1.0
         return inside
 

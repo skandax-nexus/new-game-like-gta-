@@ -87,7 +87,25 @@ def build_tree(species: str, variant: str, style: dict, regions_meta: dict, tris
                                                "step": g["step"] * (0.85 + 0.15 * s)})
     sk = V.grow(gp, rng)
     crown = region_list(spec, regions_meta, "crown")
-    cards = V.place_cards(sk, crown, rng, region_weights=region_weights(spec, "crown"), **spec.cards)
+    # enough card candidates for the LOD0 budget (~72 % of it in leaf cards): densify until there are
+    need = int(tris[0] * 0.72 / 2 * 1.1)
+    ckw = dict(spec.cards)
+
+    def crown_cards() -> list[V.Card]:
+        cs = V.place_cards(sk, crown, rng, region_weights=region_weights(spec, "crown"), **ckw)
+        if not cs:
+            return cs
+        keep = envelope.contains(np.array([c.pos for c in cs], np.float64), grow=1.18)  # never down the bole
+        return [c for c, k in zip(cs, keep) if k]
+
+    cards = crown_cards()
+    for _ in range(5):
+        if len(cards) >= need:
+            break
+        ckw["per_tip"] = ckw.get("per_tip", 1.0) * 1.4
+        ckw["along"] = max(ckw.get("along", 0.0), 1.0) * 1.5
+        ckw["max_radius"] = min(0.08, ckw.get("max_radius", 0.03) * 1.2)
+        cards = crown_cards()
     center = V.crown_center(sk)
     cp = np.array([c.pos for c in cards]) if cards else sk.pos
     axes = V.crown_axes(cp, center)
@@ -160,7 +178,7 @@ def _prop_roots(tb: TreeBuild, n: int, rng: np.random.Generator) -> None:
         pts = np.array([top + (bottom - top) * (j / (k - 1)) + np.r_[rng.normal(0, 0.06, 2), 0] * math.sin(math.pi * j / (k - 1))
                         for j in range(k)])
         age = 1.0 - float(np.hypot(top[0], top[1])) / (tb.axes[0] + 1e-6)
-        r = 0.1 + 0.24 * age * rng.uniform(0.7, 1.2)
+        r = 0.14 + 0.32 * age * rng.uniform(0.7, 1.2)
         radii = np.linspace(min(r * 0.7, float(sk.radius[i]) * 1.2 + 0.03), r, k)
         radii[-1] *= 1.35
         tb.extra_wood.append((pts, radii))
@@ -198,12 +216,26 @@ def _sides_for(r: float, table) -> int:
     return table[-1][1]
 
 
-def _wood(tb: TreeBuild, level: int, bark_rect: tuple | None) -> V.MeshData:
+WOOD_SHARE = (0.3, 0.3, 0.3)  # max fraction of each LOD's triangle budget spent on trunk / branches / roots
+
+
+def _wood(tb: TreeBuild, level: int, bark_rect: tuple | None, budget: int | None = None) -> V.MeshData:
+    """Trunk + branch tubes for a LOD; with `budget` the branch-radius cut-off and ring spacing rise until the wood fits."""
+    w = tb.spec.wood
+    r_min, step = w["r_min"][level], w["step"][level]
+    for _ in range(12):
+        md = _wood_once(tb, level, bark_rect, r_min, step)
+        if budget is None or md.tris() <= budget:
+            return md
+        r_min *= 1.22
+        step *= 1.12
+    return md
+
+
+def _wood_once(tb: TreeBuild, level: int, bark_rect: tuple | None, r_min: float, step: float) -> V.MeshData:
     sp = tb.spec
     sk = tb.sk
     w = sp.wood
-    r_min = w["r_min"][level]
-    step = w["step"][level]
     table = [(rmin, max(3, int(round(s * (1.0, 0.6, 0.42)[level])))) for rmin, s in w["sides"]]
     md = V.MeshData()
     tile = (64.0, 64.0)  # bark UVs in 1/64 tiles (quantizable [0, 1] range); the material's uv_scale restores tiles
@@ -228,7 +260,7 @@ def _wood(tb: TreeBuild, level: int, bark_rect: tuple | None) -> V.MeshData:
         V.tube(md, pts, rr, sides, tile=tile, hier=sk.hier[idx][k], phase=sk.phase[idx][k], ao=tb.dens.ao,
                flare=flare if (trunk and level < 2) else None, uv_rect=bark_rect, cap=level == 0)
     for pts, radii in getattr(tb, "extra_wood", []):
-        if level == 2 and radii.max() < 0.14:
+        if radii.max() < (0.0, 0.12, 0.2)[level]:
             continue
         p2, r2, _ = V.resample_chain(pts, radii, step * 1.5, 30)
         V.tube(md, p2, r2, max(3, (7, 5, 4)[level]), tile=tile, hier=np.zeros(len(p2), F), phase=np.zeros(len(p2), F),
@@ -286,7 +318,7 @@ def _build_lod(tb: TreeBuild, level: int, target: int, regions_meta: dict, rng: 
         u0, v0, u1, v1 = bark_rect
         du, dv = (u1 - u0) * 0.06, (v1 - v0) * 0.06
         bark_rect = (u0 + du, v0 + dv, u1 - du, v1 - dv)
-    wood = _wood(tb, level, bark_rect)
+    wood = _wood(tb, level, bark_rect, int(target * WOOD_SHARE[level]))
     leaves = V.MeshData()
     stone = V.MeshData()
     struct = tb.struct_cards
