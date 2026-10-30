@@ -88,3 +88,75 @@ console errors.
 - At the operational / strategic zooms the finite map shows as a hazy tile: no seam, but an outer terrain skirt
   (GFX-02) would sell the horizon better.
 - Shafts are strong against the low sun (lab): `r.shaftsStrength` x band is the AD's knob.
+
+## Lead Graphics Engineer review - round 1
+
+Re-run on HEAD by the reviewer: `npm run typecheck`, `npm test`, `vite build --outDir .build/gfx-01-review`,
+`vite build --mode single --outDir .build/gfx-01-review-single`, the capture script
+(`SHOTS_DIST=.build/gfx-01-review SHOTS_PORT=4454 SHOTS_OUT=docs/sprint1/gfx-01/review`, every PNG + `report.json`
+in `review/`) and smoke (`SMOKE_DIST=.build/gfx-01-review SMOKE_PORT=4453 SMOKE_OUT=docs/sprint1/gfx-01/review-smoke`).
+Every PNG in this folder, `review/`, `smoke/` and `review-smoke/` was opened and compared with
+`docs/art/lookdev_presets.jpg` and the baseline `docs/screenshots/battle.png` / `hero.png` / `world-overview.png`.
+
+### Results (reviewer re-run)
+
+| Check | Result |
+|---|---|
+| `npm run typecheck` | clean |
+| `npm test` | GFX-01 suites green: `tests/render/lighting` 68 / 68 (incl. the review tests), `tests/core/quality` 11 / 11; guards green (purity, integration determinism, data). The full run has 10 failures, all in sim / contracts suites that no GFX-01 file touches (the purity guard keeps render out of sim): contracts migration battles, construction Palace, politics careful year, siege logistics x3 (pre-existing, listed by the developer), tactical determinism mid-siege (siege code of GP-01 / SIM-02 in flux), AI perf x2 and tactical perf (CPU timing while the capture ran). |
+| Builds | `vite build` and `vite build --mode single` OK (`.build/gfx-01-review*`, `.build/gfx-01-review-final*`) |
+| Capture | 38 PNGs in `review/`, `review/report.json` failures `[]`, every shot 0 console errors; zoom / budgets / tiers / context re-captured on the final build |
+| Smoke | 14 / 14, no console errors - run on the build with the first three fixes and again on the final build (cascade cap) |
+| Night tactical lower half | sRGB luma 0.141 ultra / 0.149 low (>= 0.12) |
+| Zoomed-out seam | largest row jump 1.14 (battle operational) / 0.74 (world strategic) 8-bit levels - no seam |
+| `?csm=1` | ultra 4 PCSS (579 m), high 3 PCSS (386 m), medium 2 PCF (258 m); low 1 hard; contact pass only in ultra hero / close views |
+| Tier cycling x3 | 11 textures / 30 geometries / 3 post RTs at every return to low |
+| Context loss | lost -> restored, `scene+final`, 53 draws on the first frame, no errors |
+
+Draw calls incl. shadow passes (SwiftShader, `__SAMRAJYA_GFX__.info()` / `getProfile()`):
+
+| View | Before GFX-01 | GFX-01 as delivered | After review | Budget (ARCHITECTURE §15) |
+|---|---|---|---|---|
+| battle 1,000 @high (tactical) | 81 | 70 (36 shadow) | 70 (36 shadow) | < 400 |
+| battle river 5,000 @high | 81 | 70 (36 shadow) | 70 (36 shadow) | < 500 |
+| battle mobile @low | 26 | 24 (5 shadow) | 24 (5 shadow) | < 150 |
+| battle operational @high | - | 70 (36 shadow) | 58 (24 shadow) | < 400 |
+| world default (operational) @high | - | 185 (74 shadow) | 162 (51 shadow) | < 300 |
+| world default (operational) @ultra | - | 241 (147 shadow) | 182 (88 shadow) | < 300 |
+| **world overview (strategic) @high** | - | **343 (162 shadow)** | 246 (65 shadow) | < 300 |
+| **world overview (strategic) @ultra** | - | **475 (311 shadow)** | 293 (129 shadow) | < 300 |
+
+
+### Post passes per tier (`planPasses`, ART_BIBLE §13 "Post" row)
+
+| Tier | Passes built (in order) | Notes |
+|---|---|---|
+| low | scene + final | ONE fullscreen pass: grade + vignette + FXAA on tone-mapped taps |
+| medium | scene + shafts + bloom + final + fxaa | shafts 24 samples half res; separate FXAA |
+| high | scene + gtao + composite + shafts + bloom + dof + final + smaa | GTAO half res 2 slices; shafts 32 half; DoF hero / cutscenes; LUT 35 % |
+| ultra | scene + gtao + contact + ssr + composite + shafts + bloom + dof + final + taa / smaa | GTAO full 3 slices; contact shadows close / hero bands; SSR; shafts 48 full res; lens dirt; DoF close bands; TAA hero band or `setTaa(true)`, SMAA otherwise |
+
+Built passes disable themselves per frame when idle (shafts need the sun on screen and below 35 deg or strength
+> 0.3; contact / DoF follow the zoom band), so the frame's list (`post.info().passes`) can be shorter.
+
+### Reviewer fixes (inside GFX-01's paths)
+
+| Commit | Fix |
+|---|---|
+| dad8e27 | Cascade memory: outer cascades half size with 3+ cascades (high 3 x 4096^2 ~384 MiB -> 192 MiB); allocation-free rig and sky per frame; baked-sky horizon ring feeds aerial perspective / map-edge fade when assets are attached; `copyZoomLookInto` (no aliasing of caller looks) |
+| eb19a84 | `PostPipeline.setView` on a new scene resets per-scene inputs (focus override, forced TAA, zoom look, AgX): a hero / cutscene focus can no longer leak DoF + TAA into the next battle |
+| d480114 | Lightning: the flash light is anchored at focus + bearing every frame (from the second strike on it sat near the world origin: wrong direction away from the map centre); the light joins the scene at `setEnvironment` for storm / monsoon rain, so the first strike no longer recompiles every lit material mid-storm |
+| c4e8fe2 | Allocation-free per-frame profiler stats feed |
+| 800ef43 (swept into a Studio Head WIP snapshot before the reviewer's commit) | Far zoom bands use fewer cascades (`activeCascadesFor`: strategic 1, operational 2; tactical and closer keep the tier's 1 / 2 / 3 / 4). Idle cascades keep their light and map (no recompile, no re-allocation when zooming), are weighted 0 in the shader and skip their shadow render. Fixes the world-map budget miss above; the operational / strategic frames are pixel-identical (row means equal before / after) |
+
+### Open items outside GFX-01's paths (not blocking this ticket)
+
+- **Art Director co-sign** of the look (this folder + `review/`). Questions from the developer stand: 18.9 h in
+  sharad resolves to the night preset (`style/lighting.ts`), hero-band DoF strength (`style/zoom.ts`), shaft
+  strength against a low sun, LUT strength.
+- **CTO**: `render.attachAssets(assets)` in `src/main.ts` so game scenes get the baked WP7 skies, LUTs, lens dirt
+  and sun sprite (today only the labs show them).
+- **GFX-02**: outer terrain skirt (operational / strategic zoom still reads as a tile in haze, no seam);
+  `WETNESS_GLSL` in `splat.ts`; water writes its SSR weight to alpha and uses `injectHeightFog`; weather calls
+  `env.triggerLightning()`.
+- **GFX-05 / GP-02**: pass ZoomLook into `env.update(dt, camera, look)`; hero / cutscene focus via `post.setFocus`.

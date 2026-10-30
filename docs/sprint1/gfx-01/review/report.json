@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-30T18:18:41.627Z",
+  "generated": "2026-10-30T19:30:32.234Z",
   "shots": [
     {
       "name": "battle-dawn-ultra",
@@ -777,66 +777,6 @@
       "errors": []
     },
     {
-      "name": "zoom-battle-operational",
-      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=high&noui=1&hour=16&season=sharad&weather=clear&camera=overview",
-      "ms": 46122,
-      "drawCalls": 70,
-      "shadowDrawCalls": 36,
-      "triangles": 2160758,
-      "textures": 33,
-      "geometries": 32,
-      "tier": "high",
-      "passes": [
-        "scene",
-        "gtao",
-        "composite",
-        "bloom",
-        "final",
-        "smaa"
-      ],
-      "look": "operational",
-      "env": {
-        "preset": "noon",
-        "exposure": 0.8497273472075287,
-        "effectiveIrradiance": 0.6696752721245693,
-        "bakedSky": null,
-        "cascades": 3,
-        "look": "operational",
-        "wetness": 0.1
-      },
-      "errors": []
-    },
-    {
-      "name": "zoom-world-strategic",
-      "query": "scene=world&quality=high&noui=1&hour=16&season=sharad&weather=clear&camera=overview",
-      "ms": 40591,
-      "drawCalls": 339,
-      "shadowDrawCalls": 158,
-      "triangles": 1707644,
-      "textures": 32,
-      "geometries": 142,
-      "tier": "high",
-      "passes": [
-        "scene",
-        "gtao",
-        "composite",
-        "bloom",
-        "final",
-        "smaa"
-      ],
-      "look": "strategic",
-      "env": {
-        "preset": "noon",
-        "exposure": 0.8194185013328875,
-        "effectiveIrradiance": 0.7169606078106804,
-        "bakedSky": null,
-        "cascades": 3,
-        "look": "strategic",
-        "wetness": 0.1
-      },
-      "errors": []
-    },
-    {
       "name": "lab-post-hero-taa-on",
       "query": "scene=lab&lab=post-hero&noui=1&quality=ultra&taa=1",
       "ms": 97076,
@@ -1397,9 +1337,69 @@
       "errors": []
     },
     {
+      "name": "zoom-battle-operational",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=high&noui=1&hour=16&season=sharad&weather=clear&camera=overview",
+      "ms": 99411,
+      "drawCalls": 58,
+      "shadowDrawCalls": 24,
+      "triangles": 1752732,
+      "textures": 32,
+      "geometries": 32,
+      "tier": "high",
+      "passes": [
+        "scene",
+        "gtao",
+        "composite",
+        "bloom",
+        "final",
+        "smaa"
+      ],
+      "look": "operational",
+      "env": {
+        "preset": "noon",
+        "exposure": 0.8497273472075287,
+        "effectiveIrradiance": 0.6696752721245693,
+        "bakedSky": null,
+        "cascades": 3,
+        "look": "operational",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "zoom-world-strategic",
+      "query": "scene=world&quality=high&noui=1&hour=16&season=sharad&weather=clear&camera=overview",
+      "ms": 90129,
+      "drawCalls": 246,
+      "shadowDrawCalls": 65,
+      "triangles": 1371392,
+      "textures": 30,
+      "geometries": 142,
+      "tier": "high",
+      "passes": [
+        "scene",
+        "gtao",
+        "composite",
+        "bloom",
+        "final",
+        "smaa"
+      ],
+      "look": "strategic",
+      "env": {
+        "preset": "noon",
+        "exposure": 0.8194185013328875,
+        "effectiveIrradiance": 0.7169606078106804,
+        "bakedSky": null,
+        "cascades": 3,
+        "look": "strategic",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
       "name": "budget-battle-1000-high",
       "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=high",
-      "ms": 57859,
+      "ms": 88365,
       "drawCalls": 70,
       "shadowDrawCalls": 36,
       "triangles": 1885726,
@@ -1429,7 +1429,7 @@
     {
       "name": "budget-battle-river-5000-high",
       "query": "scene=battle&seed=11&soldiers=5000&preset=river_crossing&hour=17&quality=high",
-      "ms": 91572,
+      "ms": 160693,
       "drawCalls": 70,
       "shadowDrawCalls": 36,
       "triangles": 4820050,
@@ -1459,7 +1459,7 @@
     {
       "name": "budget-battle-mobile-low",
       "query": "scene=battle&seed=7&soldiers=600&preset=plains&quality=low",
-      "ms": 21139,
+      "ms": 30444,
       "drawCalls": 24,
       "shadowDrawCalls": 5,
       "triangles": 349653,
@@ -1512,8 +1512,8 @@
       "distance": 258,
       "contactPass": false
     },
-    "horizonRowJump_battle-operational": 1.12,
-    "horizonRowJump_world-strategic": 0.75,
+    "horizonRowJump_battle-operational": 1.14,
+    "horizonRowJump_world-strategic": 0.74,
     "labHeroTaa": {
       "passes": [
         "scene",
@@ -2024,7 +2024,7 @@
     "restored": true,
     "passes": "scene+final",
     "drawCalls": 53,
-    "captureBytes": 528566,
+    "captureBytes": 680758,
     "errors": []
   },
   "failures": []
