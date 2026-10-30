@@ -68,16 +68,6 @@
       "observed": []
     },
     {
-      "name": "hero HUD (pc): open map areas pass pointer events through to the game",
-      "ok": true,
-      "observed": []
-    },
-    {
-      "name": "hero (pc): no console errors, page errors, failed requests or crash reports",
-      "ok": true,
-      "observed": []
-    },
-    {
       "name": "world HUD (portrait): open map areas pass pointer events through to the game",
       "ok": true,
       "observed": []
@@ -115,16 +105,6 @@
     },
     {
       "name": "battle (portrait): no console errors, page errors, failed requests or crash reports",
-      "ok": true,
-      "observed": []
-    },
-    {
-      "name": "hero HUD (portrait): open map areas pass pointer events through to the game",
-      "ok": true,
-      "observed": []
-    },
-    {
-      "name": "hero (portrait): no console errors, page errors, failed requests or crash reports",
       "ok": true,
       "observed": []
     },
@@ -170,16 +150,6 @@
       "observed": []
     },
     {
-      "name": "hero HUD (landscape): open map areas pass pointer events through to the game",
-      "ok": true,
-      "observed": []
-    },
-    {
-      "name": "hero (landscape): no console errors, page errors, failed requests or crash reports",
-      "ok": true,
-      "observed": []
-    },
-    {
       "name": "assets=off: the world HUD shows",
       "ok": true,
       "observed": true
@@ -190,40 +160,41 @@
       "observed": []
     },
     {
+      "name": "hero HUD (pc): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero (pc): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero HUD (portrait): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero (portrait): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero HUD (landscape): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero (landscape): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
       "name": "contrast: every measured text run >= 4.5:1 (body) / 3:1 (large) on 53 captures",
-      "ok": false,
+      "ok": true,
       "observed": {
         "texts": 1834,
-        "fails": [
-          {
-            "shot": "hero-combat-portrait.png",
-            "text": "Durjaya the Red",
-            "ratio": 4.44,
-            "need": 4.5,
-            "fontSize": 16.856119791666668,
-            "color": "rgb(236, 90, 64)",
-            "bg": "rgb(40,36,42)",
-            "cls": "hh-boss-name",
-            "at": [
-              127,
-              181
-            ]
-          },
-          {
-            "shot": "hero-combat-landscape.png",
-            "text": "Durjaya the Red",
-            "ratio": 4.2,
-            "need": 4.5,
-            "fontSize": 16.856119791666668,
-            "color": "rgb(236, 90, 64)",
-            "bg": "rgb(48,39,45)",
-            "cls": "hh-boss-name",
-            "at": [
-              354,
-              53
-            ]
-          }
-        ]
+        "fails": []
       }
     },
     {
@@ -313,14 +284,6 @@
       "note": "battle results: banner, per-side table, formations, fates, chronicle, Continue"
     },
     {
-      "name": "hero-explore-pc.png",
-      "note": "hero HUD exploring: objective, compass strip, prompt bubble at its anchor, caption; phones: stick + interact"
-    },
-    {
-      "name": "hero-combat-pc.png",
-      "note": "hero HUD in combat: HP / stamina / salves, boss bar (unblockable cue), enemy bars, lock-on reticle; phones: combat buttons"
-    },
-    {
       "name": "world-settlement-economy-portrait.png",
       "note": "world HUD, Rajapura selected: resource bar, date/season/forecast, speed, realm buttons, objectives, minimap, command card Economy tab"
     },
@@ -389,14 +352,6 @@
       "note": "battle results: banner, per-side table, formations, fates, chronicle, Continue"
     },
     {
-      "name": "hero-explore-portrait.png",
-      "note": "hero HUD exploring: objective, compass strip, prompt bubble at its anchor, caption; phones: stick + interact"
-    },
-    {
-      "name": "hero-combat-portrait.png",
-      "note": "hero HUD in combat: HP / stamina / salves, boss bar (unblockable cue), enemy bars, lock-on reticle; phones: combat buttons"
-    },
-    {
       "name": "world-settlement-economy-landscape.png",
       "note": "world HUD, Rajapura selected: resource bar, date/season/forecast, speed, realm buttons, objectives, minimap, command card Economy tab"
     },
@@ -463,6 +418,22 @@
     {
       "name": "battle-results-landscape.png",
       "note": "battle results: banner, per-side table, formations, fates, chronicle, Continue"
+    },
+    {
+      "name": "hero-explore-pc.png",
+      "note": "hero HUD exploring: objective, compass strip, prompt bubble at its anchor, caption; phones: stick + interact"
+    },
+    {
+      "name": "hero-combat-pc.png",
+      "note": "hero HUD in combat: HP / stamina / salves, boss bar (unblockable cue), enemy bars, lock-on reticle; phones: combat buttons"
+    },
+    {
+      "name": "hero-explore-portrait.png",
+      "note": "hero HUD exploring: objective, compass strip, prompt bubble at its anchor, caption; phones: stick + interact"
+    },
+    {
+      "name": "hero-combat-portrait.png",
+      "note": "hero HUD in combat: HP / stamina / salves, boss bar (unblockable cue), enemy bars, lock-on reticle; phones: combat buttons"
     },
     {
       "name": "hero-explore-landscape.png",
@@ -594,20 +565,6 @@
       "smallTargets": []
     },
     {
-      "shot": "hero-explore-pc.png",
-      "texts": 10,
-      "contrastFails": [],
-      "targets": 2,
-      "smallTargets": []
-    },
-    {
-      "shot": "hero-combat-pc.png",
-      "texts": 9,
-      "contrastFails": [],
-      "targets": 1,
-      "smallTargets": []
-    },
-    {
       "shot": "world-settlement-economy-portrait.png",
       "texts": 46,
       "contrastFails": [],
@@ -710,34 +667,6 @@
       "texts": 44,
       "contrastFails": [],
       "targets": 1,
-      "smallTargets": []
-    },
-    {
-      "shot": "hero-explore-portrait.png",
-      "texts": 10,
-      "contrastFails": [],
-      "targets": 3,
-      "smallTargets": []
-    },
-    {
-      "shot": "hero-combat-portrait.png",
-      "texts": 14,
-      "contrastFails": [
-        {
-          "text": "Durjaya the Red",
-          "ratio": 4.44,
-          "need": 4.5,
-          "fontSize": 16.856119791666668,
-          "color": "rgb(236, 90, 64)",
-          "bg": "rgb(40,36,42)",
-          "cls": "hh-boss-name",
-          "at": [
-            127,
-            181
-          ]
-        }
-      ],
-      "targets": 7,
       "smallTargets": []
     },
     {
@@ -846,6 +775,34 @@
       "smallTargets": []
     },
     {
+      "shot": "hero-explore-pc.png",
+      "texts": 10,
+      "contrastFails": [],
+      "targets": 2,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-combat-pc.png",
+      "texts": 9,
+      "contrastFails": [],
+      "targets": 1,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-explore-portrait.png",
+      "texts": 10,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-combat-portrait.png",
+      "texts": 14,
+      "contrastFails": [],
+      "targets": 7,
+      "smallTargets": []
+    },
+    {
       "shot": "hero-explore-landscape.png",
       "texts": 10,
       "contrastFails": [],
@@ -855,21 +812,7 @@
     {
       "shot": "hero-combat-landscape.png",
       "texts": 15,
-      "contrastFails": [
-        {
-          "text": "Durjaya the Red",
-          "ratio": 4.2,
-          "need": 4.5,
-          "fontSize": 16.856119791666668,
-          "color": "rgb(236, 90, 64)",
-          "bg": "rgb(48,39,45)",
-          "cls": "hh-boss-name",
-          "at": [
-            354,
-            53
-          ]
-        }
-      ],
+      "contrastFails": [],
       "targets": 7,
       "smallTargets": []
     }
