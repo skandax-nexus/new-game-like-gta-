@@ -211,12 +211,27 @@ export class PostPipeline {
 
   // ------------------------------------------------------------------------------------------- inputs
 
-  /** Bind the scene/camera to render. */
+  /**
+   * Bind the scene/camera to render. A new scene starts from neutral per-scene inputs: the focus override, the TAA
+   * mode, the zoom look and the tone mapper are the previous scene's choices (the post pipeline outlives scenes), so a
+   * hero / cutscene focus or a forced TAA never leaks into the next scene. A camera change in the same scene keeps
+   * them (cutscene cameras).
+   */
   setView(scene: THREE.Scene, camera: THREE.Camera): void {
     if (scene === this.frame.scene && camera === this.frame.camera) return;
+    if (scene !== this.frame.scene) this.resetSceneInputs();
     this.frame.scene = scene;
     this.frame.camera = camera;
     this.passes.taa?.reset();
+  }
+
+  /** Neutral per-scene inputs (setView on a new scene). */
+  private resetSceneInputs(): void {
+    this.focusOverride = null;
+    this.taaMode = 'auto';
+    this.look = null;
+    this.focusDistance = 220;
+    if (this.toneMapper !== 'aces') this.setToneMapping('aces');
   }
 
   setQuality(q: QualitySettings): void {

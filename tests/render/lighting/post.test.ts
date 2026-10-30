@@ -6,7 +6,8 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { buildQualitySettings } from '../../../src/core/quality';
-import { planPasses } from '../../../src/render/post';
+import { planPasses, PostPipeline } from '../../../src/render/post';
+import { createZoomLook } from '../../../src/render/style/zoom';
 import { shaftsActive, SHAFTS_MAX_ELEVATION_DEG } from '../../../src/render/post/shafts';
 import { circleOfConfusionPx } from '../../../src/render/post/dof';
 import { halton, TAA_JITTER_PHASES } from '../../../src/render/post/scenePass';
@@ -124,5 +125,38 @@ describe('lens dirt and shader contracts', () => {
     expect(fp.material.defines.SAM_FXAA).toBe(1);
     expect(fp.material.fragmentShader).toContain('samACES');
     fp.dispose();
+  });
+});
+
+describe('PostPipeline per-scene inputs (the pipeline outlives scenes)', () => {
+  /** Minimal renderer surface the pipeline touches outside render() (node: no WebGL). */
+  const fakeRenderer = (): THREE.WebGLRenderer =>
+    ({ toneMappingExposure: 1, getPixelRatio: () => 1, getSize: (v: THREE.Vector2) => v.set(1, 1) }) as unknown as THREE.WebGLRenderer;
+  const focusOf = (p: PostPipeline): unknown => p.info().focus;
+
+  it('a new scene drops the previous focus override, forced TAA, zoom look and AgX; a new camera keeps them', () => {
+    installShaderGlobals();
+    const post = new PostPipeline(fakeRenderer(), buildQualitySettings('low'));
+    const sceneA = new THREE.Scene();
+    const sceneB = new THREE.Scene();
+    const camA = new THREE.PerspectiveCamera();
+    const camB = new THREE.PerspectiveCamera();
+    post.setView(sceneA, camA);
+    post.setFocus(6, 2, 8);
+    post.setTaa(true);
+    post.applyZoomLook(createZoomLook(), 6);
+    post.setToneMapping('agx');
+    // Cutscene camera in the same scene: the scene's choices stay.
+    post.setView(sceneA, camB);
+    expect(focusOf(post)).toEqual({ distance: 6, fStop: 2, maxBlurPx: 8, strength: 1 });
+    expect(post.info().taaMode).toBe(true);
+    expect(post.toneMapping).toBe('agx');
+    // Next scene: neutral again (no hero DoF / forced TAA / AgX leaking into a battle).
+    post.setView(sceneB, camA);
+    expect(focusOf(post)).toEqual({ distance: 220, auto: true });
+    expect(post.info().taaMode).toBe('auto');
+    expect(post.info().look).toBeNull();
+    expect(post.toneMapping).toBe('aces');
+    post.dispose();
   });
 });
