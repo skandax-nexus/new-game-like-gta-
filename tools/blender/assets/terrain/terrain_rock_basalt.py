@@ -62,7 +62,7 @@ with core.timer("flows"):
 
 with core.timer("colonnade"):
     # columns: vertical joints with branching / stopping across hairline cross-joints every 0.6-2.2 m
-    jb = joint_bands(kit, spacing=(1.2, 3.5), amp=0.15, feature=1.0, vspacing=(0.45, 1.6), carry=0.6, tilt=0.12,
+    jb = joint_bands(kit, spacing=(1.2, 3.5), amp=0.15, feature=1.0, vspacing=(0.45, 1.6), carry=0.93, tilt=0.12,
                      wander=0.1, vfeature=1.2)
     left, width = jb["left"], jb["width"]
     right = width - left
@@ -79,7 +79,8 @@ with core.timer("colonnade"):
     # cross-joints: hairline step at each segment boundary (segments sit at slightly different depths)
     fell = (jb["block"] > 0.93).astype(np.float32)  # a few column segments fell out (planar back face)
     seg_off = 0.01 * (jb["rand3"] - 0.5) - 0.06 * fell
-    cross = tg.smoothstep(0.006, 0.0, np.minimum(jb["below"], jb["above"])) * (kit.fbm(0.5, 2) > 0.3)
+    # cross-joints break single columns at their own heights, never a course across the whole colonnade
+    cross = tg.smoothstep(0.006, 0.0, np.minimum(jb["below"], jb["above"])) * (jb["rand1"] > 0.55)
     col_h = prism + seg_off - 0.008 * cross
     col_h += 0.012 * kit.fbm(0.4, 3) + 0.006 * kit.fbm(0.12, 3) + 0.0015 * kit.fbm(0.03, 2)
     joint_line = tg.smoothstep(0.025, 0.0, jb["side"]) * jpres

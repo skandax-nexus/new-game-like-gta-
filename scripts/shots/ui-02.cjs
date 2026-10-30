@@ -12,15 +12,26 @@
  * Every capture is taken at 1280x720 (pc), 390x844 (portrait phone) and 844x390 (landscape phone):
  *   world-settlement-economy / world-settlement-recruit   world HUD, capital selected, command card Economy / Recruit tab
  *   settlement-panel, army-panel                          drawers (bottom sheets on phones)
+ *   settlement-panel-lower                                the drawer scrolled to its lower half after queueing a build and a
+ *                                                         recruit: buildings grid (level pips, condition), construction queue
+ *                                                         (progress, cancel), recruitment queue (cancel), garrison
+ *   world-colorblind-<mode>, battle-colorblind-<mode>     pc: protan / deutan / tritan (settings.colorblind; the minimap
+ *                                                         canvas follows the remaps)
  *   build-placement                                       placement HUD (props pushed by this script until GP-03 drives it)
  *   market, age-panel, economy-panel, diplomacy           AoE / realm screens (diplomacy: AI reply reasons)
  *   event-modal, engagement-prompt                        real prompts reached by stepping the campaign
+ *   event-modal-advisors                                  the day-3 succession event: advisor portraits ("Recommended by") and
+ *                                                         a locked choice with its reason
  *   minimap-world                                         the minimap element (phones: expanded)
  *   battle-deployment, battle-live, battle-radial         battle HUD: deployment bar; in battle (cards strip, rally ring,
  *                                                         floating cards); radial wheel open (all viewports)
  *   battle-intents                                        Intents page of the battle card (keyboard reachable via Tab)
  *   minimap-battle, battle-results                        minimap element; results of a battle stepped to its end
- *   hero-explore, hero-combat                             hero HUD (v2 props patched until GP-02 pushes them)
+ *   battle-results-prisoners                              the same real outcome shown as a won world battle (engagementId +
+ *                                                         prisoners; the session does not pass engagementId yet - GP-03)
+ *   hero-explore, hero-combat                             hero HUD on REAL targets: ?scene=lab&lab=hero-hud projects 3D figures
+ *                                                         (potter / bandit captain / bandits) through the camera every frame
+ *   hero-scene                                            pc: the live HeroScene with what GP-02 pushes today
  * Checks (exit 1 on failure): no console / page errors, no failed requests or crash reports; text contrast measured
  * on the captured pixels (>= 4.5:1 body, >= 3:1 large text, disabled controls exempt); every interactive element
  * >= 44x44 CSS px on phone captures; UI + input CPU per frame (profiler counters uiInput.ms) printed for world and
@@ -495,6 +506,40 @@ async function worldSession(browser, base, vpName) {
     await closeAll(s, ['settlement_panel']);
   }, 'world: settlement panel');
 
+  // Lower half of the settlement panel: queue a building upgrade and a recruit (real commands, applied by one sim
+  // hour), open the drawer and scroll to the buildings grid + queues + garrison.
+  await step(s, async () => {
+    const queued = await ev(s, async (sid) => {
+      const api = window.__SAMRAJYA__;
+      const w0 = window.__SAMRAJYA_UI__.props('world_hud').world;
+      const have = w0.settlements[sid].buildings.map((b) => b.type);
+      for (const b of ['granary', 'market', 'workshop', 'water_tank', 'stepwell', ...have]) {
+        if (!have.includes(b)) continue;
+        api.issueStrategicCommand({ kind: 'build', settlementId: sid, building: b });
+        api.step(1);
+        await api.waitFrames(1);
+        if (window.__SAMRAJYA_UI__.props('world_hud').world.settlements[sid].construction.length > 0) break;
+      }
+      api.issueStrategicCommand({ kind: 'recruit', settlementId: sid, unitClass: 'spearmen', formations: 2, targetArmyId: null });
+      api.issueStrategicCommand({ kind: 'recruit', settlementId: sid, unitClass: 'archers', formations: 1, targetArmyId: null });
+      api.step(1);
+      await api.waitFrames(2);
+      const st = window.__SAMRAJYA_UI__.props('world_hud').world.settlements[sid];
+      return { construction: st.construction.length, recruitment: st.recruitment.length };
+    }, info.cap);
+    check(`world (${vpName}): a construction job and a recruitment job are queued for the lower-panel capture`, queued.construction > 0 && queued.recruitment > 0, queued);
+    await selectCap();
+    await settle(s, 500);
+    await click(s, '.sel-action');
+    await ev(s, () => {
+      // Scrolled to the end: the last building rows (level pips, condition bars), both queues and the garrison.
+      const body = document.querySelector('.hud-drawer:not(.ui-hidden) .panel-body');
+      if (body) body.scrollTop = body.scrollHeight;
+    });
+    await shot(s, 'settlement-panel-lower', 'settlement panel, lower half: buildings grid (level pips, condition bars), construction queue (progress, days, cancel), recruitment queue (progress, cancel with its reason), garrison');
+    await closeAll(s, ['settlement_panel']);
+  }, 'world: settlement panel lower half');
+
   await step(s, async () => {
     await ev(s, () => window.__SAMRAJYA_UI__.emit('ui:world_select', { kind: 'army', id: 'army_royal' }));
     await settle(s, 600);
@@ -559,6 +604,20 @@ async function worldSession(browser, base, vpName) {
   }, 'world: minimap');
 
 
+  if (!phone)
+    await step(s, async () => {
+      for (const mode of ['protan', 'deutan', 'tritan']) {
+        await ev(s, (m) => window.__SAMRAJYA_UI__.settings({ colorblind: m }), mode);
+        await selectCap();
+        await settle(s, 500);
+        const cb = await ev(s, () => document.documentElement.dataset.colorblind || '');
+        check(`world (${vpName}): colour-blind mode ${mode} applied to <html>`, cb === mode, cb);
+        await shot(s, `world-colorblind-${mode}`, `world HUD with settings.colorblind = ${mode}: faction colours, emblems and the minimap canvas follow the remap`);
+      }
+      await ev(s, () => window.__SAMRAJYA_UI__.settings({ colorblind: 'none' }));
+      await settle(s, 300);
+    }, 'world: colour-blind modes');
+
   // Prompts: step the campaign day by day until an event and an engagement appear (the Royal Host marches on the
   // nearest army of a realm at war with the player).
   await step(s, async () => {
@@ -581,10 +640,23 @@ async function worldSession(browser, base, vpName) {
     if (target) await ev(s, (id) => window.__SAMRAJYA__.issueStrategicCommand({ kind: 'army_order', armyId: 'army_royal', order: { kind: 'attack_army', targetArmyId: id } }), target.id);
     let gotEvent = false;
     let gotEngagement = false;
-    for (let day = 0; day < 90 && !(gotEvent && gotEngagement); day++) {
+    let gotAdvisors = false;
+    for (let day = 0; day < 90 && !(gotEvent && gotEngagement && gotAdvisors); day++) {
       await ev(s, () => window.__SAMRAJYA__.step(24));
       await frames(s, 2);
-      const st = await ev(s, () => ({ ev: window.__SAMRAJYA_UI__.visible('event_modal'), eng: window.__SAMRAJYA_UI__.visible('engagement_prompt') }));
+      const st = await ev(s, () => ({ ev: window.__SAMRAJYA_UI__.visible('event_modal'), eng: window.__SAMRAJYA_UI__.visible('engagement_prompt'), adv: !!document.querySelector('.event-choice .choice-adv') && !!document.querySelector('.event-choice.disabled .choice-req') }));
+      if (st.ev && st.adv && !gotAdvisors) {
+        // Advisor portraits on every choice + a locked one with its reason: bring the locked choice into view.
+        await ev(s, () => document.querySelector('.event-choice.disabled')?.scrollIntoView({ block: 'nearest' }));
+        await shot(s, 'event-modal-advisors', 'event modal: the succession event - advisor portraits ("Recommended by the ..."), a locked choice with its requirement, auto-resolve countdown');
+        gotAdvisors = true;
+        if (!gotEvent) {
+          gotEvent = true;
+          await click(s, '.event-choice:not(.disabled)');
+          await ev(s, () => window.__SAMRAJYA__.pause());
+          continue;
+        }
+      }
       if (st.eng && !gotEngagement) {
         await shot(s, 'engagement-prompt', 'engagement prompt: both sides, prediction bar, advisor factors, queue');
         gotEngagement = true;
@@ -601,6 +673,7 @@ async function worldSession(browser, base, vpName) {
       }
     }
     check(`world (${vpName}): an event modal was reached`, gotEvent, null);
+    check(`world (${vpName}): an event with advisor portraits and a locked choice was reached`, gotAdvisors, null);
     check(`world (${vpName}): an engagement prompt was reached`, gotEngagement || !target, target);
   }, 'world: prompts');
 
@@ -676,15 +749,44 @@ async function battleSession(browser, base, vpName, outcomeHolder) {
       const own = p.battle.formations.filter((f) => f.side === p.playerSide && f.soldiers > 0).map((f) => f.index);
       return own.slice(0, 2);
     });
+    // Control groups through the real input path (BattleScene: group_assign -> battle command): 1 = the first two
+    // formations, 2 = the third, 4 = the next two; then the first two are selected again.
+    await ev(s, async () => {
+      const api = window.__SAMRAJYA__;
+      const u = window.__SAMRAJYA_UI__;
+      const p = u.props('battle_hud');
+      const own = p.battle.formations.filter((f) => f.side === p.playerSide && f.soldiers > 0).map((f) => f.index);
+      const assign = async (formations, group) => {
+        u.emit('ui:select_formations', { formations, additive: false });
+        await api.waitFrames(2);
+        u.action('group_assign', { group });
+        await api.waitFrames(2);
+        api.step(1);
+      };
+      await assign(own.slice(0, 2), 1);
+      await assign(own.slice(2, 3), 2);
+      await assign(own.slice(3, 5), 4);
+    });
     await ev(s, (formations) => window.__SAMRAJYA_UI__.emit('ui:select_formations', { formations, additive: false }), sel);
     await settle(s, 500);
+    const groups = await ev(s, () => [...document.querySelectorAll('.bh-groups .group-slot:not(.empty) .group-num')].map((x) => x.textContent));
+    check(`battle (${s.vpName}): the control-group row shows the assigned groups 1, 2, 4`, ['1', '2', '4'].every((g) => groups.includes(g)), groups);
     const anchors = await ev(s, computeAnchors);
     await ev(s, (a) => window.__SAMRAJYA_UI__.patch('battle_hud', { anchors: a }), anchors);
     await passThrough(s, 'battle HUD', [
       [0.5, 0.3],
       [0.3, 0.25],
     ]);
-    await shot(s, 'battle-live', 'battle HUD in battle: cards strip (strength, morale + cause, fatigue, ammo), selection card, rally ring, floating formation cards (anchors from the camera model), feed');
+    await shot(s, 'battle-live', 'battle HUD in battle: control-group row (groups assigned through the input path), cards strip (short titles, men, morale + cause, fatigue, ammo), command card, rally ring, floating formation cards (anchors from the camera model), feed');
+    if (!phone) {
+      for (const mode of ['protan', 'deutan', 'tritan']) {
+        await ev(s, (m) => window.__SAMRAJYA_UI__.settings({ colorblind: m }), mode);
+        await settle(s, 400);
+        await shot(s, `battle-colorblind-${mode}`, `battle HUD with settings.colorblind = ${mode}: forces-bar edges, floating bars and minimap formations follow the remap`);
+      }
+      await ev(s, () => window.__SAMRAJYA_UI__.settings({ colorblind: 'none' }));
+      await settle(s, 300);
+    }
   }, 'battle: live');
 
   await step(s, async () => {
@@ -733,6 +835,22 @@ async function battleSession(browser, base, vpName, outcomeHolder) {
       await ev(s, (p) => window.__SAMRAJYA__.showScreen('battle_results', p), outcomeHolder.outcome);
     }
     await shot(s, 'battle-results', 'battle results: banner, per-side table, formations, fates, chronicle, Continue');
+    // The same outcome as a won world battle: prisoners choice (Ransom / Release) and commander fate. The session
+    // does not pass engagementId to battle_results yet (request to GP-03), so the script adds it.
+    await ev(s, () => {
+      const p = window.__SAMRAJYA_UI__.props('battle_results');
+      const o = JSON.parse(JSON.stringify(p.outcome));
+      const ps = p.playerSide;
+      o.winner = ps;
+      const foe = o.sides[1 - ps];
+      o.sides[ps].prisoners = Math.max(o.sides[ps].prisoners || 0, foe.captured || 0, 120);
+      foe.commanderFate = foe.commanderFate === 'safe' ? 'captured' : foe.commanderFate;
+      window.__SAMRAJYA__.showScreen('battle_results', { ...p, outcome: o, engagementId: 'eng_ui02_capture', continueLabel: 'Return to the Realm' });
+    });
+    await ev(s, () => document.querySelector('.br-prisoners')?.scrollIntoView({ block: 'center' }));
+    const pris = await ev(s, () => !!document.querySelector('.br-prisoners button'));
+    check(`battle (${s.vpName}): the prisoners choice (Ransom / Release) is shown for a won world battle`, pris, pris);
+    await shot(s, 'battle-results-prisoners', 'battle results of a won world battle: prisoners choice (Ransom / Release), commander fates, Return to the Realm');
   }, 'battle: results');
 
   await finish(s, 'battle');
@@ -741,6 +859,58 @@ async function battleSession(browser, base, vpName, outcomeHolder) {
 // ------------------------------------------------------------------------------------------------ hero
 
 async function heroSession(browser, base, vpName) {
+  const s = await newPage(browser, vpName);
+  // Hero HUD on real targets: the hero-hud lab projects 3D figures through its camera every frame and pushes the
+  // anchors exactly as GP-02's HeroScene will.
+  await open(s, base, 'scene=lab&lab=hero-hud');
+  await ev(s, () => window.__SAMRAJYA__.call('hero-hud.clean', true));
+  await step(s, async () => {
+    await ev(s, () => window.__SAMRAJYA__.call('hero-hud.mode', 'explore'));
+    await frames(s, 6);
+    const st = await ev(s, () => window.__SAMRAJYA__.call('hero-hud.state'));
+    const bubble = await ev(s, () => {
+      const r = document.querySelector('.hh-prompt')?.getBoundingClientRect();
+      return r ? { x: r.left + r.width / 2, bottom: r.bottom } : null;
+    });
+    const a = st.anchors.potter;
+    check(`hero (${s.vpName}): the prompt bubble points at the potter (projected head)`, !!bubble && Math.abs(bubble.x - a.x) < 24 && bubble.bottom <= a.y + 4 && a.y - bubble.bottom < 40, { bubble, potter: a });
+    await shot(s, 'hero-explore', 'hero HUD exploring (lab hero-hud): prompt bubble on the potter (projected 3D target), objective, compass strip, caption; phones: stick + interact');
+  }, 'hero: explore');
+  await step(s, async () => {
+    await ev(s, () => window.__SAMRAJYA__.call('hero-hud.mode', 'combat'));
+    await frames(s, 6);
+    const st = await ev(s, () => window.__SAMRAJYA__.call('hero-hud.state'));
+    const ret = await ev(s, () => {
+      const r = document.querySelector('.hh-reticle:not(.ui-hidden)')?.getBoundingClientRect();
+      return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : null;
+    });
+    const b = st.anchors.boss;
+    check(`hero (${s.vpName}): the lock-on reticle sits on the bandit captain (projected)`, !!ret && Math.abs(ret.x - b.x) < 30 && ret.y > b.y - 10, { reticle: ret, boss: b });
+    await passThrough(s, 'hero HUD', [
+      [0.5, 0.55],
+      [0.25, 0.45],
+    ]);
+    await shot(s, 'hero-combat', 'hero HUD in combat (lab hero-hud): lock-on reticle on the bandit captain, enemy bars over the bandits (projected), boss bar with the unblockable cue, HP / stamina / salves; phones: combat buttons');
+  }, 'hero: combat');
+  await finish(s, 'hero lab');
+  if (vpName === 'pc') await heroScene(browser, base, vpName);
+}
+
+/** The live HeroScene (pc): what GP-02 pushes today (settlement name, prompt text without an anchor). */
+async function heroScene(browser, base, vpName) {
+  const s = await newPage(browser, vpName);
+  const phone = s.vp.mobile;
+  await open(s, base, 'scene=hero');
+  await step(s, async () => {
+    await shot(s, 'hero-scene', 'live HeroScene: hero HUD with the props GP-02 pushes today (objective fallback, compass, keys hint)');
+  }, 'hero: live scene');
+  await finish(s, 'hero');
+  void phone;
+}
+
+// Former staged hero captures (props patched over the hero's own head) were replaced by the lab above.
+// eslint-disable-next-line no-unused-vars
+async function heroStaged(browser, base, vpName) {
   const s = await newPage(browser, vpName);
   const phone = s.vp.mobile;
   await open(s, base, 'scene=hero');

@@ -278,11 +278,20 @@ export function sparkline(width = 96, height = 28): { el: SVGSVGElement; set(val
       const k = values.map((v) => v.toFixed(3)).join(',');
       if (k === key) return;
       key = k;
-      setEmpty(values.length < 2);
-      if (values.length < 2) {
+      // No history yet, or a price that never moved (day 0): a dashed baseline and a word, not a dark block.
+      let flat = values.length < 2;
+      if (!flat) {
+        let mn = Infinity;
+        let mx = -Infinity;
+        for (const v of values) ((mn = Math.min(mn, v)), (mx = Math.max(mx, v)));
+        flat = mx - mn < 1e-6;
+      }
+      setEmpty(flat);
+      if (flat) {
         line.setAttribute('points', '');
         area.setAttribute('points', '');
-        el.setAttribute('aria-label', 'No trades yet');
+        empty.textContent = values.length < 2 ? 'No trades yet' : 'Price steady';
+        el.setAttribute('aria-label', empty.textContent);
         return;
       }
       let lo = Infinity;

@@ -9,9 +9,9 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 31475410,
-    "high": 17182241,
-    "mobile": 6012638
+    "ultra": 31357134,
+    "high": 17073873,
+    "mobile": 6000710
   },
   "assets": {
     "bamboo_lattice": {
@@ -5138,12 +5138,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_rock_basalt",
       "category": "terrain",
-      "hash": "56d6ef44e1",
+      "hash": "1db8589d31",
       "description": "Deccan Trap basalt for triplanar projection (10 m, v = up): three flows of unequal thickness, flat-faced angular columns 0.4-1.6 m with branching joints, hackly entablature, recessed rubbly flow tops with soil ledges and red bole, streaks, lichen.",
       "bytes": {
-        "ultra": 388886,
-        "high": 354208,
-        "mobile": 95822
+        "ultra": 345404,
+        "high": 317796,
+        "mobile": 94468
       },
       "tiers": [
         "ultra",
@@ -5164,51 +5164,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/terrain_rock_basalt/baseColor_1024.webp",
-            "bytes": 55122,
+            "bytes": 42268,
             "size": 1024
           },
           "high": {
             "url": "textures/terrain_rock_basalt/baseColor_512.webp",
-            "bytes": 20444,
+            "bytes": 14660,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_basalt/baseColor_256.webp",
-            "bytes": 6038,
+            "bytes": 4386,
             "size": 256
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/terrain_rock_basalt/normal_512.webp",
-            "bytes": 309170,
+            "bytes": 283156,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_basalt/normal_512.webp",
-            "bytes": 309170,
+            "bytes": 283156,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_basalt/normal_256.webp",
-            "bytes": 80496,
+            "bytes": 82462,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/terrain_rock_basalt/orm_512.webp",
-            "bytes": 24594,
+            "bytes": 19980,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_basalt/orm_512.webp",
-            "bytes": 24594,
+            "bytes": 19980,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_basalt/orm_256.webp",
-            "bytes": 9288,
+            "bytes": 7620,
             "size": 256
           }
         }
@@ -5218,12 +5218,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_rock_granite",
       "category": "terrain",
-      "hash": "8453c61acc",
-      "description": "Granite tor for triplanar projection (8 m, v = up): joint-bounded blocks 0.8-3 m with open clefts and closed hairlines, corestone rounding, broad exfoliation steps, spall chips, speckled grain, black water streaks, orange and grey-green crustose lichen.",
+      "hash": "6c59c117f6",
+      "description": "Granite tor for triplanar projection (8 m, v = up): hierarchically jointed blocks 0.5-3 m (no lattice) with open clefts and closed hairlines, corestone rounding, broad exfoliation steps, spall chips, speckled grain, black water streaks, orange and grey-green crustose lichen.",
       "bytes": {
-        "ultra": 467194,
-        "high": 245586,
-        "mobile": 67472
+        "ultra": 500948,
+        "high": 270540,
+        "mobile": 73854
       },
       "tiers": [
         "ultra",
@@ -5244,51 +5244,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/terrain_rock_granite/baseColor_1024.webp",
-            "bytes": 256668,
+            "bytes": 266646,
             "size": 1024
           },
           "high": {
             "url": "textures/terrain_rock_granite/baseColor_512.webp",
-            "bytes": 35060,
+            "bytes": 36238,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_granite/baseColor_256.webp",
-            "bytes": 6086,
+            "bytes": 4992,
             "size": 256
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/terrain_rock_granite/normal_512.webp",
-            "bytes": 192126,
+            "bytes": 213372,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_granite/normal_512.webp",
-            "bytes": 192126,
+            "bytes": 213372,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_granite/normal_256.webp",
-            "bytes": 53528,
+            "bytes": 59606,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/terrain_rock_granite/orm_512.webp",
-            "bytes": 18400,
+            "bytes": 20930,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_granite/orm_512.webp",
-            "bytes": 18400,
+            "bytes": 20930,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_granite/orm_256.webp",
-            "bytes": 7858,
+            "bytes": 9256,
             "size": 256
           }
         }
@@ -5298,12 +5298,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_rock_sandstone",
       "category": "terrain",
-      "hash": "659e85bdc0",
+      "hash": "ce142d7adb",
       "description": "Sandstone cliff for triplanar projection (10 m, v = up): cross-bedded sets 0.3-2 m with tangential foresets, recessed soft beds under overhanging lips, irregular blocky joints, sparse tafoni, varnish streaks, lichen.",
       "bytes": {
-        "ultra": 385186,
-        "high": 343460,
-        "mobile": 94164
+        "ultra": 276638,
+        "high": 246550,
+        "mobile": 77208
       },
       "tiers": [
         "ultra",
@@ -5324,51 +5324,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/terrain_rock_sandstone/baseColor_1024.webp",
-            "bytes": 67724,
+            "bytes": 48232,
             "size": 1024
           },
           "high": {
             "url": "textures/terrain_rock_sandstone/baseColor_512.webp",
-            "bytes": 25998,
+            "bytes": 18144,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_sandstone/baseColor_256.webp",
-            "bytes": 7922,
+            "bytes": 6396,
             "size": 256
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/terrain_rock_sandstone/normal_512.webp",
-            "bytes": 294046,
+            "bytes": 207622,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_sandstone/normal_512.webp",
-            "bytes": 294046,
+            "bytes": 207622,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_sandstone/normal_256.webp",
-            "bytes": 77312,
+            "bytes": 61894,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/terrain_rock_sandstone/orm_512.webp",
-            "bytes": 23416,
+            "bytes": 20784,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_sandstone/orm_512.webp",
-            "bytes": 23416,
+            "bytes": 20784,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_sandstone/orm_256.webp",
-            "bytes": 8930,
+            "bytes": 8918,
             "size": 256
           }
         }

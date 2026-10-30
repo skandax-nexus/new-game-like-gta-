@@ -4284,3 +4284,8 @@
   max-height: 100%;
   align-self: flex-start;
 }
+/* Signed reason lines carry their own plus / minus icon: no extra dot bullet. */
+.dip-reasons li.dip-reason.positive::before,
+.dip-reasons li.dip-reason.danger::before {
+  content: none;
+}

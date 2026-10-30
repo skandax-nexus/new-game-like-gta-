@@ -6,7 +6,7 @@
  */
 import type { AppContext, ScreenId } from '../../app/contracts';
 import { isScreenId } from '../../app/contracts';
-import type { InputAction, KeyPreset } from '../../core/types';
+import type { GameSettings, InputAction, KeyPreset } from '../../core/types';
 import type { UiService } from '../screens/registry';
 import type { UIManager } from '../ui';
 import { uiClock } from '../dom';
@@ -35,6 +35,8 @@ export interface UiDebugApi {
   setWorldGroups(groups: WorldControlGroup[]): void;
   /** Battle control-group row (null = derive from the battle state, as before GP-04 pushes groups). */
   setBattleGroups(groups: BattleControlGroup[] | null): void;
+  /** Apply a settings patch through GameActions.updateSettings (colour-blind mode, simple mode, scale...). */
+  settings(patch: Partial<GameSettings>): void;
   /** UI + input CPU counters (ms per frame, EMA) from the profiler. */
   profile(): { ui: number; input: number; total: number; max: number };
   /**
@@ -95,6 +97,7 @@ function start(ctx: AppContext, ui: UIManager): () => void {
     setCamera: (quad, heading) => ui.feeds.setCamera(quad, heading),
     setWorldGroups: (groups) => ui.feeds.setWorldGroups(groups),
     setBattleGroups: (groups) => ui.feeds.setBattleGroups(groups),
+    settings: (patch) => ctx.actions.updateSettings(patch),
     profile: () => ({ ui: counter('ui.ms'), input: counter('input.ms'), total: counter('uiInput.ms'), max: counter('uiInput.maxMs') }),
     bench: (opts = {}) => {
       const id: ScreenId | null = ui.isVisible('battle_hud') ? 'battle_hud' : ui.isVisible('world_hud') ? 'world_hud' : ui.isVisible('hero_hud') ? 'hero_hud' : null;
