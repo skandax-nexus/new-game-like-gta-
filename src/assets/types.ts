@@ -352,7 +352,7 @@ export interface FlipbookAssetEntry extends AssetEntryBase {
    * sRGB-encoded luminance of the emission (R = G = B, sampled WITHOUT colour conversion) plus alpha, and the colour
    * is rgb = ramp(v): `ramp` holds 2..33 linear-rgb stops evenly spaced over v in [0, 1] (piecewise linear),
    * ramp[0] = [0, 0, 0] and R >= G >= B at every stop (no green / blue drift - TA-07 R2). Data sequences of such a
-   * book (the trail noises) are read raw from .r by their consumer.
+   * book (the trail noises) are read raw from .r by their consumer (the stored value is the linear multiplier).
    */
   readonly ramp: readonly (readonly number[])[] | null;
 }

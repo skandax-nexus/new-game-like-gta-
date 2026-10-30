@@ -628,14 +628,33 @@ async function main() {
             `p2 / median ${stats.p2OverMedian.toFixed(2)} (>= 0.30), median V ${(stats.medianValue * 100).toFixed(1)} %; core (alpha >= 0.8, ${stats.corePixels} px) shadow / lit ` +
             `p5 / p95 ${stats.shadowOverLit.toFixed(2)} (0.35-0.6), p10 / p90 ${stats.p10OverP90.toFixed(2)}, p10 V ${(stats.coreP10Value * 100).toFixed(1)} %, p90 V ${(stats.coreP90Value * 100).toFixed(1)} %`,
         );
-        // 2x crop of the effect (crease check)
+        // 2x crop of the effect (crease check), framed on the effect itself: the bounding box of the first quad's
+        // atlas alpha >= 0.1 plus a 15 % margin (a fixed inset of the quad cut the low, wide dust puff off at the bottom)
         if (tier === 'ultra' && rects[0]) {
           const r = rects[0];
           const meta = await sharp(path.join(OUT, `${name}.png`)).metadata();
-          const left = Math.max(0, r.x + Math.round(r.w * 0.12));
-          const top = Math.max(0, r.y + Math.round(r.h * 0.12));
-          const w = Math.min(meta.width - left, Math.round(r.w * 0.76));
-          const h = Math.min(meta.height - top, Math.round(r.h * 0.76));
+          const { k0, k1, a } = frames[0];
+          let bx0 = Infinity;
+          let by0 = Infinity;
+          let bx1 = -Infinity;
+          let by1 = -Infinity;
+          for (let y = Math.max(0, r.y); y < Math.min(meta.height, r.y + r.h); y++)
+            for (let x = Math.max(0, r.x); x < Math.min(meta.width, r.x + r.w); x++) {
+              const u = (x + 0.5 - r.x) / r.w;
+              const v = (y + 0.5 - r.y) / r.h;
+              const al = atlasSample(atlas, e.cols, e.rows, k0, u, v, 3) * (1 - a) + atlasSample(atlas, e.cols, e.rows, k1, u, v, 3) * a;
+              if (al < 0.1) continue;
+              bx0 = Math.min(bx0, x);
+              by0 = Math.min(by0, y);
+              bx1 = Math.max(bx1, x);
+              by1 = Math.max(by1, y);
+            }
+          if (bx1 < bx0) [bx0, by0, bx1, by1] = [r.x, r.y, r.x + r.w - 1, r.y + r.h - 1];
+          const pad = Math.round(0.15 * Math.max(bx1 - bx0, by1 - by0));
+          const left = Math.max(0, bx0 - pad);
+          const top = Math.max(0, by0 - pad);
+          const w = Math.min(meta.width - left, bx1 - bx0 + 1 + 2 * pad);
+          const h = Math.min(meta.height - top, by1 - by0 + 1 + 2 * pad);
           await sharp(path.join(OUT, `${name}.png`)).extract({ left, top, width: w, height: h }).resize(w * 2, h * 2, { kernel: 'nearest' }).toFile(path.join(OUT, `${name}_2x.png`));
         }
       }

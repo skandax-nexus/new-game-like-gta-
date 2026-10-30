@@ -1433,7 +1433,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_weapon_trail.py",
-      "inputHash": "28241893091339fbab189c03faa92b4764b594f9a77fc845801bd6a022a880e3",
+      "inputHash": "57137635b2a9a510019624667e3c85e28eca318b031cac2b80227d52d8f190be",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -1681,7 +1681,7 @@
       "files": [
         {
           "path": "fx/fx_weapon_trail/color_256.webp",
-          "bytes": 20104,
+          "bytes": 20098,
           "tiers": [
             "ultra",
             "high",
@@ -1697,19 +1697,19 @@
           "color": {
             "ultra": {
               "path": "fx/fx_weapon_trail/color_256.webp",
-              "bytes": 20104,
+              "bytes": 20098,
               "width": 256,
               "height": 256
             },
             "high": {
               "path": "fx/fx_weapon_trail/color_256.webp",
-              "bytes": 20104,
+              "bytes": 20098,
               "width": 256,
               "height": 256
             },
             "mobile": {
               "path": "fx/fx_weapon_trail/color_256.webp",
-              "bytes": 20104,
+              "bytes": 20098,
               "width": 256,
               "height": 256
             }
@@ -1717,9 +1717,9 @@
         }
       },
       "bytes": {
-        "ultra": 20104,
-        "high": 20104,
-        "mobile": 20104
+        "ultra": 20098,
+        "high": 20098,
+        "mobile": 20098
       }
     },
     "ground_dry_earth": {

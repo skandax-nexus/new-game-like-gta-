@@ -212,6 +212,21 @@ describe('fx_weapon_trail is dithered, no contour bands (R2-B3)', () => {
       expect(longest, `${name}: longest flat run (px)`).toBeLessThan(16);
     }
   });
+
+  it('the noise sequences store the linear multiplier a consumer reads raw from .r (a ramp book is never sRGB-decoded)', async () => {
+    // Round 1 shipped the noises sRGB-encoded in an sRGB texture, so a consumer saw the decoded multiplier (mean
+    // ~0.21). A ramp book's colour map is sampled without conversion: storing the ENCODED noise made the raw .r about
+    // twice that (mean ~0.45, TA-07 R2 review). The stored value must be the multiplier itself.
+    const e = flipbook('fx_weapon_trail');
+    const img = await decode(e.maps.color.ultra!.url);
+    for (const name of ['noise', 'noise_b']) {
+      const s = e.sequences.find((q) => q.name === name)!;
+      const { v } = frameChannel(img, e.cols, e.rows, s.start, 0);
+      const mean = v.reduce((a, b) => a + b, 0) / v.length;
+      expect(mean, `${name}: mean raw .r`).toBeGreaterThan(0.08);
+      expect(mean, `${name}: mean raw .r`).toBeLessThan(0.32);
+    }
+  });
 });
 
 describe('parry_flash is an open radial flash, not a wheel (R2-B4)', () => {

@@ -9,9 +9,9 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 13331324,
-    "high": 6217279,
-    "mobile": 3407948
+    "ultra": 13331318,
+    "high": 6217273,
+    "mobile": 3407942
   },
   "assets": {
     "banner_cloth": {
@@ -1211,12 +1211,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_weapon_trail",
       "category": "fx",
-      "hash": "2824189309",
+      "hash": "57137635b2",
       "description": "Weapon trail: dithered gradient-mapped intensity (warm-white edge -> gold -> saffron -> ember-red tail), wide variant, two u-tileable streak noises (raw .r).",
       "bytes": {
-        "ultra": 20104,
-        "high": 20104,
-        "mobile": 20104
+        "ultra": 20098,
+        "high": 20098,
+        "mobile": 20098
       },
       "tiers": [
         "ultra",
@@ -1288,19 +1288,19 @@ export const ASSET_MANIFEST = {
         "color": {
           "ultra": {
             "url": "fx/fx_weapon_trail/color_256.webp",
-            "bytes": 20104,
+            "bytes": 20098,
             "width": 256,
             "height": 256
           },
           "high": {
             "url": "fx/fx_weapon_trail/color_256.webp",
-            "bytes": 20104,
+            "bytes": 20098,
             "width": 256,
             "height": 256
           },
           "mobile": {
             "url": "fx/fx_weapon_trail/color_256.webp",
-            "bytes": 20104,
+            "bytes": 20098,
             "width": 256,
             "height": 256
           }

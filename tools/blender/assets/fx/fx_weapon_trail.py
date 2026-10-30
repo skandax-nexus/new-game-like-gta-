@@ -80,9 +80,11 @@ def streak_noise(seed: int, rows: int, stretch: float) -> np.ndarray:
 
 
 def noise_frame(seed: int, rows: int, stretch: float) -> np.ndarray:
-    # grayscale multiplier (data, not drawn alone): stored as the encoded value of the round-1 atlas, so a consumer
-    # reading the raw .r gets the same multiplier the sRGB-decoded texture gave before
-    return kit.tg.linear_to_srgb(streak_noise(seed, rows, stretch))
+    # grayscale multiplier (data, not drawn alone). A ramp book's colour map is sampled WITHOUT sRGB decoding, so the
+    # stored value IS what a consumer reads from the raw .r: store the multiplier itself (seq() encodes v as
+    # linear_to_srgb(srgb_to_linear(v)) = v), the same values the round-1 sRGB-decoded texture gave. (Storing
+    # linear_to_srgb(noise) here made the raw .r about twice the multiplier: mean 0.45 against 0.21 - TA-07 R2 review.)
+    return streak_noise(seed, rows, stretch)
 
 
 # Layout [noise | trail] / [noise_b | trail_wide]: every open edge touches either the atlas border (clamped) or another

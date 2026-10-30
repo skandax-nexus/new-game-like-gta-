@@ -210,7 +210,7 @@ emission showed on the night sky; fx_weapon_trail's 8-bit RGB x3 showed 6-8 cont
 where its channels quantised at different steps (R2-B2b, R2-B3). One channel cannot drift in hue, and is smaller.
 
 - **Bake:** `flipbook.ramp_fit` (fire: the mean simulated colour per v, then R >= G >= B and non-decreasing
-  luminance enforced - 33 stops, mean |ramp(v) - simulated| 2.6/255) or `ramp_from_hues` (trail: authored hue stops
+  luminance enforced - 33 stops, mean |ramp(v) - simulated| 2.3/255) or `ramp_from_hues` (trail: authored hue stops
   ember red -> saffron -> gold -> warm-white, each scaled to the luminance v encodes); `ramp_encode` quantises v with
   **triangular dither of +-1 LSB** (values below 1 LSB round as before, so empty areas stay 0); `write(ramp=...)`
   checks R = G = B and the ramp rules and publishes `ramp`.
@@ -221,7 +221,8 @@ where its channels quantised at different steps (R2-B2b, R2-B3). One channel can
   re-quantises the dither away).
 - **Runtime:** `loadFlipbook` loads the colour map of a ramp book with `NoColorSpace`; the material adds
   `FLIP_RAMP` (stop count) and `uniform vec3 flipRamp[N]` and sets `flipC.rgb = flipRampColor(flipC.r)` before the
-  blend math. Data sequences in a ramp book (the trail noises) are read raw from `.r` by their consumer.
+  blend math. Data sequences in a ramp book (the trail noises) are read raw from `.r` by their consumer: the stored
+  value IS the linear multiplier (no sRGB decode applies to a ramp book's colour map).
 
 #### Effect artifact gates (rework round 2)
 
