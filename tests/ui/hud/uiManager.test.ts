@@ -23,14 +23,14 @@ interface Probe {
   el: ShimElement;
 }
 
-async function setup(): Promise<{ ui: import('../../../src/ui/ui').UIManager; probe: Probe; clock: { t: number }; restore: () => void }> {
+async function setup(layer: 'modal' | 'hud' = 'modal'): Promise<{ ui: import('../../../src/ui/ui').UIManager; probe: Probe; clock: { t: number }; restore: () => void }> {
   const { UIManager } = await import('../../../src/ui/ui');
   const { SCREEN_FACTORIES } = await import('../../../src/ui/screens/index');
   const { uiClock } = await import('../../../src/ui/dom');
   const factories = SCREEN_FACTORIES as unknown as Record<string, unknown>;
   const saved = factories.council;
   const probe: Probe = { updates: [], tracks: [], el: new ShimElement('div') };
-  factories.council = () => ({ id: 'council', layer: 'modal', el: probe.el, update: (p: unknown) => probe.updates.push(p), track: (p: unknown) => probe.tracks.push(p) });
+  factories.council = () => ({ id: 'council', layer, el: probe.el, update: (p: unknown) => probe.updates.push(p), track: (p: unknown) => probe.tracks.push(p) });
   const clock = { t: 1000 };
   const realNow = uiClock.now;
   uiClock.now = () => clock.t;
@@ -91,6 +91,20 @@ describe('UIManager: throttle, anchor tracking, press hold', () => {
       expect(probe.updates).toHaveLength(1);
       vi.advanceTimersByTime(1);
       expect(probe.updates).toEqual([{ n: 1 }, { n: 3 }]);
+    } finally {
+      restore();
+    }
+  });
+
+  it('HUD screens never wait for a release (touch stick and hold buttons live there)', async () => {
+    vi.useFakeTimers();
+    const { ui, probe, clock, restore } = await setup('hud');
+    try {
+      ui.show('council', { n: 1 } as never);
+      probe.el.dispatchEvent(new ShimEvent('pointerdown', { bubbles: true }));
+      clock.t = 1500;
+      ui.update('council', { n: 2 } as never);
+      expect(probe.updates).toEqual([{ n: 1 }, { n: 2 }]);
     } finally {
       restore();
     }

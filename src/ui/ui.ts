@@ -6,7 +6,7 @@
  * Scenes push state with `ui.show(id, props)` / `ui.update(id, props)`; updates are diffed by the screens and
  * throttled here (HUD screens <= 10 Hz, panels <= 5 Hz; the latest props always win). Between full renders,
  * `Screen.track(props)` moves screen-anchored elements on every push (scenes push anchors every frame). While a
- * pointer is pressed inside a screen its re-renders wait for the release (a rebuild under a press would swallow the
+ * pointer is pressed inside a panel or modal its re-renders wait for the release (a rebuild under a press would swallow the
  * click), and keyboard focus survives re-renders that rebuild DOM. Screens act through
  * `ctx.actions.*` (GameActions), input actions (`ctx.input.injectAction`), `ui:*` bus events or `ui.commands`
  * (HUD -> scene requests such as building placement, ui/services/hudCommands.ts).
@@ -273,7 +273,9 @@ export class UIManager {
       if (!factory || !this.ctx) throw new Error(`No screen factory for ${id}`);
       s = factory(this.ctx, this);
       shield(s.el);
-      s.el.addEventListener('pointerdown', () => this.pressed.set(id, uiClock.now()));
+      // Panels and modals rebuild rows / buttons on update: hold them under a press. HUD screens keep their nodes
+      // (keyed lists, reused slots) and host continuous controls (touch stick, hold buttons), so they never wait.
+      if (s.layer !== 'hud') s.el.addEventListener('pointerdown', () => this.pressed.set(id, uiClock.now()));
       this.screens.set(id, s as unknown as Screen);
       this.layers[s.layer].appendChild(s.el);
     }
