@@ -21,6 +21,7 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
 import type { QualitySettings } from '../core/types';
+import type { ZoomLook } from './style/zoom';
 
 export interface GradeParams {
   contrast: number;
@@ -33,6 +34,14 @@ export interface GradeParams {
   vignette: number;
   /** Tint multiplied in, linear-ish RGB (1,1,1 = none). */
   tint: [number, number, number];
+}
+
+/** A 32^3 grading LUT as the AssetManager returns it (loadLut): display-referred, applied after the grade. */
+export interface PostLutHandle {
+  readonly texture: THREE.Data3DTexture;
+  readonly size: number;
+  readonly strength: number;
+  release(): void;
 }
 
 export const DEFAULT_GRADE: GradeParams = { contrast: 1.06, saturation: 1.08, warmth: 0.08, lift: 0.01, vignette: 0.32, tint: [1, 1, 1] };
@@ -130,6 +139,38 @@ export class PostPipeline {
     this.grade = { ...this.grade, ...g };
   }
 
+  /** Lighting-driven post parameters (EnvironmentRig). threshold is scene-linear (r.bloomThreshold / r.exposure). */
+  readonly lighting = { bloomStrength: 0.22, bloomRadius: 0.4, bloomThreshold: 4.5 / 0.8, aoIntensity: 1, aoRadiusM: 1.5 };
+  /** ZoomLook post multipliers (AO, bloom, vignette, saturation, contrast...). */
+  private look: ZoomLook | null = null;
+
+  /** Bloom from the resolved lighting: strength, radius, threshold in scene-linear units. */
+  setBloom(strength: number, radius: number, thresholdLinear: number): void {
+    this.lighting.bloomStrength = strength;
+    this.lighting.bloomRadius = radius;
+    this.lighting.bloomThreshold = thresholdLinear;
+  }
+
+  /** GTAO intensity and world radius (m) from the resolved lighting. */
+  setAmbientOcclusion(intensity: number, radiusM: number): void {
+    this.lighting.aoIntensity = intensity;
+    this.lighting.aoRadiusM = radiusM;
+  }
+
+  /** Plain-data state (pass list, key parameters) for diagnostics. */
+  info(): Record<string, unknown> {
+    return {
+      passes: this.composer.passes.filter((p) => p.enabled).map((p) => (p as { name?: string }).name ?? p.constructor.name),
+      lighting: { ...this.lighting },
+      look: this.look?.id ?? null,
+    };
+  }
+
+  /** Camera-distance look (ART_BIBLE §2): post multipliers for AO, bloom, DoF, vignette / saturation / contrast. */
+  applyZoomLook(look: ZoomLook): void {
+    this.look = look;
+  }
+
   private disposePasses(): void {
     for (const p of [...this.composer.passes]) this.composer.removePass(p);
     this.outputPass.dispose();
@@ -196,11 +237,18 @@ export class PostPipeline {
     const u = this.gradePass.uniforms;
     const g = this.grade;
     const q = this.quality;
-    u.uContrast!.value = q.colorGrading ? g.contrast : 1;
-    u.uSaturation!.value = q.colorGrading ? g.saturation : 1;
+    const lp = this.look?.post;
+    u.uContrast!.value = q.colorGrading ? g.contrast * (lp ? lp.contrastMul : 1) : 1;
+    u.uSaturation!.value = q.colorGrading ? g.saturation * (lp ? lp.saturationMul : 1) : 1;
     u.uWarmth!.value = q.colorGrading ? g.warmth : 0;
     u.uLift!.value = q.colorGrading ? g.lift : 0;
-    u.uVignette!.value = q.vignette ? g.vignette : 0;
+    u.uVignette!.value = q.vignette ? Math.max(0, g.vignette + (lp ? lp.vignetteAdd : 0)) : 0;
+    if (this.bloomPass) {
+      const l = this.lighting;
+      this.bloomPass.strength = l.bloomStrength * (lp ? lp.bloomScale : 1);
+      this.bloomPass.radius = l.bloomRadius;
+      this.bloomPass.threshold = l.bloomThreshold;
+    }
     (u.uTint!.value as THREE.Vector3).set(g.tint[0], g.tint[1], g.tint[2]);
     this.composer.render(dt);
   }

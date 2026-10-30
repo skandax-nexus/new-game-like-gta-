@@ -9,7 +9,29 @@
 import * as THREE from 'three';
 import type { QualitySettings } from '../core/types';
 import type { Profiler, RenderStats } from '../core/profiler';
-import { PostPipeline } from './post';
+import { PostPipeline, type PostLutHandle } from './post';
+import type { SkyAssetSource } from './environment/sky';
+import { installShaderGlobals, resetShaderGlobals } from './materials/chunks/globals';
+
+/**
+ * Per-frame participant bound to one scene (EnvironmentRig): called right before that scene renders with the camera
+ * actually used, after the scene's own update. Several hooks may target the same scene.
+ */
+export interface FrameHook {
+  readonly scene: THREE.Scene;
+  beforeRender(camera: THREE.Camera, dt: number): void;
+  /** Optional plain-data diagnostics (window.__SAMRAJYA_GFX__.info()). */
+  info?(): Record<string, unknown>;
+}
+
+/**
+ * Asset loaders the render layer may use (baked skies, sun sprite, lens dirt, LUTs). Structural subset of the
+ * AssetManager - attach it once with attachAssets(ctx.assets) (main.ts) so EnvironmentRig / PostPipeline prefer
+ * baked content; without it everything stays procedural (single-file build, ?assets=off).
+ */
+export type RenderAssetSource = SkyAssetSource & {
+  loadLut?(id: string): Promise<PostLutHandle | null>;
+};
 
 export class RenderContext {
   readonly renderer: THREE.WebGLRenderer;
@@ -30,6 +52,11 @@ export class RenderContext {
   private lastDynAdjust = 0;
   private readonly resizeObserver: ResizeObserver | null;
   onContextLost: (() => void) | null = null;
+  private readonly hooks: FrameHook[] = [];
+  private readonly qualityListeners: ((q: QualitySettings) => void)[] = [];
+  private readonly restoreListeners: (() => void)[] = [];
+  /** Optional content-pipeline loaders (see RenderAssetSource). */
+  assets: RenderAssetSource | null = null;
 
   constructor(canvas: HTMLCanvasElement, quality: QualitySettings, private readonly profiler: Profiler | null = null) {
     this.canvas = canvas;
@@ -48,6 +75,8 @@ export class RenderContext {
     renderer.toneMappingExposure = 1;
     renderer.info.autoReset = false;
     this.renderer = renderer;
+    // Global shader hooks (height fog, cascades, material globals) must be in place before any material compiles.
+    installShaderGlobals();
     this.pmrem = new THREE.PMREMGenerator(renderer);
     this.applyRendererQuality();
     this.post = new PostPipeline(renderer, quality);
@@ -55,6 +84,14 @@ export class RenderContext {
       e.preventDefault();
       this.onContextLost?.();
     });
+    canvas.addEventListener('webglcontextrestored', () => {
+      // three re-creates GL state lazily; render-target contents (PMREM, shadow maps) must be rebuilt.
+      for (const fn of this.restoreListeners) fn();
+    });
+    if (typeof window !== 'undefined') {
+      // QA / evidence scripts: lighting, post and memory state of the frame being rendered (plain data).
+      (window as unknown as { __SAMRAJYA_GFX__?: unknown }).__SAMRAJYA_GFX__ = { info: () => this.diagnostics() };
+    }
     this.resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => this.resize()) : null;
     this.resizeObserver?.observe(canvas);
     window.addEventListener('resize', this.resize);
@@ -74,6 +111,59 @@ export class RenderContext {
     this.applyRendererQuality();
     this.post.setQuality(q);
     this.resize();
+    for (const fn of this.qualityListeners) fn(q);
+  }
+
+  /** Listen for runtime tier changes (EnvironmentRig rebuilds cascades, light pools, fog mode). */
+  onQualityChange(fn: (q: QualitySettings) => void): () => void {
+    this.qualityListeners.push(fn);
+    return () => {
+      const i = this.qualityListeners.indexOf(fn);
+      if (i >= 0) this.qualityListeners.splice(i, 1);
+    };
+  }
+
+  /** Listen for WebGL context restoration (re-bake GPU-generated content). */
+  onContextRestored(fn: () => void): () => void {
+    this.restoreListeners.push(fn);
+    return () => {
+      const i = this.restoreListeners.indexOf(fn);
+      if (i >= 0) this.restoreListeners.splice(i, 1);
+    };
+  }
+
+  /** Register a per-frame hook for a scene (returns the remover). */
+  addFrameHook(hook: FrameHook): () => void {
+    this.hooks.push(hook);
+    return () => {
+      const i = this.hooks.indexOf(hook);
+      if (i >= 0) this.hooks.splice(i, 1);
+    };
+  }
+
+  /** Plain-data diagnostics of the bound scene's hooks, the post pipeline and GPU memory. */
+  diagnostics(): Record<string, unknown> {
+    const hooks: Record<string, unknown>[] = [];
+    for (const h of this.hooks) if (h.scene === this.scene && h.info) hooks.push(h.info());
+    const m = this.renderer.info.memory;
+    return {
+      tier: this.quality.tier,
+      env: hooks[0] ?? null,
+      post: this.post.info(),
+      memory: { geometries: m.geometries, textures: m.textures },
+      stats: this.getStats(),
+      assetsAttached: !!this.assets,
+    };
+  }
+
+  /** Attach the content-pipeline loaders (main.ts: render.attachAssets(assets)). */
+  attachAssets(assets: RenderAssetSource | null): void {
+    this.assets = assets;
+  }
+
+  /** The bound view (null before the first setView). */
+  get view(): { scene: THREE.Scene; camera: THREE.Camera } | null {
+    return this.scene && this.camera ? { scene: this.scene, camera: this.camera } : null;
   }
 
   /** Bind the active scene + camera (post passes are rebuilt for it). */
@@ -121,6 +211,9 @@ export class RenderContext {
   render(dt: number): void {
     if (!this.scene || !this.camera) return;
     this.renderer.info.reset();
+    // Frame globals belong to the scene being drawn: neutral unless one of its hooks fills them.
+    resetShaderGlobals();
+    for (const h of this.hooks) if (h.scene === this.scene) h.beforeRender(this.camera, dt);
     if (this.usePost) this.post.render(dt);
     else this.renderer.render(this.scene, this.camera);
     if (this.profiler) this.profiler.setRenderStats(this.getStats());

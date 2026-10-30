@@ -397,6 +397,8 @@ export class SkySystem {
   readonly moonDir = new THREE.Vector3(0, 1, 0);
   /** Night weight 0..1 (procedural night gradient + moon + stars). */
   night = 0;
+  /** GPU bakes on (false in headless unit tests, which have no WebGL context). */
+  bakeEnabled = true;
   private readonly envMaterial: THREE.ShaderMaterial;
   private readonly envScene = new THREE.Scene();
   private readonly envMesh: THREE.Mesh;
@@ -607,6 +609,7 @@ export class SkySystem {
    * (envMapSize > 0) an envMapSize cube -> PMREM (render target reused). Returns null when nothing changed.
    */
   bake(renderer: THREE.WebGLRenderer, force = false): SkyBake | null {
+    if (!this.bakeEnabled) return null;
     const key = this.bakeKey();
     if (!force && key === this.lastBakeKey && (this.pmremTarget || this.envMapSize <= 0)) return null;
     this.lastBakeKey = key;
