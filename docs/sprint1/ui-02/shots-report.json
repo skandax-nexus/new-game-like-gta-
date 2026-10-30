@@ -3,6 +3,11 @@
   "dist": ".build/ui-02",
   "checks": [
     {
+      "name": "world HUD (pc): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
       "name": "world (pc): an event modal was reached",
       "ok": true,
       "observed": null
@@ -19,12 +24,17 @@
       "name": "profiler world-1280x720: UI + input < 1 ms/frame at 60 fps (bench avg, 1x and 4x)",
       "ok": true,
       "observed": {
-        "bench1x": 0.087,
+        "bench1x": 0.077,
         "bench4x": 0.133
       }
     },
     {
       "name": "world (pc): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "battle HUD (pc): open map areas pass pointer events through to the game",
       "ok": true,
       "observed": []
     },
@@ -40,7 +50,7 @@
       "name": "profiler battle-1280x720: UI + input < 1 ms/frame at 60 fps (bench avg, 1x and 4x)",
       "ok": true,
       "observed": {
-        "bench1x": 0.028,
+        "bench1x": 0.051,
         "bench4x": 0.012
       }
     },
@@ -58,7 +68,17 @@
       "observed": []
     },
     {
+      "name": "hero HUD (pc): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
       "name": "hero (pc): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "world HUD (portrait): open map areas pass pointer events through to the game",
       "ok": true,
       "observed": []
     },
@@ -81,6 +101,11 @@
       "observed": []
     },
     {
+      "name": "battle HUD (portrait): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
       "name": "battle (portrait): Esc closes the radial wheel without opening the pause menu",
       "ok": true,
       "observed": {
@@ -94,7 +119,17 @@
       "observed": []
     },
     {
+      "name": "hero HUD (portrait): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
       "name": "hero (portrait): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "world HUD (landscape): open map areas pass pointer events through to the game",
       "ok": true,
       "observed": []
     },
@@ -117,6 +152,11 @@
       "observed": []
     },
     {
+      "name": "battle HUD (landscape): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
       "name": "battle (landscape): Esc closes the radial wheel without opening the pause menu",
       "ok": true,
       "observed": {
@@ -126,6 +166,11 @@
     },
     {
       "name": "battle (landscape): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero HUD (landscape): open map areas pass pointer events through to the game",
       "ok": true,
       "observed": []
     },
@@ -148,34 +193,34 @@
       "name": "contrast: every measured text run >= 4.5:1 (body) / 3:1 (large) on 53 captures",
       "ok": false,
       "observed": {
-        "texts": 2159,
+        "texts": 1834,
         "fails": [
           {
-            "shot": "army-panel-portrait.png",
-            "text": "1",
-            "ratio": 4.03,
+            "shot": "hero-combat-portrait.png",
+            "text": "Durjaya the Red",
+            "ratio": 4.44,
             "need": 4.5,
-            "fontSize": 13.708333333333332,
-            "color": "rgb(233, 185, 73)",
-            "bg": "rgb(126,73,21)",
-            "cls": "group-num",
+            "fontSize": 16.856119791666668,
+            "color": "rgb(236, 90, 64)",
+            "bg": "rgb(40,36,42)",
+            "cls": "hh-boss-name",
             "at": [
-              37,
-              440
+              127,
+              181
             ]
           },
           {
-            "shot": "army-panel-landscape.png",
-            "text": "1",
-            "ratio": 4.03,
+            "shot": "hero-combat-landscape.png",
+            "text": "Durjaya the Red",
+            "ratio": 4.2,
             "need": 4.5,
-            "fontSize": 13.708333333333332,
-            "color": "rgb(233, 185, 73)",
-            "bg": "rgb(126,73,21)",
-            "cls": "group-num",
+            "fontSize": 16.856119791666668,
+            "color": "rgb(236, 90, 64)",
+            "bg": "rgb(48,39,45)",
+            "cls": "hh-boss-name",
             "at": [
-              38,
-              161
+              354,
+              53
             ]
           }
         ]
@@ -185,7 +230,7 @@
       "name": "touch: every interactive element >= 44x44 px on phone captures",
       "ok": true,
       "observed": {
-        "targets": 1040,
+        "targets": 858,
         "fails": []
       }
     }
@@ -522,21 +567,21 @@
     },
     {
       "shot": "battle-live-pc.png",
-      "texts": 72,
+      "texts": 71,
       "contrastFails": [],
       "targets": 36,
       "smallTargets": []
     },
     {
       "shot": "battle-radial-pc.png",
-      "texts": 94,
+      "texts": 22,
       "contrastFails": [],
-      "targets": 61,
+      "targets": 25,
       "smallTargets": []
     },
     {
       "shot": "battle-intents-pc.png",
-      "texts": 66,
+      "texts": 65,
       "contrastFails": [],
       "targets": 36,
       "smallTargets": []
@@ -578,37 +623,23 @@
     },
     {
       "shot": "settlement-panel-portrait.png",
-      "texts": 70,
+      "texts": 37,
       "contrastFails": [],
-      "targets": 43,
+      "targets": 19,
       "smallTargets": []
     },
     {
       "shot": "army-panel-portrait.png",
-      "texts": 79,
-      "contrastFails": [
-        {
-          "text": "1",
-          "ratio": 4.03,
-          "need": 4.5,
-          "fontSize": 13.708333333333332,
-          "color": "rgb(233, 185, 73)",
-          "bg": "rgb(126,73,21)",
-          "cls": "group-num",
-          "at": [
-            37,
-            440
-          ]
-        }
-      ],
-      "targets": 47,
+      "texts": 35,
+      "contrastFails": [],
+      "targets": 24,
       "smallTargets": []
     },
     {
       "shot": "build-placement-portrait.png",
       "texts": 15,
       "contrastFails": [],
-      "targets": 18,
+      "targets": 12,
       "smallTargets": []
     },
     {
@@ -662,16 +693,16 @@
     },
     {
       "shot": "battle-live-portrait.png",
-      "texts": 30,
+      "texts": 29,
       "contrastFails": [],
       "targets": 15,
       "smallTargets": []
     },
     {
       "shot": "battle-radial-portrait.png",
-      "texts": 52,
+      "texts": 22,
       "contrastFails": [],
-      "targets": 40,
+      "targets": 25,
       "smallTargets": []
     },
     {
@@ -690,58 +721,58 @@
     },
     {
       "shot": "hero-combat-portrait.png",
-      "texts": 15,
-      "contrastFails": [],
+      "texts": 14,
+      "contrastFails": [
+        {
+          "text": "Durjaya the Red",
+          "ratio": 4.44,
+          "need": 4.5,
+          "fontSize": 16.856119791666668,
+          "color": "rgb(236, 90, 64)",
+          "bg": "rgb(40,36,42)",
+          "cls": "hh-boss-name",
+          "at": [
+            127,
+            181
+          ]
+        }
+      ],
       "targets": 7,
       "smallTargets": []
     },
     {
       "shot": "world-settlement-economy-landscape.png",
-      "texts": 46,
+      "texts": 35,
       "contrastFails": [],
       "targets": 39,
       "smallTargets": []
     },
     {
       "shot": "world-settlement-recruit-landscape.png",
-      "texts": 40,
+      "texts": 30,
       "contrastFails": [],
       "targets": 39,
       "smallTargets": []
     },
     {
       "shot": "settlement-panel-landscape.png",
-      "texts": 63,
+      "texts": 30,
       "contrastFails": [],
-      "targets": 41,
+      "targets": 13,
       "smallTargets": []
     },
     {
       "shot": "army-panel-landscape.png",
-      "texts": 73,
-      "contrastFails": [
-        {
-          "text": "1",
-          "ratio": 4.03,
-          "need": 4.5,
-          "fontSize": 13.708333333333332,
-          "color": "rgb(233, 185, 73)",
-          "bg": "rgb(126,73,21)",
-          "cls": "group-num",
-          "at": [
-            38,
-            161
-          ]
-        }
-      ],
-      "targets": 44,
+      "texts": 30,
+      "contrastFails": [],
+      "targets": 17,
       "smallTargets": []
     },
     {
       "shot": "build-placement-landscape.png",
       "texts": 15,
       "contrastFails": [],
-      "targets": 18,
+      "targets": 13,
       "smallTargets": []
     },
     {
@@ -795,21 +826,21 @@
     },
     {
       "shot": "battle-live-landscape.png",
-      "texts": 45,
+      "texts": 43,
       "contrastFails": [],
       "targets": 18,
       "smallTargets": []
     },
     {
       "shot": "battle-radial-landscape.png",
-      "texts": 67,
+      "texts": 22,
       "contrastFails": [],
-      "targets": 43,
+      "targets": 25,
       "smallTargets": []
     },
     {
       "shot": "battle-results-landscape.png",
-      "texts": 33,
+      "texts": 35,
       "contrastFails": [],
       "targets": 0,
       "smallTargets": []
@@ -824,7 +855,21 @@
     {
       "shot": "hero-combat-landscape.png",
       "texts": 15,
-      "contrastFails": [],
+      "contrastFails": [
+        {
+          "text": "Durjaya the Red",
+          "ratio": 4.2,
+          "need": 4.5,
+          "fontSize": 16.856119791666668,
+          "color": "rgb(236, 90, 64)",
+          "bg": "rgb(48,39,45)",
+          "cls": "hh-boss-name",
+          "at": [
+            354,
+            53
+          ]
+        }
+      ],
       "targets": 7,
       "smallTargets": []
     }
@@ -837,9 +882,9 @@
         "frames": 600,
         "updates": 40,
         "steps": 120,
-        "avgMs": 0.087,
+        "avgMs": 0.077,
         "p95Ms": 0.4,
-        "maxMs": 22.1
+        "maxMs": 12.5
       },
       "bench4x": {
         "screen": "world_hud",
@@ -848,14 +893,14 @@
         "updates": 40,
         "steps": 480,
         "avgMs": 0.133,
-        "p95Ms": 1.3,
-        "maxMs": 17.7
+        "p95Ms": 1.5,
+        "maxMs": 16.9
       },
       "liveSwiftShader": {
-        "ui": 3.073,
-        "input": 0.016,
-        "total": 3.089,
-        "max": 54.8
+        "ui": 3.23,
+        "input": 0.002,
+        "total": 3.232,
+        "max": 36.3
       }
     },
     "battle-1280x720": {
@@ -865,9 +910,9 @@
         "frames": 600,
         "updates": 85,
         "steps": 200,
-        "avgMs": 0.028,
-        "p95Ms": 0.9,
-        "maxMs": 2.6
+        "avgMs": 0.051,
+        "p95Ms": 1.5,
+        "maxMs": 4.7
       },
       "bench4x": {
         "screen": "battle_hud",
@@ -877,13 +922,13 @@
         "steps": 795,
         "avgMs": 0.012,
         "p95Ms": 0,
-        "maxMs": 1.9
+        "maxMs": 2.7
       },
       "liveSwiftShader": {
-        "ui": 2.939,
-        "input": 0.002,
-        "total": 2.941,
-        "max": 91.8
+        "ui": 2.416,
+        "input": 0.004,
+        "total": 2.42,
+        "max": 86.8
       }
     }
   }

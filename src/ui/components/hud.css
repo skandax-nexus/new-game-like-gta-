@@ -2711,7 +2711,8 @@
   align-self: center;
   padding: 0 10px;
   border-radius: var(--radius-sm);
-  background: rgba(13, 11, 24, 0.86);
+  /* Opaque: the unblockable red name keeps >= 5:1 whatever the scene behind it. */
+  background: rgb(13, 11, 24);
 }
 .hh-vrow .meter.stamina {
   height: 6px;
@@ -3577,4 +3578,25 @@
 }
 :root[data-layout='phone-landscape'] .br-forms {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+/* Landscape phones: prompts fit 390 px of height (no ornament, compact sides) so the decision buttons stay visible. */
+:root[data-layout='phone-landscape'] .modal .title-torana,
+:root[data-layout='phone-landscape'] .modal .panel-head .title-torana {
+  padding-top: 0;
+}
+:root[data-layout='phone-landscape'] .modal .title-torana::before {
+  display: none;
+}
+:root[data-layout='phone-landscape'] .eng-sides {
+  margin: 4px 0;
+}
+:root[data-layout='phone-landscape'] .eng-side {
+  padding: 6px 8px;
+}
+:root[data-layout='phone-landscape'] .eng-men {
+  font-size: var(--fs-lg);
+  margin: 0;
+}
+:root[data-layout='phone-landscape'] .eng-factors {
+  margin: 4px 0;
 }
