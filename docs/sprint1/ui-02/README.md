@@ -158,10 +158,12 @@ HTML) both succeed. Smoke: `docs/sprint1/ui-02/smoke/` (all 14 smoke shots passe
   cam.yaw + Math.PI)` at 4-10 Hz and `setWorldGroups(...)` when army control groups change;
   `ctx.input.setSelectionHitTest(...)` for drag-from-selection.
 - Lead Gameplay Engineer / GP-04 (`src/scenes/BattleScene.ts`): push `battle_hud.deployment`, `rally` and `anchors`
-  (batched worldToScreen at 10 Hz); consume `battle_target` and `minimap_move`; open the pause menu on `menu` only
+  (batched worldToScreen, `ui.update('battle_hud', ...)` every frame: the full HUD render stays throttled to 10 Hz,
+  `Screen.track` moves the floating cards on every push - lead review round 1); consume `battle_target` and `minimap_move`; open the pause menu on `menu` only
   (today `cancel` also pauses, so a mode cancel pauses the game - the radial wheel already swallows its own Esc).
 - Lead Gameplay Engineer / GP-02 (`src/scenes/HeroScene.ts`, `src/hero/**`): push the `hero_hud` v2 fields
-  (`promptAnchor`, `objective`, `compassHeading`, `caption`, `combat`, `touchControls`); read hero holds with
+  (`promptAnchor`, `objective`, `compassHeading`, `caption`, `combat`, `touchControls`) every frame (enemy bars, the
+  lock-on reticle and the prompt bubble follow each push through `Screen.track`); read hero holds with
   `ctx.input.isHeld / heldFor / releasedFor` and the touch stick from the input frame.
 - CTO (`src/core/profiler.ts`): an API for external per-system milliseconds (e.g. `profiler.addSystemMs('ui', ms)`)
   so UI + input appear in the F3 system list next to the counters `ui.ms`, `input.ms`, `uiInput.ms`, `uiInput.maxMs`.
@@ -182,3 +184,31 @@ HTML) both succeed. Smoke: `docs/sprint1/ui-02/smoke/` (all 14 smoke shots passe
 - `npm test` in this tree has 5 failures outside UI-02 (strategic siege / politics, contracts migration, SIM-02
   campaign AI) that come with the SIM-02 / snapshot commits after `5829cd1` (they pass on a clean export of
   `5829cd1`, fail on a clean export of HEAD); every UI and input suite passes.
+
+## Lead UI/UX review, round 1 (reviewer fixes and re-captures)
+
+Re-captured with the reviewer fixes into `docs/sprint1/ui-02/review/` (same script: `SHOTS_PORT=4465
+SHOTS_DIST=.build/ui-02-review SHOTS_OUT=docs/sprint1/ui-02/review`); review smoke in
+`docs/sprint1/ui-02/review-smoke/`. Fixed by the reviewer (commits `[Lead UI/UX Engineer] UI-02 review ...`):
+
+| Finding | Fix |
+|---|---|
+| Live panels (economy, ages, diplomacy, council, market) rebuild their buttons on every refresh (up to 2.5 Hz while the game runs): a click whose pointerdown and pointerup straddle a rebuild was lost, and keyboard focus dropped to `<body>` | `UIManager`: a press inside a panel / modal holds its re-renders until the release and renders after the click; focus is restored on the node at the same place after a re-render. HUD screens are exempt (touch stick, hold buttons). `tests/ui/hud/uiManager.test.ts` |
+| Floating formation cards, hero enemy bars, the lock-on reticle and the prompt bubble only moved on the 10 Hz render: they would swim behind a moving camera | `Screen.track(props)`: every throttled push repositions anchored nodes (transform writes only); GP-04 / GP-02 push anchors every frame (requests above updated) |
+| Battle HUD at 1280 x 720 stacked the cards strip over the middle of the battlefield (the HUD covered the lower-centre half of the screen) | PC: AoE IV layout - minimap bottom-left, formation cards bottom-centre (wrap, 2 rows, then scroll), command card bottom-right, Rally in the corner |
+| Formation cards cut the dominant morale cause to "gener..."; experience shown as `^^` text | lotus icon + `82 · general near`; stacked chevron icons (army panel too) |
+| Age requirements met / unmet differed by colour only | check / cross icon per row |
+| Phones: keyboard chips on touch portrait slots; hero vitals over the compass band (portrait); landscape tabs "Econo..."; battle results' Return row below the fold (landscape) | chips hidden on touch, vitals under the compass, body face for landscape tabs, sticky results footer |
+| Settlement card refresh re-ran SIM-01 `buildOptions` (placement search, 5.6 ms in node) twice a second | memoized on everything `validateBuild` reads + the sim day: 0.5 ms per refresh when nothing changed |
+| The event modal printed 1, 2, 3 on its choices but those keys selected control groups | number keys pick the choice while the modal is open |
+| The placement HUD's touch rotate sent the HUD command and the `placement_rotate` input action (two turns per tap once GP-03 handles both) | HUD command only; R stays the input action |
+
+Review capture (`docs/sprint1/ui-02/review/shots-report.json`): 59 shots, 34 / 34 checks; 1,827 text runs on 53
+captures with 0 below 4.5:1 / 3:1; 867 phone touch targets, 0 under 44 px; no console / page errors. UI + input on the
+60 fps bench at 1280 x 720: world 0.064 ms avg at 1x (p95 0.7, max 21.8) and 0.133 ms at 4x; battle 0.040 ms at 1x
+(p95 1.1, max 4.3) and 0.018 ms at 4x. The world max is still a sim-day cache miss of SIM-01 `buildOptions` (request
+above). Single-file build 2,618 kB.
+
+Still open for the developer (round 2): see the review verdict - battle control-group row on touch, recruitment
+queue cancel (needs a command), and evidence for the settlement panel's lower half, an event with advisor
+recommendations and a locked choice, and the prisoners choice.

@@ -1,0 +1,878 @@
+{
+  "port": 4465,
+  "dist": ".build/ui-02-review2",
+  "checks": [
+    {
+      "name": "world HUD (pc): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "world (pc): an event modal was reached",
+      "ok": true,
+      "observed": null
+    },
+    {
+      "name": "world (pc): an engagement prompt was reached",
+      "ok": true,
+      "observed": {
+        "id": "army_giri",
+        "d": 2018.0439178570916
+      }
+    },
+    {
+      "name": "profiler world-1280x720: UI + input < 1 ms/frame at 60 fps (bench avg, 1x and 4x)",
+      "ok": true,
+      "observed": {
+        "bench1x": 0.064,
+        "bench4x": 0.133
+      }
+    },
+    {
+      "name": "world (pc): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "battle HUD (pc): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "battle (pc): Esc closes the radial wheel without opening the pause menu",
+      "ok": true,
+      "observed": {
+        "radial": false,
+        "pause": false
+      }
+    },
+    {
+      "name": "profiler battle-1280x720: UI + input < 1 ms/frame at 60 fps (bench avg, 1x and 4x)",
+      "ok": true,
+      "observed": {
+        "bench1x": 0.04,
+        "bench4x": 0.018
+      }
+    },
+    {
+      "name": "battle (pc): the battle reaches an outcome and the results screen shows",
+      "ok": true,
+      "observed": {
+        "winner": 0,
+        "reason": "withdrawal"
+      }
+    },
+    {
+      "name": "battle (pc): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero HUD (pc): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero (pc): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "world HUD (portrait): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "world (portrait): an event modal was reached",
+      "ok": true,
+      "observed": null
+    },
+    {
+      "name": "world (portrait): an engagement prompt was reached",
+      "ok": true,
+      "observed": {
+        "id": "army_giri",
+        "d": 2018.0439178570916
+      }
+    },
+    {
+      "name": "world (portrait): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "battle HUD (portrait): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "battle (portrait): Esc closes the radial wheel without opening the pause menu",
+      "ok": true,
+      "observed": {
+        "radial": false,
+        "pause": false
+      }
+    },
+    {
+      "name": "battle (portrait): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero HUD (portrait): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero (portrait): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "world HUD (landscape): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "world (landscape): an event modal was reached",
+      "ok": true,
+      "observed": null
+    },
+    {
+      "name": "world (landscape): an engagement prompt was reached",
+      "ok": true,
+      "observed": {
+        "id": "army_giri",
+        "d": 2018.0439178570916
+      }
+    },
+    {
+      "name": "world (landscape): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "battle HUD (landscape): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "battle (landscape): Esc closes the radial wheel without opening the pause menu",
+      "ok": true,
+      "observed": {
+        "radial": false,
+        "pause": false
+      }
+    },
+    {
+      "name": "battle (landscape): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero HUD (landscape): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero (landscape): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "assets=off: the world HUD shows",
+      "ok": true,
+      "observed": true
+    },
+    {
+      "name": "assets=off world (pc): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "contrast: every measured text run >= 4.5:1 (body) / 3:1 (large) on 53 captures",
+      "ok": true,
+      "observed": {
+        "texts": 1827,
+        "fails": []
+      }
+    },
+    {
+      "name": "touch: every interactive element >= 44x44 px on phone captures",
+      "ok": true,
+      "observed": {
+        "targets": 867,
+        "fails": []
+      }
+    }
+  ],
+  "shots": [
+    {
+      "name": "world-settlement-economy-pc.png",
+      "note": "world HUD, Rajapura selected: resource bar, date/season/forecast, speed, realm buttons, objectives, minimap, command card Economy tab"
+    },
+    {
+      "name": "world-settlement-recruit-pc.png",
+      "note": "command card Recruit tab (recruit slots by UnitDef.commandSlot, rally point slot 14)"
+    },
+    {
+      "name": "settlement-panel-pc.png",
+      "note": "settlement panel (drawer / bottom sheet): vitals, labor, tax, buildings, queues, garrison"
+    },
+    {
+      "name": "world-army-card-pc.png",
+      "note": "army selected: army command card (orders, stances, forced march, split, merge, disband, visit)"
+    },
+    {
+      "name": "army-panel-pc.png",
+      "note": "army panel: commander, supply with reasons, stance, units with split selection"
+    },
+    {
+      "name": "build-placement-pc.png",
+      "note": "build placement HUD (granary ghost, invalid with reason, cost, rotate / repeat keys; phones: tick / cross / rotate)"
+    },
+    {
+      "name": "market-pc.png",
+      "note": "market (opened from the Economy tab \"Trade\" slot): quotes, buy / sell lots, sparkline, reasons"
+    },
+    {
+      "name": "age-panel-pc.png",
+      "note": "age panel: requirements checklist, two landmark cards, unlock preview"
+    },
+    {
+      "name": "economy-panel-pc.png",
+      "note": "economy panel: ledger and projection, tax policy, royal reserve, rationing, granaries"
+    },
+    {
+      "name": "diplomacy-pc.png",
+      "note": "diplomacy: realm list, relation, proposal composer with the AI reply and its reasons (evaluateAcceptance)"
+    },
+    {
+      "name": "minimap-world-pc.png",
+      "note": "world minimap: terrain bitmap, borders, roads, settlements by relation, armies, fog"
+    },
+    {
+      "name": "event-modal-pc.png",
+      "note": "event modal: illustration band, text, choices with advisor recommendation and requirements"
+    },
+    {
+      "name": "engagement-prompt-pc.png",
+      "note": "engagement prompt: both sides, prediction bar, advisor factors, queue"
+    },
+    {
+      "name": "battle-deployment-pc.png",
+      "note": "battle HUD in deployment: forces bar, deployment timer + Begin, cards strip, command card, simple presets"
+    },
+    {
+      "name": "battle-live-pc.png",
+      "note": "battle HUD in battle: cards strip (strength, morale + cause, fatigue, ammo), selection card, rally ring, floating formation cards (anchors from the camera model), feed"
+    },
+    {
+      "name": "battle-radial-pc.png",
+      "note": "radial wheel (long press): inner ring orders, outer ring shapes / intents, cancel centre"
+    },
+    {
+      "name": "battle-intents-pc.png",
+      "note": "command card Intents page (Tab cycles Orders / Shapes / Intents; slots keyed per preset)"
+    },
+    {
+      "name": "minimap-battle-pc.png",
+      "note": "battle minimap: terrain, deploy zones, formations by side with facing, selection"
+    },
+    {
+      "name": "battle-results-pc.png",
+      "note": "battle results: banner, per-side table, formations, fates, chronicle, Continue"
+    },
+    {
+      "name": "hero-explore-pc.png",
+      "note": "hero HUD exploring: objective, compass strip, prompt bubble at its anchor, caption; phones: stick + interact"
+    },
+    {
+      "name": "hero-combat-pc.png",
+      "note": "hero HUD in combat: HP / stamina / salves, boss bar (unblockable cue), enemy bars, lock-on reticle; phones: combat buttons"
+    },
+    {
+      "name": "world-settlement-economy-portrait.png",
+      "note": "world HUD, Rajapura selected: resource bar, date/season/forecast, speed, realm buttons, objectives, minimap, command card Economy tab"
+    },
+    {
+      "name": "world-settlement-recruit-portrait.png",
+      "note": "command card Recruit tab (recruit slots by UnitDef.commandSlot, rally point slot 14)"
+    },
+    {
+      "name": "settlement-panel-portrait.png",
+      "note": "settlement panel (drawer / bottom sheet): vitals, labor, tax, buildings, queues, garrison"
+    },
+    {
+      "name": "army-panel-portrait.png",
+      "note": "army panel: commander, supply with reasons, stance, units with split selection"
+    },
+    {
+      "name": "build-placement-portrait.png",
+      "note": "build placement HUD (granary ghost, invalid with reason, cost, rotate / repeat keys; phones: tick / cross / rotate)"
+    },
+    {
+      "name": "market-portrait.png",
+      "note": "market (opened from the Economy tab \"Trade\" slot): quotes, buy / sell lots, sparkline, reasons"
+    },
+    {
+      "name": "age-panel-portrait.png",
+      "note": "age panel: requirements checklist, two landmark cards, unlock preview"
+    },
+    {
+      "name": "economy-panel-portrait.png",
+      "note": "economy panel: ledger and projection, tax policy, royal reserve, rationing, granaries"
+    },
+    {
+      "name": "diplomacy-portrait.png",
+      "note": "diplomacy: realm list, relation, proposal composer with the AI reply and its reasons (evaluateAcceptance)"
+    },
+    {
+      "name": "minimap-world-portrait.png",
+      "note": "world minimap: terrain bitmap, borders, roads, settlements by relation, armies, fog"
+    },
+    {
+      "name": "event-modal-portrait.png",
+      "note": "event modal: illustration band, text, choices with advisor recommendation and requirements"
+    },
+    {
+      "name": "engagement-prompt-portrait.png",
+      "note": "engagement prompt: both sides, prediction bar, advisor factors, queue"
+    },
+    {
+      "name": "battle-deployment-portrait.png",
+      "note": "battle HUD in deployment: forces bar, deployment timer + Begin, cards strip, command card, simple presets"
+    },
+    {
+      "name": "battle-live-portrait.png",
+      "note": "battle HUD in battle: cards strip (strength, morale + cause, fatigue, ammo), selection card, rally ring, floating formation cards (anchors from the camera model), feed"
+    },
+    {
+      "name": "battle-radial-portrait.png",
+      "note": "radial wheel (long press): inner ring orders, outer ring shapes / intents, cancel centre"
+    },
+    {
+      "name": "minimap-battle-portrait.png",
+      "note": "battle minimap: terrain, deploy zones, formations by side with facing, selection"
+    },
+    {
+      "name": "battle-results-portrait.png",
+      "note": "battle results: banner, per-side table, formations, fates, chronicle, Continue"
+    },
+    {
+      "name": "hero-explore-portrait.png",
+      "note": "hero HUD exploring: objective, compass strip, prompt bubble at its anchor, caption; phones: stick + interact"
+    },
+    {
+      "name": "hero-combat-portrait.png",
+      "note": "hero HUD in combat: HP / stamina / salves, boss bar (unblockable cue), enemy bars, lock-on reticle; phones: combat buttons"
+    },
+    {
+      "name": "world-settlement-economy-landscape.png",
+      "note": "world HUD, Rajapura selected: resource bar, date/season/forecast, speed, realm buttons, objectives, minimap, command card Economy tab"
+    },
+    {
+      "name": "world-settlement-recruit-landscape.png",
+      "note": "command card Recruit tab (recruit slots by UnitDef.commandSlot, rally point slot 14)"
+    },
+    {
+      "name": "settlement-panel-landscape.png",
+      "note": "settlement panel (drawer / bottom sheet): vitals, labor, tax, buildings, queues, garrison"
+    },
+    {
+      "name": "army-panel-landscape.png",
+      "note": "army panel: commander, supply with reasons, stance, units with split selection"
+    },
+    {
+      "name": "build-placement-landscape.png",
+      "note": "build placement HUD (granary ghost, invalid with reason, cost, rotate / repeat keys; phones: tick / cross / rotate)"
+    },
+    {
+      "name": "market-landscape.png",
+      "note": "market (opened from the Economy tab \"Trade\" slot): quotes, buy / sell lots, sparkline, reasons"
+    },
+    {
+      "name": "age-panel-landscape.png",
+      "note": "age panel: requirements checklist, two landmark cards, unlock preview"
+    },
+    {
+      "name": "economy-panel-landscape.png",
+      "note": "economy panel: ledger and projection, tax policy, royal reserve, rationing, granaries"
+    },
+    {
+      "name": "diplomacy-landscape.png",
+      "note": "diplomacy: realm list, relation, proposal composer with the AI reply and its reasons (evaluateAcceptance)"
+    },
+    {
+      "name": "minimap-world-landscape.png",
+      "note": "world minimap: terrain bitmap, borders, roads, settlements by relation, armies, fog"
+    },
+    {
+      "name": "event-modal-landscape.png",
+      "note": "event modal: illustration band, text, choices with advisor recommendation and requirements"
+    },
+    {
+      "name": "engagement-prompt-landscape.png",
+      "note": "engagement prompt: both sides, prediction bar, advisor factors, queue"
+    },
+    {
+      "name": "battle-deployment-landscape.png",
+      "note": "battle HUD in deployment: forces bar, deployment timer + Begin, cards strip, command card, simple presets"
+    },
+    {
+      "name": "battle-live-landscape.png",
+      "note": "battle HUD in battle: cards strip (strength, morale + cause, fatigue, ammo), selection card, rally ring, floating formation cards (anchors from the camera model), feed"
+    },
+    {
+      "name": "battle-radial-landscape.png",
+      "note": "radial wheel (long press): inner ring orders, outer ring shapes / intents, cancel centre"
+    },
+    {
+      "name": "minimap-battle-landscape.png",
+      "note": "battle minimap: terrain, deploy zones, formations by side with facing, selection"
+    },
+    {
+      "name": "battle-results-landscape.png",
+      "note": "battle results: banner, per-side table, formations, fates, chronicle, Continue"
+    },
+    {
+      "name": "hero-explore-landscape.png",
+      "note": "hero HUD exploring: objective, compass strip, prompt bubble at its anchor, caption; phones: stick + interact"
+    },
+    {
+      "name": "hero-combat-landscape.png",
+      "note": "hero HUD in combat: HP / stamina / salves, boss bar (unblockable cue), enemy bars, lock-on reticle; phones: combat buttons"
+    }
+  ],
+  "audits": [
+    {
+      "shot": "world-settlement-economy-pc.png",
+      "texts": 71,
+      "contrastFails": [],
+      "targets": 41,
+      "smallTargets": []
+    },
+    {
+      "shot": "world-settlement-recruit-pc.png",
+      "texts": 65,
+      "contrastFails": [],
+      "targets": 41,
+      "smallTargets": []
+    },
+    {
+      "shot": "settlement-panel-pc.png",
+      "texts": 93,
+      "contrastFails": [],
+      "targets": 52,
+      "smallTargets": []
+    },
+    {
+      "shot": "world-army-card-pc.png",
+      "texts": 65,
+      "contrastFails": [],
+      "targets": 35,
+      "smallTargets": []
+    },
+    {
+      "shot": "army-panel-pc.png",
+      "texts": 91,
+      "contrastFails": [],
+      "targets": 43,
+      "smallTargets": []
+    },
+    {
+      "shot": "build-placement-pc.png",
+      "texts": 87,
+      "contrastFails": [],
+      "targets": 41,
+      "smallTargets": []
+    },
+    {
+      "shot": "market-pc.png",
+      "texts": 28,
+      "contrastFails": [],
+      "targets": 8,
+      "smallTargets": []
+    },
+    {
+      "shot": "age-panel-pc.png",
+      "texts": 45,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": []
+    },
+    {
+      "shot": "economy-panel-pc.png",
+      "texts": 59,
+      "contrastFails": [],
+      "targets": 12,
+      "smallTargets": []
+    },
+    {
+      "shot": "diplomacy-pc.png",
+      "texts": 19,
+      "contrastFails": [],
+      "targets": 7,
+      "smallTargets": []
+    },
+    {
+      "shot": "event-modal-pc.png",
+      "texts": 7,
+      "contrastFails": [],
+      "targets": 1,
+      "smallTargets": []
+    },
+    {
+      "shot": "engagement-prompt-pc.png",
+      "texts": 22,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-deployment-pc.png",
+      "texts": 79,
+      "contrastFails": [],
+      "targets": 37,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-live-pc.png",
+      "texts": 76,
+      "contrastFails": [],
+      "targets": 36,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-radial-pc.png",
+      "texts": 22,
+      "contrastFails": [],
+      "targets": 25,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-intents-pc.png",
+      "texts": 70,
+      "contrastFails": [],
+      "targets": 36,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-results-pc.png",
+      "texts": 50,
+      "contrastFails": [],
+      "targets": 1,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-explore-pc.png",
+      "texts": 10,
+      "contrastFails": [],
+      "targets": 2,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-combat-pc.png",
+      "texts": 9,
+      "contrastFails": [],
+      "targets": 1,
+      "smallTargets": []
+    },
+    {
+      "shot": "world-settlement-economy-portrait.png",
+      "texts": 35,
+      "contrastFails": [],
+      "targets": 39,
+      "smallTargets": []
+    },
+    {
+      "shot": "world-settlement-recruit-portrait.png",
+      "texts": 30,
+      "contrastFails": [],
+      "targets": 39,
+      "smallTargets": []
+    },
+    {
+      "shot": "settlement-panel-portrait.png",
+      "texts": 37,
+      "contrastFails": [],
+      "targets": 19,
+      "smallTargets": []
+    },
+    {
+      "shot": "army-panel-portrait.png",
+      "texts": 35,
+      "contrastFails": [],
+      "targets": 24,
+      "smallTargets": []
+    },
+    {
+      "shot": "build-placement-portrait.png",
+      "texts": 15,
+      "contrastFails": [],
+      "targets": 12,
+      "smallTargets": []
+    },
+    {
+      "shot": "market-portrait.png",
+      "texts": 28,
+      "contrastFails": [],
+      "targets": 8,
+      "smallTargets": []
+    },
+    {
+      "shot": "age-panel-portrait.png",
+      "texts": 34,
+      "contrastFails": [],
+      "targets": 2,
+      "smallTargets": []
+    },
+    {
+      "shot": "economy-panel-portrait.png",
+      "texts": 44,
+      "contrastFails": [],
+      "targets": 8,
+      "smallTargets": []
+    },
+    {
+      "shot": "diplomacy-portrait.png",
+      "texts": 13,
+      "contrastFails": [],
+      "targets": 5,
+      "smallTargets": []
+    },
+    {
+      "shot": "event-modal-portrait.png",
+      "texts": 7,
+      "contrastFails": [],
+      "targets": 1,
+      "smallTargets": []
+    },
+    {
+      "shot": "engagement-prompt-portrait.png",
+      "texts": 22,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-deployment-portrait.png",
+      "texts": 31,
+      "contrastFails": [],
+      "targets": 16,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-live-portrait.png",
+      "texts": 29,
+      "contrastFails": [],
+      "targets": 15,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-radial-portrait.png",
+      "texts": 22,
+      "contrastFails": [],
+      "targets": 25,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-results-portrait.png",
+      "texts": 44,
+      "contrastFails": [],
+      "targets": 1,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-explore-portrait.png",
+      "texts": 10,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-combat-portrait.png",
+      "texts": 15,
+      "contrastFails": [],
+      "targets": 7,
+      "smallTargets": []
+    },
+    {
+      "shot": "world-settlement-economy-landscape.png",
+      "texts": 35,
+      "contrastFails": [],
+      "targets": 39,
+      "smallTargets": []
+    },
+    {
+      "shot": "world-settlement-recruit-landscape.png",
+      "texts": 30,
+      "contrastFails": [],
+      "targets": 39,
+      "smallTargets": []
+    },
+    {
+      "shot": "settlement-panel-landscape.png",
+      "texts": 30,
+      "contrastFails": [],
+      "targets": 13,
+      "smallTargets": []
+    },
+    {
+      "shot": "army-panel-landscape.png",
+      "texts": 30,
+      "contrastFails": [],
+      "targets": 17,
+      "smallTargets": []
+    },
+    {
+      "shot": "build-placement-landscape.png",
+      "texts": 15,
+      "contrastFails": [],
+      "targets": 13,
+      "smallTargets": []
+    },
+    {
+      "shot": "market-landscape.png",
+      "texts": 20,
+      "contrastFails": [],
+      "targets": 6,
+      "smallTargets": []
+    },
+    {
+      "shot": "age-panel-landscape.png",
+      "texts": 20,
+      "contrastFails": [],
+      "targets": 1,
+      "smallTargets": []
+    },
+    {
+      "shot": "economy-panel-landscape.png",
+      "texts": 25,
+      "contrastFails": [],
+      "targets": 5,
+      "smallTargets": []
+    },
+    {
+      "shot": "diplomacy-landscape.png",
+      "texts": 12,
+      "contrastFails": [],
+      "targets": 5,
+      "smallTargets": []
+    },
+    {
+      "shot": "event-modal-landscape.png",
+      "texts": 7,
+      "contrastFails": [],
+      "targets": 1,
+      "smallTargets": []
+    },
+    {
+      "shot": "engagement-prompt-landscape.png",
+      "texts": 22,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-deployment-landscape.png",
+      "texts": 45,
+      "contrastFails": [],
+      "targets": 19,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-live-landscape.png",
+      "texts": 43,
+      "contrastFails": [],
+      "targets": 18,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-radial-landscape.png",
+      "texts": 22,
+      "contrastFails": [],
+      "targets": 25,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-results-landscape.png",
+      "texts": 27,
+      "contrastFails": [],
+      "targets": 1,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-explore-landscape.png",
+      "texts": 10,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-combat-landscape.png",
+      "texts": 15,
+      "contrastFails": [],
+      "targets": 7,
+      "smallTargets": []
+    }
+  ],
+  "profile": {
+    "world-1280x720": {
+      "bench1x": {
+        "screen": "world_hud",
+        "speed": 1,
+        "frames": 600,
+        "updates": 40,
+        "steps": 120,
+        "avgMs": 0.064,
+        "p95Ms": 0.7,
+        "maxMs": 21.8
+      },
+      "bench4x": {
+        "screen": "world_hud",
+        "speed": 4,
+        "frames": 600,
+        "updates": 40,
+        "steps": 480,
+        "avgMs": 0.133,
+        "p95Ms": 0.5,
+        "maxMs": 13.3
+      },
+      "liveSwiftShader": {
+        "ui": 0.898,
+        "input": 0.007,
+        "total": 0.905,
+        "max": 73.2
+      }
+    },
+    "battle-1280x720": {
+      "bench1x": {
+        "screen": "battle_hud",
+        "speed": 1,
+        "frames": 600,
+        "updates": 85,
+        "steps": 200,
+        "avgMs": 0.04,
+        "p95Ms": 1.1,
+        "maxMs": 4.3
+      },
+      "bench4x": {
+        "screen": "battle_hud",
+        "speed": 4,
+        "frames": 600,
+        "updates": 85,
+        "steps": 795,
+        "avgMs": 0.018,
+        "p95Ms": 0.2,
+        "maxMs": 2
+      },
+      "liveSwiftShader": {
+        "ui": 2.177,
+        "input": 0.011,
+        "total": 2.188,
+        "max": 120.8
+      }
+    }
+  }
+}
