@@ -10,6 +10,7 @@
  *   setResolved(r | null, ease?)           override the resolver (cutscenes, interiors); null returns to it
  *   setMoodBlend([{ mood, weight }])       hero districts: resolveHeroMood + lerp (the 40 m cross-fade is the caller's)
  *   triggerLightning(dir?)                 storm flash (#d8e2ff x9, 80-160 ms double flash, sky +2 EV) - GFX-02 weather
+ *                                          (the flash light is in the scene from setEnvironment in LIGHTNING_WEATHER)
  *   addPractical(kind, position)           -> handle { setPosition, setScale, remove } (lamps, torches, braziers, fires)
  *   sunDirection(out?)                     unit vector toward the key light (sun by day, moon at night)
  *   update(dt, focus | camera, look?)      per frame; focus = camera focus point (legacy), look = ZoomLook from GFX-05
@@ -27,7 +28,7 @@
  * scenes that never call update() still get fitted cascades, fog and post. Allocation-free per frame.
  */
 import * as THREE from 'three';
-import type { EnvironmentState, HeroMood, QualitySettings, Rect, Season } from '../../core/types';
+import type { EnvironmentState, HeroMood, QualitySettings, Rect, Season, WeatherKind } from '../../core/types';
 import { currentUrlParams } from '../../core/params';
 import type { RenderContext, RenderAssetSource } from '../renderer';
 import type { PostLutHandle, PostSunInput } from '../post';
@@ -87,6 +88,8 @@ const MOON_ELEVATION_DEG: readonly [number, number] = [25, 62];
 const EXPOSURE_EASE_S = 0.6;
 /** Hemisphere factor with IBL on (ART_BIBLE §4.2). */
 const HEMI_WITH_IBL = 0.35;
+/** Weather that can bring lightning (GFX-02 calls triggerLightning in these): the flash light is added up front. */
+export const LIGHTNING_WEATHER: ReadonlySet<WeatherKind> = new Set<WeatherKind>(['storm', 'monsoon_rain']);
 
 export class EnvironmentRig {
   readonly sky: SkySystem;
@@ -306,6 +309,9 @@ export class EnvironmentRig {
     const w = env.weather;
     this.wind.set(Math.sin(w.windDirection), 0, Math.cos(w.windDirection));
     this.windStrength = Math.min(1, w.windSpeed / 12);
+    // Storm-capable weather: the flash light joins the scene now (scene setup / weather change), not on the first
+    // strike - adding a light changes NUM_DIR_LIGHTS and recompiles every lit material in the middle of the storm.
+    if (LIGHTNING_WEATHER.has(w.kind)) this.ensureLightningLight();
     solarDirection(env, this.sunDir);
     this.sunElevationDeg = Math.asin(THREE.MathUtils.clamp(this.sunDir.y, -1, 1)) / DEG;
     copyResolvedInto(this.base, resolveLighting({ sunElevationDeg: this.sunElevationDeg, hour: env.hour, season: env.season, weather: w }));
@@ -354,8 +360,13 @@ export class EnvironmentRig {
 
   /** Storm lightning (GFX-02 weather calls this): double flash + sky +2 EV. */
   triggerLightning(direction?: THREE.Vector3): void {
-    if (!this.lightning.light.parent) this.scene.add(this.lightning.light, this.lightning.light.target);
+    this.ensureLightningLight();
     this.lightning.trigger(direction);
+  }
+
+  /** The flash light stays in the scene once added (intensity 0 when idle: a stable light count, no recompiles). */
+  private ensureLightningLight(): void {
+    if (!this.lightning.light.parent) this.scene.add(this.lightning.light, this.lightning.light.target);
   }
 
   /** Register a practical light (lamp, torch, brazier, burning building). Returns a handle (move / scale / remove). */

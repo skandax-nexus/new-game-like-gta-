@@ -9,6 +9,8 @@ import { PRACTICAL_LIGHTS } from '../style/lighting';
 
 /** Sky multiplier while the flash is lit (+2 EV). */
 export const LIGHTNING_SKY_EV = 2;
+/** Distance of the flash light from its target (m); only the direction matters for a DirectionalLight. */
+export const LIGHTNING_DISTANCE_M = 1000;
 
 interface Pulse {
   start: number;
@@ -26,14 +28,16 @@ export class LightningFlash {
   private active = false;
   /** 0..1 strength of the current frame (drives the sky +2 EV). */
   level = 0;
+  /** Light position relative to the target (direction toward the flash x LIGHTNING_DISTANCE_M). */
+  private readonly offset = new THREE.Vector3(0, LIGHTNING_DISTANCE_M, 0);
 
   constructor(private readonly random: () => number = Math.random) {
     const p = PRACTICAL_LIGHTS.lightningFlash;
     this.light = new THREE.DirectionalLight(p.color, 0);
     this.light.name = 'lightningFlash';
     this.light.castShadow = false;
-    // Always present (intensity 0 when idle): toggling `visible` would change the light count and recompile every
-    // lit material on each flash.
+    // Always present once added (intensity 0 when idle): toggling `visible` would change the light count and
+    // recompile every lit material on each flash. EnvironmentRig adds it when the weather can storm.
   }
 
   /**
@@ -53,11 +57,11 @@ export class LightningFlash {
     this.pulses[1]!.gain = 0.55 + r() * 0.3;
     this.t = 0;
     this.active = true;
-    if (direction) this.light.position.copy(direction).multiplyScalar(1000);
+    if (direction) this.offset.copy(direction).normalize().multiplyScalar(LIGHTNING_DISTANCE_M);
     else {
       const a = r() * Math.PI * 2;
       const el = 0.6 + r() * 0.5;
-      this.light.position.set(Math.cos(a) * Math.cos(el), Math.sin(el), Math.sin(a) * Math.cos(el)).multiplyScalar(1000);
+      this.offset.set(Math.cos(a) * Math.cos(el), Math.sin(el), Math.sin(a) * Math.cos(el)).multiplyScalar(LIGHTNING_DISTANCE_M);
     }
   }
 
@@ -74,14 +78,12 @@ export class LightningFlash {
     if (this.t >= this.pulses[1]!.end) this.active = false;
     this.level = lvl;
     this.light.intensity = PRACTICAL_LIGHTS.lightningFlash.intensity * lvl;
+    // Anchored on the camera focus every frame: the flash direction is `offset` wherever the camera is.
     this.light.target.position.copy(target);
     this.light.target.updateMatrixWorld();
-    this.light.position.add(target).sub(this.lastTarget);
-    this.lastTarget.copy(target);
+    this.light.position.copy(target).add(this.offset);
     return 1 + (Math.pow(2, LIGHTNING_SKY_EV) - 1) * lvl;
   }
-
-  private readonly lastTarget = new THREE.Vector3();
 
   get flashing(): boolean {
     return this.active;

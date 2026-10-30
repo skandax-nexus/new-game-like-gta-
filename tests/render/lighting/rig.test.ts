@@ -163,12 +163,34 @@ describe('lightning (ART_BIBLE §4.6)', () => {
     expect(flash.flashing).toBe(false);
   });
 
-  it('the rig adds the flash light on first use and keeps the light count stable', () => {
+  it('storm weather adds the flash light at setup (no recompile on the first strike); the light count stays stable', () => {
     const { rig, scene } = makeRig();
-    rig.setEnvironment(env(15, 'storm', 'varsha'));
+    rig.setEnvironment(env(15, 'clear', 'sharad'));
     expect(rig.lightning.light.parent).toBeNull();
-    rig.triggerLightning();
+    rig.setEnvironment(env(15, 'storm', 'varsha'));
     expect(rig.lightning.light.parent).toBe(scene);
+    const lights = scene.children.length;
+    rig.triggerLightning();
+    rig.setEnvironment(env(15, 'clear', 'sharad'));
+    expect(scene.children.length).toBe(lights);
+    // Any other weather still gets the light on first use (fallback).
+    const other = makeRig();
+    other.rig.setEnvironment(env(15, 'cloudy', 'sharad'));
+    other.rig.triggerLightning();
+    expect(other.rig.lightning.light.parent).toBe(other.scene);
+  });
+
+  it('every flash comes from its own bearing above the camera focus, wherever the focus is', () => {
+    const flash = new LightningFlash(() => 0.5);
+    const dir = new THREE.Vector3();
+    const up = new THREE.Vector3(0.3, 0.9, -0.2).normalize();
+    for (const target of [new THREE.Vector3(0, 0, 0), new THREE.Vector3(1800, 40, -2400), new THREE.Vector3(-900, 10, 600)]) {
+      flash.trigger(up);
+      flash.update(0.01, target);
+      dir.copy(flash.light.position).sub(flash.light.target.position).normalize();
+      expect(dir.distanceTo(up)).toBeLessThan(1e-6);
+      expect(flash.light.target.position.distanceTo(target)).toBeLessThan(1e-9);
+    }
   });
 });
 
