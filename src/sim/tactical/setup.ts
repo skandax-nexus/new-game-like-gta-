@@ -344,19 +344,27 @@ function deployDefenders(state: BattleState, ctx: BattleContext, own: FormationS
 // Skirmish setup
 // ---------------------------------------------------------------------------------------------------
 
+/** A skirmish block may stand up to 25% over `menPerFormation` (§10.1 [REQ GP-01]). */
+export const SKIRMISH_OVERSTRENGTH = 1.25;
+
+/** Largest skirmish formation of a class: floor(1.25 x menPerFormation) (§10.1 [REQ GP-01]). */
+export function skirmishBlockCap(cls: UnitClass): number {
+  return Math.floor(SKIRMISH_OVERSTRENGTH * UNITS[cls].stats.menPerFormation);
+}
+
 /**
- * Split one class budget into formations (§10.1): k = max(1, round(budget / per)), raised to ceil(budget / per) when
- * budget / k would overfill a formation; the budget is spread evenly over the k formations (sizes differ by at most
- * one man, each <= per). There is never a separate remainder formation, so with k >= 2 every formation holds at
- * least half of `per`; `room` caps k at the formations left under MAX_FORMATIONS_PER_SIDE and the rest is dropped.
+ * Split one class budget into formations (§10.1 [REQ GP-01]): k = max(1, ceil(budget / floor(1.25 x per))), capped by
+ * `room` (the formations left under MAX_FORMATIONS_PER_SIDE); the budget is spread evenly over the k formations (sizes
+ * differ by at most one man, each <= floor(1.25 x per)). A block may stand up to 25% over strength rather than splitting
+ * a small overflow into two half-size ones (Riders spearmen 122 -> one block of 122), with k >= 2 every formation holds
+ * at least 62.5% of `per`, and there is never a separate remainder formation. When `room` caps k, whatever does not
+ * fit into k full-cap blocks is dropped.
  */
 function splitClassBudget(cls: UnitClass, budget: number, room: number, out: { unitClass: UnitClass; soldiers: number }[]): void {
   if (budget <= 0 || room <= 0) return;
-  const per = UNITS[cls].stats.menPerFormation;
-  let k = Math.max(1, Math.round(budget / per));
-  if (budget / k > per) k = Math.ceil(budget / per);
-  k = Math.min(k, room);
-  const used = Math.min(budget, k * per);
+  const cap = skirmishBlockCap(cls);
+  const k = Math.min(Math.max(1, Math.ceil(budget / cap)), room);
+  const used = Math.min(budget, k * cap);
   const base = Math.floor(used / k);
   const extra = used - base * k;
   for (let i = 0; i < k; i++) out.push({ unitClass: cls, soldiers: base + (i < extra ? 1 : 0) });
@@ -366,8 +374,9 @@ function splitClassBudget(cls: UnitClass, budget: number, room: number, out: { u
  * Formations for a skirmish army from a composition (DESIGN_SPEC §10.1). Classes outside the faction roster are
  * skipped and the weights renormalized; the side budget is apportioned to classes by largest remainder (the class
  * budgets sum to exactly `total`); a class whose budget is below half a formation is dropped unless it is spearmen
- * or archers (which may field one sole small formation); each class is split by `splitClassBudget`, so no formation
- * is created below half strength. The total never exceeds `total`.
+ * or archers (which may field one sole small formation); each class is split by `splitClassBudget` into even blocks
+ * of at most 1.25 x menPerFormation, so no formation is created below half strength (62.5% when a class has two or
+ * more). The total never exceeds `total`.
  */
 export function composeArmy(total: number, factionId: string, compositionId: string): { unitClass: UnitClass; soldiers: number }[] {
   const comp = SKIRMISH_COMPOSITIONS.find((c) => c.id === compositionId) ?? SKIRMISH_COMPOSITIONS[0]!;
