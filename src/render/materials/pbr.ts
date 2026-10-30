@@ -1,7 +1,7 @@
 /**
- * PBR materials from baked texture sets (content pipeline). OWNER: Technical Art Director (with the
- * Lead Graphics Engineer). Used by src/assets/AssetManager.ts to bind runtime textures to the
- * texture-less proxy materials exported from Blender, and by feature code for tiling materials.
+ * PBR materials from baked texture sets (content pipeline). OWNER: Graphics Developer - Lighting, Atmosphere &
+ * Post (GFX-01; baseline by the Technical Art Director). Used by src/assets/AssetManager.ts to bind runtime
+ * textures to the texture-less proxy materials exported from Blender, and by feature code for tiling materials.
  *
  *   const mat = createPbrMaterial({ baseColor, normal, orm, macro }, { tint: '#f0e0d8', uvScale: [2, 1] });
  *
@@ -15,9 +15,20 @@
  *
  * Global hooks (shared uniforms, driven by the weather/environment systems):
  *   MATERIAL_GLOBALS.wetness   0..1 rain wetness: darkens porous albedo, lowers roughness, more on
- *                              up-facing surfaces (monsoon look)
+ *                              up-facing surfaces (monsoon look); puddles on flat porous ground (chunks/wetness.ts)
+ *
+ * GFX-01 surface features (src/render/materials/chunks/):
+ *   clearcoat / sheen   MeshPhysicalMaterial from the option or the Art Director's MATERIAL_PRESETS entry whose
+ *                       assetId matches the material name (Mauryan polish clearcoat 0.6/0.12, silk sheen 0.9 ...)
+ *   subsurface          wrap + back transmission (skin, thin cloth); `foliage: true` reads leaf thickness from ORM.b
+ *                       (ART_BIBLE §9: translucency 0.35, metalness forced to 0)
+ *   ZoomLook            normal-map detail and macro fade with distance, band-scaled specular AA (samG MATERIAL_LOOK)
+ *   quality             emissive / baked-AO boosts on low (global chunks, samG MATERIAL_BOOST)
  */
 import * as THREE from 'three';
+import { MATERIAL_PRESETS, type MaterialPreset } from '../style/materials';
+import { WETNESS_GLSL } from './chunks/wetness';
+import { DETAIL_FADE_GLSL, FOLIAGE_THICKNESS_GLSL, SPEC_AA_GLSL, SUBSURFACE_PARS_GLSL } from './chunks/surface';
 
 export interface PbrTextures {
   baseColor?: THREE.Texture | null;
@@ -53,6 +64,30 @@ export interface PbrMaterialOptions {
   /** Use MeshPhysicalMaterial (clearcoat, sheen, transmission ... set afterwards). */
   physical?: boolean;
   name?: string;
+  /** Clearcoat (polish, lacquer, glaze); null = none. Default: the MATERIAL_PRESETS entry for `name`. */
+  clearcoat?: { strength: number; roughness: number } | null;
+  /** Fabric sheen; null = none. Default: the MATERIAL_PRESETS entry for `name`. */
+  sheen?: { color: THREE.ColorRepresentation; roughness: number; intensity: number } | null;
+  /** Wrap + back-transmission lobe (skin, cloth, leaves); null = none. Default: the preset's `subsurface`. */
+  subsurface?: { color: THREE.ColorRepresentation; strength: number } | null;
+  /** Leaf atlas: ORM.b is translucency (leaf thickness), not metalness; subsurface defaults to 0.35 x leaf colour. */
+  foliage?: boolean;
+  /** Puddles on flat, up-facing parts when wet (default: porosity >= 0.5). */
+  puddles?: boolean;
+}
+
+let presetByAsset: Map<string, MaterialPreset> | null = null;
+/** The Art Director's preset for a material asset id (or preset id), if any. */
+export function materialPresetFor(name: string | undefined): MaterialPreset | null {
+  if (!name) return null;
+  if (!presetByAsset) {
+    presetByAsset = new Map();
+    for (const p of Object.values(MATERIAL_PRESETS) as MaterialPreset[]) {
+      if (p.assetId && !presetByAsset.has(p.assetId)) presetByAsset.set(p.assetId, p);
+      if (!presetByAsset.has(p.id)) presetByAsset.set(p.id, p);
+    }
+  }
+  return presetByAsset.get(name) ?? null;
 }
 
 /** Shared uniforms for global material effects (weather, debug). */
@@ -96,7 +131,25 @@ export function createPbrMaterial(textures: PbrTextures, opts: PbrMaterialOption
     side: opts.side ?? THREE.FrontSide,
     envMapIntensity: opts.envMapIntensity ?? 1,
   };
-  const mat = opts.physical ? new THREE.MeshPhysicalMaterial(params) : new THREE.MeshStandardMaterial(params);
+  const preset = materialPresetFor(opts.name);
+  const clearcoat = opts.clearcoat !== undefined ? opts.clearcoat : (preset?.clearcoat ?? null);
+  const sheen = opts.sheen !== undefined ? opts.sheen : preset?.sheen ? { color: preset.sheen.color, roughness: preset.sheen.roughness, intensity: preset.sheen.intensity } : null;
+  const foliage = opts.foliage === true;
+  const subsurface =
+    opts.subsurface !== undefined ? opts.subsurface : preset?.subsurface ? { color: preset.subsurface.color, strength: preset.subsurface.strength } : foliage ? { color: 0xffffff, strength: 0.35 } : null;
+  const physical = opts.physical === true || !!clearcoat || !!sheen;
+  const mat = physical ? new THREE.MeshPhysicalMaterial(params) : new THREE.MeshStandardMaterial(params);
+  if (mat instanceof THREE.MeshPhysicalMaterial) {
+    if (clearcoat) {
+      mat.clearcoat = clearcoat.strength;
+      mat.clearcoatRoughness = clearcoat.roughness;
+    }
+    if (sheen) {
+      mat.sheen = sheen.intensity;
+      mat.sheenRoughness = sheen.roughness;
+      mat.sheenColor.set(sheen.color);
+    }
+  }
   const owned: THREE.Texture[] = [];
   const scaled = (t: THREE.Texture | null | undefined): THREE.Texture | null => {
     const s = withUvScale(t, opts.uvScale);
@@ -112,7 +165,12 @@ export function createPbrMaterial(textures: PbrTextures, opts: PbrMaterialOption
     mat.color.set(opts.fallbackColor ?? 0x808080).multiply(tint);
   }
   const orm = scaled(textures.orm);
-  if (orm) {
+  if (orm && foliage) {
+    // Leaf atlas: B = translucency, so no metalness map.
+    mat.roughnessMap = orm;
+    mat.roughness = opts.roughnessScale ?? 1;
+    mat.metalness = 0;
+  } else if (orm) {
     mat.roughnessMap = orm;
     mat.metalnessMap = orm;
     mat.roughness = opts.roughnessScale ?? 1;
@@ -143,16 +201,38 @@ export function createPbrMaterial(textures: PbrTextures, opts: PbrMaterialOption
   }
   const useDetailWithMacro = !!(macro && orm && detailAo > 0);
   const porosity = THREE.MathUtils.clamp(opts.porosity ?? 0.8, 0, 1);
+  const puddles = opts.puddles ?? porosity >= 0.5;
+  const sss = subsurface ? new THREE.Color(subsurface.color) : null;
   const uniforms = {
     uDetailAo: { value: detailAo },
     uMacroAlbedo: { value: macroStrength },
     uPorosity: { value: porosity },
     uWetness: MATERIAL_GLOBALS.wetness,
+    samSubsurfaceColor: { value: sss ?? new THREE.Color(1, 1, 1) },
+    samSubsurface: { value: subsurface ? subsurface.strength : 0 },
   };
   mat.userData.samrajyaUniforms = uniforms;
   mat.userData.ownedTextures = owned;
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
+    if (puddles) {
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vSamWorldPos;')
+        .replace(
+          '#include <project_vertex>',
+          `#include <project_vertex>
+{
+  vec4 samWp = vec4( transformed, 1.0 );
+  #ifdef USE_BATCHING
+    samWp = batchingMatrix * samWp;
+  #endif
+  #ifdef USE_INSTANCING
+    samWp = instanceMatrix * samWp;
+  #endif
+  vSamWorldPos = ( modelMatrix * samWp ).xyz;
+}`,
+        );
+    }
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <common>',
@@ -160,28 +240,46 @@ export function createPbrMaterial(textures: PbrTextures, opts: PbrMaterialOption
 uniform float uDetailAo;
 uniform float uMacroAlbedo;
 uniform float uPorosity;
-uniform float uWetness;`,
+uniform float uWetness;
+${puddles ? 'varying vec3 vSamWorldPos;' : ''}
+${WETNESS_GLSL}
+float samPuddle = 0.0;`,
       )
+      .replace('#include <lights_physical_pars_fragment>', `#include <lights_physical_pars_fragment>\n${SUBSURFACE_PARS_GLSL}`)
       .replace(
         '#include <map_fragment>',
         `#include <map_fragment>
 #if defined( SAMRAJYA_MACRO ) && defined( USE_AOMAP )
-  diffuseColor.rgb *= mix( 1.0, texture2D( aoMap, vAoMapUv ).g, uMacroAlbedo );
+  diffuseColor.rgb *= mix( 1.0, texture2D( aoMap, vAoMapUv ).g, uMacroAlbedo * ( 1.0 - clamp( samG[ SAM_G_MATERIAL_LOOK ].y, 0.0, 1.0 ) ) );
 #endif`,
       )
       .replace(
         '#include <roughnessmap_fragment>',
         `#include <roughnessmap_fragment>
-  // Rain wetness: porous surfaces darken and turn glossy, more on up-facing surfaces.
+${FOLIAGE_THICKNESS_GLSL}
+  // Rain wetness (chunks/wetness.ts): porous surfaces darken and turn glossy, more on up-facing surfaces.
   #ifndef FLAT_SHADED
-    float samWetUp = clamp( dot( normalize( vNormal ), normalize( ( viewMatrix * vec4( 0.0, 1.0, 0.0, 0.0 ) ).xyz ) ) * 0.5 + 0.6, 0.0, 1.0 );
+    float samUp = samUpFacing( vNormal );
+    float samUpCos = samUpDot( vNormal );
   #else
-    float samWetUp = 1.0;
+    float samUp = 1.0;
+    float samUpCos = 1.0;
   #endif
-  float samWet = uWetness * uPorosity * samWetUp;
-  diffuseColor.rgb *= mix( 1.0, 0.58, samWet );
-  roughnessFactor = mix( roughnessFactor, 0.12, samWet * 0.85 );`,
+  samApplyWetness( diffuseColor.rgb, roughnessFactor, samWetAmount( uWetness, uPorosity, samUp ) );
+  #ifdef SAM_PUDDLES
+    samPuddle = samPuddleMask( vSamWorldPos.xz, uWetness * uPorosity, samUpCos );
+    samApplyPuddle( diffuseColor.rgb, roughnessFactor, samPuddle );
+  #endif`,
       )
+      .replace(
+        '#include <normal_fragment_maps>',
+        `#include <normal_fragment_maps>
+${DETAIL_FADE_GLSL}
+#ifdef SAM_PUDDLES
+  normal = normalize( mix( normal, nonPerturbedNormal, samPuddle ) );
+#endif`,
+      )
+      .replace('#include <lights_physical_fragment>', `#include <lights_physical_fragment>\n${SPEC_AA_GLSL}`)
       .replace(
         '#include <aomap_fragment>',
         `#include <aomap_fragment>
@@ -198,10 +296,17 @@ uniform float uWetness;`,
   }
 #endif`,
       );
-    if (macro) shader.defines = { ...(shader.defines ?? {}), SAMRAJYA_MACRO: '' };
-    if (useDetailWithMacro) shader.defines = { ...(shader.defines ?? {}), SAMRAJYA_DETAIL_AO: '' };
+    const defines: Record<string, string> = {};
+    if (macro) defines.SAMRAJYA_MACRO = '';
+    if (useDetailWithMacro) defines.SAMRAJYA_DETAIL_AO = '';
+    if (puddles) defines.SAM_PUDDLES = '';
+    if (subsurface) defines.SAM_SUBSURFACE = '';
+    if (foliage) defines.SAM_FOLIAGE = '';
+    shader.defines = { ...(shader.defines ?? {}), ...defines };
   };
-  mat.customProgramCacheKey = () => `samrajya-pbr|${macro ? 'm' : ''}|${useDetailWithMacro ? 'd' : ''}`;
+  const key = `samrajya-pbr|${macro ? 'm' : ''}|${useDetailWithMacro ? 'd' : ''}|${puddles ? 'p' : ''}|${subsurface ? 's' : ''}|${foliage ? 'f' : ''}`;
+  mat.customProgramCacheKey = () => key;
+  mat.userData.samFeatures = { clearcoat: !!clearcoat, sheen: !!sheen, subsurface: !!subsurface, foliage, puddles };
   return mat;
 }
 

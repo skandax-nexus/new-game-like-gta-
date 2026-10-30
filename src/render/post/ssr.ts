@@ -10,7 +10,8 @@
  * OWNER: Graphics Developer - Lighting, Atmosphere & Post (GFX-01).
  */
 import * as THREE from 'three';
-import { G, g, registerChunkPatch, SAM_G_DECL } from '../materials/chunks/globals';
+import { G, g, registerChunkPatch } from '../materials/chunks/globals';
+import '../materials/chunks/surface'; // samG declared at global scope (common chunk)
 import { colorTarget, DEPTH_GLSL, NOISE_GLSL, postMaterial, QuadPass, type PostFrame } from './shared';
 
 /** Roughness above which nothing reflects in screen space (written to samG while SSR is active). */
@@ -21,7 +22,6 @@ const OPAQUE_LINE = 'gl_FragColor = vec4( outgoingLight, diffuseColor.a );';
 /** Appended to three's opaque_fragment: the SSR weight of standard / physical opaque surfaces. */
 export const SSR_MASK_GLSL = /* glsl */ `
 #if defined( STANDARD ) && defined( OPAQUE )
-${SAM_G_DECL}
 {
   float samSsrCut = samG[ SAM_G_MATERIAL_BOOST ].z;
   if ( samSsrCut > 0.0 ) gl_FragColor.a = smoothstep( samSsrCut * 0.4, samSsrCut, material.roughness );

@@ -43,10 +43,12 @@ with core.timer("bond"):
     runnel = runnel * tg.smoothstep(-0.2, 0.4, kit.fbm(0.3, 2))
     face -= 0.0012 * runnel  # rain runnels from the brick above
     face += np.where(slump, -0.006 * (1.0 - b["lv"]) + 0.003 * kit.fbm(0.03, 2), 0.0)
-    spall = (((bid * 3.3) % 1.0) < 0.06) * tg.smoothstep(0.45, 0.65, kit.fbm(0.06, 3) * 0.5 + 0.5)
-    face -= 0.012 * spall
+    # a few brick faces spalled back as one soft, shallow dish (sharp-edged islands read as glyphs at distance)
+    spall = (((bid * 3.3) % 1.0) < 0.06) * tg.smoothstep(0.3, 0.6, kit.fbm(0.15, 2) * 0.5 + 0.5)
+    spall = kit.blur(spall.astype(np.float32), 0.012)
+    face -= 0.006 * spall
     c1, c2, _ = kit.worley(0.09, 1.0, x=kit.warp(0.006, 0.04, 2)[0])
-    crack = tg.smoothstep(0.012, 0.0, c2 - c1) * tg.smoothstep(0.5, 0.75, kit.fbm(0.2, 3) * 0.5 + 0.5)
+    crack = tg.smoothstep(0.012, 0.0, c2 - c1) * tg.smoothstep(0.6, 0.8, kit.fbm(0.2, 3) * 0.5 + 0.5)
     face -= 0.003 * crack
     straw = kit.scatter(0.025, K.shape_blade(0.022, 0.0007, 0.0005, 0.4), density=0.25)
     face += straw.height(0.0) * 0.5
@@ -62,7 +64,7 @@ with core.timer("albedo"):
     brick = K.tint(brick, "#c2ab8a", 0.3 * bleach)
     damp = tg.smoothstep(0.55, 0.85, kit.fbm(0.5, 3) * 0.5 + 0.5)
     brick = K.mul(brick, 1.0 - 0.15 * damp - 0.15 * gully - 0.3 * crack)
-    brick = K.tint(brick, "#8a6c50", 0.3 * spall)
+    brick = K.tint(brick, "#9a7c5c", 0.25 * spall)
     brick = K.tint(brick, "#b9a273", 0.35 * straw.mask)
     brick = K.mul(brick, 1.0 - 0.1 * runnel)
     mortar = K.ramp(np.clip(0.5 + 0.3 * kit.fbm(0.03, 3), 0, 1), [(0.0, "#86694d"), (1.0, "#a08262")])

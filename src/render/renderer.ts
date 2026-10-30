@@ -11,9 +11,11 @@ import type { QualitySettings } from '../core/types';
 import type { Profiler, RenderStats } from '../core/profiler';
 import { PostPipeline, type PostLutHandle } from './post';
 import type { SkyAssetSource } from './environment/sky';
-import { installShaderGlobals, resetShaderGlobals } from './materials/chunks/globals';
+import { G, g, installShaderGlobals, resetShaderGlobals } from './materials/chunks/globals';
 // Global shader patches (registered on import, applied by installShaderGlobals before any material compiles).
 import './lighting/shadowChunks';
+import './materials/chunks/surface';
+import './post/ssr';
 import './environment/atmosphere/heightFog';
 
 /**
@@ -218,6 +220,10 @@ export class RenderContext {
     this.renderer.info.reset();
     // Frame globals belong to the scene being drawn: neutral unless one of its hooks fills them.
     resetShaderGlobals();
+    // Tier compensations every material reads (low: emissive x1.3, baked AO x1.2).
+    const boost = g(G.MATERIAL_BOOST);
+    boost.x = this.quality.emissiveBoost - 1;
+    boost.y = this.quality.bakedAoBoost - 1;
     for (const h of this.hooks) if (h.scene === this.scene) h.beforeRender(this.camera, dt);
     if (this.usePost) this.post.render(dt);
     else this.renderer.render(this.scene, this.camera);

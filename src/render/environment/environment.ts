@@ -494,8 +494,10 @@ export class EnvironmentRig {
     this.shadows.update(camera, this.keyDir, this.look, focusDist);
     // Practicals.
     this.practicals.update(step, this.camPos);
-    // Material globals written per frame (the renderer zeroes samG before the hooks).
+    // Material globals written per frame (the renderer zeroes samG before the hooks): wetness, ZoomLook detail.
     g(G.MATERIAL_BOOST).w = MATERIAL_GLOBALS.wetness.value;
+    const lm = this.look.material;
+    g(G.MATERIAL_LOOK).set(1 - lm.detailNormal, 1 - lm.macro, lm.parallax, lm.specularAA);
     // Post: zoom-look multipliers, auto focus, sun / shafts.
     this.ctx.post.applyZoomLook(this.look, focusDist);
     this.postSun.elevationDeg = this.sunElevationDeg;

@@ -9,11 +9,122 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 17523544,
-    "high": 7593689,
-    "mobile": 3782406
+    "ultra": 23124436,
+    "high": 10733007,
+    "mobile": 4592932
   },
   "assets": {
+    "bamboo_lattice": {
+      "kind": "material",
+      "id": "bamboo_lattice",
+      "category": "materials",
+      "hash": "76af8df10e",
+      "description": "Bamboo trim sheet (1.5 m): three culm-skin bands (nodes 0.3-0.4 m), coir lashing coils, 2/2 twill split-lath weave (0.825 m band).",
+      "bytes": {
+        "ultra": 737802,
+        "high": 243142,
+        "mobile": 68768
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        1.5,
+        1.5
+      ],
+      "averageColor": "#b39a63",
+      "roughness": 0.55,
+      "metalness": 0,
+      "normalScale": 0.8,
+      "trims": [
+        {
+          "name": "pole_a",
+          "v0": 0,
+          "v1": 0.116667,
+          "heightMeters": 0.175
+        },
+        {
+          "name": "pole_b",
+          "v0": 0.116667,
+          "v1": 0.233333,
+          "heightMeters": 0.175
+        },
+        {
+          "name": "pole_c",
+          "v0": 0.233333,
+          "v1": 0.35,
+          "heightMeters": 0.175
+        },
+        {
+          "name": "lashing",
+          "v0": 0.35,
+          "v1": 0.45,
+          "heightMeters": 0.15
+        },
+        {
+          "name": "weave",
+          "v0": 0.45,
+          "v1": 1,
+          "heightMeters": 0.825
+        }
+      ],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/bamboo_lattice/baseColor_1024.webp",
+            "bytes": 80964,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/bamboo_lattice/baseColor_1024.webp",
+            "bytes": 80964,
+            "size": 1024
+          },
+          "mobile": {
+            "url": "textures/bamboo_lattice/baseColor_512.webp",
+            "bytes": 23822,
+            "size": 512
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/bamboo_lattice/normal_1024.webp",
+            "bytes": 593040,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/bamboo_lattice/normal_512.webp",
+            "bytes": 136140,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/bamboo_lattice/normal_256.webp",
+            "bytes": 36892,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/bamboo_lattice/orm_1024.webp",
+            "bytes": 63798,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/bamboo_lattice/orm_512.webp",
+            "bytes": 26038,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/bamboo_lattice/orm_256.webp",
+            "bytes": 8054,
+            "size": 256
+          }
+        }
+      }
+    },
     "banner_cloth": {
       "kind": "model",
       "id": "banner_cloth",
@@ -193,6 +304,246 @@ export const ASSET_MANIFEST = {
       "materialSets": [],
       "sets": {},
       "footprintMeters": null
+    },
+    "basalt_dressed": {
+      "kind": "material",
+      "id": "basalt_dressed",
+      "category": "materials",
+      "hash": "dc30a289f7",
+      "description": "Chisel-dressed basalt ashlar (3 m): diagonal tooling per block, drafted margins, tight joints, hand-polished patches, weathering rind, salt bloom.",
+      "bytes": {
+        "ultra": 167126,
+        "high": 153254,
+        "mobile": 45148
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        3,
+        3
+      ],
+      "averageColor": "#57534f",
+      "roughness": 0.7,
+      "metalness": 0,
+      "normalScale": 0.9,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/basalt_dressed/baseColor_1024.webp",
+            "bytes": 22216,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/basalt_dressed/baseColor_512.webp",
+            "bytes": 8344,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/basalt_dressed/baseColor_256.webp",
+            "bytes": 3218,
+            "size": 256
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/basalt_dressed/normal_512.webp",
+            "bytes": 125966,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/basalt_dressed/normal_512.webp",
+            "bytes": 125966,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/basalt_dressed/normal_256.webp",
+            "bytes": 33768,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/basalt_dressed/orm_512.webp",
+            "bytes": 18944,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/basalt_dressed/orm_512.webp",
+            "bytes": 18944,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/basalt_dressed/orm_256.webp",
+            "bytes": 8162,
+            "size": 256
+          }
+        }
+      }
+    },
+    "brick_fired_old": {
+      "kind": "material",
+      "id": "brick_fired_old",
+      "category": "materials",
+      "hash": "41d4c10dd1",
+      "description": "Aged fired brick (2 m): flat 0.42/0.26 x 0.07 m bricks, recessed lime joints, overfired and underfired bricks, chipped arrises, efflorescence and soot in damp zones.",
+      "bytes": {
+        "ultra": 1161516,
+        "high": 337488,
+        "mobile": 94040
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        2,
+        2
+      ],
+      "averageColor": "#9c5a40",
+      "roughness": 0.84,
+      "metalness": 0,
+      "normalScale": 1,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/brick_fired_old/baseColor_1024.webp",
+            "bytes": 79470,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/brick_fired_old/baseColor_1024.webp",
+            "bytes": 79470,
+            "size": 1024
+          },
+          "mobile": {
+            "url": "textures/brick_fired_old/baseColor_512.webp",
+            "bytes": 30856,
+            "size": 512
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/brick_fired_old/normal_1024.webp",
+            "bytes": 1032512,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/brick_fired_old/normal_512.webp",
+            "bytes": 235230,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/brick_fired_old/normal_256.webp",
+            "bytes": 54158,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/brick_fired_old/orm_1024.webp",
+            "bytes": 49534,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/brick_fired_old/orm_512.webp",
+            "bytes": 22788,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/brick_fired_old/orm_256.webp",
+            "bytes": 9026,
+            "size": 256
+          }
+        }
+      }
+    },
+    "decals_settlement": {
+      "kind": "material",
+      "id": "decals_settlement",
+      "category": "decals",
+      "hash": "e6e336cdff",
+      "description": "Settlement decal atlas (4 m): plaster cracks, damp stains, soot, charring, mandana borders, rice-paste kolam x4, cart-rut end-cap, puddle masks, footprint / hoof trail. Opacity in ORM.b.",
+      "bytes": {
+        "ultra": 324614,
+        "high": 108490,
+        "mobile": 31378
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        4,
+        4
+      ],
+      "averageColor": "#7f705d",
+      "roughness": 0.819,
+      "metalness": 0,
+      "normalScale": 1,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/decals_settlement/baseColor_1024.webp",
+            "bytes": 64514,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/decals_settlement/baseColor_512.webp",
+            "bytes": 25964,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/decals_settlement/baseColor_256.webp",
+            "bytes": 8586,
+            "size": 256
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/decals_settlement/normal_1024.webp",
+            "bytes": 192612,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/decals_settlement/normal_512.webp",
+            "bytes": 59916,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/decals_settlement/normal_256.webp",
+            "bytes": 15676,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/decals_settlement/orm_1024.webp",
+            "bytes": 67488,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/decals_settlement/orm_512.webp",
+            "bytes": 22610,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/decals_settlement/orm_256.webp",
+            "bytes": 7116,
+            "size": 256
+          }
+        }
+      }
     },
     "fx_dust": {
       "kind": "flipbook",
@@ -1484,16 +1835,96 @@ export const ASSET_MANIFEST = {
         ]
       ]
     },
+    "granite_rubble": {
+      "kind": "material",
+      "id": "granite_rubble",
+      "category": "materials",
+      "hash": "f359c3f168",
+      "description": "Dry-laid granite rubble (3 m): irregular rock-faced blocks, deep joints with chinking stones, speckled grain, water stains, orange and grey lichen.",
+      "bytes": {
+        "ultra": 549864,
+        "high": 388690,
+        "mobile": 120152
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        3,
+        3
+      ],
+      "averageColor": "#8a8680",
+      "roughness": 0.82,
+      "metalness": 0,
+      "normalScale": 1.2,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/granite_rubble/baseColor_1024.webp",
+            "bytes": 206186,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/granite_rubble/baseColor_512.webp",
+            "bytes": 45012,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/granite_rubble/baseColor_256.webp",
+            "bytes": 15808,
+            "size": 256
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/granite_rubble/normal_512.webp",
+            "bytes": 309328,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/granite_rubble/normal_512.webp",
+            "bytes": 309328,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/granite_rubble/normal_256.webp",
+            "bytes": 90270,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/granite_rubble/orm_512.webp",
+            "bytes": 34350,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/granite_rubble/orm_512.webp",
+            "bytes": 34350,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/granite_rubble/orm_256.webp",
+            "bytes": 14074,
+            "size": 256
+          }
+        }
+      }
+    },
     "ground_dry_earth": {
       "kind": "material",
       "id": "ground_dry_earth",
       "category": "materials",
-      "hash": "9c0389aba3",
-      "description": "Dry dusty plains earth with pebbles, drying cracks and straw litter (4 m tile).",
+      "hash": "f2266fabf6",
+      "description": "Cracked dry earth (4 m): drying-mud polygons with curled plates, crusted hairline cracks, dust drifts, half-buried pebbles, straw and leaf bits; macro-neutral.",
       "bytes": {
-        "ultra": 3039774,
-        "high": 892768,
-        "mobile": 269520
+        "ultra": 322262,
+        "high": 282532,
+        "mobile": 80684
       },
       "tiers": [
         "ultra",
@@ -1505,61 +1936,61 @@ export const ASSET_MANIFEST = {
         4,
         4
       ],
-      "averageColor": "#6a4f36",
-      "roughness": 0.909,
+      "averageColor": "#a88a68",
+      "roughness": 0.92,
       "metalness": 0,
       "normalScale": 1,
       "trims": [],
       "maps": {
         "baseColor": {
           "ultra": {
-            "url": "textures/ground_dry_earth/baseColor_2048.webp",
-            "bytes": 140542,
-            "size": 2048
-          },
-          "high": {
             "url": "textures/ground_dry_earth/baseColor_1024.webp",
-            "bytes": 58006,
+            "bytes": 69570,
             "size": 1024
           },
-          "mobile": {
+          "high": {
             "url": "textures/ground_dry_earth/baseColor_512.webp",
-            "bytes": 19594,
+            "bytes": 29840,
             "size": 512
+          },
+          "mobile": {
+            "url": "textures/ground_dry_earth/baseColor_256.webp",
+            "bytes": 9978,
+            "size": 256
           }
         },
         "normal": {
           "ultra": {
-            "url": "textures/ground_dry_earth/normal_2048.webp",
-            "bytes": 2655690,
-            "size": 2048
+            "url": "textures/ground_dry_earth/normal_512.webp",
+            "bytes": 230920,
+            "size": 512
           },
           "high": {
-            "url": "textures/ground_dry_earth/normal_1024.webp",
-            "bytes": 739124,
-            "size": 1024
+            "url": "textures/ground_dry_earth/normal_512.webp",
+            "bytes": 230920,
+            "size": 512
           },
           "mobile": {
-            "url": "textures/ground_dry_earth/normal_512.webp",
-            "bytes": 219870,
-            "size": 512
+            "url": "textures/ground_dry_earth/normal_256.webp",
+            "bytes": 62168,
+            "size": 256
           }
         },
         "orm": {
           "ultra": {
-            "url": "textures/ground_dry_earth/orm_2048.webp",
-            "bytes": 243542,
-            "size": 2048
+            "url": "textures/ground_dry_earth/orm_512.webp",
+            "bytes": 21772,
+            "size": 512
           },
           "high": {
-            "url": "textures/ground_dry_earth/orm_1024.webp",
-            "bytes": 95638,
-            "size": 1024
+            "url": "textures/ground_dry_earth/orm_512.webp",
+            "bytes": 21772,
+            "size": 512
           },
           "mobile": {
-            "url": "textures/ground_dry_earth/orm_512.webp",
-            "bytes": 30056,
-            "size": 512
+            "url": "textures/ground_dry_earth/orm_256.webp",
+            "bytes": 8538,
+            "size": 256
           }
         }
       }
@@ -1631,6 +2062,86 @@ export const ASSET_MANIFEST = {
             "bytes": 205140,
             "size": 512,
             "framePx": 64
+          }
+        }
+      }
+    },
+    "laterite_block": {
+      "kind": "material",
+      "id": "laterite_block",
+      "category": "materials",
+      "hash": "cf7114d229",
+      "description": "Laterite block masonry (2 m): 0.6 x 0.3 m vesicular red-brown blocks with ochre and pale clay-lined pits, manganese spots, chipped arrises, dry joints, dark crust patches.",
+      "bytes": {
+        "ultra": 601378,
+        "high": 479754,
+        "mobile": 137730
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        2,
+        2
+      ],
+      "averageColor": "#8f4a34",
+      "roughness": 0.9,
+      "metalness": 0,
+      "normalScale": 1.3,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/laterite_block/baseColor_1024.webp",
+            "bytes": 193696,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/laterite_block/baseColor_512.webp",
+            "bytes": 72072,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/laterite_block/baseColor_256.webp",
+            "bytes": 20950,
+            "size": 256
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/laterite_block/normal_512.webp",
+            "bytes": 356294,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/laterite_block/normal_512.webp",
+            "bytes": 356294,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/laterite_block/normal_256.webp",
+            "bytes": 100042,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/laterite_block/orm_512.webp",
+            "bytes": 51388,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/laterite_block/orm_512.webp",
+            "bytes": 51388,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/laterite_block/orm_256.webp",
+            "bytes": 16738,
+            "size": 256
           }
         }
       }
@@ -2093,6 +2604,246 @@ export const ASSET_MANIFEST = {
       "sets": {},
       "footprintMeters": null
     },
+    "mud_brick_sundried": {
+      "kind": "material",
+      "id": "mud_brick_sundried",
+      "category": "materials",
+      "hash": "919dd68c28",
+      "description": "Sun-dried mud brick (2 m): 0.4 x 0.1 m bricks in mud mortar, rain-rounded arrises and gullies, slumped and spalled bricks, straw temper, cracks.",
+      "bytes": {
+        "ultra": 325322,
+        "high": 304868,
+        "mobile": 84390
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        2,
+        2
+      ],
+      "averageColor": "#a88866",
+      "roughness": 0.95,
+      "metalness": 0,
+      "normalScale": 1.1,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/mud_brick_sundried/baseColor_1024.webp",
+            "bytes": 31916,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/mud_brick_sundried/baseColor_512.webp",
+            "bytes": 11462,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/mud_brick_sundried/baseColor_256.webp",
+            "bytes": 4112,
+            "size": 256
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/mud_brick_sundried/normal_512.webp",
+            "bytes": 268398,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/mud_brick_sundried/normal_512.webp",
+            "bytes": 268398,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/mud_brick_sundried/normal_256.webp",
+            "bytes": 70554,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/mud_brick_sundried/orm_512.webp",
+            "bytes": 25008,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/mud_brick_sundried/orm_512.webp",
+            "bytes": 25008,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/mud_brick_sundried/orm_256.webp",
+            "bytes": 9724,
+            "size": 256
+          }
+        }
+      }
+    },
+    "mud_plaster": {
+      "kind": "material",
+      "id": "mud_plaster",
+      "category": "materials",
+      "hash": "c97969e87f",
+      "description": "Finger-smoothed mud and dung plaster (2.5 m): hand sweeps with finger grooves, straw flecks, shrinkage cracks, spalls; mandana borders are decals.",
+      "bytes": {
+        "ultra": 903814,
+        "high": 305184,
+        "mobile": 69172
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        2.5,
+        2.5
+      ],
+      "averageColor": "#a8835f",
+      "roughness": 0.94,
+      "metalness": 0,
+      "normalScale": 0.8,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/mud_plaster/baseColor_1024.webp",
+            "bytes": 73606,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/mud_plaster/baseColor_1024.webp",
+            "bytes": 73606,
+            "size": 1024
+          },
+          "mobile": {
+            "url": "textures/mud_plaster/baseColor_512.webp",
+            "bytes": 16900,
+            "size": 512
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/mud_plaster/normal_1024.webp",
+            "bytes": 786036,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/mud_plaster/normal_512.webp",
+            "bytes": 211308,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/mud_plaster/normal_256.webp",
+            "bytes": 43652,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/mud_plaster/orm_1024.webp",
+            "bytes": 44172,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/mud_plaster/orm_512.webp",
+            "bytes": 20270,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/mud_plaster/orm_256.webp",
+            "bytes": 8620,
+            "size": 256
+          }
+        }
+      }
+    },
+    "roof_tile_terracotta": {
+      "kind": "material",
+      "id": "roof_tile_terracotta",
+      "category": "materials",
+      "hash": "2d889971c1",
+      "description": "Flat grooved terracotta roof tiles with hooked lips (2 m): 6 courses x 7 tiles, half bond, channels, drip rims, 3 % broken, lichen rows. u = along the eave, v = up the slope.",
+      "bytes": {
+        "ultra": 760704,
+        "high": 243848,
+        "mobile": 61172
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        2,
+        2
+      ],
+      "averageColor": "#a65a3c",
+      "roughness": 0.72,
+      "metalness": 0,
+      "normalScale": 1.2,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/roof_tile_terracotta/baseColor_1024.webp",
+            "bytes": 67066,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/roof_tile_terracotta/baseColor_1024.webp",
+            "bytes": 67066,
+            "size": 1024
+          },
+          "mobile": {
+            "url": "textures/roof_tile_terracotta/baseColor_512.webp",
+            "bytes": 22244,
+            "size": 512
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/roof_tile_terracotta/normal_1024.webp",
+            "bytes": 637470,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/roof_tile_terracotta/normal_512.webp",
+            "bytes": 152908,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/roof_tile_terracotta/normal_256.webp",
+            "bytes": 29972,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/roof_tile_terracotta/orm_1024.webp",
+            "bytes": 56168,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/roof_tile_terracotta/orm_512.webp",
+            "bytes": 23874,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/roof_tile_terracotta/orm_256.webp",
+            "bytes": 8956,
+            "size": 256
+          }
+        }
+      }
+    },
     "sandstone_buff": {
       "kind": "material",
       "id": "sandstone_buff",
@@ -2334,6 +3085,86 @@ export const ASSET_MANIFEST = {
           "mobile": {
             "url": "textures/sandstone_carved_red/orm_256.webp",
             "bytes": 17184,
+            "size": 256
+          }
+        }
+      }
+    },
+    "sandstone_polished_mauryan": {
+      "kind": "material",
+      "id": "sandstone_polished_mauryan",
+      "category": "materials",
+      "hash": "e43711a0e4",
+      "description": "Mauryan mirror-polished Chunar sandstone (2 m): cloud mottle, faint bedding wisps, dark speckle, grinding waves; polish dulled in patches. Use with clearcoat 0.6.",
+      "bytes": {
+        "ultra": 189846,
+        "high": 104816,
+        "mobile": 20056
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        2,
+        2
+      ],
+      "averageColor": "#cdbb9a",
+      "roughness": 0.18,
+      "metalness": 0,
+      "normalScale": 0.25,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/sandstone_polished_mauryan/baseColor_1024.webp",
+            "bytes": 87762,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/sandstone_polished_mauryan/baseColor_512.webp",
+            "bytes": 2732,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/sandstone_polished_mauryan/baseColor_256.webp",
+            "bytes": 800,
+            "size": 256
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/sandstone_polished_mauryan/normal_512.webp",
+            "bytes": 91310,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/sandstone_polished_mauryan/normal_512.webp",
+            "bytes": 91310,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/sandstone_polished_mauryan/normal_256.webp",
+            "bytes": 14306,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/sandstone_polished_mauryan/orm_512.webp",
+            "bytes": 10774,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/sandstone_polished_mauryan/orm_512.webp",
+            "bytes": 10774,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/sandstone_polished_mauryan/orm_256.webp",
+            "bytes": 4950,
             "size": 256
           }
         }
@@ -3134,6 +3965,289 @@ export const ASSET_MANIFEST = {
       "alpha": false,
       "hdrScale": 50,
       "usage": "additive sun sprite: L = texel x hdrScale, tinted by the preset sun color, ~6 deg on screen"
+    },
+    "thatch_grass": {
+      "kind": "material",
+      "id": "thatch_grass",
+      "category": "materials",
+      "hash": "2bd13a1053",
+      "description": "Grass/straw thatch (2 m): combed stems in 0.33 m courses, bundles, coir rope bands every 0.67 m, weathered grey top layer. u = along the eave, v = up the slope.",
+      "bytes": {
+        "ultra": 1654284,
+        "high": 563504,
+        "mobile": 134160
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        2,
+        2
+      ],
+      "averageColor": "#a8935e",
+      "roughness": 0.96,
+      "metalness": 0,
+      "normalScale": 1.4,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/thatch_grass/baseColor_1024.webp",
+            "bytes": 116510,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/thatch_grass/baseColor_1024.webp",
+            "bytes": 116510,
+            "size": 1024
+          },
+          "mobile": {
+            "url": "textures/thatch_grass/baseColor_512.webp",
+            "bytes": 34186,
+            "size": 512
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/thatch_grass/normal_1024.webp",
+            "bytes": 1418348,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/thatch_grass/normal_512.webp",
+            "bytes": 408456,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/thatch_grass/normal_256.webp",
+            "bytes": 89736,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/thatch_grass/orm_1024.webp",
+            "bytes": 119426,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/thatch_grass/orm_512.webp",
+            "bytes": 38538,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/thatch_grass/orm_256.webp",
+            "bytes": 10238,
+            "size": 256
+          }
+        }
+      }
+    },
+    "timber_sal_weathered": {
+      "kind": "material",
+      "id": "timber_sal_weathered",
+      "category": "materials",
+      "hash": "b8a0577c26",
+      "description": "Weathered sal timber (2 m, grain along v): five adzed planks, scallops, coarse grain, checks, knots, peg holes, silvering with brown in the grooves.",
+      "bytes": {
+        "ultra": 275160,
+        "high": 227912,
+        "mobile": 55746
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        2,
+        2
+      ],
+      "averageColor": "#5e4631",
+      "roughness": 0.8,
+      "metalness": 0,
+      "normalScale": 1.1,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/timber_sal_weathered/baseColor_1024.webp",
+            "bytes": 56464,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/timber_sal_weathered/baseColor_512.webp",
+            "bytes": 9216,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/timber_sal_weathered/baseColor_256.webp",
+            "bytes": 2914,
+            "size": 256
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/timber_sal_weathered/normal_512.webp",
+            "bytes": 180596,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/timber_sal_weathered/normal_512.webp",
+            "bytes": 180596,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/timber_sal_weathered/normal_256.webp",
+            "bytes": 41100,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/timber_sal_weathered/orm_512.webp",
+            "bytes": 38100,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/timber_sal_weathered/orm_512.webp",
+            "bytes": 38100,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/timber_sal_weathered/orm_256.webp",
+            "bytes": 11732,
+            "size": 256
+          }
+        }
+      }
+    },
+    "timber_teak_carved": {
+      "kind": "material",
+      "id": "timber_teak_carved",
+      "category": "materials",
+      "hash": "3bd23fa6e8",
+      "description": "Carved oiled teak trim sheet (2 m, grain along u): plain beam, bead row, creeper scroll, lotus bracket, bell capital, fluted shaft, studded door panel.",
+      "bytes": {
+        "ultra": 666974,
+        "high": 288604,
+        "mobile": 77450
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        2,
+        2
+      ],
+      "averageColor": "#6b4a2e",
+      "roughness": 0.62,
+      "metalness": 0,
+      "normalScale": 1,
+      "trims": [
+        {
+          "name": "plain_beam",
+          "v0": 0,
+          "v1": 0.16,
+          "heightMeters": 0.32
+        },
+        {
+          "name": "bead_row",
+          "v0": 0.16,
+          "v1": 0.2,
+          "heightMeters": 0.08
+        },
+        {
+          "name": "creeper_scroll",
+          "v0": 0.2,
+          "v1": 0.32,
+          "heightMeters": 0.24
+        },
+        {
+          "name": "lotus_bracket",
+          "v0": 0.32,
+          "v1": 0.44,
+          "heightMeters": 0.24
+        },
+        {
+          "name": "bell_capital",
+          "v0": 0.44,
+          "v1": 0.54,
+          "heightMeters": 0.2
+        },
+        {
+          "name": "fluted_shaft",
+          "v0": 0.54,
+          "v1": 0.75,
+          "heightMeters": 0.42
+        },
+        {
+          "name": "door_panel",
+          "v0": 0.75,
+          "v1": 1,
+          "heightMeters": 0.5
+        }
+      ],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/timber_teak_carved/baseColor_1024.webp",
+            "bytes": 106342,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/timber_teak_carved/baseColor_1024.webp",
+            "bytes": 106342,
+            "size": 1024
+          },
+          "mobile": {
+            "url": "textures/timber_teak_carved/baseColor_512.webp",
+            "bytes": 26798,
+            "size": 512
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/timber_teak_carved/normal_1024.webp",
+            "bytes": 379558,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/timber_teak_carved/normal_512.webp",
+            "bytes": 123172,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/timber_teak_carved/normal_256.webp",
+            "bytes": 36166,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/timber_teak_carved/orm_1024.webp",
+            "bytes": 181074,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/timber_teak_carved/orm_512.webp",
+            "bytes": 59090,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/timber_teak_carved/orm_256.webp",
+            "bytes": 14486,
+            "size": 256
+          }
+        }
+      }
     },
     "vat_test_dummy": {
       "kind": "vat",

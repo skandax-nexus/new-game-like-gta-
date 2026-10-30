@@ -3,7 +3,7 @@
  * TA-01 evidence capture (WP1 PBR materials, terrain layers, decal atlas). OWNER: Technical Artist A (TA-01).
  *
  *   npx vite build --outDir .build/ta-01 --emptyOutDir
- *   NODE_PATH=$(npm root -g) node scripts/shots/ta-01.cjs [--only=deltas,budgets,previews,tiling,swatches,viewer,splat,stupa]
+ *   NODE_PATH=$(npm root -g) node scripts/shots/ta-01.cjs [--only=deltas,budgets,previews,tiling,swatches,decals,viewer,splat,stupa]
  *                                                         [--ids=a,b] [--fast]
  *
  * Env: SHOTS_PORT (default 4404), SHOTS_DIST (default .build/ta-01), SHOTS_OUT (default docs/sprint1/ta-01).
@@ -20,6 +20,8 @@
  *   viewer    asset viewer lookdev (wall corner, column, sphere) at ~1.2 m (camera=detail) and ~9 m
  *             (camera=overview) under sky_day and sky_golden -> viewer/<id>.jpg (2 x 2 contact sheet)
  *   splat     4-layer height-blended splat lookdev of every BIOME_TERRAIN recipe -> splat/<biome>.jpg + splat_sheet.jpg
+ *   decals    the shipped decal atlas composited by its ORM.b opacity over wall (plaster) / ground (earth)
+ *             backdrops per region, labelled with the metadata.decals regions -> decals_atlas.png
  *   stupa     stupa_sanchi as published (samrajya_set sandstone_carved_red) and re-skinned to sandstone_buff by
  *             rewriting the GLB JSON chunk in flight (page.route) -> proves the shared trim-band layout
  * Fails (exit 1) on console errors, page errors, failed requests or a delta outside +-6 %.
@@ -343,6 +345,39 @@ async function main() {
       .composite(pc)
       .png()
       .toFile(path.join(OUT, 'palette.png'));
+  }
+
+  // ---------------------------------------------------------------- decal atlas composite (shipped maps)
+  if (run('decals') && MANIFEST_JSON.assets.decals_settlement) {
+    const e = MANIFEST_JSON.assets.decals_settlement;
+    const pub = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools', 'assets', 'published.json'), 'utf8'));
+    const regions = pub.assets.decals_settlement?.meta?.decals ?? [];
+    const bc = await sharp(path.join(PUB, e.maps.baseColor.ultra.url)).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+    const orm = await sharp(path.join(PUB, e.maps.orm.ultra.url)).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+    const N = bc.info.width;
+    const out = Buffer.alloc(N * N * 3);
+    const wall = hexToRgb('#cdbfa6').map(lin);
+    const ground = hexToRgb('#9a7e5e').map(lin);
+    for (let y = 0; y < N; y++)
+      for (let x = 0; x < N; x++) {
+        const u = (x + 0.5) / N;
+        const v = 1 - (y + 0.5) / N;
+        const r = regions.find((q) => u >= q.u0 && u < q.u1 && v >= q.v0 && v < q.v1);
+        const back = r && r.surface === 'wall' ? wall : ground;
+        const i = (y * N + x) * 3;
+        const a = orm.data[(y * orm.info.width + Math.floor((x * orm.info.width) / N)) * 3 + 2] / 255;
+        for (let c = 0; c < 3; c++) out[i + c] = Math.round(enc(back[c] * (1 - a) + lin(bc.data[i + c]) * a));
+      }
+    const labels = regions.map((q) => {
+      const x = Math.round(q.u0 * N) + 4;
+      const y = Math.round((1 - q.v1) * N) + 4;
+      return `<text x="${x}" y="${y + 11}" font-family="DejaVu Sans, sans-serif" font-size="11" fill="#120d1f" stroke="#f3e6c8" stroke-width="2.5" paint-order="stroke">${esc(q.name)}</text>` +
+        `<rect x="${Math.round(q.u0 * N) + 0.5}" y="${Math.round((1 - q.v1) * N) + 0.5}" width="${Math.round((q.u1 - q.u0) * N) - 1}" height="${Math.round((q.v1 - q.v0) * N) - 1}" fill="none" stroke="#120d1f" stroke-opacity="0.35"/>`;
+    });
+    const svg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${N}" height="${N}">${labels.join('')}</svg>`);
+    await sharp(out, { raw: { width: N, height: N, channels: 3 } }).composite([{ input: svg, left: 0, top: 0 }]).png().toFile(path.join(OUT, 'decals_atlas.png'));
+    report.decals = regions.map((q) => ({ name: q.name, category: q.category, surface: q.surface, tileU: q.tileU, uv: [q.u0, q.v0, q.u1, q.v1], sizeMeters: q.sizeMeters }));
+    console.log(`[ta-01] decal atlas: ${regions.length} regions composited over wall / ground backdrops (ORM.b opacity) -> decals_atlas.png`);
   }
 
   // ---------------------------------------------------------------- browser groups

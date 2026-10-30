@@ -29,7 +29,7 @@ kit = K.Kit(__file__, cls="C", size=(W, H), target="materials:MATERIAL_PRESETS.g
 with core.timer("blocks"):
     st = kit.stones(0.55, warp_m=0.09, jitter=0.85, aniso=(1.5, 0.7))
     d, sid = st["d"], st["id"]
-    gap = 0.014 + 0.022 * (kit.fbm(0.3, 2) * 0.5 + 0.5)
+    gap = 0.008 + 0.016 * (kit.fbm(0.3, 2) * 0.5 + 0.5)  # joints 16-48 mm
     inside = tg.smoothstep(gap, gap + 0.006, d)
     # rock-faced, pillowed blocks with rounded weathered edges, per-block projection
     bulge = 0.06 * np.clip((d - gap) / 0.14, 0.0, 1.0) ** 0.6 + 0.02 * (sid - 0.5)
@@ -40,7 +40,9 @@ with core.timer("blocks"):
     joint_floor = -0.05
     h = joint_floor + (block_h - joint_floor) * inside
     # chinking stones in the joints
-    ch = kit.scatter(0.04, K.shape_pebble(0.016, 0.012, 0.02, 0.5, 0.4), density=0.75, density_map=1.0 - inside)
+    # chinking: wedge stones 30-60 mm hammered into the wider joints (not a scatter of pale specks)
+    ch = kit.scatter(0.06, K.shape_pebble(0.028, 0.018, 0.03, 0.55, 0.35), density=0.6,
+                     density_map=(1.0 - inside) * tg.smoothstep(0.012, 0.02, gap))
     chm = (ch.h > -1e5) & (inside < 0.5)
     h = np.where(chm, np.maximum(h, joint_floor + 0.02 + ch.height(0.0)), h)
 
@@ -51,8 +53,8 @@ with core.timer("albedo"):
     grain = kit.fbm(0.004, 1)
     rock = K.tint(rock, "#b49a8c", 0.3 * tg.smoothstep(0.35, 0.6, grain))
     rock = K.tint(rock, "#2a2724", 0.4 * tg.smoothstep(-0.35, -0.6, grain))
-    soil = K.ramp(np.clip(0.5 + 0.3 * kit.fbm(0.03, 2), 0, 1), [(0.0, "#2c2620"), (1.0, "#4a4036")])
-    chink = K.ramp(ch.id, [(0.0, "#5e5a54"), (1.0, "#8a847a")])
+    soil = K.ramp(np.clip(0.5 + 0.3 * kit.fbm(0.03, 2), 0, 1), [(0.0, "#3a3229"), (1.0, "#5a4e40")])
+    chink = K.mul(K.ramp(ch.id, [(0.0, "#6a655e"), (1.0, "#8a847a")]), 0.8)
     alb = rock * inside[..., None] + soil * (1.0 - inside[..., None])
     alb = np.where(chm[..., None], chink, alb)
     # water staining from the joints downward, dirt rim around blocks
