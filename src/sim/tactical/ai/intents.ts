@@ -328,7 +328,9 @@ export function highGroundPoint(terrain: TerrainQuery, x: number, z: number, r: 
 
 function pin(state: BattleState, f: FormationState, target: FormationIndex, terrain: TerrainQuery): FormationOrder {
   const t = state.formations[target];
-  if (!t || t.side === f.side || !standingEnemy(state, f, t, terrain)) return { type: 'hold' };
+  // The target was picked by the player (or the AI) explicitly: it is tracked like an attack_target order is, seen or
+  // not, while it stands.
+  if (!t || t.side === f.side || t.soldiers <= 0 || t.activity === 'routing' || t.activity === 'surrendered' || t.activity === 'destroyed') return { type: 'hold' };
   const ctx = battleContext(state, terrain);
   const shooter = isShooter(ctx.stats[f.index]!) && UNITS[f.unitClass].category === 'ranged' && f.ammo > 0;
   const want = shooter ? Math.max(INTENT.pinGap, 0.55 * effectiveRange(state, ctx, f, t)) : INTENT.pinGap;
@@ -340,7 +342,8 @@ function pin(state: BattleState, f: FormationState, target: FormationIndex, terr
   const g = gapOf(f, t);
   const toward = facingOf(-dx, -dz);
   // Charged: the target comes at us - fall back 30 m, still facing it.
-  const closingSpeed = -(t.vx * ux + t.vz * uz);
+  // (u points from the target to f: positive = the target closes on f.)
+  const closingSpeed = t.vx * ux + t.vz * uz;
   const aimed = (t.order.type === 'charge' || t.order.type === 'attack_target' || t.order.type === 'flank') && t.order.target === f.index;
   if (f.engagedWith.length === 0 && g < want + 30 && (closingSpeed > 1 || (aimed && closingSpeed > 0.3))) {
     pt.x = f.x + ux * INTENT.pinRetreat;
