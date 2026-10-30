@@ -1,7 +1,1561 @@
 {
-  "generated": "2026-10-30T13:00:45.374Z",
+  "generated": "2026-10-30T14:54:11.196Z",
   "tolerancePct": 6,
-  "sets": {},
+  "sets": {
+    "bamboo_lattice": {
+      "id": "bamboo_lattice",
+      "class": "S",
+      "target": "#b39a63",
+      "tiers": {
+        "ultra": {
+          "url": "textures/bamboo_lattice/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#b39a63",
+          "deltaRgbPct": [
+            0.02,
+            0.09,
+            0.04
+          ],
+          "deltaLumPct": 0.15,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/bamboo_lattice/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#b39a63",
+          "deltaRgbPct": [
+            0.02,
+            0.09,
+            0.04
+          ],
+          "deltaLumPct": 0.15,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/bamboo_lattice/baseColor_512.webp",
+          "size": 512,
+          "mean": "#b39a63",
+          "deltaRgbPct": [
+            -0.04,
+            0.04,
+            -0.05
+          ],
+          "deltaLumPct": 0.04,
+          "pass": true
+        }
+      }
+    },
+    "basalt_dressed": {
+      "id": "basalt_dressed",
+      "class": "C",
+      "target": "#57534f",
+      "tiers": {
+        "ultra": {
+          "url": "textures/basalt_dressed/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#57534f",
+          "deltaRgbPct": [
+            0.01,
+            0.15,
+            -0.05
+          ],
+          "deltaLumPct": 0.21,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/basalt_dressed/baseColor_512.webp",
+          "size": 512,
+          "mean": "#57534f",
+          "deltaRgbPct": [
+            -0.04,
+            0.12,
+            -0.15
+          ],
+          "deltaLumPct": 0.14,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/basalt_dressed/baseColor_256.webp",
+          "size": 256,
+          "mean": "#57534f",
+          "deltaRgbPct": [
+            0.3,
+            0.45,
+            0.15
+          ],
+          "deltaLumPct": 0.82,
+          "pass": true
+        }
+      }
+    },
+    "brick_fired_old": {
+      "id": "brick_fired_old",
+      "class": "S",
+      "target": "#9c5a40",
+      "tiers": {
+        "ultra": {
+          "url": "textures/brick_fired_old/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#9c5a40",
+          "deltaRgbPct": [
+            0.03,
+            0.06,
+            0.03
+          ],
+          "deltaLumPct": 0.09,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/brick_fired_old/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#9c5a40",
+          "deltaRgbPct": [
+            0.03,
+            0.06,
+            0.03
+          ],
+          "deltaLumPct": 0.09,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/brick_fired_old/baseColor_512.webp",
+          "size": 512,
+          "mean": "#9c5a40",
+          "deltaRgbPct": [
+            0.05,
+            0.07,
+            0.2
+          ],
+          "deltaLumPct": 0.14,
+          "pass": true
+        }
+      }
+    },
+    "granite_rubble": {
+      "id": "granite_rubble",
+      "class": "C",
+      "target": "#8a8680",
+      "tiers": {
+        "ultra": {
+          "url": "textures/granite_rubble/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#8a8680",
+          "deltaRgbPct": [
+            -0.03,
+            0.14,
+            -0.1
+          ],
+          "deltaLumPct": 0.19,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/granite_rubble/baseColor_512.webp",
+          "size": 512,
+          "mean": "#8a8680",
+          "deltaRgbPct": [
+            -0.06,
+            0.06,
+            -0.16
+          ],
+          "deltaLumPct": 0.05,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/granite_rubble/baseColor_256.webp",
+          "size": 256,
+          "mean": "#8a8680",
+          "deltaRgbPct": [
+            0.26,
+            0.36,
+            0.12
+          ],
+          "deltaLumPct": 0.69,
+          "pass": true
+        }
+      }
+    },
+    "ground_dry_earth": {
+      "id": "ground_dry_earth",
+      "class": "T",
+      "target": "#a88a68",
+      "tiers": {
+        "ultra": {
+          "url": "textures/ground_dry_earth/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#a88a68",
+          "deltaRgbPct": [
+            0.06,
+            0.03,
+            -0.08
+          ],
+          "deltaLumPct": 0.08,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/ground_dry_earth/baseColor_512.webp",
+          "size": 512,
+          "mean": "#a88a68",
+          "deltaRgbPct": [
+            0.04,
+            0.03,
+            -0.02
+          ],
+          "deltaLumPct": 0.07,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/ground_dry_earth/baseColor_256.webp",
+          "size": 256,
+          "mean": "#a88a68",
+          "deltaRgbPct": [
+            0.29,
+            0.35,
+            0.43
+          ],
+          "deltaLumPct": 0.74,
+          "pass": true
+        }
+      }
+    },
+    "laterite_block": {
+      "id": "laterite_block",
+      "class": "C",
+      "target": "#8f4a34",
+      "tiers": {
+        "ultra": {
+          "url": "textures/laterite_block/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#8f4a34",
+          "deltaRgbPct": [
+            -0.01,
+            0.17,
+            0.18
+          ],
+          "deltaLumPct": 0.15,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/laterite_block/baseColor_512.webp",
+          "size": 512,
+          "mean": "#8f4a34",
+          "deltaRgbPct": [
+            -0.05,
+            0.06,
+            0.25
+          ],
+          "deltaLumPct": 0.01,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/laterite_block/baseColor_256.webp",
+          "size": 256,
+          "mean": "#8f4a34",
+          "deltaRgbPct": [
+            0.08,
+            0.36,
+            0.76
+          ],
+          "deltaLumPct": 0.45,
+          "pass": true
+        }
+      }
+    },
+    "lime_plaster_weathered": {
+      "id": "lime_plaster_weathered",
+      "class": "H",
+      "target": "#e4dac6",
+      "tiers": {
+        "ultra": {
+          "url": "textures/lime_plaster_weathered/baseColor_2048.webp",
+          "size": 2048,
+          "mean": "#e7d7c6",
+          "deltaRgbPct": [
+            1.17,
+            -1.27,
+            -0.15
+          ],
+          "deltaLumPct": -1.42,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/lime_plaster_weathered/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#e7d7c6",
+          "deltaRgbPct": [
+            1.17,
+            -1.27,
+            -0.16
+          ],
+          "deltaLumPct": -1.42,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/lime_plaster_weathered/baseColor_512.webp",
+          "size": 512,
+          "mean": "#e7d7c6",
+          "deltaRgbPct": [
+            1.26,
+            -1.16,
+            -0.05
+          ],
+          "deltaLumPct": -1.18,
+          "pass": true
+        }
+      }
+    },
+    "mud_brick_sundried": {
+      "id": "mud_brick_sundried",
+      "class": "C",
+      "target": "#a88866",
+      "tiers": {
+        "ultra": {
+          "url": "textures/mud_brick_sundried/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#a88866",
+          "deltaRgbPct": [
+            0.03,
+            0.12,
+            -0.15
+          ],
+          "deltaLumPct": 0.19,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/mud_brick_sundried/baseColor_512.webp",
+          "size": 512,
+          "mean": "#a88866",
+          "deltaRgbPct": [
+            -0.01,
+            0.13,
+            -0.17
+          ],
+          "deltaLumPct": 0.16,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/mud_brick_sundried/baseColor_256.webp",
+          "size": 256,
+          "mean": "#a98966",
+          "deltaRgbPct": [
+            0.32,
+            0.41,
+            0.18
+          ],
+          "deltaLumPct": 0.82,
+          "pass": true
+        }
+      }
+    },
+    "mud_plaster": {
+      "id": "mud_plaster",
+      "class": "S",
+      "target": "#a8835f",
+      "tiers": {
+        "ultra": {
+          "url": "textures/mud_plaster/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#a8835f",
+          "deltaRgbPct": [
+            0.01,
+            0.16,
+            -0.05
+          ],
+          "deltaLumPct": 0.22,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/mud_plaster/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#a8835f",
+          "deltaRgbPct": [
+            0.01,
+            0.16,
+            -0.05
+          ],
+          "deltaLumPct": 0.22,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/mud_plaster/baseColor_512.webp",
+          "size": 512,
+          "mean": "#a8835f",
+          "deltaRgbPct": [
+            0,
+            0.14,
+            -0.08
+          ],
+          "deltaLumPct": 0.19,
+          "pass": true
+        }
+      }
+    },
+    "roof_tile_terracotta": {
+      "id": "roof_tile_terracotta",
+      "class": "S",
+      "target": "#a65a3c",
+      "tiers": {
+        "ultra": {
+          "url": "textures/roof_tile_terracotta/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#a65a3c",
+          "deltaRgbPct": [
+            0.02,
+            0.28,
+            -0.11
+          ],
+          "deltaLumPct": 0.28,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/roof_tile_terracotta/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#a65a3c",
+          "deltaRgbPct": [
+            0.02,
+            0.28,
+            -0.11
+          ],
+          "deltaLumPct": 0.28,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/roof_tile_terracotta/baseColor_512.webp",
+          "size": 512,
+          "mean": "#a65a3c",
+          "deltaRgbPct": [
+            0.03,
+            0.23,
+            0.04
+          ],
+          "deltaLumPct": 0.26,
+          "pass": true
+        }
+      }
+    },
+    "sandstone_buff": {
+      "id": "sandstone_buff",
+      "class": "H",
+      "target": "#c2a985",
+      "tiers": {
+        "ultra": {
+          "url": "textures/sandstone_buff/baseColor_2048.webp",
+          "size": 2048,
+          "mean": "#c2a985",
+          "deltaRgbPct": [
+            -0.02,
+            0.15,
+            0.09
+          ],
+          "deltaLumPct": 0.22,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/sandstone_buff/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#c2a985",
+          "deltaRgbPct": [
+            -0.04,
+            0.12,
+            0.06
+          ],
+          "deltaLumPct": 0.16,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/sandstone_buff/baseColor_512.webp",
+          "size": 512,
+          "mean": "#c2aa85",
+          "deltaRgbPct": [
+            0.15,
+            0.33,
+            0.36
+          ],
+          "deltaLumPct": 0.63,
+          "pass": true
+        }
+      }
+    },
+    "sandstone_carved_red": {
+      "id": "sandstone_carved_red",
+      "class": "S",
+      "target": "#a8644c",
+      "tiers": {
+        "ultra": {
+          "url": "textures/sandstone_carved_red/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#a8644c",
+          "deltaRgbPct": [
+            0.06,
+            0.11,
+            0.13
+          ],
+          "deltaLumPct": 0.18,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/sandstone_carved_red/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#a8644c",
+          "deltaRgbPct": [
+            0.06,
+            0.11,
+            0.13
+          ],
+          "deltaLumPct": 0.18,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/sandstone_carved_red/baseColor_512.webp",
+          "size": 512,
+          "mean": "#a8644c",
+          "deltaRgbPct": [
+            -0.01,
+            0.04,
+            0.09
+          ],
+          "deltaLumPct": 0.03,
+          "pass": true
+        }
+      }
+    },
+    "sandstone_polished_mauryan": {
+      "id": "sandstone_polished_mauryan",
+      "class": "C",
+      "target": "#cdbb9a",
+      "tiers": {
+        "ultra": {
+          "url": "textures/sandstone_polished_mauryan/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#cdbb9a",
+          "deltaRgbPct": [
+            -0.13,
+            0.06,
+            0.09
+          ],
+          "deltaLumPct": 0.02,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/sandstone_polished_mauryan/baseColor_512.webp",
+          "size": 512,
+          "mean": "#cdbb9a",
+          "deltaRgbPct": [
+            -0.14,
+            0.03,
+            0.05
+          ],
+          "deltaLumPct": -0.03,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/sandstone_polished_mauryan/baseColor_256.webp",
+          "size": 256,
+          "mean": "#cdbb9a",
+          "deltaRgbPct": [
+            0.05,
+            0.2,
+            0.3
+          ],
+          "deltaLumPct": 0.37,
+          "pass": true
+        }
+      }
+    },
+    "sandstone_red_ashlar": {
+      "id": "sandstone_red_ashlar",
+      "class": "C",
+      "target": "#a46450",
+      "tiers": {
+        "ultra": {
+          "url": "textures/sandstone_red_ashlar/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#a46450",
+          "deltaRgbPct": [
+            -0.08,
+            0.2,
+            -0.29
+          ],
+          "deltaLumPct": 0.13,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/sandstone_red_ashlar/baseColor_512.webp",
+          "size": 512,
+          "mean": "#a46450",
+          "deltaRgbPct": [
+            -0.04,
+            0.1,
+            -0.37
+          ],
+          "deltaLumPct": 0.04,
+          "pass": true
+        }
+      }
+    },
+    "stone_slab_roof": {
+      "id": "stone_slab_roof",
+      "class": "C",
+      "target": "#7c7770",
+      "tiers": {
+        "ultra": {
+          "url": "textures/stone_slab_roof/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#7c7770",
+          "deltaRgbPct": [
+            0.06,
+            0.04,
+            -0.01
+          ],
+          "deltaLumPct": 0.08,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/stone_slab_roof/baseColor_512.webp",
+          "size": 512,
+          "mean": "#7c7770",
+          "deltaRgbPct": [
+            -0.02,
+            0,
+            -0.07
+          ],
+          "deltaLumPct": -0.02,
+          "pass": true
+        }
+      }
+    },
+    "thatch_grass": {
+      "id": "thatch_grass",
+      "class": "S",
+      "target": "#a8935e",
+      "tiers": {
+        "ultra": {
+          "url": "textures/thatch_grass/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#a8935e",
+          "deltaRgbPct": [
+            0.04,
+            0.11,
+            0.21
+          ],
+          "deltaLumPct": 0.21,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/thatch_grass/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#a8935e",
+          "deltaRgbPct": [
+            0.04,
+            0.11,
+            0.21
+          ],
+          "deltaLumPct": 0.21,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/thatch_grass/baseColor_512.webp",
+          "size": 512,
+          "mean": "#a8935e",
+          "deltaRgbPct": [
+            -0.03,
+            0.06,
+            0.13
+          ],
+          "deltaLumPct": 0.08,
+          "pass": true
+        }
+      }
+    },
+    "thatch_palm": {
+      "id": "thatch_palm",
+      "class": "C",
+      "target": "#9c8a5c",
+      "tiers": {
+        "ultra": {
+          "url": "textures/thatch_palm/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#9c8a5c",
+          "deltaRgbPct": [
+            -0.13,
+            0.17,
+            0.2
+          ],
+          "deltaLumPct": 0.19,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/thatch_palm/baseColor_512.webp",
+          "size": 512,
+          "mean": "#9b8a5c",
+          "deltaRgbPct": [
+            -0.46,
+            -0.23,
+            -0.09
+          ],
+          "deltaLumPct": -0.63,
+          "pass": true
+        }
+      }
+    },
+    "timber_sal_weathered": {
+      "id": "timber_sal_weathered",
+      "class": "C",
+      "target": "#5e4631",
+      "tiers": {
+        "ultra": {
+          "url": "textures/timber_sal_weathered/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#5e4631",
+          "deltaRgbPct": [
+            -0.16,
+            0.27,
+            -0.47
+          ],
+          "deltaLumPct": 0.2,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/timber_sal_weathered/baseColor_512.webp",
+          "size": 512,
+          "mean": "#5e4631",
+          "deltaRgbPct": [
+            -0.18,
+            0.2,
+            -0.29
+          ],
+          "deltaLumPct": 0.1,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/timber_sal_weathered/baseColor_256.webp",
+          "size": 256,
+          "mean": "#5e4631",
+          "deltaRgbPct": [
+            0.24,
+            0.65,
+            0.37
+          ],
+          "deltaLumPct": 1.01,
+          "pass": true
+        }
+      }
+    },
+    "timber_teak_carved": {
+      "id": "timber_teak_carved",
+      "class": "S",
+      "target": "#6b4a2e",
+      "tiers": {
+        "ultra": {
+          "url": "textures/timber_teak_carved/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#6b4a2e",
+          "deltaRgbPct": [
+            -0.06,
+            0.23,
+            0.05
+          ],
+          "deltaLumPct": 0.23,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/timber_teak_carved/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#6b4a2e",
+          "deltaRgbPct": [
+            -0.06,
+            0.23,
+            0.05
+          ],
+          "deltaLumPct": 0.23,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/timber_teak_carved/baseColor_512.webp",
+          "size": 512,
+          "mean": "#6b4a2e",
+          "deltaRgbPct": [
+            -0.21,
+            0.1,
+            -0.06
+          ],
+          "deltaLumPct": -0.05,
+          "pass": true
+        }
+      }
+    },
+    "timber_weathered_grey": {
+      "id": "timber_weathered_grey",
+      "class": "C",
+      "target": "#80776a",
+      "tiers": {
+        "ultra": {
+          "url": "textures/timber_weathered_grey/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#80776a",
+          "deltaRgbPct": [
+            0.13,
+            0.07,
+            0.01
+          ],
+          "deltaLumPct": 0.17,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/timber_weathered_grey/baseColor_512.webp",
+          "size": 512,
+          "mean": "#80776a",
+          "deltaRgbPct": [
+            0.02,
+            0.03,
+            -0.13
+          ],
+          "deltaLumPct": 0.04,
+          "pass": true
+        }
+      }
+    },
+    "terrain_alluvial_silt": {
+      "id": "terrain_alluvial_silt",
+      "class": "T",
+      "target": "#8d7d64",
+      "tiers": {
+        "ultra": {
+          "url": "textures/terrain_alluvial_silt/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#8d7d64",
+          "deltaRgbPct": [
+            0.02,
+            0.08,
+            -0.15
+          ],
+          "deltaLumPct": 0.11,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/terrain_alluvial_silt/baseColor_512.webp",
+          "size": 512,
+          "mean": "#8d7d64",
+          "deltaRgbPct": [
+            0.08,
+            0.13,
+            0.03
+          ],
+          "deltaLumPct": 0.24,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/terrain_alluvial_silt/baseColor_256.webp",
+          "size": 256,
+          "mean": "#8e7e65",
+          "deltaRgbPct": [
+            0.41,
+            0.51,
+            0.54
+          ],
+          "deltaLumPct": 1.06,
+          "pass": true
+        }
+      }
+    },
+    "terrain_black_soil": {
+      "id": "terrain_black_soil",
+      "class": "T",
+      "target": "#3e3a33",
+      "tiers": {
+        "ultra": {
+          "url": "textures/terrain_black_soil/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#3e3a33",
+          "deltaRgbPct": [
+            -0.68,
+            0.44,
+            -0.77
+          ],
+          "deltaLumPct": 0.21,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/terrain_black_soil/baseColor_512.webp",
+          "size": 512,
+          "mean": "#3d3a33",
+          "deltaRgbPct": [
+            -0.86,
+            0.19,
+            -0.97
+          ],
+          "deltaLumPct": -0.24,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/terrain_black_soil/baseColor_256.webp",
+          "size": 256,
+          "mean": "#3e3a33",
+          "deltaRgbPct": [
+            -0.34,
+            0.7,
+            -0.57
+          ],
+          "deltaLumPct": 0.74,
+          "pass": true
+        }
+      }
+    },
+    "terrain_farmland_tilled": {
+      "id": "terrain_farmland_tilled",
+      "class": "T",
+      "target": "#7e6a50",
+      "tiers": {
+        "ultra": {
+          "url": "textures/terrain_farmland_tilled/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#7e6a50",
+          "deltaRgbPct": [
+            -0.01,
+            0.19,
+            0.1
+          ],
+          "deltaLumPct": 0.28,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/terrain_farmland_tilled/baseColor_512.webp",
+          "size": 512,
+          "mean": "#7e6a50",
+          "deltaRgbPct": [
+            -0.1,
+            0.02,
+            0.07
+          ],
+          "deltaLumPct": -0.03,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/terrain_farmland_tilled/baseColor_256.webp",
+          "size": 256,
+          "mean": "#7e6a50",
+          "deltaRgbPct": [
+            0.19,
+            0.42,
+            0.59
+          ],
+          "deltaLumPct": 0.78,
+          "pass": true
+        }
+      }
+    },
+    "terrain_flagstone": {
+      "id": "terrain_flagstone",
+      "class": "T",
+      "target": "#a09582",
+      "tiers": {
+        "ultra": {
+          "url": "textures/terrain_flagstone/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#a09582",
+          "deltaRgbPct": [
+            -0.02,
+            0.15,
+            0.08
+          ],
+          "deltaLumPct": 0.22,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/terrain_flagstone/baseColor_512.webp",
+          "size": 512,
+          "mean": "#a09582",
+          "deltaRgbPct": [
+            -0.09,
+            0.09,
+            -0.02
+          ],
+          "deltaLumPct": 0.09,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/terrain_flagstone/baseColor_256.webp",
+          "size": 256,
+          "mean": "#a09582",
+          "deltaRgbPct": [
+            0.03,
+            0.26,
+            0.15
+          ],
+          "deltaLumPct": 0.43,
+          "pass": true
+        }
+      }
+    },
+    "terrain_forest_litter": {
+      "id": "terrain_forest_litter",
+      "class": "T",
+      "target": "#5a4a35",
+      "tiers": {
+        "ultra": {
+          "url": "textures/terrain_forest_litter/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#5a4a35",
+          "deltaRgbPct": [
+            -0.03,
+            0.13,
+            0.15
+          ],
+          "deltaLumPct": 0.16,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/terrain_forest_litter/baseColor_512.webp",
+          "size": 512,
+          "mean": "#5a4a35",
+          "deltaRgbPct": [
+            -0.2,
+            0.11,
+            0.17
+          ],
+          "deltaLumPct": 0.04,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/terrain_forest_litter/baseColor_256.webp",
+          "size": 256,
+          "mean": "#5a4a35",
+          "deltaRgbPct": [
+            0.02,
+            0.4,
+            0.94
+          ],
+          "deltaLumPct": 0.62,
+          "pass": true
+        }
+      }
+    },
+    "terrain_grass_dry": {
+      "id": "terrain_grass_dry",
+      "class": "T",
+      "target": "#9a8a5a",
+      "tiers": {
+        "ultra": {
+          "url": "textures/terrain_grass_dry/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#9a8a5a",
+          "deltaRgbPct": [
+            0.01,
+            0.13,
+            0.03
+          ],
+          "deltaLumPct": 0.21,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/terrain_grass_dry/baseColor_512.webp",
+          "size": 512,
+          "mean": "#9a8a5a",
+          "deltaRgbPct": [
+            -0.05,
+            0.06,
+            0.01
+          ],
+          "deltaLumPct": 0.06,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/terrain_grass_dry/baseColor_256.webp",
+          "size": 256,
+          "mean": "#9a8b5a",
+          "deltaRgbPct": [
+            0.16,
+            0.45,
+            0.5
+          ],
+          "deltaLumPct": 0.81,
+          "pass": true
+        }
+      }
+    },
+    "terrain_grass_lush": {
+      "id": "terrain_grass_lush",
+      "class": "T",
+      "target": "#5f6f3a",
+      "tiers": {
+        "ultra": {
+          "url": "textures/terrain_grass_lush/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#5f6f3b",
+          "deltaRgbPct": [
+            0.39,
+            -0.17,
+            1.44
+          ],
+          "deltaLumPct": -0.1,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/terrain_grass_lush/baseColor_512.webp",
+          "size": 512,
+          "mean": "#5e6d3a",
+          "deltaRgbPct": [
+            -0.65,
+            -1.97,
+            0.24
+          ],
+          "deltaLumPct": -3.56,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/terrain_grass_lush/baseColor_256.webp",
+          "size": 256,
+          "mean": "#5e6c3a",
+          "deltaRgbPct": [
+            -0.73,
+            -2.66,
+            0.2
+          ],
+          "deltaLumPct": -4.74,
+          "pass": true
+        }
+      }
+    },
+    "terrain_laterite_soil": {
+      "id": "terrain_laterite_soil",
+      "class": "T",
+      "target": "#8e5038",
+      "tiers": {
+        "ultra": {
+          "url": "textures/terrain_laterite_soil/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#8e5038",
+          "deltaRgbPct": [
+            0,
+            0.32,
+            0.56
+          ],
+          "deltaLumPct": 0.35,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/terrain_laterite_soil/baseColor_512.webp",
+          "size": 512,
+          "mean": "#8d5038",
+          "deltaRgbPct": [
+            -0.44,
+            -0.19,
+            0.12
+          ],
+          "deltaLumPct": -0.65,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/terrain_laterite_soil/baseColor_256.webp",
+          "size": 256,
+          "mean": "#8d5038",
+          "deltaRgbPct": [
+            -0.68,
+            -0.3,
+            -0.02
+          ],
+          "deltaLumPct": -1.02,
+          "pass": true
+        }
+      }
+    },
+    "terrain_mud_wet": {
+      "id": "terrain_mud_wet",
+      "class": "T",
+      "target": "#4f4636",
+      "tiers": {
+        "ultra": {
+          "url": "textures/terrain_mud_wet/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#4f4636",
+          "deltaRgbPct": [
+            -0.26,
+            0.35,
+            -0.22
+          ],
+          "deltaLumPct": 0.33,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/terrain_mud_wet/baseColor_512.webp",
+          "size": 512,
+          "mean": "#4f4636",
+          "deltaRgbPct": [
+            -0.39,
+            0.23,
+            -0.2
+          ],
+          "deltaLumPct": 0.1,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/terrain_mud_wet/baseColor_256.webp",
+          "size": 256,
+          "mean": "#4f4736",
+          "deltaRgbPct": [
+            0.2,
+            0.77,
+            0.78
+          ],
+          "deltaLumPct": 1.25,
+          "pass": true
+        }
+      }
+    },
+    "terrain_paddy_mud": {
+      "id": "terrain_paddy_mud",
+      "class": "T",
+      "target": "#5b5443",
+      "tiers": {
+        "ultra": {
+          "url": "textures/terrain_paddy_mud/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#5b5443",
+          "deltaRgbPct": [
+            -0.1,
+            0.14,
+            -0.23
+          ],
+          "deltaLumPct": 0.13,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/terrain_paddy_mud/baseColor_512.webp",
+          "size": 512,
+          "mean": "#5b5443",
+          "deltaRgbPct": [
+            -0.14,
+            0.17,
+            -0.16
+          ],
+          "deltaLumPct": 0.16,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/terrain_paddy_mud/baseColor_256.webp",
+          "size": 256,
+          "mean": "#5b5544",
+          "deltaRgbPct": [
+            0.45,
+            0.6,
+            0.79
+          ],
+          "deltaLumPct": 1.18,
+          "pass": true
+        }
+      }
+    },
+    "terrain_pebbles": {
+      "id": "terrain_pebbles",
+      "class": "T",
+      "target": "#8c8273",
+      "tiers": {
+        "ultra": {
+          "url": "textures/terrain_pebbles/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#8c8273",
+          "deltaRgbPct": [
+            -0.06,
+            0.13,
+            -0.03
+          ],
+          "deltaLumPct": 0.16,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/terrain_pebbles/baseColor_512.webp",
+          "size": 512,
+          "mean": "#8c8273",
+          "deltaRgbPct": [
+            -0.1,
+            0.07,
+            -0.04
+          ],
+          "deltaLumPct": 0.05,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/terrain_pebbles/baseColor_256.webp",
+          "size": 256,
+          "mean": "#8c8273",
+          "deltaRgbPct": [
+            0.13,
+            0.26,
+            0.34
+          ],
+          "deltaLumPct": 0.51,
+          "pass": true
+        }
+      }
+    },
+    "terrain_river_sand": {
+      "id": "terrain_river_sand",
+      "class": "T",
+      "target": "#c4b18e",
+      "tiers": {
+        "ultra": {
+          "url": "textures/terrain_river_sand/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#c4b18e",
+          "deltaRgbPct": [
+            0.02,
+            0.09,
+            -0.22
+          ],
+          "deltaLumPct": 0.13,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/terrain_river_sand/baseColor_512.webp",
+          "size": 512,
+          "mean": "#c4b18e",
+          "deltaRgbPct": [
+            -0.02,
+            0.1,
+            -0.21
+          ],
+          "deltaLumPct": 0.12,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/terrain_river_sand/baseColor_256.webp",
+          "size": 256,
+          "mean": "#c4b28e",
+          "deltaRgbPct": [
+            0.23,
+            0.36,
+            0.26
+          ],
+          "deltaLumPct": 0.71,
+          "pass": true
+        }
+      }
+    },
+    "terrain_road_earth": {
+      "id": "terrain_road_earth",
+      "class": "T",
+      "target": "#9a7e5e",
+      "tiers": {
+        "ultra": {
+          "url": "textures/terrain_road_earth/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#9a7e5e",
+          "deltaRgbPct": [
+            -0.02,
+            0.16,
+            -0.3
+          ],
+          "deltaLumPct": 0.19,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/terrain_road_earth/baseColor_512.webp",
+          "size": 512,
+          "mean": "#9a7e5e",
+          "deltaRgbPct": [
+            0.04,
+            0.1,
+            -0.03
+          ],
+          "deltaLumPct": 0.17,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/terrain_road_earth/baseColor_256.webp",
+          "size": 256,
+          "mean": "#9b7f5e",
+          "deltaRgbPct": [
+            0.37,
+            0.45,
+            0.48
+          ],
+          "deltaLumPct": 0.93,
+          "pass": true
+        }
+      }
+    },
+    "terrain_rock_basalt": {
+      "id": "terrain_rock_basalt",
+      "class": "T",
+      "target": "#5a5650",
+      "tiers": {
+        "ultra": {
+          "url": "textures/terrain_rock_basalt/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#5a5650",
+          "deltaRgbPct": [
+            0.07,
+            0.16,
+            -0.36
+          ],
+          "deltaLumPct": 0.22,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/terrain_rock_basalt/baseColor_512.webp",
+          "size": 512,
+          "mean": "#5a5650",
+          "deltaRgbPct": [
+            0.06,
+            0.1,
+            -0.33
+          ],
+          "deltaLumPct": 0.14,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/terrain_rock_basalt/baseColor_256.webp",
+          "size": 256,
+          "mean": "#5a5750",
+          "deltaRgbPct": [
+            0.5,
+            0.62,
+            0.13
+          ],
+          "deltaLumPct": 1.17,
+          "pass": true
+        }
+      }
+    },
+    "terrain_rock_granite": {
+      "id": "terrain_rock_granite",
+      "class": "T",
+      "target": "#87827a",
+      "tiers": {
+        "ultra": {
+          "url": "textures/terrain_rock_granite/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#87827a",
+          "deltaRgbPct": [
+            0,
+            0.22,
+            -0.06
+          ],
+          "deltaLumPct": 0.33,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/terrain_rock_granite/baseColor_512.webp",
+          "size": 512,
+          "mean": "#87827a",
+          "deltaRgbPct": [
+            -0.04,
+            0.19,
+            -0.1
+          ],
+          "deltaLumPct": 0.26,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/terrain_rock_granite/baseColor_256.webp",
+          "size": 256,
+          "mean": "#87837a",
+          "deltaRgbPct": [
+            0.34,
+            0.55,
+            0.33
+          ],
+          "deltaLumPct": 1.06,
+          "pass": true
+        }
+      }
+    },
+    "terrain_rock_sandstone": {
+      "id": "terrain_rock_sandstone",
+      "class": "T",
+      "target": "#a88a6c",
+      "tiers": {
+        "ultra": {
+          "url": "textures/terrain_rock_sandstone/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#a88a6c",
+          "deltaRgbPct": [
+            -0.02,
+            0.18,
+            -0.09
+          ],
+          "deltaLumPct": 0.24,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/terrain_rock_sandstone/baseColor_512.webp",
+          "size": 512,
+          "mean": "#a88a6c",
+          "deltaRgbPct": [
+            -0.03,
+            0.09,
+            -0.04
+          ],
+          "deltaLumPct": 0.1,
+          "pass": true
+        },
+        "mobile": {
+          "url": "textures/terrain_rock_sandstone/baseColor_256.webp",
+          "size": 256,
+          "mean": "#a88b6c",
+          "deltaRgbPct": [
+            0.27,
+            0.42,
+            0.45
+          ],
+          "deltaLumPct": 0.83,
+          "pass": true
+        }
+      }
+    },
+    "terrain_salt_crust": {
+      "id": "terrain_salt_crust",
+      "class": "T",
+      "target": "#d9d2c4",
+      "tiers": {
+        "ultra": {
+          "url": "textures/terrain_salt_crust/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#d9d2c4",
+          "deltaRgbPct": [
+            0.11,
+            -0.03,
+            0.11
+          ],
+          "deltaLumPct": 0.02,
+          "pass": true
+        },
+        "high": {
+          "url": "textures/terrain_salt_crust/baseColor_512.webp",
+          "size": 512,
+          "mean": "#d9d2c4",
+          "deltaRgbPct": [
+            0.1,
+            0,
+            0.11
+          ],
+          "deltaLumPct": 0.07,
+          "pass": true
+        }
+      }
+    },
+    "decals_settlement": {
+      "id": "decals_settlement",
+      "class": "A",
+      "target": null,
+      "tiers": {
+        "ultra": {
+          "url": "textures/decals_settlement/baseColor_1024.webp",
+          "size": 1024,
+          "mean": "#7f705d"
+        },
+        "high": {
+          "url": "textures/decals_settlement/baseColor_512.webp",
+          "size": 512,
+          "mean": "#7f705c"
+        },
+        "mobile": {
+          "url": "textures/decals_settlement/baseColor_256.webp",
+          "size": 256,
+          "mean": "#7f6f5b"
+        }
+      }
+    }
+  },
   "budgets": null,
   "shots": [
     {
@@ -311,10 +1865,829 @@
       "ms": 27810,
       "errors": [],
       "routed": 6
+    },
+    {
+      "name": "viewer granite_rubble sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=granite_rubble&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 11278,
+      "errors": []
+    },
+    {
+      "name": "viewer granite_rubble sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=granite_rubble&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 6625,
+      "errors": []
+    },
+    {
+      "name": "viewer granite_rubble sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=granite_rubble&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 5513,
+      "errors": []
+    },
+    {
+      "name": "viewer granite_rubble sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=granite_rubble&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 6344,
+      "errors": []
+    },
+    {
+      "name": "viewer lime_plaster_weathered sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=lime_plaster_weathered&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 6077,
+      "errors": []
+    },
+    {
+      "name": "viewer lime_plaster_weathered sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=lime_plaster_weathered&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 14517,
+      "errors": []
+    },
+    {
+      "name": "viewer lime_plaster_weathered sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=lime_plaster_weathered&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 14151,
+      "errors": []
+    },
+    {
+      "name": "viewer lime_plaster_weathered sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=lime_plaster_weathered&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 15645,
+      "errors": []
+    },
+    {
+      "name": "viewer mud_brick_sundried sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=mud_brick_sundried&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 5753,
+      "errors": []
+    },
+    {
+      "name": "viewer mud_brick_sundried sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=mud_brick_sundried&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 6232,
+      "errors": []
+    },
+    {
+      "name": "viewer mud_brick_sundried sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=mud_brick_sundried&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 5856,
+      "errors": []
+    },
+    {
+      "name": "viewer mud_brick_sundried sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=mud_brick_sundried&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 5963,
+      "errors": []
+    },
+    {
+      "name": "viewer sandstone_red_ashlar sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_red_ashlar&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 6634,
+      "errors": []
+    },
+    {
+      "name": "viewer sandstone_red_ashlar sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_red_ashlar&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 15362,
+      "errors": []
+    },
+    {
+      "name": "viewer sandstone_red_ashlar sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_red_ashlar&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 13736,
+      "errors": []
+    },
+    {
+      "name": "viewer sandstone_red_ashlar sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_red_ashlar&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 15237,
+      "errors": []
+    },
+    {
+      "name": "viewer stone_slab_roof sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=stone_slab_roof&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 6908,
+      "errors": []
+    },
+    {
+      "name": "viewer stone_slab_roof sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=stone_slab_roof&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 8246,
+      "errors": []
+    },
+    {
+      "name": "viewer stone_slab_roof sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=stone_slab_roof&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 8603,
+      "errors": []
+    },
+    {
+      "name": "viewer stone_slab_roof sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=stone_slab_roof&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 11136,
+      "errors": []
+    },
+    {
+      "name": "viewer thatch_grass sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_grass&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 20752,
+      "errors": []
+    },
+    {
+      "name": "viewer thatch_grass sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_grass&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 21574,
+      "errors": []
+    },
+    {
+      "name": "viewer thatch_grass sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_grass&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 18113,
+      "errors": []
+    },
+    {
+      "name": "viewer thatch_grass sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_grass&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 19862,
+      "errors": []
+    },
+    {
+      "name": "viewer thatch_palm sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_palm&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 6459,
+      "errors": []
+    },
+    {
+      "name": "viewer thatch_palm sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_palm&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 11874,
+      "errors": []
+    },
+    {
+      "name": "viewer thatch_palm sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_palm&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 7633,
+      "errors": []
+    },
+    {
+      "name": "viewer thatch_palm sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_palm&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 9599,
+      "errors": []
+    },
+    {
+      "name": "viewer timber_weathered_grey sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=timber_weathered_grey&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 16983,
+      "errors": []
+    },
+    {
+      "name": "viewer timber_weathered_grey sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=timber_weathered_grey&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 21450,
+      "errors": []
+    },
+    {
+      "name": "viewer timber_weathered_grey sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=timber_weathered_grey&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 19031,
+      "errors": []
+    },
+    {
+      "name": "viewer timber_weathered_grey sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=timber_weathered_grey&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 16013,
+      "errors": []
+    },
+    {
+      "name": "splat river sky_golden",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_river_sand,terrain_pebbles,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_golden&assets=ultra",
+      "ms": 7176,
+      "errors": []
+    },
+    {
+      "name": "splat floodplain sky_golden",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_alluvial_silt,terrain_grass_lush,terrain_river_sand,terrain_rock_sandstone&hdri=sky_golden&assets=ultra",
+      "ms": 11348,
+      "errors": []
+    },
+    {
+      "name": "splat farmland sky_golden",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_farmland_tilled,terrain_grass_lush,terrain_road_earth,terrain_rock_sandstone&hdri=sky_golden&assets=ultra",
+      "ms": 13614,
+      "errors": []
+    },
+    {
+      "name": "splat grassland sky_golden",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_grass_lush,terrain_grass_dry,terrain_alluvial_silt,terrain_rock_granite&hdri=sky_golden&assets=ultra",
+      "ms": 13516,
+      "errors": []
+    },
+    {
+      "name": "splat scrub sky_golden",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_grass_dry,ground_dry_earth,terrain_pebbles,terrain_rock_granite&hdri=sky_golden&assets=ultra",
+      "ms": 15767,
+      "errors": []
+    },
+    {
+      "name": "splat dry_plain sky_golden",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=ground_dry_earth,terrain_grass_dry,terrain_salt_crust,terrain_rock_sandstone&hdri=sky_golden&assets=ultra",
+      "ms": 6562,
+      "errors": []
+    },
+    {
+      "name": "splat forest sky_golden",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_forest_litter,terrain_grass_lush,terrain_laterite_soil,terrain_rock_granite&hdri=sky_golden&assets=ultra",
+      "ms": 6640,
+      "errors": []
+    },
+    {
+      "name": "splat dense_forest sky_golden",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_forest_litter,terrain_laterite_soil,terrain_grass_lush,terrain_rock_basalt&hdri=sky_golden&assets=ultra",
+      "ms": 12096,
+      "errors": []
+    },
+    {
+      "name": "splat hills sky_golden",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_grass_dry,terrain_laterite_soil,terrain_pebbles,terrain_rock_granite&hdri=sky_golden&assets=ultra",
+      "ms": 13143,
+      "errors": []
+    },
+    {
+      "name": "splat rocky sky_golden",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_pebbles,terrain_grass_dry,terrain_laterite_soil,terrain_rock_granite&hdri=sky_golden&assets=ultra",
+      "ms": 11710,
+      "errors": []
+    },
+    {
+      "name": "splat plateau sky_golden",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_laterite_soil,terrain_black_soil,terrain_grass_dry,terrain_rock_basalt&hdri=sky_golden&assets=ultra",
+      "ms": 11840,
+      "errors": []
+    },
+    {
+      "name": "splat sandbank sky_golden",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_river_sand,terrain_pebbles,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_golden&assets=ultra",
+      "ms": 12293,
+      "errors": []
+    },
+    {
+      "name": "splat marsh sky_golden",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_mud_wet,terrain_grass_lush,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_golden&assets=ultra",
+      "ms": 6746,
+      "errors": []
+    },
+    {
+      "name": "splat river sky_day",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_river_sand,terrain_pebbles,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
+      "ms": 13051,
+      "errors": []
+    },
+    {
+      "name": "splat floodplain sky_day",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_alluvial_silt,terrain_grass_lush,terrain_river_sand,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
+      "ms": 22948,
+      "errors": []
+    },
+    {
+      "name": "splat farmland sky_day",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_farmland_tilled,terrain_grass_lush,terrain_road_earth,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
+      "ms": 17592,
+      "errors": []
+    },
+    {
+      "name": "splat grassland sky_day",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_grass_lush,terrain_grass_dry,terrain_alluvial_silt,terrain_rock_granite&hdri=sky_day&assets=ultra",
+      "ms": 13376,
+      "errors": []
+    },
+    {
+      "name": "splat scrub sky_day",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_grass_dry,ground_dry_earth,terrain_pebbles,terrain_rock_granite&hdri=sky_day&assets=ultra",
+      "ms": 12569,
+      "errors": []
+    },
+    {
+      "name": "splat dry_plain sky_day",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=ground_dry_earth,terrain_grass_dry,terrain_salt_crust,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
+      "ms": 20111,
+      "errors": []
+    },
+    {
+      "name": "splat forest sky_day",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_forest_litter,terrain_grass_lush,terrain_laterite_soil,terrain_rock_granite&hdri=sky_day&assets=ultra",
+      "ms": 16717,
+      "errors": []
+    },
+    {
+      "name": "splat dense_forest sky_day",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_forest_litter,terrain_laterite_soil,terrain_grass_lush,terrain_rock_basalt&hdri=sky_day&assets=ultra",
+      "ms": 21796,
+      "errors": []
+    },
+    {
+      "name": "splat hills sky_day",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_grass_dry,terrain_laterite_soil,terrain_pebbles,terrain_rock_granite&hdri=sky_day&assets=ultra",
+      "ms": 14744,
+      "errors": []
+    },
+    {
+      "name": "splat rocky sky_day",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_pebbles,terrain_grass_dry,terrain_laterite_soil,terrain_rock_granite&hdri=sky_day&assets=ultra",
+      "ms": 11263,
+      "errors": []
+    },
+    {
+      "name": "splat plateau sky_day",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_laterite_soil,terrain_black_soil,terrain_grass_dry,terrain_rock_basalt&hdri=sky_day&assets=ultra",
+      "ms": 15649,
+      "errors": []
+    },
+    {
+      "name": "splat sandbank sky_day",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_river_sand,terrain_pebbles,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
+      "ms": 22352,
+      "errors": []
+    },
+    {
+      "name": "splat marsh sky_day",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_mud_wet,terrain_grass_lush,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
+      "ms": 19941,
+      "errors": []
     }
   ],
   "failures": [],
+  "splat": {
+    "river": {
+      "layers": [
+        "river_sand",
+        "pebbles_gravel",
+        "alluvial_silt",
+        "rock_sandstone_cliff"
+      ],
+      "assets": [
+        "terrain_river_sand",
+        "terrain_pebbles",
+        "terrain_alluvial_silt",
+        "terrain_rock_sandstone"
+      ],
+      "fallback": []
+    },
+    "floodplain": {
+      "layers": [
+        "alluvial_silt",
+        "grass_lush",
+        "river_sand",
+        "rock_sandstone_cliff"
+      ],
+      "assets": [
+        "terrain_alluvial_silt",
+        "terrain_grass_lush",
+        "terrain_river_sand",
+        "terrain_rock_sandstone"
+      ],
+      "fallback": []
+    },
+    "farmland": {
+      "layers": [
+        "farmland_tilled",
+        "grass_lush",
+        "road_packed_earth",
+        "rock_sandstone_cliff"
+      ],
+      "assets": [
+        "terrain_farmland_tilled",
+        "terrain_grass_lush",
+        "terrain_road_earth",
+        "terrain_rock_sandstone"
+      ],
+      "fallback": []
+    },
+    "grassland": {
+      "layers": [
+        "grass_lush",
+        "grass_dry",
+        "alluvial_silt",
+        "rock_granite"
+      ],
+      "assets": [
+        "terrain_grass_lush",
+        "terrain_grass_dry",
+        "terrain_alluvial_silt",
+        "terrain_rock_granite"
+      ],
+      "fallback": []
+    },
+    "scrub": {
+      "layers": [
+        "grass_dry",
+        "dry_earth_cracked",
+        "pebbles_gravel",
+        "rock_granite"
+      ],
+      "assets": [
+        "terrain_grass_dry",
+        "ground_dry_earth",
+        "terrain_pebbles",
+        "terrain_rock_granite"
+      ],
+      "fallback": []
+    },
+    "dry_plain": {
+      "layers": [
+        "dry_earth_cracked",
+        "grass_dry",
+        "salt_crust",
+        "rock_sandstone_cliff"
+      ],
+      "assets": [
+        "ground_dry_earth",
+        "terrain_grass_dry",
+        "terrain_salt_crust",
+        "terrain_rock_sandstone"
+      ],
+      "fallback": []
+    },
+    "forest": {
+      "layers": [
+        "forest_litter",
+        "grass_lush",
+        "laterite_soil",
+        "rock_granite"
+      ],
+      "assets": [
+        "terrain_forest_litter",
+        "terrain_grass_lush",
+        "terrain_laterite_soil",
+        "terrain_rock_granite"
+      ],
+      "fallback": []
+    },
+    "dense_forest": {
+      "layers": [
+        "forest_litter",
+        "laterite_soil",
+        "grass_lush",
+        "rock_basalt"
+      ],
+      "assets": [
+        "terrain_forest_litter",
+        "terrain_laterite_soil",
+        "terrain_grass_lush",
+        "terrain_rock_basalt"
+      ],
+      "fallback": []
+    },
+    "hills": {
+      "layers": [
+        "grass_dry",
+        "laterite_soil",
+        "pebbles_gravel",
+        "rock_granite"
+      ],
+      "assets": [
+        "terrain_grass_dry",
+        "terrain_laterite_soil",
+        "terrain_pebbles",
+        "terrain_rock_granite"
+      ],
+      "fallback": []
+    },
+    "rocky": {
+      "layers": [
+        "pebbles_gravel",
+        "grass_dry",
+        "laterite_soil",
+        "rock_granite"
+      ],
+      "assets": [
+        "terrain_pebbles",
+        "terrain_grass_dry",
+        "terrain_laterite_soil",
+        "terrain_rock_granite"
+      ],
+      "fallback": []
+    },
+    "plateau": {
+      "layers": [
+        "laterite_soil",
+        "black_cotton_soil",
+        "grass_dry",
+        "rock_basalt"
+      ],
+      "assets": [
+        "terrain_laterite_soil",
+        "terrain_black_soil",
+        "terrain_grass_dry",
+        "terrain_rock_basalt"
+      ],
+      "fallback": []
+    },
+    "sandbank": {
+      "layers": [
+        "river_sand",
+        "pebbles_gravel",
+        "alluvial_silt",
+        "rock_sandstone_cliff"
+      ],
+      "assets": [
+        "terrain_river_sand",
+        "terrain_pebbles",
+        "terrain_alluvial_silt",
+        "terrain_rock_sandstone"
+      ],
+      "fallback": []
+    },
+    "marsh": {
+      "layers": [
+        "mud_wet",
+        "grass_lush",
+        "alluvial_silt",
+        "rock_sandstone_cliff"
+      ],
+      "assets": [
+        "terrain_mud_wet",
+        "terrain_grass_lush",
+        "terrain_alluvial_silt",
+        "terrain_rock_sandstone"
+      ],
+      "fallback": []
+    }
+  },
   "stupaReskin": {
     "replacedSetReferences": 6
-  }
+  },
+  "decals": [
+    {
+      "name": "mandana_border_ochre",
+      "category": "mandana",
+      "surface": "wall",
+      "tileU": true,
+      "uv": [
+        0,
+        0.875,
+        0.5,
+        1
+      ],
+      "sizeMeters": [
+        2,
+        0.5
+      ]
+    },
+    {
+      "name": "mandana_border_white",
+      "category": "mandana",
+      "surface": "wall",
+      "tileU": true,
+      "uv": [
+        0.5,
+        0.875,
+        1,
+        1
+      ],
+      "sizeMeters": [
+        2,
+        0.5
+      ]
+    },
+    {
+      "name": "kolam_pulli",
+      "category": "kolam",
+      "surface": "ground",
+      "tileU": false,
+      "uv": [
+        0,
+        0.625,
+        0.25,
+        0.875
+      ],
+      "sizeMeters": [
+        1,
+        1
+      ]
+    },
+    {
+      "name": "kolam_lotus",
+      "category": "kolam",
+      "surface": "ground",
+      "tileU": false,
+      "uv": [
+        0.25,
+        0.625,
+        0.5,
+        0.875
+      ],
+      "sizeMeters": [
+        1,
+        1
+      ]
+    },
+    {
+      "name": "kolam_star",
+      "category": "kolam",
+      "surface": "ground",
+      "tileU": false,
+      "uv": [
+        0.5,
+        0.625,
+        0.75,
+        0.875
+      ],
+      "sizeMeters": [
+        1,
+        1
+      ]
+    },
+    {
+      "name": "kolam_interlace",
+      "category": "kolam",
+      "surface": "ground",
+      "tileU": false,
+      "uv": [
+        0.75,
+        0.625,
+        1,
+        0.875
+      ],
+      "sizeMeters": [
+        1,
+        1
+      ]
+    },
+    {
+      "name": "plaster_crack_corner",
+      "category": "crack",
+      "surface": "wall",
+      "tileU": false,
+      "uv": [
+        0,
+        0.375,
+        0.25,
+        0.625
+      ],
+      "sizeMeters": [
+        1,
+        1
+      ]
+    },
+    {
+      "name": "plaster_crack_craze",
+      "category": "crack",
+      "surface": "wall",
+      "tileU": false,
+      "uv": [
+        0.25,
+        0.375,
+        0.5,
+        0.625
+      ],
+      "sizeMeters": [
+        1,
+        1
+      ]
+    },
+    {
+      "name": "soot_plume",
+      "category": "soot",
+      "surface": "wall",
+      "tileU": false,
+      "uv": [
+        0.5,
+        0.375,
+        0.75,
+        0.625
+      ],
+      "sizeMeters": [
+        1,
+        1
+      ]
+    },
+    {
+      "name": "charring",
+      "category": "charring",
+      "surface": "any",
+      "tileU": false,
+      "uv": [
+        0.75,
+        0.375,
+        1,
+        0.625
+      ],
+      "sizeMeters": [
+        1,
+        1
+      ]
+    },
+    {
+      "name": "damp_rising",
+      "category": "damp",
+      "surface": "wall",
+      "tileU": true,
+      "uv": [
+        0,
+        0.125,
+        0.5,
+        0.375
+      ],
+      "sizeMeters": [
+        2,
+        1
+      ]
+    },
+    {
+      "name": "damp_leak",
+      "category": "damp",
+      "surface": "wall",
+      "tileU": false,
+      "uv": [
+        0.5,
+        0.125,
+        0.75,
+        0.375
+      ],
+      "sizeMeters": [
+        1,
+        1
+      ]
+    },
+    {
+      "name": "puddle_large",
+      "category": "puddle",
+      "surface": "ground",
+      "tileU": false,
+      "uv": [
+        0.75,
+        0.125,
+        1,
+        0.375
+      ],
+      "sizeMeters": [
+        1,
+        1
+      ]
+    },
+    {
+      "name": "puddle_small_a",
+      "category": "puddle",
+      "surface": "ground",
+      "tileU": false,
+      "uv": [
+        0.75,
+        0,
+        0.875,
+        0.125
+      ],
+      "sizeMeters": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "puddle_small_b",
+      "category": "puddle",
+      "surface": "ground",
+      "tileU": false,
+      "uv": [
+        0.875,
+        0,
+        1,
+        0.125
+      ],
+      "sizeMeters": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "name": "rut_endcap",
+      "category": "rut",
+      "surface": "ground",
+      "tileU": false,
+      "uv": [
+        0,
+        0,
+        0.25,
+        0.125
+      ],
+      "sizeMeters": [
+        1,
+        0.5
+      ]
+    },
+    {
+      "name": "footprint_trail",
+      "category": "footprints",
+      "surface": "ground",
+      "tileU": true,
+      "uv": [
+        0.25,
+        0,
+        0.75,
+        0.125
+      ],
+      "sizeMeters": [
+        2,
+        0.5
+      ]
+    }
+  ]
 }

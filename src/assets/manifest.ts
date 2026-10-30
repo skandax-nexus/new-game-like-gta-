@@ -9,9 +9,9 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 31473126,
-    "high": 17329873,
-    "mobile": 6046370
+    "ultra": 31449960,
+    "high": 17280501,
+    "mobile": 6029384
   },
   "assets": {
     "bamboo_lattice": {
@@ -3174,11 +3174,11 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "sandstone_red_ashlar",
       "category": "materials",
-      "hash": "7a9cbd66df",
+      "hash": "19003b0201",
       "description": "Plain spotted red sandstone ashlar (3 m): 0.43 m courses, 4 mm lime joints, point-dressed faces, reduction spots with dark rims, cross-bedding, chipped arrises, grime.",
       "bytes": {
-        "ultra": 225158,
-        "high": 179006,
+        "ultra": 201992,
+        "high": 164054,
         "mobile": 0
       },
       "tiers": [
@@ -3199,12 +3199,12 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/sandstone_red_ashlar/baseColor_1024.webp",
-            "bytes": 67492,
+            "bytes": 47050,
             "size": 1024
           },
           "high": {
             "url": "textures/sandstone_red_ashlar/baseColor_512.webp",
-            "bytes": 21340,
+            "bytes": 9112,
             "size": 512
           }
         },
@@ -3223,12 +3223,12 @@ export const ASSET_MANIFEST = {
         "orm": {
           "ultra": {
             "url": "textures/sandstone_red_ashlar/orm_512.webp",
-            "bytes": 27944,
+            "bytes": 25220,
             "size": 512
           },
           "high": {
             "url": "textures/sandstone_red_ashlar/orm_512.webp",
-            "bytes": 27944,
+            "bytes": 25220,
             "size": 512
           }
         }
@@ -4818,12 +4818,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_paddy_mud",
       "category": "terrain",
-      "hash": "65bdecc527",
-      "description": "Puddled paddy mud (3 m): glossy levelled clay, standing water over ~55 % (mask in baseColor alpha), footprints, floating straw and duckweed, algae at the edges.",
+      "hash": "9a2e392a5b",
+      "description": "Puddled paddy mud (3 m): glossy levelled clay, standing water over ~55 % (mask: cache file, lowest ORM.r), footprints, floating straw and duckweed, algae at the edges.",
       "bytes": {
         "ultra": 194488,
-        "high": 193870,
-        "mobile": 73990
+        "high": 159450,
+        "mobile": 57004
       },
       "tiers": [
         "ultra",
@@ -4849,12 +4849,12 @@ export const ASSET_MANIFEST = {
           },
           "high": {
             "url": "textures/terrain_paddy_mud/baseColor_512.webp",
-            "bytes": 51998,
+            "bytes": 17578,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_paddy_mud/baseColor_256.webp",
-            "bytes": 22558,
+            "bytes": 5572,
             "size": 256
           }
         },

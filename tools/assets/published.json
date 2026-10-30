@@ -5790,7 +5790,7 @@
       "kind": "material",
       "category": "materials",
       "script": "tools/blender/assets/materials/sandstone_red_ashlar.py",
-      "inputHash": "7a9cbd66dfaae6446cb61b7b341c0b8b668713101ab6b43d5402a413093e81e5",
+      "inputHash": "19003b0201637d439b3c8edb2226a0054ce21dbbba6a449e49ab52aca55aa573",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -5820,8 +5820,8 @@
             0.42
           ],
           "lumMean": 0.1759,
-          "lumP2": 0.1325,
-          "lumP98": 0.2809,
+          "lumP2": 0.1523,
+          "lumP98": 0.2556,
           "meanColor": "#a46450",
           "roughMean": 0.8,
           "roughP5": 0.66,
@@ -5830,8 +5830,8 @@
             0.66,
             0.92
           ],
-          "satMean": 0.518,
-          "satP95": 0.551,
+          "satMean": 0.515,
+          "satP95": 0.543,
           "saturationLimit": 0.6,
           "target": "#a46450"
         },
@@ -5846,7 +5846,7 @@
       "files": [
         {
           "path": "textures/sandstone_red_ashlar/baseColor_1024.webp",
-          "bytes": 67492,
+          "bytes": 47050,
           "tiers": [
             "ultra"
           ],
@@ -5856,7 +5856,7 @@
         },
         {
           "path": "textures/sandstone_red_ashlar/baseColor_512.webp",
-          "bytes": 21340,
+          "bytes": 9112,
           "tiers": [
             "high"
           ],
@@ -5877,7 +5877,7 @@
         },
         {
           "path": "textures/sandstone_red_ashlar/orm_512.webp",
-          "bytes": 27944,
+          "bytes": 25220,
           "tiers": [
             "ultra",
             "high"
@@ -5898,12 +5898,12 @@
           "baseColor": {
             "ultra": {
               "path": "textures/sandstone_red_ashlar/baseColor_1024.webp",
-              "bytes": 67492,
+              "bytes": 47050,
               "size": 1024
             },
             "high": {
               "path": "textures/sandstone_red_ashlar/baseColor_512.webp",
-              "bytes": 21340,
+              "bytes": 9112,
               "size": 512
             }
           },
@@ -5922,20 +5922,20 @@
           "orm": {
             "ultra": {
               "path": "textures/sandstone_red_ashlar/orm_512.webp",
-              "bytes": 27944,
+              "bytes": 25220,
               "size": 512
             },
             "high": {
               "path": "textures/sandstone_red_ashlar/orm_512.webp",
-              "bytes": 27944,
+              "bytes": 25220,
               "size": 512
             }
           }
         }
       },
       "bytes": {
-        "ultra": 225158,
-        "high": 179006,
+        "ultra": 201992,
+        "high": 164054,
         "mobile": 0
       }
     },
@@ -9334,13 +9334,13 @@
       "kind": "material",
       "category": "terrain",
       "script": "tools/blender/assets/terrain/terrain_paddy_mud.py",
-      "inputHash": "65bdecc5279cf4f87e25733f712a707eb596f347defc12bf00dbc3332e0bd947",
+      "inputHash": "9a2e392a5b786f1c7d12ac7954184350d0856d6af7e599bfcbe645ac17309338",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
         "averageColor": "#5b5443",
         "decals": [],
-        "description": "Puddled paddy mud (3 m): glossy levelled clay, standing water over ~55 % (mask in baseColor alpha), footprints, floating straw and duckweed, algae at the edges.",
+        "description": "Puddled paddy mud (3 m): glossy levelled clay, standing water over ~55 % (mask: cache file, lowest ORM.r), footprints, floating straw and duckweed, algae at the edges.",
         "heightRangeMeters": [
           -0.00038,
           0.0104
@@ -9387,9 +9387,10 @@
         ],
         "trims": [],
         "waterMask": {
-          "channel": "baseColor.a",
+          "file": "terrain_paddy_mud_waterMask.png",
           "heightPercentile": 55,
-          "note": "also lowest ORM.r; publish keeps alpha once the CTO request lands"
+          "note": "lowest ORM.r; moves to baseColor.a when publish keeps alpha",
+          "shipped": false
         }
       },
       "files": [
@@ -9405,7 +9406,7 @@
         },
         {
           "path": "textures/terrain_paddy_mud/baseColor_512.webp",
-          "bytes": 51998,
+          "bytes": 17578,
           "tiers": [
             "high"
           ],
@@ -9415,7 +9416,7 @@
         },
         {
           "path": "textures/terrain_paddy_mud/baseColor_256.webp",
-          "bytes": 22558,
+          "bytes": 5572,
           "tiers": [
             "mobile"
           ],
@@ -9476,12 +9477,12 @@
             },
             "high": {
               "path": "textures/terrain_paddy_mud/baseColor_512.webp",
-              "bytes": 51998,
+              "bytes": 17578,
               "size": 512
             },
             "mobile": {
               "path": "textures/terrain_paddy_mud/baseColor_256.webp",
-              "bytes": 22558,
+              "bytes": 5572,
               "size": 256
             }
           },
@@ -9523,8 +9524,8 @@
       },
       "bytes": {
         "ultra": 194488,
-        "high": 193870,
-        "mobile": 73990
+        "high": 159450,
+        "mobile": 57004
       }
     },
     "terrain_pebbles": {
