@@ -502,7 +502,8 @@ async function main() {
     }
 
     async function shootOnce(file, query, opts = {}) {
-      const context = await browser.newContext({ viewport: { width: vp[0], height: vp[1] }, deviceScaleFactor: 1 });
+      const v = opts.vp ?? vp;
+      const context = await browser.newContext({ viewport: { width: v[0], height: v[1] }, deviceScaleFactor: 1 });
       const page = await context.newPage();
       const errors = [];
       page.on('console', (m) => {
@@ -591,9 +592,9 @@ async function main() {
       if (run('viewer')) {
         fs.mkdirSync(path.join(OUT, 'viewer'), { recursive: true });
         const views = [
-          ['sky_day', 'detail', '~1.2 m, sky_day'],
+          ['sky_day', 'detail', '~1.2 m, sky_day (crop on the material)'],
           ['sky_day', 'overview', '~9 m, sky_day'],
-          ['sky_golden', 'detail', '~1.2 m, sky_golden'],
+          ['sky_golden', 'detail', '~1.2 m, sky_golden (crop on the material)'],
           ['sky_golden', 'overview', '~9 m, sky_golden'],
         ];
         // architecture sets only: terrain layers are judged in the splat group (their real context), and the decal
@@ -602,7 +603,14 @@ async function main() {
           const items = [];
           for (const [sky, cam, label] of views) {
             const file = path.join(RAW, `viewer_${s.id}_${sky}_${cam}.png`);
-            await shoot(`viewer ${s.id} ${sky} ${cam}`, file, `asset=${s.id}&hdri=${sky}&camera=${cam}&assets=ultra`);
+            if (cam === 'detail') {
+              // AD-8: the 1.2 m frame must be >= 60 % material. The viewer's detail preset puts the lookdev set in the
+              // right half, so shoot at 1600 x 900 and crop the 16:9 window around the wall, column and sphere
+              // (no rescaling up: the crop keeps the native ~1.2 m texel density).
+              const full = file.replace(/\.png$/, '_full.png');
+              await shoot(`viewer ${s.id} ${sky} ${cam}`, full, `asset=${s.id}&hdri=${sky}&camera=${cam}&assets=ultra`, { vp: [1600, 900] });
+              if (fs.existsSync(full)) await sharp(full).extract({ left: 744, top: 24, width: 856, height: 482 }).toFile(file);
+            } else await shoot(`viewer ${s.id} ${sky} ${cam}`, file, `asset=${s.id}&hdri=${sky}&camera=${cam}&assets=ultra`);
             items.push({ file, label });
           }
           await sheet(items, 2, 640, 360, path.join(OUT, 'viewer', `${s.id}.jpg`), `${s.id} - asset viewer lookdev (wall corner, column, sphere), quality high, ultra textures`);

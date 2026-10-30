@@ -65,14 +65,15 @@ with core.timer("bed profiles"):
     h = hard_h * (1.0 - soft) + soft_h * soft
     # blocks: each joint-bounded block at its own depth and slight tilt
     h += 0.02 * (jb["block"] - 0.5) * (1.0 - 0.6 * soft) + 0.03 * (jb["rand2"] - 0.5) * (jb["lu"] - 0.5)
-    h += 0.06 * kit.fbm(1.5, 3, aniso=(2.0, 1.0)) * (1.0 - soft)  # weathered, undulating bed faces
+    h += (0.09 * kit.fbm(1.5, 3, aniso=(2.0, 1.0)) + 0.03 * kit.fbm(0.4, 3)) * (1.0 - soft)  # weathered, undulating bed faces
     # joints: broken V-grooves, open ones wider and deeper
-    jopen = jb["open_v"]
+    # most joints are closed hairlines (barely a relief line); only some open into weathered clefts
+    jopen = tg.smoothstep(0.45, 0.85, jb["open_v"])
     jw = 0.02 + 0.09 * jopen * (0.6 + 0.4 * (kit.fbm(0.8, 2) * 0.5 + 0.5))
     jd = jb["side"] + 0.015 * kit.fbm(0.05, 2)
     joint = tg.smoothstep(jw, 0.0, jd) * tg.smoothstep(-0.35, 0.15, kit.fbm(0.9, 3, aniso=(0.35, 1.0)))  # joints fade in and out
     jr = 0.08 + 0.1 * jopen  # weathered, rounded joint shoulders (not a cut line)
-    h -= (0.04 + 0.14 * jopen) * joint + 0.06 * (1.0 - np.sqrt(np.clip(1.0 - (1.0 - np.clip(jd / jr, 0, 1)) ** 2, 0, 1)))
+    h -= (0.006 + 0.15 * jopen) * joint + 0.07 * jopen * (1.0 - np.sqrt(np.clip(1.0 - (1.0 - np.clip(jd / jr, 0, 1)) ** 2, 0, 1)))
     bedding = tg.smoothstep(0.02, 0.0, np.minimum(below, above)) * (1.0 - soft)
     h -= 0.025 * bedding
 
@@ -84,11 +85,11 @@ with core.timer("cross-bedding"):
     sp = sp_b[band].astype(np.float32)
     kb = k_b[band].astype(np.float32)
     zr = np.clip(lv, 0, 1)
-    g = below + 0.55 * thick * (1.0 - zr) ** 2  # foresets curve tangentially into the set's base
-    phi = g / sp - kb * x + 0.45 * kit.fbm(1.5, 2) + 0.12 * kit.fbm(0.3, 2)  # planar foresets, gently warped
+    g = below + 0.18 * thick * (1.0 - zr) ** 4  # straight foresets, curving tangentially only at the set's base
+    phi = g / sp - kb * x + 0.25 * kit.fbm(2.0, 2)  # planar foresets, barely warped (no wood-grain rings)
     saw = phi - np.floor(phi)
     lam = tg.smoothstep(0.0, 0.25, saw) * tg.smoothstep(1.0, 0.6, saw)  # etched rib profile
-    lam_amp = (0.008 + 0.008 * soft) * tg.smoothstep(0.0, 0.08, lv) * (0.5 + 0.5 * tg.smoothstep(-0.3, 0.3, kit.fbm(1.0, 2)))
+    lam_amp = (0.003 + 0.003 * soft) * tg.smoothstep(0.0, 0.08, lv) * (0.4 + 0.6 * tg.smoothstep(-0.3, 0.3, kit.fbm(1.0, 2)))
     h += lam_amp * lam
     lam_tone = (np.floor(phi) * 0.618) % 1.0  # lamina-to-lamina tone variation
 
@@ -112,10 +113,10 @@ with core.timer("albedo"):
     alb = K.ramp(t, [(0.0, "#8c6450"), (0.3, "#9c785e"), (0.55, "#ab8b6c"), (0.8, "#bda27f"), (1.0, "#c9b18f")])
     alb = K.tint(alb, "#857269", 0.35 * tg.smoothstep(0.8, 0.97, tone))  # purple-grey reduced sets
     alb = K.tint(alb, "#a2624a", 0.25 * tg.smoothstep(0.2, 0.04, tone))  # iron-red sets
-    alb = K.mul(alb, 1.0 + 0.14 * (lam - 0.5) * (0.6 + 0.6 * soft))
+    alb = K.mul(alb, 1.0 + 0.08 * (lam - 0.5) * (0.6 + 0.6 * soft))
     # Liesegang iron rings (wavy, faint)
     lies = 0.5 + 0.5 * np.sin(2 * np.pi * (kit.fbm(1.5, 3) * 6.0))
-    alb = K.tint(alb, "#9b6a4c", 0.12 * lies * tg.smoothstep(0.1, 0.5, kit.fbm(2.0, 2)))
+    alb = K.tint(alb, "#9b6a4c", 0.05 * lies * tg.smoothstep(0.2, 0.6, kit.fbm(2.0, 2)))  # faint: strong rings read as wood grain
     alb = K.mul(alb, 1.0 - 0.55 * under_lip)  # overhang shadow line under every hard lip
     alb = K.tint(alb, "#5a4a3e", 0.5 * joint * jopen)
     alb = K.mul(alb, 1.0 - 0.35 * honey - 0.1 * tz)

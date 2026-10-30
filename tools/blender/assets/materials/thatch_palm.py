@@ -7,9 +7,9 @@
 
 Woven palm-leaf (cadjan) shingle thatch (class C, 2 m x 2 m, seamless; P2 - ultra / high, mobile falls back to
 thatch_grass): seven courses (0.286 m rhythm) of plaited coconut-frond mats, u along the ridge, v UP the slope.
-Each course: the plaited band (diagonal over-under leaflets) on top, free leaflets of overlapping fronds hanging
-down-slope (0.1-0.3 m long, 15-35 mm wide, each with its own droop and splay - no regular comb) with dark gaps
-where the fringe thins, midribs, curled leaflets, sun-bleached grey tips,
+Each course: the plaited band (diagonal over-under leaflets) on top, free leaflets in two overlapping layers
+hanging down-slope (random widths 15-40 mm, each with its own length, splay and fill, tapering to a point - no
+regular comb) with dark gaps only where neither layer covers, midribs, curled leaflets, sun-bleached grey tips,
 darker damp undersides in the overlaps.
 Target (MATERIAL_PRESETS.thatch_palm): average #9c8a5c, roughness 0.90 (0.80-0.98).
 
@@ -39,28 +39,59 @@ with core.timer("courses"):
     course = np.floor(vy / CH)
     lv = (vy - course * CH) / CH  # 0 = lower (fringe) edge of the course, 1 = under the next course
     course = course % NC  # seamless: the course index wraps with the tile
-    # AD-7: overlapping fronds, not a zipper comb - free leaflets scattered along each course (two overlapping
-    # passes), lengths 0.1-0.3 m, widths 15-35 mm, each drooping / splayed by its own angle; dark gaps where the
-    # fringe is thin
-    yv = (vy / H) % 1.0
-    best = np.full(kit.x.shape, -1e9, np.float32)
+    # AD-7: overlapping fronds, not a zipper comb. Per course two leaflet layers (top + one showing beneath), each
+    # a RANDOM partition of the eave into leaflets 15-40 mm wide; every leaflet has its own length (tip height),
+    # splay (shear), fill and droop, tapers to a point; dark gaps only where neither layer covers.
+    tip = 0.62  # the plait band sits above lv = 0.62; free leaflet ends hang below it
+    u_m = kit.x * W
+    in_leaf = np.zeros(kit.x.shape, bool)
     lid = np.zeros_like(kit.x)
     llu = np.zeros_like(kit.x)
     llv = np.zeros_like(kit.x)
-    for cellu, Lm, Wm in ((0.05, 0.2, 0.012), (0.04, 0.16, 0.01)):
-        sc = kit.scatter((cellu, CH), K.shape_blade(Lm, Wm, 0.004, bend=0.35), density=0.85, jitter=1.0,
-                         angle=(-np.pi / 2 - 0.35, -np.pi / 2 + 0.35), x=kit.x, y=yv)
-        better = sc.h > best
-        best = np.where(better, sc.h, best)
-        lid = np.where(better, sc.id, lid)
-        llu = np.where(better, sc.lu / Lm, llu)
-        llv = np.where(better, sc.lv, llv)
-    tip = 0.62  # fringe zone: lower 62 % of each course (the plait band sits above)
+    layer_lo = np.zeros_like(kit.x)
+    rng = kit.rng
+    for layer in (1, 0):  # lower layer first, the top layer overwrites
+        for c in range(NC):
+            sel = course == c
+            w: list[float] = []
+            while sum(w) < W:
+                w.append(float(rng.uniform(0.015, 0.04)))
+            w = [v * W / sum(w) for v in w]
+            cuts = np.cumsum([0.0] + w[:-1]) + float(rng.uniform(0, W))
+            n = len(cuts)
+            tips = rng.uniform(-0.05, 0.3, n) + 0.08 * layer  # leaflet lengths differ
+            shear = rng.uniform(-0.18, 0.18, n)  # splay / droop angle (m of u per course height)
+            fill = rng.uniform(0.8, 1.0, n)
+            ids = rng.uniform(0, 1, n)
+            uu = u_m[sel]
+            lvs = lv[sel]
+            # find each texel's leaflet in the sheared frame (iterate: shear depends on the leaflet)
+            order = np.sort(cuts % W)
+            ext = np.concatenate([order - W, order, order + W])
+            j = np.searchsorted(ext, uu, side="right") - 1
+            jj = j % n
+            us = uu - shear[np.argsort(cuts % W)][jj] * (tip - lvs) * CH
+            j = np.searchsorted(ext, us, side="right") - 1
+            jj = j % n
+            left = ext[j]
+            right = ext[np.minimum(j + 1, len(ext) - 1)]
+            lu_ = (us - left) / np.maximum(right - left, 1e-6)
+            srt = np.argsort(cuts % W)
+            tp = tips[srt][jj]
+            half = 0.5 * fill[srt][jj] * np.clip((lvs - tp) / 0.18, 0.0, 1.0) ** 0.55
+            inside = (np.abs(lu_ - 0.5) < half) & (lvs < tip + 0.06) & (lvs > tp)
+            cur = in_leaf[sel]
+            take = inside if layer == 0 else (inside & ~cur)
+            in_leaf[sel] = cur | inside
+            lid[sel] = np.where(take, ids[srt][jj], lid[sel])
+            llu[sel] = np.where(take, lu_, llu[sel])
+            llv[sel] = np.where(take, (lvs - tp) / np.maximum(tip - tp, 1e-3), llv[sel])
+            layer_lo[sel] = np.where(take, float(layer), layer_lo[sel])
     fringe = lv < tip
-    in_leaf = best > -1e5
     hole = fringe & ~in_leaf
-    leaf_prof = np.where(in_leaf, np.clip(best / 0.004, 0, 1), 0.0)
-    rib = tg.smoothstep(0.0015, 0.0, np.abs(llv)) * in_leaf
+    leaf_prof = np.where(in_leaf, np.sqrt(np.clip(1.0 - (2.0 * (llu - 0.5)) ** 2, 0, 1)) * (1.0 - 0.5 * layer_lo), 0.0)
+    rib = tg.smoothstep(0.08, 0.0, np.abs(llu - 0.5)) * in_leaf
+    llu = 1.0 - np.clip(llv, 0, 1)  # 1 at the tip (for bleaching / curl below)
     # plait: diagonal over-under weave on the upper part of the course
     pu = kit.x * 56.0  # even number of plait cycles per tile (seamless), ~36 mm plait pitch
     pv = vy / H * 56.0
@@ -73,6 +104,7 @@ with core.timer("courses"):
     weave = np.where(over, np.abs(d1), np.abs(d2))
     h += plait * (0.0025 * weave + 0.001 * over)
     curl = tg.smoothstep(0.75, 1.0, llu) * ((lid * 5.3) % 1.0 > 0.6) * in_leaf
+    h -= 0.004 * layer_lo * in_leaf * (1.0 - plait)  # the lower leaflet layer sits deeper
     h += 0.004 * curl
     h = np.where(hole, h - 0.02, h)
     h += 0.0004 * kit.fbm(0.02, 2, aniso=(1.0, 6.0))
@@ -88,7 +120,7 @@ with core.timer("albedo"):
     leaf = K.mul(leaf, 1.0 + 0.1 * rib * (1.0 - plait) + 0.06 * plait * (over - 0.5))
     damp = tg.smoothstep(0.75, 1.0, lv)
     leaf = K.mul(leaf, 1.0 - 0.25 * damp)
-    gapc = K.hexlin("#2a241a")[None, None, :]
+    gapc = K.hexlin("#3a3122")[None, None, :]
     alb = np.where(hole[..., None], gapc + 0.0 * leaf, leaf)
     alb = K.compress_chroma(alb, 0.75)
 

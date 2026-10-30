@@ -51,7 +51,7 @@ with core.timer("domes"):
                 dx = ((cx_ - ox + S / 2) % S) - S / 2
                 dy = ((cy_ - oy + S / 2) % S) - S / 2
                 dd = float(np.hypot(dx, dy))
-                if dd < 0.38 * (r + orr) or dd < 0.55 * max(r, orr):
+                if dd < 0.45 * (r + orr) or dd < 0.62 * max(r, orr):
                     ok = False
                     break
             if ok:
@@ -87,7 +87,7 @@ with core.timer("domes"):
         better = z > cur
         # smooth union (k = 0.18 m): where domes meet high up they merge into one whaleback (closed joint); only
         # where both flanks have fallen away does a cleft remain
-        kk = 0.12
+        kk = 0.06
         hh_ = np.clip(kk - np.abs(cur - z), 0.0, None) / kk
         h[sub] = np.maximum(cur, z) + 0.25 * kk * hh_ * hh_
         q_best[sub] = np.where(better, q, q_best[sub])
@@ -114,13 +114,15 @@ with core.timer("domes"):
             wav = 0.55 * kit.fbm(4.0, 2, x=(x + slope * y) % 1.0, y=yc + 0.37 * k)
         dist = np.abs(((((y - slope * x) * S - pos - wav) + S / 2) % S) - S / 2) * (0.7071 if slope else 1.0)
         if k < 3:
-            opening = tg.smoothstep(-0.25, 0.35, kit.fbm(2.2, 2)) * tg.smoothstep(-0.3, 0.1, kit.fbm(3.0, 2))
-            w = 0.02 + 0.05 * opening
-            shoulder = 0.3 * opening + 0.02
+            # partial joints only (no tile-long lines): open in short stretches, absent elsewhere
+            present = tg.smoothstep(0.0, 0.3, kit.fbm(2.0, 2))
+            opening = tg.smoothstep(0.1, 0.5, kit.fbm(1.5, 2)) * present
+            w = 0.006 + 0.02 * opening
+            shoulder = 0.12 * opening + 0.01
             t = np.clip((dist - w) / shoulder, 0.0, 1.0)
             prof = np.where(dist < w, 1.0, 1.0 - np.sqrt(np.clip(1.0 - (1.0 - t) ** 2, 0.0, 1.0)))
-            cleft = np.maximum(cleft, prof * (0.05 + 0.3 * opening))
-            hair = np.maximum(hair, tg.smoothstep(0.012, 0.0, dist) * (1.0 - opening))
+            cleft = np.maximum(cleft, prof * (0.03 + 0.12 * opening) * present)
+            hair = np.maximum(hair, tg.smoothstep(0.01, 0.0, dist) * present * (1.0 - opening))
         else:  # hairline joints with a small step across the crowns
             on = tg.smoothstep(-0.1, 0.25, kit.fbm(2.0, 2))
             hair = np.maximum(hair, tg.smoothstep(0.01, 0.0, dist) * on)

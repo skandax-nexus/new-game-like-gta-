@@ -65,6 +65,7 @@ TILING_SKY = 0.16
 PREVIEW_EXPOSURE = -1.0
 # The raking tiling shot receives little light on a horizontal plane: expose it ~1 stop brighter.
 TILING_EXPOSURE = -0.2
+PREVIEW_SPP_CAP = 40
 
 
 # Art Director desk rulings that land in src/render/style after this republish (docs/art/reviews/ta-01.md, AD-8:
@@ -846,9 +847,11 @@ class Kit:
         c = scn.cycles
         scn.render.engine = "CYCLES"
         c.device = "CPU"
-        c.samples = samples
+        # 40 spp cap + OIDN: the lookdev reads the same as 96 spp and a full WP1 republish stays affordable on the
+        # shared 4-CPU machine (a 96 spp 1280 x 720 frame took 7 min under load)
+        c.samples = min(int(samples), PREVIEW_SPP_CAP)
         c.use_adaptive_sampling = True
-        c.adaptive_threshold = 0.02
+        c.adaptive_threshold = 0.03
         c.use_denoising = True
         c.max_bounces = 6
         c.diffuse_bounces = 3
