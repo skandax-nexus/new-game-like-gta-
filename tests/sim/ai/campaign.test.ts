@@ -1,0 +1,297 @@
+/**
+ * SIM-02 campaign AI acceptance: 3-year AI-only sandboxes (6 realms, 4 seeds), the war / peace rules, the age-up, The
+ * Broken Crown default run, and targeted planner checks (economy, military prudence, recruitment ceiling, landmark
+ * choice, schedule, passive switch, determinism). OWNER: AI Engineer - Battle AI, Intents & Campaign AI (SIM-02).
+ */
+import { describe, expect, it } from 'vitest';
+import type { WorldState } from '../../../src/core/types';
+import { decodeJson, encodeJson, hashState } from '../../../src/core/save';
+import { AI_PERSONALITY_DEFS } from '../../../src/data/difficulty';
+import { aiJournal, aiSchedule, resetAiJournal, runCampaignAI, setAiPassive, warRule } from '../../../src/sim/strategic/ai';
+import { situate } from '../../../src/sim/strategic/ai/core';
+import { daysToNextHarvest, grainOutlook, planGrain, planLabor, planTaxes, planTreasury } from '../../../src/sim/strategic/ai/economy';
+import { preferredLandmark } from '../../../src/sim/strategic/ai/build';
+import { planMilitary } from '../../../src/sim/strategic/ai/military';
+import { planRecruitment, soldierCeiling } from '../../../src/sim/strategic/ai/recruit';
+import { armyStrength, makeArmy } from '../../../src/sim/strategic/armies';
+import { createTreaty } from '../../../src/sim/strategic/diplomacy';
+import { getRegionHeightfield } from '../../../src/sim/strategic/world';
+import { relationKey } from '../../../src/core/ids';
+import { campaign, runDays } from '../strategic/helpers';
+import type { CampaignAudit } from './harness/campaign';
+import { aiSandbox, runAudited } from './harness/campaign';
+
+const YEARS3 = 1080;
+
+function setWar(w: WorldState, a: string, b: string, atWar: boolean): void {
+  const r = w.diplomacy.relations[relationKey(a, b)]!;
+  r.atWar = atWar;
+  r.warStartDay = atWar ? 0 : null;
+}
+
+function checkAudit(seed: number, a: CampaignAudit): void {
+  // No treasury death spiral: never more than 60 consecutive days below zero.
+  for (const [fid, streak] of Object.entries(a.worstDebtStreak)) expect(streak, `seed ${seed} ${fid} debt streak`).toBeLessThanOrEqual(60);
+  // Wars only per the rule: every AI declaration held the rule the hour before (independent evaluation, 10% drift
+  // margin for the day's own updates) with no truce / forbidding treaty; anything else is an ally call or an event.
+  for (const war of a.wars) {
+    const tag = `seed ${seed} day ${war.day} ${war.a} -> ${war.b}`;
+    if (war.byAi) {
+      expect(war.blockedBefore, tag).toBeNull();
+      expect(war.ratio, tag).toBeGreaterThan(0.9 * war.threshold);
+    } else expect(war.other, tag).not.toBe('unexplained');
+  }
+  // Peace is sued within 31 days of falling below peaceWarScore (spells that had 31 days to run).
+  for (const p of a.peace) {
+    if (p.belowSince > a.days - 31) continue;
+    const tag = `seed ${seed} ${p.a} vs ${p.b} below since ${p.belowSince}`;
+    expect(p.sued, tag).not.toBeNull();
+    expect(p.sued! - p.belowSince, tag).toBeLessThanOrEqual(31);
+  }
+  // A realm whose next age is open starts its landmark within 150 days (saving for it included).
+  for (const [fid, streak] of Object.entries(a.worstReadyStreak)) expect(streak, `seed ${seed} ${fid} ready streak`).toBeLessThanOrEqual(150);
+}
+
+describe('AI-only sandbox, 3 years, 6 realms (SIM-02 acceptance)', () => {
+  const ageUps: CampaignAudit['ageUps'] = [];
+  const kinds = new Set<string>();
+  for (const seed of [1, 2, 3, 4]) {
+    it(`seed ${seed}: no debt spiral, wars per the rule, peace sued, landmarks started`, () => {
+      resetAiJournal(true);
+      const w = aiSandbox(seed);
+      const audit = runAudited(w, YEARS3);
+      expect(audit.days).toBe(YEARS3);
+      checkAudit(seed, audit);
+      expect(audit.wars.some((x) => x.byAi), `seed ${seed}: the AI declared no war in 3 years`).toBe(true);
+      for (const e of aiJournal()) kinds.add(e.kind);
+      ageUps.push(...audit.ageUps);
+    }, 300_000);
+  }
+  it('across the seeds: at least one realm aged up; every planner acted', () => {
+    expect(ageUps.length).toBeGreaterThan(0);
+    for (const k of ['war', 'peace', 'diplomacy', 'economy', 'build', 'recruit', 'army', 'spy', 'goal', 'age']) expect(kinds.has(k), k).toBe(true);
+  });
+});
+
+describe('The Broken Crown default run (campaign AI active)', () => {
+  it('ends mixed - never defeat - on 6/6 seeds; the AI realms stay solvent', () => {
+    for (const seed of [1, 2, 3, 4, 5, 6]) {
+      const w = campaign(seed);
+      const debt: Record<string, number> = {};
+      const worst: Record<string, number> = {};
+      let hour = 0;
+      runDays(w, 545, {
+        onHour: () => {
+          if (++hour % 24 !== 0) return;
+          for (const f of Object.values(w.factions)) {
+            if (f.isPlayer) continue;
+            debt[f.id] = f.treasury < 0 ? (debt[f.id] ?? 0) + 1 : 0;
+            worst[f.id] = Math.max(worst[f.id] ?? 0, debt[f.id]!);
+          }
+        },
+      });
+      expect(w.victory.status, `seed ${seed}: ${w.victory.outcomeId}`).toBe('ended');
+      expect(['out_restored', 'out_iron']).toContain(w.victory.outcomeId);
+      expect(w.settlements.rajapura!.ownerFactionId).toBe('heartland');
+      for (const [fid, s] of Object.entries(worst)) expect(s, `seed ${seed} ${fid}`).toBeLessThanOrEqual(60);
+    }
+  }, 600_000);
+});
+
+describe('the war rule (DESIGN_SPEC §7.14)', () => {
+  it('ratio = own / target strength x (1 - opinion / 200) against warRatio - aggression bonus', () => {
+    const w = aiSandbox(7);
+    const sit = situate(w, 'frontier');
+    const r = warRule(sit, 'forest');
+    const own = sit.strength.frontier!;
+    const target = Math.max(1, sit.strength.forest!);
+    const rel = w.diplomacy.relations[relationKey('frontier', 'forest')]!;
+    expect(rel.grievances.length).toBe(0);
+    expect(r.ratio).toBeCloseTo((own / target) * (1 - rel.opinion / 200), 9);
+    expect(r.threshold).toBeCloseTo(AI_PERSONALITY_DEFS.raider!.warRatio, 9);
+    expect(r.ok).toBe(r.ratio > r.threshold);
+  });
+
+  it('the sandbox slider and difficulty move the threshold', () => {
+    const hard = aiSandbox(7, { difficulty: 'very_hard', aiAggression: 1 });
+    const r = warRule(situate(hard, 'frontier'), 'forest');
+    expect(r.threshold).toBeCloseTo(AI_PERSONALITY_DEFS.raider!.warRatio - 0.2 - 0.5, 9);
+  });
+
+  it('a truce or a non-aggression pact blocks the declaration whatever the odds', () => {
+    const w = aiSandbox(7);
+    for (const a of Object.values(w.armies)) if (a.factionId === 'forest') a.units = a.units.slice(0, 1);
+    expect(warRule(situate(w, 'frontier'), 'forest').ok).toBe(true);
+    w.diplomacy.relations[relationKey('frontier', 'forest')]!.truceUntilDay = 400;
+    expect(warRule(situate(w, 'frontier'), 'forest').blocked).toBe('truce');
+    w.diplomacy.relations[relationKey('frontier', 'forest')]!.truceUntilDay = null;
+    createTreaty(w, 'non_aggression', 'frontier', 'forest');
+    const r = warRule(situate(w, 'frontier'), 'forest');
+    expect(r.ok).toBe(false);
+    expect(r.blocked).toContain('non_aggression');
+  });
+
+  it('the opportunist adds +0.3 against a starving realm', () => {
+    const w = aiSandbox(7);
+    w.factions.forest!.ai.personality = 'opportunist';
+    const before = warRule(situate(w, 'forest'), 'frontier');
+    expect(before.opportunity).toBe(false);
+    w.settlements.lavanapura!.starvationDays = 3;
+    const after = warRule(situate(w, 'forest'), 'frontier');
+    expect(after.opportunity).toBe(true);
+    expect(after.ratio).toBeCloseTo(before.ratio + 0.3, 9);
+  });
+});
+
+describe('planners', () => {
+  it('a grain shortfall puts the hands in the fields and orders rationing', () => {
+    const w = aiSandbox(3);
+    runDays(w, 2, { autoEvents: false, autoEngagements: false });
+    for (const s of Object.values(w.settlements)) if (s.ownerFactionId === 'highland') s.foodStored = 5 * s.foodConsumption;
+    w.factions.highland!.foodReserve = 0;
+    const sit = situate(w, 'highland');
+    expect(grainOutlook(sit).marginDays).toBeLessThan(0);
+    expect(daysToNextHarvest(sit)).toBeGreaterThan(0);
+    planLabor(sit);
+    planGrain(sit);
+    const labor = sit.commands.filter((c) => c.cmd.kind === 'set_labor');
+    expect(labor.length).toBeGreaterThan(0);
+    for (const c of labor) if (c.cmd.kind === 'set_labor') expect(c.cmd.allocation.farming).toBeGreaterThanOrEqual(0.75);
+    expect(sit.commands.some((c) => c.cmd.kind === 'set_policy' && c.cmd.policy === 'rationing' && c.cmd.on)).toBe(true);
+  });
+
+  it('in debt the realm taxes harder, sells surplus materials and spends nothing', () => {
+    const w = aiSandbox(3);
+    runDays(w, 2, { autoEvents: false, autoEngagements: false });
+    const f = w.factions.heartland!;
+    f.treasury = -400;
+    f.materials.timber = 3000;
+    const sit = situate(w, 'heartland');
+    const crisis = planTreasury(sit);
+    expect(crisis).toBe(true);
+    planTaxes(sit);
+    planRecruitment(sit, crisis);
+    expect(sit.commands.some((c) => c.cmd.kind === 'set_tax_policy' && (c.cmd.policy === 'emergency' || c.cmd.policy === 'heavy'))).toBe(true);
+    expect(sit.commands.some((c) => c.cmd.kind === 'market_trade' && !c.cmd.buy && c.cmd.resource === 'timber')).toBe(true);
+    expect(sit.commands.some((c) => c.cmd.kind === 'recruit' || c.cmd.kind === 'build')).toBe(false);
+  });
+
+  it('a weaker army never marches on a stronger host; a stronger one relieves the town', () => {
+    const run = (enemyFormations: number): string[] => {
+      const w = aiSandbox(5);
+      runDays(w, 1, { autoEvents: false, autoEngagements: false });
+      const s = w.settlements.giridurg!;
+      const e = makeArmy(w, 'army_enemy', 'Raiders', 'heartland', s.x + s.radius + 300, s.z, [{ unitClass: 'spearmen', formations: enemyFormations }], null);
+      e.visibility.highland = 1;
+      w.armies[e.id] = e;
+      setWar(w, 'highland', 'heartland', true);
+      const sit = situate(w, 'highland');
+      planMilitary(sit, false);
+      return sit.commands.filter((c) => c.cmd.kind === 'army_order' && c.cmd.order.kind === 'attack_army').map((c) => (c.cmd.kind === 'army_order' ? c.cmd.armyId : ''));
+    };
+    const w0 = aiSandbox(5);
+    const host = Object.values(w0.armies).find((a) => a.factionId === 'highland')!;
+    expect(armyStrength(host)).toBeGreaterThan(0);
+    expect(run(2).length).toBe(1);
+    expect(run(20).length).toBe(0);
+  });
+
+  it('recruitment stops at 0.04 x population (x1.3 expansionist, x0.7 mercantile)', () => {
+    const w = aiSandbox(3);
+    const sit = situate(w, 'heartland');
+    expect(soldierCeiling(sit)).toBeCloseTo(0.04 * sit.realmPop * 1.3, 6);
+    w.factions.heartland!.ai.personality = 'mercantile';
+    expect(soldierCeiling(situate(w, 'heartland'))).toBeCloseTo(0.04 * sit.realmPop * 0.7, 6);
+    // Over the ceiling: nothing is raised however rich the realm.
+    w.factions.heartland!.treasury = 1e6;
+    const host = Object.values(w.armies).find((a) => a.factionId === 'heartland')!;
+    while (host.units.length < 40) host.units.push({ ...host.units[0]!, id: `u_extra_${host.units.length}` });
+    const over = situate(w, 'heartland');
+    expect(over.soldiers).toBeGreaterThan(1.4 * soldierCeiling(over));
+    planRecruitment(over, false);
+    expect(over.commands.some((c) => c.cmd.kind === 'recruit')).toBe(false);
+  });
+
+  it('the landmark follows the top weights: the expansionist Suvarna raise the Royal Granary, a mercantile court the Hall', () => {
+    const w = aiSandbox(3);
+    const f = w.factions.heartland!;
+    f.age = 'janapada';
+    expect(preferredLandmark(situate(w, 'heartland'))!.id).toBe('lm_royal_granary');
+    f.ai.personality = 'mercantile';
+    expect(preferredLandmark(situate(w, 'heartland'))!.id).toBe('lm_hundred_pillars');
+    const h = w.factions.highland!;
+    h.ai.personality = 'diplomatic';
+    expect(preferredLandmark(situate(w, 'highland'))!.id).toBe('lm_cave_assembly');
+    h.ai.personality = 'defensive';
+    expect(preferredLandmark(situate(w, 'highland'))!.id).toBe('lm_thousand_steps');
+  });
+
+  it('ages up when the requirements hold: Marudesha starts the Salt Caravanserai and enters the Mahajanapada Age', () => {
+    const w = aiSandbox(9);
+    for (const f of Object.values(w.factions)) if (f.id !== 'frontier') setAiPassive(w, f.id, true);
+    for (const r of Object.values(w.diplomacy.relations)) r.atWar = false;
+    // A third settlement, the people and the court the Mahajanapada Age asks for.
+    const t = w.settlements.tirthaghat!;
+    t.ownerFactionId = 'frontier';
+    w.settlements.lavanapura!.population = 9000;
+    const f = w.factions.frontier!;
+    f.treasury = 4000;
+    f.legitimacy = 0.6;
+    f.stability = 0.6;
+    expect(f.age).toBe('janapada');
+    let started = -1;
+    let day = 0;
+    while (day < 200 && f.age === 'janapada') {
+      runDays(w, 1, { autoEvents: true, autoEngagements: true });
+      day++;
+      if (started < 0 && Object.values(w.settlements).some((s) => s.construction.some((j) => j.landmarkId === 'lm_salt_caravanserai'))) started = day;
+    }
+    expect(started, 'landmark started').toBeGreaterThan(0);
+    expect(started).toBeLessThanOrEqual(30);
+    expect(f.age).toBe('mahajanapada');
+    expect(f.landmarks).toContain('lm_salt_caravanserai');
+  }, 120_000);
+
+  it('the schedule keeps heavy planners off the month rollover and runs each once per period', () => {
+    for (let slot = 0; slot < 6; slot++) {
+      let strategy = 0;
+      let economy = 0;
+      let diplomacy = 0;
+      for (let day = 0; day < 360; day++) {
+        const s = aiSchedule(day, day % 30, slot);
+        if (day % 30 === 0) expect(s.strategy || s.economy || s.diplomacy).toBe(false);
+        strategy += s.strategy ? 1 : 0;
+        economy += s.economy ? 1 : 0;
+        diplomacy += s.diplomacy ? 1 : 0;
+      }
+      expect(strategy).toBeGreaterThanOrEqual(70);
+      expect(economy).toBeGreaterThanOrEqual(70);
+      expect(diplomacy).toBeGreaterThanOrEqual(23);
+    }
+  });
+
+  it('a passive realm issues nothing; the player realm is never run', () => {
+    const w = aiSandbox(3);
+    const hf = getRegionHeightfield(w);
+    setAiPassive(w, 'forest', true);
+    expect(runCampaignAI(w, 'forest', hf)).toEqual([]);
+    setAiPassive(w, 'forest', false);
+    w.factions.forest!.isPlayer = true;
+    expect(runCampaignAI(w, 'forest', hf)).toEqual([]);
+  });
+});
+
+describe('determinism with the campaign AI', () => {
+  it('an AI-only sandbox continues identically from a mid-run save', () => {
+    const a = aiSandbox(11);
+    runDays(a, 60);
+    const b = decodeJson<WorldState>(encodeJson(a));
+    expect(hashState(b)).toBe(hashState(a));
+    runDays(a, 90);
+    runDays(b, 90);
+    expect(hashState(b)).toBe(hashState(a));
+    const c = aiSandbox(11);
+    runDays(c, 150);
+    expect(hashState(c)).toBe(hashState(a));
+  }, 120_000);
+});

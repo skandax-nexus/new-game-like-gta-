@@ -11,7 +11,7 @@
  * The decision journal is a debug ring buffer outside the state (QA logs, the SIM-02 narrative); it never feeds a
  * decision.
  */
-import type { AiPersonalityDef, ArmyState, DifficultyDef, FactionId, FactionState, IssuedStrategicCommand, SettlementState, StrategicCommand, WorldState } from '../../../core/types';
+import type { AiPersonalityDef, ArmyState, DifficultyDef, FactionId, FactionLedger, FactionState, IssuedStrategicCommand, SettlementState, StrategicCommand, WorldState } from '../../../core/types';
 import { REBEL_FACTION_ID } from '../../../core/types';
 import { sortedKeys } from '../../../core/ids';
 import { AI_PERSONALITY_DEFS, DIFFICULTY_DEFS } from '../../../data/difficulty';
@@ -92,6 +92,8 @@ export interface Situation {
   /** War appetite bonus: difficulty aiAggressionBonus + sandbox slider (0.5 = as designed). */
   aggressionBonus: number;
   commands: IssuedStrategicCommand[];
+  /** The projected month, computed on first use in a run (economy.ts). */
+  ledger: FactionLedger | null;
 }
 
 /** Garrison stand-in armies (siege.ts `garrison_<id>`) are not field armies. */
@@ -147,36 +149,55 @@ export function situate(world: WorldState, fid: FactionId): Situation {
     threats: [],
     aggressionBonus: difficulty.aiAggressionBonus + sandboxBonus,
     commands: [],
+    ledger: null,
   };
   sit.threats = assessThreats(sit);
   return sit;
 }
 
-/** Hostile armies (enemy realms and rebels against us) bearing on each owned settlement. */
+/** Strength of a settlement's garrison units. */
+export function garrisonStrength(s: SettlementState): number {
+  if (s.garrison.length === 0) return 0;
+  return armyStrength({ units: s.garrison } as unknown as ArmyState);
+}
+
+/**
+ * Hostile armies (enemy realms and rebels against us) bearing on each owned settlement. No cheating: an army counts
+ * only while the realm sees it (`visibility`), or one besieging its town; a lost one counts at its ghost (last seen
+ * position, estimated soldiers) for the 5 days the ghost lasts. An army garrisoned in its own town threatens nobody.
+ */
 function assessThreats(sit: Situation): SettlementThreat[] {
   const { world, fid } = sit;
   const out: SettlementThreat[] = [];
-  const hostile: ArmyState[] = [];
+  const hostile: { a: ArmyState; x: number; z: number; strength: number }[] = [];
   for (const id of sortedKeys(world.armies)) {
     const a = world.armies[id]!;
     if (a.units.length === 0 || a.status === 'disbanded') continue;
-    if (hostileToArmy(world, fid, a)) hostile.push(a);
+    if (!hostileToArmy(world, fid, a)) continue;
+    // Behind its own walls it threatens nobody (it counts again when it marches out).
+    if (a.status === 'garrisoned') continue;
+    if ((a.visibility[fid] ?? 0) > 0 || a.status === 'besieging') {
+      hostile.push({ a, x: a.x, z: a.z, strength: armyStrength(a) });
+      continue;
+    }
+    const g = sit.f.ghosts[id];
+    if (g) hostile.push({ a, x: g.x, z: g.z, strength: armyStrength(a) * (g.soldiers / Math.max(1, armySoldiers(a))) });
   }
   for (const s of sit.owned) {
     let threat = 0;
     let enemy: ArmyState | null = null;
     let bd = 2000 * 2000;
-    for (const a of hostile) {
-      const d2 = (a.x - s.x) * (a.x - s.x) + (a.z - s.z) * (a.z - s.z);
+    for (const h of hostile) {
+      const d2 = (h.x - s.x) * (h.x - s.x) + (h.z - s.z) * (h.z - s.z);
       if (d2 > 2000 * 2000) continue;
       const d = Math.sqrt(d2);
-      threat += armyStrength(a) * (1 - d / 2400);
+      threat += h.strength * (1 - d / 2400);
       if (d2 < bd) {
         bd = d2;
-        enemy = a;
+        enemy = h.a;
       }
     }
-    let defense = s.garrison.length ? armyStrength({ units: s.garrison } as unknown as ArmyState) : 0;
+    let defense = garrisonStrength(s);
     for (const a of sit.armies) {
       const d2 = (a.x - s.x) * (a.x - s.x) + (a.z - s.z) * (a.z - s.z);
       if (d2 < 400 * 400) defense += armyStrength(a);

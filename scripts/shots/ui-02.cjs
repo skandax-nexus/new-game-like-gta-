@@ -208,6 +208,12 @@ function collectUi() {
   const vh = innerHeight;
   // With a modal open, the layers below sit under its backdrop (dimmed, not interactive): audit the modal and above.
   const modalOpen = !!document.querySelector('.ui-layer-modal.has-modal');
+  // Covered by another UI element (a bottom sheet over the HUD card): not seen, not tappable. The 3D canvas behind
+  // pass-through layers does not count as cover.
+  const covered = (el, x, y) => {
+    const hit = document.elementFromPoint(x, y);
+    return !!hit && root.contains(hit) && hit !== el && !el.contains(hit) && !hit.contains(el);
+  };
   const visible = (el) => {
     if (el.closest('.ui-hidden, [hidden]')) return false;
     if (modalOpen && !el.closest('.ui-layer-modal, .ui-layer-toast, .ui-layer-tooltip')) return false;
@@ -259,6 +265,7 @@ function collectUi() {
       }
     }
     if (masked || x1 - x0 < 6 || y1 - y0 < 4) continue;
+    if (covered(el, (x0 + x1) / 2, (y0 + y1) / 2)) continue;
     const cs = getComputedStyle(el);
     texts.push({
       text: t.nodeValue.trim().slice(0, 48),
@@ -279,6 +286,9 @@ function collectUi() {
     if (!visible(el) || el.closest('.ui-layer-tooltip')) continue;
     const r = el.getBoundingClientRect();
     if (r.width === 0 || r.height === 0 || r.right <= 0 || r.bottom <= 0 || r.left >= vw || r.top >= vh) continue;
+    const cx = Math.min(vw - 1, Math.max(0, r.left + r.width / 2));
+    const cy = Math.min(vh - 1, Math.max(0, r.top + r.height / 2));
+    if (covered(el, cx, cy)) continue;
     targets.push({ w: Math.round(r.width * 10) / 10, h: Math.round(r.height * 10) / 10, label: (el.getAttribute('aria-label') || el.textContent || el.className || el.tagName).trim().slice(0, 40), cls: String(el.className).slice(0, 60), at: [Math.round(r.left), Math.round(r.top)] });
   }
   return { texts, targets };
@@ -796,6 +806,19 @@ async function assetsOff(browser, base) {
       if (!ONLY || ONLY.has('hero')) await heroSession(browser, base, vp);
     }
     if (!ONLY || ONLY.has('assetsoff')) await assetsOff(browser, base);
+    // SHOTS_MERGE=1 (partial re-runs with --only / --vp): keep the other entries of the existing report.
+    const file = path.join(OUT, 'shots-report.json');
+    if (process.env.SHOTS_MERGE && fs.existsSync(file)) {
+      const old = JSON.parse(fs.readFileSync(file, 'utf8'));
+      const names = new Set(report.shots.map((x) => x.name));
+      const checks = new Set(report.checks.map((x) => x.name));
+      const summary = (n) => n.startsWith('contrast:') || n.startsWith('touch:');
+      report.shots = [...old.shots.filter((x) => !names.has(x.name)), ...report.shots];
+      report.audits = [...old.audits.filter((x) => !names.has(x.shot)), ...report.audits];
+      report.checks = [...old.checks.filter((x) => !checks.has(x.name) && !summary(x.name)), ...report.checks];
+      report.profile = { ...old.profile, ...report.profile };
+      failed = report.checks.some((c) => !c.ok);
+    }
     // Contrast + touch summaries.
     const cf = report.audits.flatMap((a) => a.contrastFails.map((f) => ({ shot: a.shot, ...f })));
     const tf = report.audits.flatMap((a) => a.smallTargets.map((t) => ({ shot: a.shot, ...t })));

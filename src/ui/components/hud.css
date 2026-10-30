@@ -1653,7 +1653,9 @@
 :root[data-layout='phone']:has(.screen-build-placement:not(.ui-hidden)) .wh-bottom,
 :root[data-layout='phone-landscape']:has(.screen-build-placement:not(.ui-hidden)) .wh-bottom,
 :root[data-layout='phone']:has(.screen-build-placement:not(.ui-hidden)) .wh-objectives,
-:root[data-layout='phone-landscape']:has(.screen-build-placement:not(.ui-hidden)) .wh-objectives {
+:root[data-layout='phone-landscape']:has(.screen-build-placement:not(.ui-hidden)) .wh-objectives,
+:root[data-layout='phone']:has(.screen-build-placement:not(.ui-hidden)) .wh-realm-btns,
+:root[data-layout='phone-landscape']:has(.screen-build-placement:not(.ui-hidden)) .wh-realm-btns {
   display: none;
 }
 :root[data-layout='phone'] .screen-build-placement .bp-info {
@@ -3498,4 +3500,37 @@
 }
 .dip-back .icon {
   transform: scaleX(-1);
+}
+
+/* --- phone landscape: keep the map visible - compact card docked right, drawers as a right-side panel --- */
+:root[data-layout='phone-landscape'] .wh-bottom {
+  left: auto;
+  right: max(6px, var(--safe-right));
+  align-items: flex-end;
+}
+:root[data-layout='phone-landscape'] .wh-card {
+  width: auto;
+}
+:root[data-layout='phone-landscape'] .sel-info {
+  width: 190px;
+}
+:root[data-layout='phone-landscape'] .card-grid {
+  grid-template-columns: repeat(5, 48px);
+  gap: 4px;
+}
+:root[data-layout='phone-landscape'] .btn.slot {
+  --slot-size: 48px;
+}
+:root[data-layout='phone-landscape'] .hud-drawer,
+:root[data-layout='phone-landscape'] .hud-drawer.sheet-full {
+  left: auto;
+  right: max(6px, var(--safe-right));
+  top: calc(var(--safe-top) + 58px);
+  bottom: 0;
+  width: min(440px, 56%);
+  height: auto;
+}
+:root[data-layout='phone-landscape'] .btn.slot > .icon {
+  width: 22px;
+  height: 22px;
 }
