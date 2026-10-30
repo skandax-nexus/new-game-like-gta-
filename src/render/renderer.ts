@@ -1,10 +1,19 @@
 /**
  * WebGL2 renderer bootstrap: color management, tone mapping, shadows, post pipeline, resize,
  * dynamic resolution, stats, screenshots, context-loss handling.
- * OWNER: Lead Graphics Engineer. Baseline implementation by the CTO.
+ * OWNER: Graphics Developer - Lighting, Atmosphere & Post (GFX-01; baseline by the CTO).
  *
  * Conventions: physically based lighting (three r170 defaults), sRGB output, ACES Filmic tone
- * mapping, HDR (HalfFloat) post chain. Scenes call setView(scene, camera) once and render(dt) per frame.
+ * mapping, HDR (HalfFloat + depth texture) post chain (render/post.ts). Scenes call setView(scene, camera) once and
+ * render(dt) per frame.
+ *   Stats -> profiler: draw calls / triangles (RenderStats), counters `render.shadowDraws` (shadow-map draws inside
+ *     the frame's total) and `render.postPasses`, timings `render.shadows` and `render.submit` (F3 overlay).
+ *   Dynamic resolution: proportional controller on the averaged frame time (pixels ~ scale^2), quantised to 0.05
+ *     steps with a dead band so render targets are not rebuilt every second (dynamicResolutionStep, tested).
+ *   Context loss: rendering pauses while lost; on restore the post pipeline is rebuilt, shadow maps are re-rendered
+ *     and onContextRestored listeners re-bake GPU-generated content (sky / PMREM).
+ *   Tier switches (setQuality) rebuild post passes, cascades, light pools and sky resolution without leaking GPU
+ *     resources (verified by scripts/shots/gfx-01.cjs: tier cycling keeps renderer.info.memory constant).
  */
 import * as THREE from 'three';
 import type { QualitySettings } from '../core/types';
@@ -17,6 +26,25 @@ import './lighting/shadowChunks';
 import './materials/chunks/surface';
 import './post/ssr';
 import './environment/atmosphere/heightFog';
+
+/** Frame-time budget dead band: no change while the frame time is within [0.87, 1.15] x budget. */
+export const DYNRES_DEADBAND: readonly [number, number] = [0.87, 1.15];
+/** Resolution scale quantum (render targets are only rebuilt on 0.05 steps). */
+export const DYNRES_QUANTUM = 0.05;
+
+/**
+ * One dynamic-resolution decision (pure): GPU cost ~ pixel count ~ scale^2, so the new scale is
+ * scale x sqrt(budget / frame), limited to +-0.1 per step, quantised to DYNRES_QUANTUM and clamped to [min, max].
+ */
+export function dynamicResolutionStep(scale: number, avgFrameMs: number, budgetMs: number, min: number, max: number): number {
+  if (avgFrameMs <= 0 || budgetMs <= 0) return scale;
+  const load = avgFrameMs / budgetMs;
+  if (load >= DYNRES_DEADBAND[0] && load <= DYNRES_DEADBAND[1]) return scale;
+  const target = scale * Math.sqrt(1 / load);
+  const limited = Math.min(scale + 0.1, Math.max(scale - 0.1, target));
+  const q = Math.round(limited / DYNRES_QUANTUM) * DYNRES_QUANTUM;
+  return Math.min(max, Math.max(min, Math.round(q * 1000) / 1000));
+}
 
 /**
  * Per-frame participant bound to one scene (EnvironmentRig): called right before that scene renders with the camera
@@ -62,6 +90,9 @@ export class RenderContext {
   private readonly restoreListeners: (() => void)[] = [];
   /** Optional content-pipeline loaders (see RenderAssetSource). */
   assets: RenderAssetSource | null = null;
+  private lost = false;
+  private shadowDraws = 0;
+  private lastShadowDraws = 0;
 
   constructor(canvas: HTMLCanvasElement, quality: QualitySettings, private readonly profiler: Profiler | null = null) {
     this.canvas = canvas;
@@ -80,6 +111,16 @@ export class RenderContext {
     renderer.toneMappingExposure = 1;
     renderer.info.autoReset = false;
     this.renderer = renderer;
+    // Count shadow-map draws (they are part of info.render.calls) and time them for the profiler.
+    const shadowMap = renderer.shadowMap as unknown as { render: (lights: THREE.Light[], scene: THREE.Object3D, camera: THREE.Camera) => void };
+    const renderShadows = shadowMap.render.bind(shadowMap);
+    shadowMap.render = (lights, scene, camera) => {
+      const before = renderer.info.render.calls;
+      this.profiler?.begin('render.shadows');
+      renderShadows(lights, scene, camera);
+      this.profiler?.end('render.shadows');
+      this.shadowDraws += renderer.info.render.calls - before;
+    };
     // Global shader hooks (height fog, cascades, material globals) must be in place before any material compiles.
     installShaderGlobals();
     this.pmrem = new THREE.PMREMGenerator(renderer);
@@ -87,10 +128,15 @@ export class RenderContext {
     this.post = new PostPipeline(renderer, quality);
     canvas.addEventListener('webglcontextlost', (e) => {
       e.preventDefault();
+      this.lost = true;
       this.onContextLost?.();
     });
     canvas.addEventListener('webglcontextrestored', () => {
-      // three re-creates GL state lazily; render-target contents (PMREM, shadow maps) must be rebuilt.
+      // three re-creates GL state lazily (textures / geometry re-upload on use); our render targets and their
+      // contents (post chain, PMREM, shadow maps) must be rebuilt.
+      this.lost = false;
+      this.post.setQuality(this.quality);
+      this.renderer.shadowMap.needsUpdate = true;
       for (const fn of this.restoreListeners) fn();
     });
     if (typeof window !== 'undefined') {
@@ -148,6 +194,11 @@ export class RenderContext {
     };
   }
 
+  /** Is the WebGL context currently lost (rendering paused)? */
+  get contextLost(): boolean {
+    return this.lost;
+  }
+
   /** Plain-data diagnostics of the bound scene's hooks, the post pipeline and GPU memory. */
   diagnostics(): Record<string, unknown> {
     const hooks: Record<string, unknown>[] = [];
@@ -157,8 +208,9 @@ export class RenderContext {
       tier: this.quality.tier,
       env: hooks[0] ?? null,
       post: this.post.info(),
-      memory: { geometries: m.geometries, textures: m.textures },
-      stats: this.getStats(),
+      memory: { geometries: m.geometries, textures: m.textures, postRenderTargets: this.post.renderTargetCount() },
+      stats: { ...this.getStats(), shadowDrawCalls: this.lastShadowDraws },
+      contextLost: this.lost,
       assetsAttached: !!this.assets,
     };
   }
@@ -198,16 +250,12 @@ export class RenderContext {
     }
   };
 
-  /** Adjust resolution scale from the measured frame time (call once per frame). */
+  /** Adjust resolution scale from the measured frame time (call once per frame; decisions at most every 750 ms). */
   updateDynamicResolution(avgFrameMs: number, nowMs: number): void {
     const d = this.quality.dynamicResolution;
-    if (!d.enabled || avgFrameMs <= 0 || nowMs - this.lastDynAdjust < 1000) return;
+    if (!d.enabled || avgFrameMs <= 0 || nowMs - this.lastDynAdjust < 750) return;
     this.lastDynAdjust = nowMs;
-    const budget = 1000 / this.quality.targetFps;
-    let s = this.resolutionScale;
-    if (avgFrameMs > budget * 1.15) s -= 0.05;
-    else if (avgFrameMs < budget * 0.8) s += 0.05;
-    s = Math.min(d.maxScale, Math.max(d.minScale, s));
+    const s = dynamicResolutionStep(this.resolutionScale, avgFrameMs, 1000 / this.quality.targetFps, d.minScale, d.maxScale);
     if (Math.abs(s - this.resolutionScale) > 1e-3) {
       this.resolutionScale = s;
       this.resize();
@@ -216,8 +264,9 @@ export class RenderContext {
 
   /** Render the bound view through the post pipeline (or directly). */
   render(dt: number): void {
-    if (!this.scene || !this.camera) return;
+    if (!this.scene || !this.camera || this.lost) return;
     this.renderer.info.reset();
+    this.shadowDraws = 0;
     // Frame globals belong to the scene being drawn: neutral unless one of its hooks fills them.
     resetShaderGlobals();
     // Tier compensations every material reads (low: emissive x1.3, baked AO x1.2).
@@ -225,9 +274,16 @@ export class RenderContext {
     boost.x = this.quality.emissiveBoost - 1;
     boost.y = this.quality.bakedAoBoost - 1;
     for (const h of this.hooks) if (h.scene === this.scene) h.beforeRender(this.camera, dt);
+    this.profiler?.begin('render.submit');
     if (this.usePost) this.post.render(dt);
     else this.renderer.render(this.scene, this.camera);
-    if (this.profiler) this.profiler.setRenderStats(this.getStats());
+    this.profiler?.end('render.submit');
+    this.lastShadowDraws = this.shadowDraws;
+    if (this.profiler) {
+      this.profiler.setRenderStats(this.getStats());
+      this.profiler.setCounter('render.shadowDraws', this.shadowDraws);
+      this.profiler.setCounter('render.postPasses', this.usePost ? this.post.enabledPassCount() : 0);
+    }
   }
 
   getStats(): RenderStats {

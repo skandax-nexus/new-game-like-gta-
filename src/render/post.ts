@@ -341,6 +341,13 @@ export class PostPipeline {
     };
   }
 
+  /** Passes that will run this frame (profiler counter). */
+  enabledPassCount(): number {
+    let n = 0;
+    for (const p of this.composer.passes) if (p.enabled) n++;
+    return n;
+  }
+
   /** Render targets owned by the pipeline (composer ping-pong + passes). */
   renderTargetCount(): number {
     let n = 2; // composer
@@ -410,6 +417,10 @@ export class PostPipeline {
 
   private rebuild(): void {
     this.disposePasses();
+    // Free the composer's ping-pong buffers too: they are re-allocated lazily by the tiers that use them (the low
+    // tier's merged pass draws straight to the screen), so tier cycling leaves GPU memory exactly as it was.
+    this.composer.renderTarget1.dispose();
+    this.composer.renderTarget2.dispose();
     this.neutral = this.createNeutral();
     this.build();
   }
