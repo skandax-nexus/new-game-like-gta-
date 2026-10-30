@@ -1,11 +1,16 @@
 {
   "port": 4407,
-  "dist": ".build/gp-01",
+  "dist": "/home/user/new-game-like-gta-/.build/gp-01",
   "checks": [
     {
-      "name": "tactical-river: no formation centroid sampled in a deep-water cell",
+      "name": "tactical-river: no formation centroid in a deep-water cell (every tick, exact; and every 2 s frame sample)",
       "ok": true,
-      "observed": 0
+      "observed": {
+        "deepFormationTicks": 0,
+        "ticks": 6472,
+        "deepFrameSamples": 0,
+        "boundarySamplesSkipped": 185
+      }
     },
     {
       "name": "tactical-plains: the 1,000-soldier skirmish ends in 3-8 min (or near it)",
@@ -13,20 +18,20 @@
       "observed": {
         "winner": 0,
         "reason": "rout",
-        "minutes": 4.29
+        "minutes": 4.19
       }
     },
     {
       "name": "tactical-river: the 1,000-soldier skirmish ends in 3-8 min (or near it)",
       "ok": true,
       "observed": {
-        "winner": 0,
+        "winner": 1,
         "reason": "rout",
-        "minutes": 5.36
+        "minutes": 5.39
       }
     },
     {
-      "name": "tactical-siege: the main gate is broken, a ladder is up and the attacker wins (breach held or defenders broken)",
+      "name": "tactical-siege: the main gate is broken, a ladder is up, the garrison's melee has routed but its dry archers still stand on their walls, and the attacker wins by holding the breach (siege_breach)",
       "ok": true,
       "observed": {
         "gates": [
@@ -36,8 +41,13 @@
         "ladders": [
           3
         ],
+        "meleeRouted": true,
+        "dryWallArchers": [
+          "8:100"
+        ],
         "winner": 0,
-        "outcome": "rout"
+        "outcome": "siege_breach",
+        "minutes": 4.38
       }
     },
     {
@@ -46,30 +56,63 @@
       "observed": []
     },
     {
-      "name": "battle-melee: the lines are in melee (>= 8% losses) - t=85s phase=active soldiers 458/500 vs 460/500 morale 62/63",
+      "name": "battle-melee: the lines are in melee (>= 8% losses, a player formation engaged) - t=60s phase=active soldiers 452/500 vs 451/500 morale 71/70",
       "ok": true,
       "observed": {
-        "tick": 1700,
-        "lost": 82
+        "tick": 1200,
+        "lost": 97,
+        "engaged": {
+          "card": 3,
+          "index": 3,
+          "cls": "elite_guards",
+          "soldiers": 59,
+          "enemies": [
+            "scouts"
+          ]
+        }
       }
     },
     {
-      "name": "battle-melee-close: camera zoomed onto the melee (distance 45 m)",
+      "name": "battle-melee: the 3D view rendered (not a blank canvas)",
       "ok": true,
       "observed": {
-        "x": -613.721281411477,
-        "z": -1032.9318042085263,
-        "distance": 44.96093663144529,
-        "yaw": 0.1559181424452462,
-        "tilt": 0
+        "dominantColourShare": 0.0099
       }
     },
     {
-      "name": "battle-result: the battle reaches an outcome - t=130.3s phase=ended soldiers 424/500 vs 430/500 morale 75/31 outcome 0 rout",
+      "name": "battle-melee-close: camera zoomed onto the melee (distance 45 m, 13 m from the engaged elite_guards)",
+      "ok": true,
+      "observed": {
+        "camera": {
+          "x": -573.0844724740356,
+          "z": -928.0917612028711,
+          "distance": 44.96093663144529,
+          "yaw": 0.19816684339273077,
+          "tilt": 0
+        },
+        "offsetFromFormation": 13.2
+      }
+    },
+    {
+      "name": "battle-melee-close: the 3D view rendered (not a blank canvas)",
+      "ok": true,
+      "observed": {
+        "dominantColourShare": 0.0099
+      }
+    },
+    {
+      "name": "battle-result: the battle reaches an outcome - t=251.7s phase=ended soldiers 404/500 vs 232/500 morale 75/0 outcome 0 rout",
       "ok": true,
       "observed": {
         "winner": 0,
         "reason": "rout"
+      }
+    },
+    {
+      "name": "battle-result: the 3D view rendered (not a blank canvas)",
+      "ok": true,
+      "observed": {
+        "dominantColourShare": 0.0232
       }
     },
     {
@@ -78,11 +121,27 @@
       "observed": []
     },
     {
-      "name": "battle-melee-overview: the lines are in melee (>= 8% losses) - t=85s phase=active soldiers 458/500 vs 460/500 morale 62/63",
+      "name": "battle-melee-overview: the lines are in melee (>= 8% losses, a player formation engaged) - t=60s phase=active soldiers 452/500 vs 451/500 morale 71/70",
       "ok": true,
       "observed": {
-        "tick": 1700,
-        "lost": 82
+        "tick": 1200,
+        "lost": 97,
+        "engaged": {
+          "card": 3,
+          "index": 3,
+          "cls": "elite_guards",
+          "soldiers": 59,
+          "enemies": [
+            "scouts"
+          ]
+        }
+      }
+    },
+    {
+      "name": "battle-melee-overview: the 3D view rendered (not a blank canvas)",
+      "ok": true,
+      "observed": {
+        "dominantColourShare": 0.0185
       }
     },
     {
@@ -94,16 +153,23 @@
       "name": "in-engine plains battle is deterministic across page loads (same tick => same state hash)",
       "ok": true,
       "observed": [
-        "946d4e94",
-        "946d4e94"
+        "0948da35",
+        "0948da35"
       ]
     },
     {
-      "name": "battle-river-melee: first clash at the ford - t=85s phase=active soldiers 475/500 vs 474/500 morale 60/78",
+      "name": "battle-river-melee: first clash at the ford - t=85s phase=active soldiers 476/500 vs 466/500 morale 58/75",
       "ok": true,
       "observed": {
         "tick": 1700,
-        "lost": 51
+        "lost": 58
+      }
+    },
+    {
+      "name": "battle-river-melee: the 3D view rendered (not a blank canvas)",
+      "ok": true,
+      "observed": {
+        "dominantColourShare": 0.0186
       }
     },
     {
@@ -112,10 +178,17 @@
       "observed": []
     },
     {
-      "name": "battle-mobile-melee: melee at 390x844 low - t=85s phase=active soldiers 458/500 vs 460/500 morale 62/64",
+      "name": "battle-mobile-melee: melee at 390x844 low - t=55s phase=active soldiers 452/500 vs 455/500 morale 75/72",
       "ok": true,
       "observed": {
-        "tick": 1700
+        "tick": 1100
+      }
+    },
+    {
+      "name": "battle-mobile-melee: the 3D view rendered (not a blank canvas)",
+      "ok": true,
+      "observed": {
+        "dominantColourShare": 0.0183
       }
     },
     {
@@ -139,27 +212,27 @@
     },
     {
       "name": "battle-melee.png",
-      "note": "plains seed 2, 1,000 soldiers AI vs AI, default camera (165 m behind the player line): t=85s phase=active soldiers 458/500 vs 460/500 morale 62/63"
+      "note": "plains seed 2, 1,000 soldiers AI vs AI, default camera (165 m behind the player line): t=60s phase=active soldiers 452/500 vs 451/500 morale 71/70"
     },
     {
       "name": "battle-melee-close.png",
-      "note": "the same tick, wheel-zoomed onto the melee at 45 m: soldier layer in contact (attack / hit / die anims, gaps filled from behind)"
+      "note": "the same tick, focused on the engaged elite_guards (59) fighting scouts and wheel-zoomed to 45 m: soldier layer in contact (attack / hit / die anims, gaps filled from behind)"
     },
     {
       "name": "battle-result.png",
-      "note": "plains seed 2 stepped to the end: t=130.3s phase=ended soldiers 424/500 vs 430/500 morale 75/31 outcome 0 rout"
+      "note": "plains seed 2 stepped to the end: t=251.7s phase=ended soldiers 404/500 vs 232/500 morale 75/0 outcome 0 rout"
     },
     {
       "name": "battle-melee-overview.png",
-      "note": "plains seed 2, 1,000 soldiers AI vs AI, overview camera (650 m): t=85s phase=active soldiers 458/500 vs 460/500 morale 62/63"
+      "note": "plains seed 2, 1,000 soldiers AI vs AI, overview camera (650 m): t=60s phase=active soldiers 452/500 vs 451/500 morale 71/70"
     },
     {
       "name": "battle-river-melee.png",
-      "note": "the Ford seed 11, 17:00, overview camera at the first clash: t=85s phase=active soldiers 475/500 vs 474/500 morale 60/78"
+      "note": "the Ford seed 11, 17:00, overview camera at the first clash: t=85s phase=active soldiers 476/500 vs 466/500 morale 58/75"
     },
     {
       "name": "battle-mobile-melee.png",
-      "note": "390x844 @low, default camera, plains seed 2 mid-melee: t=85s phase=active soldiers 458/500 vs 460/500 morale 62/64"
+      "note": "390x844 @low, default camera, plains seed 2 mid-melee: t=55s phase=active soldiers 452/500 vs 455/500 morale 75/72"
     }
   ]
 }

@@ -10,7 +10,8 @@
  *
  * In-engine (the authoritative formation sim + soldier layer stepped with __SAMRAJYA__.step(n), then rendered):
  *   battle-melee.png            1,000-soldier skirmish on the open plain (AI vs AI), default camera, lines in melee
- *   battle-melee-close.png      the same tick, cursor-anchored wheel zoom onto the melee (soldier layer close up)
+ *   battle-melee-close.png      the same tick: camera focused on the player's formation most engaged in melee
+ *                               (found from a quick save of the battle state), wheel-zoomed to ~45 m
  *   battle-melee-overview.png   the same moment from the overview camera (650 m)
  *   battle-river-melee.png      the Ford (river_crossing) at the first clash, overview camera
  *   battle-result.png           the same plains battle stepped to its outcome (result screen)
@@ -173,8 +174,35 @@ async function begin(page) {
   return err;
 }
 
-/** Screen point (1280x720, default camera) where the plains seed-2 melee sits at the battle-melee tick. */
-const CLOSE_ANCHOR = [600, 162];
+/**
+ * The player's formation most engaged in melee at the current (paused) tick - preferring the battle lines (a spear or
+ * guard block fighting an enemy spear or guard block: `line` true). The debug state has no formation positions, so
+ * this reads a quick save of the battle from localStorage (then removes it). Returns its card index in the HUD (cards
+ * list the player's formations in index order), its class, position and the enemies it fights.
+ */
+async function meleeFocus(page) {
+  return page.evaluate(() => {
+    const slot = 'gp01-focus';
+    window.__SAMRAJYA__.save(slot);
+    const key = `samrajya.save.${slot}`;
+    const text = localStorage.getItem(key) || '';
+    localStorage.removeItem(key);
+    const nl = text.lastIndexOf('\n#');
+    const game = JSON.parse(nl >= 0 ? text.slice(0, nl) : text);
+    const b = game.battle;
+    const ps = game.session && game.session.skirmish ? game.session.skirmish.playerSide : 0;
+    const own = b.formations.filter((f) => f.side === ps);
+    const lineCls = (c) => c === 'spearmen' || c === 'elite_guards';
+    let best = null;
+    own.forEach((f, card) => {
+      if (f.soldiers <= 0 || f.activity === 'routing' || f.engagedWith.length === 0) return;
+      const line = lineCls(f.unitClass) && f.engagedWith.some((j) => lineCls(b.formations[j].unitClass));
+      const score = (line ? 1e6 : 0) + f.engagedWith.length * 10000 + f.soldiers;
+      if (!best || score > best.score) best = { score, line, card, index: f.index, cls: f.unitClass, soldiers: f.soldiers, x: f.x, z: f.z, enemies: f.engagedWith.map((j) => b.formations[j].unitClass) };
+    });
+    return best;
+  });
+}
 
 async function capturePlains(browser, base) {
   // Default camera, then the overview of the same deterministic battle (same seed, same steps => same state hash).
@@ -189,13 +217,32 @@ async function capturePlains(browser, base) {
     await page.goto(`${base}?scene=battle&preset=plains&seed=2&soldiers=1000&aivsai=1&paused=1&quality=high&noaudio=1${cam}`, { waitUntil: 'load', timeout: TIMEOUT });
     await waitReady(page);
     await begin(page);
-    const s = await stepUntil(page, (x) => x.phase !== 'deployment' && lost(x) >= total(x) * 0.08, 6000);
-    check(`${name}: the lines are in melee (>= 8% losses) - ${fmt(s)}`, lost(s) >= total(s) * 0.08 && !s.outcome, { tick: s.tick, lost: lost(s) });
+    let s = await stepUntil(page, (x) => x.phase !== 'deployment' && lost(x) >= total(x) * 0.08, 6000);
+    // Then on, 50 ticks at a time, until the battle lines are in melee (a player spear / guard block fighting an enemy
+    // one, read from the battle state; at most 150 s more, else any melee of a player formation). Both page loads step
+    // identically, so they stop on the same tick.
+    let mf = await meleeFocus(page);
+    for (let i = 0; i < 60 && !(mf && mf.line) && !s.outcome; i++) {
+      await page.evaluate(() => window.__SAMRAJYA__.step(50));
+      s = await battleInfo(page);
+      mf = await meleeFocus(page);
+    }
+    // Let the 'Chronicle saved' toasts of the probe fade (real time; the battle stays paused).
+    await page.waitForTimeout(2500);
+    await page.evaluate(() => window.__SAMRAJYA__.waitFrames(3));
+    check(`${name}: the lines are in melee (>= 8% losses, a player spear / guard block fighting an enemy one) - ${fmt(s)}`, lost(s) >= total(s) * 0.08 && !s.outcome && !!mf && mf.line, { tick: s.tick, lost: lost(s), engaged: mf && { card: mf.card, index: mf.index, cls: mf.cls, soldiers: mf.soldiers, enemies: mf.enemies } });
     hashes.push(await page.evaluate(() => window.__SAMRAJYA__.hash()));
     await shot(page, name, `plains seed 2, 1,000 soldiers AI vs AI, ${note}: ${fmt(s)}`);
     if (!cam) {
-      // Close-up: cursor-anchored wheel zoom onto the melee (same seed + ticks + start camera => same screen spot).
-      await page.mouse.move(CLOSE_ANCHOR[0], CLOSE_ANCHOR[1]);
+      // Close-up: select the player's formation most engaged in melee (its HUD card), focus the camera on it (Home =
+      // camera_focus), then wheel-zoom at the screen centre. Found from the battle state, not a fixed screen spot, so
+      // it follows the melee when data changes move it.
+      if (mf) {
+        await page.locator('button.btn:has(> .bar)').nth(mf.card).click();
+        await page.keyboard.press('Home');
+        await page.evaluate(() => window.__SAMRAJYA__.waitFrames(60));
+      }
+      await page.mouse.move(640, 330);
       let cs = await battleInfo(page);
       for (let i = 0; i < 16 && cs.camera.distance > 48; i++) {
         await page.mouse.wheel(0, -240);
@@ -204,8 +251,9 @@ async function capturePlains(browser, base) {
       }
       await page.evaluate(() => window.__SAMRAJYA__.waitFrames(30));
       cs = await battleInfo(page);
-      check(`battle-melee-close: camera zoomed onto the melee (distance ${Math.round(cs.camera.distance)} m)`, cs.camera.distance < 80, cs.camera);
-      await shot(page, 'battle-melee-close', `the same tick, wheel-zoomed onto the melee at ${Math.round(cs.camera.distance)} m: soldier layer in contact (attack / hit / die anims, gaps filled from behind)`);
+      const off = mf ? Math.hypot(cs.camera.x - mf.x, cs.camera.z - mf.z) : Infinity;
+      check(`battle-melee-close: camera zoomed onto the melee (distance ${Math.round(cs.camera.distance)} m, ${Math.round(off)} m from the engaged ${mf ? mf.cls : '?'})`, cs.camera.distance < 80 && off < 30, { camera: cs.camera, offsetFromFormation: Math.round(off * 10) / 10 });
+      await shot(page, 'battle-melee-close', `the same tick, focused on the engaged ${mf ? `${mf.cls} (${mf.soldiers}) fighting ${mf.enemies.join(' + ')}` : 'formation'} and wheel-zoomed to ${Math.round(cs.camera.distance)} m: soldier layer in contact (attack / hit / die anims, gaps filled from behind)`);
       const r = await stepUntil(page, (x) => !!x.outcome, 12000, 200);
       check(`battle-result: the battle reaches an outcome - ${fmt(r)}`, !!r.outcome, r.outcome);
       await page.evaluate(() => window.__SAMRAJYA__.waitFrames(6));
