@@ -32,4 +32,59 @@ the rig drives `setGrade / setBloom / setAmbientOcclusion / setSun / setLut / se
 
 ## Results
 
-RESULTS_PLACEHOLDER
+All numbers from `report.json` (generated 2026-10-30T13:41Z); `failures: []`.
+
+### Lighting presets on ultra (ART_BIBLE §4.1), battle `preset=plains` tactical + hero (Rajapura)
+
+| Preset | Battle | Hero | Resolved dominant |
+|---|---|---|---|
+| dawn | `battle-dawn-ultra.png` (89 draws, 52 shadow) | `hero-dawn-ultra.png` (115 / 65) | dawn |
+| noon | `battle-noon-ultra.png` (89 draws, 52 shadow) | `hero-noon-ultra.png` (117 / 67) | noon |
+| golden | `battle-golden-ultra.png` (89 draws, 52 shadow) | `hero-golden-ultra.png` (114 / 64) | golden |
+| dusk | `battle-dusk-ultra.png` (89 draws, 52 shadow) | `hero-dusk-ultra.png` (114 / 64) | night (the resolver hands 18.9 h in sharad to the night preset) |
+| night | `battle-night-ultra.png` (89 draws, 52 shadow) | `hero-night-ultra.png` (118 / 68) | night |
+| monsoon | `battle-monsoon-ultra.png` (90 draws, 52 shadow) | `hero-monsoon-ultra.png` (119 / 69) | monsoon |
+| dry_haze | `battle-dry_haze-ultra.png` (89 draws, 52 shadow) | `hero-dry_haze-ultra.png` (119 / 69) | dry_haze |
+| winter_fog | `battle-winter_fog-ultra.png` (89 draws, 52 shadow) | `hero-winter_fog-ultra.png` (117 / 67) | winter_fog |
+
+Low tier (single merged post pass, hard 1 cascade, FogExp2 x0.6): `battle-noon-low.png` (24), `hero-noon-low.png` (41); `battle-golden-low.png` (24), `hero-golden-low.png` (41); `battle-night-low.png` (24), `hero-night-low.png` (41).
+
+### Checks
+
+- Night readability, tactical battle lower half (the armies), mean sRGB luma: ultra **0.141**, low **0.149** (>= 0.12 required).
+- Cascades (`?csm=1`, `battle-csm-*.png`): ultra 4 x pcss (579 m), high 3 x pcss (386 m), medium 2 x pcf (258 m); low 1 x hard (tests). Contact shadows run only on ultra in the close / hero bands (`contact` pass in every hero-ultra shot, never at tactical zoom or below ultra).
+- Zoomed out (`zoom-battle-operational.png` 650 m, `zoom-world-strategic.png` 4.2 km): no seam - the largest row-to-row jump of the mean colour over the top 45 % is 1.13 / 0.74 (8-bit levels); the map edge melts into the horizon haze (fog.test.ts covers the edge-fade maths).
+- Post-hero lab (`?scene=lab&lab=post-hero`, assets attached: baked sky_golden, `lut_golden` at 35 %, WP7 lens dirt): TAA on `scene+gtao+contact+ssr+composite+shafts+bloom+dof+final+taa` vs off `scene+gtao+contact+ssr+composite+shafts+bloom+dof+final+smaa` (`lab-post-hero-taa-on/off.png`); DoF focus override 12 m (`lab-post-hero-dof-focus12.png`); AgX (`lab-post-hero-agx.png`); battle view SMAA on ultra `scene+gtao+ssr+composite+bloom+final+smaa`; low tier `scene+final` = ONE fullscreen pass after the scene.
+- Surface lab (`lab-surface-wet-ultra.png`, `lab-surface-dry-high.png`): clearcoat polish, silk sheen, skin subsurface, back-lit foliage, wet plaza + puddles on the ground disc, per-instance LOD dither ramp.
+- Tier cycling low -> medium -> high -> ultra -> high -> medium -> low x3 (battle, 600 soldiers): start: 11 tex / 30 geo / 3 RT, cycle1:low: 11 tex / 30 geo / 3 RT, cycle2:low: 11 tex / 30 geo / 3 RT, cycle3:low: 11 tex / 30 geo / 3 RT - unchanged.
+- Context loss (WEBGL_lose_context): reported lost yes, restored yes, post `scene+final`, 53 draws on the first frame after restore (sky / PMREM re-bake), no errors.
+
+### Draw calls (SwiftShader, same deep links as the baseline)
+
+| Bench | Before GFX-01 | After | Budget | | Post passes |
+|---|---|---|---|---|---|
+| battle-1000-high | 81 | 70 (36 shadow) | < 400 | pass | scene+gtao+composite+bloom+final+smaa |
+| battle-river-5000-high | 81 | 70 (36 shadow) | < 500 | pass | scene+gtao+composite+bloom+final+smaa |
+| battle-mobile-low | 26 | 24 (5 shadow) | < 150 | pass | scene+final |
+
+Post adds 1 (low) to ~20 (ultra hero) fullscreen draws; the cascades dominate (`shadowDrawCalls`).
+
+### Builds and smoke
+
+`npm run typecheck` clean; `npm test`: all GFX-01 suites green (tests/render/lighting 58, tests/core/quality 11); the
+remaining failures are pre-existing sim / contracts tests that also fail on a clean HEAD export (migration battles,
+construction Palace, politics careful year, siege x3; `sim/tactical/perf` is CPU-timing flaky under load).
+`vite build --outDir .build/gfx-01` and `vite build --mode single --outDir .build/gfx-01-single` OK.
+`SMOKE_PORT=4403 SMOKE_OUT=docs/sprint1/gfx-01/smoke SMOKE_DIST=.build/gfx-01-smoke npm run smoke`: 14 / 14 shots, no
+console errors.
+
+### Self-critique (read against ART_BIBLE §4 / §13; Art Director sign-off still to be recorded)
+
+- Golden / dawn / night / fog / monsoon read as their presets; armies stay readable at night (moonlit key + hemi fill).
+- Dusk at 18.9 h reads closer to early night than to an afterglow from the default battle camera (it faces away from
+  the western glow); the AD may want more horizon warmth in `sky_dusk` / dusk preset.
+- Hero DoF (aperture K 0.5 at f/2.8) keeps the background readable; the near ground in front of the hero still blurs
+  (max 10 px at 1080p x strength) - tune `ZOOM_BANDS.hero.post.dof` if the AD wants less.
+- At the operational / strategic zooms the finite map shows as a hazy tile: no seam, but an outer terrain skirt
+  (GFX-02) would sell the horizon better.
+- Shafts are strong against the low sun (lab): `r.shaftsStrength` x band is the AD's knob.

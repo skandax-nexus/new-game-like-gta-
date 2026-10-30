@@ -1,0 +1,2031 @@
+{
+  "generated": "2026-10-30T13:41:53.663Z",
+  "shots": [
+    {
+      "name": "battle-dawn-ultra",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=ultra&noui=1&hour=6.2&season=sharad&weather=clear",
+      "ms": 133984,
+      "drawCalls": 89,
+      "shadowDrawCalls": 52,
+      "triangles": 4550219,
+      "textures": 39,
+      "geometries": 33,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "ssr",
+        "composite",
+        "bloom",
+        "final",
+        "Q_"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "dawn",
+        "exposure": 1.508086370406863,
+        "effectiveIrradiance": 0.2560844771020076,
+        "bakedSky": null,
+        "cascades": 4,
+        "look": "tactical",
+        "wetness": 0.1587479668975197
+      },
+      "errors": []
+    },
+    {
+      "name": "hero-dawn-ultra",
+      "query": "scene=hero&quality=ultra&noui=1&hour=6.2&season=sharad&weather=clear",
+      "ms": 100389,
+      "drawCalls": 115,
+      "shadowDrawCalls": 65,
+      "triangles": 1815936,
+      "textures": 39,
+      "geometries": 42,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "bloom",
+        "dof",
+        "final",
+        "taa"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "dawn",
+        "exposure": 1.508086370406863,
+        "effectiveIrradiance": 0.2560844771020076,
+        "bakedSky": null,
+        "cascades": 4,
+        "look": "hero",
+        "wetness": 0.1587479668975197
+      },
+      "errors": []
+    },
+    {
+      "name": "battle-noon-ultra",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=ultra&noui=1&hour=12.5&season=sharad&weather=clear",
+      "ms": 99571,
+      "drawCalls": 89,
+      "shadowDrawCalls": 52,
+      "triangles": 4550219,
+      "textures": 39,
+      "geometries": 33,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "ssr",
+        "composite",
+        "bloom",
+        "final",
+        "Q_"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "noon",
+        "exposure": 0.8,
+        "effectiveIrradiance": 0.75,
+        "bakedSky": null,
+        "cascades": 4,
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "hero-noon-ultra",
+      "query": "scene=hero&quality=ultra&noui=1&hour=12.5&season=sharad&weather=clear",
+      "ms": 103841,
+      "drawCalls": 117,
+      "shadowDrawCalls": 67,
+      "triangles": 1835628,
+      "textures": 39,
+      "geometries": 41,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "bloom",
+        "dof",
+        "final",
+        "taa"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "noon",
+        "exposure": 0.8,
+        "effectiveIrradiance": 0.75,
+        "bakedSky": null,
+        "cascades": 4,
+        "look": "hero",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "battle-golden-ultra",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=ultra&noui=1&hour=17.4&season=sharad&weather=clear",
+      "ms": 98045,
+      "drawCalls": 89,
+      "shadowDrawCalls": 52,
+      "triangles": 4550219,
+      "textures": 39,
+      "geometries": 33,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "ssr",
+        "composite",
+        "bloom",
+        "final",
+        "Q_"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "golden",
+        "exposure": 1.0863539909539097,
+        "effectiveIrradiance": 0.42155367096939494,
+        "bakedSky": null,
+        "cascades": 4,
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "hero-golden-ultra",
+      "query": "scene=hero&quality=ultra&noui=1&hour=17.4&season=sharad&weather=clear",
+      "ms": 90006,
+      "drawCalls": 114,
+      "shadowDrawCalls": 64,
+      "triangles": 1796592,
+      "textures": 39,
+      "geometries": 42,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "bloom",
+        "dof",
+        "final",
+        "taa"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "golden",
+        "exposure": 1.0863539909539097,
+        "effectiveIrradiance": 0.42155367096939494,
+        "bakedSky": null,
+        "cascades": 4,
+        "look": "hero",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "battle-dusk-ultra",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=ultra&noui=1&hour=18.9&season=sharad&weather=clear",
+      "ms": 117037,
+      "drawCalls": 89,
+      "shadowDrawCalls": 52,
+      "triangles": 4550219,
+      "textures": 39,
+      "geometries": 33,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "ssr",
+        "composite",
+        "bloom",
+        "final",
+        "Q_"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "night",
+        "exposure": 2.5,
+        "effectiveIrradiance": 0.07999999999999999,
+        "bakedSky": null,
+        "cascades": 4,
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "hero-dusk-ultra",
+      "query": "scene=hero&quality=ultra&noui=1&hour=18.9&season=sharad&weather=clear",
+      "ms": 99992,
+      "drawCalls": 114,
+      "shadowDrawCalls": 64,
+      "triangles": 1796592,
+      "textures": 39,
+      "geometries": 42,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "bloom",
+        "dof",
+        "final",
+        "taa"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "night",
+        "exposure": 2.5,
+        "effectiveIrradiance": 0.07999999999999999,
+        "bakedSky": null,
+        "cascades": 4,
+        "look": "hero",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "battle-night-ultra",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=ultra&noui=1&hour=22&season=sharad&weather=clear",
+      "ms": 58929,
+      "drawCalls": 89,
+      "shadowDrawCalls": 52,
+      "triangles": 4550219,
+      "textures": 39,
+      "geometries": 33,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "ssr",
+        "composite",
+        "bloom",
+        "final",
+        "Q_"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "night",
+        "exposure": 2.5,
+        "effectiveIrradiance": 0.07999999999999999,
+        "bakedSky": null,
+        "cascades": 4,
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "hero-night-ultra",
+      "query": "scene=hero&quality=ultra&noui=1&hour=22&season=sharad&weather=clear",
+      "ms": 62087,
+      "drawCalls": 118,
+      "shadowDrawCalls": 68,
+      "triangles": 1836028,
+      "textures": 39,
+      "geometries": 41,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "bloom",
+        "dof",
+        "final",
+        "taa"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "night",
+        "exposure": 2.5,
+        "effectiveIrradiance": 0.07999999999999999,
+        "bakedSky": null,
+        "cascades": 4,
+        "look": "hero",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "battle-monsoon-ultra",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=ultra&noui=1&hour=13&season=varsha&weather=monsoon_rain",
+      "ms": 87753,
+      "drawCalls": 90,
+      "shadowDrawCalls": 52,
+      "triangles": 4550219,
+      "textures": 39,
+      "geometries": 34,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "ssr",
+        "composite",
+        "bloom",
+        "final",
+        "Q_"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "monsoon",
+        "exposure": 1.04,
+        "effectiveIrradiance": 0.8999999999999999,
+        "bakedSky": null,
+        "cascades": 4,
+        "look": "tactical",
+        "wetness": 0.85
+      },
+      "errors": []
+    },
+    {
+      "name": "hero-monsoon-ultra",
+      "query": "scene=hero&quality=ultra&noui=1&hour=13&season=varsha&weather=monsoon_rain",
+      "ms": 60486,
+      "drawCalls": 119,
+      "shadowDrawCalls": 69,
+      "triangles": 1836616,
+      "textures": 39,
+      "geometries": 41,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "bloom",
+        "dof",
+        "final",
+        "taa"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "monsoon",
+        "exposure": 1.04,
+        "effectiveIrradiance": 0.8999999999999999,
+        "bakedSky": null,
+        "cascades": 4,
+        "look": "hero",
+        "wetness": 0.85
+      },
+      "errors": []
+    },
+    {
+      "name": "battle-dry_haze-ultra",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=ultra&noui=1&hour=13&season=grishma&weather=hazy",
+      "ms": 72940,
+      "drawCalls": 89,
+      "shadowDrawCalls": 52,
+      "triangles": 4550219,
+      "textures": 39,
+      "geometries": 33,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "ssr",
+        "composite",
+        "bloom",
+        "final",
+        "Q_"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "dry_haze",
+        "exposure": 0.766,
+        "effectiveIrradiance": 0.718125,
+        "bakedSky": null,
+        "cascades": 4,
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "hero-dry_haze-ultra",
+      "query": "scene=hero&quality=ultra&noui=1&hour=13&season=grishma&weather=hazy",
+      "ms": 71811,
+      "drawCalls": 119,
+      "shadowDrawCalls": 69,
+      "triangles": 1836616,
+      "textures": 39,
+      "geometries": 41,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "bloom",
+        "dof",
+        "final",
+        "taa"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "dry_haze",
+        "exposure": 0.766,
+        "effectiveIrradiance": 0.718125,
+        "bakedSky": null,
+        "cascades": 4,
+        "look": "hero",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "battle-winter_fog-ultra",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=ultra&noui=1&hour=8&season=shishira&weather=fog",
+      "ms": 77732,
+      "drawCalls": 89,
+      "shadowDrawCalls": 52,
+      "triangles": 4550219,
+      "textures": 39,
+      "geometries": 33,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "ssr",
+        "composite",
+        "bloom",
+        "final",
+        "Q_"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "winter_fog",
+        "exposure": 1.2798448945281682,
+        "effectiveIrradiance": 0.4723756905777903,
+        "bakedSky": null,
+        "cascades": 4,
+        "look": "tactical",
+        "wetness": 0.35
+      },
+      "errors": []
+    },
+    {
+      "name": "hero-winter_fog-ultra",
+      "query": "scene=hero&quality=ultra&noui=1&hour=8&season=shishira&weather=fog",
+      "ms": 73491,
+      "drawCalls": 117,
+      "shadowDrawCalls": 67,
+      "triangles": 1835328,
+      "textures": 39,
+      "geometries": 42,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "bloom",
+        "dof",
+        "final",
+        "taa"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "winter_fog",
+        "exposure": 1.0939931083697492,
+        "effectiveIrradiance": 0.5884562838523998,
+        "bakedSky": null,
+        "cascades": 4,
+        "look": "hero",
+        "wetness": 0.35
+      },
+      "errors": []
+    },
+    {
+      "name": "battle-noon-low",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=low&noui=1&hour=12.5&season=sharad&weather=clear",
+      "ms": 34449,
+      "drawCalls": 24,
+      "shadowDrawCalls": 5,
+      "triangles": 442519,
+      "textures": 11,
+      "geometries": 30,
+      "tier": "low",
+      "passes": [
+        "scene",
+        "final"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "noon",
+        "exposure": 0.8,
+        "effectiveIrradiance": 0.75,
+        "bakedSky": null,
+        "cascades": 1,
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "hero-noon-low",
+      "query": "scene=hero&quality=low&noui=1&hour=12.5&season=sharad&weather=clear",
+      "ms": 49352,
+      "drawCalls": 41,
+      "shadowDrawCalls": 11,
+      "triangles": 245817,
+      "textures": 10,
+      "geometries": 39,
+      "tier": "low",
+      "passes": [
+        "scene",
+        "final"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "noon",
+        "exposure": 0.8,
+        "effectiveIrradiance": 0.75,
+        "bakedSky": null,
+        "cascades": 1,
+        "look": "hero",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "battle-golden-low",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=low&noui=1&hour=17.4&season=sharad&weather=clear",
+      "ms": 29904,
+      "drawCalls": 24,
+      "shadowDrawCalls": 5,
+      "triangles": 442519,
+      "textures": 11,
+      "geometries": 30,
+      "tier": "low",
+      "passes": [
+        "scene",
+        "final"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "golden",
+        "exposure": 1.0863539909539097,
+        "effectiveIrradiance": 0.42155367096939494,
+        "bakedSky": null,
+        "cascades": 1,
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "hero-golden-low",
+      "query": "scene=hero&quality=low&noui=1&hour=17.4&season=sharad&weather=clear",
+      "ms": 11364,
+      "drawCalls": 41,
+      "shadowDrawCalls": 11,
+      "triangles": 245817,
+      "textures": 10,
+      "geometries": 39,
+      "tier": "low",
+      "passes": [
+        "scene",
+        "final"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "golden",
+        "exposure": 1.0863539909539097,
+        "effectiveIrradiance": 0.42155367096939494,
+        "bakedSky": null,
+        "cascades": 1,
+        "look": "hero",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "battle-night-low",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=low&noui=1&hour=22&season=sharad&weather=clear",
+      "ms": 57576,
+      "drawCalls": 24,
+      "shadowDrawCalls": 5,
+      "triangles": 442519,
+      "textures": 11,
+      "geometries": 30,
+      "tier": "low",
+      "passes": [
+        "scene",
+        "final"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "night",
+        "exposure": 2.5,
+        "effectiveIrradiance": 0.07999999999999999,
+        "bakedSky": null,
+        "cascades": 1,
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "hero-night-low",
+      "query": "scene=hero&quality=low&noui=1&hour=22&season=sharad&weather=clear",
+      "ms": 46250,
+      "drawCalls": 41,
+      "shadowDrawCalls": 11,
+      "triangles": 245817,
+      "textures": 10,
+      "geometries": 39,
+      "tier": "low",
+      "passes": [
+        "scene",
+        "final"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "night",
+        "exposure": 2.5,
+        "effectiveIrradiance": 0.07999999999999999,
+        "bakedSky": null,
+        "cascades": 1,
+        "look": "hero",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "battle-csm-ultra",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=ultra&noui=1&hour=15&season=sharad&weather=clear&csm=1",
+      "ms": 83957,
+      "drawCalls": 89,
+      "shadowDrawCalls": 52,
+      "triangles": 4550219,
+      "textures": 39,
+      "geometries": 33,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "ssr",
+        "composite",
+        "bloom",
+        "final",
+        "Q_"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "noon",
+        "exposure": 0.8,
+        "effectiveIrradiance": 0.75,
+        "bakedSky": null,
+        "cascades": 4,
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "extra": {
+        "cascades": 4,
+        "filter": "pcss",
+        "distance": 579,
+        "contactPass": false
+      },
+      "errors": []
+    },
+    {
+      "name": "battle-csm-high",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=high&noui=1&hour=15&season=sharad&weather=clear&csm=1",
+      "ms": 37051,
+      "drawCalls": 70,
+      "shadowDrawCalls": 36,
+      "triangles": 1885726,
+      "textures": 33,
+      "geometries": 32,
+      "tier": "high",
+      "passes": [
+        "scene",
+        "gtao",
+        "composite",
+        "bloom",
+        "final",
+        "Q_"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "noon",
+        "exposure": 0.8,
+        "effectiveIrradiance": 0.75,
+        "bakedSky": null,
+        "cascades": 3,
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "extra": {
+        "cascades": 3,
+        "filter": "pcss",
+        "distance": 386,
+        "contactPass": false
+      },
+      "errors": []
+    },
+    {
+      "name": "battle-csm-medium",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=medium&noui=1&hour=15&season=sharad&weather=clear&csm=1",
+      "ms": 44293,
+      "drawCalls": 53,
+      "shadowDrawCalls": 24,
+      "triangles": 1033225,
+      "textures": 24,
+      "geometries": 31,
+      "tier": "medium",
+      "passes": [
+        "scene",
+        "bloom",
+        "final",
+        "Zg"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "noon",
+        "exposure": 0.8,
+        "effectiveIrradiance": 0.75,
+        "bakedSky": null,
+        "cascades": 2,
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "extra": {
+        "cascades": 2,
+        "filter": "pcf",
+        "distance": 258,
+        "contactPass": false
+      },
+      "errors": []
+    },
+    {
+      "name": "zoom-battle-operational",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=high&noui=1&hour=16&season=sharad&weather=clear&camera=overview",
+      "ms": 52869,
+      "drawCalls": 70,
+      "shadowDrawCalls": 36,
+      "triangles": 2160758,
+      "textures": 33,
+      "geometries": 32,
+      "tier": "high",
+      "passes": [
+        "scene",
+        "gtao",
+        "composite",
+        "bloom",
+        "final",
+        "Q_"
+      ],
+      "look": "operational",
+      "env": {
+        "preset": "noon",
+        "exposure": 0.8497273472075287,
+        "effectiveIrradiance": 0.6696752721245693,
+        "bakedSky": null,
+        "cascades": 3,
+        "look": "operational",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "zoom-world-strategic",
+      "query": "scene=world&quality=high&noui=1&hour=16&season=sharad&weather=clear&camera=overview",
+      "ms": 54661,
+      "drawCalls": 339,
+      "shadowDrawCalls": 158,
+      "triangles": 1707644,
+      "textures": 32,
+      "geometries": 142,
+      "tier": "high",
+      "passes": [
+        "scene",
+        "gtao",
+        "composite",
+        "bloom",
+        "final",
+        "Q_"
+      ],
+      "look": "strategic",
+      "env": {
+        "preset": "noon",
+        "exposure": 0.8194185013328875,
+        "effectiveIrradiance": 0.7169606078106804,
+        "bakedSky": null,
+        "cascades": 3,
+        "look": "strategic",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "lab-post-hero-taa-on",
+      "query": "scene=lab&lab=post-hero&noui=1&quality=ultra&taa=1",
+      "ms": 63690,
+      "drawCalls": 305,
+      "shadowDrawCalls": 220,
+      "triangles": 15260,
+      "textures": 46,
+      "geometries": 90,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "shafts",
+        "bloom",
+        "dof",
+        "final",
+        "taa"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "golden",
+        "exposure": 1.0863539909539097,
+        "effectiveIrradiance": 0.42155367096939494,
+        "bakedSky": "sky_golden",
+        "cascades": 4,
+        "look": "hero",
+        "wetness": 0.1
+      },
+      "extra": {
+        "passes": [
+          "scene",
+          "gtao",
+          "contact",
+          "ssr",
+          "composite",
+          "shafts",
+          "bloom",
+          "dof",
+          "final",
+          "taa"
+        ],
+        "active": {
+          "ao": true,
+          "contact": true,
+          "ssr": true,
+          "composite": true,
+          "shafts": true,
+          "bloom": true,
+          "dof": true,
+          "taa": true,
+          "smaa": false,
+          "fxaa": false,
+          "merged": false
+        },
+        "tier": "ultra",
+        "toneMapping": "aces",
+        "taaMode": true,
+        "lighting": {
+          "bloomStrength": 0.45315743819340215,
+          "bloomRadius": 0.55,
+          "bloomThreshold": 2.8875037623579214,
+          "aoIntensity": 1.0405276854197936,
+          "aoRadiusM": 1.4936851236131958
+        },
+        "look": "hero",
+        "focus": {
+          "distance": 4.5,
+          "auto": true
+        },
+        "ao": {
+          "radius": 0.5974740494452783,
+          "intensity": 1.1966068382327626
+        },
+        "shafts": {
+          "strength": 0.5427660112912367,
+          "decay": 0.9593685123613196,
+          "density": 0.7936851236131958
+        },
+        "bloom": {
+          "threshold": 2.8875037623579214,
+          "radius": 0.55
+        },
+        "dof": {
+          "focus": 4.5,
+          "fStop": 2.8,
+          "maxBlurPx": 10,
+          "strength": 1
+        },
+        "lut": {
+          "loaded": true,
+          "mix": 1
+        },
+        "renderTargets": 28
+      },
+      "errors": []
+    },
+    {
+      "name": "lab-post-hero-taa-off",
+      "query": "scene=lab&lab=post-hero&noui=1&quality=ultra&taa=0",
+      "ms": 100974,
+      "drawCalls": 306,
+      "shadowDrawCalls": 220,
+      "triangles": 15261,
+      "textures": 48,
+      "geometries": 90,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "shafts",
+        "bloom",
+        "dof",
+        "final",
+        "smaa"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "golden",
+        "exposure": 1.0863539909539097,
+        "effectiveIrradiance": 0.42155367096939494,
+        "bakedSky": "sky_golden",
+        "cascades": 4,
+        "look": "hero",
+        "wetness": 0.1
+      },
+      "extra": {
+        "passes": [
+          "scene",
+          "gtao",
+          "contact",
+          "ssr",
+          "composite",
+          "shafts",
+          "bloom",
+          "dof",
+          "final",
+          "smaa"
+        ],
+        "active": {
+          "ao": true,
+          "contact": true,
+          "ssr": true,
+          "composite": true,
+          "shafts": true,
+          "bloom": true,
+          "dof": true,
+          "taa": false,
+          "smaa": true,
+          "fxaa": false,
+          "merged": false
+        },
+        "tier": "ultra",
+        "toneMapping": "aces",
+        "taaMode": false,
+        "lighting": {
+          "bloomStrength": 0.45315743819340215,
+          "bloomRadius": 0.55,
+          "bloomThreshold": 2.8875037623579214,
+          "aoIntensity": 1.0405276854197936,
+          "aoRadiusM": 1.4936851236131958
+        },
+        "look": "hero",
+        "focus": {
+          "distance": 4.5,
+          "auto": true
+        },
+        "ao": {
+          "radius": 0.5974740494452783,
+          "intensity": 1.1966068382327626
+        },
+        "shafts": {
+          "strength": 0.5427660112912367,
+          "decay": 0.9593685123613196,
+          "density": 0.7936851236131958
+        },
+        "bloom": {
+          "threshold": 2.8875037623579214,
+          "radius": 0.55
+        },
+        "dof": {
+          "focus": 4.5,
+          "fStop": 2.8,
+          "maxBlurPx": 10,
+          "strength": 1
+        },
+        "lut": {
+          "loaded": true,
+          "mix": 1
+        },
+        "renderTargets": 28
+      },
+      "errors": []
+    },
+    {
+      "name": "lab-post-hero-dof-focus12",
+      "query": "scene=lab&lab=post-hero&noui=1&quality=ultra&focus=12",
+      "ms": 64972,
+      "drawCalls": 305,
+      "shadowDrawCalls": 220,
+      "triangles": 15260,
+      "textures": 46,
+      "geometries": 90,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "shafts",
+        "bloom",
+        "dof",
+        "final",
+        "taa"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "golden",
+        "exposure": 1.0863539909539097,
+        "effectiveIrradiance": 0.42155367096939494,
+        "bakedSky": "sky_golden",
+        "cascades": 4,
+        "look": "hero",
+        "wetness": 0.1
+      },
+      "extra": {
+        "passes": [
+          "scene",
+          "gtao",
+          "contact",
+          "ssr",
+          "composite",
+          "shafts",
+          "bloom",
+          "dof",
+          "final",
+          "taa"
+        ],
+        "active": {
+          "ao": true,
+          "contact": true,
+          "ssr": true,
+          "composite": true,
+          "shafts": true,
+          "bloom": true,
+          "dof": true,
+          "taa": true,
+          "smaa": false,
+          "fxaa": false,
+          "merged": false
+        },
+        "tier": "ultra",
+        "toneMapping": "aces",
+        "taaMode": "auto",
+        "lighting": {
+          "bloomStrength": 0.45315743819340215,
+          "bloomRadius": 0.55,
+          "bloomThreshold": 2.8875037623579214,
+          "aoIntensity": 1.0405276854197936,
+          "aoRadiusM": 1.4936851236131958
+        },
+        "look": "hero",
+        "focus": {
+          "distance": 12,
+          "fStop": 2.8,
+          "maxBlurPx": 10,
+          "strength": 1
+        },
+        "ao": {
+          "radius": 0.5974740494452783,
+          "intensity": 1.1966068382327626
+        },
+        "shafts": {
+          "strength": 0.5427660112912367,
+          "decay": 0.9593685123613196,
+          "density": 0.7936851236131958
+        },
+        "bloom": {
+          "threshold": 2.8875037623579214,
+          "radius": 0.55
+        },
+        "dof": {
+          "focus": 12,
+          "fStop": 2.8,
+          "maxBlurPx": 10,
+          "strength": 1
+        },
+        "lut": {
+          "loaded": true,
+          "mix": 1
+        },
+        "renderTargets": 28
+      },
+      "errors": []
+    },
+    {
+      "name": "lab-post-hero-agx",
+      "query": "scene=lab&lab=post-hero&noui=1&quality=ultra&tonemap=agx",
+      "ms": 48474,
+      "drawCalls": 305,
+      "shadowDrawCalls": 220,
+      "triangles": 15260,
+      "textures": 46,
+      "geometries": 90,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "shafts",
+        "bloom",
+        "dof",
+        "final",
+        "taa"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "golden",
+        "exposure": 1.0863539909539097,
+        "effectiveIrradiance": 0.42155367096939494,
+        "bakedSky": "sky_golden",
+        "cascades": 4,
+        "look": "hero",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "lab-post-battle-smaa-ultra",
+      "query": "scene=lab&lab=post-hero&noui=1&quality=ultra&view=battle",
+      "ms": 35367,
+      "drawCalls": 271,
+      "shadowDrawCalls": 185,
+      "triangles": 85415,
+      "textures": 44,
+      "geometries": 92,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "ssr",
+        "composite",
+        "bloom",
+        "final",
+        "smaa"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "golden",
+        "exposure": 1.0863539909539097,
+        "effectiveIrradiance": 0.42155367096939494,
+        "bakedSky": "sky_golden",
+        "cascades": 4,
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "extra": {
+        "passes": [
+          "scene",
+          "gtao",
+          "ssr",
+          "composite",
+          "bloom",
+          "final",
+          "smaa"
+        ],
+        "active": {
+          "ao": true,
+          "contact": false,
+          "ssr": true,
+          "composite": true,
+          "shafts": false,
+          "bloom": true,
+          "dof": false,
+          "taa": false,
+          "smaa": true,
+          "fxaa": false,
+          "merged": false
+        },
+        "tier": "ultra",
+        "toneMapping": "aces",
+        "taaMode": "auto",
+        "lighting": {
+          "bloomStrength": 0.45315743819340215,
+          "bloomRadius": 0.55,
+          "bloomThreshold": 2.8875037623579214,
+          "aoIntensity": 1.0405276854197936,
+          "aoRadiusM": 1.4936851236131958
+        },
+        "look": "tactical",
+        "focus": {
+          "distance": 220.00000000000003,
+          "auto": true
+        },
+        "ao": {
+          "radius": 1.4936851236131958,
+          "intensity": 1.0405276854197936
+        },
+        "shafts": {
+          "strength": 0,
+          "decay": 0.9593685123613196,
+          "density": 0.7936851236131958
+        },
+        "bloom": {
+          "threshold": 2.8875037623579214,
+          "radius": 0.55
+        },
+        "dof": null,
+        "lut": {
+          "loaded": true,
+          "mix": 1
+        },
+        "renderTargets": 28
+      },
+      "errors": []
+    },
+    {
+      "name": "lab-post-battle-merged-low",
+      "query": "scene=lab&lab=post-hero&noui=1&quality=low&view=battle",
+      "ms": 12526,
+      "drawCalls": 129,
+      "shadowDrawCalls": 61,
+      "triangles": 36869,
+      "textures": 15,
+      "geometries": 87,
+      "tier": "low",
+      "passes": [
+        "scene",
+        "final"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "golden",
+        "exposure": 1.0863539909539097,
+        "effectiveIrradiance": 0.42155367096939494,
+        "bakedSky": "sky_golden",
+        "cascades": 1,
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "extra": {
+        "passes": [
+          "scene",
+          "final"
+        ],
+        "active": {
+          "ao": false,
+          "contact": false,
+          "ssr": false,
+          "composite": false,
+          "shafts": false,
+          "bloom": false,
+          "dof": false,
+          "taa": false,
+          "smaa": false,
+          "fxaa": true,
+          "merged": true
+        },
+        "tier": "low",
+        "toneMapping": "aces",
+        "taaMode": "auto",
+        "lighting": {
+          "bloomStrength": 0.45315743819340215,
+          "bloomRadius": 0.55,
+          "bloomThreshold": 2.8875037623579214,
+          "aoIntensity": 1.0405276854197936,
+          "aoRadiusM": 1.4936851236131958
+        },
+        "look": "tactical",
+        "focus": {
+          "distance": 220.00000000000003,
+          "auto": true
+        },
+        "ao": null,
+        "shafts": null,
+        "bloom": null,
+        "dof": null,
+        "lut": {
+          "loaded": false,
+          "mix": 1
+        },
+        "renderTargets": 3
+      },
+      "errors": []
+    },
+    {
+      "name": "lab-surface-wet-ultra",
+      "query": "scene=lab&lab=surface&noui=1&quality=ultra&wet=0.9",
+      "ms": 55274,
+      "drawCalls": 117,
+      "shadowDrawCalls": 72,
+      "triangles": 126414,
+      "textures": 42,
+      "geometries": 34,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "shafts",
+        "bloom",
+        "dof",
+        "final",
+        "taa"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "golden",
+        "exposure": 1.0527827047035845,
+        "effectiveIrradiance": 0.4477208184621674,
+        "bakedSky": null,
+        "cascades": 4,
+        "look": "hero",
+        "wetness": 0.9
+      },
+      "errors": []
+    },
+    {
+      "name": "lab-surface-dry-high",
+      "query": "scene=lab&lab=surface&noui=1&quality=high&wet=0",
+      "ms": 34652,
+      "drawCalls": 98,
+      "shadowDrawCalls": 54,
+      "triangles": 101615,
+      "textures": 40,
+      "geometries": 33,
+      "tier": "high",
+      "passes": [
+        "scene",
+        "gtao",
+        "composite",
+        "shafts",
+        "bloom",
+        "dof",
+        "final",
+        "smaa"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "golden",
+        "exposure": 1.0527827047035845,
+        "effectiveIrradiance": 0.4477208184621674,
+        "bakedSky": null,
+        "cascades": 3,
+        "look": "hero",
+        "wetness": 0
+      },
+      "errors": []
+    },
+    {
+      "name": "budget-battle-1000-high",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=high",
+      "ms": 48203,
+      "drawCalls": 70,
+      "shadowDrawCalls": 36,
+      "triangles": 1885726,
+      "textures": 33,
+      "geometries": 32,
+      "tier": "high",
+      "passes": [
+        "scene",
+        "gtao",
+        "composite",
+        "bloom",
+        "final",
+        "smaa"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "noon",
+        "exposure": 0.8455280562565347,
+        "effectiveIrradiance": 0.6940624611370825,
+        "bakedSky": null,
+        "cascades": 3,
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "budget-battle-river-5000-high",
+      "query": "scene=battle&seed=11&soldiers=5000&preset=river_crossing&hour=17&quality=high",
+      "ms": 79402,
+      "drawCalls": 70,
+      "shadowDrawCalls": 36,
+      "triangles": 4820050,
+      "textures": 33,
+      "geometries": 32,
+      "tier": "high",
+      "passes": [
+        "scene",
+        "gtao",
+        "composite",
+        "bloom",
+        "final",
+        "smaa"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "golden",
+        "exposure": 1.0334375418095074,
+        "effectiveIrradiance": 0.46364291852733613,
+        "bakedSky": null,
+        "cascades": 3,
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "budget-battle-mobile-low",
+      "query": "scene=battle&seed=7&soldiers=600&preset=plains&quality=low",
+      "ms": 16884,
+      "drawCalls": 24,
+      "shadowDrawCalls": 5,
+      "triangles": 349653,
+      "textures": 11,
+      "geometries": 30,
+      "tier": "low",
+      "passes": [
+        "scene",
+        "final"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "noon",
+        "exposure": 0.8455280562565347,
+        "effectiveIrradiance": 0.6940624611370825,
+        "bakedSky": null,
+        "cascades": 1,
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "errors": []
+    }
+  ],
+  "checks": {
+    "nightLowerHalf_ultra": {
+      "luma": 0.1415,
+      "linear": 0.0215,
+      "pass": true
+    },
+    "nightLowerHalf_low": {
+      "luma": 0.1489,
+      "linear": 0.0219,
+      "pass": true
+    },
+    "csm_ultra": {
+      "cascades": 4,
+      "filter": "pcss",
+      "distance": 579,
+      "contactPass": false
+    },
+    "csm_high": {
+      "cascades": 3,
+      "filter": "pcss",
+      "distance": 386,
+      "contactPass": false
+    },
+    "csm_medium": {
+      "cascades": 2,
+      "filter": "pcf",
+      "distance": 258,
+      "contactPass": false
+    },
+    "horizonRowJump_battle-operational": 1.13,
+    "horizonRowJump_world-strategic": 0.74,
+    "labHeroTaa": {
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "shafts",
+        "bloom",
+        "dof",
+        "final",
+        "taa"
+      ],
+      "active": {
+        "ao": true,
+        "contact": true,
+        "ssr": true,
+        "composite": true,
+        "shafts": true,
+        "bloom": true,
+        "dof": true,
+        "taa": true,
+        "smaa": false,
+        "fxaa": false,
+        "merged": false
+      },
+      "tier": "ultra",
+      "toneMapping": "aces",
+      "taaMode": true,
+      "lighting": {
+        "bloomStrength": 0.45315743819340215,
+        "bloomRadius": 0.55,
+        "bloomThreshold": 2.8875037623579214,
+        "aoIntensity": 1.0405276854197936,
+        "aoRadiusM": 1.4936851236131958
+      },
+      "look": "hero",
+      "focus": {
+        "distance": 4.5,
+        "auto": true
+      },
+      "ao": {
+        "radius": 0.5974740494452783,
+        "intensity": 1.1966068382327626
+      },
+      "shafts": {
+        "strength": 0.5427660112912367,
+        "decay": 0.9593685123613196,
+        "density": 0.7936851236131958
+      },
+      "bloom": {
+        "threshold": 2.8875037623579214,
+        "radius": 0.55
+      },
+      "dof": {
+        "focus": 4.5,
+        "fStop": 2.8,
+        "maxBlurPx": 10,
+        "strength": 1
+      },
+      "lut": {
+        "loaded": true,
+        "mix": 1
+      },
+      "renderTargets": 28
+    },
+    "labHeroNoTaa": {
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "shafts",
+        "bloom",
+        "dof",
+        "final",
+        "smaa"
+      ],
+      "active": {
+        "ao": true,
+        "contact": true,
+        "ssr": true,
+        "composite": true,
+        "shafts": true,
+        "bloom": true,
+        "dof": true,
+        "taa": false,
+        "smaa": true,
+        "fxaa": false,
+        "merged": false
+      },
+      "tier": "ultra",
+      "toneMapping": "aces",
+      "taaMode": false,
+      "lighting": {
+        "bloomStrength": 0.45315743819340215,
+        "bloomRadius": 0.55,
+        "bloomThreshold": 2.8875037623579214,
+        "aoIntensity": 1.0405276854197936,
+        "aoRadiusM": 1.4936851236131958
+      },
+      "look": "hero",
+      "focus": {
+        "distance": 4.5,
+        "auto": true
+      },
+      "ao": {
+        "radius": 0.5974740494452783,
+        "intensity": 1.1966068382327626
+      },
+      "shafts": {
+        "strength": 0.5427660112912367,
+        "decay": 0.9593685123613196,
+        "density": 0.7936851236131958
+      },
+      "bloom": {
+        "threshold": 2.8875037623579214,
+        "radius": 0.55
+      },
+      "dof": {
+        "focus": 4.5,
+        "fStop": 2.8,
+        "maxBlurPx": 10,
+        "strength": 1
+      },
+      "lut": {
+        "loaded": true,
+        "mix": 1
+      },
+      "renderTargets": 28
+    },
+    "labHeroFocus": {
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "shafts",
+        "bloom",
+        "dof",
+        "final",
+        "taa"
+      ],
+      "active": {
+        "ao": true,
+        "contact": true,
+        "ssr": true,
+        "composite": true,
+        "shafts": true,
+        "bloom": true,
+        "dof": true,
+        "taa": true,
+        "smaa": false,
+        "fxaa": false,
+        "merged": false
+      },
+      "tier": "ultra",
+      "toneMapping": "aces",
+      "taaMode": "auto",
+      "lighting": {
+        "bloomStrength": 0.45315743819340215,
+        "bloomRadius": 0.55,
+        "bloomThreshold": 2.8875037623579214,
+        "aoIntensity": 1.0405276854197936,
+        "aoRadiusM": 1.4936851236131958
+      },
+      "look": "hero",
+      "focus": {
+        "distance": 12,
+        "fStop": 2.8,
+        "maxBlurPx": 10,
+        "strength": 1
+      },
+      "ao": {
+        "radius": 0.5974740494452783,
+        "intensity": 1.1966068382327626
+      },
+      "shafts": {
+        "strength": 0.5427660112912367,
+        "decay": 0.9593685123613196,
+        "density": 0.7936851236131958
+      },
+      "bloom": {
+        "threshold": 2.8875037623579214,
+        "radius": 0.55
+      },
+      "dof": {
+        "focus": 12,
+        "fStop": 2.8,
+        "maxBlurPx": 10,
+        "strength": 1
+      },
+      "lut": {
+        "loaded": true,
+        "mix": 1
+      },
+      "renderTargets": 28
+    },
+    "labBattleSmaa": {
+      "passes": [
+        "scene",
+        "gtao",
+        "ssr",
+        "composite",
+        "bloom",
+        "final",
+        "smaa"
+      ],
+      "active": {
+        "ao": true,
+        "contact": false,
+        "ssr": true,
+        "composite": true,
+        "shafts": false,
+        "bloom": true,
+        "dof": false,
+        "taa": false,
+        "smaa": true,
+        "fxaa": false,
+        "merged": false
+      },
+      "tier": "ultra",
+      "toneMapping": "aces",
+      "taaMode": "auto",
+      "lighting": {
+        "bloomStrength": 0.45315743819340215,
+        "bloomRadius": 0.55,
+        "bloomThreshold": 2.8875037623579214,
+        "aoIntensity": 1.0405276854197936,
+        "aoRadiusM": 1.4936851236131958
+      },
+      "look": "tactical",
+      "focus": {
+        "distance": 220.00000000000003,
+        "auto": true
+      },
+      "ao": {
+        "radius": 1.4936851236131958,
+        "intensity": 1.0405276854197936
+      },
+      "shafts": {
+        "strength": 0,
+        "decay": 0.9593685123613196,
+        "density": 0.7936851236131958
+      },
+      "bloom": {
+        "threshold": 2.8875037623579214,
+        "radius": 0.55
+      },
+      "dof": null,
+      "lut": {
+        "loaded": true,
+        "mix": 1
+      },
+      "renderTargets": 28
+    },
+    "labBattleMerged": {
+      "passes": [
+        "scene",
+        "final"
+      ],
+      "active": {
+        "ao": false,
+        "contact": false,
+        "ssr": false,
+        "composite": false,
+        "shafts": false,
+        "bloom": false,
+        "dof": false,
+        "taa": false,
+        "smaa": false,
+        "fxaa": true,
+        "merged": true
+      },
+      "tier": "low",
+      "toneMapping": "aces",
+      "taaMode": "auto",
+      "lighting": {
+        "bloomStrength": 0.45315743819340215,
+        "bloomRadius": 0.55,
+        "bloomThreshold": 2.8875037623579214,
+        "aoIntensity": 1.0405276854197936,
+        "aoRadiusM": 1.4936851236131958
+      },
+      "look": "tactical",
+      "focus": {
+        "distance": 220.00000000000003,
+        "auto": true
+      },
+      "ao": null,
+      "shafts": null,
+      "bloom": null,
+      "dof": null,
+      "lut": {
+        "loaded": false,
+        "mix": 1
+      },
+      "renderTargets": 3
+    },
+    "tierCyclingLeakFree": true
+  },
+  "budgets": [
+    {
+      "name": "battle-1000-high",
+      "before": 81,
+      "after": 70,
+      "shadow": 36,
+      "budget": 400,
+      "pass": true,
+      "passes": [
+        "scene",
+        "gtao",
+        "composite",
+        "bloom",
+        "final",
+        "smaa"
+      ]
+    },
+    {
+      "name": "battle-river-5000-high",
+      "before": 81,
+      "after": 70,
+      "shadow": 36,
+      "budget": 500,
+      "pass": true,
+      "passes": [
+        "scene",
+        "gtao",
+        "composite",
+        "bloom",
+        "final",
+        "smaa"
+      ]
+    },
+    {
+      "name": "battle-mobile-low",
+      "before": 26,
+      "after": 24,
+      "shadow": 5,
+      "budget": 150,
+      "pass": true,
+      "passes": [
+        "scene",
+        "final"
+      ]
+    }
+  ],
+  "tiers": [
+    {
+      "label": "start",
+      "tier": "low",
+      "textures": 11,
+      "geometries": 30,
+      "postRenderTargets": 3,
+      "passes": "scene+final"
+    },
+    {
+      "label": "cycle1:medium",
+      "tier": "medium",
+      "textures": 23,
+      "geometries": 31,
+      "postRenderTargets": 14,
+      "passes": "scene+bloom+final+Zg"
+    },
+    {
+      "label": "cycle1:high",
+      "tier": "high",
+      "textures": 30,
+      "geometries": 32,
+      "postRenderTargets": 22,
+      "passes": "scene+gtao+composite+bloom+final+Q_"
+    },
+    {
+      "label": "cycle1:ultra",
+      "tier": "ultra",
+      "textures": 34,
+      "geometries": 33,
+      "postRenderTargets": 26,
+      "passes": "scene+gtao+ssr+composite+bloom+final+Q_"
+    },
+    {
+      "label": "cycle1:high",
+      "tier": "high",
+      "textures": 30,
+      "geometries": 32,
+      "postRenderTargets": 22,
+      "passes": "scene+gtao+composite+bloom+final+Q_"
+    },
+    {
+      "label": "cycle1:medium",
+      "tier": "medium",
+      "textures": 23,
+      "geometries": 31,
+      "postRenderTargets": 14,
+      "passes": "scene+bloom+final+Zg"
+    },
+    {
+      "label": "cycle1:low",
+      "tier": "low",
+      "textures": 11,
+      "geometries": 30,
+      "postRenderTargets": 3,
+      "passes": "scene+final"
+    },
+    {
+      "label": "cycle2:medium",
+      "tier": "medium",
+      "textures": 23,
+      "geometries": 31,
+      "postRenderTargets": 14,
+      "passes": "scene+bloom+final+Zg"
+    },
+    {
+      "label": "cycle2:high",
+      "tier": "high",
+      "textures": 30,
+      "geometries": 32,
+      "postRenderTargets": 22,
+      "passes": "scene+gtao+composite+bloom+final+Q_"
+    },
+    {
+      "label": "cycle2:ultra",
+      "tier": "ultra",
+      "textures": 34,
+      "geometries": 33,
+      "postRenderTargets": 26,
+      "passes": "scene+gtao+ssr+composite+bloom+final+Q_"
+    },
+    {
+      "label": "cycle2:high",
+      "tier": "high",
+      "textures": 30,
+      "geometries": 32,
+      "postRenderTargets": 22,
+      "passes": "scene+gtao+composite+bloom+final+Q_"
+    },
+    {
+      "label": "cycle2:medium",
+      "tier": "medium",
+      "textures": 23,
+      "geometries": 31,
+      "postRenderTargets": 14,
+      "passes": "scene+bloom+final+Zg"
+    },
+    {
+      "label": "cycle2:low",
+      "tier": "low",
+      "textures": 11,
+      "geometries": 30,
+      "postRenderTargets": 3,
+      "passes": "scene+final"
+    },
+    {
+      "label": "cycle3:medium",
+      "tier": "medium",
+      "textures": 23,
+      "geometries": 31,
+      "postRenderTargets": 14,
+      "passes": "scene+bloom+final+Zg"
+    },
+    {
+      "label": "cycle3:high",
+      "tier": "high",
+      "textures": 30,
+      "geometries": 32,
+      "postRenderTargets": 22,
+      "passes": "scene+gtao+composite+bloom+final+Q_"
+    },
+    {
+      "label": "cycle3:ultra",
+      "tier": "ultra",
+      "textures": 34,
+      "geometries": 33,
+      "postRenderTargets": 26,
+      "passes": "scene+gtao+ssr+composite+bloom+final+Q_"
+    },
+    {
+      "label": "cycle3:high",
+      "tier": "high",
+      "textures": 30,
+      "geometries": 32,
+      "postRenderTargets": 22,
+      "passes": "scene+gtao+composite+bloom+final+Q_"
+    },
+    {
+      "label": "cycle3:medium",
+      "tier": "medium",
+      "textures": 23,
+      "geometries": 31,
+      "postRenderTargets": 14,
+      "passes": "scene+bloom+final+Zg"
+    },
+    {
+      "label": "cycle3:low",
+      "tier": "low",
+      "textures": 11,
+      "geometries": 30,
+      "postRenderTargets": 3,
+      "passes": "scene+final"
+    }
+  ],
+  "context": {
+    "supported": true,
+    "reportedLost": true,
+    "captureWhileLost": "data",
+    "restored": true,
+    "passes": "scene+final",
+    "drawCalls": 53,
+    "captureBytes": 680746,
+    "errors": []
+  },
+  "failures": []
+}
