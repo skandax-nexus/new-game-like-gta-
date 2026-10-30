@@ -917,7 +917,7 @@ Initial values come from `makeSettlement` [BASE]; the rules below are the target
 | Variable | Daily update (unless noted) |
 |---|---|
 | **population** | `+ pop x 0.012/360 x health x housingFactor`; housingFactor = 1 if pop <= housing else `max(-1, 1 - 2 x (pop/housing - 1))`. Famine (store empty and net < 0): `- pop x 0.0015 x deficitShare` per day. Emigration 0.05%/day to the nearest same-owner settlement when loyalty < 0.3 and price > 2. Floor 50. |
-| **labor** | `pop x 0.45 x (0.5 + 0.5 x health)` workers; split by `laborAllocation` (farming / construction / crafts / military; unallocated = idle). Defaults: village 0.75/0.1/0.1/0.05, town/city/capital/port/temple town 0.55/0.1/0.25/0.1, fort 0.55/0.1/0.1/0.25 (`RULES.population.defaultLabor`). |
+| **labor** | `pop x 0.45` workers (`RULES.population.laborHealthWeight` 0 - SIM-01 review CD-1: the §13.2 bands assume it; sickness costs people through growth and famine deaths, not labor); split by `laborAllocation` (farming / construction / crafts / military; unallocated = idle). Defaults: village 0.75/0.1/0.1/0.05, town/city/capital/port/temple town 0.55/0.1/0.25/0.1, fort 0.55/0.1/0.1/0.25 (`RULES.population.defaultLabor`). **Free towns in famine** (owner null, store empty): once a day 0.01 of share moves into farming - from crafts, then construction, then military, each kept >= 0.05 - until farming reaches 0.85; the shares stay after the famine and a new owner resets them with `set_labor` (`RULES.population.freeTownFamineLabor`, SIM-01 review CD-3). Owned settlements are managed by their realm. |
 | **food** | §7.3. |
 | **waterAvailability** | `clamp01(0.45 + 0.5 x terrain moisture + Σ water effects - 0.2 x drought)`; drought = monsoon failed (M < 0.7) during grishma/varsha. |
 | **irrigation** | `clamp01(0.15 + Σ irrigation effects)`. |
@@ -996,9 +996,10 @@ flood event. The UI shows a monsoon forecast bar in month 3 (±0.15 accuracy; ex
 #### 7.3.5 Moving grain inside a realm (`RULES.distribution`)
 
 1. **Internal market (daily):** for each connected component of owned settlements (roads with condition >= 0.5,
-   not blocked by an enemy army), settlements with rd > 120 export 5%/day of their stock above 120 days into a
+   not blocked by an enemy army), settlements with rd > 75 export 5%/day of their stock above 75 days into a
    pool; settlements with rd < 60 import from the pool in proportion to their need (to 60 days), losing 10% in
-   transport. Exporters receive `0.1 x price x amount` wealth (sales).
+   transport. Exporters receive `0.1 x price x amount` wealth (sales). (`exportAboveDays` 75, SIM-01 review CD-2: at
+   120 the grain villages almost never shipped and Rajapura, break-even on its own fields, starved every lean season.)
 2. **Grain tax (at each harvest):** the crown takes `10% x harvest x (taxRate / 0.15) x compliance` from every
    owned settlement left with >= 90 reserve days, into `FactionState.foodReserve` (the royal granaries).
 3. **Relief (daily):** an owned, connected settlement below 30 reserve days draws up to 30 days/month from the
@@ -1114,6 +1115,9 @@ progress/day   = min(1.25, buildersAssigned / crew) / days x faction constructio
   day; Rajapura -> Giridurg: the road climbs the escarpment for **114 km** -> ≈ 4.3 days; across country ≈ 9.2 days
   (hills, forest and the river crossing). The formula check: 81 km of plain road = 3.4 days, 81 km of open ground =
   6.75 days.
+- **Road repair** (`repair_road`, an edge touching an own settlement, not blocked for the faction): restores
+  condition to 1 at once for `ceil(20 x km x (1 - condition))` wealth (`RULES.roads.repairWealthPerKm`, SIM-01 review
+  CD-6) - a 30 km royal road at condition 0.4 costs 360.
 - **Forced march** (army panel toggle): x1.3 speed, +0.1 fatigue/day, 0.2%/day attrition.
 - **Stances**: aggressive (contact radius x1.3, seeks battle), balanced (x1), cautious (x0.8; avoids contact when
   its strength ratio < 0.6 and it is at least 10% faster - "evades").
@@ -1154,7 +1158,8 @@ Resupply each day, first match [REQ]:
   damage +0.01/day, grievance `raid` (-10 opinion).
 - **Starvation:** morale -6/day [BASE]; after 3 days desertion 1%/day; after 10 days 3%/day.
 - **Attrition** (per day, share of soldiers): monsoon off-road 0.2%, hills/forest off-road 0.1%, dry plain in
-  grishma without a settlement in range 0.3%, besieging 0.4% [BASE value].
+  grishma without a settlement in range 0.3%, besieging 0.4% [BASE value] - fed by a depot or not: it is camp
+  disease, the price of a long siege (no fed-camp exemption; SIM-01 review CD-9 option (a)).
 - **Requisition** (`requisition_grain`): take up to 60% of an own settlement's store to an army, depot or the
   reserve; `requisitionedFood += amount`; loyalty -0.02 per 1,000; the loyalty memory decays 25%/month. This is
   step 1 of the GDD §6 chain (§7.13).
@@ -1166,10 +1171,13 @@ Resupply each day, first match [REQ]:
 - **Siege logistics:** the besieger stands in enemy land, so supply rules 1 and 3 do not reach it; it eats from an own
   depot within 400 m (rule 2 - `create_depot` beside the siege camp, filled by `requisition_grain` or
   `transfer_supply`) and otherwise forages/plunders.
-- Wall damage/day = `Σ soldiers x siege x 0.5 x siegeStrength` (engineers 40 x 4 x 0.5 = 80/day); wallHp =
-  fortLevel x 1,000 x fortDefense (Giridurg: 3 x 1,000 x 1.4 = **4,200** -> 52.5 days with one fed engineer formation
-  at siegeStrength 1, 48 for Suvarna at 1.1;
-  Royal Elephant Corps adds 20/day).
+- Wall damage/day = `Σ soldiers x siege x 0.5 x siegeStrength` (engineers 40 x 4 x 0.5 = 80/day at full strength;
+  Royal Elephant Corps adds 20/day); wallHp = fortLevel x 1,000 x fortDefense (Giridurg: 3 x 1,000 x 1.4 = **4,200**).
+  *Example (measured in the real tick by SIM-01 and the Creative Director, seeds 1-6, depot-fed camp, siege attrition
+  included - review CD-9):* the 0.4%/day siege attrition thins the engineers while they work (40 -> 29-36 men), so one
+  engineer formation brings Giridurg's walls down in **49-55 days for Suvarna** (siegeStrength 1.1) and **55-61 days at
+  siegeStrength 1** (the full-strength bounds are 4,200 / 88 = 48 and 4,200 / 80 = 52.5 days); **two** formations take
+  **25-26 / 27-29 days**. The remedy for a long siege is more engineers, not a disease-free camp.
 - Assault options: when wallHp <= 50% (breach) or after ladders (5 days with engineers): **Assault** = siege
   battle (§6.6.5). **Starve out:** once the store is empty, daily surrender chance `0.1 x starvationDays / 10`
   (cap 0.6). Relief armies arriving fight the besiegers in a field battle.
@@ -1217,7 +1225,8 @@ stage requires unrest below threshold - 0.05. Each stage multiplies the settleme
   independent (owner null); if it was a province capital, every settlement of that province gains +0.2 unrest.
 - **Player responses** (`negotiate_rebels`): relief (30 days of grain + 2 wealth per 100 people: unrest -0.25,
   loyalty +0.1), tax cut (-5 points for 180 days: unrest -0.15, loyalty +0.05), autonomy (province autonomy +0.25:
-  unrest -0.3, tax -25%, governor loyalty +0.2, legitimacy -0.02), coercion (needs a garrison of 2% of pop or an
+  unrest -0.3, tax -12.5% through the §7.5 factor `1 - 0.5 x autonomy`, governor loyalty +0.2, legitimacy -0.02;
+  SIM-01 review CD-5), coercion (needs a garrison of 2% of pop or an
   army present: unrest -0.35, loyalty -0.15; if loyalty < 0.3 a 30% chance it escalates one stage instead);
   military intervention = defeat the rebel army.
 
@@ -1225,8 +1234,10 @@ stage requires unrest below threshold - 0.05. Each stage multiplies the settleme
 tax +1% per stewardship point above 10; interest satisfied gives +0.05 loyalty in the province (wealth: province
 tax rate <= 15%; power: autonomy >= 0.25 or a council seat; faith: temple level >= 2 in the province capital;
 family: married or the heir is of their family; land: province has >= 2 owned settlements; learning: a Stupa or
-culture >= 0.3). A governor with loyalty < 0.3 and ambition > 0.6 issues **demands** (governor events); below 0.15
-attempts **secession** (all province settlements +0.3 unrest).
+culture >= 0.3). Governor loyalty drifts monthly by 10% of the gap toward
+`0.5 + (interest satisfied ? 0.15 : -0.1) - 0.2 x province unrest + 0.2 x (legitimacy - 0.5)`
+(`RULES.politics.governor.loyaltyDrift`, SIM-01 review CD-6). A governor with loyalty < 0.3 and ambition > 0.6 issues
+**demands** (governor events); below 0.15 attempts **secession** (all province settlements +0.3 unrest).
 
 **Faction stability** drifts 10%/month toward
 `0.5 + 0.3 x (legitimacy - 0.5) + 0.2 x avg settlement loyalty - 0.3 x share of settlements at protest or worse
@@ -2266,6 +2277,22 @@ Nothing existing was renamed or removed; no runtime state shape changed (no save
    with `initialMaterials(w.scenarioId, fid)` from `data/campaign.ts` instead of reading `ScenarioDef.materials`
    only - in the **same commit** as Lead AI & Simulation item 11, so migration defaults stay equal to creation
    defaults (`tests/contracts/migration.test.ts`). Value change only: no state-shape change, no `SAVE_VERSION` bump.
+8. Landmark rules as data (SIM-01 review CD-4; the sim keys them by landmark id today). `LandmarkDef` gains four
+   optional fields (content defs, not state - no `SAVE_VERSION` change):
+   ```ts
+   /** Multiplier on grain spoilage in every settlement of the faction while it holds this landmark (§7.3.4). */
+   spoilageFactor?: number;
+   /** Multiplier on civilian consumption in the faction's besieged settlements while it holds this landmark (§7.8). */
+   besiegedConsumption?: number;
+   /** Recruitment-time multipliers by unit class while the faction holds this landmark (§7.6). */
+   recruitTime?: Partial<Record<UnitClass, number>>;
+   /** On completion, owned road edges within this many links of the host settlement become royal roads (§8.5). */
+   royalRoadLinks?: number;
+   ```
+   The Creative Director then fills `src/data/ages.ts`: The Royal Granary `spoilageFactor: 0.5`, The Cliff Cistern
+   `besiegedConsumption: 0.6`, Elephant Grove `recruitTime: { war_elephants: 0.7 }`, The Great Road
+   `royalRoadLinks: 2`. `royalRoadLinks` replaces the requested `roadSpeed`: the Great Road paves roads (a road-class
+   upgrade); its march bonus is already `factionEffects.marchSpeed` 1.15, which a speed field would count twice.
 
 **Lead AI & Simulation (strategic sim, battle AI):**
 1. Economy §7.2-§7.5: storage capacity in **days** (`foodCapacity` effects are days), harvest pulses (trickle
@@ -2296,6 +2323,19 @@ Nothing existing was renamed or removed; no runtime state shape changed (no save
     rules §6.4.
 11. `createWorld` (`sim/strategic/world.ts`): `materials: initialMaterials(scenario?.id ?? null, fid)` (sandbox realms
     get `SANDBOX_MATERIALS`, §7.5), landed together with CTO item 7.
+12. Free towns in famine (§7.2 labor, `RULES.population.freeTownFamineLabor`; SIM-01 review CD-3): once a day, for every
+    settlement with `ownerFactionId === null` and an empty store, move `perDay` of labor share into farming, from
+    `takeFrom` in order, each share kept >= `minShare`, farming capped at `maxFarming`. Prototyped between ticks by the
+    Creative Director (default sandbox, passive player, 960 days): starving days of the towns that broke away fall
+    (Giridurg 504 -> 305, Shilapur 489 -> 270, Lavanapura 469 -> 215, Naukapattana 317 -> 73, Tirthaghat 171 -> 25;
+    680-930 days free) and 15 days after the third kharif they hold 60-115 reserve days (37-66 without the rule).
+    Owned settlements are untouched, so the §13.2 calibration does not move; The Broken Crown seed 1 keeps its outcome
+    (out_restored, 13 revolts, 11 secessions).
+13. Landmark rules from data once CTO item 8 lands: read `spoilageFactor`, `besiegedConsumption` and `recruitTime` from
+    the held landmarks' defs instead of `LM_ROYAL_GRANARY` / `LM_CLIFF_CISTERN` / `LM_ELEPHANT_GROVE`, and implement
+    `royalRoadLinks` (not implemented today): on completion, every road edge whose two settlements the builder owns and
+    that lies within N edges of the host settlement (counting the edge itself) becomes `quality: 'royal_road'` for good -
+    paved roads stay paved if the capital later falls (§8.4: capture does not revert an age).
 
 **Lead Gameplay (battle, hero, session):**
 1. Battle §6.2-§6.12: shape modifiers and shape-change time; charge preconditions; missiles with `bonusVs`,
@@ -2348,10 +2388,17 @@ support in the hero camera.
   x0.6). Its peace outcomes (*The River Oath*, *The Full Cisterns*) need grain that comes with peace and trade - a
   grain flow on trade treaties with a surplus realm, or scenario grain on the peace path. Re-tune with SIM-02's AI
   (which must ration, buy and raid) before the QA autoplay per path (§13.4).
-- **Starvation unrest** (review request CD-3) stays a flat +0.02/day for now: a starving town gets only the trickle
-  (40-55% of its need), so scaling by the unmet share would move revolt from ~19 to ~27 days and not change who
-  survives; revisit together with the deficit-realm item above. Free towns in famine never recover (production is
-  linear in farm labor) - a land-limited yield or a labor shift to farming is the candidate rule.
+- **Starvation unrest** (review request CD-3, re-measured in SIM-01 rework round 2 with storage 120 days) stays a flat
+  +0.02/day. Most famine unrest is the price term (0.01 x (price - 1.3), up to +0.027/day with the famine premium), so
+  "0.02 x unmet share" (emulated as 0.01: a starving town gets only the trickle, 40-55% of its need) delays a town's
+  first revolt by 5-8 days (+17-21 -> +22-29 days after the store empties); Giridurg, Dvaradurga and Lavanapura still
+  secede in year 1 (passive highland sandbox) and the passive frontier realm is still lost (day 230 instead of 250).
+  Highland and frontier fertility stays too:
+  the -9% / -8% deficits are those realms' identity (§4, §13.2 bands); their remedy is management - rationing, market
+  buying, relief, raiding and farm-heavy labor - which a passive player and SIM-01's baseline AI do not do. Re-tune target
+  for SIM-02's campaign AI, together with the deficit-realm item above: a deficit realm keeps its capital through a
+  normal-monsoon year. The free-town half of CD-3 is decided: a free town in famine shifts labor to farming (§7.2,
+  `RULES.population.freeTownFamineLabor`, Lead AI & Simulation item 12) instead of starving every lean season for good.
 - **Battle balance with the baseline battle AI** (GP-01 co-review round 1, measured in the authoritative tactical sim,
   skirmish auto-deploy, AI vs AI, plains, 20 seeds). Pass: 3 spear vs 1.5 horse 20/20; horse vs archers + 1 spear,
   horse loses 20/20; elephants vs 2 horse 16/20; elephants vs 4 archers, archers 19/20; Samudra Balanced mirror

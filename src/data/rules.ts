@@ -6,7 +6,7 @@
  * Conventions: shares/fractions 0..1; "per day" = per strategic game day; money = wealth (silver coin);
  * food = grain measures (1 measure = rations for 10 person-days); materials = timber loads / stone blocks.
  */
-import type { ArmyStance, RebellionStage, Season, TaxPolicy, UnitCategory, VictoryType } from '../core/types';
+import type { ArmyStance, LaborAllocation, RebellionStage, Season, TaxPolicy, UnitCategory, VictoryType } from '../core/types';
 
 /** Per-stage consequences of the rebellion escalation ladder (DESIGN_SPEC §7.9). Multipliers on the settlement. */
 export interface RebellionStageEffect {
@@ -191,6 +191,21 @@ export const RULES = {
       urban: { farming: 0.55, construction: 0.1, crafts: 0.25, military: 0.1 },
       fort: { farming: 0.55, construction: 0.1, crafts: 0.1, military: 0.25 },
     },
+    /**
+     * A FREE settlement (owner null: seceded or independent - nobody issues set_labor for it) that is starving (store
+     * empty) moves `perDay` of labor share into farming once a day, taken from the shares in `takeFrom` order, each kept
+     * >= `minShare`, until farming reaches `maxFarming`. The shares stay when the famine ends; a new owner resets them
+     * with set_labor. Owned settlements are managed by their realm (player, campaign AI). SIM-01 review CD-3: production
+     * is linear in farm labor, so a seceded deficit town starved every lean season for good (default sandbox, 960 days:
+     * Giridurg 504 starving days of 688 free days, Lavanapura 469 of 700); with this rule it starves through its first
+     * lean season and recovers after the next kharif (Giridurg 305, Lavanapura 215; 60-115 reserve days at the end).
+     */
+    freeTownFamineLabor: {
+      perDay: 0.01,
+      maxFarming: 0.85,
+      minShare: 0.05,
+      takeFrom: ['crafts', 'construction', 'military'] satisfies readonly Exclude<keyof LaborAllocation, 'farming'>[],
+    },
   },
   // ------------------------------------------------------------------------------------------- §7.6 / §8.2
   construction: {
@@ -277,7 +292,11 @@ export const RULES = {
     plunderMultiplier: 1.7,
     forageUnrestPerDay: 0.004,
     starvation: { desertionAfterDays: 3, desertionPerDay: 0.01, heavyAfterDays: 10, heavyDesertionPerDay: 0.03 },
-    /** Daily attrition (share of soldiers) by condition. */
+    /**
+     * Daily attrition (share of soldiers) by condition. `siege` hits every besieging army, fed by a depot or not: it is
+     * camp disease, the price of a long siege (SIM-01 review CD-9, option (a) - no fed-camp exemption). More engineers
+     * are the remedy: one formation brings Giridurg's walls down in 49-55 days for Suvarna, two in 25-26 (§7.8).
+     */
     attrition: { monsoonOffroad: 0.002, roughOffroad: 0.001, dryHeat: 0.003, siege: 0.004 },
     requisition: { maxShare: 0.6, loyaltyPer1000: -0.02, memoryDecayPerMonth: 0.25 },
   },
