@@ -55,10 +55,16 @@ function ownsResource(world: WorldState, factionId: FactionId, res: ResourceKind
   return false;
 }
 
-/** War-elephant source (§5.8). */
+/**
+ * Faction flag: the day an elephant source bought by event ends (exclusive). Written by events.applyEffect for the event
+ * flag 'elephant_source' (The Elephant Fair, 'Buy breeding rights': today + 360).
+ */
+export const ELEPHANT_SOURCE_UNTIL_FLAG = 'elephant_source_until';
+
+/** War-elephant source (§5.8): an own elephant forest, a trade treaty with a realm that has one, or breeding rights. */
 export function hasElephantSource(world: WorldState, factionId: FactionId): boolean {
   if (ownsResource(world, factionId, 'elephants')) return true;
-  const until = world.factions[factionId]?.flags.elephant_source_until;
+  const until = world.factions[factionId]?.flags[ELEPHANT_SOURCE_UNTIL_FLAG];
   if (typeof until === 'number' && until > today(world)) return true;
   for (const id of stableKeys('settlements', world.settlements as Record<string, unknown>)) {
     const s = world.settlements[id]!;

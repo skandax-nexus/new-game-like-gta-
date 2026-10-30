@@ -41,9 +41,18 @@ import { handleDeath } from './dynasty';
 import { noteEventChoice } from './council';
 import { transferOwnership } from './siege';
 import { setRationing } from './economy';
+import { ELEPHANT_SOURCE_UNTIL_FLAG } from './recruitment';
 
 /** Event flag that switches the scope realm's rationing policy on (set_flag) or off (clear_flag). */
 export const RATIONING_FLAG = 'rationing';
+/**
+ * Event flag 'elephant_source' (The Elephant Fair, 'Buy breeding rights'): set_flag gives the scope realm an elephant
+ * source for ELEPHANT_SOURCE_DAYS (its faction flag ELEPHANT_SOURCE_UNTIL_FLAG, read by recruitment.hasElephantSource);
+ * clear_flag takes it away (SIM-01 review S2).
+ */
+export const ELEPHANT_SOURCE_FLAG = 'elephant_source';
+/** Breeding rights last a year (360 days). */
+export const ELEPHANT_SOURCE_DAYS = 360;
 
 function cmp(a: number, op: CompareOp, b: number): boolean {
   switch (op) {
@@ -218,6 +227,14 @@ export function severityScaled(world: WorldState, op: 'add' | 'set' | 'mul', v: 
  * Apply one effect. `misfortune` (effects of disaster events) scales harmful changes to the player's own settlements,
  * realm and people by the difficulty's eventSeverity; choice costs and rewards are never scaled.
  */
+/** Breeding rights: the realm may raise war elephants without an elephant forest until today + 360 (or no longer). */
+function setElephantSource(world: WorldState, factionId: string, on: boolean): void {
+  const f = world.factions[factionId];
+  if (!f) return;
+  if (on) f.flags[ELEPHANT_SOURCE_UNTIL_FLAG] = totalDays(world.calendar) + ELEPHANT_SOURCE_DAYS;
+  else delete f.flags[ELEPHANT_SOURCE_UNTIL_FLAG];
+}
+
 export function applyEffect(world: WorldState, effect: Effect, scope: EventScope, out: SimEvent[], misfortune = false): void {
   const prev = severityOn;
   severityOn = misfortune;
@@ -263,10 +280,12 @@ function applyEffectInner(world: WorldState, effect: Effect, scope: EventScope, 
       // Policy flags act on the scope's realm (DESIGN_SPEC §7.3.5 item 5): 'Ration the realm's grain' / 'Ration the
       // clans' start the same 120-day rationing rule as set_policy rationing on.
       if (effect.flag === RATIONING_FLAG && scope.factionId) setRationing(world, scope.factionId, !!effect.value);
+      if (effect.flag === ELEPHANT_SOURCE_FLAG && scope.factionId) setElephantSource(world, scope.factionId, !!effect.value);
       return;
     case 'clear_flag':
       delete world.events.flags[effect.flag];
       if (effect.flag === RATIONING_FLAG && scope.factionId) setRationing(world, scope.factionId, false);
+      if (effect.flag === ELEPHANT_SOURCE_FLAG && scope.factionId) setElephantSource(world, scope.factionId, false);
       return;
     case 'trigger_event':
       world.events.scheduled.push({ eventId: effect.eventId, day: totalDays(world.calendar) + effect.delayDays, scope: { ...scope } });

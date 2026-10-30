@@ -28,7 +28,9 @@ import {
 } from '../../../src/sim/strategic/construction';
 import { ageChecklist, landmarkOptions } from '../../../src/sim/strategic/ages';
 import { factionMod } from '../../../src/sim/strategic/modifiers';
-import { hasElephantSource, newRecruit, queueRecruit, recruitCost, validateRecruit } from '../../../src/sim/strategic/recruitment';
+import { ELEPHANT_SOURCE_UNTIL_FLAG, hasElephantSource, newRecruit, queueRecruit, RECRUIT_REASONS, recruitCost, validateRecruit } from '../../../src/sim/strategic/recruitment';
+import { applyEffect, ELEPHANT_SOURCE_DAYS, ELEPHANT_SOURCE_FLAG } from '../../../src/sim/strategic/events';
+import { totalDays } from '../../../src/sim/strategic/seasons';
 import { villagerAllocation } from '../../../src/sim/strategic/villagers';
 import { RULES } from '../../../src/data/rules';
 import { campaign, issue, runDays, sandbox } from './helpers';
@@ -381,6 +383,43 @@ describe('recruitment (DESIGN_SPEC §7.6, §5.7-§5.8)', () => {
     expect(validateRecruit(w, 'frontier', 'lavanapura', 'cavalry', 1, null).reason).toBe('Requires the Mahajanapada Age');
     S(w, 'rajapura').recruitPool = 10;
     expect(validateRecruit(w, 'heartland', 'rajapura', 'spearmen', 1, null).reason).toBe('Need 120 recruits');
+  });
+
+  it("The Elephant Fair 'Buy breeding rights' is an elephant source for 360 days (review S2)", () => {
+    const w = campaign(9);
+    rich(w);
+    S(w, 'rajapura').foodStored = 100_000;
+    // No elephant forest and no trade treaty with a realm that has one.
+    w.diplomacy.treaties = {};
+    for (const r of Object.values(w.diplomacy.relations)) r.treatyIds = [];
+    expect(Object.values(w.settlements).some((s) => s.ownerFactionId === 'heartland' && s.resources.includes('elephants'))).toBe(false);
+    expect(validateRecruit(w, 'heartland', 'rajapura', 'war_elephants', 1, null).reason).toBe(RECRUIT_REASONS.elephantSource);
+    // The fair comes to the player's court; 'buy' through the real command path.
+    const day0 = totalDays(w.calendar);
+    w.events.pending.push({ id: 'evt_fair_test', defId: 'evt_elephant_fair', day: day0, scope: { factionId: 'heartland', settlementId: 'rajapura', provinceId: null, characterId: null, armyId: null }, status: 'pending', choiceId: null, resolvedDay: null, params: {} });
+    const treasury = w.factions.heartland!.treasury;
+    issue(w, { kind: 'event_choice', eventInstanceId: 'evt_fair_test', choiceId: 'buy' });
+    const bought = totalDays(w.calendar);
+    expect(w.factions.heartland!.treasury).toBeCloseTo(treasury - 700, 0);
+    expect(w.events.flags[ELEPHANT_SOURCE_FLAG]).toBe(true);
+    expect(w.factions.heartland!.flags[ELEPHANT_SOURCE_UNTIL_FLAG]).toBe(bought + ELEPHANT_SOURCE_DAYS);
+    expect(hasElephantSource(w, 'heartland')).toBe(true);
+    for (const fid of ['highland', 'forest', 'frontier']) expect(w.factions[fid]!.flags[ELEPHANT_SOURCE_UNTIL_FLAG], fid).toBeUndefined(); // the scope realm only
+    // Day 359 of the rights: war elephants can be queued.
+    w.calendar.totalHours += 24 * 359;
+    expect(totalDays(w.calendar)).toBe(bought + 359);
+    expect(validateRecruit(w, 'heartland', 'rajapura', 'war_elephants', 1, null).reason).toBeNull();
+    expect(queueRecruit(w, 'heartland', 'rajapura', 'war_elephants', 1, null).ok).toBe(true);
+    // Day 361: refused again.
+    w.calendar.totalHours += 24 * 2;
+    expect(validateRecruit(w, 'heartland', 'rajapura', 'war_elephants', 1, null).reason).toBe(RECRUIT_REASONS.elephantSource);
+    // clear_flag takes the rights away at once.
+    const scope = { factionId: 'heartland', settlementId: null, provinceId: null, characterId: null, armyId: null };
+    applyEffect(w, { kind: 'set_flag', flag: ELEPHANT_SOURCE_FLAG, value: true }, scope, []);
+    expect(hasElephantSource(w, 'heartland')).toBe(true);
+    applyEffect(w, { kind: 'clear_flag', flag: ELEPHANT_SOURCE_FLAG }, scope, []);
+    expect(hasElephantSource(w, 'heartland')).toBe(false);
+    expect(w.factions.heartland!.flags[ELEPHANT_SOURCE_UNTIL_FLAG]).toBeUndefined();
   });
 
   it('horses discount mounted classes 20%; Royal Levy raises in 8 days; AI pays the difficulty multiplier', () => {
