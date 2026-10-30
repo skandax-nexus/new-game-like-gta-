@@ -17,7 +17,7 @@
  * Bus events already in the contract are used where they fit: 'ui:camera_focus' (minimap click, notification click),
  * 'ui:world_select', 'ui:select_formations', 'ui:overlay'.
  *
- * Feeds (`ctx.ui.feeds`): the camera frustum quad for the minimap (GFX-05 / scenes, ~4-10 Hz), world control groups
+ * Feeds (`ctx.ui.feeds`): the camera frustum quad + heading for the minimap (GFX-05 / scenes, ~4-10 Hz), world control groups
  * (GP-03 owns the army groups; battle groups come from BattleState.sides[].groups).
  */
 import { EventBus } from '../../core/events';
@@ -61,16 +61,20 @@ export interface WorldControlGroup {
 
 /** Scene -> HUD data that is not part of ScreenPropsMap (all optional; the HUD degrades gracefully). */
 export class HudFeeds {
-  /** Camera footprint (minimap frustum quad) and heading (radians, facing convention) for a rotating minimap. */
+  /** Camera footprint on the ground (minimap frustum quad). */
   cameraQuad: GroundQuad | null = null;
-  cameraYaw = 0;
+  /**
+   * Direction the camera looks (facing convention: forward = (sin h, cos h)); the rotating minimap turns it up.
+   * Default PI = looking north. For the RTS camera (camera placed at focus + (sin yaw, cos yaw) x d): heading = yaw + PI.
+   */
+  cameraHeading = Math.PI;
   cameraVersion = 0;
   worldGroups: readonly WorldControlGroup[] = [];
   groupsVersion = 0;
 
-  setCamera(quad: GroundQuad | null, yaw: number): void {
+  setCamera(quad: GroundQuad | null, heading: number): void {
     this.cameraQuad = quad;
-    this.cameraYaw = yaw;
+    this.cameraHeading = heading;
     this.cameraVersion++;
   }
 
@@ -81,7 +85,7 @@ export class HudFeeds {
 
   reset(): void {
     this.cameraQuad = null;
-    this.cameraYaw = 0;
+    this.cameraHeading = Math.PI;
     this.worldGroups = [];
     this.cameraVersion++;
     this.groupsVersion++;

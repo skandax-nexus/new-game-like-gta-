@@ -455,10 +455,33 @@ export function chordsFor(preset: KeyPreset, scope: BindingScope, action: InputA
   return out;
 }
 
-/** First chord label of an action in a scope ('' when unbound). Prefers keyboard over mouse chords. */
+const labelCache = new Map<string, Map<InputAction, string>>();
+
+/**
+ * First chord label of an action in a scope ('' when unbound). Prefers keyboard over mouse chords. Memoized per
+ * (preset, scope, overrides content): command cards ask for 15 labels per refresh.
+ */
 export function hotkeyLabel(preset: KeyPreset, scope: BindingScope, action: InputAction, overrides?: BindingMap): string {
-  const chords = chordsFor(preset, scope, action, overrides).sort((a, b) => Number(a.includes('Mouse')) - Number(b.includes('Mouse')));
-  return chords.length ? chordLabel(chords[0]!) : '';
+  const key = `${preset}|${scope.context}|${scope.page ?? 0}|${scope.mode ?? ''}|${overrides ? JSON.stringify(overrides) : ''}`;
+  let labels = labelCache.get(key);
+  if (!labels) {
+    if (labelCache.size >= 64) labelCache.clear();
+    const by = new Map<InputAction, string[]>();
+    for (const [chord, acts] of buildChordTable(preset, scope, overrides)) {
+      for (const a of acts) {
+        const list = by.get(a) ?? [];
+        list.push(chord);
+        by.set(a, list);
+      }
+    }
+    labels = new Map();
+    for (const [a, chords] of by) {
+      chords.sort((x, y) => Number(x.includes('Mouse')) - Number(y.includes('Mouse')));
+      labels.set(a, chordLabel(chords[0]!));
+    }
+    labelCache.set(key, labels);
+  }
+  return labels.get(action) ?? '';
 }
 
 /** Held keys of a preset. */

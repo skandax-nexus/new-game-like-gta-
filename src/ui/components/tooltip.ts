@@ -35,7 +35,7 @@ export class TooltipService {
   /** UI scale of the layer (tooltip coordinates are divided by it). */
   scale = 1;
 
-  constructor(private readonly layer: HTMLElement) {
+  constructor(layer: HTMLElement) {
     this.el = h('div', { class: 'tooltip ui-hidden', role: 'tooltip' });
     layer.appendChild(this.el);
     if (typeof document !== 'undefined') {

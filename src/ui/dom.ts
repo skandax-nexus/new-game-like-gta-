@@ -240,3 +240,25 @@ export function onLongPress(el: HTMLElement, ms: number, fn: (e: PointerEvent) =
     el.removeEventListener('click', click, true);
   };
 }
+
+/** Clock of the UI throttles (performance.now; the QA bench in ui-debug swaps in a virtual 60 fps clock). */
+export const uiClock = { now: (): number => performance.now() };
+
+/**
+ * Throttle gate for HUD selectors (scene pushes arrive at up to 10 Hz): true when `key` changed, or when `clock`
+ * (sim hours / battle tick) moved and at least `ms` passed since the last true. Expensive selectors behind a gate run
+ * at most 1000/ms times a second while the game runs, and not at all while it is paused and nothing changed.
+ */
+export function clockGate(ms: number): (key: string, clock: number) => boolean {
+  let lastKey: string | null = null;
+  let lastClock = Number.NaN;
+  let at = Number.NEGATIVE_INFINITY;
+  return (key, clock) => {
+    const now = uiClock.now();
+    if (key === lastKey && (clock === lastClock || now - at < ms)) return false;
+    lastKey = key;
+    lastClock = clock;
+    at = now;
+    return true;
+  };
+}
