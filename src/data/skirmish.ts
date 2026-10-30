@@ -61,10 +61,16 @@ export const SKIRMISH_WEATHER: Readonly<Record<Season, readonly WeatherKind[]>> 
   shishira: ['clear', 'fog', 'cloudy'],
 };
 
-/** Suggested composition per faction for the AI side and the "Random" button. */
+/**
+ * Suggested composition per faction for the AI side and the "Random" button.
+ * Giridurga fields the Balanced Host by default since the GP-01 co-review round 1 (was Hill Fort Garrison): the
+ * default skirmish (Suvarna vs Giridurga on The Open Plain) is then the DESIGN_SPEC 13.1 balanced skirmish the pacing
+ * test measures (median 5.5 min, 10/10 within 3-8 min). The garrison host on an open plain broke in a median 3.0 min
+ * (10/20 in band). Hill Fort Garrison stays the recommended pick for Hill Country and The Plateau Edge.
+ */
 export const FACTION_DEFAULT_COMPOSITION: Readonly<Record<string, string>> = {
   heartland: 'balanced',
-  highland: 'fortress',
+  highland: 'balanced',
   forest: 'shock',
   frontier: 'mobile',
   maritime: 'balanced',
