@@ -141,3 +141,86 @@ With the campaign AI live, six tests elsewhere assume realms that never act or a
 - A realm ground down to one town (Giridurga above) keeps a field host it cannot pay for well; the demobilisation rule
   now disbands or splits off the costliest formations when the month is in the red and the treasury is below zero or
   under four months of runway.
+
+## Lead review, round 1 (Lead AI & Simulation Engineer)
+
+Verdict: **changes requested**. The field battle AI, the eight intents, the matchup suite and most of the campaign AI
+are strong; the siege AI and two campaign planners are not yet at the bar, and `npm test` is still red on the six
+premise tests in other owners' files (requests 1-2 above, unchanged).
+
+### Re-run (this review)
+
+| Check | Result |
+|---|---|
+| `npm run typecheck` | clean |
+| `npm test` (after the review fixes) | 805 / 811 pass in 275 s; the 6 failures are the inert-AI premise tests of requests 1-2 (`tests/sim/strategic/{siege,construction,politics}.test.ts`, `tests/contracts/migration.test.ts`). Purity and both determinism suites pass. Before the fixes: 801 / 807 in 320 s (`tests/sim/ai/campaign.test.ts` alone 213 s - now 130 s, see fix 1). |
+| `tests/sim/ai` | 45 / 45 (intents 11, matchups 9, campaign 21, perf 2, siege 2) |
+| Battle AI decisions | `vite-node tests/sim/ai/harness/regression-cli.ts 10`: diffs 0 against `matchups.json` (the review touched no field decision) |
+| Perf (review run) | runCampaignAI: Broken Crown mean 106 us, p95 297 us; AI sandbox mean 83 us, p95 337 us. runBattleAI at 40 formations: mean 93 us, p50 86 us, p95 180 us |
+| Builds | `vite build --outDir .build/sim-02-review` and `--mode single` (index.html 2,612.55 kB, gzip 927.22 kB) succeed |
+| Capture | `SHOTS_PORT=4468 SHOTS_DIST=.build/sim-02-review SHOTS_SKIP_BUILD=1 SHOTS_OUT=docs/sprint1/sim-02/review node scripts/shots/sim-02.cjs`: all checks pass -> [review/](review/) (AI year regenerated with the fixes: `node scripts/sim-ai/autoplay.mjs --seed=3 --out=docs/sprint1/sim-02/review`) |
+| Smoke | `SMOKE_DIST=.build/sim-02-review SMOKE_PORT=4468 SMOKE_OUT=docs/sprint1/sim-02/review-smoke npm run smoke -- --scenes=menu,world,battle`: 8 / 8, no console errors -> [review-smoke/](review-smoke/) |
+
+### Fixed by the reviewer (in the SIM-02 paths)
+
+1. **Siege assault stalls for the whole time limit** (`ai/siege.ts`). When the ram crew routed, the finished ram they
+   left behind counted as a siege tool forever, so the hopeless rule never fired: in
+   `tests/sim/ai/harness/siege-watch.ts engineers` the besiegers stood idle from minute 5 to minute 30 (siege_held). Now
+   only a crewed ram counts; a free engineer formation re-crews an abandoned ram (construct 'ram' at it - the GP-01
+   rule); with no engineer, elephant, crewed ram, breach or ladder left, the side withdraws after 30 s (5.9 min there).
+   The hopeless clock also resets when tools come back. This also took the 3-year sandbox seed 2 from 90 s to ~30 s
+   (autoresolved assaults no longer run to the 30-minute limit). New `tests/sim/ai/siege.test.ts` (both cases fail on
+   the previous code).
+2. **Demobilisation split -> merge loop** (`ai/recruit.ts`, `ai/core.ts`, `ai.ts`). The costliest formations split off
+   the main host became the strongest army, so the next strategy run picked them as the main host and merged the rest
+   back into them (journal of the previous AI year: days 224 / 227 / 229 / 262, the "(detachment) (detachment)" names) -
+   nothing was ever stood down. The split unit ids now go to plan memory (`standDown`); armies made only of them are
+   no field army (`Situation.standDown`, never main, never merged) and are disbanded by the daily `planStandDown`.
+   Test: "demobilisation: formations split off to be stood down are disbanded the next day, never merged back".
+3. **Recruitment past the 0.04 x population ceiling** (`ai/recruit.ts`). Garrison levies were allowed up to 1.4 x the
+   ceiling and a field batch could cross it. Every recruit now fits under the ceiling (DESIGN_SPEC §7.14); the peace
+   target stays 70% (80% defensive) and the rest is garrison headroom. Tests updated ("at the ceiling nothing is
+   raised", "every soldier raised fits under the ceiling").
+4. Dead code: the commander-protection branch in `reserveUnit` (unreachable - engaged line formations never reach it),
+   `void` suppressors and unused helpers in `field.ts`, `siege.ts`, `intents.ts`, `recruit.ts`.
+5. Dev tool `tests/sim/ai/harness/siege-watch.ts` (an AI-vs-AI siege printed every N s) for the siege rework below.
+
+The review fixes were captured in the Studio Head WIP snapshot `db29b1b`; this section and the review evidence are the
+reviewer's own commit.
+
+### Blocking - for the developer
+
+1. **Siege attack: palisade work missing; archers duel the walls.** SIM-02 spec 1 lists "engineer works: rams,
+   ladders, palisade"; no palisade is ever ordered (the old header claimed it). The besiegers' archers walk to 175 m of
+   the wall archers (x1.2 range, x1.2 accuracy, x1.3 defence) and are destroyed before the ram arrives (siege-watch
+   engineers: one archer formation destroyed at 2.5 min, the other at 6 men), after which the ram crew is shot off.
+   Expected: archers stand off out of the walls' range until the ram / ladders are committed, a palisade screen covers
+   them when they must close, and the ram goes in under that cover; the siege-watch 'engineers' scenario should breach
+   or withdraw for a reason, not lose its archers for nothing.
+2. **Siege defence: towers are not manned.** Spec 1: "man walls and towers". Archers fan on the wall walk; a tower is
+   garrisoned only by accident. Expected: archers take the intact towers nearest the threat (a shooter within 10 m of a
+   tower garrisons it). The reviewer tried it (greedy nearest-archer assignment, works) but reverted it: it changes the
+   premise of `tests/sim/tactical/determinism.test.ts` "mid-siege" (the defender archer then out-shoots the elephants
+   and the gate is never damaged) - file a request with QA / GP-01 for that premise when you land it. With towers manned
+   the siege-watch 'elephants' scenario also exposed a jam: the besiegers' archers stopped in the broken gate and the
+   storming spears queued behind them for 20+ minutes (siege_held) - clear the breach approach for the stormers.
+3. **A siege AI acceptance test.** Nothing in `tests/sim/ai` exercised the siege plan before this review. Add
+   end-to-end checks: ram built and carried to the gate, gate breached, breach held 60 s (siege_breach); defenders on
+   walls / towers, gate repair, a sally against an exposed ram crew.
+4. **Wartime recruitment freezes while saving for a landmark.** `spendable()` subtracts `saveWealth` for recruitment
+   too (the build.ts header says construction holds it back). Previous AI year, seed 3: Suvarna at war recruited
+   nothing from day ~115 to 186 with 3,000-4,700 in the treasury and +1,100 a month, and held 900-1,200 soldiers
+   against a 2,300-2,600 target all year (reviewer probe of `situate` / `spendable` every 15 days: room = treasury -
+   3 months of upkeep - the 4,000 landmark saving, mostly negative). Expected:
+   at war or threatened, the landmark saving and the 3-month floor do not starve the army (e.g. a 1-month floor and no
+   saving hold-back for recruitment); re-verify The Broken Crown 6/6 mixed and the sandbox audits (talk to the Creative
+   Director if the campaign balance moves).
+5. **`npm test` green**: requests 1-2 (CTO, QA / SIM-01) must land; re-run the full suite and update this README.
+
+### Notes (non-blocking)
+
+- `battle-aivsai-contact.png` frames the contact as a thin strip at the top of the image under four identical "The
+  enemy wavers" toasts (UI-02 toast de-duplication); move the camera onto the melee for the evidence.
+- runBattleAI p95 is 180-199 us at 40 formations (mean 93-97 us); keep an eye on the full re-plan spikes.
+- Matchup row 4 (elephants vs horse) is won by the horse's `futile()` withdrawal (200 / 200), row 9 measures "defeated"
+  (withdrawal counts) rather than rout; both defensible, say so in matchups.md.

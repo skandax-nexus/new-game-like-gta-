@@ -1,0 +1,490 @@
+{
+  "build": "0.1.0+db29b1b",
+  "quality": "high",
+  "shots": [
+    {
+      "name": "menu",
+      "url": "http://127.0.0.1:4468/?scene=menu&quality=high&noaudio=1",
+      "ms": 59156,
+      "errors": [],
+      "state": {
+        "scene": "menu",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "scene": "menu",
+          "center": {
+            "x": -534.3999999999999,
+            "z": -598.72
+          }
+        },
+        "fps": 4.2614310249033505,
+        "errors": 0
+      },
+      "frame": {
+        "dominantShare": 0.007,
+        "lumaStdev": 50.294,
+        "pageBgShare": 0.002
+      },
+      "view3d": {
+        "dominantShare": 0.007,
+        "lumaStdev": 55.501,
+        "pageBgShare": 0,
+        "layersHidden": 2
+      },
+      "blankAttempts": []
+    },
+    {
+      "name": "world",
+      "url": "http://127.0.0.1:4468/?scene=world&quality=high&noaudio=1&seed=7&paused=1",
+      "ms": 26226,
+      "errors": [],
+      "state": {
+        "scene": "world",
+        "mode": "campaign",
+        "paused": true,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "world": {
+            "day": 0,
+            "date": {
+              "year": -300,
+              "month": 6,
+              "day": 0,
+              "hour": 8
+            },
+            "season": "sharad",
+            "weather": "clear",
+            "factions": [
+              {
+                "id": "forest",
+                "treasury": 1800,
+                "settlements": 2,
+                "soldiers": 478
+              },
+              {
+                "id": "frontier",
+                "treasury": 1500,
+                "settlements": 2,
+                "soldiers": 266
+              },
+              {
+                "id": "heartland",
+                "treasury": 4000,
+                "settlements": 5,
+                "soldiers": 1650
+              },
+              {
+                "id": "highland",
+                "treasury": 2600,
+                "settlements": 5,
+                "soldiers": 1172
+              }
+            ],
+            "armies": 7,
+            "engagements": 0,
+            "pendingEvents": 0,
+            "victory": "ongoing"
+          },
+          "selection": {
+            "kind": "none",
+            "id": null
+          },
+          "camera": {
+            "x": -534.3999999999999,
+            "z": -538.72,
+            "distance": 900,
+            "yaw": 0.5,
+            "tilt": 0
+          },
+          "blocked": false
+        },
+        "fps": 2.72268414793986,
+        "errors": 0
+      },
+      "frame": {
+        "dominantShare": 0.01,
+        "lumaStdev": 44.782,
+        "pageBgShare": 0.001
+      },
+      "view3d": {
+        "dominantShare": 0.001,
+        "lumaStdev": 22.806,
+        "pageBgShare": 0,
+        "layersHidden": 2
+      },
+      "blankAttempts": []
+    },
+    {
+      "name": "world-overview",
+      "url": "http://127.0.0.1:4468/?scene=world&quality=high&noaudio=1&seed=7&paused=1&camera=overview",
+      "ms": 36579,
+      "errors": [],
+      "state": {
+        "scene": "world",
+        "mode": "campaign",
+        "paused": true,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "world": {
+            "day": 0,
+            "date": {
+              "year": -300,
+              "month": 6,
+              "day": 0,
+              "hour": 8
+            },
+            "season": "sharad",
+            "weather": "clear",
+            "factions": [
+              {
+                "id": "forest",
+                "treasury": 1800,
+                "settlements": 2,
+                "soldiers": 478
+              },
+              {
+                "id": "frontier",
+                "treasury": 1500,
+                "settlements": 2,
+                "soldiers": 266
+              },
+              {
+                "id": "heartland",
+                "treasury": 4000,
+                "settlements": 5,
+                "soldiers": 1650
+              },
+              {
+                "id": "highland",
+                "treasury": 2600,
+                "settlements": 5,
+                "soldiers": 1172
+              }
+            ],
+            "armies": 7,
+            "engagements": 0,
+            "pendingEvents": 0,
+            "victory": "ongoing"
+          },
+          "selection": {
+            "kind": "none",
+            "id": null
+          },
+          "camera": {
+            "x": -534.3999999999999,
+            "z": -538.72,
+            "distance": 4200,
+            "yaw": 0.5,
+            "tilt": 0
+          },
+          "blocked": false
+        },
+        "fps": 4.433682259856417,
+        "errors": 0
+      },
+      "frame": {
+        "dominantShare": 0.01,
+        "lumaStdev": 52.725,
+        "pageBgShare": 0
+      },
+      "view3d": {
+        "dominantShare": 0.032,
+        "lumaStdev": 18.559,
+        "pageBgShare": 0,
+        "layersHidden": 2
+      },
+      "blankAttempts": []
+    },
+    {
+      "name": "battle",
+      "url": "http://127.0.0.1:4468/?scene=battle&quality=high&noaudio=1&seed=7&soldiers=1000&preset=plains",
+      "ms": 26508,
+      "errors": [],
+      "state": {
+        "scene": "battle",
+        "mode": "skirmish",
+        "paused": true,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "battleId": "skirmish_7",
+          "time": 25.7,
+          "tick": 514,
+          "phase": "deployment",
+          "sides": [
+            {
+              "faction": "heartland",
+              "soldiers": 500,
+              "initial": 500,
+              "routed": 0,
+              "morale": 58
+            },
+            {
+              "faction": "highland",
+              "soldiers": 500,
+              "initial": 500,
+              "routed": 0,
+              "morale": 58
+            }
+          ],
+          "formations": 15,
+          "soldierCapacity": 1000,
+          "visibleSoldiers": 812,
+          "outcome": null,
+          "selection": [
+            0
+          ],
+          "camera": {
+            "x": 1773.5126794628586,
+            "z": 1006.1413659602291,
+            "distance": 165,
+            "yaw": -0.08295356090102977,
+            "tilt": 0
+          }
+        },
+        "fps": 2.7711066125654957,
+        "errors": 0
+      },
+      "frame": {
+        "dominantShare": 0.009,
+        "lumaStdev": 37.816,
+        "pageBgShare": 0
+      },
+      "view3d": {
+        "dominantShare": 0.004,
+        "lumaStdev": 24.055,
+        "pageBgShare": 0,
+        "layersHidden": 2
+      },
+      "blankAttempts": []
+    },
+    {
+      "name": "battle-close",
+      "url": "http://127.0.0.1:4468/?scene=battle&quality=high&noaudio=1&seed=7&soldiers=1000&preset=plains&camera=close",
+      "ms": 24638,
+      "errors": [],
+      "state": {
+        "scene": "battle",
+        "mode": "skirmish",
+        "paused": true,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "battleId": "skirmish_7",
+          "time": 35.7,
+          "tick": 713,
+          "phase": "active",
+          "sides": [
+            {
+              "faction": "heartland",
+              "soldiers": 500,
+              "initial": 500,
+              "routed": 0,
+              "morale": 80
+            },
+            {
+              "faction": "highland",
+              "soldiers": 500,
+              "initial": 500,
+              "routed": 0,
+              "morale": 79
+            }
+          ],
+          "formations": 15,
+          "soldierCapacity": 1000,
+          "visibleSoldiers": 812,
+          "outcome": null,
+          "selection": [
+            0
+          ],
+          "camera": {
+            "x": 1769.011415508944,
+            "z": 1060.2792995988436,
+            "distance": 55,
+            "yaw": -0.08295356090102977,
+            "tilt": -0.05
+          }
+        },
+        "fps": 2.906695109608352,
+        "errors": 0
+      },
+      "frame": {
+        "dominantShare": 0.01,
+        "lumaStdev": 45.033,
+        "pageBgShare": 0
+      },
+      "view3d": {
+        "dominantShare": 0.007,
+        "lumaStdev": 40.679,
+        "pageBgShare": 0,
+        "layersHidden": 2
+      },
+      "blankAttempts": []
+    },
+    {
+      "name": "battle-river-5000",
+      "url": "http://127.0.0.1:4468/?scene=battle&quality=high&noaudio=1&seed=11&soldiers=5000&preset=river_crossing&hour=17",
+      "ms": 52594,
+      "errors": [],
+      "state": {
+        "scene": "battle",
+        "mode": "skirmish",
+        "paused": true,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "battleId": "skirmish_11",
+          "time": 16.1,
+          "tick": 322,
+          "phase": "deployment",
+          "sides": [
+            {
+              "faction": "heartland",
+              "soldiers": 2500,
+              "initial": 2500,
+              "routed": 0,
+              "morale": 58
+            },
+            {
+              "faction": "highland",
+              "soldiers": 2500,
+              "initial": 2500,
+              "routed": 0,
+              "morale": 58
+            }
+          ],
+          "formations": 61,
+          "soldierCapacity": 5000,
+          "visibleSoldiers": 3407,
+          "outcome": null,
+          "selection": [
+            0
+          ],
+          "camera": {
+            "x": -108.8518224630702,
+            "z": -179.5220965593328,
+            "distance": 165,
+            "yaw": 0.16558642538010154,
+            "tilt": 0
+          }
+        },
+        "fps": 2.4600245937532104,
+        "errors": 0
+      },
+      "frame": {
+        "dominantShare": 0.009,
+        "lumaStdev": 42.02,
+        "pageBgShare": 0.001
+      },
+      "view3d": {
+        "dominantShare": 0.003,
+        "lumaStdev": 31.404,
+        "pageBgShare": 0,
+        "layersHidden": 2
+      },
+      "blankAttempts": []
+    },
+    {
+      "name": "menu-mobile",
+      "url": "http://127.0.0.1:4468/?scene=menu&quality=low&noaudio=1",
+      "ms": 10621,
+      "errors": [],
+      "state": {
+        "scene": "menu",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "low",
+        "sceneState": {
+          "scene": "menu",
+          "center": {
+            "x": -534.3999999999999,
+            "z": -598.72
+          }
+        },
+        "fps": 9.64918328197025,
+        "errors": 0
+      },
+      "frame": {
+        "dominantShare": 0.018,
+        "lumaStdev": 58.208,
+        "pageBgShare": 0.004
+      },
+      "view3d": {
+        "dominantShare": 0.011,
+        "lumaStdev": 60.716,
+        "pageBgShare": 0,
+        "layersHidden": 2
+      },
+      "blankAttempts": []
+    },
+    {
+      "name": "battle-mobile",
+      "url": "http://127.0.0.1:4468/?scene=battle&quality=low&noaudio=1&seed=7&soldiers=600&preset=plains",
+      "ms": 13485,
+      "errors": [],
+      "state": {
+        "scene": "battle",
+        "mode": "skirmish",
+        "paused": true,
+        "timeScale": 1,
+        "quality": "low",
+        "sceneState": {
+          "battleId": "skirmish_7",
+          "time": 20.6,
+          "tick": 412,
+          "phase": "deployment",
+          "sides": [
+            {
+              "faction": "heartland",
+              "soldiers": 300,
+              "initial": 300,
+              "routed": 0,
+              "morale": 58
+            },
+            {
+              "faction": "highland",
+              "soldiers": 300,
+              "initial": 300,
+              "routed": 0,
+              "morale": 58
+            }
+          ],
+          "formations": 13,
+          "soldierCapacity": 600,
+          "visibleSoldiers": 492,
+          "outcome": null,
+          "selection": [
+            0
+          ],
+          "camera": {
+            "x": 1773.7382388495273,
+            "z": 1006.7998402549129,
+            "distance": 165,
+            "yaw": -0.0751310870412856,
+            "tilt": 0
+          }
+        },
+        "fps": 8.033323382028469,
+        "errors": 0
+      },
+      "frame": {
+        "dominantShare": 0.012,
+        "lumaStdev": 41.231,
+        "pageBgShare": 0
+      },
+      "view3d": {
+        "dominantShare": 0.009,
+        "lumaStdev": 23.762,
+        "pageBgShare": 0,
+        "layersHidden": 2
+      },
+      "blankAttempts": []
+    }
+  ]
+}

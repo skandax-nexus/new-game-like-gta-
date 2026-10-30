@@ -1,0 +1,232 @@
+{
+ "port": 4468,
+ "dist": ".build/sim-02-review",
+ "checks": [
+  {
+   "name": "battle: AI vs AI skirmish ready in deployment",
+   "ok": true,
+   "observed": {
+    "phase": "deployment",
+    "formations": 28
+   }
+  },
+  {
+   "name": "battle: both sides deployed by the battle AI (plan memory)",
+   "ok": true,
+   "observed": {
+    "deployed": [
+     true,
+     true
+    ],
+    "posture": [
+     "attack",
+     "hold"
+    ],
+    "phase": "active"
+   }
+  },
+  {
+   "name": "battle: the fight is on 75 s after deployment (losses on both sides)",
+   "ok": true,
+   "observed": [
+    {
+     "faction": "heartland",
+     "soldiers": 687,
+     "initial": 750,
+     "routed": 1,
+     "morale": 71
+    },
+    {
+     "faction": "highland",
+     "soldiers": 628,
+     "initial": 750,
+     "routed": 5,
+     "morale": 55
+    }
+   ]
+  },
+  {
+   "name": "battle: no console errors, page errors, failed requests or crash reports",
+   "ok": true,
+   "observed": []
+  },
+  {
+   "name": "river battle: running with the AI on both sides",
+   "ok": true,
+   "observed": {
+    "phase": "active",
+    "time": 90
+   }
+  },
+  {
+   "name": "river battle: no console errors, page errors, failed requests or crash reports",
+   "ok": true,
+   "observed": []
+  },
+  {
+   "name": "world: the AI-year save loads into the world scene",
+   "ok": true,
+   "observed": {
+    "day": 360,
+    "factions": [
+     {
+      "id": "citystates",
+      "treasury": 3000,
+      "settlements": 0,
+      "soldiers": 0
+     },
+     {
+      "id": "forest",
+      "treasury": 5588,
+      "settlements": 4,
+      "soldiers": 653
+     },
+     {
+      "id": "frontier",
+      "treasury": 778,
+      "settlements": 0,
+      "soldiers": 0
+     },
+     {
+      "id": "heartland",
+      "treasury": 4703,
+      "settlements": 12,
+      "soldiers": 1085
+     },
+     {
+      "id": "highland",
+      "treasury": 376,
+      "settlements": 0,
+      "soldiers": 0
+     },
+     {
+      "id": "maritime",
+      "treasury": 3000,
+      "settlements": 0,
+      "soldiers": 0
+     }
+    ]
+   }
+  },
+  {
+   "name": "world (AI year): no console errors, page errors, failed requests or crash reports",
+   "ok": true,
+   "observed": []
+  },
+  {
+   "name": "live world: every landed AI realm planned today in the browser (plan memory)",
+   "ok": true,
+   "observed": {
+    "day": 45,
+    "planned": [
+     {
+      "id": "highland",
+      "lastDay": 45,
+      "goals": 2,
+      "top": "develop"
+     },
+     {
+      "id": "forest",
+      "lastDay": 45,
+      "goals": 3,
+      "top": "develop"
+     },
+     {
+      "id": "frontier",
+      "lastDay": 45,
+      "goals": 2,
+      "top": "develop"
+     }
+    ]
+   }
+  },
+  {
+   "name": "live world: the AI realms build, recruit and set labour (queues and allocations in the state)",
+   "ok": true,
+   "observed": {
+    "jobs": 10,
+    "farmingHeavySettlements": 7
+   }
+  },
+  {
+   "name": "world (live): no console errors, page errors, failed requests or crash reports",
+   "ok": true,
+   "observed": []
+  }
+ ],
+ "shots": [
+  {
+   "name": "battle-aivsai-deploy.png",
+   "note": "deployment over (30s), phase active"
+  },
+  {
+   "name": "battle-aivsai-contact.png",
+   "note": "t=105s soldiers 687/750 vs 628/750"
+  },
+  {
+   "name": "battle-aivsai-river.png",
+   "note": "river crossing t=90s soldiers 982/1000 vs 971/1000"
+  },
+  {
+   "name": "world-ai-year.png",
+   "note": "after 360 days of six AI realms: forest 4 towns 653 soldiers, heartland 12 towns 1085 soldiers"
+  },
+  {
+   "name": "world-ai-live.png",
+   "note": "sandbox seed 3, day 45: highland goal develop, forest goal develop, frontier goal develop"
+  }
+ ],
+ "aiYear": {
+  "day": 360,
+  "date": {
+   "year": -299,
+   "month": 0,
+   "day": 0,
+   "hour": 17
+  },
+  "season": "vasanta",
+  "weather": "cloudy",
+  "factions": [
+   {
+    "id": "citystates",
+    "treasury": 3000,
+    "settlements": 0,
+    "soldiers": 0
+   },
+   {
+    "id": "forest",
+    "treasury": 5588,
+    "settlements": 4,
+    "soldiers": 653
+   },
+   {
+    "id": "frontier",
+    "treasury": 778,
+    "settlements": 0,
+    "soldiers": 0
+   },
+   {
+    "id": "heartland",
+    "treasury": 4703,
+    "settlements": 12,
+    "soldiers": 1085
+   },
+   {
+    "id": "highland",
+    "treasury": 376,
+    "settlements": 0,
+    "soldiers": 0
+   },
+   {
+    "id": "maritime",
+    "treasury": 3000,
+    "settlements": 0,
+    "soldiers": 0
+   }
+  ],
+  "armies": 2,
+  "engagements": 0,
+  "pendingEvents": 0,
+  "victory": "ongoing"
+ }
+}
