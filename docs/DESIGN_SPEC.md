@@ -576,14 +576,14 @@ result (GDD §9). Distant battles run the same code headless (autoresolve) [BASE
 | Circle | 1 | 1.15 | 0.3 | 0.9 | 1.15 | 1.0 | 0.8 | **yes** | Last stand; protects archers inside |
 
 All-round shapes ignore flank/rear multipliers (attacks always count as frontal). Changing shape takes
-`3 s + 0.02 s x soldiers` during which cohesion is capped at 0.6.
+`3 s + 0.02 s x soldiers` during which cohesion is capped at 0.6 (`RULES.battle.shapeChange`).
 
 ### 6.3 Orders (`FormationOrder`)
 
 | Order | Behavior | Edge cases |
 |---|---|---|
 | **hold** | Stop; keep facing; fight anything that contacts; ranged formations shoot targets in range unless `hold_fire`. Turns to face an attacker only if stance is aggressive or defensive and not engaged. | Hold under missile fire costs morale via perceived risk; no auto-retreat. |
-| **advance** (`distance`) | Walk forward along facing, keeping the line; stops early on contact. | Default distance 30 m per key press (`T`). |
+| **advance** (`distance`) | Walk forward along facing, keeping the line; stops early on contact. | Default distance 30 m per key press (`T`; `RULES.battle.orders.advanceMeters`). |
 | **move_to** (x, z, facing, run) | Path to the point (flow field on the battle grid [REQ]); arrive and turn to `facing`. Right-drag sets facing and frontage (width -> files). | Water: only through fords/shallows; deep water impassable [BASE detour]. |
 | **attack_target** | Approach at walk; melee classes engage on contact; ranged classes move until in range then shoot and keep distance (as skirmish). | Target routing -> pursue only if stance aggressive; otherwise stop at 40 m. |
 | **charge** | Approach at walk until **40 m (foot) / 90 m (mounted, elephants)** then run; on contact apply charge impact (§6.6.2) once, then melee. | Charge impact requires >= 20 m of running at >= 60% run speed (`RULES.battle.charge`); exhausted formations cannot charge. |
@@ -624,6 +624,10 @@ UI: intent orders are on the battle command card's second page and in the touch 
 | skirmish (default ranged) | Avoids melee: steps back when enemies close within 0.4x range | Fires at will | Never |
 | hold_fire | As defensive | Does not fire (ambushes, avoiding friendly fire) | Never |
 
+The aggressive distances are `RULES.battle.orders.aggressiveEngageMeters` (30) and `aggressivePursuitMeters` (60). An
+aggressive formation holding its ground does not step out to meet an enemy that is already closing on it at >= 0.5 m/s:
+it receives the charge braced.
+
 Movement speed (m/s) = `walkSpeed | runSpeed` x `terrain.speed` x `(1 - 0.35 x fatigue)` x `shape.speed` x
 weather mud factor (§6.10) [BASE except shape/weather]. Formations turn at `turnRate` rad/s; a formation turning
 more than 90° in place loses 0.1 cohesion. Formations do not interpenetrate except: routers pass through
@@ -651,6 +655,10 @@ dmgHP     = frontage x ATK / max(1, DEF) x aspect x rout x K x dt x U(0.85, 1.15
 
 Side effects per tick: D's cohesion -0.01 x aspect x dt; A's fatigue +0.003 x dt x fatigueRate x 100; flank/rear
 hits add a morale event with probability `0.5 x dt`.
+
+**Contact.** Two enemy formations come into melee when their footprints close to 0.75 m each (a 1.5 m gap), and stay
+in melee until they open past 2 m each (a 4 m gap), `RULES.battle.contact`. The hysteresis keeps blocks jostling on
+the contact line from flickering in and out of melee (and from re-triggering `contact` events).
 
 *Worked example:* two fresh spear blocks (24 files, morale 60) fight front-to-front: ATK = 6 x 0.8 = 4.8, DEF = 11
 -> 24 x 4.8 / 11 x 0.45 = **4.7 HP/s ≈ 0.47 men/s** each way. A 25% loss takes ~60 s; morale (perceived risk +
@@ -716,12 +724,12 @@ formation closes within 30 m, once per 20 s).
 
 | Element | Rule |
 |---|---|
-| Wall ring | `RULES.battle.walls.segments` = 12 segments on the settlement radius; segment HP = `fortLevel x 1000 x fortDefense / 12`. Gates: 1 (fort), 2 (town/port/temple town), 4 (city/capital); gate HP = 1.5 x segment HP. Towers: 1 per 2 segments per fort level, each a shooting position (+20% range/accuracy for archers inside 10 m). |
-| Engineers' works (`EngineerWork`) | palisade (40 s, 20 m wall, 300 HP), ditch (60 s, slows crossers to 0.4x), bridge (90 s over shallow water or a ford, makes it passable at road speed), ram (60 s; then moved to a gate, damage 4 HP/s x engineers/10), ladder (20 s per segment; allows assault over intact walls with escalade penalty: attackers' melee x0.7 and morale -0.15 on the climb), repair_gate (defender engineers +10 HP/s). |
+| Wall ring | `RULES.battle.walls.segments` = 12 segments on the settlement radius; segment HP = `fortLevel x 1000 x fortDefense / 12` (`RULES.siege.wallHpPerLevel`). Gates: 1 (fort), 2 (town/port/temple town), 4 (city/capital); gate HP = 1.5 x segment HP. Towers: 1 per 2 segments per fort level, each a shooting position (+20% range/accuracy for archers inside 10 m). |
+| Engineers' works (`EngineerWork`) | palisade (40 s, 20 m wall, 300 HP), ditch (60 s, slows crossers to 0.4x), bridge (90 s over shallow water or a ford, makes it passable at road speed), ram (60 s; then moved to a gate, damage 4 HP/s x engineers/10 x crew siege stat/4, `RULES.battle.ram`), ladder (20 s per segment; allows assault over intact walls with escalade penalty: attackers' melee x0.7 and morale -0.15 on the climb), repair_gate (defender engineers +10 HP/s). |
 | Elephants vs gates | Elephants adjacent to a gate deal `siege x soldiers` HP/s to it (5 x 8 = 40 HP/s). |
 | Defenders on walls | Defense x1.3, missile accuracy x1.2, range x1.2 (`RULES.battle.walls`). |
 | Breach | A segment or gate at 0 HP becomes passable. |
-| Siege battle victory | Attacker wins when a formation holds the inside of a breach/gate for **60 s** with the defenders broken there (no standing defender combat formation within 40 m of the breach), or the defenders are broken (§6.8; arrowless archers on the walls still hold them); defender wins at the time limit or if attackers break. Objective markers: `breach_gate`. |
+| Siege battle victory | Attacker wins when a formation holds the inside of a breach/gate for **60 s** with the defenders broken there (no standing defender combat formation within 40 m of the breach; "holds" = a standing combat formation inside the ring within 30 m + half its depth of the breach; `RULES.battle.walls.breachHoldMeters` / `breachContestMeters`), or the defenders are broken (§6.8; arrowless archers on the walls still hold them); defender wins at the time limit or if attackers break. Objective markers: `breach_gate`. |
 
 ### 6.7 Morale (GDD §5)
 
@@ -791,7 +799,7 @@ event -> -5, S -0.3 -> -3): target ≈ 25 -> it routs with 80% of its men alive.
 | **Rallying** | Morale > 50 and no damage for 10 s -> `rallying` for 15 s (regroup, cohesion x2.5), then controllable. Max **2 rallies** per formation per battle; the third rout is final ("shattered"). The commander's Rally ability (§6.11) can force a rally check at morale > 35. |
 | **Surrender** | Routing **and** morale < 8 **and** (enemy formations within 30 m on >= 2 aspects **or** cornered: water, wall or map edge within 20 m in the flee direction) -> `surrendered`; all remaining soldiers are **captured**. |
 | **Side broken** | All formations that hold the field routing, destroyed or surrendered -> battle ends [BASE]; both sides at once = draw. Engineers and supply trains never hold the field; neither do archer-category formations that are out of arrows and not in melee (they would otherwise keep a lost battle open to the time limit) - **except** a besieged garrison's archers standing on their own walls, who hold the walls with stones and spears until the attacker takes them [REQ GP-01]. A side broken while its arrowless archers still stand loses by `rout`. |
-| **Pursuit** | When a side breaks: `pursuitLosses = routing soldiers x (0.15 + 0.1 x winnerMountedShare) x (1 - 0.5 x loserMountedShare)`; 70% killed, 30% captured. Mounted share = mounted soldiers / combat soldiers still fighting. |
+| **Pursuit** | When a side breaks: `pursuitLosses = routing soldiers x (0.15 + 0.1 x winnerMountedShare) x (1 - 0.5 x loserMountedShare)`; 70% killed, 30% captured (`RULES.battle.pursuit.capturedShare`). Mounted share = mounted soldiers / combat soldiers still fighting. |
 | **Prisoners** | Results screen choice per battle: **Ransom** (loser pays 5 wealth per prisoner, capped at 30% of its treasury; opinion -5) or **Release** (opinion +5 per 100 released, max +20). AI: ransom if greedy/expansionist else release. Captured commanders: ransom 500 or held (event). |
 
 ### 6.9 Fatigue and cohesion
@@ -824,10 +832,12 @@ event -> -5, S -0.3 -> -3): target ≈ 25 -> it routs with 80% of its men alive.
   all + commanderSkill/100 (skill 0..20 = the character's martial); fallen commander -> 0.35 for the whole side.
 - **Commander falls** when the commander's formation drops below 35% of its starting strength [BASE], or while it
   routs with enemy mounted within 20 m (chance 0.25/s), or when the hero loses a duel. Fate on the results screen:
-  50% killed, 30% wounded (character health -0.3), 20% captured (always captured if the formation surrendered).
+  50% killed, 30% wounded (character health -0.3), 20% captured (`RULES.battle.commander.fallenFate`); always captured
+  if the formation or side surrendered; a commander who never fell is safe.
 - **Rally** ability [REQ]: commander formation not engaged; every own formation within 120 m gains +15 morale and a
-  `rallied` event; routing formations there with morale > 35 start rallying; cooldown 90 s. Button on the battle
-  HUD and key `L` (classic preset; §8.8).
+  `rallied` event; routing formations there with morale > 35 start rallying; cooldown 90 s (`RULES.battle.commander`
+  rallyRadius / rallyMorale / rallyRoutersAbove / rallyCooldownSec). Button on the battle HUD and key `L` (classic
+  preset; §8.8).
 - **Experience** (0..1): new formations 0.1 + barracks/age bonuses (§7.6); after a battle survivors gain +0.1 (won)
   or +0.05 (lost), +0.05 more for each enemy formation they routed; effects attack x(1 + 0.25e), defense
   x(1 + 0.15e), morale +15e. Shown as 0-3 chevrons (0.25/0.5/0.75).
@@ -2348,6 +2358,24 @@ Nothing existing was renamed or removed; no runtime state shape changed (no save
    shot playback, retry/accept, effects at the end), melee (`HERO_COMBAT` frame data, poise, attack tokens,
    telegraphs, phases), avatar by faction (`HERO_AVATARS`), free "Walk Rajapura" from the menu.
 3. Session: engagement queue, prisoners and capture decisions, mission flow, autosaves (§2.3).
+4. Tactical constants from data (GP-01 review desk). The Creative Director confirmed GP-01's decisions and moved
+   them into `RULES.battle`; the values equal the literals in `src/sim/tactical` today, so reading them changes no
+   result and no determinism hash:
+   - `battle.ts`: the shape-change time `3 + 0.02 x soldiers` and the 0.6 cohesion cap -> `RULES.battle.shapeChange`
+     (`baseSec`, `perSoldierSec`, `cohesionCap`); `CONTACT_MARGIN` / `CONTACT_HOLD_MARGIN` ->
+     `RULES.battle.contact.startMarginMeters` / `holdMarginMeters`; the Rally threshold `f.morale > 35` ->
+     `RULES.battle.commander.rallyRoutersAbove`.
+   - `orders.ts`: `ADVANCE_DEFAULT`, `AGGRESSIVE_ENGAGE`, `AGGRESSIVE_PURSUIT` -> `RULES.battle.orders.advanceMeters`,
+     `aggressiveEngageMeters`, `aggressivePursuitMeters` (keep the exported names as aliases of the data values if
+     other modules import them).
+   - `siege.ts`: `RAM_HP_PER_10` and the `st.siege / 4` reference -> `RULES.battle.ram.hpPerSecPer10` / `siegeRef`;
+     `BREACH_HOLD_RADIUS` / `BREACH_CONTEST_RADIUS` -> `RULES.battle.walls.breachHoldMeters` / `breachContestMeters`.
+   - `outcome.ts`: the fallen-commander roll `r < 0.5 ? 'killed' : r < 0.8 ? 'wounded' : 'captured'` ->
+     `r < k ? 'killed' : r < k + w ? 'wounded' : 'captured'` with `{ killed: k, wounded: w } =
+     RULES.battle.commander.fallenFate` (0.5 + 0.3 === 0.8 in doubles, so the roll is bit-identical).
+   - Already read from data, no change: segment HP (`RULES.siege.wallHpPerLevel`, `RULES.battle.walls.segments`),
+     the pursuit split 70 / 30 (`RULES.battle.pursuit.capturedShare`), the Rally radius, morale and cooldown
+     (`RULES.battle.commander`).
 
 **Lead UI/UX (UI, input, audio):**
 1. Screens and layouts §12.2-§12.3 (new screens listed in CTO item 5), objectives tracker by act, event modal
@@ -2407,17 +2435,42 @@ support in the hero camera.
   - *4 spear + 2 archers vs 6 spear* wins 1-2/20 with the line-order auto-deploy (12-17/20 in hand-placed layouts): the
     longer spear line overlaps both flanks while the archers shoot the centre. The rule set supports combined arms
     (friendly fire 0.1); the AI must refuse or anchor its flanks and aim its archers at the overlapping blocks.
+    GP-01 desk re-measure (40 seeds): 1/40 (3/40 in GP-01 round 1, 8/40 before the §6.8 arrowless-archer amendment,
+    which ends a side whose melee blocks all rout while its archers are dry). No data change.
   - *Royal guards vs 2.5 spear blocks* (equal cost) wins 0/20 (45-60% wanted), while guards beat 1 block 20/20, 1.5
     blocks 20/20 in line (0/20 in their default square) and beat equal-cost horse and elephants. Numbers that can
     envelop beat quality at equal cost in this model; the guards' row and their `counters` hint (weakVs cavalry) are
-    to be re-tuned together after SIM-02 (shape choice, flank refusal).
+    to be re-tuned together after SIM-02 (shape choice, flank refusal). Guards in line by default still win 0/20 here
+    (GP-01 desk), so the default shape is not the lever for this row.
   - Suvarna's Balanced Host beats every elephant-less faction's Balanced Host in 43 of 46 battles at equal soldiers (8 elephants
     are worth 1,600 wealth); the elephant counter is archers' panic, which the baseline AI does not aim. Equal-wealth
-    skirmish budgets are the fallback if SIM-02's targeting does not close it.
+    skirmish budgets are the fallback if SIM-02's targeting does not close it. GP-01 desk re-measure: Suvarna wins the
+    §13.1 pacing pairing 10/10 and the in-engine default (Suvarna vs Giridurga, faction defaults, 08:30) 20/20 (median
+    5.18 min, 19/20 in 3-8), while same-faction Balanced mirrors split 17/13 (Kotanagara) and 13/17 (Suvarna). No data
+    change: elephants are Suvarna's identity (§4) and the open plain is its ground; Giridurga's answer is the hill
+    (§13.3, Giridurga on a hill >= 60%) and panic fire.
   - The baseline AI (`battleai.ts`, SIM-02) picks the flank side by formation index parity, not geometry: in mirror
     battles one side's horse rides across the centre (Riders of the Frontier mirror 2/18 with ally_routed -0.3,
-    9/11 at -0.15; Suvarna Balanced mirror 13/27 at -0.15 but 18/22 with a geometric flank choice, 40 seeds). Hill
-    Fort Garrison pairings take 10-15 min because AI guards stay in their default square.
+    9/11 at -0.15; Suvarna Balanced mirror 13/27 at -0.15 but 18/22 with a geometric flank choice, 40 seeds). The
+    Riders mirror is too fast to play: median 0.9 min in GP-01 round 1, 1.44 min (1/20 in 3-8, wins 16/4) with the
+    §10.1 1.25 x blocks. No data change before SIM-02 (geometric flank choice, a mounted reserve); if it stays under
+    3 min with SIM-02's AI, the data levers are the mounted charge (`chargeImpulse`, cavalry `chargeBonus`) against
+    mounted targets, re-measured with the 21 faction-default pairings.
+  - *Hill Fort Garrison pairings take 10-15 min* because AI guards stay in their default square: Giridurga vs
+    Kotanagara, Garrison both, median 12.96 min (0/10 in 3-8); Kotanagara mirror 14.9 min. GP-01 desk decision: the
+    Royal Guards' default shape stays **square** (they stand with the commander). Measured (`tools/probes.ts`,
+    full-resolution terrain, AI vs AI):
+    - guards in line by default: the review pairing 6.71 min (9/10), but §13.1 pacing 5.48 -> 3.88 min (10/10 ->
+      9/10), the 21 faction-default pairings 50 -> 49/84 in 3-8 with 25 -> 32 under 3 min (median 4.30 -> 3.75);
+    - line for the Garrison's guards only (a per-composition deploy shape, prototyped): the review pairing 6.71 min,
+      the Kotanagara mirror 14.9 -> 5.7 min, but the 21 pairings 50 -> 48/84 (Kotanagara vs Suvarna 2.9 -> 2.4 min,
+      vs Nilavana 2.0 -> 1.6 min: guards in line break faster to elephants and horse).
+    A long grind between two hosts that want to be attacked is in character (the 3-8 min target is the Balanced
+    Host's); the lever is SIM-02's shape choice: guards in line against foot, square when horse or elephants close.
+  - Resolved: `composeArmy`'s GP-01 round-1 split of a class budget just over one formation into two half-size blocks
+    (Riders spearmen 122 -> 61/61, Nilavana elephants 9 -> 5/4) is superseded by the §10.1 1.25 x rule [REQ GP-01]:
+    both are single blocks now (122; 9), and the 16 remaining overflow splits of the 120 faction x composition x size
+    combinations are all budgets above 1.25 x a formation. No `SKIRMISH_COMPOSITIONS` weight change.
 - **Armies camped beside a hungry own town** keep the 30-day floor and do not forage it (civilians first; the remedies
   are garrisoning inside the walls, requisition, moving to a surplus town or "Hold the reserve"). The UI must say so
   (army supply panel: source and why it is empty). Partial starvation (desertion x unmet share) is a candidate rule

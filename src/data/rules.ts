@@ -463,11 +463,29 @@ export const RULES = {
       loose: { aspect: 3, spread: 1.8, speed: 1.1, meleeAttack: 0.85, meleeDefense: 0.75, missileDamageTaken: 0.5, chargeImpact: 0.7, allRound: false },
       circle: { aspect: 1, spread: 1.15, speed: 0.3, meleeAttack: 0.9, meleeDefense: 1.15, missileDamageTaken: 1, chargeImpact: 0.8, allRound: true },
     },
+    /*
+     * GP-01 review desk: the constants below (shapeChange, contact, orders, commander.rallyRoutersAbove and
+     * .fallenFate, ram, walls.breachHoldMeters / breachContestMeters) are GP-01's decisions where the spec was silent
+     * or gave the number in prose only (docs/sprint1/gp-01/README.md "Decisions"), confirmed by the Creative Director
+     * and moved into data. The values equal the ones src/sim/tactical hard-codes today, so reading them changes nothing
+     * (DESIGN_SPEC §14.3 Lead Gameplay item 4).
+     */
+    /** Changing shape (§6.2) takes baseSec + perSoldierSec x soldiers; cohesion is capped at cohesionCap meanwhile. */
+    shapeChange: { baseSec: 3, perSoldierSec: 0.02, cohesionCap: 0.6 },
+    /**
+     * Melee contact (§6.6.1), per footprint: a new pair engages when each footprint is within startMarginMeters of the
+     * other (a 1.5 m gap); a pair in melee stays engaged until it opens past holdMarginMeters each (a 4 m gap). The
+     * hysteresis keeps formations jostling on the contact line from flickering in and out of melee.
+     */
+    contact: { startMarginMeters: 0.75, holdMarginMeters: 2 },
+    /** advance default distance per key press (§6.3); aggressive stance engages enemies within / pursues routers to (§6.5). */
+    orders: { advanceMeters: 30, aggressiveEngageMeters: 30, aggressivePursuitMeters: 60 },
     charge: { minRunMeters: 20, minSpeedShare: 0.6, infantryRunFrom: 40, mountedRunFrom: 90, bracedFactor: 0.35, bracedRecoil: 0.5 },
     withdraw: { backwardsSpeed: 0.5, disengagePenaltySec: 3, disengageDamageTaken: 1.5 },
     regroup: { cohesionRecovery: 2.5, moraleBonus: 5 },
     rout: { meleeDamageTaken: 3, maxRallies: 2, rallyQuietSec: 10, rallyingSec: 15 },
     surrender: { morale: 8, enemyWithinMeters: 30, minEnemyAspects: 2, corneredWithinMeters: 20 },
+    /** Pursuit losses of a broken side (§6.8): capturedShare of them are captured, the rest (70%) killed. */
     pursuit: { base: 0.15, perWinnerMountedShare: 0.1, loserMountedShield: 0.5, capturedShare: 0.3 },
     fatigueTiers: [
       { from: 0, id: 'fresh', label: 'Fresh' },
@@ -476,7 +494,26 @@ export const RULES = {
       { from: 0.8, id: 'spent', label: 'Spent - cannot charge, -10 morale' },
     ],
     weather: { rainAccuracy: 0.4, wetReload: 1.25, mudMounted: 0.5, mudInfantry: 0.25, rangeVsVisibility: 0.5, heatFatigue: 1.3, heatAboveC: 34, nightVision: 0.4, nightAccuracy: 0.7, nightMorale: -5 },
-    commander: { ownFormation: 0.9, nearMeters: 180, near: 0.7, far: 0.5, fallen: 0.35, skillPer100: 1, fallBelowStrength: 0.35, rallyRadius: 120, rallyMorale: 15, rallyCooldownSec: 90 },
+    /**
+     * Leadership, commander fall and the Rally ability (§6.11). Rally: own formations within rallyRadius m gain
+     * rallyMorale, routers there above rallyRoutersAbove morale start rallying, cooldown rallyCooldownSec. fallenFate:
+     * the results-screen roll for a commander who fell (killed / wounded / captured; a commander whose formation or
+     * side surrendered is always captured, one who never fell is safe).
+     */
+    commander: {
+      ownFormation: 0.9,
+      nearMeters: 180,
+      near: 0.7,
+      far: 0.5,
+      fallen: 0.35,
+      skillPer100: 1,
+      fallBelowStrength: 0.35,
+      rallyRadius: 120,
+      rallyMorale: 15,
+      rallyCooldownSec: 90,
+      rallyRoutersAbove: 35,
+      fallenFate: { killed: 0.5, wounded: 0.3, captured: 0.2 },
+    },
     experience: { attackPerExp: 0.25, defensePerExp: 0.15, moralePerExp: 15, winGain: 0.1, lossGain: 0.05 },
     /** p(panic) per volley = clamp(unruliness x base x (1 - morale/100) x hits / elephants, 0, maxChance). */
     elephantPanic: { base: 0.8, maxChance: 0.5, durationSec: 8, trampleShare: 0.5, trampleRadius: 6, moraleAfter: -20 },
@@ -489,8 +526,16 @@ export const RULES = {
     friendlyFireShare: 0.1,
     /** Missile damage taken by a formation standing in forest. */
     forestCover: 0.6,
-    /** Defenders on walls: defense / ranged accuracy / range multipliers. */
-    walls: { defense: 1.3, accuracy: 1.2, range: 1.2, segments: 12, holdBreachSec: 60 },
+    /**
+     * Defenders on walls: defense / ranged accuracy / range multipliers. The ring has `segments` segments of
+     * fortLevel x RULES.siege.wallHpPerLevel x fortDefense / segments HP each (§6.6.5). An attacker combat formation holds a
+     * breach while it stands inside the ring with its centre within breachHoldMeters (+ half its depth) of the breach
+     * point; holdBreachSec of that, with no standing defender combat formation within breachContestMeters of the
+     * breach point, wins the siege.
+     */
+    walls: { defense: 1.3, accuracy: 1.2, range: 1.2, segments: 12, holdBreachSec: 60, breachHoldMeters: 30, breachContestMeters: 40 },
+    /** Ram (§6.6.5): damage per second = hpPerSecPer10 x engineers / 10 x (crew siege stat / siegeRef) - 4 HP/s per 10 engineers. */
+    ram: { hpPerSecPer10: 4, siegeRef: 4 },
     prisoners: { ransomPerSoldier: 5, releaseOpinion: 5 },
   },
   // ------------------------------------------------------------------------------------------- §8.4
