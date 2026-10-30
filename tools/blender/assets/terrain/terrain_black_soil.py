@@ -42,13 +42,15 @@ with core.timer("polygons"):
     # self-mulching granular crust
     specs = [
         dict(cell=0.012, shape=K.shape_pebble(0.004, 0.0035, 0.0025, 0.6, 0.35), z=0.0, density=0.85, density_map=1.0 - crack),
-        dict(cell=0.06, shape=K.shape_pebble(0.008, 0.006, 0.005, 0.6, 0.4), z=0.0, density=0.12, density_map=1.0 - crack),  # kankar
         dict(cell=0.08, shape=K.shape_blade(0.07, 0.0016, 0.0025, 0.3), z=0.0, density=0.12, density_map=1.0 - crack),
     ]
     L = layers(kit, specs)
     top = L["h"] + h
     over = (L["h"] > -1e5) & (top > h)
     h = np.where(over, top, h)
+    # AD-5: kankar (calcrete) nodules clustered and size-varied (2-14 mm), <= 1 % coverage - never an even polka-dot
+    kank = kit.specks(0.05, coverage=0.007, size=(0.002, 0.014), cluster_m=0.5) * (1.0 - crack)
+    h += 0.004 * tg.blur(kank, 1.0)
 
 with core.timer("albedo"):
     t = np.clip(0.5 + 0.25 * kit.fbm(0.1, 3) + 0.12 * kit.fbm(0.015, 2), 0, 1)
@@ -57,14 +59,14 @@ with core.timer("albedo"):
     soil = K.mul(soil, 1.0 - 0.6 * crack - 0.3 * sec)
     idx, gid = L["idx"], L["id"]
     crumbs = K.mul(soil, 0.9 + 0.25 * gid[..., None])
-    kankar = K.ramp(gid, [(0.0, "#8c8476"), (1.0, "#b0a896")])
     stub = K.ramp(gid, [(0.0, "#6e6448"), (1.0, "#8e8160")])
-    col = np.where((idx == 0)[..., None], crumbs, np.where((idx == 1)[..., None], kankar, stub))
+    col = np.where((idx == 0)[..., None], crumbs, stub)
     alb = np.where(over[..., None], col, soil)
+    alb = K.tint(alb, "#857c6c", 0.75 * kank)  # soil-dusted, not white
     alb = K.compress_chroma(alb, 0.85)
 
 with core.timer("roughness"):
-    rough = 0.91 + 0.03 * kit.fbm(0.05, 2) + 0.04 * crack - 0.06 * (over & (idx == 1))
+    rough = 0.91 + 0.03 * kit.fbm(0.05, 2) + 0.04 * crack - 0.05 * kank
 
 finish_terrain(kit, h, alb, rough, ao_distance=0.06, height_hp=0.5, ao_height_mix=0.4,
                description="Black cotton soil (4 m, dry season): deep polygonal shrinkage cracks, secondary cracks, "

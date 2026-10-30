@@ -8,6 +8,8 @@
  *   of all cascade lights sum to 1, so N lights still light like one sun) times that cascade's shadow:
  *   hard / PCF through three's getShadow(), or PCSS (Vogel-disk blocker search, penumbra = receiver-blocker
  *   distance x tan(sun angular radius), filtered with up to 32 rotated taps). Shadows fade out at the last split.
+ *   Idle cascades (far zoom bands use fewer, csm.ts activeCascadesFor) carry texel 0 in their slot: weight 0, and the
+ *   cascade before them is the last one in use.
  *   Lights at or above the count behave exactly like stock three.js (asset viewer suns, future rim lights).
  * - `lights_fragment_begin`: only the directional `getShadow( directionalShadowMap[ i ] ...)` line is replaced;
  *   every other line (incl. the light-probe / hemisphere calls TA-07's flipbook patches by string) is untouched.
@@ -63,11 +65,15 @@ float samShadowPCSS( sampler2D map, vec2 mapSize, float bias, vec4 coord, vec4 c
   }
   return lit / float( nF );
 }
+// Is cascade i the last one in use? (the tier's last, or the one before an idle cascade: texel 0 in its slot)
+bool samCsmLast( int i ) {
+  return float( i ) >= samG[ SAM_G_CSM_PARAMS ].x - 1.0 || samG[ SAM_G_CSM_CASCADE + i + 1 ].z <= 0.0;
+}
 // Fraction of the key light already handed to cascades after j at view depth d (1 for j < 0, 0 for the last).
 float samCsmOut( int j, float d ) {
   if ( j < 0 ) return 1.0;
   vec4 prm = samG[ SAM_G_CSM_PARAMS ];
-  if ( float( j ) >= prm.x - 1.0 ) return 0.0;
+  if ( samCsmLast( j ) ) return 0.0;
   vec4 c = samG[ SAM_G_CSM_CASCADE + j ];
   float band = prm.w * ( c.y - c.x );
   return smoothstep( c.y - band, c.y, d );
@@ -83,14 +89,16 @@ vec3 samDirShadow( const in int i, sampler2D map, DirectionalLightShadow s, vec4
     // Not a cascade of the rig's sun: stock three.js behaviour.
     return vec3( receive ? getShadow( map, s.shadowMapSize, s.shadowIntensity, s.shadowBias, s.shadowRadius, coord ) : 1.0 );
   }
+  vec4 c = samG[ SAM_G_CSM_CASCADE + i ];
+  // Idle cascade (a far zoom band uses fewer than the tier's cascades): no light, no lookup.
+  if ( c.z <= 0.0 ) return vec3( 0.0 );
   float w = samCsmOut( i - 1, depth ) - samCsmOut( i, depth );
   if ( w <= 0.0 ) return vec3( 0.0 );
   float sh = 1.0;
   if ( receive ) {
-    vec4 c = samG[ SAM_G_CSM_CASCADE + i ];
     if ( prm.y > 1.5 ) sh = samShadowPCSS( map, s.shadowMapSize, s.shadowBias, coord, c );
     else sh = getShadow( map, s.shadowMapSize, 1.0, s.shadowBias, s.shadowRadius, coord );
-    if ( float( i ) >= prm.x - 1.0 ) {
+    if ( samCsmLast( i ) ) {
       float band = prm.w * ( c.y - c.x );
       sh = mix( sh, 1.0, smoothstep( c.y - band, c.y, depth ) );
     }

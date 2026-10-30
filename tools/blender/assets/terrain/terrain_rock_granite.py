@@ -42,21 +42,22 @@ with core.timer("domes"):
     # elongated along the sheet direction; placed by dart throwing with overlap, so their union is a lumpy tor:
     # where two domes meet high up the crease is a CLOSED joint, where both have fallen away it is an OPEN cleft.
     domes: list[tuple[float, ...]] = []
-    tries = 0
-    while tries < 4000 and len(domes) < 60:
-        tries += 1
-        r = 0.6 + 3.0 * float(rng.uniform()) ** 2.2
-        cx_, cy_ = float(rng.uniform(0, S)), float(rng.uniform(0, S))
-        ok = True
-        for (ox, oy, orr, *_rest) in domes:
-            dx = ((cx_ - ox + S / 2) % S) - S / 2
-            dy = ((cy_ - oy + S / 2) % S) - S / 2
-            if np.hypot(dx, dy) < 0.62 * (r + orr) or np.hypot(dx, dy) < 0.9 * max(r, orr):
-                ok = False
+    radii = sorted((0.8 + 1.9 * float(rng.uniform()) ** 1.5 for _ in range(90)), reverse=True)
+    for r in radii:  # large domes first; smaller ones fill the gaps and merge into their flanks
+        for _try in range(40):
+            cx_, cy_ = float(rng.uniform(0, S)), float(rng.uniform(0, S))
+            ok = True
+            for (ox, oy, orr, *_rest) in domes:
+                dx = ((cx_ - ox + S / 2) % S) - S / 2
+                dy = ((cy_ - oy + S / 2) % S) - S / 2
+                dd = float(np.hypot(dx, dy))
+                if dd < 0.38 * (r + orr) or dd < 0.55 * max(r, orr):
+                    ok = False
+                    break
+            if ok:
+                domes.append((cx_, cy_, r, float(rng.uniform(1.0, 1.6)), float(rng.uniform(-0.4, 0.4)),
+                              float(rng.uniform(0.16, 0.28)), float(rng.uniform()), float(rng.uniform()), float(rng.uniform())))
                 break
-        if ok:
-            domes.append((cx_, cy_, r, float(rng.uniform(1.0, 1.7)), float(rng.uniform(-0.45, 0.45)),
-                          float(rng.uniform(0.1, 0.24)), float(rng.uniform()), float(rng.uniform()), float(rng.uniform())))
     core.log(f"granite domes: {len(domes)}, radii {sorted(round(d[2], 2) for d in domes)}")
     N = kit.N
     px = S / N
@@ -67,7 +68,7 @@ with core.timer("domes"):
     dr2 = np.zeros((N, N), np.float32)
     dsize = np.zeros((N, N), np.float32)
     for (cx_, cy_, r, ax, rot, k, r1, r2, r3) in domes:
-        a_ = r * ax
+        a_ = min(r * ax, 0.45 * S)  # the dome's box must stay inside one tile (no wrapped duplicate indices)
         b_ = r / ax
         ext = int(np.ceil(1.05 * max(a_, b_) / px))
         ci = int(round(cx_ / px))
@@ -80,11 +81,15 @@ with core.timer("domes"):
         lu_ = du_ * cr + dv_ * sr
         lv_ = -du_ * sr + dv_ * cr
         q = np.sqrt((lu_ / a_) ** 2 + (lv_ / b_) ** 2)
-        z = np.where(q < 1.0, k * r * np.clip(1.0 - q * q, 0.0, 1.0) ** 0.55 - 0.45 * q ** 4 * 0.6, -9.0).astype(np.float32)
+        z = np.where(q < 1.0, k * r * np.clip(1.0 - q * q, 0.0, 1.0) ** 0.8, -9.0).astype(np.float32)
         sub = np.ix_(rows, cols)
         cur = h[sub]
         better = z > cur
-        h[sub] = np.where(better, z, cur)
+        # smooth union (k = 0.18 m): where domes meet high up they merge into one whaleback (closed joint); only
+        # where both flanks have fallen away does a cleft remain
+        kk = 0.12
+        hh_ = np.clip(kk - np.abs(cur - z), 0.0, None) / kk
+        h[sub] = np.maximum(cur, z) + 0.25 * kk * hh_ * hh_
         q_best[sub] = np.where(better, q, q_best[sub])
         did[sub] = np.where(better, r3, did[sub])
         dr1[sub] = np.where(better, r1, dr1[sub])
@@ -94,13 +99,35 @@ with core.timer("domes"):
     # the deeper a crease between domes, the more open the joint: soften the valley floors into rounded clefts
     floor_ = tg.blur(h, kit.px(0.05))
     h = np.maximum(h, floor_ - 0.01)
-    # closed hairline joints crossing the domes: two sub-horizontal sheet joints and a few curved cross joints
-    jl = np.abs(kit.fbm(2.5, 3, aniso=(1.0, 0.35)))
-    jc = np.abs(kit.fbm(1.8, 3, aniso=(0.4, 1.0)))
-    hair = np.clip(tg.smoothstep(0.012, 0.0, jl) * (kit.fbm(1.5, 2) > -0.2) + tg.smoothstep(0.01, 0.0, jc) * (kit.fbm(1.2, 2) > 0.25), 0, 1)
-    step_side = (kit.fbm(2.5, 3, aniso=(1.0, 0.35)) > 0).astype(np.float32)
-    h += -0.02 * hair + 0.012 * step_side * (crest > 0.05)
-    open_cleft = tg.smoothstep(-0.02, -0.25, h)  # deep between domes
+    # major OPEN joints: two sub-horizontal sheet joints and two steep cross joints - wavy clefts 4-12 cm wide with
+    # rounded shoulders (r 0.25 m), open over part of their length and closing to hairlines elsewhere
+    yc = np.zeros_like(x)
+    hair = np.zeros_like(x)
+    cleft = np.zeros_like(x)
+    step_side = np.zeros_like(x)
+    # 3 open joints (one sub-horizontal sheet joint and a conjugate pair of +-45 deg joints - integer slopes keep
+    # them seamless), strongly wavy, never a grid; 3 hairline joints with a small step
+    for k, slope in enumerate((0.0, 1.0, -1.0, 0.0, 1.0, -1.0)):
+        pos = float(rng.uniform(0, S))
+        wav = 0.55 * kit.fbm(4.0, 2, x=x, y=yc + 0.37 * k) + 0.08 * kit.fbm(0.8, 2, x=x, y=yc + 0.11 * k)
+        if slope != 0.0:  # wander measured across the joint, as a function of the position along it
+            wav = 0.55 * kit.fbm(4.0, 2, x=(x + slope * y) % 1.0, y=yc + 0.37 * k)
+        dist = np.abs(((((y - slope * x) * S - pos - wav) + S / 2) % S) - S / 2) * (0.7071 if slope else 1.0)
+        if k < 3:
+            opening = tg.smoothstep(-0.25, 0.35, kit.fbm(2.2, 2)) * tg.smoothstep(-0.3, 0.1, kit.fbm(3.0, 2))
+            w = 0.02 + 0.05 * opening
+            shoulder = 0.3 * opening + 0.02
+            t = np.clip((dist - w) / shoulder, 0.0, 1.0)
+            prof = np.where(dist < w, 1.0, 1.0 - np.sqrt(np.clip(1.0 - (1.0 - t) ** 2, 0.0, 1.0)))
+            cleft = np.maximum(cleft, prof * (0.05 + 0.3 * opening))
+            hair = np.maximum(hair, tg.smoothstep(0.012, 0.0, dist) * (1.0 - opening))
+        else:  # hairline joints with a small step across the crowns
+            on = tg.smoothstep(-0.1, 0.25, kit.fbm(2.0, 2))
+            hair = np.maximum(hair, tg.smoothstep(0.01, 0.0, dist) * on)
+            step_side += 0.01 * (((((y - slope * x) * S - pos - wav) + S / 2) % S) > S / 2) * on
+    h -= cleft
+    h += -0.015 * hair + step_side * (crest > 0.05)
+    open_cleft = np.clip(tg.smoothstep(0.06, 0.2, cleft) + tg.smoothstep(-0.05, -0.3, h), 0.0, 1.0)  # deep clefts
     # broad surface undulation of the rock itself
     h += 0.03 * kit.fbm(1.2, 3) + 0.01 * kit.fbm(0.3, 3)
 
@@ -138,7 +165,7 @@ with core.timer("albedo"):
     rock = K.mul(rock, 1.0 - 0.25 * pits)
     rock = K.tint(rock, "#ab9585", 0.35 * peel)  # fresher, pinker rock where the sheet peeled
     rock = K.tint(rock, "#9a9187", 0.25 * chip)
-    rock = K.tint(rock, "#3b342d", 0.55 * lip)  # undercut shadow line of the sheet edge
+    rock = K.tint(rock, "#4a423a", 0.35 * lip)  # undercut shadow line of the sheet edge
     rock = K.tint(rock, "#4a443d", 0.5 * hair)
     rock = K.tint(rock, "#6e5d4b", 0.75 * grus)
     # black water streaks from the block shoulders and joint lips, running down v

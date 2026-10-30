@@ -27,7 +27,9 @@ kit = K.Kit(__file__, cls="T", size=(S, S), target="terrain:TERRAIN_LAYERS.paddy
             rough_range=(0.03, 0.6))
 
 with core.timer("mud"):
-    h = 0.012 * kit.fbm(0.45, 3) + 0.003 * kit.fbm(0.08, 3) + 0.0005 * kit.fbm(0.01, 2)
+    # B7: the puddle pattern lives below 0.3 m (0.12 m pockets dominate; the 0.45 m term only nudges them), so the
+    # 3 x 3 golden shot has no 0.3-0.6 m camouflage blotches that repeat every 3 m
+    h = 0.0035 * kit.fbm(0.5, 3) + 0.006 * kit.fbm(0.13, 3) + 0.0022 * kit.fbm(0.045, 2) + 0.0005 * kit.fbm(0.01, 2)
     feet = kit.scatter(0.3, shape_foot(0.02), density=0.5, angle=(-0.6, 0.6))
     d = feet.height(0.0)
     h += 0.5 * np.clip(tg.blur(d, 3.0) - d, 0.0, None) - d
@@ -42,26 +44,26 @@ with core.timer("floaters"):
     specs = [
         dict(cell=0.08, shape=K.shape_blade(0.07, 0.0016, 0.0005, 0.4), z=0.0, density=0.25, density_map=water),
         dict(cell=0.012, shape=K.shape_disc(0.0025, 0.0003, 0.4), z=0.0, density=0.5,
-             density_map=water * tg.smoothstep(0.55, 0.75, kit.fbm(0.3, 3) * 0.5 + 0.5)),  # duckweed
+             density_map=water * tg.smoothstep(0.45, 0.7, kit.fbm(0.1, 3) * 0.5 + 0.5)),  # duckweed
     ]
     L = layers(kit, specs)
     fl = (L["h"] > -1e5).astype(np.float32)
     idx, gid = L["idx"], L["id"]
 
 with core.timer("albedo"):
-    t = np.clip(0.5 + 0.25 * kit.fbm(0.12, 3) + 0.1 * kit.fbm(0.015, 2), 0, 1)
+    t = np.clip(0.5 + 0.15 * kit.fbm(0.1, 3) + 0.1 * kit.fbm(0.015, 2), 0, 1)
     mud = K.ramp(t, [(0.0, "#3d372b"), (0.4, "#4f4838"), (0.75, "#625a47"), (1.0, "#756b55")])
-    mud = K.tint(mud, "#7d735e", 0.25 * tg.smoothstep(0.004, 0.015, hb - level))  # drying island crests
-    under = K.mul(K.tint(mud, "#4a4434", 0.4), 0.75)  # silty water over mud
+    mud = K.tint(mud, "#6f6652", 0.12 * tg.smoothstep(0.003, 0.01, hb - level))  # drying island crests
+    under = K.mul(K.tint(mud, "#4a4434", 0.3), 0.88)  # silty water over mud (low contrast: wetness reads in roughness)
     alb = mud * (1.0 - water[..., None]) + under * water[..., None]
-    alb = K.tint(alb, "#4e5634", 0.35 * shore)  # algae film at the water edge
+    alb = K.tint(alb, "#4e5634", 0.15 * shore)  # algae film at the water edge
     straw = K.ramp(gid, [(0.0, "#7a6e4a"), (1.0, "#988a5c")])
     weed = K.ramp(gid, [(0.0, "#46562c"), (1.0, "#5e6e38")])
     alb = np.where((fl > 0)[..., None], np.where((idx == 0)[..., None], straw, weed), alb)
     alb = K.compress_chroma(alb, 0.85)
 
 with core.timer("roughness"):
-    rough = 0.42 + 0.06 * kit.fbm(0.05, 2) + 0.1 * tg.smoothstep(0.004, 0.015, hb - level)
+    rough = 0.42 + 0.06 * kit.fbm(0.05, 2) + 0.1 * tg.smoothstep(0.003, 0.01, hb - level)
     rough = rough * (1.0 - water) + 0.02 * water
     rough = np.where(fl > 0, 0.7, rough)
 

@@ -62,18 +62,24 @@ with core.timer("relief"):
 with core.timer("albedo"):
     t = np.clip(0.5 + 0.45 * (sid - 0.5) + 0.15 * kit.fbm(0.3, 3) + 0.06 * kit.fbm(0.03, 2), 0, 1)
     stone = K.ramp(t, [(0.0, "#605c57"), (0.4, "#75706a"), (0.75, "#8a857d"), (1.0, "#9c968c")])
-    spk = kit.fbm(0.003, 1) * 0.5 + 0.5
-    stone = K.tint(stone, "#2e2c2a", 0.6 * tg.smoothstep(0.72, 0.85, spk))  # biotite
-    stone = K.tint(stone, "#c9c3b6", 0.4 * tg.smoothstep(0.25, 0.12, spk))  # feldspar
+    g1, _, gid = kit.worley(0.004, 1.0)  # grain: biotite flecks and feldspar laths of varied size, not dots
+    stone = K.tint(stone, "#2e2c2a", 0.5 * ((gid > 0.9) & (g1 < 0.5)))
+    stone = K.tint(stone, "#b9b3a6", 0.3 * (gid < 0.18))
     rind = tg.smoothstep(0.4, 0.75, kit.fbm(0.5, 3) * 0.5 + 0.5)
     stone = K.tint(stone, "#8c8476", 0.25 * rind)
     stone = K.tint(stone, "#a9a296", 0.4 * chip)  # fresh breaks
     stain = tg.smoothstep(0.55, 0.85, kit.fbm(0.06, 3, aniso=(1.0, 6.0)) * 0.5 + 0.5) * (1.0 - lv)
     stone = K.tint(stone, "#3a3834", 0.3 * stain)  # water streaks below each edge
-    lf1, _, lid = kit.worley(0.05, 1.0)
-    lichen = tg.smoothstep(0.38, 0.15, lf1 + 0.1 * kit.fbm(0.01, 2)) * (lid > 0.75) * (1.0 - moss_zone)
-    lich_col = np.where((((lid * 7.0) % 1.0) < 0.3)[..., None], K.hexlin("#b07a3a")[None, None, :], K.hexlin("#9a9a86")[None, None, :])
-    stone = stone * (1.0 - 0.6 * lichen[..., None]) + lich_col * (0.6 * lichen[..., None])
+    # AD-5: lichen as crustose patches with lobed rosettes, clustered on the exposed upper slab and the drip
+    # lines under each lower edge (never round discs on a grid)
+    zone = np.clip(tg.smoothstep(0.2, 0.7, lv) * 0.7 + 0.6 * stain, 0, 1) * (1.0 - moss_zone)
+    lic = kit.lichen(zone, coverage=0.07, patch_m=0.3, rosette_m=0.03, rosette_density=0.45)
+    lichen = np.clip(lic["crust"] + lic["rosette"], 0, 1) * (1.0 - moss_zone)
+    orange_sel = (kit.fbm(0.7, 2) > 0.2).astype(np.float32)
+    stone = K.tint(stone, "#a87a48", 0.55 * lichen * orange_sel)
+    stone = K.tint(stone, "#959582", 0.5 * lichen * (1.0 - orange_sel))
+    stone = K.tint(stone, "#b8b2a2", 0.25 * lic["centre"])
+    h = h + lic["h"]
     stone = K.mul(stone, 1.0 - 0.55 * gap)
     moss_col = K.ramp(np.clip(moss_tex, 0, 1), [(0.0, "#3c4128"), (1.0, "#66693e")])
     alb = stone * (1.0 - moss[..., None]) + moss_col * moss[..., None]

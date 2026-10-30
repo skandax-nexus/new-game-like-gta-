@@ -53,8 +53,9 @@ with core.timer("relief"):
     ch = np.abs(((lu * 3.0) % 1.0) - 0.5) * 2.0  # 0 at channel centre, 1 at the ridges between
     h -= 0.0028 * (1.0 - tg.smoothstep(0.0, 0.62, ch)) * tg.smoothstep(0.0, 0.08, lv)
     # thickened drip rim + central nib at the lower edge
-    rim = tg.smoothstep(0.045, 0.01, vexp)
-    h += 0.0015 * rim
+    # AD note: hooked lips must read - a thicker 4 mm drip lip turned down at the lower edge
+    rim = tg.smoothstep(0.045, 0.012, vexp)
+    h += 0.004 * rim
     # rounded clay edges along the side joints and the lower edge
     h += K.Kit.edge_round(np.maximum(du - 0.002, 0.0), 0.007, 0.004)
     h += K.Kit.edge_round(vexp, 0.006, 0.003)
@@ -87,6 +88,9 @@ with core.timer("albedo"):
     alb = K.tint(alb, "#c79a7c", 0.18 * tg.smoothstep(0.3, 0.9, lv))
     wet = tg.smoothstep(0.08, 0.0, vexp)
     alb = K.mul(alb, 1.0 - 0.25 * wet)
+    # overlap shadow line: the strip of the lower course just under each hooked lip stays in shade and grime
+    lip_shadow = tg.smoothstep(0.86, 0.99, lv)
+    alb = K.mul(alb, 1.0 - 0.38 * lip_shadow)
     # dirt in the channels (washed silt) and in side joints
     grime = (1.0 - tg.smoothstep(0.0, 0.5, ch)) * tg.smoothstep(0.1, 0.6, lv)
     grime = grime * (0.5 + 0.5 * tg.smoothstep(0.4, 0.8, kit.fbm(0.05, 3, aniso=(1.0, 8.0)) * 0.5 + 0.5))

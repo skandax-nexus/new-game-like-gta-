@@ -589,6 +589,7 @@ export class EnvironmentRig {
       night: this.sky.night,
       look: this.look.id,
       cascades: this.shadows.cascadeCount,
+      activeCascades: this.shadows.activeCascadeCount,
       shadowFilter: this.shadows.filterMode,
       shadowDistance: Math.round(this.shadows.info.distance),
       practicals: this.practicals.size,

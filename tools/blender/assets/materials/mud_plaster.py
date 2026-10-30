@@ -4,7 +4,7 @@
 @style materials:MATERIAL_PRESETS.mud_plaster, palette:ALBEDO_LIMITS, palette:SATURATION_LIMITS
 
 Finger-smoothed mud and cow-dung plaster (class S, 2.5 m x 2.5 m tile, seamless): overlapping hand sweeps (fan
-arcs ~0.2 m radius, four finger grooves each, 1 mm relief, a ridge where each sweep stops), straw / chaff
+arcs 0.12-0.26 m radius, 2-5 finger grooves of varying spacing and pressure, 0.5-1.3 mm relief, a ridge where each sweep stops), straw / chaff
 fibres bound in the mud (~3 % flecks, some proud of the surface), dung fibre grain, shrinkage cracks on
 0.15-0.35 m cells (wider where the coat is thick), a few spalls showing the darker base coat, slightly glossier
 burnished ridges. Mandana borders (ochre / white) are decals (decals_settlement), not part of this set.
@@ -30,26 +30,34 @@ kit = K.Kit(__file__, cls="S", size=(W, H), target="materials:MATERIAL_PRESETS.m
 
 
 def sweep_shape(lu, lv, e1, e2):
-    """One hand sweep: a fan of four finger grooves on arcs around a pivot behind the palm."""
-    R = 0.16 + 0.06 * e1
+    """One hand sweep: a fan of 2-5 finger grooves on arcs around a pivot behind the palm. AD note (stamped combs):
+    radius 0.12-0.26 m, finger count, spacing and pressure vary per sweep, the pressure fades along the stroke and
+    differs finger to finger, the grooves wobble."""
+    R = 0.12 + 0.14 * e1
     py = lv + R
     r = np.sqrt(lu * lu + py * py)
     ang = np.arctan2(lu, py)
-    span = 0.5 + 0.3 * e2
-    inside = (np.abs(ang) < span) & (np.abs(r - R) < 0.032)
-    # four fingers: grooves 16 mm apart, ridges between them; fade at the sweep ends
-    k = (r - R + 0.032) / 0.064
-    grooves = 0.5 + 0.5 * np.cos(2 * np.pi * k * 4.0)
-    fade = tg.smoothstep(span, span * 0.7, np.abs(ang))
-    stop = tg.smoothstep(span * 0.85, span, ang) * 0.6  # mud pushed up where the sweep stops
-    hgt = 0.0009 * grooves * fade + 0.0012 * stop * tg.smoothstep(0.032, 0.0, np.abs(r - R))
+    span = 0.35 + 0.4 * e2
+    nf = 2.0 + np.floor(((e1 * 7.3 + e2 * 3.1) % 1.0) * 4.0)  # 2..5 fingers
+    pitch = 0.013 + 0.007 * ((e2 * 5.7) % 1.0)
+    half = 0.5 * nf * pitch
+    rr = r - R + 0.003 * np.sin(ang * (9.0 + 6.0 * e1) + 7.0 * e2)  # fingers wobble
+    inside = (np.abs(ang) < span) & (np.abs(rr) < half)
+    k = (rr + half) / np.maximum(pitch, 1e-6)
+    finger = np.floor(k)
+    press = 0.45 + 0.55 * np.abs(np.sin(finger * 2.3 + e1 * 11.0))  # each finger presses differently
+    along = 0.5 + 0.5 * np.cos(np.pi * np.clip((ang / span + (e1 - 0.5)) * 0.9, -1.0, 1.0))  # pressure fades along
+    grooves = (0.5 + 0.5 * np.cos(2 * np.pi * k)) * press
+    fade = tg.smoothstep(span, span * 0.6, np.abs(ang)) * along
+    stop = tg.smoothstep(span * 0.8, span, ang) * 0.5 * (0.4 + 0.6 * e2)  # mud pushed up where the sweep stops
+    hgt = (0.0005 + 0.0008 * e2) * grooves * fade + 0.0012 * stop * tg.smoothstep(half, 0.0, np.abs(rr))
     return np.where(inside, 0.0004 + hgt, -1e9)
 
 
 with core.timer("sweeps"):
     h = 0.0018 * kit.fbm(0.5, 3) + 0.0006 * kit.fbm(0.08, 3)  # uneven hand-laid coat
     # cells >= the sweep extent (R sin(span) ~ 0.16 m) so no sweep is clipped at a lattice-cell border
-    sw = kit.scatter(0.24, sweep_shape, density=0.9)
+    sw = kit.scatter(0.28, sweep_shape, density=0.9)
     sw2 = kit.scatter(0.2, sweep_shape, density=0.7)
     swp = np.maximum(sw.height(0.0), sw2.height(0.0))
     smooth = tg.smoothstep(0.0, 0.0004, swp)  # burnished by the palm

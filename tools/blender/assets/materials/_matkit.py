@@ -248,7 +248,8 @@ class Kit:
     def __init__(self, script: str, cls: str, size: tuple[float, float], target: str | None = None,
                  internal: int | None = None, rough_range: tuple[float, float] | None = None,
                  rough_spread: float = 0.05, family: str | None = None, saturation_limit: str = "large",
-                 channel_max_srgb: int | None = None) -> None:
+                 channel_max_srgb: int | None = None, sat_cap: float | None = None,
+                 value_cap: float | None = None) -> None:
         """`target` = style ref of the preset (materials:MATERIAL_PRESETS.<id> or terrain:TERRAIN_LAYERS.<id>)."""
         self.ctx = core.begin(script, kind="material")
         if cls not in CLASSES:
@@ -273,6 +274,9 @@ class Kit:
         self.limits: dict[str, Any] = style("palette:ALBEDO_LIMITS")
         self.sat_limits: dict[str, float] = style("palette:SATURATION_LIMITS")
         self.family = family
+        # per-texel HSV caps enforced inside the calibration loop (AD-4: grass blades never lime)
+        self.sat_cap = sat_cap
+        self.value_cap = value_cap
         self.saturation_limit = saturation_limit
         # per-channel ceiling (e.g. lime plaster "never above sRGB 236"); None = luminance limit only
         self.channel_max = float(tg.srgb_to_linear(np.array(channel_max_srgb / 255.0, F))) if channel_max_srgb else 0.98
@@ -547,7 +551,7 @@ class Kit:
     @staticmethod
     def edge_round(d: np.ndarray, radius: float, depth: float) -> np.ndarray:
         """Rounded arris profile: -depth at the edge (d=0) rising to 0 at d >= radius (quarter circle)."""
-        t = np.clip(d / max(radius, 1e-6), 0.0, 1.0)
+        t = np.clip(d / np.maximum(radius, 1e-6), 0.0, 1.0)  # radius may be a per-texel array
         return (-depth * (1.0 - np.sqrt(np.clip(1.0 - (1.0 - t) ** 2, 0.0, 1.0)))).astype(F)
 
     def macro_flatten(self, albedo: np.ndarray, sigma_m: float = 0.5, amount: float = 0.85) -> np.ndarray:
@@ -611,7 +615,23 @@ class Kit:
             lum = tg.luminance(a)
             k = np.where(lum < lo, lo / np.maximum(lum, 1e-6), np.where(lum > hi, hi / lum, 1.0))
             a = np.clip(a * k[..., None], 0.0, self.channel_max)
+            if self.sat_cap is not None or self.value_cap is not None:
+                a = self.cap_hsv(a)
         return a.astype(F)
+
+    def cap_hsv(self, lin: np.ndarray) -> np.ndarray:
+        """Pull texels above the HSV saturation cap toward their own max channel (value kept, chroma reduced) and
+        scale texels above the value cap down (hue kept)."""
+        s = tg.linear_to_srgb(np.clip(lin, 0.0, 1.0)).astype(F)
+        mx = s.max(axis=-1, keepdims=True)
+        mn = s.min(axis=-1, keepdims=True)
+        if self.sat_cap is not None:
+            sat = (mx - mn) / np.maximum(mx, 1e-6)
+            t = np.where(sat > self.sat_cap, self.sat_cap / np.maximum(sat, 1e-6), 1.0)
+            s = mx - (mx - s) * t
+        if self.value_cap is not None:
+            s = s * np.where(mx > self.value_cap, self.value_cap / np.maximum(mx, 1e-6), 1.0)
+        return tg.srgb_to_linear(np.clip(s, 0.0, 1.0)).astype(F)
 
     def clamp_limits(self, albedo: np.ndarray) -> np.ndarray:
         """Per-pixel luminance clamp to ALBEDO_LIMITS without a target mean (decals, uncalibrated sets)."""
@@ -655,6 +675,8 @@ class Kit:
             "lumP98": round(float(np.percentile(lum, 98)), 4),
             "satMean": round(float(sat.mean(dtype=np.float64)), 3),
             "satP95": round(float(np.percentile(sat, 95)), 3),
+            "satP98": round(float(np.percentile(sat, 98)), 3),
+            "valueP98": round(float(np.percentile(s.max(axis=-1) / 255.0, 98)), 3),
             "roughMean": round(float(rough.mean(dtype=np.float64)), 3),
             "roughP5": round(float(np.percentile(rough, 5)), 3),
             "roughP95": round(float(np.percentile(rough, 95)), 3),
@@ -917,6 +939,12 @@ class Kit:
             self._cliff_scene(files, po)
             self._lights(golden, 0.45)
             ctx.add_file("preview", self._render(ctx.path("preview.png"), res, spp, ev))
+            # 1.5-2.5 m close-up of the left face under a raking day sun (AD-8/AD-9: rock close-ups)
+            core.reset_scene()
+            self._cliff_scene(files, po)
+            self._lights(dict(elevation=28.0, azimuth=262.0, strength=4.4, color="#fff0dc"), 0.5)
+            render.look_at_camera((-0.62 * W, -2.3, 1.55), (-0.5 * W, 0.0, 1.35), lens=32, fstop=8.0)
+            ctx.add_file("preview_closeup", self._render(ctx.path("preview_closeup.png"), res, spp, ev))
         elif kind == "atlas":
             self._atlas_scene(files, po)
             ctx.add_file("preview", self._render(ctx.path("preview.png"), (1024, 1024) if not ctx.draft else (512, 512), spp, ev))
@@ -924,6 +952,11 @@ class Kit:
             self._pole_scene(files, po)
             self._lights(dict(elevation=24.0, azimuth=235.0, strength=4.4, color="#ffe2bf"), 0.55)
             ctx.add_file("preview", self._render(ctx.path("preview.png"), res, spp, ev))
+            # close-up of the woven panel, the lashing and a pole at ~1 m (AD-9: bamboo close-up)
+            pv0, pv1 = po.get("panel_band", (0.0, 1.0))
+            ph = (pv1 - pv0) * H
+            render.look_at_camera((-0.3, -1.25, ph + 0.05), (0.05, 0.0, 0.62 * ph + 0.05), lens=40, fstop=6.0)
+            ctx.add_file("preview_closeup", self._render(ctx.path("preview_closeup.png"), res, spp, ev))
         else:
             raise ValueError(f"unknown preview kind {kind}")
         del bpy

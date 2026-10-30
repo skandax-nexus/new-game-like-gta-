@@ -23,8 +23,9 @@ from lib import core, texgen as tg  # noqa: E402
 from _terrainkit import K, finish_terrain, layers  # noqa: E402
 
 S = 3.0
+# AD-4: olive-emerald, never lime - every texel at HSV saturation <= 0.5 and value <= 0.55 (enforced in calibration)
 kit = K.Kit(__file__, cls="T", size=(S, S), target="terrain:TERRAIN_LAYERS.grass_lush", family="grass",
-            rough_spread=0.05)
+            rough_spread=0.05, sat_cap=0.5, value_cap=0.55)
 
 
 def clover(lu, lv, e1, e2):
@@ -66,21 +67,23 @@ with core.timer("grass layers"):
     h = np.where(veg, np.maximum(L["h"], soil), soil)
 
 with core.timer("albedo"):
-    soil_col = K.ramp(np.clip(0.5 + 0.3 * kit.fbm(0.05, 3), 0, 1), [(0.0, "#2c241b"), (0.5, "#3b3024"), (1.0, "#4d3e2c")])
+    # soil gaps not much darker than the sward: a dark soil would force the blades brighter and more saturated
+    # (lime) to hit the layer mean
+    soil_col = K.ramp(np.clip(0.5 + 0.3 * kit.fbm(0.05, 3), 0, 1), [(0.0, "#3a3226"), (0.5, "#463b2c"), (1.0, "#544633")])
     idx = L["idx"]
     gid = L["id"]
     # blade colour: olive to emerald-olive, lighter tips, darker lower layers (self-shadowed sward)
     tip = np.clip(L["lu"] / 0.06, 0, 1)
     g = np.clip(0.5 + 0.45 * (gid - 0.5) + 0.25 * tip + 0.1 * kit.fbm(0.1, 3), 0, 1)
-    grass = K.ramp(g, [(0.0, "#36481f"), (0.35, "#4c6029"), (0.65, "#5f7334"), (1.0, "#788442")])
+    grass = K.ramp(g, [(0.0, "#3e4a26"), (0.35, "#4f5f2e"), (0.65, "#5d6c37"), (1.0, "#6c7740")])
     depth = np.clip(idx.astype(np.float32) / 5.0, 0.0, 1.0)
-    grass = K.mul(grass, 0.72 + 0.28 * depth)
-    clov = K.ramp(np.clip(0.5 + 0.3 * (gid - 0.5), 0, 1), [(0.0, "#34492a"), (1.0, "#465f33")])
+    grass = K.mul(grass, 0.8 + 0.2 * depth)
+    clov = K.ramp(np.clip(0.5 + 0.3 * (gid - 0.5), 0, 1), [(0.0, "#2f3a22"), (1.0, "#3b4628")])  # darker, olive, not teal
     straw = K.ramp(np.clip(gid, 0, 1), [(0.0, "#8f8455"), (1.0, "#b0a46c")])
     col = np.where((idx == 3)[..., None], clov, grass)
     col = np.where((idx == 5)[..., None], straw, col)
     alb = np.where(veg[..., None], col, soil_col)
-    alb = K.compress_chroma(alb, 0.85)
+    alb = K.compress_chroma(alb, 0.7)
 
 with core.timer("roughness"):
     rough = np.where(veg, 0.86 + 0.06 * (gid - 0.5), 0.97) + 0.02 * kit.fbm(0.05, 2)

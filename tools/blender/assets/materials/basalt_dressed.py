@@ -49,7 +49,18 @@ with core.timer("blocks"):
     c1, c2, cid = kit.worley(0.4, 1.0, x=kit.warp(0.02, 0.1, 2)[0])
     crack = tg.smoothstep(0.006, 0.0, c2 - c1) * (cid > 0.75)
     tilt = 0.0012 * (((bid * 7.7) % 1.0) - 0.5) * (b["lu"] - 0.5)
-    h = (face + arris + tilt - 0.005 * chips - 0.0015 * crack) * inside - 0.008 * (1.0 - inside)
+    # AD note: point-chisel dressing over the striation (pocks 2-5 mm, denser in the field than in the margin)
+    def pock(lu, lv, e1, e2):
+        r = 0.0012 + 0.0014 * e1
+        dd = np.sqrt((lu / 1.4) ** 2 + lv * lv) / r
+        return np.where(dd < 1.0, 0.0008 * (0.5 + 0.5 * e2) * np.sqrt(np.clip(1.0 - dd * dd, 0, 1)), -1e9)
+
+    pk = kit.scatter(0.008, pock, density=0.7, jitter=0.7, angle=(0.5, 1.1))
+    tool = tg.blur(pk.height(0.0), 0.6) * (0.35 + 0.65 * margin) * (1.0 - tg.smoothstep(0.5, 0.8, kit.fbm(0.6, 3) * 0.5 + 0.5))
+    # hand-polished arrises: the outer 3 cm of every block is worn smooth and slightly rounded
+    polish = tg.smoothstep(0.035, 0.008, d) * inside
+    h = (face + arris + tilt - 0.005 * chips - 0.0015 * crack - tool * (1.0 - polish)) * inside - 0.008 * (1.0 - inside)
+    h += -0.0008 * polish * (1.0 - tg.smoothstep(0.0, 0.03, d))
 
 with core.timer("albedo"):
     t = np.clip(0.5 + 0.3 * (bid - 0.5) + 0.12 * kit.fbm(0.3, 3) + 0.06 * kit.fbm(0.03, 2), 0, 1)
@@ -59,6 +70,8 @@ with core.timer("albedo"):
     rock = K.tint(rock, "#7a756c", 0.3 * rind)
     rock = K.tint(rock, "#8a8478", 0.35 * chips)
     rock = K.mul(rock, 1.0 - 0.4 * crack)
+    rock = K.mul(rock, 1.0 + 0.12 * tg.smoothstep(0.0, 0.0006, tool))  # fresh pocks pale with stone dust
+    rock = K.mul(rock, 1.0 - 0.12 * polish)  # polished arrises darker, glossier
     # hand-polished patches: darker, smoother
     touch = tg.smoothstep(0.55, 0.8, kit.fbm(0.6, 3) * 0.5 + 0.5)  # hand-worn patches (periodic)
     rock = K.mul(rock, 1.0 - 0.1 * touch)
@@ -70,10 +83,10 @@ with core.timer("albedo"):
     alb = K.compress_chroma(alb, 0.9)
 
 with core.timer("roughness"):
-    rough = 0.72 + 0.05 * kit.fbm(0.2, 3) + 0.06 * stri * margin - 0.2 * touch + 0.1 * salt + 0.08 * rind
+    rough = 0.72 + 0.05 * kit.fbm(0.2, 3) + 0.06 * stri * margin - 0.2 * touch + 0.1 * salt + 0.08 * rind - 0.22 * polish + 0.05 * tg.smoothstep(0.0, 0.0006, tool)
     rough = rough * inside + 0.9 * (1.0 - inside)
 
 kit.finish(height=h, albedo=alb, rough=rough, ao="cycles", ao_distance=0.02, ao_samples=32,
-           description="Chisel-dressed basalt ashlar (3 m): diagonal tooling per block, drafted margins, tight joints, "
-                       "hand-polished patches, weathering rind, salt bloom.",
+           description="Chisel-dressed basalt ashlar (3 m): diagonal tooling and point-chisel pocks per block, drafted "
+                       "margins, hand-polished arrises and patches, tight joints, weathering rind, salt bloom.",
            preview="wall", preview_opts=dict(floor_band=None, samples=64))

@@ -5,7 +5,8 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { buildQualitySettings } from '../../../src/core/quality';
-import { CascadedShadows, cascadeCountFor, cascadeMapSize, practicalSplits, shadowDistanceFor, shadowFilterFor, shadowMapBytes, CSM_BLEND } from '../../../src/render/lighting/csm';
+import { activeCascadesFor, CascadedShadows, cascadeCountFor, cascadeMapSize, practicalSplits, shadowDistanceFor, shadowFilterFor, shadowMapBytes, CSM_BLEND } from '../../../src/render/lighting/csm';
+import { CSM_PARS_GLSL } from '../../../src/render/lighting/shadowChunks';
 import { DIR_SHADOW_LINE, cascadeChunksInstalled } from '../../../src/render/lighting/shadowChunks';
 import { installShaderGlobals, G, g } from '../../../src/render/materials/chunks/globals';
 import { createZoomLook, resolveZoomLook, capZoomLook } from '../../../src/render/style/zoom';
@@ -113,6 +114,54 @@ describe('splits and fitting', () => {
     expect(g(G.CSM_PARAMS).x).toBe(3);
     expect(g(G.CSM_PARAMS).y).toBe(2);
     csm.dispose();
+  });
+});
+
+describe('far zoom bands use fewer cascades (review: ARCHITECTURE §15 world < 300 draw calls)', () => {
+  it('strategic 1, operational 2, tactical and closer the tier count', () => {
+    const at = (d: number) => resolveZoomLook(d, createZoomLook());
+    expect([1, 2, 3, 4].map((n) => activeCascadesFor(n, at(2600)))).toEqual([1, 1, 1, 1]);
+    expect([1, 2, 3, 4].map((n) => activeCascadesFor(n, at(700)))).toEqual([1, 2, 2, 2]);
+    for (const d of [220, 45, 4.5]) expect([1, 2, 3, 4].map((n) => activeCascadesFor(n, at(d)))).toEqual([1, 2, 3, 4]);
+  });
+
+  it('idle cascades keep their light (no recompile) but are weighted 0 and skip their shadow render', () => {
+    const csm = new CascadedShadows(buildQualitySettings('ultra'));
+    csm.maxCascades = 4;
+    csm.rebuild();
+    const cam = new THREE.PerspectiveCamera(42, 16 / 9, 0.5, 20000);
+    const toLight = new THREE.Vector3(0.3, 0.8, 0.5).normalize();
+    const view = (d: number): void => {
+      cam.position.set(0, d * 0.75, d * 0.66);
+      cam.lookAt(0, 0, 0);
+      cam.updateMatrixWorld();
+      csm.update(cam, toLight, resolveZoomLook(d, createZoomLook()), d);
+    };
+    view(2600);
+    expect(csm.lights.length).toBe(4);
+    expect(csm.activeCascadeCount).toBe(1);
+    expect(csm.lights.map((l) => l.shadow.autoUpdate)).toEqual([true, false, false, false]);
+    expect(g(G.CSM_PARAMS).x).toBe(4);
+    expect(g(G.CSM_CASCADE).z).toBeGreaterThan(0);
+    for (let i = 1; i < 4; i++) expect(g(G.CSM_CASCADE + i).z).toBe(0);
+    // The one cascade in use covers the whole shadow distance.
+    expect(g(G.CSM_CASCADE).y).toBeCloseTo(csm.info.distance, 3);
+    view(700);
+    expect(csm.activeCascadeCount).toBe(2);
+    expect(csm.lights.map((l) => l.shadow.autoUpdate)).toEqual([true, true, false, false]);
+    expect(g(G.CSM_CASCADE + 1).y).toBeCloseTo(csm.info.distance, 3);
+    // Back to tactical: every cascade re-renders again.
+    view(220);
+    expect(csm.activeCascadeCount).toBe(4);
+    expect(csm.lights.every((l) => l.shadow.autoUpdate)).toBe(true);
+    for (let i = 0; i < 4; i++) expect(g(G.CSM_CASCADE + i).z).toBeGreaterThan(0);
+    csm.dispose();
+  });
+
+  it('the shader gives idle cascades no light and fades out at the last cascade in use', () => {
+    expect(CSM_PARS_GLSL).toContain('if ( c.z <= 0.0 ) return vec3( 0.0 );');
+    expect(CSM_PARS_GLSL).toContain('samG[ SAM_G_CSM_CASCADE + i + 1 ].z <= 0.0');
+    expect(CSM_PARS_GLSL).toContain('if ( samCsmLast( i ) ) {');
   });
 });
 

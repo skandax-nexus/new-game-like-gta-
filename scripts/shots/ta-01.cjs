@@ -3,14 +3,18 @@
  * TA-01 evidence capture (WP1 PBR materials, terrain layers, decal atlas). OWNER: Technical Artist A (TA-01).
  *
  *   npx vite build --outDir .build/ta-01/dist --emptyOutDir
- *   NODE_PATH=$(npm root -g) node scripts/shots/ta-01.cjs [--only=deltas,budgets,previews,tiling,swatches,decals,viewer,splat,stupa]
+ *   NODE_PATH=$(npm root -g) node scripts/shots/ta-01.cjs [--only=deltas,budgets,previews,tiling,swatches,decals,viewer,splat,stupa,mobile,varsha]
  *                                                         [--ids=a,b] [--fast]
  *
  * Env: SHOTS_PORT (default 4404), SHOTS_DIST (default .build/ta-01/dist), SHOTS_OUT (default docs/sprint1/ta-01).
  *
  *   deltas    mean baseColor of every PUBLISHED WebP (all tiers; linear mean per channel -> sRGB) against the Art
  *             Director's target (MATERIAL_PRESETS / TERRAIN_LAYERS baseColor via `npm run assets -- --style`):
- *             per-channel and luminance delta in %, PASS within +-6 %. -> deltas.md, report.json
+ *             per-channel and luminance delta in %, PASS within +-6 %. Also (round 1 review): the ultra WebP mean vs
+ *             the cache asset.json QA meanColor (B2: they must agree), HSV saturation p98 / value p98 / lime share
+ *             (AD-4) and, for terrain layers, the ORM.r (height-blend proxy) 5th..95th percentile span (B6: >= 0.3).
+ *             Art Director desk rulings (docs/art/reviews/ta-01.md AD-8) replace a preset that still holds its old
+ *             value. -> deltas.md, stats.md, report.json
  *   budgets   WP1 bytes per tier from the generated manifest vs the ASSET_LIST budget (36 / 16 / 5.3 MB)
  *   previews  Cycles previews in docs/screenshots/pipeline/wp1 (copied by the runner's --previews-dir) re-encoded
  *             to JPEG (q82, tiling shots 768 px) to keep the repository small
@@ -24,7 +28,11 @@
  *   decals    the shipped decal atlas composited by its ORM.b opacity over wall (plaster) / ground (earth)
  *             backdrops per region, labelled with the metadata.decals regions -> decals_atlas.png
  *   stupa     stupa_sanchi as published (samrajya_set sandstone_carved_red) and re-skinned to sandstone_buff by
- *             rewriting the GLB JSON chunk in flight (page.route) -> proves the shared trim-band layout
+ *             rewriting the GLB JSON chunk in flight (page.route) -> proves the shared trim-band layout; golden + day
+ *   mobile    every P0 set on the MOBILE texture tier (assets=mobile, quality=low): architecture in the viewer at
+ *             ~1.2 m and ~9 m under sky_day, terrain layers as a single-layer splat patch -> mobile/<id>.jpg
+ *   varsha    marsh and farmland splat recipes wet (monsoon): the splat wetness uniform (MATERIAL_GLOBALS.wetness,
+ *             reached through three.js' __THREE_DEVTOOLS__ observe hook) at 0.85 -> varsha_sheet.jpg
  * Fails (exit 1) on console errors, page errors, failed requests or a delta outside +-6 %.
  */
 'use strict';
@@ -75,10 +83,62 @@ if (args.ids) {
   SETS = SETS.filter((s) => keep.has(s.id));
 }
 
+// Art Director desk rulings (docs/art/reviews/ta-01.md AD-8), mirrored from tools/blender/assets/materials/_matkit.py
+// AD_RULINGS: applied only while the preset still holds the old value.
+const AD_RULINGS = {
+  'materials:MATERIAL_PRESETS.roof_tile_terracotta': ['#a65a3c', '#a6644a'],
+  'terrain:TERRAIN_LAYERS.laterite_soil': ['#8e5038', '#8e5a44'],
+  'materials:MATERIAL_PRESETS.laterite_block': ['#8f4a34', '#8f5240'],
+};
+
 function styleValues(refs) {
   if (!refs.length) return {};
   const outp = execFileSync(process.execPath, [path.join(ROOT, 'tools', 'assets', 'build.mjs'), '--style', ...refs], { cwd: ROOT, maxBuffer: 1 << 26 }).toString();
-  return JSON.parse(outp.slice(outp.indexOf('{')));
+  const vals = JSON.parse(outp.slice(outp.indexOf('{')));
+  for (const [ref, [from, to]] of Object.entries(AD_RULINGS))
+    if (vals[ref] && String(vals[ref].baseColor).toLowerCase() === from) vals[ref] = { ...vals[ref], baseColor: to, adRuling: `${from} -> ${to}` };
+  return vals;
+}
+
+/** HSV saturation / value percentiles and the lime share (hue 70-110 deg, S > 0.55, V > 0.40) of an sRGB image. */
+async function hsvStats(file) {
+  const { data, info } = await sharp(file).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const n = info.width * info.height;
+  const sat = new Float32Array(n);
+  const val = new Float32Array(n);
+  let lime = 0;
+  for (let i = 0; i < n; i++) {
+    const r = data[i * 3] / 255;
+    const g = data[i * 3 + 1] / 255;
+    const b = data[i * 3 + 2] / 255;
+    const mx = Math.max(r, g, b);
+    const mn = Math.min(r, g, b);
+    const sv = mx > 1e-6 ? (mx - mn) / mx : 0;
+    sat[i] = sv;
+    val[i] = mx;
+    let hue = 0;
+    if (mx - mn > 1e-6) {
+      if (mx === r) hue = 60 * (((g - b) / (mx - mn)) % 6);
+      else if (mx === g) hue = 60 * ((b - r) / (mx - mn) + 2);
+      else hue = 60 * ((r - g) / (mx - mn) + 4);
+      if (hue < 0) hue += 360;
+    }
+    if (hue >= 70 && hue <= 110 && sv > 0.55 && mx > 0.4) lime++;
+  }
+  const pct = (a, q) => Float32Array.from(a).sort()[Math.min(n - 1, Math.floor(q * n))];
+  return { satP98: +pct(sat, 0.98).toFixed(3), valueP98: +pct(val, 0.98).toFixed(3), limePct: +((lime / n) * 100).toFixed(2) };
+}
+
+/** 5th / 95th percentile of a channel (0..1) of an image. */
+async function channelSpan(file, ch) {
+  const { data, info } = await sharp(file).raw().toBuffer({ resolveWithObject: true });
+  const n = info.width * info.height;
+  const v = new Float32Array(n);
+  for (let i = 0; i < n; i++) v[i] = data[i * info.channels + ch] / 255;
+  v.sort();
+  const p5 = v[Math.floor(0.05 * n)];
+  const p95 = v[Math.floor(0.95 * n)];
+  return { p5: +p5.toFixed(3), p95: +p95.toFixed(3), span: +(p95 - p5).toFixed(3) };
 }
 
 // ------------------------------------------------------------------ colour helpers
@@ -235,6 +295,48 @@ async function main() {
       '',
     ].join('\n');
     fs.writeFileSync(path.join(OUT, 'deltas.md'), md);
+
+    // round-1 review statistics: B2 (cache QA mean == shipped WebP mean), AD-4 (saturation / lime), B6 (ORM.r span)
+    const st = [];
+    for (const s of SETS) {
+      const e = MANIFEST_JSON.assets[s.id];
+      const bc = e?.maps?.baseColor?.ultra;
+      if (!bc) continue;
+      const r = report.sets[s.id] ?? (report.sets[s.id] = { id: s.id, tiers: {} });
+      const qaPath = path.join(CACHE, s.id, 'asset.json');
+      const qa = fs.existsSync(qaPath) ? JSON.parse(fs.readFileSync(qaPath, 'utf8'))?.material?.qa ?? null : null;
+      const shipped = r.tiers.ultra?.mean ?? rgbToHex((await meanColor(path.join(PUB, bc.url))).srgb);
+      let qaDelta = null;
+      if (qa?.meanColor) {
+        const a = hexToRgb(qa.meanColor);
+        const b = hexToRgb(shipped);
+        qaDelta = Math.max(...a.map((v, c) => Math.abs(v - b[c])));
+      }
+      const hs = await hsvStats(path.join(PUB, bc.url));
+      let orm = null;
+      const om = e.maps?.orm?.ultra;
+      if (s.cat === 'terrain' || s.id === 'ground_dry_earth') if (om) orm = await channelSpan(path.join(PUB, om.url), 0);
+      r.stats = { qaMean: qa?.meanColor ?? null, shippedMean: shipped, qaVsShippedMaxLevels: qaDelta, ...hs, ormR: orm };
+      if (qaDelta !== null && qaDelta > 2) failures.push(`${s.id}: cache QA mean ${qa.meanColor} != shipped ${shipped} (B2)`);
+      if (orm && orm.span < 0.3) failures.push(`${s.id}: ORM.r p5..p95 span ${orm.span} < 0.3 (B6)`);
+      st.push(`| ${s.id} | ${qa?.meanColor ?? '-'} | ${shipped} | ${qaDelta ?? '-'} | ${hs.satP98} | ${hs.valueP98} | ${hs.limePct} | ${orm ? `${orm.p5} / ${orm.p95} / **${orm.span}**` : 'n/a'} |`);
+    }
+    fs.writeFileSync(
+      path.join(OUT, 'stats.md'),
+      [
+        '# TA-01 - review round 1 statistics (published ultra WebP)',
+        '',
+        '- **B2**: the cache QA mean (asset.json `material.qa.meanColor`, float64 means since round 1) against the mean of the',
+        '  shipped ultra WebP (max abs difference in sRGB levels; > 2 fails).',
+        '- **AD-4**: HSV saturation p98, value p98 and the lime share (hue 70-110 deg, S > 0.55, V > 0.40).',
+        '- **B6**: ORM.r (the splat height-blend proxy) 5th / 95th percentile and span for every terrain layer (>= 0.3).',
+        '',
+        '| id | cache QA mean | shipped mean | max diff (levels) | sat p98 | value p98 | lime % | ORM.r p5 / p95 / span |',
+        '|---|---|---|---|---|---|---|---|',
+        ...st,
+        '',
+      ].join('\n'),
+    );
   }
 
   // ---------------------------------------------------------------- budgets
@@ -384,7 +486,7 @@ async function main() {
   }
 
   // ---------------------------------------------------------------- browser groups
-  const needBrowser = run('viewer') || run('splat') || run('stupa');
+  const needBrowser = run('viewer') || run('splat') || run('stupa') || run('mobile') || run('varsha');
   if (needBrowser) {
     if (!fs.existsSync(path.join(ROOT, DIST, 'index.html'))) throw new Error(`${DIST} not built: npx vite build --outDir ${DIST} --emptyOutDir`);
     const { chromium } = requirePlaywright();
@@ -409,6 +511,18 @@ async function main() {
       page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
       page.on('requestfailed', (r) => errors.push(`requestfailed: ${r.url()} ${r.failure()?.errorText ?? ''}`));
       let routed = null;
+      if (opts.wet !== undefined) {
+        // three.js r170 announces every Scene to window.__THREE_DEVTOOLS__ ('observe'); keep them so the splat
+        // material's shared wetness uniform (MATERIAL_GLOBALS.wetness) can be set like the weather rig does.
+        await page.addInitScript(() => {
+          const t = new EventTarget();
+          window.__ta01Scenes = [];
+          t.addEventListener('observe', (e) => {
+            if (e.detail && e.detail.isScene) window.__ta01Scenes.push(e.detail);
+          });
+          window.__THREE_DEVTOOLS__ = t;
+        });
+      }
       if (opts.reskin) {
         // the loader appends a cache-buster (?v=<hash>), so match on the path, not a glob
         await page.route((u) => u.pathname.endsWith('.glb'), async (route) => {
@@ -429,6 +543,22 @@ async function main() {
         await page.waitForFunction(() => window.__SAMRAJYA__ && window.__SAMRAJYA__.ready && window.__SAMRAJYA__.sceneReady, null, { timeout: 240000, polling: 250 });
         await page.evaluate((n) => window.__SAMRAJYA__.waitFrames(n), 4);
         await page.waitForFunction(() => !document.getElementById('boot-splash'), null, { timeout: 30000, polling: 100 }).catch(() => undefined);
+        if (opts.wet !== undefined) {
+          const n = await page.evaluate((w) => {
+            let count = 0;
+            for (const sc of window.__ta01Scenes || [])
+              sc.traverse((o) => {
+                const u = o.material && o.material.userData && o.material.userData.samrajyaUniforms;
+                if (u && u.uWetness) {
+                  u.uWetness.value = w;
+                  count++;
+                }
+              });
+            return count;
+          }, opts.wet);
+          if (!n) errors.push('varsha: no splat material with a uWetness uniform found');
+          await page.evaluate((n2) => window.__SAMRAJYA__.waitFrames(n2), 3);
+        }
         state = await page.evaluate(() => window.__SAMRAJYA__.getState().sceneState);
         await page.evaluate(() => window.__SAMRAJYA__.freeze(true));
         for (const c of await page.evaluate(() => window.__SAMRAJYA__.getErrors().map((r) => r.message))) errors.push(`crash: ${c}`);
@@ -505,15 +635,64 @@ async function main() {
         }
       }
 
+      if (run('mobile')) {
+        // P0 sets on the mobile texture tier, as a phone renders them (quality=low)
+        fs.mkdirSync(path.join(OUT, 'mobile'), { recursive: true });
+        const P0 = ['sandstone_buff', 'lime_plaster_weathered', 'brick_fired_old', 'roof_tile_terracotta', 'thatch_grass', 'mud_plaster',
+          'bamboo_lattice', 'timber_teak_carved', 'sandstone_carved_red', 'terrain_grass_lush', 'terrain_grass_dry', 'terrain_alluvial_silt',
+          'terrain_farmland_tilled', 'terrain_road_earth', 'terrain_river_sand', 'terrain_rock_sandstone', 'terrain_flagstone', 'terrain_mud_wet',
+          'ground_dry_earth'];
+        const items = [];
+        for (const id of P0.filter((x) => SETS.some((s2) => s2.id === x))) {
+          const terr = id.startsWith('terrain_') || id === 'ground_dry_earth';
+          const views = terr ? [['hero', `splat=${id}`]] : [['detail', `asset=${id}&camera=detail`], ['overview', `asset=${id}&camera=overview`]];
+          for (const [cam, q] of views) {
+            const file = path.join(RAW, `mobile_${id}_${cam}.png`);
+            await shoot(`mobile ${id} ${cam}`, file, `${q}&hdri=sky_day&assets=mobile`, { quality: 'low' });
+            const out = path.join(OUT, 'mobile', `${id}_${cam}.jpg`);
+            if (fs.existsSync(file)) await sharp(file).jpeg({ quality: 84, mozjpeg: true }).toFile(out);
+            items.push({ file: out, label: `${id} - mobile tier, ${terr ? 'splat patch' : cam === 'detail' ? '~1.2 m' : '~9 m'}, sky_day` });
+          }
+        }
+        await sheet(items, 4, 480, 270, path.join(OUT, 'mobile_sheet.jpg'), 'P0 sets on the MOBILE texture tier (assets=mobile, quality=low), sky_day');
+      }
+
+      if (run('varsha')) {
+        // monsoon lookdev of the wet biomes (AD-9): marsh (mud_wet base) and farmland, dry vs wet 0.85
+        const terr = fs.readFileSync(path.join(ROOT, 'src', 'render', 'style', 'terrain.ts'), 'utf8');
+        const layerAsset = {};
+        for (const m of terr.matchAll(/^\s+(\w+): L\(\{ id: '(\w+)'.*?assetId: (?:'(\w+)'|null)/gm)) layerAsset[m[1]] = m[3] ?? null;
+        const bt = terr.slice(terr.indexOf('export const BIOME_TERRAIN'));
+        const items = [];
+        for (const biome of ['marsh', 'farmland']) {
+          const m = new RegExp(`^\\s+${biome}: \\{ layers: \\[([^\\]]+)\\]`, 'm').exec(bt);
+          if (!m) {
+            failures.push(`varsha: biome ${biome} not in BIOME_TERRAIN`);
+            continue;
+          }
+          const ids = m[1].split(',').map((x) => layerAsset[x.trim().replace(/'/g, '')] ?? x.trim().replace(/'/g, ''));
+          for (const [wet, label] of [[0, 'dry'], [0.85, 'varsha wet 0.85']]) {
+            const file = path.join(RAW, `varsha_${biome}_${label.split(' ')[0]}.png`);
+            await shoot(`varsha ${biome} ${label}`, file, `splat=${ids.join(',')}&hdri=sky_overcast&assets=ultra`, { wet });
+            items.push({ file, label: `${biome} (${ids.join(', ')}) - ${label}, sky_overcast` });
+          }
+        }
+        await sheet(items, 2, 640, 360, path.join(OUT, 'varsha_sheet.jpg'), 'Monsoon lookdev: splat wetness 0 vs 0.85 (darkened porous albedo, lowered roughness)');
+      }
+
       if (run('stupa')) {
         const a = path.join(RAW, 'stupa_red.png');
         const b = path.join(RAW, 'stupa_buff.png');
         const c = path.join(RAW, 'stupa_buff_close.png');
+        const dday = path.join(RAW, 'stupa_buff_day.png');
         await shoot('stupa_sanchi samrajya_set=sandstone_carved_red', a, 'asset=stupa_sanchi&hdri=sky_golden&camera=hero&assets=ultra');
         const r = await shoot('stupa_sanchi samrajya_set=sandstone_buff', b, 'asset=stupa_sanchi&hdri=sky_golden&camera=hero&assets=ultra', {
           reskin: { model: 'stupa_sanchi', from: 'sandstone_carved_red', to: 'sandstone_buff' },
         });
         await shoot('stupa_sanchi buff close', c, 'asset=stupa_sanchi&hdri=sky_golden&camera=close&assets=ultra', {
+          reskin: { model: 'stupa_sanchi', from: 'sandstone_carved_red', to: 'sandstone_buff' },
+        });
+        await shoot('stupa_sanchi buff sky_day', dday, 'asset=stupa_sanchi&hdri=sky_day&camera=hero&assets=ultra', {
           reskin: { model: 'stupa_sanchi', from: 'sandstone_carved_red', to: 'sandstone_buff' },
         });
         report.stupaReskin = { replacedSetReferences: r.routed };
@@ -523,8 +702,9 @@ async function main() {
             { file: a, label: 'as published: samrajya_set = sandstone_carved_red' },
             { file: b, label: `samrajya_set -> sandstone_buff (${r.routed ?? 0} refs rewritten in the GLB)` },
             { file: c, label: 'sandstone_buff, camera=close (trim bands: ashlar, vine, dentil, padma, bead-reel, frieze)' },
+            { file: dday, label: 'sandstone_buff under sky_day (AD-9)' },
           ],
-          3,
+          2,
           640,
           360,
           path.join(OUT, 'stupa_reskin.jpg'),

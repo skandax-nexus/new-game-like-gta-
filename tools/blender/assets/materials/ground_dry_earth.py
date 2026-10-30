@@ -48,8 +48,9 @@ with core.timer("soil"):
 with core.timer("scatter"):
     specs = [
         dict(cell=0.02, shape=K.shape_pebble(0.005, 0.004, 0.0025, 0.6, 0.35), density=0.45, density_map=loose + 0.2),  # crumbs
-        dict(cell=0.1, shape=K.shape_pebble(0.022, 0.016, 0.009, 0.65, 0.25), density=0.22, density_map=1.0 - 0.7 * low),
-        dict(cell=0.25, shape=K.shape_pebble(0.04, 0.03, 0.014, 0.7, 0.2), density=0.1, density_map=1.0 - 0.7 * low),
+        # AD note: pebbles smaller, fewer and soil-tinted (they read as droppings before)
+        dict(cell=0.1, shape=K.shape_pebble(0.012, 0.009, 0.006, 0.6, 0.35), density=0.14, density_map=1.0 - 0.7 * low),
+        dict(cell=0.25, shape=K.shape_pebble(0.022, 0.016, 0.009, 0.6, 0.3), density=0.06, density_map=1.0 - 0.7 * low),
         dict(cell=0.1, shape=K.shape_blade(0.08, 0.002, 0.0012, 0.35), density=0.18),
         dict(cell=0.3, shape=K.shape_leaf(0.06, 0.018, 0.0015), density=0.12),
     ]
@@ -68,8 +69,8 @@ with core.timer("albedo"):
     soil = K.mul(soil, 1.0 - 0.55 * crack - 0.25 * hair)
     soil = K.mul(soil, 1.0 + 0.08 * tg.smoothstep(0.0, 0.003, curl))  # plate rims catch light dust
     crumbs = K.mul(soil, 0.88 + 0.2 * gid[..., None])
-    stone = K.ramp(gid, [(0.0, "#6c6258"), (0.3, "#8a7a68"), (0.55, "#a08668"), (0.8, "#5a524c"), (1.0, "#b4a690")])
-    stone = K.tint(stone, "#b49a78", 0.35)  # dust coated
+    stone = K.ramp(gid, [(0.0, "#7c6a58"), (0.4, "#8e7a62"), (0.7, "#9c8466"), (1.0, "#a8916f")])
+    stone = K.tint(stone, "#a48a68", 0.5)  # soil-dusted, close to the ground value
     straw = K.ramp(gid, [(0.0, "#b39a66"), (1.0, "#d0ba88")])
     leaf = K.ramp(gid, [(0.0, "#6e5236"), (1.0, "#8c6c46")])
     col = np.where((idx == 0)[..., None], crumbs,

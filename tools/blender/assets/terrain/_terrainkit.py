@@ -56,22 +56,26 @@ def layers(kit: "K.Kit", specs: list[dict]) -> dict[str, np.ndarray]:
 
 
 def shape_foot(depth: float = 0.008) -> "callable":
-    """Bare human footprint (DEPTH map, positive inside): heel, arch, ball, five toes; 0.24-0.27 m long along +u."""
+    """Bare human footprint (DEPTH map, positive inside), 0.24-0.27 m long along +u (AD-3: anatomical, not a
+    'bone'): a deep oval heel, the shallow LATERAL contact band of the arch (the medial arch leaves no print), a
+    wide ball, a gap, then a large separate big toe and four smaller toes stepping down to the little toe.
+    e2 < 0.5 = right foot, else left (mirrored)."""
     def fn(lu, lv, e1, e2):
         L = 0.25 * (0.94 + 0.12 * e1)
-        mirror = np.where(e2 < 0.5, 1.0, -1.0)  # left / right foot
-        y = lv * mirror
-        t = lu / L + 0.5  # 0 heel .. 1 toe
-        heel = ((lu + 0.36 * L) / (0.075 * L * 1.6)) ** 2 + (y / (0.16 * L)) ** 2
-        ball = ((lu - 0.2 * L) / (0.13 * L)) ** 2 + ((y - 0.02 * L) / (0.19 * L)) ** 2
-        arch = ((lu + 0.05 * L) / (0.3 * L)) ** 2 + ((y + 0.07 * L) / (0.1 * L)) ** 2
-        body = np.minimum(np.minimum(heel, ball), arch)
-        d = np.where(body < 1.0, depth * (0.6 + 0.4 * np.sqrt(np.clip(1 - body, 0, 1))), -1e9)
-        for k, (tx, ty, tr) in enumerate(((0.43, 0.1, 0.06), (0.4, -0.01, 0.045), (0.37, -0.08, 0.04),
-                                          (0.33, -0.14, 0.035), (0.28, -0.19, 0.03))):
-            dd = ((lu - tx * L) ** 2 + (y - ty * L) ** 2) / (tr * L) ** 2
-            d = np.maximum(d, np.where(dd < 1.0, depth * 0.7 * np.sqrt(np.clip(1 - dd, 0, 1)), -1e9))
-        del t
+        mirror = np.where(e2 < 0.5, 1.0, -1.0)
+        t = lu / L
+        yy = lv * mirror / L  # +y = medial (big-toe) side
+        heel = ((t + 0.33) / 0.15) ** 2 + ((yy + 0.01) / 0.145) ** 2
+        lateral = ((t + 0.07) / 0.27) ** 2 + ((yy + 0.085) / 0.1) ** 2
+        ball = ((t - 0.19) / 0.11) ** 2 + ((yy - 0.01) / 0.2) ** 2
+        d = np.full(np.shape(lu), -1e9, np.float32)
+        for q, k in ((heel, 1.0), (lateral, 0.72), (ball, 0.9)):
+            d = np.maximum(d, np.where(q < 1.0, depth * k * (0.55 + 0.45 * np.sqrt(np.clip(1.0 - q, 0, 1))), -1e9))
+        for tx, ty, rx, ry, k in ((0.41, 0.12, 0.07, 0.06, 0.85), (0.385, 0.015, 0.042, 0.037, 0.6),
+                                  (0.36, -0.065, 0.038, 0.034, 0.55), (0.325, -0.13, 0.034, 0.031, 0.5),
+                                  (0.28, -0.185, 0.03, 0.028, 0.45)):
+            q = ((t - tx) / rx) ** 2 + ((yy - ty) / ry) ** 2
+            d = np.maximum(d, np.where(q < 1.0, depth * k * np.sqrt(np.clip(1.0 - q, 0, 1)), -1e9))
         return d
     return fn
 
@@ -91,6 +95,27 @@ def shape_hoof(depth: float = 0.012, size: float = 0.07) -> "callable":
     return fn
 
 
+def shape_leaf_ovate(length: float, width: float, h: float = 0.0025, curl: float = 0.012,
+                     arch: float = 0.004) -> "callable":
+    """Ovate sal / teak leaf with an ACUTE tip (AD-6: not a paper disc), petiole at lu = -L/2, widest at ~35 % of
+    the length; lamina 1.5-3 mm thick, edges cupped / curled up by up to `curl` (dry leaves), arched along the
+    midrib, raised midrib and pinnate lateral veins. Returns height (m) or -1e9."""
+    def fn(lu, lv, e1, e2):
+        L = length * (0.75 + 0.5 * e1)
+        Wd = width * (0.8 + 0.4 * e2)
+        t = lu / L + 0.5  # 0 petiole .. 1 tip
+        tc = np.clip(t, 0.0, 1.0)
+        half = Wd * 0.5 * np.sin(np.pi * tc ** 0.75) ** 0.9 * (1.0 - tc ** 4) ** 0.6 * np.where(tc > 0.7, (1.0 - tc) / 0.3, 1.0) ** 0.35
+        inside = (t > 0.0) & (t < 1.0) & (np.abs(lv) < half)
+        rel = np.abs(lv) / np.maximum(half, 1e-6)
+        dry = e2  # some leaves flat and soft, others crisp and curled
+        lam = h * (0.6 + 0.4 * e1) + curl * dry * rel ** 2.2 + arch * np.sin(np.pi * tc) * (0.4 + 0.6 * e1)
+        rib = 0.0012 * np.exp(-(lv / (0.025 * Wd)) ** 2)
+        veins = 0.0004 * (np.abs(np.sin(np.pi * (tc * 9.0 - rel * 2.2))) > 0.93)
+        return np.where(inside, lam + rib + veins, -1e9)
+    return fn
+
+
 def _cuts(rng, total: float, spacing: tuple[float, float]) -> list[float]:
     """Random partition of [0, total) into pieces in `spacing` (rescaled to fill exactly); returns the cut starts."""
     w: list[float] = []
@@ -105,12 +130,13 @@ def _cuts(rng, total: float, spacing: tuple[float, float]) -> list[float]:
 
 def joint_bands(kit: "K.Kit", spacing: tuple[float, float], amp: float, feature: float,
                 vspacing: tuple[float, float], carry: float = 0.3, tilt: float = 0.1, wander: float = 0.1,
-                vfeature: float = 0.8) -> dict[str, np.ndarray]:
+                vfeature: float = 0.8, pinch: bool = False) -> dict[str, np.ndarray]:
     """Rock-face joint system for triplanar rock layers (v = up), periodic over the tile:
     sub-horizontal sheet / bedding joints (thickness drawn from `spacing`, each an independent wavy curve of
     amplitude `amp`, so beds thin and thicken along u) and, per band, vertical joints (spacing `vspacing`), each
     tilted (+-tilt m/m) and wandering (+-wander m); a fraction `carry` of a band's joints continue the joint of
-    the band below (offset a little), the rest stop at the bed boundary.
+    the band below (offset a little), the rest stop at the bed boundary. `pinch` lets neighbouring curves cross,
+    so thin beds pinch out into lenses.
     Returns band (index), below / above (m to the joint below / above), side (m to the nearest vertical joint),
     left (m from the left joint), width (block width, m), lu (0..1 across the block), block (id 0..1),
     rand1..rand3 (per-block randoms), open_h / open_v (per-joint openness bias of the nearest joint, 0..1),
@@ -122,7 +148,7 @@ def joint_bands(kit: "K.Kit", spacing: tuple[float, float], amp: float, feature:
     starts = _cuts(rng, H, spacing)
     nb = len(starts)
     thick_min = min(((starts[(i + 1) % nb] - starts[i]) % H) or H for i in range(nb))
-    a_eff = min(amp, 0.3 * thick_min)
+    a_eff = amp if pinch else min(amp, 0.3 * thick_min)  # pinch: curves may cross -> beds thin out to lenses
     yc = np.zeros_like(kit.y)
     curves = []
     for k in range(nb):
@@ -189,4 +215,4 @@ def finish_terrain(kit: "K.Kit", height: np.ndarray, albedo: np.ndarray, rough: 
                ao_height_mix=ao_height_mix, orm_span_min=orm_span_min, description=description, preview=preview, preview_opts=po, **kw)
 
 
-__all__ = ["K", "finish_terrain", "joint_bands", "layers", "shape_foot", "shape_hoof"]
+__all__ = ["K", "finish_terrain", "joint_bands", "layers", "shape_foot", "shape_hoof", "shape_leaf_ovate"]

@@ -60,27 +60,28 @@ with core.timer("flows"):
 
 with core.timer("colonnade"):
     # columns: vertical joints with branching / stopping across hairline cross-joints every 0.6-2.2 m
-    jb = joint_bands(kit, spacing=(0.6, 2.2), amp=0.05, feature=1.0, vspacing=(0.4, 1.6), carry=0.7, tilt=0.06,
-                     wander=0.05, vfeature=1.5)
+    jb = joint_bands(kit, spacing=(1.4, 4.0), amp=0.12, feature=1.0, vspacing=(0.4, 1.3), carry=0.72, tilt=0.11,
+                     wander=0.08, vfeature=1.2)
     left, width = jb["left"], jb["width"]
     right = width - left
-    a = 0.35 + 0.9 * jb["rand1"]  # oblique face slopes (m/m) left and right
-    b = 0.35 + 0.9 * jb["rand2"]
-    plateau = (0.06 + 0.12 * jb["rand3"]) * np.clip(width, 0.4, 1.6)
+    a = 0.5 + 1.3 * jb["rand1"]  # oblique face slopes (m/m) left and right: crisp prism facets
+    b = 0.5 + 1.3 * jb["rand2"]
+    plateau = (0.02 + 0.1 * jb["rand3"] ** 2) * np.clip(width, 0.4, 1.6)  # most columns show a crease
     prism = np.minimum(np.minimum(a * left, b * right), plateau)
     # broad face: planar with a small random tilt per column segment (no convex bulge)
     face_tilt = 0.04 * (jb["block"] - 0.5)
     prism = prism + face_tilt * (left - 0.5 * width) * (prism >= plateau - 1e-4)
     # cross-joints: hairline step at each segment boundary (segments sit at slightly different depths)
-    seg_off = 0.05 * (jb["rand3"] - 0.5) - 0.12 * (jb["block"] > 0.9)  # some columns fell out -> recessed
-    cross = tg.smoothstep(0.012, 0.0, np.minimum(jb["below"], jb["above"]))
-    col_h = prism + seg_off - 0.015 * cross
+    fell = (jb["block"] > 0.93).astype(np.float32)  # a few column segments fell out (planar back face)
+    seg_off = 0.025 * (jb["rand3"] - 0.5) - 0.07 * fell
+    cross = tg.smoothstep(0.008, 0.0, np.minimum(jb["below"], jb["above"])) * (kit.fbm(0.5, 2) > 0.1)
+    col_h = prism + seg_off - 0.008 * cross
     col_h += 0.006 * kit.fbm(0.25, 3) + 0.0015 * kit.fbm(0.03, 2)
     joint_line = tg.smoothstep(0.03, 0.0, jb["side"])
 
 with core.timer("entablature"):
     # hackly: chaotic small planar chips, steep, elongated a little in v, two scales
-    e1 = kit.facets(0.24, slope=0.55, aniso=(1.0, 1.8))
+    e1 = kit.facets(0.17, slope=0.55, aniso=(0.7, 3.6))  # chaotic, thin, steep fractured columnettes
     e2 = kit.facets(0.09, slope=0.4)
     ent_h = e1["h"] * 0.6 + 0.35 * e2["h"] * (e2["id"] > 0.4)
     ent_h = np.clip(ent_h, -0.12, 0.12) - 0.02 * tg.smoothstep(0.02, 0.0, e1["d"]) - 0.01 * tg.smoothstep(0.008, 0.0, e2["d"])
@@ -105,18 +106,18 @@ with core.timer("compose"):
     h = tg.blur(h, 0.6)
 
 with core.timer("albedo"):
-    t = np.clip(0.5 + 0.12 * kit.fbm(0.8, 3) + 0.1 * (jb["rand2"] - 0.5) + 0.05 * kit.fbm(0.05, 2), 0, 1)
+    t = np.clip(0.5 + 0.1 * kit.fbm(0.8, 3) + 0.22 * (jb["rand2"] - 0.5) + 0.05 * kit.fbm(0.05, 2), 0, 1)
     rock = K.ramp(t, [(0.0, "#3f3e3d"), (0.5, "#545250"), (1.0, "#69655f")])
     rock = K.tint(rock, "#6e655a", 0.4 * tg.smoothstep(-0.1, 0.4, kit.fbm(1.2, 3)) * col_zone)  # brown weathering rind
     rock = K.mul(rock, 1.0 - 0.18 * ent_zone)  # entablature darker, glassier
     rock = K.tint(rock, "#2c2b2a", 0.6 * joint_line * col_zone + 0.4 * ent_crack * ent_zone + 0.35 * cross * col_zone)
-    fresh = (jb["block"] > 0.9) * col_zone
+    fresh = fell * col_zone
     rock = K.tint(rock, "#3a3a3c", 0.4 * fresh)
-    topc = K.ramp(0.5 + 0.3 * kit.fbm(0.1, 3), [(0.0, "#5a4438"), (0.5, "#6b5142"), (1.0, "#7a6150")])
+    topc = K.ramp(0.5 + 0.3 * kit.fbm(0.1, 3), [(0.0, "#56483e"), (0.5, "#645448"), (1.0, "#726254")])
     topc = K.mul(topc, 1.0 - 0.35 * ves)
-    topc = K.tint(topc, "#5b4a3b", 0.8 * soil)
+    topc = K.tint(topc, "#574a3e", 0.7 * soil)
     rock = rock * (1.0 - top_zone[..., None]) + topc * top_zone[..., None]
-    rock = K.tint(rock, "#7a4a3a", 0.55 * bole * (1.0 - top_zone))
+    rock = K.tint(rock, "#74503f", 0.4 * bole * (1.0 - top_zone))
     # white zeolite / calcite amygdales (clustered, size-varied, sparse)
     zeo = kit.specks(0.05, coverage=0.004, size=(0.002, 0.012), cluster_m=0.6) * (ent_zone + top_zone)
     rock = K.tint(rock, "#b8b3a6", 0.7 * zeo)

@@ -19,11 +19,16 @@
  * - Biases scale with the cascade texel: normalBias = 1.4 texels (world m), depth bias = 0.6 texel / depth range.
  * - Filter per tier: low hard (BasicShadowMap), medium PCF with a radius from the sun's angular size, high / ultra
  *   PCSS (blocker search + penumbra from r.sunSoftnessDeg x ZoomLook softnessScale).
+ * - Far bands use fewer cascades than the tier allows (activeCascadesFor: strategic 1, operational 2). From far away
+ *   every caster on the map falls inside every cascade, so each extra cascade re-draws the whole map for detail
+ *   nobody can see (world overview @ultra: 475 draws, 311 of them shadow; ARCHITECTURE §15 world < 300). Idle
+ *   cascades keep their light and map (same light count: no recompiles, no re-allocation when zooming), are
+ *   weighted 0 in the shader (cascade texel 0) and skip their shadow render (shadow.autoUpdate = false).
  * Allocation-free per frame.
  */
 import * as THREE from 'three';
 import type { QualitySettings } from '../../core/types';
-import type { ZoomLook } from '../style/zoom';
+import type { ZoomBandId, ZoomLook } from '../style/zoom';
 import { G, g } from '../materials/chunks/globals';
 import { pcfRadiusFromSoftness } from './ibl';
 
@@ -40,6 +45,15 @@ export const CSM_DEBUG_COLORS: readonly (readonly [number, number, number])[] = 
   [0.4, 0.55, 1],
   [1, 1, 0.3],
 ];
+
+/** Max cascades in use per zoom band (bands not listed use the tier's count). See the design notes above. */
+export const CASCADE_CAP_BY_BAND: Readonly<Partial<Record<ZoomBandId, number>>> = { strategic: 1, operational: 2 };
+
+/** Cascades in use for a view: the tier's count, capped for far zoom bands (CASCADE_CAP_BY_BAND). */
+export function activeCascadesFor(count: number, look: ZoomLook): number {
+  const cap = CASCADE_CAP_BY_BAND[look.id];
+  return Math.max(1, Math.min(count, cap ?? count));
+}
 
 /** Shadow filter mode written to samG (GLSL reads CSM_PARAMS.y). */
 export type ShadowFilter = 'hard' | 'pcf' | 'pcss';
@@ -113,6 +127,8 @@ export class CascadedShadows {
   readonly group = new THREE.Group();
   private quality: QualitySettings;
   private count = 1;
+  /** Cascades in use this frame (<= count; far zoom bands use fewer). */
+  private active = 1;
   private filter: ShadowFilter = 'hard';
   /** Max cascades honoured (4 = every tier as authored in ART_BIBLE §13). */
   maxCascades = 4;
@@ -142,6 +158,11 @@ export class CascadedShadows {
     return this.count;
   }
 
+  /** Cascades in use last frame (the rest are idle: weight 0, not re-rendered). */
+  get activeCascadeCount(): number {
+    return this.active;
+  }
+
   get filterMode(): ShadowFilter {
     return this.filter;
   }
@@ -164,6 +185,7 @@ export class CascadedShadows {
     }
     const q = this.quality;
     this.count = Math.min(this.maxCascades, cascadeCountFor(q));
+    this.active = this.count;
     this.filter = shadowFilterFor(q);
     this.lights = [];
     for (let i = 0; i < this.count; i++) {
@@ -210,7 +232,9 @@ export class CascadedShadows {
     const camFar = persp ? persp.far : 2000;
     const far = shadowDistanceFor(look, q, focusDistance, camFar);
     this.info.distance = far;
-    practicalSplits(near, far, this.count, look.shadows.cascadeSplitLambda, this.splits);
+    const active = activeCascadesFor(this.count, look);
+    this.active = active;
+    practicalSplits(near, far, active, look.shadows.cascadeSplitLambda, this.splits);
     camera.matrixWorld.decompose(this.camPos, this.camQuat, this.tmp);
     // Light basis matching three's lookAt(eye = target + dir, target, up = +Y): z = dir, x = up x z, y = z x x.
     const up = Math.abs(this.lightDir.y) > 0.999 ? this.tmp.set(0, 0, 1) : this.tmp.set(0, 1, 0);
@@ -221,6 +245,16 @@ export class CascadedShadows {
     const softTan = Math.tan(THREE.MathUtils.degToRad(Math.max(0.05, this.softnessDeg * look.shadows.softnessScale)));
     for (let i = 0; i < this.count; i++) {
       const l = this.lights[i]!;
+      if (i >= active) {
+        // Idle cascade (far band): keep its light and map, weight 0 in the shader (texel 0), skip its shadow render.
+        l.shadow.autoUpdate = false;
+        l.shadow.needsUpdate = false;
+        g(G.CSM_CASCADE + i).set(0, 0, 0, 0);
+        this.info.texels[i] = 0;
+        this.info.radii[i] = 0;
+        continue;
+      }
+      l.shadow.autoUpdate = true;
       const s0 = i === 0 ? this.splits[0]! : this.splits[i]! - CSM_BLEND * (this.splits[i]! - this.splits[i - 1]!);
       const s1 = this.splits[i + 1]!;
       // Slice corners in world space.
@@ -265,7 +299,7 @@ export class CascadedShadows {
       this.info.texels[i] = texel;
       this.info.radii[i] = r;
     }
-    for (let i = 0; i <= this.count; i++) this.info.splits[i] = this.splits[i]!;
+    for (let i = 0; i < this.info.splits.length; i++) this.info.splits[i] = i <= active ? this.splits[i]! : 0;
     g(G.CSM_PARAMS).set(q.shadows.enabled ? this.count : 0, FILTER_CODE[this.filter], this.debugColors ? 1 : 0, CSM_BLEND);
     // PCSS: light size, blocker / filter samples (ultra more), max penumbra in texels.
     const ultra = q.tier === 'ultra';

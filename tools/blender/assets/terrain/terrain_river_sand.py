@@ -5,7 +5,7 @@
 @inputs tools/blender/assets/materials/_matkit.py
 
 River sand splat layer (class T, 3 m x 3 m, seamless, macro-neutral). Flow runs along +u: current ripples with
-crests across the flow (along v), 9-12 cm wavelength, asymmetric (gentle stoss, steep lee facing downstream),
+crests across the flow (along v), 10-20 cm wavelength (varying), bifurcating crests, asymmetric (gentle stoss, steep lee facing downstream),
 sinuous / linguoid crest lines, dark heavy-mineral sand concentrated in the troughs, pale quartz on the crests,
 fine grain, a few shell fragments, pebbles and twigs, sparse bird tracks. (The darker wet band 1.5 m above the
 water line is the renderer's: RIVERBANK.wetBandM.) Orient u along the river flow.
@@ -45,10 +45,14 @@ def bird_track(lu, lv, e1, e2):
 
 with core.timer("ripples"):
     wx, wy = kit.warp(0.06, 0.35, 3)
-    lam = S / 29.0  # 29 ripples per tile: seamless
+    lam = S / 21.0  # 21 ripples per tile on average (14 cm): seamless
     # linguoid / sinuous crests: phase along u, bent by a v-dependent sinuosity
     sinu = 0.045 * kit.fbm(0.45, 3, x=wx, y=wy, aniso=(1.0, 1.4)) + 0.012 * kit.fbm(0.12, 2, x=wx, y=wy)
-    ph = (wx * S + sinu) / lam + 0.4 * kit.fbm(0.5, 2)
+    # AD note: wavelength varies 10-20 cm (local phase-rate modulation, integer mean count per tile: seamless) and
+    # crests bifurcate (a half-cycle dislocation term switched on along wandering zones), so no moire at RTS range
+    stretch = 0.32 * kit.fbm(0.6, 3, aniso=(1.0, 0.6))
+    disl = 0.5 * tg.smoothstep(-0.15, 0.15, kit.fbm(0.35, 3))  # +half wavelength on one side -> Y-junctions
+    ph = (wx * S + sinu) / lam + 5.0 * stretch + disl + 0.4 * kit.fbm(0.5, 2)
     p = ph % 1.0
     prof = np.where(p < 0.72, p / 0.72, (1.0 - p) / 0.28)  # gentle stoss upstream, steep lee downstream
     amp = 0.012 * np.clip(0.7 + 0.5 * kit.fbm(0.4, 3), 0.25, 1.2)
@@ -93,4 +97,4 @@ with core.timer("roughness"):
 finish_terrain(kit, h, alb, rough, ao_distance=0.04, height_hp=0.6,
                description="River sand (3 m, flow along +u): asymmetric current ripples with dark heavy-mineral troughs, "
                            "pale crests, pebbles, shells, twigs, bird tracks; macro-neutral.",
-               extra_meta=dict(flowAxis="+u", rippleWavelengthMeters=round(S / 29.0, 4)))
+               extra_meta=dict(flowAxis="+u", rippleWavelengthMeters=[0.1, 0.2]))

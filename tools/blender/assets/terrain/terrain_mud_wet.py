@@ -5,7 +5,8 @@
 @inputs tools/blender/assets/materials/_matkit.py
 
 Monsoon wet-mud overlay splat layer (class T, 3 m x 3 m, seamless, macro-neutral): churned, glossy dark mud -
-overlapping hoof and bare-foot prints, cart-churned wheel slots and squeezed-up ridges, a few straw bits and
+overlapping hoof and bare-foot prints, short curving wheel / drag churn (0.4-1.5 m, random directions, never
+world-aligned lines) with squeezed-up ridges, a few straw bits and
 pebbles pressed in, standing water in every hollow below the water line. PUDDLE MASK (1 = standing water): a
 cache-only file `<id>_puddleMask.png` today, destined for the baseColor ALPHA once publish.mjs keeps alpha (TA-01
 request to the CTO: its resize premultiplies, so an RGBA source darkens the high / mobile tiers); it is also
@@ -30,18 +31,25 @@ x, y = kit.x, kit.y
 
 with core.timer("churned mud"):
     h = 0.012 * kit.fbm(0.35, 3) + 0.004 * kit.fbm(0.08, 3) + 0.0008 * kit.fbm(0.012, 2)
-    # wheel slots: a couple of meandering cart grooves along u with squeezed-up ridges
-    wob = 0.16 * kit.fbm(0.7, 3, aniso=(2.0, 1.0))
-    seg = np.clip(0.55 + 0.6 * kit.fbm(0.35, 3, aniso=(3.0, 1.0)), 0.1, 1.2)  # slot depth varies along u -> pools
-    slot = np.zeros_like(h)
-    for c in (0.9, 2.3):
-        dv = y * S - c - wob
-        # each groove comes and goes along u (trampled over, filled in): continuous slots repeat as stripes
-        pres = tg.smoothstep(0.35, 0.6, kit.fbm(0.6, 3, aniso=(3.0, 1.0)) * 0.5 + 0.5)
-        slot = np.maximum(slot, pres * np.clip(1.0 - (dv / 0.1) ** 2, 0, 1) ** 0.6)
-        h += 0.006 * pres * np.exp(-((np.abs(dv) - 0.12) / 0.03) ** 2)
-    h -= 0.014 * slot * seg
-    hooves = kit.scatter(0.13, shape_hoof(0.016, 0.075), density=0.5,
+    # AD-3: no world-aligned ruts (marsh uses this layer as base layer 0). Churn = short (0.4-1.5 m), curving,
+    # intermittent wheel / hoof-drag grooves in random directions with squeezed-up ridges; the long straight ruts
+    # belong to terrain_road_earth and the decals_settlement rut end-cap.
+    def churn(lu, lv, e1, e2):
+        L = 0.4 + 1.1 * e1
+        w = 0.035 + 0.04 * e2
+        bend = (e2 - 0.5) * 1.2 / L
+        c = lv - bend * lu * lu
+        tt = np.abs(lu) / (0.5 * L)
+        inside = (tt < 1.0) & (np.abs(c) < w)
+        prof = np.clip(1.0 - (c / w) ** 2, 0, 1) ** 0.6 * np.clip((1.0 - tt) / 0.3, 0, 1)
+        return np.where(inside, 0.009 * (0.5 + 0.5 * e1) * prof, -1e9)
+
+    groove = np.zeros_like(h)
+    for cell, dens in ((0.9, 0.55), (0.6, 0.45)):
+        g = kit.scatter(cell, churn, density=dens).height(0.0)
+        groove = np.maximum(groove, g)
+    h += 0.7 * np.clip(tg.blur(groove, kit.px(0.03)) - groove, 0.0, None) - groove
+    hooves = kit.scatter(0.15, shape_hoof(0.016, 0.075), density=0.32, scale=(0.75, 1.25),
                          density_map=tg.smoothstep(0.3, 0.7, kit.fbm(0.4, 3) * 0.5 + 0.5))
     feet = kit.scatter(0.35, shape_foot(0.013), density=0.35)
     d = np.maximum(hooves.height(0.0), feet.height(0.0))
@@ -86,7 +94,7 @@ with core.timer("roughness"):
 mask_png = tg.write_png(kit.ctx.path(f"{kit.ctx.id}_puddleMask.png"), kit._down(puddle, kit.albedo_res), 8)
 kit.ctx.add_file("puddleMask", mask_png, colorSpace="linear", ship=False)
 finish_terrain(kit, h_w, alb, rough, ao_distance=0.04, height_hp=0.0, ao_height_mix=0.45, macro_amount=0.85,
-               description="Monsoon wet mud overlay (3 m): churned hoof and foot prints, cart slots, squeezed rims, "
+               description="Monsoon wet mud overlay (3 m): churned hoof and foot prints, short curving churn, squeezed rims, "
                            "straw; standing water below the level (puddle mask: cache file, lowest ORM.r).",
                extra_meta=dict(puddleMask=dict(file=f"{kit.ctx.id}_puddleMask.png", shipped=False, heightPercentile=17,
                                                note="lowest ORM.r; moves to baseColor.a when publish keeps alpha")))
