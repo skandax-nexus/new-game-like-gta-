@@ -31,14 +31,18 @@ with core.timer("silt"):
     h = 0.003 * kit.fbm(0.35, 3) + 0.0012 * kit.fbm(0.06, 3) + 0.00025 * kit.fbm(0.006, 2)
     # dried ripples: two current directions in patches
     rip = np.zeros_like(h)
-    # integer wave vectors per tile (kx, ky) = ripples at ~20 and ~110 deg, 7.5 / 6.5 cm: seamless
-    for kx, ky in ((50, 18), (-20, 58)):
+    # integer wave vectors per tile (kx, ky) = ripples at ~20 and ~110 deg, 7.5 / 6.5 cm: seamless. ONE zone field
+    # picks the current direction (A where high, B where low, flat silt between) - two independent zone masks
+    # overlapped into a cross-hatched grid.
+    zf = kit.fbm(0.5, 3) * 0.5 + 0.5
+    zones = (tg.smoothstep(0.56, 0.68, zf), tg.smoothstep(0.44, 0.32, zf))
+    broken = 0.6 + 0.4 * tg.smoothstep(-0.3, 0.3, kit.fbm(0.12, 3))  # crests fade in and out along their length
+    for (kx, ky), zone in zip(((50, 18), (-20, 58)), zones):
         wx, wy = kit.warp(0.05, 0.3, 3)
         ph = wx * kx + wy * ky + 0.6 * kit.fbm(0.25, 3)
         p = ph % 1.0
         prof = np.where(p < 0.7, p / 0.7, (1.0 - p) / 0.3)  # gentle stoss, steep lee
-        zone = tg.smoothstep(0.45, 0.65, kit.fbm(0.45, 3) * 0.5 + 0.5)
-        rip = np.maximum(rip, 0.0045 * tg.smoothstep(0.0, 1.0, prof) * zone)
+        rip = np.maximum(rip, 0.0045 * tg.smoothstep(0.0, 1.0, prof) * zone * broken)
     h += rip
     # mud-crack flakes in dried puddle zones: polygons whose edges curl up
     low = tg.smoothstep(0.58, 0.72, kit.fbm(0.4, 3) * 0.5 + 0.5)

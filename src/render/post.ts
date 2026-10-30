@@ -20,6 +20,7 @@
  */
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import type { Pass } from 'three/examples/jsm/postprocessing/Pass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
@@ -322,7 +323,9 @@ export class PostPipeline {
   /** Plain-data state (pass list, key parameters) for diagnostics. */
   info(): Record<string, unknown> {
     const p = this.passes;
-    const ran = this.composer.passes.filter((x) => x.enabled).map((x) => (x as { name?: string }).name ?? x.constructor.name);
+    // Minified builds rename three's pass classes: name them from the pass table.
+    const label = (x: Pass): string => (x === p.smaa ? 'smaa' : x === p.fxaa ? 'fxaa' : ((x as { name?: string }).name ?? x.constructor.name));
+    const ran = this.composer.passes.filter((x) => x.enabled).map(label);
     return {
       passes: ran,
       active: { ...this.active },

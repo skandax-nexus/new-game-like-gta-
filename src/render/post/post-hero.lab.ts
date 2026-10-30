@@ -58,6 +58,9 @@ function build(ctx: AppContext, host: LabHost): LabInstance {
     return m;
   };
 
+  // Content-pipeline skies, the dominant preset's LUT and the WP7 lens dirt (main.ts does not attach them to the
+  // render context yet - see the GFX-01 request to the CTO); procedural fallbacks when assets are off.
+  host.env.setAssets(ctx.assets);
   // Golden hour, wet ground (?hour= / ?weather= win); the stage turns so the sun stands behind the colonnade.
   if (ctx.params.hour === null) host.setEnvironment({ hour: 17.4 });
   const sun = host.env.solarDirection(new THREE.Vector3());
@@ -164,6 +167,7 @@ function build(ctx: AppContext, host: LabHost): LabInstance {
       }
     },
     dispose() {
+      host.env.setAssets(null);
       post.setTaa('auto');
       post.setFocus(null);
       post.setToneMapping('aces');

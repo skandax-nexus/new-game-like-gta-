@@ -46,15 +46,16 @@ with core.timer("soil"):
     c1, c2, _ = kit.worley(0.12, 1.0, x=kit.warp(0.01, 0.06, 2)[0])
     crack = tg.smoothstep(0.03, 0.0, c2 - c1) * tg.smoothstep(0.55, 0.75, kit.fbm(0.2, 3) * 0.5 + 0.5)
     soil -= 0.002 * crack
-    bare = tg.smoothstep(0.35, 0.6, kit.fbm(0.2, 3) * 0.5 + 0.5 + 0.2 * kit.fbm(0.05, 2))
-    cover = 1.0 - 0.85 * bare
+    bare = tg.smoothstep(0.5, 0.72, kit.fbm(0.15, 3) * 0.5 + 0.5 + 0.2 * kit.fbm(0.05, 2))  # ~20 % bare earth
+    cover = 1.0 - 0.8 * bare
 
 with core.timer("layers"):
     specs = [
         dict(cell=0.03, shape=K.shape_blade(0.06, 0.0016, 0.0025, 0.4), z=0.0, density=0.7, density_map=cover),  # litter
         dict(cell=0.02, shape=K.shape_pebble(0.005, 0.004, 0.003), z=0.0, density=0.25, density_map=bare),
-        dict(cell=0.11, shape=tuft, z=0.0, density=0.85, density_map=cover),
-        dict(cell=0.12, shape=tuft, z=0.002, density=0.6, density_map=cover),
+        dict(cell=0.1, shape=tuft, z=0.0, density=0.95, density_map=cover),
+        dict(cell=0.12, shape=tuft, z=0.002, density=0.7, density_map=cover),
+        dict(cell=0.08, shape=tuft, z=0.001, density=0.5, density_map=cover),
         dict(cell=0.06, shape=K.shape_blade(0.09, 0.0012, 0.0035, 0.2), z=0.006, density=0.3, density_map=cover),  # seed stalks
     ]
     L = layers(kit, specs)
@@ -62,13 +63,13 @@ with core.timer("layers"):
     h = np.where(veg, np.maximum(L["h"], soil), soil)
 
 with core.timer("albedo"):
-    soil_col = K.ramp(np.clip(0.5 + 0.3 * kit.fbm(0.06, 3), 0, 1), [(0.0, "#6e5a40"), (0.5, "#85704f"), (1.0, "#9a8562")])
+    soil_col = K.ramp(np.clip(0.5 + 0.3 * kit.fbm(0.06, 3), 0, 1), [(0.0, "#7a6648"), (0.5, "#8e7a56"), (1.0, "#a18d66")])
     soil_col = K.mul(soil_col, 1.0 - 0.35 * crack)
     idx, gid = L["idx"], L["id"]
     t = np.clip(0.5 + 0.45 * (gid - 0.5) + 0.12 * kit.fbm(0.05, 3) + 0.2 * np.clip(L["h"] / 0.012, 0, 1), 0, 1)
     straw = K.ramp(t, [(0.0, "#6e6040"), (0.4, "#8f8052"), (0.75, "#a99a66"), (1.0, "#c2b47e")])
     # a few tufts still faintly green at the crown (khaki-olive), stalks paler
-    straw = np.where(((idx == 2) | (idx == 3))[..., None] & (gid < 0.2)[..., None], K.tint(straw, "#7d7f4f", 0.4), straw)
+    straw = np.where(((idx >= 2) & (idx <= 4))[..., None] & (gid < 0.2)[..., None], K.tint(straw, "#7d7f4f", 0.4), straw)
     peb = K.ramp(gid, [(0.0, "#6f675e"), (0.5, "#8a7f70"), (1.0, "#a39885")])
     col = np.where((idx == 1)[..., None], peb, straw)
     alb = np.where(veg[..., None], col, soil_col)

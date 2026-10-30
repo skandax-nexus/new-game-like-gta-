@@ -9,9 +9,9 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 23124436,
-    "high": 10733007,
-    "mobile": 4592932
+    "ultra": 26010910,
+    "high": 13045407,
+    "mobile": 5199412
   },
   "assets": {
     "bamboo_lattice": {
@@ -2178,12 +2178,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "lime_plaster_weathered",
       "category": "materials",
-      "hash": "b6c63f3cfb",
+      "hash": "776c8a2c3d",
       "description": "Weathered hand-troweled lime plaster (3 m): trowel sweeps, craze and settlement cracks, fallen finish coat over brick, rain streaks, damp patches with salt fringes.",
       "bytes": {
-        "ultra": 2932224,
-        "high": 665754,
-        "mobile": 171350
+        "ultra": 2718520,
+        "high": 580104,
+        "mobile": 143888
       },
       "tiers": [
         "ultra",
@@ -2204,51 +2204,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/lime_plaster_weathered/baseColor_2048.webp",
-            "bytes": 113374,
+            "bytes": 95074,
             "size": 2048
           },
           "high": {
             "url": "textures/lime_plaster_weathered/baseColor_1024.webp",
-            "bytes": 41928,
+            "bytes": 29528,
             "size": 1024
           },
           "mobile": {
             "url": "textures/lime_plaster_weathered/baseColor_512.webp",
-            "bytes": 15146,
+            "bytes": 10186,
             "size": 512
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/lime_plaster_weathered/normal_2048.webp",
-            "bytes": 2645362,
+            "bytes": 2500402,
             "size": 2048
           },
           "high": {
             "url": "textures/lime_plaster_weathered/normal_1024.webp",
-            "bytes": 551476,
+            "bytes": 504556,
             "size": 1024
           },
           "mobile": {
             "url": "textures/lime_plaster_weathered/normal_512.webp",
-            "bytes": 134654,
+            "bytes": 120622,
             "size": 512
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/lime_plaster_weathered/orm_2048.webp",
-            "bytes": 173488,
+            "bytes": 123044,
             "size": 2048
           },
           "high": {
             "url": "textures/lime_plaster_weathered/orm_1024.webp",
-            "bytes": 72350,
+            "bytes": 46020,
             "size": 1024
           },
           "mobile": {
             "url": "textures/lime_plaster_weathered/orm_512.webp",
-            "bytes": 21550,
+            "bytes": 13080,
             "size": 512
           }
         }
@@ -3965,6 +3965,566 @@ export const ASSET_MANIFEST = {
       "alpha": false,
       "hdrScale": 50,
       "usage": "additive sun sprite: L = texel x hdrScale, tinted by the preset sun color, ~6 deg on screen"
+    },
+    "terrain_alluvial_silt": {
+      "kind": "material",
+      "id": "terrain_alluvial_silt",
+      "category": "terrain",
+      "hash": "7a37ba3d83",
+      "description": "Gangetic alluvial silt (4 m): dried ripple patches, curled mud-crack flakes, sparse hoof and foot prints, pale crests, damp hollows; macro-neutral.",
+      "bytes": {
+        "ultra": 251340,
+        "high": 219524,
+        "mobile": 67938
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        4,
+        4
+      ],
+      "averageColor": "#8d7d64",
+      "roughness": 0.92,
+      "metalness": 0,
+      "normalScale": 0.7,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/terrain_alluvial_silt/baseColor_1024.webp",
+            "bytes": 53850,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/terrain_alluvial_silt/baseColor_512.webp",
+            "bytes": 22034,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_alluvial_silt/baseColor_256.webp",
+            "bytes": 8320,
+            "size": 256
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/terrain_alluvial_silt/normal_512.webp",
+            "bytes": 177936,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/terrain_alluvial_silt/normal_512.webp",
+            "bytes": 177936,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_alluvial_silt/normal_256.webp",
+            "bytes": 52008,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/terrain_alluvial_silt/orm_512.webp",
+            "bytes": 19554,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/terrain_alluvial_silt/orm_512.webp",
+            "bytes": 19554,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_alluvial_silt/orm_256.webp",
+            "bytes": 7610,
+            "size": 256
+          }
+        }
+      }
+    },
+    "terrain_farmland_tilled": {
+      "kind": "material",
+      "id": "terrain_farmland_tilled",
+      "category": "terrain",
+      "hash": "6c4689a988",
+      "description": "Ploughed field (4 m): 13 ox-plough furrows along u (0.31 m), clods, tilth, stubble rows, straw; rotate UVs per plot; macro-neutral.",
+      "bytes": {
+        "ultra": 520806,
+        "high": 439662,
+        "mobile": 114252
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        4,
+        4
+      ],
+      "averageColor": "#7e6a50",
+      "roughness": 0.95,
+      "metalness": 0,
+      "normalScale": 1.3,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/terrain_farmland_tilled/baseColor_1024.webp",
+            "bytes": 121584,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/terrain_farmland_tilled/baseColor_512.webp",
+            "bytes": 40440,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_farmland_tilled/baseColor_256.webp",
+            "bytes": 10718,
+            "size": 256
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/terrain_farmland_tilled/normal_512.webp",
+            "bytes": 375036,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/terrain_farmland_tilled/normal_512.webp",
+            "bytes": 375036,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_farmland_tilled/normal_256.webp",
+            "bytes": 96098,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/terrain_farmland_tilled/orm_512.webp",
+            "bytes": 24186,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/terrain_farmland_tilled/orm_512.webp",
+            "bytes": 24186,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_farmland_tilled/orm_256.webp",
+            "bytes": 7436,
+            "size": 256
+          }
+        }
+      }
+    },
+    "terrain_grass_dry": {
+      "kind": "material",
+      "id": "terrain_grass_dry",
+      "category": "terrain",
+      "hash": "bd209bb703",
+      "description": "Dry grass splat layer (3 m): straw-khaki bunch-grass tufts, fallen blades, seed stalks, 30 % bare dusty earth with crumbs, pebbles and cracks; macro-neutral.",
+      "bytes": {
+        "ultra": 486582,
+        "high": 386678,
+        "mobile": 98884
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        3,
+        3
+      ],
+      "averageColor": "#9a8a5a",
+      "roughness": 0.95,
+      "metalness": 0,
+      "normalScale": 1,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/terrain_grass_dry/baseColor_1024.webp",
+            "bytes": 150426,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/terrain_grass_dry/baseColor_512.webp",
+            "bytes": 50522,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_grass_dry/baseColor_256.webp",
+            "bytes": 15554,
+            "size": 256
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/terrain_grass_dry/normal_512.webp",
+            "bytes": 311474,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/terrain_grass_dry/normal_512.webp",
+            "bytes": 311474,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_grass_dry/normal_256.webp",
+            "bytes": 73200,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/terrain_grass_dry/orm_512.webp",
+            "bytes": 24682,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/terrain_grass_dry/orm_512.webp",
+            "bytes": 24682,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_grass_dry/orm_256.webp",
+            "bytes": 10130,
+            "size": 256
+          }
+        }
+      }
+    },
+    "terrain_grass_lush": {
+      "kind": "material",
+      "id": "terrain_grass_lush",
+      "category": "terrain",
+      "hash": "5d32afe570",
+      "description": "Monsoon grass splat layer (3 m): olive-emerald blades in five layers, clover, dry straw, dark soil gaps; macro-neutral.",
+      "bytes": {
+        "ultra": 809504,
+        "high": 477912,
+        "mobile": 111770
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        3,
+        3
+      ],
+      "averageColor": "#5f6f3a",
+      "roughness": 0.9,
+      "metalness": 0,
+      "normalScale": 1,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/terrain_grass_lush/baseColor_1024.webp",
+            "bytes": 451186,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/terrain_grass_lush/baseColor_512.webp",
+            "bytes": 119594,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_grass_lush/baseColor_256.webp",
+            "bytes": 27944,
+            "size": 256
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/terrain_grass_lush/normal_512.webp",
+            "bytes": 316390,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/terrain_grass_lush/normal_512.webp",
+            "bytes": 316390,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_grass_lush/normal_256.webp",
+            "bytes": 68026,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/terrain_grass_lush/orm_512.webp",
+            "bytes": 41928,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/terrain_grass_lush/orm_512.webp",
+            "bytes": 41928,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_grass_lush/orm_256.webp",
+            "bytes": 15800,
+            "size": 256
+          }
+        }
+      }
+    },
+    "terrain_river_sand": {
+      "kind": "material",
+      "id": "terrain_river_sand",
+      "category": "terrain",
+      "hash": "462fdeea10",
+      "description": "River sand (3 m, flow along +u): asymmetric current ripples with dark heavy-mineral troughs, pale crests, pebbles, shells, twigs, bird tracks; macro-neutral.",
+      "bytes": {
+        "ultra": 254904,
+        "high": 214292,
+        "mobile": 80714
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        3,
+        3
+      ],
+      "averageColor": "#c4b18e",
+      "roughness": 0.85,
+      "metalness": 0,
+      "normalScale": 0.8,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/terrain_river_sand/baseColor_1024.webp",
+            "bytes": 71330,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/terrain_river_sand/baseColor_512.webp",
+            "bytes": 30718,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_river_sand/baseColor_256.webp",
+            "bytes": 10342,
+            "size": 256
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/terrain_river_sand/normal_512.webp",
+            "bytes": 160530,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/terrain_river_sand/normal_512.webp",
+            "bytes": 160530,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_river_sand/normal_256.webp",
+            "bytes": 59920,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/terrain_river_sand/orm_512.webp",
+            "bytes": 23044,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/terrain_river_sand/orm_512.webp",
+            "bytes": 23044,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_river_sand/orm_256.webp",
+            "bytes": 10452,
+            "size": 256
+          }
+        }
+      }
+    },
+    "terrain_road_earth": {
+      "kind": "material",
+      "id": "terrain_road_earth",
+      "category": "terrain",
+      "hash": "d6b4a52258",
+      "description": "Packed-earth road (4 m, u along the road): two bullock-cart ruts 1.4 m apart, hoof-churned centre, footprints on the shoulders, pebbles, straw, dust; macro-neutral.",
+      "bytes": {
+        "ultra": 309738,
+        "high": 250988,
+        "mobile": 63144
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        4,
+        4
+      ],
+      "averageColor": "#9a7e5e",
+      "roughness": 0.88,
+      "metalness": 0,
+      "normalScale": 1,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/terrain_road_earth/baseColor_1024.webp",
+            "bytes": 83482,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/terrain_road_earth/baseColor_512.webp",
+            "bytes": 24732,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_road_earth/baseColor_256.webp",
+            "bytes": 5728,
+            "size": 256
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/terrain_road_earth/normal_512.webp",
+            "bytes": 211812,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/terrain_road_earth/normal_512.webp",
+            "bytes": 211812,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_road_earth/normal_256.webp",
+            "bytes": 52156,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/terrain_road_earth/orm_512.webp",
+            "bytes": 14444,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/terrain_road_earth/orm_512.webp",
+            "bytes": 14444,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_road_earth/orm_256.webp",
+            "bytes": 5260,
+            "size": 256
+          }
+        }
+      }
+    },
+    "terrain_rock_sandstone": {
+      "kind": "material",
+      "id": "terrain_rock_sandstone",
+      "category": "terrain",
+      "hash": "52e3bca48a",
+      "description": "Sandstone cliff for triplanar projection (10 m, v = up): beds of varying hardness with ledges and undercuts, cross-bedding, joints, honeycomb, varnish streaks, lichen.",
+      "bytes": {
+        "ultra": 467304,
+        "high": 408994,
+        "mobile": 97240
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        10,
+        10
+      ],
+      "averageColor": "#a88a6c",
+      "roughness": 0.82,
+      "metalness": 0,
+      "normalScale": 1.3,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/terrain_rock_sandstone/baseColor_1024.webp",
+            "bytes": 82398,
+            "size": 1024
+          },
+          "high": {
+            "url": "textures/terrain_rock_sandstone/baseColor_512.webp",
+            "bytes": 24088,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_rock_sandstone/baseColor_256.webp",
+            "bytes": 6764,
+            "size": 256
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/terrain_rock_sandstone/normal_512.webp",
+            "bytes": 359144,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/terrain_rock_sandstone/normal_512.webp",
+            "bytes": 359144,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_rock_sandstone/normal_256.webp",
+            "bytes": 79976,
+            "size": 256
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/terrain_rock_sandstone/orm_512.webp",
+            "bytes": 25762,
+            "size": 512
+          },
+          "high": {
+            "url": "textures/terrain_rock_sandstone/orm_512.webp",
+            "bytes": 25762,
+            "size": 512
+          },
+          "mobile": {
+            "url": "textures/terrain_rock_sandstone/orm_256.webp",
+            "bytes": 10500,
+            "size": 256
+          }
+        }
+      }
     },
     "thatch_grass": {
       "kind": "material",

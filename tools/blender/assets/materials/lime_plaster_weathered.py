@@ -65,11 +65,11 @@ with core.timer("cracks"):
 
 with core.timer("fallen patches"):
     # ~6.5 % of the area has lost its lime finish coat (3 mm, revealing the coarse grey-buff base render); the cores
-    # of the largest losses (~0.7 %) go through to the brick (8 mm). Losses cluster in 1-2 weathered zones per tile
+    # of the largest losses (~0.7 %) go through to the brick (8 mm). Losses cluster in 3-4 weathered zones per tile
     # (mixed scales inside) so the wall does not read as an even scatter of specks.
-    # losses cluster (1-2 weathered zones per tile, 1.2 m features) instead of a uniform scatter of specks
-    cluster = kit.fbm(1.2, 3)
-    pn = 2.2 * cluster + 0.8 * kit.fbm(0.35, 4) + 0.25 * kit.fbm(0.08, 3) + 0.08 * kit.fbm(0.02, 2)
+    # losses cluster (3-4 weathered zones per tile, 0.75 m features) instead of a uniform scatter of specks
+    cluster = kit.fbm(0.75, 3)
+    pn = 1.6 * cluster + 0.8 * kit.fbm(0.35, 4) + 0.25 * kit.fbm(0.08, 3) + 0.08 * kit.fbm(0.02, 2)
     thr = float(np.percentile(pn, 93.5))
     thr_deep = float(np.percentile(pn, 99.3))
     patch = tg.smoothstep(thr, thr + 0.015, pn)  # finish coat lost

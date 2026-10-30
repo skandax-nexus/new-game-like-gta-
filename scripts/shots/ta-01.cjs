@@ -2,11 +2,11 @@
 /**
  * TA-01 evidence capture (WP1 PBR materials, terrain layers, decal atlas). OWNER: Technical Artist A (TA-01).
  *
- *   npx vite build --outDir .build/ta-01 --emptyOutDir
+ *   npx vite build --outDir .build/ta-01/dist --emptyOutDir
  *   NODE_PATH=$(npm root -g) node scripts/shots/ta-01.cjs [--only=deltas,budgets,previews,tiling,swatches,decals,viewer,splat,stupa]
  *                                                         [--ids=a,b] [--fast]
  *
- * Env: SHOTS_PORT (default 4404), SHOTS_DIST (default .build/ta-01), SHOTS_OUT (default docs/sprint1/ta-01).
+ * Env: SHOTS_PORT (default 4404), SHOTS_DIST (default .build/ta-01/dist), SHOTS_OUT (default docs/sprint1/ta-01).
  *
  *   deltas    mean baseColor of every PUBLISHED WebP (all tiers; linear mean per channel -> sRGB) against the Art
  *             Director's target (MATERIAL_PRESETS / TERRAIN_LAYERS baseColor via `npm run assets -- --style`):
@@ -34,9 +34,9 @@ const http = require('node:http');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const PORT = Number(process.env.SHOTS_PORT || 4404);
-const DIST = process.env.SHOTS_DIST || '.build/ta-01';
+const DIST = process.env.SHOTS_DIST || '.build/ta-01/dist';
 const OUT = path.resolve(ROOT, process.env.SHOTS_OUT || 'docs/sprint1/ta-01');
-const RAW = path.join(ROOT, DIST + '-shots');
+const RAW = path.join(ROOT, '.build', 'ta-01', 'shots');
 const args = Object.fromEntries(process.argv.slice(2).map((a) => (/^--([^=]+)=?(.*)$/.exec(a) || [null, a, '1']).slice(1)));
 const ONLY = args.only ? new Set(args.only.split(',')) : null;
 const run = (g) => !ONLY || ONLY.has(g);
@@ -407,7 +407,8 @@ async function main() {
       page.on('requestfailed', (r) => errors.push(`requestfailed: ${r.url()} ${r.failure()?.errorText ?? ''}`));
       let routed = null;
       if (opts.reskin) {
-        await page.route('**/*.glb', async (route) => {
+        // the loader appends a cache-buster (?v=<hash>), so match on the path, not a glob
+        await page.route((u) => u.pathname.endsWith('.glb'), async (route) => {
           const resp = await route.fetch();
           const body = await resp.body();
           const url = route.request().url();
@@ -530,7 +531,20 @@ async function main() {
     }
   }
 
-  fs.writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(report, null, 2) + '\n');
+  // merge with an earlier partial run (--only / --ids): newer groups and shots replace older ones by name
+  const reportFile = path.join(OUT, 'report.json');
+  if (fs.existsSync(reportFile) && (ONLY || args.ids)) {
+    try {
+      const prev = JSON.parse(fs.readFileSync(reportFile, 'utf8'));
+      const names = new Set(report.shots.map((x) => x.name));
+      report.shots = [...(prev.shots ?? []).filter((x) => !names.has(x.name)), ...report.shots];
+      report.sets = { ...(prev.sets ?? {}), ...report.sets };
+      for (const k of ['budgets', 'splat', 'stupaReskin', 'decals']) if (report[k] === undefined && prev[k] !== undefined) report[k] = prev[k];
+    } catch {
+      // unreadable earlier report: start fresh
+    }
+  }
+  fs.writeFileSync(reportFile, JSON.stringify(report, null, 2) + '\n');
   console.log(`[ta-01] ${failures.length ? `FAIL (${failures.length})` : 'all ok'} -> ${path.relative(ROOT, OUT)}`);
   for (const f of failures) console.log(`  - ${f}`);
   process.exit(failures.length ? 1 : 0);
