@@ -14,6 +14,7 @@ import type { SkyAssetSource } from './environment/sky';
 import { installShaderGlobals, resetShaderGlobals } from './materials/chunks/globals';
 // Global shader patches (registered on import, applied by installShaderGlobals before any material compiles).
 import './lighting/shadowChunks';
+import './environment/atmosphere/heightFog';
 
 /**
  * Per-frame participant bound to one scene (EnvironmentRig): called right before that scene renders with the camera
