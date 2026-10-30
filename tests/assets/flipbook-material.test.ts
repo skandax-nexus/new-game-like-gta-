@@ -1,5 +1,10 @@
 /**
- * Flipbook reference material blending (TA-07 rework round 1). OWNER: Technical Artist G (TA-07).
+ * Flipbook reference material blending (TA-07 rework round 1) and lighting / gradient map (round 2).
+ * OWNER: Technical Artist G (TA-07).
+ *
+ * Round 2: lit books are lit as a participating medium (wrap lighting, upper-hemisphere ambient, no specular - the
+ * three r170 chunk text the patch rewrites must still exist), and gradient-mapped books (`ramp`: fx_fire,
+ * fx_weapon_trail) colour one stored channel with the published ramp.
  *
  * Premultiplied books (fx_fire: emission + occlusion alpha) must blend ONE / ONE_MINUS_SRC_ALPHA with
  * material.premultipliedAlpha OFF: three's PREMULTIPLIED_ALPHA chunk multiplies rgb by alpha a second time, which
@@ -10,7 +15,13 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { ASSET_MANIFEST } from '../../src/assets/manifest';
 import type { AssetEntry, FlipbookAssetEntry } from '../../src/assets/types';
-import { createFlipbookMaterial, type FlipbookHandle } from '../../src/assets/loaders/flipbook';
+import {
+  createFlipbookMaterial,
+  FLIP_CHUNK_HOOKS,
+  FLIP_WRAP,
+  rampColor,
+  type FlipbookHandle,
+} from '../../src/assets/loaders/flipbook';
 import { PREPASS_TAG } from '../../src/assets/loaders/prepass';
 
 const assets = ASSET_MANIFEST.assets as unknown as Record<string, AssetEntry>;
@@ -30,16 +41,18 @@ function handle(id: string): FlipbookHandle {
 }
 
 /** Runs the material's shader patch on a minimal stand-in of the three chunks it hooks. */
-function patchedFragment(mat: THREE.Material): { fragment: string; defines: Record<string, unknown> } {
+function patchedFragment(mat: THREE.Material): { fragment: string; defines: Record<string, unknown>; uniforms: Record<string, THREE.IUniform> } {
   const shader = {
-    uniforms: {},
+    uniforms: {} as Record<string, THREE.IUniform>,
     defines: {} as Record<string, unknown>,
     vertexShader: '#include <common>\nvoid main() {}',
-    fragmentShader: '#include <common>\nvoid main() {\n#include <map_fragment>\n#include <normal_fragment_maps>\n}',
+    fragmentShader:
+      '#include <common>\n#include <lights_physical_pars_fragment>\nvoid main() {\n#include <map_fragment>\n#include <normal_fragment_maps>\n' +
+      '#include <lights_physical_fragment>\n#include <lights_fragment_begin>\n#include <lights_fragment_maps>\n}',
   };
   // cast: three's onBeforeCompile takes WebGLProgramParametersWithUniforms; the patch only touches the fields above
   mat.onBeforeCompile(shader as unknown as THREE.WebGLProgramParametersWithUniforms, {} as THREE.WebGLRenderer);
-  return { fragment: shader.fragmentShader, defines: shader.defines };
+  return { fragment: shader.fragmentShader, defines: shader.defines, uniforms: shader.uniforms };
 }
 
 describe('flipbook material blending', () => {
@@ -78,6 +91,78 @@ describe('flipbook material blending', () => {
     const { defines } = patchedFragment(mat);
     expect(defines.FLIP_NORMAL).toBe('');
     expect(defines.FLIP_PREMULTIPLIED).toBeUndefined();
+    mat.dispose();
+  });
+});
+
+describe('lit flipbooks are lit as a participating medium (TA-07 R2-B1)', () => {
+  it('the three r170 chunk text the patch rewrites still exists', () => {
+    expect(THREE.ShaderChunk.lights_physical_pars_fragment).toContain(FLIP_CHUNK_HOOKS.directDotNL);
+    expect(THREE.ShaderChunk.lights_fragment_begin).toContain(FLIP_CHUNK_HOOKS.probe);
+    expect(THREE.ShaderChunk.lights_fragment_begin).toContain(FLIP_CHUNK_HOOKS.hemi);
+    expect(THREE.ShaderChunk.lights_fragment_maps).toContain(FLIP_CHUNK_HOOKS.ibl);
+  });
+
+  it('wrap lighting, upper-hemisphere ambient and no specular replace plain Lambert', () => {
+    const mat = createFlipbookMaterial(handle('fx_smoke'));
+    const { fragment, defines } = patchedFragment(mat);
+    expect(defines.FLIP_WRAP).toBe(String(FLIP_WRAP));
+    expect(fragment).toContain('( dot( geometryNormal, directLight.direction ) + FLIP_WRAP ) / ( 1.0 + FLIP_WRAP )');
+    expect(fragment).not.toContain(FLIP_CHUNK_HOOKS.directDotNL);
+    expect(fragment).toContain('getIBLIrradiance( flipAmbientNormal( geometryNormal ) )');
+    expect(fragment).toContain('getHemisphereLightIrradiance( hemisphereLights[ i ], flipAmbientNormal( geometryNormal ) )');
+    expect(fragment).toContain('getLightProbeIrradiance( lightProbe, flipAmbientNormal( geometryNormal ) )');
+    expect(fragment).toContain('material.specularColor = vec3( 0.0 );');
+    expect(fragment).not.toContain('#include <lights_fragment_begin>');
+    mat.dispose();
+  });
+
+  it('a wrap override changes the define and the program key; unlit books keep three lighting untouched', () => {
+    const a = createFlipbookMaterial(handle('fx_dust'), { wrap: 0 });
+    const b = createFlipbookMaterial(handle('fx_dust'));
+    expect(patchedFragment(a).defines.FLIP_WRAP).toBe('0.0');
+    expect(a.customProgramCacheKey()).not.toBe(b.customProgramCacheKey());
+    const fire = createFlipbookMaterial(handle('fx_fire'));
+    const { fragment } = patchedFragment(fire);
+    expect(fragment).toContain('#include <lights_fragment_begin>');
+    for (const m of [a, b, fire]) m.dispose();
+  });
+});
+
+describe('gradient-mapped flipbooks (TA-07 R2-B2 / R2-B3)', () => {
+  for (const id of ['fx_fire', 'fx_weapon_trail']) {
+    it(`${id}: ramp uniform + define, colour from one channel`, () => {
+      const h = handle(id);
+      const ramp = h.entry.ramp;
+      expect(ramp).not.toBeNull();
+      const mat = createFlipbookMaterial(h);
+      const { fragment, defines, uniforms } = patchedFragment(mat);
+      expect(defines.FLIP_RAMP).toBe(String(ramp!.length));
+      expect(fragment).toContain('flipC.rgb = flipRampColor( flipC.r );');
+      const u = uniforms.flipRamp!.value as THREE.Vector3[];
+      expect(u.length).toBe(ramp!.length);
+      expect(u[0]!.toArray()).toEqual([0, 0, 0]);
+      expect(mat.customProgramCacheKey()).toContain(`r${ramp!.length}`);
+      mat.dispose();
+    });
+  }
+
+  it('rampColor interpolates evenly spaced stops and clamps v', () => {
+    const ramp = [
+      [0, 0, 0],
+      [1, 0.5, 0],
+      [1, 1, 1],
+    ];
+    expect(rampColor(ramp, 0)).toEqual([0, 0, 0]);
+    expect(rampColor(ramp, 0.25)).toEqual([0.5, 0.25, 0]);
+    expect(rampColor(ramp, 0.75)).toEqual([1, 0.75, 0.5]);
+    expect(rampColor(ramp, 2)).toEqual([1, 1, 1]);
+    expect(rampColor(ramp, -1)).toEqual([0, 0, 0]);
+  });
+
+  it('books without a ramp do not get the define', () => {
+    const mat = createFlipbookMaterial(handle('fx_sparks_embers'));
+    expect(patchedFragment(mat).defines.FLIP_RAMP).toBeUndefined();
     mat.dispose();
   });
 });

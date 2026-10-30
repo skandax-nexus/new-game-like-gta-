@@ -116,7 +116,8 @@ def lit_frames(dens: Sequence[np.ndarray], extent: Sequence[float], h: float, px
                frame: Sequence[float], depth: float = 4.5, albedo: Sequence[float] = (0.6, 0.585, 0.565),
                flatten: float = 0.45, fades: Sequence[float] | None = None, normal_blur: float = 2.0,
                normal_strength: float = 0.8, ambient_blur: float = 4.0, ground_fade: float | np.ndarray = 0.0,
-               ground_soft: float = 0.12,
+               ground_soft: float = 0.12, normal_blur_frac: float | None = None,
+               normal_fade: tuple[float, float] | None = None,
                window: tuple[float, float] = (0.02, 0.06)) -> tuple[list[np.ndarray], list[np.ndarray], float]:
     """Density frames (FluidSim grids) -> straight-alpha linear rgba frames + tangent normals, noise-free
     (flipbook.integrate_volume). Color = occlusion-only (ambient) albedo; directional light comes from the normals at
@@ -124,7 +125,12 @@ def lit_frames(dens: Sequence[np.ndarray], extent: Sequence[float], h: float, px
     opacity; `ground_fade` softens the contact with the floor: a scalar fade height (m), or an (nx, ny) map of
     ground-line offsets g0 (m) -> density x smooth((z - g0) / ground_soft), a ragged, soft base that is never a
     straight line; `window` = safety window
-    (zero margin, fade) so no frame can touch its border. Returns (color, normals, worst pre-window border alpha)."""
+    (zero margin, fade) so no frame can touch its border.
+    Lit-medium normals (Art Director TA-07 R2-B1): `normal_blur_frac` takes the density gradient from a density blurred
+    by that fraction of the frame side (~0.035: the puff's big rounded forms, no internal creases; overrides
+    `normal_blur`, in voxels) and `normal_fade` = (lo, hi) fades the tilt with the final alpha
+    (flipbook.soften_normals), so thin fringes face the camera instead of carrying a hard silhouette.
+    Returns (color, normals, worst pre-window border alpha)."""
     axis = 2 if view == "top" else 1
     peaks = [float((d.sum(axis=axis) * h).max()) for d in dens]
     top = max(max(peaks), 1e-9)
@@ -132,6 +138,7 @@ def lit_frames(dens: Sequence[np.ndarray], extent: Sequence[float], h: float, px
     color, normals = [], []
     worst = 0.0
     z = None
+    nblur = normal_blur if normal_blur_frac is None else float(normal_blur_frac) * float(frame[2]) / h
     gf = np.asarray(ground_fade, dtype=F)
     if gf.ndim == 2 or float(gf.max()) > 0:
         zc = ((np.arange(dens[0].shape[2], dtype=F) + 0.5) * h)[None, None, :]
@@ -146,19 +153,21 @@ def lit_frames(dens: Sequence[np.ndarray], extent: Sequence[float], h: float, px
         if z is not None:
             sig = (sig * z).astype(F)
         rad = fb.light_volume(sig, h, albedo, key=(0.0, 0.0, 0.0), ambient=(1.0, 1.0, 1.0), ambient_blur=ambient_blur, ambient_k=0.35)
-        nrm = fb.density_normals(sig, normal_blur)
+        nrm = fb.density_normals(sig, nblur)
         rgba, nm = fb.integrate_volume(sig, rad, extent, px, view=view, frame=frame, normals=nrm, normal_strength=normal_strength)
         s = fb.to_straight(rgba)
         a = s[..., 3]
         worst = max(worst, float(max(a[:2].max(), a[-2:].max(), a[:, :2].max(), a[:, -2:].max())))
         s[..., 3] = a * win
+        if normal_fade is not None:
+            nm = fb.soften_normals(nm, s[..., 3], *normal_fade)
         color.append(s)
         normals.append(nm)
     return color, normals, worst
 
 
 def fire_frames(temps: Sequence[np.ndarray], extent: Sequence[float], h: float, px: int, *, frame: Sequence[float],
-                t0: float = 0.42, t1: float = 0.8, t_max: float = 1.35, alpha: float = 2.0, base_fade: float = 0.16,
+                t0: float = 0.42, t1: float = 0.8, t_max: float = 1.35, alpha: float = 2.0, base_fade: float | np.ndarray = 0.16,
                 stops: Sequence[tuple[float, str]] = ((0.0, "#000000"), (0.4, "#a8300e"), (0.5, "#e2571e"), (0.68, "#ff8a2a"),
                                                       (0.88, "#ffb040"), (1.1, "#ffc860"), (1.35, "#fff2c0")),
                 window: tuple[float, float] = (0.02, 0.06)) -> tuple[list[np.ndarray], float]:
@@ -171,10 +180,15 @@ def fire_frames(temps: Sequence[np.ndarray], extent: Sequence[float], h: float, 
     worst = 0.0
     for T in temps:
         Tn = np.clip(T, 0, t_max)
-        if base_fade > 0:
-            # the flame root fades in over `base_fade` meters by temperature (darker / redder, never a dim grey core)
+        bf = np.asarray(base_fade, dtype=F)
+        if bf.ndim == 2 or float(bf.max()) > 0:
+            # the flame root fades in over `base_fade` meters by temperature (darker / redder, never a dim grey core);
+            # an (nx, ny) map gives every column its own root height (a ragged base, never one flat glowing line)
             if zf is None:
-                zf = smooth01((np.arange(T.shape[2], dtype=F) + 0.5) * h / base_fade)[None, None, :]
+                zc = ((np.arange(T.shape[2], dtype=F) + 0.5) * h)[None, None, :]
+                zf = smooth01(zc / (bf[..., None] if bf.ndim == 2 else float(bf))).astype(F)
+                if zf.ndim == 3 and zf.shape[:2] == (1, 1):
+                    zf = zf
             Tn = Tn * (0.6 + 0.4 * zf)
         col = tg.gradient_map(Tn / t_max, [(a / t_max, c) for a, c in stops])
         e = smooth01((Tn - t0) / (t1 - t0))
@@ -309,3 +323,89 @@ def fbm2(x: np.ndarray, y: np.ndarray, seed: int, octaves: int = 5, freq: float 
         amp *= 0.55
         f *= 2.03
     return (out / tot * 0.5 + 0.5).astype(F)
+
+
+# ============================================================================================ artifact checks
+def regions(mask: np.ndarray) -> list[np.ndarray]:
+    """4-connected components of a boolean image: a list of (k, 2) [row, col] index arrays, largest first."""
+    from collections import deque
+
+    h, w = mask.shape
+    seen = np.zeros_like(mask, dtype=bool)
+    out: list[np.ndarray] = []
+    for r0, c0 in zip(*np.nonzero(mask)):
+        if seen[r0, c0]:
+            continue
+        q = deque([(int(r0), int(c0))])
+        seen[r0, c0] = True
+        pix = []
+        while q:
+            r, c = q.popleft()
+            pix.append((r, c))
+            for rr, cc in ((r - 1, c), (r + 1, c), (r, c - 1), (r, c + 1)):
+                if 0 <= rr < h and 0 <= cc < w and mask[rr, cc] and not seen[rr, cc]:
+                    seen[rr, cc] = True
+                    q.append((rr, cc))
+        out.append(np.array(pix, np.int64))
+    out.sort(key=len, reverse=True)
+    return out
+
+
+def flat_top_fraction(pix: np.ndarray, width: int, tol: int = 1) -> float:
+    """Longest run of adjacent columns whose TOP pixel sits on the same row (+-tol) in one region, as a fraction of
+    the frame width - a flat-topped block reads as a glowing rectangle (Art Director TA-07 R2-B2a, target <= 0.1)."""
+    cols = np.unique(pix[:, 1])
+    if len(cols) < 2:
+        return len(cols) / width
+    top = np.array([pix[pix[:, 1] == c, 0].min() for c in cols])
+    best = run = 1
+    for i in range(1, len(cols)):
+        if cols[i] == cols[i - 1] + 1 and abs(int(top[i]) - int(top[i - run])) <= tol:
+            run += 1
+        else:
+            run = 1
+        best = max(best, run)
+    return best / width
+
+
+def flat_tops(v: np.ndarray, thresholds: Sequence[float] = (0.15, 0.3), min_px: int = 12, tol: int = 2) -> tuple[float, str]:
+    """Worst flat-top fraction over every emissive region of one frame's intensity image `v` (encoded [0, 1]) at each
+    threshold - detached blobs and lobes joined to the body only through the dim base alike (the column-wise top
+    profile of a joined block is still its flat top). Returns (fraction of the frame width, description)."""
+    worst, what = 0.0, "none"
+    for thr in thresholds:
+        for k, pix in enumerate(regions(v > thr)):
+            if len(pix) < min_px:
+                continue
+            f = flat_top_fraction(pix, v.shape[1], tol)
+            if f > worst:
+                worst = f
+                what = f"region {k} ({len(pix)} px) at v > {thr}: top {int(pix[:, 0].min())}, cols {int(pix[:, 1].min())}-{int(pix[:, 1].max())}"
+    return worst, what
+
+
+def straight_top_edge(v: np.ndarray, edge: float = 0.05, lit: float = 0.2, wobble: int = 1) -> tuple[float, str]:
+    """Longest horizontal TOP edge of an emissive shape in one frame's intensity image `v` (encoded [0, 1], row 0 =
+    top): pixels where v rises by more than `edge` from the pixel above into an emitting pixel (> `lit`), collected
+    along each row (+-`wobble` rows) into runs of adjacent columns. Flame tongues have curved / slanted edges (short
+    runs); a flat-topped glowing block (the fuel-bed rim lobe, Art Director TA-07 R2-B2a) has one long run.
+    Returns (longest run as a fraction of the frame width, description)."""
+    up = np.zeros_like(v, dtype=bool)
+    up[:-1] = ((v[1:] - v[:-1]) > edge) & (v[1:] > lit)
+    band = up.copy()
+    for d in range(1, wobble + 1):
+        band[:-d] |= up[d:]
+        band[d:] |= up[:-d]
+    best, where = 0, "none"
+    for r in range(band.shape[0]):
+        row = band[r]
+        if not row.any():
+            continue
+        x = np.concatenate([[0], row.astype(np.int8), [0]])
+        starts = np.nonzero(np.diff(x) == 1)[0]
+        ends = np.nonzero(np.diff(x) == -1)[0]
+        k = int(np.argmax(ends - starts))
+        if ends[k] - starts[k] > best:
+            best = int(ends[k] - starts[k])
+            where = f"row {r}, cols {int(starts[k])}-{int(ends[k]) - 1}"
+    return best / v.shape[1], where

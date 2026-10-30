@@ -751,6 +751,50 @@ def density_normals(sigma: np.ndarray, blur_vox: float = 1.5) -> np.ndarray:
     return (-g / l[None]).astype(F)
 
 
+def soften_normals(normal: np.ndarray, alpha: np.ndarray, lo: float = 0.1, hi: float = 0.7) -> np.ndarray:
+    """Participating-medium normals (lit smoke / dust): fade an ENCODED tangent normal map's tilt with coverage,
+    n = normalize(mix(+Z, n, smoothstep(lo, hi, alpha))). A puff's thin fringe has no surface to tilt; a full-strength
+    normal right up to a soft alpha edge reads as a hard silhouette / porcelain fold (Art Director TA-07 R2-B1).
+    Returns the encoded (n * 0.5 + 0.5) map, same shape."""
+    n = normal[..., :3].astype(F) * 2.0 - 1.0
+    t = np.clip((np.asarray(alpha, F) - lo) / max(hi - lo, 1e-6), 0, 1)
+    t = (t * t * (3 - 2 * t))[..., None]
+    m = n * t + np.array([0.0, 0.0, 1.0], F) * (1 - t)
+    m /= np.maximum(np.linalg.norm(m, axis=-1, keepdims=True), 1e-9)
+    out = normal.astype(F).copy()
+    out[..., :3] = m * 0.5 + 0.5
+    return out
+
+
+def normal_stats(normals: Sequence[np.ndarray], alphas: Sequence[np.ndarray], thr: float = 0.1,
+                 crease_deg: float = 8.0) -> dict[str, float]:
+    """Lit-medium normal statistics over covered pixels (alpha > thr) of encoded tangent maps:
+      mean_z        mean decoded normal z (1 = flat facing the camera; the Art Director target for lit smoke is >= 0.8)
+      worst_frame_z lowest per-frame mean z (frames with > 1 % coverage)
+      crease_p999   99.9th percentile of the angle (deg) between a pixel's normal and its right / lower neighbour
+      crease_share  share of covered neighbour pairs turning more than `crease_deg` per pixel (fold lines)."""
+    zs: list[float] = []
+    ws: list[int] = []
+    angles: list[np.ndarray] = []
+    for nm, a in zip(normals, alphas):
+        n = nm[..., :3].astype(np.float64) * 2.0 - 1.0
+        n /= np.maximum(np.linalg.norm(n, axis=-1, keepdims=True), 1e-9)
+        cov = np.asarray(a) > thr
+        if cov.sum() > 0.01 * cov.size:
+            zs.append(float(n[..., 2][cov].mean()))
+            ws.append(int(cov.sum()))
+        for d0, d1 in (((slice(None), slice(1, None)), (slice(None), slice(None, -1))),
+                       ((slice(1, None), slice(None)), (slice(None, -1), slice(None)))):
+            both = cov[d0] & cov[d1]
+            if both.any():
+                dot = np.clip((n[d0] * n[d1]).sum(-1), -1, 1)[both]
+                angles.append(np.degrees(np.arccos(dot)))
+    ang = np.concatenate(angles) if angles else np.zeros(1)
+    total = float(sum(w * z for w, z in zip(ws, zs)) / max(sum(ws), 1)) if zs else 1.0
+    return {"mean_z": total, "worst_frame_z": float(min(zs)) if zs else 1.0,
+            "crease_p999": float(np.percentile(ang, 99.9)), "crease_share": float((ang > crease_deg).mean())}
+
+
 def frame_window(px: int, margin: float = 0.03, fade: float = 0.08) -> np.ndarray:
     """Safety window for a square frame: exactly 0 within `margin` (fraction of the frame) of every border,
     smooth to 1 over the next `fade` - multiply coverage / emission by it so no frame can touch its border."""
@@ -895,6 +939,117 @@ def check_borders(color: Sequence[np.ndarray], sequences: Sequence[dict[str, Any
     return problems, worst
 
 
+# =========================================================================================== gradient map
+RAMP_MAX_STOPS = 33
+
+
+def luminance(rgb: np.ndarray) -> np.ndarray:
+    """Rec.709 luminance of linear rgb."""
+    return (rgb[..., 0] * 0.2126 + rgb[..., 1] * 0.7152 + rgb[..., 2] * 0.0722).astype(F)
+
+
+def ramp_apply(ramp: Sequence[Sequence[float]], v: np.ndarray) -> np.ndarray:
+    """Linear rgb of a gradient-map ramp at v (piecewise linear over evenly spaced stops) - the runtime's
+    flipRampColor (src/assets/loaders/flipbook.ts)."""
+    r = np.asarray(ramp, F)
+    n = len(r)
+    x = np.clip(np.asarray(v, F), 0, 1) * (n - 1)
+    i = np.minimum(np.floor(x), n - 2).astype(np.int64)
+    f = (x - i)[..., None]
+    return (r[i] * (1 - f) + r[i + 1] * f).astype(F)
+
+
+def ramp_fit(colors: Sequence[np.ndarray], v: Sequence[np.ndarray], stops: int = 17, min_weight: float = 1e-4,
+             anchors: Sequence[tuple[float, Sequence[float]]] | None = None) -> list[list[float]]:
+    """Fit a gradient-map ramp to existing emission: for each stop v_k = k / (stops - 1) the (tent-weighted) mean
+    linear colour of the texels whose v is near v_k. Empty stops are interpolated from their neighbours (or from
+    `anchors`: (v, rgb) pairs, e.g. the Bible ramp colours); stop 0 is black; then R >= G >= B is enforced per
+    stop and the ramp's luminance is made non-decreasing, so the gradient is a monotone hue run."""
+    vv = np.concatenate([np.asarray(x, F).ravel() for x in v])
+    cc = np.concatenate([np.asarray(c, F).reshape(-1, 3) for c in colors])
+    out = np.zeros((stops, 3), np.float64)
+    have = np.zeros(stops, bool)
+    xs = vv * (stops - 1)
+    for k in range(stops):
+        w = np.clip(1.0 - np.abs(xs - k), 0, 1)
+        sw = float(w.sum())
+        if sw > min_weight * len(vv) and k > 0:
+            out[k] = (cc * w[:, None]).sum(0) / sw
+            have[k] = True
+    have[0] = True
+    out[0] = 0.0
+    if anchors:
+        for av, rgb in anchors:
+            k = int(round(float(av) * (stops - 1)))
+            if not have[k]:
+                out[k] = rgb
+                have[k] = True
+    idx = np.nonzero(have)[0]
+    for ch in range(3):
+        out[:, ch] = np.interp(np.arange(stops), idx, out[idx, ch])
+    out = np.clip(out, 0, 1)
+    for k in range(stops):  # monotone hue: R >= G >= B
+        out[k, 1] = min(out[k, 1], out[k, 0])
+        out[k, 2] = min(out[k, 2], out[k, 1])
+    lum = luminance(out.astype(F))
+    for k in range(1, stops):  # non-decreasing luminance (scale up a dip)
+        if lum[k] < lum[k - 1] and lum[k] > 0:
+            out[k] = np.clip(out[k] * (lum[k - 1] / lum[k]), 0, 1)
+            lum[k] = luminance(out[k:k + 1].astype(F))[0]
+    return [[float(c) for c in row] for row in out]
+
+
+def ramp_from_hues(hues: Sequence[tuple[float, str]], stops: int = 33) -> list[list[float]]:
+    """An authored gradient-map ramp: hue stops (v, sRGB hex) give the colour family along v; each stop is scaled so
+    its luminance equals the luminance v encodes (srgb_to_linear(v)), capped where a channel would exceed 1, so the
+    shaded emission keeps the stored brightness and the hue runs monotonically through the hex colours (every hex
+    must have R >= G >= B). Stop 0 is black."""
+    vs = np.array([h[0] for h in hues], F)
+    cols = np.stack([tg.hex_to_linear(h[1]) for h in hues]).astype(F)
+    out = []
+    for k in range(stops):
+        v = k / (stops - 1)
+        hue = np.array([np.interp(v, vs, cols[:, c]) for c in range(3)], F)
+        target = float(tg.srgb_to_linear(np.array(v, F)))
+        lum = float(luminance(hue[None])[0])
+        scale = min(target / max(lum, 1e-9), 1.0 / max(float(hue.max()), 1e-9))
+        c = np.clip(hue * scale, 0, 1)
+        c[1] = min(c[1], c[0])
+        c[2] = min(c[2], c[1])
+        out.append([float(x) for x in c])
+    out[0] = [0.0, 0.0, 0.0]
+    return out
+
+
+def ramp_problems(ramp: Sequence[Sequence[float]]) -> list[str]:
+    """Same rules as the runner (tools/assets/publish.mjs flipbookRampProblems)."""
+    if len(ramp) < 2 or len(ramp) > RAMP_MAX_STOPS:
+        return [f"ramp needs 2..{RAMP_MAX_STOPS} stops"]
+    out = []
+    for i, c in enumerate(ramp):
+        if len(c) != 3 or any((not np.isfinite(x)) or x < 0 or x > 1 for x in c):
+            out.append(f"stop {i} must be [r, g, b] in [0, 1]")
+        elif c[1] > c[0] + 1e-6 or c[2] > c[1] + 1e-6:
+            out.append(f"stop {i} breaks R >= G >= B")
+    if any(abs(x) > 1e-6 for x in ramp[0]):
+        out.append("stop 0 must be [0, 0, 0]")
+    return out
+
+
+def ramp_encode(intensity: np.ndarray, *, dither: bool = True, seed: int = 0, bits: int = 8) -> np.ndarray:
+    """v channel of a gradient-mapped book: the sRGB-encoded intensity (luminance) with triangular-PDF dither of
+    +-1 LSB before 8-bit quantisation (the published atlas is lossless, so the dither survives and breaks the
+    contour bands an x3-x6 emissive multiplier would otherwise show in dim tails - Art Director TA-07 R2-B3).
+    Returns the quantised v in [0, 1] (multiples of 1 / 255)."""
+    q = float((1 << bits) - 1)
+    e = tg.linear_to_srgb(np.clip(np.asarray(intensity, F), 0, 1)) * q
+    if dither:
+        rng = np.random.default_rng(seed)
+        tpdf = rng.random(e.shape) - rng.random(e.shape)  # triangular, -1..+1 LSB
+        e = np.where(e >= 1.0, e + tpdf, e)  # below 1 LSB (empty areas, faded borders) rounds as before
+    return (np.clip(np.round(e), 0, q) / q).astype(F)
+
+
 # =========================================================================================== packing / output
 def to_straight(rgba: np.ndarray) -> np.ndarray:
     a = np.clip(rgba[..., 3:4], 0, 1)
@@ -974,20 +1129,26 @@ def write(ctx: AssetContext, color: Sequence[np.ndarray], cols: int, rows: int, 
           emissive: Sequence[np.ndarray] | None = None, blend: str = "alpha", lit: bool = False,
           emissive_intensity: float = 1.0, soft_fade_m: float = 0.5, size_m: Sequence[float] | None = None,
           atlas_px: dict[str, int] | None = None, description: str = "", labels: Sequence[str] | None = None,
-          srgb: bool = True, ground_line: float | None = None) -> dict[str, Any]:
+          srgb: bool = True, ground_line: float | None = None, min_normal_z: float | None = None,
+          ramp: Sequence[Sequence[float]] | None = None) -> dict[str, Any]:
     """Pack and write the flipbook maps (+ contact sheet preview); returns the manifest metadata.
     `color` frames: linear rgb + alpha (straight, or premultiplied when blend == 'premultiplied').
     Fails (ValueError) when a frame's border carries coverage / emission (see the module doc: border guard);
     sequences opt out per edge with "open_edges". `ground_line`: fraction of the frame height above the bottom edge
     where a grounded effect (fire base, dust contact) meets the ground - published as `groundLine` so the particle
-    system can sink the quad by that much (the content keeps a margin above the border for lossy encoding)."""
+    system can sink the quad by that much (the content keeps a margin above the border for lossy encoding).
+    `min_normal_z` (lit books): lit-medium guard - fails when the mean decoded normal z over covered pixels
+    (alpha > 0.1) of the whole book or of any frame is below it (soft, mostly camera-facing normals: lit smoke / dust
+    must shade like a medium, not a carved solid; see soften_normals). Logged for every lit book.
+    `ramp`: gradient-mapped emission (published `ramp`): `color` frames then hold the intensity v in every rgb
+    channel (sRGB-encoded luminance, see ramp_encode) and `ramp` the linear-rgb stops evenly spaced over v."""
     if len(color) > cols * rows:
         raise ValueError(f"{len(color)} frames do not fit {cols}x{rows}")
     seqs_in = list(sequences) if sequences else None
     min_frame = None
     if atlas_px:
         min_frame = max(1, int(min(atlas_px.values())) // cols)
-    problems, worst = check_borders(color, seqs_in, blend=blend, emissive=emissive, srgb=srgb, published_frame_px=min_frame)
+    problems, worst = check_borders(color, seqs_in, blend=blend, emissive=emissive, srgb=srgb and ramp is None, published_frame_px=min_frame)
     if problems:
         head = "\n  ".join(problems[:16])
         more = f"\n  ... and {len(problems) - 16} more" if len(problems) > 16 else ""
@@ -997,9 +1158,23 @@ def write(ctx: AssetContext, color: Sequence[np.ndarray], cols: int, rows: int, 
                          "sequence (open_edges) if it must touch it.")
     log(f"flipbook: border guard ok - worst closed edge {worst * 255:.2f}/255 (limit {BORDER_LIMIT * 255:.0f}/255, "
         f"{BORDER_PX} px, checked at {color[0].shape[1]} px{f' and {min_frame} px' if min_frame and min_frame < color[0].shape[1] else ''})")
+    if normals is not None and lit:
+        st = normal_stats(normals, [f[..., 3] for f in color])
+        log(f"flipbook: lit normals - mean z {st['mean_z']:.3f} where alpha > 0.1 (worst frame {st['worst_frame_z']:.3f}), "
+            f"neighbour angle p99.9 {st['crease_p999']:.1f} deg, {100 * st['crease_share']:.3f} % of pairs > 8 deg/px")
+        if min_normal_z is not None and min(st["mean_z"], st["worst_frame_z"]) < min_normal_z:
+            raise ValueError(f"{ctx.id}: lit-medium guard - mean normal z {st['mean_z']:.3f} (worst frame {st['worst_frame_z']:.3f}) "
+                             f"< {min_normal_z} where alpha > 0.1: soften the normals (fb.soften_normals, a wider density blur)")
+    if ramp is not None:
+        problems_r = ramp_problems(ramp)
+        if problems_r:
+            raise ValueError(f"{ctx.id}: ramp - {'; '.join(problems_r)}")
+        spread = max(float(np.abs(f[..., 0] - f[..., 1]).max() + np.abs(f[..., 1] - f[..., 2]).max()) for f in color)
+        if spread > 1e-6:
+            raise ValueError(f"{ctx.id}: a gradient-mapped book stores v in every rgb channel (R = G = B); spread {spread}")
     atlas = pack(color, cols, rows)
     enc = atlas.copy()
-    if srgb:
+    if srgb and ramp is None:  # ramp books already hold the encoded v
         enc[..., :3] = tg.linear_to_srgb(np.clip(enc[..., :3], 0, 1))
     pc = tg.write_png(ctx.path("color.png"), enc, 8)
     ctx.add_file("color", pc)
@@ -1015,8 +1190,12 @@ def write(ctx: AssetContext, color: Sequence[np.ndarray], cols: int, rows: int, 
         pe = tg.write_png(ctx.path("emissive.png"), tg.linear_to_srgb(np.clip(ea[..., :3], 0, 1)), 8)
         ctx.add_file("emissive", pe)
     if ctx.preview:
-        disp = [np.concatenate([tg.linear_to_srgb(np.clip(f[..., :3], 0, 1)) if srgb else f[..., :3], f[..., 3:4]], axis=-1)
-                for f in color]
+        if ramp is not None:  # show the shaded colour (ramp(v)), as the runtime does
+            disp = [np.concatenate([tg.linear_to_srgb(np.clip(ramp_apply(ramp, f[..., 0]), 0, 1)), f[..., 3:4]], axis=-1)
+                    for f in color]
+        else:
+            disp = [np.concatenate([tg.linear_to_srgb(np.clip(f[..., :3], 0, 1)) if srgb else f[..., :3], f[..., 3:4]], axis=-1)
+                    for f in color]
         sheet = contact_sheet(disp, min(cols, 8), labels=labels, normals=normals, premultiplied=blend == "premultiplied",
                               cell=min(128, max(64, color[0].shape[0])), title=f"{ctx.id}  {len(color)} FRAMES  {cols}X{rows}")
         ctx.add_file("preview_contact", tg.write_png(ctx.path("preview_contact.png"), sheet, 8))
@@ -1040,12 +1219,15 @@ def write(ctx: AssetContext, color: Sequence[np.ndarray], cols: int, rows: int, 
         meta["atlasPx"] = atlas_px
     if ground_line is not None:
         meta["groundLine"] = round(float(ground_line), 4)
+    if ramp is not None:
+        meta["ramp"] = [[round(float(c), 5) for c in stop] for stop in ramp]
     log(f"flipbook: {len(color)} frames in {cols}x{rows} ({atlas.shape[1]}x{atlas.shape[0]} px), blend {blend}, lit {lit}")
     return meta
 
 
 __all__ = ["BORDER_LIMIT", "BORDER_PX", "CurlNoise", "EDGES", "FluidSim", "ParticleVolume", "VolumeRenderer", "begin",
            "blackbody_ramp", "blur2", "blur3", "border_levels", "border_signal", "check_borders", "contact_sheet",
-           "density_normals", "frame_window", "integrate_volume", "value_noise3",
+           "density_normals", "frame_window", "integrate_volume", "value_noise3", "luminance", "normal_stats",
+           "ramp_apply", "ramp_encode", "ramp_fit", "ramp_from_hues", "ramp_problems", "soften_normals", "RAMP_MAX_STOPS",
            "draw_text", "gaussian", "grid2", "light_volume", "loop_blend", "normal_from_alpha", "pack", "polygon_sdf",
            "render_volumes", "segment_distance", "to_straight", "write"]

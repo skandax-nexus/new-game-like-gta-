@@ -825,7 +825,8 @@ export class AssetManager {
       f ? this.trackAtlas(scope, this.url(f.url, entry.hash), f.bytes, { srgb }) : Promise.resolve(null);
     try {
       const [color, normal, emissive] = await Promise.all([
-        load(entry.maps.color[tier], true),
+        // gradient-mapped books store v (an index into entry.ramp), not a colour: no sRGB decode
+        load(entry.maps.color[tier], !entry.ramp),
         load(entry.maps.normal?.[tier], false),
         load(entry.maps.emissive?.[tier], true),
       ]);

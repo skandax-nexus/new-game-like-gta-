@@ -20,10 +20,11 @@
  *   tactical-plains.png         plains skirmish: terrain, trails (dashed = routing), footprints at peak melee,
  *                               contact / rout markers; soldiers and morale timelines; outcome
  *   tactical-river.png          the Ford: both hosts route through the shallow ford (never deep water)
- *   tactical-siege.png          scripted assault: elephants break the main gate, ram built, ladders on the east wall;
- *                               the garrison's melee blocks rout but its arrowless archers still stand on their own
- *                               walls and hold the field ([REQ GP-01] in DESIGN_SPEC 6.8 / 6.6.5), so the attacker
- *                               wins by holding the breach 60 s (siege_breach)
+ *   tactical-siege.png          scripted assault: the garrison archers keep their post on the intact walls and shoot
+ *                               the attacking archers and ram crew to pieces; the elephants break the main gate once
+ *                               its archers are dry; ladders on the east wall; the garrison's melee blocks rout but its
+ *                               arrowless archers still stand on their own walls and hold the field ([REQ GP-01] in
+ *                               DESIGN_SPEC 6.8 / 6.6.5), so the attacker wins by holding the breach 60 s (siege_breach)
  *   traces.json                 the trace data behind the three maps
  *   shots-report.json           every assertion with its observed value (full runs only; --only=maps|engine skips it)
  * Every in-engine shot is checked for a blank 3D view (a WebGL canvas that presented nothing, so the page background
@@ -574,7 +575,7 @@ async function captureMaps(browser) {
   const maps = [
     ['tactical-plains', traces.plains, 'The Open Plain - 1,000-soldier balanced skirmish, AI vs AI (seed 2)', 'Headless authoritative formation sim (20 Hz). Trails every 2 s; footprints at the moment the most soldiers are in melee.'],
     ['tactical-river', traces.river, 'The Ford - 1,000 soldiers, AI vs AI (seed 11, 17:00)', 'Flow-field pathing: both hosts route through the shallow ford; no formation enters deep water.'],
-    ['tactical-siege', traces.siege, 'Siege assault - town walls (level 2), ram, ladders, elephants (scripted orders, seed 77)', 'Elephants batter the main gate open while the ram is still being built; ladders go up on the east wall; the garrison melee routs, its dry wall archers hold the walls until the breach is held 60 s.'],
+    ['tactical-siege', traces.siege, 'Siege assault - town walls (level 2), ram, ladders, elephants (scripted orders, seed 77)', 'The wall archers destroy the attacking archers and ram crew; the elephants break the gate once its archers are dry; the garrison melee routs, its dry wall archers hold until the gate is held 60 s.'],
   ];
   for (const [name, t, title, sub] of maps) {
     await page.evaluate(`(${drawTrace.toString()})(${JSON.stringify(t)}, ${JSON.stringify(title)}, ${JSON.stringify(sub)})`);

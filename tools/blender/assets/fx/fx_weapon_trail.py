@@ -9,10 +9,16 @@ now, 1 = the oldest tail point) and v = across the ribbon (0 = blade root, 1 = b
   `trail_wide` softer and wider, for heavy / finisher swings
   `noise`      tileable-in-u grayscale streak noise, scrolled along u and multiplied in to break the ribbon up
   `noise_b`    a second, finer noise to cross-scroll against `noise`
-Additive (premultiplied emission x emissiveIntensity 3). Border guard: the trail gradients are bright at their LEFT
-edge by design (u = 0 is the blade edge now) and the noises tile in u (and wrap in v), so those sequences open
-exactly those edges (`open_edges`); every other edge fades to 0. Published lossless (44 KB): lossy WebP
-ringing put 4-8/255 on the trails' closed top / right edges. OWNER: Technical Artist G (TA-07).
+Additive (emission x emissiveIntensity 3). Gradient-mapped (Art Director TA-07 R2-B3): the atlas stores ONE channel,
+v = the sRGB-encoded luminance of the trail with +-1 LSB triangular dither, and the published `ramp` colours it with a
+monotone hue run - ember red #8f2a0c (dim tail) -> #c2412d -> saffron #e8892b -> gold #ffb040 -> warm-white #fff2c0 at
+the leading edge (R >= G >= B everywhere). 8-bit RGB storage x3 showed 6-8 contour bands in the dim tail with red /
+green fringes where the channels quantised at different steps; one dithered channel has no fringes and no contours.
+Frames are drawn supersampled at 256 px, filtered to the shipped 128 px and only then dithered and quantised (the
+atlas ships at its native 256 px on every tier, so nothing re-quantises the dither away). The noises are stored raw
+(v = noise value; consumers read .r). Border guard: the trail gradients are bright at their LEFT edge by design
+(u = 0 is the blade edge now) and the noises tile in u (and wrap in v), so those sequences open exactly those edges
+(`open_edges`); every other edge fades to 0. Published lossless. OWNER: Technical Artist G (TA-07).
 """
 import pathlib
 import sys
@@ -25,7 +31,10 @@ import _fxkit as kit  # noqa: E402
 from lib import flipbook as fb  # noqa: E402
 
 ctx = fb.begin(__file__)
-PX = 256  # supersampled, published at 128 px frames
+PX = 256  # supersampled; frames ship at OUT px
+OUT = 128
+RAMP = fb.ramp_from_hues([(0.0, "#8f2a0c"), (0.3, "#a8300e"), (0.48, "#c2412d"), (0.66, "#e8892b"), (0.82, "#ffb040"),
+                          (1.0, "#fff2c0")], stops=33)
 v_, u_ = np.mgrid[0:PX, 0:PX].astype(np.float32)
 u = (u_ + 0.5) / PX  # age along the trail (left = newest)
 v = 1.0 - (v_ + 0.5) / PX  # across the ribbon (bottom = root, top = tip)
@@ -33,9 +42,13 @@ frames: list = []
 seqs: list = []
 
 
-def seq(name: str, img: np.ndarray, **extra: object) -> None:
+def seq(name: str, v: np.ndarray, **extra: object) -> None:
+    """One frame from a supersampled intensity image v (already the stored value: encoded luminance or raw noise):
+    area-filtered to OUT px, then (trails) dithered + quantised; stored as v in rgb and alpha."""
+    small = kit.tg.resize(v.astype(np.float32), OUT, OUT)
+    q = fb.ramp_encode(kit.tg.srgb_to_linear(np.clip(small, 0, 1)), dither=True, seed=40 + len(frames))
     seqs.append({"name": name, "start": len(frames), "count": 1, "fps": 1, "loop": True, **extra})
-    frames.append(img.astype(np.float32))
+    frames.append(np.concatenate([np.repeat(q[..., None], 3, axis=-1), q[..., None]], axis=-1).astype(np.float32))
 
 
 def trail(width_pow: float, edge_w: float, tail_pow: float, gain: float) -> np.ndarray:
@@ -44,7 +57,9 @@ def trail(width_pow: float, edge_w: float, tail_pow: float, gain: float) -> np.n
     across = kit.smoothstep(0.03, 0.25, v) * kit.smoothstep(0.97, 0.82, v) * (0.35 + 0.65 * v ** width_pow)
     fade_age = fade_age * kit.smoothstep(0.98, 0.88, u)  # the oldest tail point reaches exactly 0
     i = (fade_age * 0.95 + edge * 0.8) * across * gain
-    return kit.emissive_frame(i, "#fff2c0", "#e8892b", 0.8)
+    # stored brightness = the luminance of the round-1 trail's emission (its look), encoded; the hue comes from RAMP
+    rgb = kit.emissive_frame(i, "#fff2c0", "#e8892b", 0.8)[..., :3]
+    return kit.tg.linear_to_srgb(np.clip(fb.luminance(rgb), 0, 1))
 
 
 
@@ -65,9 +80,9 @@ def streak_noise(seed: int, rows: int, stretch: float) -> np.ndarray:
 
 
 def noise_frame(seed: int, rows: int, stretch: float) -> np.ndarray:
-    # grayscale multiplier stored as white-on-black emission with alpha = value (sampled as data, not drawn alone)
-    n = streak_noise(seed, rows, stretch)
-    return np.concatenate([np.repeat(n[..., None], 3, axis=-1), n[..., None]], axis=-1)
+    # grayscale multiplier (data, not drawn alone): stored as the encoded value of the round-1 atlas, so a consumer
+    # reading the raw .r gets the same multiplier the sRGB-decoded texture gave before
+    return kit.tg.linear_to_srgb(streak_noise(seed, rows, stretch))
 
 
 # Layout [noise | trail] / [noise_b | trail_wide]: every open edge touches either the atlas border (clamped) or another
@@ -80,8 +95,9 @@ seq("trail_wide", trail(0.8, 0.1, 1.1, 0.85), open_edges=["left"])
 
 meta = fb.write(ctx, frames, 2, 2, fps=1, loop=True, sequences=seqs, blend="additive", lit=False, emissive_intensity=3.0,
                 soft_fade_m=0.0, size_m=(1.2, 1.0), atlas_px={"ultra": 256, "high": 256, "mobile": 256},
-                labels=kit.label_sequences(seqs), srgb=True,
-                description="Weapon trail: gradient (edge -> saffron -> tail), wide variant, two u-tileable streak noises.")
+                labels=kit.label_sequences(seqs), srgb=True, ramp=RAMP,
+                description="Weapon trail: dithered gradient-mapped intensity (warm-white edge -> gold -> saffron -> ember-red "
+                            "tail), wide variant, two u-tileable streak noises (raw .r).")
 meta["tint"] = "#ffffff"
 meta["encoding"] = "lossless"
 ctx.meta.update(meta)

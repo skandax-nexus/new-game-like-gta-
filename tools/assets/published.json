@@ -195,7 +195,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_dust.py",
-      "inputHash": "5e6639d8635ae05b7b6aab76a27c7d91d21a7296b43069f9a8fdae99c10ead42",
+      "inputHash": "5b77b266b1b6e5ac4a641b04664b0ecf89886c51c7ea4dd0ca0f1a48f418cd39",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -275,7 +275,7 @@
         },
         {
           "path": "fx/fx_dust/normal_512.webp",
-          "bytes": 25042,
+          "bytes": 11968,
           "tiers": [
             "ultra",
             "high"
@@ -286,7 +286,7 @@
         },
         {
           "path": "fx/fx_dust/normal_256.webp",
-          "bytes": 10202,
+          "bytes": 5266,
           "tiers": [
             "mobile"
           ],
@@ -320,19 +320,19 @@
           "normal": {
             "ultra": {
               "path": "fx/fx_dust/normal_512.webp",
-              "bytes": 25042,
+              "bytes": 11968,
               "width": 512,
               "height": 512
             },
             "high": {
               "path": "fx/fx_dust/normal_512.webp",
-              "bytes": 25042,
+              "bytes": 11968,
               "width": 512,
               "height": 512
             },
             "mobile": {
               "path": "fx/fx_dust/normal_256.webp",
-              "bytes": 10202,
+              "bytes": 5266,
               "width": 256,
               "height": 256
             }
@@ -340,9 +340,9 @@
         }
       },
       "bytes": {
-        "ultra": 96516,
-        "high": 96516,
-        "mobile": 48366
+        "ultra": 83442,
+        "high": 83442,
+        "mobile": 43430
       }
     },
     "fx_fire": {
@@ -993,7 +993,7 @@
       "kind": "flipbook",
       "category": "fx",
       "script": "tools/blender/assets/fx/fx_smoke.py",
-      "inputHash": "e19d11e2f0482e88561cc862e1ad71049ebdf3ab55c913e9b1425263f1bc85d5",
+      "inputHash": "e09e44dd9d11613c61bfb06b9bb9c5bf84d91e0eb9ad10f9268d2b71c3586f52",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -1060,7 +1060,7 @@
         },
         {
           "path": "fx/fx_smoke/normal_1024.webp",
-          "bytes": 85210,
+          "bytes": 35118,
           "tiers": [
             "ultra"
           ],
@@ -1070,7 +1070,7 @@
         },
         {
           "path": "fx/fx_smoke/normal_512.webp",
-          "bytes": 36540,
+          "bytes": 17070,
           "tiers": [
             "high"
           ],
@@ -1080,7 +1080,7 @@
         },
         {
           "path": "fx/fx_smoke/normal_256.webp",
-          "bytes": 15382,
+          "bytes": 8438,
           "tiers": [
             "mobile"
           ],
@@ -1114,19 +1114,19 @@
           "normal": {
             "ultra": {
               "path": "fx/fx_smoke/normal_1024.webp",
-              "bytes": 85210,
+              "bytes": 35118,
               "width": 1024,
               "height": 1024
             },
             "high": {
               "path": "fx/fx_smoke/normal_512.webp",
-              "bytes": 36540,
+              "bytes": 17070,
               "width": 512,
               "height": 512
             },
             "mobile": {
               "path": "fx/fx_smoke/normal_256.webp",
-              "bytes": 15382,
+              "bytes": 8438,
               "width": 256,
               "height": 256
             }
@@ -1134,9 +1134,9 @@
         }
       },
       "bytes": {
-        "ultra": 355066,
-        "high": 167292,
-        "mobile": 69380
+        "ultra": 304974,
+        "high": 147822,
+        "mobile": 62436
       }
     },
     "fx_sparks_embers": {

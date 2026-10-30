@@ -9,9 +9,9 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 13417762,
-    "high": 6335525,
-    "mobile": 3478204
+    "ultra": 13354596,
+    "high": 6302981,
+    "mobile": 3466324
   },
   "assets": {
     "banner_cloth": {
@@ -198,12 +198,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_dust",
       "category": "fx",
-      "hash": "5e6639d863",
+      "hash": "5b77b266b1",
       "description": "Dust (Eulerian sims): rolling ground puffs (2), closed expanding ring (top view), hoof kick; neutral albedo + normals, tint by ground.",
       "bytes": {
-        "ultra": 96516,
-        "high": 96516,
-        "mobile": 48366
+        "ultra": 83442,
+        "high": 83442,
+        "mobile": 43430
       },
       "tiers": [
         "ultra",
@@ -281,19 +281,19 @@ export const ASSET_MANIFEST = {
         "normal": {
           "ultra": {
             "url": "fx/fx_dust/normal_512.webp",
-            "bytes": 25042,
+            "bytes": 11968,
             "width": 512,
             "height": 512
           },
           "high": {
             "url": "fx/fx_dust/normal_512.webp",
-            "bytes": 25042,
+            "bytes": 11968,
             "width": 512,
             "height": 512
           },
           "mobile": {
             "url": "fx/fx_dust/normal_256.webp",
-            "bytes": 10202,
+            "bytes": 5266,
             "width": 256,
             "height": 256
           }
@@ -308,7 +308,8 @@ export const ASSET_MANIFEST = {
         2.2
       ],
       "groundLine": 0.0227,
-      "tint": "#b0956e"
+      "tint": "#b0956e",
+      "ramp": null
     },
     "fx_fire": {
       "kind": "flipbook",
@@ -374,7 +375,8 @@ export const ASSET_MANIFEST = {
         1.9
       ],
       "groundLine": 0.13,
-      "tint": "#ffffff"
+      "tint": "#ffffff",
+      "ramp": null
     },
     "fx_lightning": {
       "kind": "flipbook",
@@ -471,7 +473,8 @@ export const ASSET_MANIFEST = {
         1200
       ],
       "groundLine": null,
-      "tint": "#ffffff"
+      "tint": "#ffffff",
+      "ramp": null
     },
     "fx_mist": {
       "kind": "flipbook",
@@ -587,7 +590,8 @@ export const ASSET_MANIFEST = {
         6
       ],
       "groundLine": null,
-      "tint": "#dfe3e6"
+      "tint": "#dfe3e6",
+      "ramp": null
     },
     "fx_nature": {
       "kind": "flipbook",
@@ -723,7 +727,8 @@ export const ASSET_MANIFEST = {
         0.12
       ],
       "groundLine": null,
-      "tint": "#ffffff"
+      "tint": "#ffffff",
+      "ramp": null
     },
     "fx_rain": {
       "kind": "flipbook",
@@ -839,18 +844,19 @@ export const ASSET_MANIFEST = {
         0.5
       ],
       "groundLine": null,
-      "tint": "#c9d6dc"
+      "tint": "#c9d6dc",
+      "ramp": null
     },
     "fx_smoke": {
       "kind": "flipbook",
       "id": "fx_smoke",
       "category": "fx",
-      "hash": "e19d11e2f0",
+      "hash": "e09e44dd9d",
       "description": "Billowing smoke puff over life (Eulerian sim, 64 frames, one-shot), lit via density-gradient normals; tint #4a4038 for fires.",
       "bytes": {
-        "ultra": 355066,
-        "high": 167292,
-        "mobile": 69380
+        "ultra": 304974,
+        "high": 147822,
+        "mobile": 62436
       },
       "tiers": [
         "ultra",
@@ -898,19 +904,19 @@ export const ASSET_MANIFEST = {
         "normal": {
           "ultra": {
             "url": "fx/fx_smoke/normal_1024.webp",
-            "bytes": 85210,
+            "bytes": 35118,
             "width": 1024,
             "height": 1024
           },
           "high": {
             "url": "fx/fx_smoke/normal_512.webp",
-            "bytes": 36540,
+            "bytes": 17070,
             "width": 512,
             "height": 512
           },
           "mobile": {
             "url": "fx/fx_smoke/normal_256.webp",
-            "bytes": 15382,
+            "bytes": 8438,
             "width": 256,
             "height": 256
           }
@@ -925,7 +931,8 @@ export const ASSET_MANIFEST = {
         3
       ],
       "groundLine": null,
-      "tint": "#4a4038"
+      "tint": "#4a4038",
+      "ramp": null
     },
     "fx_sparks_embers": {
       "kind": "flipbook",
@@ -1031,7 +1038,8 @@ export const ASSET_MANIFEST = {
         0.6
       ],
       "groundLine": null,
-      "tint": "#ffffff"
+      "tint": "#ffffff",
+      "ramp": null
     },
     "fx_weapon_trail": {
       "kind": "flipbook",
@@ -1141,7 +1149,8 @@ export const ASSET_MANIFEST = {
         1
       ],
       "groundLine": null,
-      "tint": "#ffffff"
+      "tint": "#ffffff",
+      "ramp": null
     },
     "ground_dry_earth": {
       "kind": "material",

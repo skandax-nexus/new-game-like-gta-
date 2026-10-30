@@ -138,7 +138,8 @@ current level casts a shadow (no double shadow).
   tangent space (+Y up).
 - **Publish:** color atlas at `atlasPx` per tier (lossy WebP q86 + alpha q90; additive-only books drop the
   redundant alpha; `encoding: 'lossless' | 'near_lossless'` overrides it - fx_sparks_embers is lossless because
-  4:2:0 chroma put cyan fringes on its thin streaks; fx_lightning / fx_weapon_trail too, see border guard), normal
+  4:2:0 chroma put cyan fringes on its thin streaks; fx_lightning / fx_weapon_trail too, see border guard; fx_fire
+  and fx_weapon_trail are gradient-mapped and lossless, see below), normal
   atlas at half resolution, lossy q90 (`FLIPBOOK_NORMAL_SCALE`), same grid so the UVs are shared. fx_fire and fx_smoke ship 2048 atlases (256 px
   frames) on ultra (Art Director decision), 1024 on high, 512 on mobile.
 - **Border guard:** `flipbook.write()` fails the bake when any frame's outer 2 px carry coverage / emission above
@@ -164,6 +165,66 @@ current level casts a shadow (no double shadow).
   RGB bleed that straight-alpha atlases get (their RGB under alpha 0 is emission, not filler). It tags the material prepass `'skip'`;
   `createFlipbookMesh(handle, opts, geometry?)` (or `installPrepassGuard(mesh, 'skip')` on the particle system's own
   mesh) enforces it.
+
+#### Lit flipbooks are a participating medium (rework round 2, contract for GFX-04)
+
+Smoke and dust lit with solid-surface normals and plain Lambert read as creased, carved lumps with near-black pockets
+under golden light (darkest smoke pixel RGB 9,0,0; dust shadows at 0.1 of the lit side - Art Director R2-B1). Both
+halves change:
+
+- **Bake** (`_fxkit.lit_frames`, `lib/flipbook.soften_normals`): the density gradient is taken from the density
+  blurred by **3.5 % of the frame side** (`normal_blur_frac`: the puff's big rounded forms, no internal folds), the
+  normal is mixed with flat by `normal_strength` (smoke 0.6, dust 0.55) and its tilt **fades with alpha**:
+  `n = normalize(mix(+Z, n, smoothstep(0.1, 0.7, alpha)))` - thin fringes face the camera instead of carrying a hard
+  silhouette. **Lit-medium guard:** `flipbook.write(min_normal_z=0.8)` fails the bake when the mean decoded normal z
+  over covered pixels (alpha > 0.1) of the book or of any frame is below 0.8 (smoke 0.88 / worst frame 0.84, dust
+  0.91 / 0.84; round 1 was 0.65 / 0.53). Every lit book logs mean z and its neighbour-angle p99.9.
+  `tests/assets/fx-artifacts.test.ts` re-measures it on the shipped ultra and mobile atlases.
+- **Runtime lighting** (`createFlipbookMaterial`, lit books; the particle system's own material must match):
+  - sun: **wrap lighting** `(N.L + w) / (1 + w)`, `w = FLIP_WRAP = 0.5` (`opts.wrap` overrides; 0 = Lambert);
+  - ambient (IBL / hemisphere lights / light probes): sampled along `normalize(N * FLIP_AMBIENT_TILT + up)`,
+    `FLIP_AMBIENT_TILT = 0.5` - the **upper hemisphere** only: a puff is lit by the sky above it, never by the dark
+    ground below;
+  - **no specular** (direct, IBL, multi-scatter): a medium scatters, it does not reflect.
+  Implementation: the three r170 physical chunks with three exact text substitutions (`FLIP_CHUNK_HOOKS`; a unit
+  test fails if a three upgrade changes them) and `material.specularColor = 0`, `specularF90 = 0`.
+
+#### Gradient-mapped emission (`ramp`, rework round 2)
+
+`FlipbookAssetEntry.ramp` (null for ordinary books): the colour atlas stores **one channel** `v` - the sRGB-encoded
+luminance of the emission, R = G = B, loaded **without** colour conversion - plus alpha; the colour is
+`rgb = ramp(v)`, 2..33 linear-rgb stops evenly spaced over v (piecewise linear: `rampColor` / GLSL
+`flipRampColor`), `ramp[0] = black`, **R >= G >= B at every stop**. Why: fx_fire's lossy 4:2:0 WebP turned dim
+emission around the tongues into green / blue / magenta 8x8 blocks (48.6k green-dominant texels at 2048), which x6.5
+emission showed on the night sky; fx_weapon_trail's 8-bit RGB x3 showed 6-8 contour bands with red / green fringes
+where its channels quantised at different steps (R2-B2b, R2-B3). One channel cannot drift in hue, and is smaller.
+
+- **Bake:** `flipbook.ramp_fit` (fire: the mean simulated colour per v, then R >= G >= B and non-decreasing
+  luminance enforced - 33 stops, mean |ramp(v) - simulated| 2.6/255) or `ramp_from_hues` (trail: authored hue stops
+  ember red -> saffron -> gold -> warm-white, each scaled to the luminance v encodes); `ramp_encode` quantises v with
+  **triangular dither of +-1 LSB** (values below 1 LSB round as before, so empty areas stay 0); `write(ramp=...)`
+  checks R = G = B and the ramp rules and publishes `ramp`.
+- **Publish:** ramp books must be `encoding: 'lossless'` (`flipbookRampProblems`, and every encoded tier must
+  decode with R = G = B exactly - `flipbookChromaSpread`), so the dither and the zero chroma survive. fx_fire:
+  ultra 2048 / high 1024 / mobile 512 lossless (smaller than the lossy RGB on mobile); fx_weapon_trail ships its 256
+  atlas natively on every tier (frames drawn at 256, area-filtered to 128 and only then dithered - no resampling
+  re-quantises the dither away).
+- **Runtime:** `loadFlipbook` loads the colour map of a ramp book with `NoColorSpace`; the material adds
+  `FLIP_RAMP` (stop count) and `uniform vec3 flipRamp[N]` and sets `flipC.rgb = flipRampColor(flipC.r)` before the
+  blend math. Data sequences in a ramp book (the trail noises) are read raw from `.r` by their consumer.
+
+#### Effect artifact gates (rework round 2)
+
+- **fx_fire, no flat-topped blocks:** each hot spot of the fuel bed is a dome whose height follows the continuous
+  noise (the slab source with one flat top showed through the ignition threshold as a detached glowing block at the
+  rim, and as a flat foot at the base near the loop seam), confined to the inner ~80 % of the bed. The bake measures
+  the longest straight horizontal top edge of any emitting shape per frame (`_fxkit.straight_top_edge`) and fails
+  above 6 % of the frame width; the test re-measures the shipped atlas against the Art Director's 10 %.
+- **parry_flash, never the wheel:** an open burst of 16 irregular streaks (jittered angles, varied length / width /
+  curl, they leave the centre as they fly) and a soft gold core gone after 4 frames - no rim, no regular rays (the
+  8-spoke wheel is the capital / heraldry motif, ART_BIBLE §1.3 / §1.5 / §8.7). The bake logs and the test checks
+  closure (share of angles lit at the best radius beyond the core: 0.20, the old ring 1.00; limit 0.5) and 4- / 8-fold
+  angular symmetry (0.22, the old wheel 0.37; limit 0.3).
 
 ### Override-material passes (prepass tag)
 

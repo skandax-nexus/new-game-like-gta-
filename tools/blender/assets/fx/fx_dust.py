@@ -13,6 +13,9 @@ the runtime tints by the ground color (sample the splat albedo, lighten 15 %) an
                     (no wind, no mean drift) that stays a closed, centred ring while it expands to ~2 m
   `hoof`            a hoof / wheel kick: grains and clods thrown backwards (+x) in low ballistic arcs (<= ~0.23 m) over
                     a low dust jet that rolls out along the ground; the grains land into the rolling puff
+Lit as a medium (Art Director TA-07 R2-B1, as fx_smoke): normals from the density blurred by 3.5 % of the frame,
+tilt faded with alpha (smoothstep 0.1-0.7) at strength 0.55 - mean normal z >= 0.8 where alpha > 0.1 on every frame
+(lit-medium guard), so golden light reads as soft lit dust, never gilded rock with black pockets.
 Every frame keeps its border clear (flipbook border guard). Atlas 1024 / 1024 / 512. OWNER: Technical Artist G (TA-07).
 """
 import math
@@ -137,7 +140,8 @@ def run(name: str, kind: str, seed: int, dur: float, *, jet: float, up: float, t
     gn = fb.value_noise3((shape[0], shape[1], 1), 0.2 / H, seed + 77, octaves=2)[:, :, 0]
     gf = (-0.04 + 0.34 * kit.smooth01((gn - 0.25) / 0.5)) if view == "front" else 0.0
     c, n, worst = kit.lit_frames(frames, ext, H, PX, view=view, frame=frame, depth=2.6, albedo=ALBEDO, flatten=0.55,
-                                 fades=kit.life_fade(N, 0.08, 0.35), normal_blur=1.5, normal_strength=0.75, ground_fade=gf)
+                                 fades=kit.life_fade(N, 0.08, 0.35), normal_blur_frac=0.035, normal_fade=(0.1, 0.7),
+                                 normal_strength=0.55, ground_fade=gf)
     if kind == "hoof":
         spray(c, n, seed + 5, frame, dur)
     for i in (5, 10):
@@ -159,7 +163,7 @@ run("ring", "ring", 21, 2.0, jet=4.5, up=0.8, temp=0.5, buoy=1.2, weight=0.2, da
 run("hoof", "hoof", 13, 1.6, jet=8.0, up=0.7, temp=0.1, buoy=0.4, weight=1.8, damp=0.3, exp=0.5, wind=0.2, size=2.2, width=0.2,
     vort=6.0)
 
-meta = fb.write(ctx, color, 8, 8, fps=8, loop=False, sequences=sequences, normals=normals, blend="alpha", lit=True,
+meta = fb.write(ctx, color, 8, 8, fps=8, loop=False, sequences=sequences, normals=normals, blend="alpha", lit=True, min_normal_z=0.8,
                 soft_fade_m=0.5, size_m=(2.2, 2.2), atlas_px={"ultra": 1024, "high": 1024, "mobile": 512},
                 ground_line=round(0.05 / 2.2, 4),  # front-view sequences: ground 5 cm above the frame bottom (ring: top view)
                 labels=kit.label_sequences(sequences),

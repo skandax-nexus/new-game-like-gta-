@@ -7,7 +7,12 @@ never blood):
   `spark`           velocity-stretched streak: gold head, saffron tail (aligned to velocity at runtime: +Y = forward)
   `ember` x2        irregular glowing coals that rise and swirl (#ffb040 family)
   `slash_spark`     8 frames: a fan of sparks thrown along the blade arc from the hit point, curving under gravity
-  `parry_flash`     8 frames (~130 ms): a gold radial flash - soft tapered rays, ring and core
+  `parry_flash`     8 frames (~130 ms, Bible §10 "gold radial flash 120 ms + sparks"): an OPEN radial flash - 16
+                    irregular streaks of varied length, angle and width flung outward from the contact point (they
+                    leave the centre as they fly: no hub), no rim, and a soft gold core gone after 4 frames. The old
+                    rays + ring read as the 8-spoke wheel of our capitals and heraldry (ART_BIBLE §1.3, §1.5, §8.7) -
+                    a combat flash must never quote it (Art Director TA-07 R2-B4); the bake logs its closure (share of
+                    angles covered at the best radius, a ring ~1.0) and its 4- / 8-fold symmetry
   `finisher_burst`  16 frames: saffron-gold bloom and ring, a dust-coloured shockwave, and curved flying sparks
 Colour: streaks run from gold `#e9b949` (bright) to saffron `#e8892b` (cooling); intensity is soft-saturated, and only
 the hottest few percent blend towards the warm-white core `#fff2c0` (logged per sequence) - no flat white, no spokes.
@@ -87,17 +92,60 @@ for f in range(8):
     acc += kit.glow(x, y, hit[0], hit[1], 0.13 * (1.0 - t) + 0.02, 2.0) * (1.0 - t) ** 1.5 * 1.6
     imgs.append(kit.spark_emission(acc, gain=1.0, window=WIN))
 seq("slash_spark", imgs, 30)
-# parry flash: soft tapered gold rays + ring + core, very short
+# parry flash: an open burst of irregular streaks + a soft gold core (no ring, no regular rays - see the module doc)
 imgs = []
-rays_a = rng.uniform(0, 2 * np.pi)
+rng.uniform(0, 2 * np.pi)  # the old flash's one draw: keeps the shared stream (finisher_burst flyers) unchanged
+N_STREAK = 16
+prng = np.random.default_rng(31)
+base = prng.uniform(0, 2 * np.pi)
+streaks = []
+for k in range(N_STREAK):
+    a_ = base + (k + prng.uniform(-0.38, 0.38)) * 2 * np.pi / N_STREAK  # jittered, never evenly spaced
+    streaks.append((a_ + prng.normal(0, 0.03), prng.uniform(0.28, 0.82), prng.uniform(0.75, 1.35), prng.uniform(0.45, 1.0),
+                    prng.uniform(0.006, 0.011), prng.uniform(0.012, 0.024), prng.uniform(-0.25, 0.25)))
 for f in range(8):
-    t = f / 7.0
-    rays = (np.cos(4.0 * (ang - rays_a)) * 0.5 + 0.5) ** 10 * np.exp(-(r / (0.2 + 0.4 * t)) ** 1.5)
-    rays += 0.5 * (np.cos(4.0 * (ang - rays_a) + np.pi / 4 * 4) * 0.5 + 0.5) ** 16 * np.exp(-(r / (0.12 + 0.3 * t)) ** 1.5)
-    ring = np.exp(-((r - (0.14 + 0.45 * t)) / (0.035 + 0.03 * t)) ** 2) * 0.8
-    core = kit.glow(x, y, 0, 0, 0.07 + 0.05 * t, 2.0)
-    i = (rays * 1.2 + ring + core * 1.1) * (1.0 - t) ** 1.4 * RAD
-    imgs.append(kit.spark_emission(i, gain=1.0, core=0.95, window=WIN))
+    t = (f + 1) / 8.0
+    acc = np.zeros_like(x)
+    for a_, length, speed, amp, w0, w1, bend in streaks:
+        tt = min(1.0, t * speed)
+        head_r = 0.05 + length * (1.0 - (1.0 - tt) ** 2.2)  # fast out, easing
+        tail_r = 0.03 + head_r * (0.15 + 0.55 * tt)  # the tail leaves the centre as the streak flies
+        ah, at = a_ + bend * tt * 0.3, a_  # slight curl: streaks are not ruler-straight spokes
+        head = np.array([np.cos(ah), np.sin(ah)]) * head_r
+        tail = np.array([np.cos(at), np.sin(at)]) * tail_r
+        acc += tapered(tail, head, w0, w1) * amp * (1.0 - t) ** 1.3 * 2.2
+    # soft gold core: bright on contact, gone within 4 frames (~65 ms)
+    core_amp = max(0.0, 1.0 - f / 4.0) ** 2
+    acc += kit.glow(x, y, 0.0, 0.0, 0.09 + 0.04 * t, 2.0) * core_amp * 1.4
+    imgs.append(kit.spark_emission(acc * RAD, gain=1.0, core=0.95, window=WIN))
+
+
+def radial_report(name: str, frames_: list) -> None:
+    """Closure = best share of 360 angle bins lit (> 15 % of the frame max) at one radius beyond the core (a ring ~1.0);
+    symmetry = 4- and 8-fold angular power relative to the mean (regular spokes / a wheel read high)."""
+    worst_c, worst_s = 0.0, 0.0
+    for f_ in frames_:
+        v_ = f_[..., 3]
+        if v_.max() <= 0:
+            continue
+        lit = v_ > 0.15 * v_.max()
+        bins = ((ang + np.pi) / (2 * np.pi) * 360).astype(np.int64) % 360
+        for r0 in np.arange(0.3, 0.85, 0.02):  # beyond the core glow and its falloff
+            band = (r > r0) & (r < r0 + 0.02)
+            cov = np.zeros(360, bool)
+            cov[bins[band & lit]] = True
+            seen = np.zeros(360, bool)
+            seen[bins[band]] = True
+            if seen.sum() > 90:
+                worst_c = max(worst_c, float(cov.sum() / seen.sum()))
+        prof = np.bincount(bins[(r > 0.15) & (r < 0.7)], weights=v_[(r > 0.15) & (r < 0.7)], minlength=360)
+        spec = np.abs(np.fft.rfft(prof))
+        if spec[0] > 0:
+            worst_s = max(worst_s, float(max(spec[4], spec[8]) / spec[0]))
+    log(f"sparks {name}: closure {worst_c:.2f} (ring ~1.0), 4/8-fold symmetry {worst_s:.3f} of the mean")
+
+
+radial_report("parry_flash", imgs)
 seq("parry_flash", imgs, 60)
 # finisher burst: saffron-gold bloom + ring, dust shockwave, curved flying sparks (few, varied - no spokes)
 imgs = []

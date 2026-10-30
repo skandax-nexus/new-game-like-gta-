@@ -8,8 +8,10 @@ animations, UV sets, tangents and binding extras; checks decimation, a high->low
 procedural texture-set bake. TA-07 cases: VAT bake (reconstruction error, texture layout, GLB vertex order,
 octahedral normals, stride), impostor capture (hemi-octahedral math, coverage, normals, depth), flipbook
 volumes (curl-noise divergence, Cycles volume render, loop blend, normals from density, packing), the Eulerian
-solver (projection, buoyancy, free-slip floor), the exact integrator against Cycles, and the flipbook border guard
-(frames touching their border fail the bake unless the sequence opens that edge).
+solver (projection, buoyancy, free-slip floor), the exact integrator against Cycles, the flipbook border guard
+(frames touching their border fail the bake unless the sequence opens that edge) and, rework round 2, lit-medium
+normals (alpha-faded tilt, the min_normal_z guard) and gradient-mapped books (ramp fit / authored ramp, dithered
+encode, R = G = B, ramp rules).
 Writes to .asset-cache/_selftest/. Exit code 1 on failure.
 OWNER: Technical Art Director (TA-07 adds the vat / impostor / flipbook cases).
 """
@@ -459,8 +461,82 @@ def test_flipbook_border_guard() -> None:
           and "openEdges" not in pub["ok"], str([(n, sq.get("openEdges")) for n, sq in pub.items()]))
 
 
+def test_flipbook_medium_and_ramp() -> None:
+    """Rework round 2: lit smoke / dust normals fade with alpha (lit-medium guard) and gradient-mapped books (fire,
+    weapon trail) store one dithered channel + a monotone ramp."""
+    import os
+    core.reset_scene()
+    os.environ["SAMRAJYA_ASSET_OUT"] = str(OUT / "flipbook_ramp")
+    os.environ["SAMRAJYA_ASSET_ID"] = "selftest_flipbook_ramp"
+    try:
+        ctx = flipbook.begin(__file__)
+    finally:
+        del os.environ["SAMRAJYA_ASSET_OUT"]
+        del os.environ["SAMRAJYA_ASSET_ID"]
+    ctx.preview = False
+    x, y = flipbook.grid2(64)
+    a = flipbook.gaussian(x, y, 0.0, 0.0, 0.35) * flipbook.frame_window(64, 0.04, 0.1)
+    # a steep "solid" normal everywhere (x tilt 0.9) -> faded: flat where alpha is thin, full tilt where it is thick
+    steep = np.zeros((64, 64, 3), np.float32)
+    steep[..., 0] = 0.9
+    steep[..., 2] = math.sqrt(1 - 0.81)
+    enc = steep * 0.5 + 0.5
+    soft = flipbook.soften_normals(enc, a, 0.1, 0.7)
+    dec = soft * 2 - 1
+    thin = a < 0.1
+    thick = a > 0.7
+    check("medium: soften_normals - thin fringe faces the camera, thick core keeps its tilt",
+          float(np.abs(dec[..., 2][thin] - 1).max()) < 1e-3 and float(np.abs(dec[..., 0][thick] - 0.9).max()) < 1e-3,
+          f"thin z {float(dec[..., 2][thin].min()):.4f}, thick x {float(dec[..., 0][thick].mean()):.3f}")
+    st_steep = flipbook.normal_stats([enc], [a])
+    st_soft = flipbook.normal_stats([soft], [a])
+    check("medium: normal_stats mean z rises when the tilt fades", st_soft["mean_z"] > st_steep["mean_z"] + 0.2,
+          f"{st_steep['mean_z']:.3f} -> {st_soft['mean_z']:.3f}")
+    col = np.concatenate([np.full((64, 64, 3), 0.6, np.float32), a[..., None]], axis=-1).astype(np.float32)
+    try:
+        flipbook.write(ctx, [col], 1, 1, fps=1, loop=True, normals=[enc], blend="alpha", lit=True, min_normal_z=0.8)
+        raised = ""
+    except ValueError as e:
+        raised = str(e)
+    check("medium: write(min_normal_z) fails a solid-looking lit book", "lit-medium guard" in raised, raised[:120] or "no error")
+    flat = np.broadcast_to(np.array([0.5, 0.5, 1.0], np.float32), (64, 64, 3)).copy()
+    meta = flipbook.write(ctx, [col], 1, 1, fps=1, loop=True, normals=[flat], blend="alpha", lit=True, min_normal_z=0.8)
+    check("medium: flat normals pass the guard", meta["lit"] is True)
+    # ---------------------------------------------------------------- gradient map
+    rgb = np.stack([np.clip(a * 1.2, 0, 1), np.clip(a * 0.7, 0, 1) ** 1.4, np.clip(a * 0.3, 0, 1) ** 2], axis=-1).astype(np.float32)
+    Y = flipbook.luminance(rgb)
+    ramp = flipbook.ramp_fit([rgb], [tg.linear_to_srgb(Y)], stops=17)
+    ok_mono = all(c[0] >= c[1] - 1e-9 and c[1] >= c[2] - 1e-9 for c in ramp) and ramp[0] == [0.0, 0.0, 0.0]
+    check("ramp: ramp_fit is black at 0 and R >= G >= B", ok_mono and not flipbook.ramp_problems(ramp), str(flipbook.ramp_problems(ramp)))
+    shaded = flipbook.ramp_apply(ramp, tg.linear_to_srgb(Y))
+    err = float(np.abs(tg.linear_to_srgb(shaded) - tg.linear_to_srgb(rgb))[Y > 0.01].mean())
+    check("ramp: ramp(v) reproduces a colour that is a function of luminance", err < 0.03, f"mean encoded error {err * 255:.2f}/255")
+    v = flipbook.ramp_encode(np.linspace(0, 0.05, 4096, dtype=np.float32).reshape(64, 64), dither=True, seed=3)
+    v0 = flipbook.ramp_encode(np.linspace(0, 0.05, 4096, dtype=np.float32).reshape(64, 64), dither=False)
+    on_grid = float(np.abs(v * 255 - np.round(v * 255)).max())
+    runs = lambda img: float(np.mean([len(r) for row in img for r in np.split(row, np.nonzero(np.diff(row))[0] + 1)]))  # noqa: E731
+    check("ramp: ramp_encode quantises to 8 bit and the dither breaks flat runs", on_grid < 1e-4 and runs(v) < runs(v0) * 0.6,
+          f"mean flat run {runs(v0):.1f} -> {runs(v):.1f} px")
+    trail = flipbook.ramp_from_hues([(0.0, "#8f2a0c"), (0.5, "#e8892b"), (1.0, "#fff2c0")], stops=33)
+    lum = flipbook.luminance(np.array(trail, np.float32))
+    check("ramp: ramp_from_hues is monotone in hue order and luminance", not flipbook.ramp_problems(trail)
+          and bool(np.all(np.diff(lum) >= -1e-6)), str(flipbook.ramp_problems(trail)))
+    vv = np.repeat(flipbook.ramp_encode(Y, dither=True, seed=1)[..., None], 3, axis=-1)
+    meta = flipbook.write(ctx, [np.concatenate([vv, a[..., None]], -1).astype(np.float32)], 1, 1, fps=1, loop=True,
+                          blend="premultiplied", ramp=ramp)
+    check("ramp: write(ramp) publishes the ramp", meta.get("ramp") is not None and len(meta["ramp"]) == 17)
+    try:
+        flipbook.write(ctx, [np.concatenate([rgb, a[..., None]], -1)], 1, 1, fps=1, loop=True, blend="premultiplied", ramp=ramp)
+        raised = ""
+    except ValueError as e:
+        raised = str(e)
+    check("ramp: write(ramp) rejects colour frames (R = G = B required)", "R = G = B" in raised, raised[:120] or "no error")
+    bad = [[0, 0, 0], [0.5, 0.6, 0.1]]
+    check("ramp: ramp_problems rejects green drift", any("R >= G >= B" in q for q in flipbook.ramp_problems(bad)))
+
+
 for t in (test_skinned_export, test_lod, test_normal_bake, test_texture_set_bake, test_vat, test_impostor, test_flipbook,
-          test_fluid_and_integrator, test_flipbook_border_guard):
+          test_fluid_and_integrator, test_flipbook_border_guard, test_flipbook_medium_and_ramp):
     try:
         t()
     except Exception as e:  # noqa: BLE001

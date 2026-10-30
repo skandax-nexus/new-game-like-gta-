@@ -25,9 +25,11 @@ never change results - proven by the resume tests below).
 
 ## Evidence images (every image described)
 
-Re-captured in Creative Director rework round 2. Builds come from a clean export of `9aa38bd`; its tactical code is that of
-`f00d04b`. This excludes a teammate's uncommitted `src/sim/strategic/**` work. The capture script is the one committed with
-this README. `gp-01.cjs` passes 22 / 22 checks (`shots-report.json`).
+Re-captured in Creative Director rework round 2, then again in the lead re-review (round 2) from a clean export of
+`d884669` (the wall-post fix; teammates' uncommitted `src/assets/**` work excluded). The fix changes only siege battles:
+the plains and river traces and maps are byte-identical, the in-engine plains hash is `a185ec15` before and after, and
+only `tactical-siege.png` / the siege trace changed. The capture script is the one committed with this README.
+`gp-01.cjs` passes 22 / 22 checks (`shots-report.json`).
 
 In-engine captures use the shipping build. The battle is stepped with `__SAMRAJYA__.step(n)` while paused, then rendered
 under SwiftShader. The plains captures run seed 2 with the in-engine defaults: Suvarna vs Giridurga, both on the Balanced
@@ -111,20 +113,22 @@ The maps:
   - Deep water: the trace checks every tick exactly, and 0 of 6,472 ticks had a formation centroid in a deep-water cell
     (see R2-3a below for the check).
 - **tactical-siege.png** - a scripted Nilavana assault on a level-2 Kotanagara town wall (radius 120 m, 12 segments, 2
-  gates).
-  - The elephants batter the main (south) gate open at 1:18 (red X) while the ram engineers are still building under
-    arrow fire. The finished ram is abandoned outside the south-west wall when its crew routs at 3:27.
-  - Engineers raise ladders on the east wall (`ladders up`), and the spearmen there fight the defenders' reserve spear
-    block.
-  - The garrison's gate spearmen rout at 2:30 and the gate archers at 2:41. The west-wall archer block (100 men) has
-    been out of arrows since 1:55 and stands on its wall.
-  - The last defending spear block routs at 3:54. Under the round-2 rule the dry archers on their own wall still hold
-    the field, so the garrison is not broken.
-  - The attacker's guards have held the inside of the broken gate since 3:23. They win by `siege_breach` at 4:23,
-    60 s later; the CD's scratch prototype predicted 4.4 min.
-  - The defenders' average morale reads 70 at the end because only the wall archers are still standing.
-  - Totals: Nilavana 488 -> 374 standing; Kotanagara 410 -> 254 (150 killed, 6 captured, 25 lost in the pursuit of
-    its routers); 70 volleys.
+  gates). Re-scripted in the lead re-review (round 2): garrison archers now keep their post on intact walls (see that
+  section), so the elephants no longer walk into the gate archers' fire at once.
+  - The two garrison archer blocks shoot from the walls with the wall bonuses. The attacking archers are destroyed at
+    1:45 and the ram crew at 1:51, with the ram 82 % built (`ram` marker south of the gate).
+  - The elephants wait until the gate archers have shot their quivers dry (1:55). The garrison's gate spearmen (with
+    its commander) then sally through the gate, shoving the gate archers out ahead of them, and fight the elephants
+    outside the gate (footprints at 3:04).
+  - Engineers raise ladders on the east wall (`ladders up`). The garrison reserve leaves by the north gate, meets the
+    ladder party outside the east wall and routs at 3:35.
+  - The gate archers rout at 3:10 (and surrender at 5:30); the gate spearmen rout at 5:09. The whole garrison melee has
+    now routed, but the west-wall archer block (100 men, out of arrows since 2:26) still stands on its wall, so under
+    §6.8 [REQ GP-01] the garrison is not broken. Its average morale jumps to ~75 because only those archers stand.
+  - The elephants break the main gate at 5:44 (red X). The attacker's guards hold the inside of the broken gate from
+    7:22 and win by `siege_breach` at 8:22.
+  - Totals: Nilavana 488 -> 335 standing (153 killed); Kotanagara 410 -> 221 (173 killed, 16 captured, 9 lost in the
+    pursuit of its routers); 65 volleys.
 
 ## Numbers
 
@@ -425,10 +429,62 @@ The two failing §13.3 targets, and the fast mounted pairings, are battle-AI / b
 They are to be re-measured after SIM-02; neither round-2 rule change touches them, because explicit armies and field
 battles are unaffected.
 
+## Lead re-review (round 2, Lead Gameplay Engineer)
+
+Re-run of the round-2 rework against HEAD `08fdaa4` (tactical code of `f00d04b` and `9aa38bd`):
+
+- `tsc --noEmit` clean. `npm test` 624 / 625: the only failure is the CTO-owned migration test (Known issues). A
+  replay of that test confirms the only fields that differ after migrating a finished battle are `orderTime` (4
+  formations), `outcome.warScore` and one `routedEnemies`, and that the check requested from the CTO passes.
+- Every round-2 number reproduces exactly: pacing median 5.48 min (10 / 10); in-engine default median 5.18 min (19 / 20);
+  review pairing median 12.96 min, 0 time limits, 0 draws; Elephant Shock mirror 5.36 min (14 / 20); Riders mirror
+  1.44 min (1 / 20); composition statistics (overflow splits 16, average fill 107.9 %).
+- Builds (normal, and single-file 2.27 MB) into `.build/gp-01-review*`; `gp-01.cjs` 22 / 22 against them, in-engine
+  hash `a185ec15` on both loads; all three traces and maps byte-identical to the committed ones.
+- R2-1 and R2-2 match the rule text in DESIGN_SPEC §6.8 / §6.6.5 / §10.1, and the new tests cover them. Extra probe:
+  dry wall archers taken by a ladder assault are engaged after 38 s and rout, so the exception never stalls a siege
+  the attacker can reach.
+
+**Reviewer fix (`d884669`): garrison archers keep their post on intact walls.** R2-1 is right in `outcome.ts`, but it
+did not apply in real sieges, because the archers left the walls before they ran dry.
+
+- Probe: AI vs AI sieges through the siege auto-deploy (baseline battle AI; 7 attacker formations with elephants
+  against 4 garrison formations; level-2 town). On 6 / 6 seeds the town fell by `rout` in about 2.3 min, with both
+  gates intact, no breach, and 100 dry garrison archers standing idle 10-25 m inside the wall walk.
+- Cause, in GP-01's own order execution (`orders.ts`):
+  - The `skirmish` order's keep-range walked wall archers toward a target beyond range: inward to a gate and out of
+    the town. They never shot. When the enemy came within 0.4 x range, it stepped them back 20 m.
+  - The skirmish stance (the default for ranged formations) made even archers on `hold` evade 20 m inward as soon
+    as the enemy reached the foot of the wall.
+  - Either way they lost the wall bonuses (§6.6.5) and, once dry, the §6.8 [REQ GP-01] exception.
+- Fix: `holdsWallAgainst(state, ctx, f, e)` = `onWalls(f)` and `wallBetween(f, e)`. `evade()` and `keepRange()` keep
+  the post while it holds: the formation stands, faces its target and shoots when in range. A ladder, breach or broken
+  gate on that stretch (`wallBetween` false) restores the field behaviour. Field battles are unaffected (`onWalls` is
+  false without a fort).
+- Tests (`siege.test.ts`, both fail without the fix):
+  - the `hold` order (default skirmish stance) and the `skirmish` order keep the archers on the wall walk while an
+    enemy stands at the wall foot within 0.4 x range; they shoot from the walls;
+  - a ladder on that stretch restores the evasion.
+- `determinism.test.ts` mid-siege: the garrison archers start on the wall walk beside the main gate (20, 106). At the
+  old spot (30, 100) they held the wall, the elephants panicked and the gate was never attacked, so the test's "gate
+  under attack" condition failed. The resume check itself passed both ways.
+- `tools/trace.ts` siege: the elephants wait until the gate archers are out of arrows, then batter the main gate. Sent
+  at once, they panic under the wall archers' fire and the gate holds. The new map is described above.
+
+| AI vs AI siege probe (10 seeds) | Before the fix | After |
+|---|---|---|
+| Town falls by `rout` | 10 / 10 (6 seeds run), about 2.3 min, no breach, dry archers idle off the walls | 8 / 10, 2.7-4.5 min (3 after the elephants break a gate) |
+| Garrison holds to the 40-minute limit (`siege_held`) | 0 | 2 / 10 (1.3 s of autoresolve CPU each) |
+
+After the fix: `tsc` clean; `npm test` 627 / 628 (only the CTO-owned migration test); tactical + purity + integration
+99 / 99; perf 1,000 soldiers 0.044 / 0.237 ms, 5,000 soldiers 0.271 / 0.962 ms (formation / soldier layer); new-order
+pathing median 0.81 ms. Builds from a clean export of `d884669` (normal; single-file 2.27 MB); `gp-01.cjs` 22 / 22,
+in-engine hash `a185ec15` on both loads (unchanged); SMOKE_RESULT.
+
 ## Known issues
 
 - `tests/contracts/migration.test.ts` > "battles (incl. a finished one with an outcome)" fails. This is the only failing
-  test in `npm test` (616 / 617).
+  test in `npm test` (627 / 628 at the lead re-review, round 2).
   - The test strips the v2 fields from a *finished* battle and expects the migration defaults to restore them.
   - GP-01 writes live values into `orderTime`, `outcome.warScore` and `outcome.sides[].formations[].routedEnemies`.
   - The test is CTO-owned. The exact change has been requested in the GP-01 report since round 0.
@@ -449,6 +505,16 @@ battles are unaffected.
 - Toasts stack over the battle HUD's speed buttons (`battle-mobile-melee.png`, `battle-river-melee.png`), and the
   mobile order bar covers about 40 % of the screen. Noted for UI.
 - The soldier renderer does not yet map `SOLDIER_ANIM.reload` (12) / `charge` (13) (request to GFX-04).
+- Sieges (lead re-review, round 2), follow-ups:
+  - A formation marching out through a gate shoves a holding friendly formation in its path out through the gate
+    ahead of it. In the siege trace the gate spearmen push the gate archers off the wall walk and out of the town. The
+    mover should yield or path around (GP).
+  - `wallBetween` takes the wall segment under the midpoint between the two formations. That is exact for neighbours
+    across a wall and approximate for a wall archer and a target far across the town (GP).
+  - The baseline battle AI has no siege logic: no ladders, no rams, no gate assault. Now that garrisons keep the walls,
+    2 of 10 AI sieges in the probe reach the 40-minute limit (SIM-02).
+  - Elephants batter a gate only when their front is within 14 m + width / 4 of it. A herd that has lost elephants
+    needs a closer `move_to` point (the trace uses (34, 136)); a gate is not an attack target (GP / UI).
 - Under SwiftShader load, a frozen frame can present a blank 3D view or a stale HUD. In round 2, 2 of the 4 shots in the
   first smoke run were affected; a re-run was clean.
   - This is likely a dynamic-resolution canvas resize just before `__SAMRAJYA__.freeze(true)`, in renderer / debug-API

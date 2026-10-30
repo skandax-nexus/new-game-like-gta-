@@ -1,6 +1,6 @@
 {
-  "port": 4407,
-  "dist": "/home/user/new-game-like-gta-/.build/gp-01",
+  "port": 4457,
+  "dist": ".build/gp-01-review",
   "checks": [
     {
       "name": "tactical-river: no formation centroid in a deep-water cell (every tick, exact; and every 2 s frame sample)",
@@ -47,7 +47,7 @@
         ],
         "winner": 0,
         "outcome": "siege_breach",
-        "minutes": 4.38
+        "minutes": 8.36
       }
     },
     {
@@ -84,8 +84,8 @@
       "ok": true,
       "observed": {
         "camera": {
-          "x": -593.7944734254229,
-          "z": -987.5982596273479,
+          "x": -593.7944734261823,
+          "z": -987.5982596311216,
           "distance": 44.96093663144529,
           "yaw": 0.19816684339273077,
           "tilt": 0
@@ -112,7 +112,7 @@
       "name": "battle-result: the 3D view rendered (not a blank canvas)",
       "ok": true,
       "observed": {
-        "dominantColourShare": 0.0234
+        "dominantColourShare": 0.0235
       }
     },
     {

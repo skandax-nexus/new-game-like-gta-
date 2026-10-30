@@ -196,6 +196,7 @@ function entryFor(a) {
         sizeMeters: m.sizeMeters ? roundVec(m.sizeMeters, 3) : null,
         groundLine: typeof m.groundLine === 'number' ? round(m.groundLine, 4) : null,
         tint: m.tint ?? '#ffffff',
+        ramp: Array.isArray(m.ramp) ? m.ramp.map((c) => roundVec(c, 5)) : null,
       };
     }
     case 'lut':

@@ -347,6 +347,14 @@ export interface FlipbookAssetEntry extends AssetEntryBase {
   readonly groundLine: number | null;
   /** Suggested particle tint (sRGB hex) for neutral atlases, e.g. building smoke `#4a4038`. */
   readonly tint: string;
+  /**
+   * Gradient-mapped emission (fx_fire, fx_weapon_trail), or null. The color atlas then stores ONE channel: v = the
+   * sRGB-encoded luminance of the emission (R = G = B, sampled WITHOUT colour conversion) plus alpha, and the colour
+   * is rgb = ramp(v): `ramp` holds 2..33 linear-rgb stops evenly spaced over v in [0, 1] (piecewise linear),
+   * ramp[0] = [0, 0, 0] and R >= G >= B at every stop (no green / blue drift - TA-07 R2). Data sequences of such a
+   * book (the trail noises) are read raw from .r by their consumer.
+   */
+  readonly ramp: readonly (readonly number[])[] | null;
 }
 
 // ------------------------------------------------------------------------------------------- LUT / image

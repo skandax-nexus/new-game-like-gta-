@@ -510,6 +510,47 @@ export function flipbookLayoutProblems({ cols, rows, sequences }) {
   return problems;
 }
 
+export const FLIPBOOK_RAMP_MAX_STOPS = 33;
+
+/**
+ * Gradient-map ramp rules (`flipbook.ramp`, fx_fire / fx_weapon_trail): 2..33 linear-rgb stops in [0, 1], evenly
+ * spaced over v; ramp[0] = black (no emission where v = 0) and R >= G >= B at every stop, so the shaded colour can
+ * never drift towards green or blue (Art Director TA-07 R2-B2 / R2-B3). Returns one message per problem.
+ */
+export function flipbookRampProblems(ramp) {
+  if (ramp === undefined || ramp === null) return [];
+  if (!Array.isArray(ramp) || ramp.length < 2 || ramp.length > FLIPBOOK_RAMP_MAX_STOPS) return [`ramp needs 2..${FLIPBOOK_RAMP_MAX_STOPS} stops`];
+  const out = [];
+  ramp.forEach((c, i) => {
+    if (!Array.isArray(c) || c.length !== 3 || c.some((x) => typeof x !== 'number' || !Number.isFinite(x) || x < 0 || x > 1)) out.push(`stop ${i} must be [r, g, b] in [0, 1]`);
+    else if (c[1] > c[0] + 1e-6 || c[2] > c[1] + 1e-6) out.push(`stop ${i} [${c.join(', ')}] breaks R >= G >= B`);
+  });
+  const z = ramp[0];
+  if (Array.isArray(z) && z.some((x) => Math.abs(x) > 1e-6)) out.push('stop 0 must be [0, 0, 0] (no emission at v = 0)');
+  return out;
+}
+
+/**
+ * A gradient-mapped color atlas carries no chroma: decoded texels must have R = G = B (within `tolerance` levels;
+ * 0 for the lossless encodings ramp books use). Returns the number of offending texels and the worst spread.
+ */
+export function flipbookChromaSpread(data, width, height, channels, tolerance = 0) {
+  let bad = 0;
+  let worst = 0;
+  for (let i = 0; i < width * height * channels; i += channels) {
+    const d = Math.max(Math.abs(data[i] - data[i + 1]), Math.abs(data[i + 1] - data[i + 2]));
+    worst = Math.max(worst, d);
+    if (d > tolerance) bad++;
+  }
+  return { bad, worst };
+}
+
+async function checkEncodedRamp(asset, relPath, file) {
+  const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const r = flipbookChromaSpread(data, info.width, info.height, info.channels, 0);
+  if (r.bad) throw new Error(`${asset.id}: gradient-mapped ${relPath} must decode with R = G = B (${r.bad} texels differ, worst ${r.worst}/255) - publish it lossless`);
+}
+
 async function checkEncodedBorders(asset, relPath, file, m, signal) {
   const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const sequences = m.sequences ?? [{ name: 'all', start: 0, count: m.frames ?? m.cols * m.rows }];
@@ -529,6 +570,9 @@ async function publishFlipbook(asset, srcDir, meta, outFiles, tiers) {
   const layout = flipbookLayoutProblems(m);
   if (layout.length)
     throw new Error(`${asset.id}: flipbook atlas layout - an open edge must lie on the atlas border or against another open edge:\n  ${layout.join('\n  ')}`);
+  const rampProblems = flipbookRampProblems(m.ramp);
+  if (rampProblems.length) throw new Error(`${asset.id}: flipbook ramp - ${rampProblems.join('; ')}`);
+  if (m.ramp && m.encoding !== 'lossless') throw new Error(`${asset.id}: a gradient-mapped flipbook (ramp) must be published lossless (meta encoding)`);
   const maps = {};
   // Additive everywhere (no sequence overrides the blend): the color atlas is premultiplied emission, no alpha.
   const additiveOnly = m.blend === 'additive' && (m.sequences ?? []).every((s) => (s.blend ?? 'additive') === 'additive');
@@ -565,7 +609,13 @@ async function publishFlipbook(asset, srcDir, meta, outFiles, tiers) {
                 : TEXTURE_ENCODING.color_additive))
             : (override ?? TEXTURE_ENCODING.emissive);
       const signal = map === 'emissive' ? 'rgb' : !hasAlpha ? 'rgb' : m.blend === 'premultiplied' ? 'both' : m.blend === 'additive' ? 'rgb' : 'alpha';
-      const verify = map === 'normal' ? null : (file) => checkEncodedBorders(asset, relPath, file, m, signal);
+      const verify =
+        map === 'normal'
+          ? null
+          : async (file) => {
+              await checkEncodedBorders(asset, relPath, file, m, signal);
+              if (map === 'color' && m.ramp) await checkEncodedRamp(asset, relPath, file);
+            };
       await writeWebpRaw(raw, relPath, enc, { alpha: hasAlpha, verify });
       const rf = record(outFiles, relPath, ts, { kind: 'flipbook', map, size: raw.width });
       for (const t of ts) maps[map][t] = { path: relPath, bytes: rf.bytes, width: raw.width, height: raw.height };
@@ -739,6 +789,8 @@ export function validateRecordEntry(a) {
     case 'flipbook': {
       const n = (m.cols ?? 0) * (m.rows ?? 0);
       for (const s of m.sequences ?? []) if (s.start + s.count > n) throw new Error(`${a.id}: sequence ${s.name} exceeds ${n} frames`);
+      const rp = flipbookRampProblems(m.ramp);
+      if (rp.length) throw new Error(`${a.id}: flipbook ramp - ${rp.join('; ')}`);
       break;
     }
     case 'impostor':
