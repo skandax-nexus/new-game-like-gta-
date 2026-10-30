@@ -105,6 +105,11 @@ Every capture was opened after each run; what the images showed and what changed
    minimap is open), rally above the strip.
 10. The audit found the hero touch overlay swallowing every tap (an invisible full-screen box) -> full-width HUD
     containers are `.passive`; the capture script now checks that open map areas reach the game.
+11. Second pass on the phones: the portrait deployment bar hid behind the cards strip -> under the top bar; hero vitals
+    and boss bar overlapped -> stacked (portrait) / vitals top-left (landscape); landscape slot hotkeys collided with
+    level badges -> hidden on touch landscape (kept in tooltips); the landscape engagement prompt pushed its buttons
+    below the fold -> no torana ornament, compact sides; a toast covered the prompt title -> toasts drop to the
+    bottom edge while a modal is open; the unblockable red boss name measured 4.2:1 over the sky -> opaque band.
 
 ## Hand-off: public APIs for the scenes (GP-02 / GP-03 / GP-04) and other screens
 
@@ -132,8 +137,8 @@ Every capture was opened after each run; what the images showed and what changed
 | UI + input CPU, world HUD 1280 x 720, Rajapura selected (60 fps virtual timeline, `__SAMRAJYA_UI__.bench`, 10 s in 2 s chunks, prompts answered between) | 1x: avg 0.077 ms / frame (p95 0.4, max 12.5 when the settlement card recomputes); 4x: avg 0.133 ms (p95 1.5, max 16.9) - budget < 1 ms |
 | UI + input CPU, battle HUD 1280 x 720, two formations selected | 1x: avg 0.051 ms / frame (p95 1.5, max 4.7); 4x: avg 0.012 ms (p95 0, max 2.7) |
 | Live profiler EMA under SwiftShader (`uiInput.ms`, for transparency) | world 3.23 ms, battle 2.42 ms per frame - SwiftShader renders ~1 frame/s, so every frame carries a full HUD refresh; at 60 fps the throttles spread that work (HUD <= 10 Hz, settlement card <= 2 Hz, top bar <= 2.5 Hz, minimap layers <= 4 Hz world / ~8 Hz battle) |
-| Contrast (measured on the pixels, every visible text run) | CONTRAST_RESULT |
-| Touch targets on phone captures | TOUCH_RESULT |
+| Contrast (measured on the pixels, every visible text run) | 1839 text runs on 53 full-screen captures, 0 below the threshold |
+| Touch targets on phone captures | 441 interactive elements on the 34 full-screen phone captures, 0 below 44 x 44 px |
 | Esc closes the radial wheel without the pause menu | ok on all three viewports |
 | Open map areas pass pointer events to the game | ok (world, battle, hero, every viewport) |
 | Event modal / engagement prompt reached by stepping the campaign | ok (every viewport) |
@@ -142,7 +147,7 @@ Every capture was opened after each run; what the images showed and what changed
 | Console errors / page errors / failed requests / crash reports | none in any session |
 
 Builds: `npx vite build --outDir .build/ui-02` and `--mode single --outDir .build/ui-02-single` (2.6 MB one-file
-HTML) both succeed. Smoke: `docs/sprint1/ui-02/smoke/` (SMOKE_RESULT).
+HTML) both succeed. Smoke: `docs/sprint1/ui-02/smoke/` (all 14 smoke shots passed, no console errors).
 
 ## Requests to other owners (not edited here)
 

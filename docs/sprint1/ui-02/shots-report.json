@@ -68,29 +68,6 @@
       "observed": []
     },
     {
-      "name": "world HUD (portrait): open map areas pass pointer events through to the game",
-      "ok": true,
-      "observed": []
-    },
-    {
-      "name": "world (portrait): an event modal was reached",
-      "ok": true,
-      "observed": null
-    },
-    {
-      "name": "world (portrait): an engagement prompt was reached",
-      "ok": true,
-      "observed": {
-        "id": "army_giri",
-        "d": 2018.0439178570916
-      }
-    },
-    {
-      "name": "world (portrait): no console errors, page errors, failed requests or crash reports",
-      "ok": true,
-      "observed": []
-    },
-    {
       "name": "battle HUD (portrait): open map areas pass pointer events through to the game",
       "ok": true,
       "observed": []
@@ -105,29 +82,6 @@
     },
     {
       "name": "battle (portrait): no console errors, page errors, failed requests or crash reports",
-      "ok": true,
-      "observed": []
-    },
-    {
-      "name": "world HUD (landscape): open map areas pass pointer events through to the game",
-      "ok": true,
-      "observed": []
-    },
-    {
-      "name": "world (landscape): an event modal was reached",
-      "ok": true,
-      "observed": null
-    },
-    {
-      "name": "world (landscape): an engagement prompt was reached",
-      "ok": true,
-      "observed": {
-        "id": "army_giri",
-        "d": 2018.0439178570916
-      }
-    },
-    {
-      "name": "world (landscape): no console errors, page errors, failed requests or crash reports",
       "ok": true,
       "observed": []
     },
@@ -190,10 +144,56 @@
       "observed": []
     },
     {
+      "name": "world HUD (portrait): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "world (portrait): an event modal was reached",
+      "ok": true,
+      "observed": null
+    },
+    {
+      "name": "world (portrait): an engagement prompt was reached",
+      "ok": true,
+      "observed": {
+        "id": "army_giri",
+        "d": 2018.0439178570916
+      }
+    },
+    {
+      "name": "world (portrait): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "world HUD (landscape): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "world (landscape): an event modal was reached",
+      "ok": true,
+      "observed": null
+    },
+    {
+      "name": "world (landscape): an engagement prompt was reached",
+      "ok": true,
+      "observed": {
+        "id": "army_giri",
+        "d": 2018.0439178570916
+      }
+    },
+    {
+      "name": "world (landscape): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
       "name": "contrast: every measured text run >= 4.5:1 (body) / 3:1 (large) on 53 captures",
       "ok": true,
       "observed": {
-        "texts": 1834,
+        "texts": 1839,
         "fails": []
       }
     },
@@ -201,7 +201,7 @@
       "name": "touch: every interactive element >= 44x44 px on phone captures",
       "ok": true,
       "observed": {
-        "targets": 858,
+        "targets": 866,
         "fails": []
       }
     }
@@ -284,6 +284,70 @@
       "note": "battle results: banner, per-side table, formations, fates, chronicle, Continue"
     },
     {
+      "name": "battle-deployment-portrait.png",
+      "note": "battle HUD in deployment: forces bar, deployment timer + Begin, cards strip, command card, simple presets"
+    },
+    {
+      "name": "battle-live-portrait.png",
+      "note": "battle HUD in battle: cards strip (strength, morale + cause, fatigue, ammo), selection card, rally ring, floating formation cards (anchors from the camera model), feed"
+    },
+    {
+      "name": "battle-radial-portrait.png",
+      "note": "radial wheel (long press): inner ring orders, outer ring shapes / intents, cancel centre"
+    },
+    {
+      "name": "minimap-battle-portrait.png",
+      "note": "battle minimap: terrain, deploy zones, formations by side with facing, selection"
+    },
+    {
+      "name": "battle-results-portrait.png",
+      "note": "battle results: banner, per-side table, formations, fates, chronicle, Continue"
+    },
+    {
+      "name": "battle-deployment-landscape.png",
+      "note": "battle HUD in deployment: forces bar, deployment timer + Begin, cards strip, command card, simple presets"
+    },
+    {
+      "name": "battle-live-landscape.png",
+      "note": "battle HUD in battle: cards strip (strength, morale + cause, fatigue, ammo), selection card, rally ring, floating formation cards (anchors from the camera model), feed"
+    },
+    {
+      "name": "battle-radial-landscape.png",
+      "note": "radial wheel (long press): inner ring orders, outer ring shapes / intents, cancel centre"
+    },
+    {
+      "name": "minimap-battle-landscape.png",
+      "note": "battle minimap: terrain, deploy zones, formations by side with facing, selection"
+    },
+    {
+      "name": "battle-results-landscape.png",
+      "note": "battle results: banner, per-side table, formations, fates, chronicle, Continue"
+    },
+    {
+      "name": "hero-explore-pc.png",
+      "note": "hero HUD exploring: objective, compass strip, prompt bubble at its anchor, caption; phones: stick + interact"
+    },
+    {
+      "name": "hero-combat-pc.png",
+      "note": "hero HUD in combat: HP / stamina / salves, boss bar (unblockable cue), enemy bars, lock-on reticle; phones: combat buttons"
+    },
+    {
+      "name": "hero-explore-portrait.png",
+      "note": "hero HUD exploring: objective, compass strip, prompt bubble at its anchor, caption; phones: stick + interact"
+    },
+    {
+      "name": "hero-combat-portrait.png",
+      "note": "hero HUD in combat: HP / stamina / salves, boss bar (unblockable cue), enemy bars, lock-on reticle; phones: combat buttons"
+    },
+    {
+      "name": "hero-explore-landscape.png",
+      "note": "hero HUD exploring: objective, compass strip, prompt bubble at its anchor, caption; phones: stick + interact"
+    },
+    {
+      "name": "hero-combat-landscape.png",
+      "note": "hero HUD in combat: HP / stamina / salves, boss bar (unblockable cue), enemy bars, lock-on reticle; phones: combat buttons"
+    },
+    {
       "name": "world-settlement-economy-portrait.png",
       "note": "world HUD, Rajapura selected: resource bar, date/season/forecast, speed, realm buttons, objectives, minimap, command card Economy tab"
     },
@@ -332,26 +396,6 @@
       "note": "engagement prompt: both sides, prediction bar, advisor factors, queue"
     },
     {
-      "name": "battle-deployment-portrait.png",
-      "note": "battle HUD in deployment: forces bar, deployment timer + Begin, cards strip, command card, simple presets"
-    },
-    {
-      "name": "battle-live-portrait.png",
-      "note": "battle HUD in battle: cards strip (strength, morale + cause, fatigue, ammo), selection card, rally ring, floating formation cards (anchors from the camera model), feed"
-    },
-    {
-      "name": "battle-radial-portrait.png",
-      "note": "radial wheel (long press): inner ring orders, outer ring shapes / intents, cancel centre"
-    },
-    {
-      "name": "minimap-battle-portrait.png",
-      "note": "battle minimap: terrain, deploy zones, formations by side with facing, selection"
-    },
-    {
-      "name": "battle-results-portrait.png",
-      "note": "battle results: banner, per-side table, formations, fates, chronicle, Continue"
-    },
-    {
       "name": "world-settlement-economy-landscape.png",
       "note": "world HUD, Rajapura selected: resource bar, date/season/forecast, speed, realm buttons, objectives, minimap, command card Economy tab"
     },
@@ -398,50 +442,6 @@
     {
       "name": "engagement-prompt-landscape.png",
       "note": "engagement prompt: both sides, prediction bar, advisor factors, queue"
-    },
-    {
-      "name": "battle-deployment-landscape.png",
-      "note": "battle HUD in deployment: forces bar, deployment timer + Begin, cards strip, command card, simple presets"
-    },
-    {
-      "name": "battle-live-landscape.png",
-      "note": "battle HUD in battle: cards strip (strength, morale + cause, fatigue, ammo), selection card, rally ring, floating formation cards (anchors from the camera model), feed"
-    },
-    {
-      "name": "battle-radial-landscape.png",
-      "note": "radial wheel (long press): inner ring orders, outer ring shapes / intents, cancel centre"
-    },
-    {
-      "name": "minimap-battle-landscape.png",
-      "note": "battle minimap: terrain, deploy zones, formations by side with facing, selection"
-    },
-    {
-      "name": "battle-results-landscape.png",
-      "note": "battle results: banner, per-side table, formations, fates, chronicle, Continue"
-    },
-    {
-      "name": "hero-explore-pc.png",
-      "note": "hero HUD exploring: objective, compass strip, prompt bubble at its anchor, caption; phones: stick + interact"
-    },
-    {
-      "name": "hero-combat-pc.png",
-      "note": "hero HUD in combat: HP / stamina / salves, boss bar (unblockable cue), enemy bars, lock-on reticle; phones: combat buttons"
-    },
-    {
-      "name": "hero-explore-portrait.png",
-      "note": "hero HUD exploring: objective, compass strip, prompt bubble at its anchor, caption; phones: stick + interact"
-    },
-    {
-      "name": "hero-combat-portrait.png",
-      "note": "hero HUD in combat: HP / stamina / salves, boss bar (unblockable cue), enemy bars, lock-on reticle; phones: combat buttons"
-    },
-    {
-      "name": "hero-explore-landscape.png",
-      "note": "hero HUD exploring: objective, compass strip, prompt bubble at its anchor, caption; phones: stick + interact"
-    },
-    {
-      "name": "hero-combat-landscape.png",
-      "note": "hero HUD in combat: HP / stamina / salves, boss bar (unblockable cue), enemy bars, lock-on reticle; phones: combat buttons"
     }
   ],
   "audits": [
@@ -565,6 +565,104 @@
       "smallTargets": []
     },
     {
+      "shot": "battle-deployment-portrait.png",
+      "texts": 31,
+      "contrastFails": [],
+      "targets": 16,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-live-portrait.png",
+      "texts": 29,
+      "contrastFails": [],
+      "targets": 15,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-radial-portrait.png",
+      "texts": 22,
+      "contrastFails": [],
+      "targets": 25,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-results-portrait.png",
+      "texts": 44,
+      "contrastFails": [],
+      "targets": 1,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-deployment-landscape.png",
+      "texts": 45,
+      "contrastFails": [],
+      "targets": 19,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-live-landscape.png",
+      "texts": 43,
+      "contrastFails": [],
+      "targets": 18,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-radial-landscape.png",
+      "texts": 22,
+      "contrastFails": [],
+      "targets": 25,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-results-landscape.png",
+      "texts": 35,
+      "contrastFails": [],
+      "targets": 0,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-explore-pc.png",
+      "texts": 10,
+      "contrastFails": [],
+      "targets": 2,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-combat-pc.png",
+      "texts": 9,
+      "contrastFails": [],
+      "targets": 1,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-explore-portrait.png",
+      "texts": 10,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-combat-portrait.png",
+      "texts": 14,
+      "contrastFails": [],
+      "targets": 7,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-explore-landscape.png",
+      "texts": 10,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-combat-landscape.png",
+      "texts": 15,
+      "contrastFails": [],
+      "targets": 7,
+      "smallTargets": []
+    },
+    {
       "shot": "world-settlement-economy-portrait.png",
       "texts": 46,
       "contrastFails": [],
@@ -642,34 +740,6 @@
       "smallTargets": []
     },
     {
-      "shot": "battle-deployment-portrait.png",
-      "texts": 31,
-      "contrastFails": [],
-      "targets": 16,
-      "smallTargets": []
-    },
-    {
-      "shot": "battle-live-portrait.png",
-      "texts": 29,
-      "contrastFails": [],
-      "targets": 15,
-      "smallTargets": []
-    },
-    {
-      "shot": "battle-radial-portrait.png",
-      "texts": 22,
-      "contrastFails": [],
-      "targets": 25,
-      "smallTargets": []
-    },
-    {
-      "shot": "battle-results-portrait.png",
-      "texts": 44,
-      "contrastFails": [],
-      "targets": 1,
-      "smallTargets": []
-    },
-    {
       "shot": "world-settlement-economy-landscape.png",
       "texts": 35,
       "contrastFails": [],
@@ -713,7 +783,7 @@
     },
     {
       "shot": "age-panel-landscape.png",
-      "texts": 19,
+      "texts": 20,
       "contrastFails": [],
       "targets": 1,
       "smallTargets": []
@@ -722,98 +792,28 @@
       "shot": "economy-panel-landscape.png",
       "texts": 25,
       "contrastFails": [],
-      "targets": 1,
+      "targets": 5,
       "smallTargets": []
     },
     {
       "shot": "diplomacy-landscape.png",
       "texts": 12,
       "contrastFails": [],
-      "targets": 4,
+      "targets": 5,
       "smallTargets": []
     },
     {
       "shot": "event-modal-landscape.png",
-      "texts": 6,
+      "texts": 7,
       "contrastFails": [],
       "targets": 1,
       "smallTargets": []
     },
     {
       "shot": "engagement-prompt-landscape.png",
-      "texts": 19,
-      "contrastFails": [],
-      "targets": 0,
-      "smallTargets": []
-    },
-    {
-      "shot": "battle-deployment-landscape.png",
-      "texts": 45,
-      "contrastFails": [],
-      "targets": 19,
-      "smallTargets": []
-    },
-    {
-      "shot": "battle-live-landscape.png",
-      "texts": 43,
-      "contrastFails": [],
-      "targets": 18,
-      "smallTargets": []
-    },
-    {
-      "shot": "battle-radial-landscape.png",
       "texts": 22,
       "contrastFails": [],
-      "targets": 25,
-      "smallTargets": []
-    },
-    {
-      "shot": "battle-results-landscape.png",
-      "texts": 35,
-      "contrastFails": [],
-      "targets": 0,
-      "smallTargets": []
-    },
-    {
-      "shot": "hero-explore-pc.png",
-      "texts": 10,
-      "contrastFails": [],
-      "targets": 2,
-      "smallTargets": []
-    },
-    {
-      "shot": "hero-combat-pc.png",
-      "texts": 9,
-      "contrastFails": [],
-      "targets": 1,
-      "smallTargets": []
-    },
-    {
-      "shot": "hero-explore-portrait.png",
-      "texts": 10,
-      "contrastFails": [],
       "targets": 3,
-      "smallTargets": []
-    },
-    {
-      "shot": "hero-combat-portrait.png",
-      "texts": 14,
-      "contrastFails": [],
-      "targets": 7,
-      "smallTargets": []
-    },
-    {
-      "shot": "hero-explore-landscape.png",
-      "texts": 10,
-      "contrastFails": [],
-      "targets": 3,
-      "smallTargets": []
-    },
-    {
-      "shot": "hero-combat-landscape.png",
-      "texts": 15,
-      "contrastFails": [],
-      "targets": 7,
       "smallTargets": []
     }
   ],
