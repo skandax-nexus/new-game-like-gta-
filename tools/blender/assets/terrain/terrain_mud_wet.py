@@ -36,8 +36,10 @@ with core.timer("churned mud"):
     slot = np.zeros_like(h)
     for c in (0.9, 2.3):
         dv = y * S - c - wob
-        slot = np.maximum(slot, np.clip(1.0 - (dv / 0.1) ** 2, 0, 1) ** 0.6)
-        h += 0.006 * np.exp(-((np.abs(dv) - 0.12) / 0.03) ** 2)
+        # each groove comes and goes along u (trampled over, filled in): continuous slots repeat as stripes
+        pres = tg.smoothstep(0.35, 0.6, kit.fbm(0.6, 3, aniso=(3.0, 1.0)) * 0.5 + 0.5)
+        slot = np.maximum(slot, pres * np.clip(1.0 - (dv / 0.1) ** 2, 0, 1) ** 0.6)
+        h += 0.006 * pres * np.exp(-((np.abs(dv) - 0.12) / 0.03) ** 2)
     h -= 0.014 * slot * seg
     hooves = kit.scatter(0.13, shape_hoof(0.016, 0.075), density=0.5,
                          density_map=tg.smoothstep(0.3, 0.7, kit.fbm(0.4, 3) * 0.5 + 0.5))

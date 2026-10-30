@@ -57,24 +57,34 @@ with core.timer("beds"):
     h += 0.004 * lam * (0.4 + 0.6 * (1.0 - hard))
 
 with core.timer("joints + weathering"):
-    # joints: per bed a set of vertical joints (3-7 per tile -> periodic), half of the beds continue the joints of
-    # the bed below, so some cracks run through several beds and others stop at bedding planes
+    # joints: per bed 1-4 vertical joints at IRREGULAR positions (a regular spacing reads as ashlar masonry); about
+    # half of the beds inherit the joints of the bed below, so some cracks run through several beds and others stop
+    # at bedding planes. Joint traces wander and fade in and out.
     nb = len(thick)
-    nj = [int(kit.rng.integers(3, 8)) for _ in range(nb)]
-    off = [float(kit.rng.uniform(0, S)) for _ in range(nb)]
-    for i in range(1, nb):
-        if kit.rng.uniform() < 0.5:
-            nj[i], off[i] = nj[i - 1], off[i - 1]
-    nj_a = np.array(nj, np.float32)[bed]
-    off_a = np.array(off, np.float32)[bed]
-    sp_a = S / nj_a
-    jw = 0.08 * kit.fbm(0.8, 3, aniso=(0.3, 1.0)) + 0.02 * kit.fbm(0.15, 2)
-    fr = ((x * S - off_a + jw) % sp_a)
-    dj = np.minimum(fr, sp_a - fr)
-    joint = tg.smoothstep(0.045, 0.0, dj) * tg.smoothstep(-0.4, 0.1, kit.fbm(0.7, 2, aniso=(0.4, 1.0)))
+    cuts: list[np.ndarray] = []
+    for i in range(nb):
+        if i > 0 and kit.rng.uniform() < 0.5:
+            cuts.append(cuts[-1])
+        else:
+            cuts.append(np.sort(kit.rng.uniform(0, S, int(kit.rng.integers(1, 5)))).astype(np.float32))
+    jw = 0.15 * kit.fbm(0.8, 3, aniso=(0.3, 1.0)) + 0.03 * kit.fbm(0.15, 2)
+    ux = (x * S + jw) % S
+    dj = np.full(ux.shape, S, np.float32)
+    seg = np.zeros(ux.shape, np.float32)
+    for i in range(nb):
+        sel = bed == i
+        if not np.any(sel):
+            continue
+        c = cuts[i]
+        d_all = np.abs(ux[sel][:, None] - c[None, :])
+        d_all = np.minimum(d_all, S - d_all)
+        dj[sel] = d_all.min(axis=1)
+        # block index between cuts (for per-block depth / tone): count of cuts left of the texel
+        seg[sel] = ((np.searchsorted(c, ux[sel]) % max(len(c), 1)) * 0.618 + i * 0.31) % 1.0
+    joint = tg.smoothstep(0.05, 0.0, dj) * tg.smoothstep(-0.5, 0.0, kit.fbm(0.9, 2, aniso=(0.4, 1.0)))
     h -= 0.15 * joint
-    block = ((np.floor((x * S - off_a + jw) / sp_a) * 0.618 + bed * 0.31) % 1.0).astype(np.float32)
-    h += 0.05 * (block - 0.5) * prof  # blocks between joints stand at slightly different depths
+    block = seg.astype(np.float32)
+    h += 0.03 * (block - 0.5) * prof  # blocks between joints stand at slightly different depths
     # tafoni / honeycomb in the soft beds
     hf1, _, hid = kit.worley(0.09, 0.9)
     bowl = np.clip(1.0 - (hf1 / (0.45 + 0.25 * hid)) ** 2, 0.0, 1.0)

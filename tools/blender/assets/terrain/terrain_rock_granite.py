@@ -5,7 +5,7 @@
 @inputs tools/blender/assets/materials/_matkit.py
 
 Granite outcrop splat layer for TRIPLANAR projection (class T, 8 m x 8 m, seamless; v = world up on the side
-projections): rounded exfoliating masses of a Deccan tor - domed blocks 1-3 m between curved joints, onion-skin
+projections): rounded exfoliating masses of a Deccan tor - whaleback domes 2-4 m between a partly open network of curved joints, onion-skin
 exfoliation sheets peeling in arcs, grus (granular disintegration) in the joints, speckled grain (pink feldspar,
 white quartz, black biotite), black water stains running down from crests, orange and grey-green lichen
 colonies on the upper surfaces.
@@ -28,10 +28,13 @@ kit = K.Kit(__file__, cls="T", size=(S, S), target="terrain:TERRAIN_LAYERS.rock_
 x, y = kit.x, kit.y
 
 with core.timer("masses"):
-    st = kit.stones(1.8, warp_m=0.35, jitter=0.9)
+    # few, large masses (a full Voronoi of 1-2 m pillows reads as a cobbled wall): ~3 m cells, and only part of the
+    # joint network is open - closed joints let neighbouring masses merge into one smooth whaleback
+    st = kit.stones(3.0, warp_m=0.6, jitter=0.9)
     d, sid, f1 = st["d"], st["id"], st["f1"]
-    # each mass is domed (exfoliated), rounded towards its joints
-    dome = 0.35 * np.clip(d / 0.9, 0.0, 1.0) ** 0.45
+    gate = tg.smoothstep(-0.25, 0.25, kit.fbm(2.5, 3))
+    d = d + (1.0 - gate) * 0.8
+    dome = 0.35 * np.clip(d / 1.4, 0.0, 1.0) ** 0.5
     joint = tg.smoothstep(0.06, 0.0, d)
     h = dome - 0.08 * joint
     # onion-skin exfoliation sheets: arcs concentric to the mass centre, partly peeled (steps)
@@ -58,8 +61,11 @@ with core.timer("albedo"):
     rock = K.tint(rock, "#b5ada0", 0.3 * peel)
     rock = K.tint(rock, "#6e5f4e", 0.55 * joint + 0.4 * crack)
     # black water stains below crests and joints, running down (v)
-    src = tg.smoothstep(0.75, 1.0, dome / 0.35) * tg.smoothstep(0.3, 0.6, kit.fbm(0.2, 3, aniso=(0.2, 1.0)) * 0.5 + 0.5)
-    streak = tg.directional_blur_down(src, int(kit.px(1.2)), 0.988)
+    # thin runoff streaks starting on the shoulders of the domes (not blobs on the crests)
+    dn = dome / 0.35
+    src = tg.smoothstep(0.6, 0.85, kit.fbm(0.12, 3, aniso=(0.25, 6.0)) * 0.5 + 0.5)
+    src = src * tg.smoothstep(0.25, 0.5, dn) * (1.0 - tg.smoothstep(0.85, 1.0, dn))
+    streak = tg.directional_blur_down(src, int(kit.px(0.9)), 0.985)
     streak = np.clip(tg.blur(streak, 2.0), 0, 1)
     rock = K.tint(rock, "#2b2a28", 0.55 * streak)
     # lichen: orange (Caloplaca-like) and grey-green colonies on upper surfaces

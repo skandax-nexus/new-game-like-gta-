@@ -51,13 +51,14 @@ with core.timer("albedo"):
     lam = np.sin(2 * np.pi * (vl + dip * ul) / 0.012 + 3.0 * kit.fbm(0.2, 2))
     rock = K.mul(rock, 1.0 + 0.035 * lam)
     # iron-oxide spotting: pale reduction spots with dark rims + dark liesegang specks
-    s1, _, sid = kit.worley(0.09, 1.0, x=kit.warp(0.01, 0.06, 2)[0])
-    rad = 0.18 + 0.2 * ((sid * 3.7) % 1.0)
-    spot = (sid > 0.55)
+    # reduction spots: sparse and clustered in some blocks (an even polka-dot scatter reads as a print)
+    s1, _, sid = kit.worley(0.12, 1.0, x=kit.warp(0.015, 0.08, 2)[0])
+    rad = 0.12 + 0.22 * ((sid * 3.7) % 1.0)
+    spot = (sid > 0.7) & (((bid * 5.9) % 1.0) < 0.45)
     core_ = tg.smoothstep(rad, rad * 0.6, s1) * spot
     rim = tg.smoothstep(0.04, 0.0, np.abs(s1 - rad)) * spot
-    rock = K.tint(rock, "#c8a088", 0.45 * core_)
-    rock = K.tint(rock, "#5a2e22", 0.45 * rim)
+    rock = K.tint(rock, "#c09a84", 0.3 * core_)
+    rock = K.tint(rock, "#5a2e22", 0.3 * rim)
     speck = tg.smoothstep(0.8, 0.9, kit.fbm(0.006, 1) * 0.5 + 0.5)
     rock = K.tint(rock, "#4a2a20", 0.5 * speck)
     rock = K.tint(rock, "#c08a70", 0.35 * chips)
