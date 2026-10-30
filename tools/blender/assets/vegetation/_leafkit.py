@@ -707,10 +707,10 @@ def blade(cv: Canvas, base: Sequence[float], angle: float, length: float, width:
 # ----------------------------------------------------------------------------------------------- atlas pages
 @dataclass
 class RegionSpec:
-    """One atlas region of a species quadrant: `cells` = (col, row, ncols, nrows) in the quadrant's 4 x 4 grid,
-    row 0 at the BOTTOM (v up). `size_m` = card size at LOD0. `paint(canvas, rng, alt)` draws it; `alt` (cells of
-    the seasonal alternate, same size) is painted by the same function with alt=True and the same seed, so the
-    alternate shows the same spray with flowers / new leaves. `klass` = card class (see _vegkit)."""
+    """One atlas region of a species block: `cells` = (col, row, ncols, nrows) in the block's 4 x 2 cell grid, row 0
+    at the BOTTOM (v up). `size_m` = card size at LOD0. `paint(canvas, rng, alt)` draws it; `alt` (cells of the
+    seasonal alternate, same size) is painted by the same function with alt=True and the same seed, so the alternate
+    shows the same spray with flowers / new leaves. `klass` = card class (see _vegkit)."""
     name: str
     cells: tuple[int, int, int, int]
     size_m: tuple[float, float]
@@ -724,10 +724,12 @@ class RegionSpec:
 
 
 class Page:
-    """Leaf atlas page (A class): `px` square, 2 x 2 species quadrants of 4 x 4 cells. Accumulates LINEAR colour,
-    alpha, encoded normal and ORM at the final resolution; regions are painted supersampled (ss) and resolved."""
+    """Leaf atlas page (A class): `px` square, an 8 x 8 grid of cells holding 8 species blocks of 4 x 2 cells
+    (block b at cell column (b % 2) * 4, cell row (b // 2) * 2, rows counted from the BOTTOM). Accumulates LINEAR
+    colour, alpha, encoded normal and ORM at the final resolution; regions are painted supersampled and resolved."""
 
-    GRID = 8  # cells per page side
+    GRID = 8      # cells per page side
+    BLOCK = (4, 2)
 
     def __init__(self, px: int = 2048, ss: int = 2) -> None:
         self.px, self.ss = px, ss
@@ -740,11 +742,14 @@ class Page:
         self.orm[...] = (1.0, 0.6, 0.0)
         self.regions: dict[str, dict] = {}
 
-    def uv_rect(self, quadrant: int, cells: tuple[int, int, int, int]) -> tuple[float, float, float, float]:
-        qx, qy = quadrant % 2, quadrant // 2
+    def uv_rect(self, block: int, cells: tuple[int, int, int, int]) -> tuple[float, float, float, float]:
+        bw, bh = self.BLOCK
+        bx, by = (block % 2) * bw, (block // 2) * bh
         c, r, nc, nr = cells
+        if c + nc > bw or r + nr > bh:
+            raise ValueError(f"region cells {cells} outside the {bw} x {bh} block")
         g = float(self.GRID)
-        return ((qx * 4 + c) / g, (qy * 4 + r) / g, (qx * 4 + c + nc) / g, (qy * 4 + r + nr) / g)
+        return ((bx + c) / g, (by + r) / g, (bx + c + nc) / g, (by + r + nr) / g)
 
     def _paste(self, rect: tuple[float, float, float, float], m: dict[str, np.ndarray]) -> None:
         u0, v0, u1, v1 = rect
@@ -755,7 +760,7 @@ class Page:
         self.n[r0:r1, x0:x1] = m["n"]
         self.orm[r0:r1, x0:x1] = m["orm"]
 
-    def paint(self, species: str, quadrant: int, spec: RegionSpec, seed: int) -> None:
+    def paint(self, species: str, block: int, spec: RegionSpec, seed: int) -> None:
         c, r, nc, nr = spec.cells
         w_px, h_px = nc * self.cell, nr * self.cell
         size = spec.size_m
@@ -763,11 +768,11 @@ class Page:
             cv = Canvas(w_px, h_px, size, ss=self.ss, seed=seed, margin=spec.margin)
             spec.paint(cv, cv.rng, alt)
             m = cv.resolve(ao_strength=spec.ao_strength)
-            self._paste(self.uv_rect(quadrant, spec.alt if alt else spec.cells), m)
-        rect = self.uv_rect(quadrant, spec.cells)
+            self._paste(self.uv_rect(block, spec.alt if alt else spec.cells), m)
+        rect = self.uv_rect(block, spec.cells)
         self.regions[f"{species}.{spec.name}"] = {
             "species": species, "name": spec.name, "rect": [round(x, 6) for x in rect],
-            "alt": [round(x, 6) for x in self.uv_rect(quadrant, spec.alt)] if spec.alt else None,
+            "alt": [round(x, 6) for x in self.uv_rect(block, spec.alt)] if spec.alt else None,
             "sizeM": [round(float(size[0]), 4), round(float(size[1]), 4)], "klass": spec.klass, "weight": spec.weight,
             "use": spec.use,
         }
@@ -789,8 +794,12 @@ class Page:
 
 
 def page_images(page: Page) -> dict[str, np.ndarray]:
-    """Final maps: colour (sRGB-encoded rgb + linear alpha), normal (encoded), ORM - top-down float [0, 1]."""
-    col = np.concatenate([tg.linear_to_srgb(np.clip(page.rgb, 0, 1)), page.a[..., None]], axis=-1)
+    """Final maps: colour (sRGB-encoded rgb + linear alpha), normal (encoded), ORM - top-down float [0, 1]. Transparent
+    colour texels are push-pull filled and alpha floored at 10/255 (see _vegkit.push_pull_fill)."""
+    from _vegkit import ALPHA_FLOOR, push_pull_fill  # noqa: PLC0415
+    srgb = tg.linear_to_srgb(np.clip(page.rgb, 0, 1))
+    srgb = push_pull_fill(srgb, page.a)
+    col = np.concatenate([srgb, np.maximum(page.a, ALPHA_FLOOR)[..., None]], axis=-1)
     return {"color": col.astype(F), "normal": page.n.astype(F), "orm": page.orm.astype(F)}
 
 

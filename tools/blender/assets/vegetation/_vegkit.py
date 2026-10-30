@@ -59,6 +59,37 @@ def hexlin(h: str) -> np.ndarray:
     return tg.hex_to_linear(h).astype(F)
 
 
+ALPHA_FLOOR = 10.0 / 255.0  # > the publisher's bleed threshold (8/255), far below the 0.5 cut-out
+
+
+def push_pull_fill(rgb: np.ndarray, w: np.ndarray, *, thresh: float = 0.02) -> np.ndarray:
+    """Fill texels whose weight `w` < thresh with a smooth extension of the known ones (push-pull pyramid, box
+    upsampling + 3 x 3 smoothing). Transparent texels then compress to almost nothing and mip filtering never pulls
+    in black or the streaks of an iterative bleed. rgb (h, w, c) any channel count, top-down."""
+    from _leafkit import _box_blur  # noqa: PLC0415
+
+    c = rgb.astype(np.float64) * w[..., None]
+    ww = w.astype(np.float64).copy()
+    levels = []
+    while min(c.shape[:2]) > 1:
+        levels.append((c, ww))
+        h2, w2 = c.shape[0] // 2, c.shape[1] // 2
+        c = c[: h2 * 2, : w2 * 2].reshape(h2, 2, w2, 2, -1).sum(axis=(1, 3))
+        ww = ww[: h2 * 2, : w2 * 2].reshape(h2, 2, w2, 2).sum(axis=(1, 3))
+    col = c / np.maximum(ww, 1e-9)[..., None]
+    for cl, wl in reversed(levels):
+        up = np.repeat(np.repeat(col, 2, axis=0), 2, axis=1)
+        pad = ((0, cl.shape[0] - up.shape[0]), (0, cl.shape[1] - up.shape[1]), (0, 0))
+        up = np.pad(up, pad, mode="edge")[: cl.shape[0], : cl.shape[1]]
+        if min(up.shape[:2]) > 4:
+            up = np.stack([_box_blur(up[..., k].astype(F), 1) for k in range(up.shape[-1])], axis=-1)
+        known = cl / np.maximum(wl, 1e-9)[..., None]
+        t = np.clip(wl, 0, 1)[..., None]
+        col = known * t + up * (1 - t)
+    out = np.where((w >= thresh)[..., None], rgb, col)
+    return out.astype(F)
+
+
 def limit_threads(n: int = 2) -> None:
     """Cycles shares 4 CPUs with the other technical artist (STUDIO W3): cap render threads."""
     scn = bpy.context.scene
@@ -86,9 +117,11 @@ class Skeleton:
 
 @dataclass
 class Envelope:
-    """Crown volume for the attraction points: an ellipsoid-like shape centred at (0, 0, zc) with half axes (rx, ry,
-    rz), optional flat underside (`flat_bottom` = fraction of rz cut away below the centre), `dome` sharpening of
-    the top, `hollow` = keep only the outer shell fraction (dense surface foliage, open interior)."""
+    """Crown volume for the attraction points. Base shape: an ellipsoid centred at (0, 0, zc) with half axes
+    (rx, ry, rz), optional flat underside (`flat_bottom` = fraction of rz cut away below the centre), `top_flat`,
+    `hollow` (outer shell only). With `lobes` > 0 the crown is a cloud of sub-crowns (one per major limb + a top
+    lobe): `lobe_size` = lobe radius / crown radius, `lobe_dist` = lobe centre distance / crown radius,
+    `lobe_rise` = (min, max) lobe centre height in units of rz - irregular, AoE-readable silhouettes."""
     zc: float
     rx: float
     ry: float
@@ -98,8 +131,58 @@ class Envelope:
     hollow: float = 0.0
     lumps: int = 0
     lump_amp: float = 0.0
+    lobes: int = 0
+    lobe_size: float = 0.55
+    lobe_dist: float = 0.55
+    lobe_rise: tuple[float, float] = (-0.25, 0.45)
+    top_lobe: float = 1.0
+    centers: list = field(default_factory=list)   # filled by make_lobes(): [(centre (3,), radii (3,))]
+
+    def make_lobes(self, rng: np.random.Generator) -> None:
+        self.centers = []
+        if self.lobes <= 0:
+            return
+        if self.top_lobe > 0:
+            self.centers.append((np.array([rng.normal(0, 0.08) * self.rx, rng.normal(0, 0.08) * self.ry,
+                                           self.zc + self.rz * 0.38], F),
+                                 np.array([self.rx, self.ry, self.rz], F) * self.lobe_size * self.top_lobe))
+        n = self.lobes - (1 if self.top_lobe > 0 else 0)
+        az0 = rng.uniform(0, 2 * math.pi)
+        for k in range(n):
+            az = az0 + 2 * math.pi * (k + rng.uniform(-0.25, 0.25)) / max(n, 1)
+            el = rng.uniform(*self.lobe_rise)
+            d = self.lobe_dist * rng.uniform(0.85, 1.15)
+            c = np.array([math.cos(az) * self.rx * d, math.sin(az) * self.ry * d, self.zc + self.rz * el], F)
+            r = np.array([self.rx, self.ry, self.rz], F) * self.lobe_size * rng.uniform(0.8, 1.2)
+            self.centers.append((c, r))
+
+    def contains(self, q: np.ndarray) -> np.ndarray:
+        """Inside test for points (n, 3) in metres."""
+        if not self.centers:
+            u = np.stack([q[:, 0] / self.rx, q[:, 1] / self.ry, (q[:, 2] - self.zc) / self.rz], axis=1)
+            return np.sum(u * u, axis=1) <= 1.0
+        inside = np.zeros(len(q), bool)
+        for c, r in self.centers:
+            u = (q - c) / r
+            inside |= np.sum(u * u, axis=1) <= 1.0
+        return inside
 
     def sample(self, n: int, rng: np.random.Generator) -> np.ndarray:
+        if self.centers:
+            zmin = self.zc - self.rz * (1 - self.flat_bottom) if self.flat_bottom > 0 else -1e9
+            vols = np.array([float(np.prod(r)) for _, r in self.centers])
+            out = []
+            while sum(len(o) for o in out) < n:
+                k = int(rng.choice(len(self.centers), p=vols / vols.sum()))
+                c, r = self.centers[k]
+                q = rng.uniform(-1, 1, size=(256, 3))
+                q = q[np.sum(q * q, axis=1) <= 1.0]
+                if self.hollow > 0:
+                    q = q[np.sum(q * q, axis=1) >= (1 - self.hollow) ** 2]
+                p = c + q * r
+                p = p[p[:, 2] >= zmin]
+                out.append(p.astype(F))
+            return np.concatenate(out)[:n]
         pts = []
         lump_c = rng.normal(size=(max(self.lumps, 1), 3))
         lump_c /= np.linalg.norm(lump_c, axis=1, keepdims=True)
@@ -142,6 +225,10 @@ class GrowthParams:
     pipe_exponent: float = 2.3
     smoothing: int = 2
     max_children: int = 4
+    limbs: bool = True               # pre-grow one major limb from the bole to each lobe (scaffold branches)
+    limb_rise: float = 0.35          # limb curvature: control point lift (fraction of the limb length)
+    limb_reach: float = 0.7          # limb ends at this fraction of the way to its lobe centre
+    leader: bool = False             # the trunk continues as a central leader into the top lobe
 
 
 def grow(params: GrowthParams, rng: np.random.Generator) -> Skeleton:
@@ -155,11 +242,24 @@ def grow(params: GrowthParams, rng: np.random.Generator) -> Skeleton:
     by = p.trunk_lean[1] * t ** 1.6 + wob[1, 0] * np.sin(t * math.pi * (1.1 + wob[1, 1]) + 0.7) * t
     pos = [np.array([bx[i], by[i], t[i] * p.trunk_height], F) for i in range(nb + 1)]
     parent = [-1] + list(range(nb))
-    att = p.envelope.sample(p.attractors, rng)
+    env = p.envelope
+    env.make_lobes(rng)
+    lo_t, hi_t = p.seeds_on_trunk
+    if p.limbs and env.centers:
+        lobes = list(env.centers)
+        if p.leader:  # leader: the bole continues to the highest lobe first
+            top = max(range(len(lobes)), key=lambda k: lobes[k][0][2])
+            c, _ = lobes.pop(top)
+            _grow_limb(pos, parent, nb, c, p, rng, rise=0.05, reach=0.8)
+        for c, _ in lobes:
+            j = int(rng.integers(max(1, int(lo_t * nb)), nb + 1))
+            _grow_limb(pos, parent, j, c, p, rng, rise=p.limb_rise, reach=p.limb_reach)
+    att = env.sample(p.attractors, rng)
     alive = np.ones(len(att), bool)
     nchild = [0] * len(pos)
-    lo, hi = p.seeds_on_trunk
-    active_from = int(lo * nb)
+    for i in range(1, len(pos)):
+        nchild[parent[i]] += 1
+    active_from = int(lo_t * nb)
     kd_dirty = True
     kd = None
     for it in range(p.iterations):
@@ -178,7 +278,7 @@ def grow(params: GrowthParams, rng: np.random.Generator) -> Skeleton:
             co, i, d = kd.find(Vector(a.tolist()))
             if i is None or d > p.influence:
                 continue
-            if i < active_from and i != nb:
+            if i < active_from:
                 continue
             v = (a - pos[i]) / max(d, 1e-6)
             grow_dir[i] = grow_dir.get(i, np.zeros(3, F)) + v
@@ -211,6 +311,27 @@ def grow(params: GrowthParams, rng: np.random.Generator) -> Skeleton:
     sk = Skeleton(np.array(pos, F), np.array(parent, np.int32), np.zeros(len(pos), F))
     finalize(sk, p.base_radius, p.tip_radius, p.pipe_exponent, rng, smoothing=p.smoothing)
     return sk
+
+
+def _grow_limb(pos: list, parent: list, start: int, target: np.ndarray, p: GrowthParams, rng: np.random.Generator,
+               rise: float, reach: float) -> None:
+    """A scaffold limb from bole node `start` towards `target`: quadratic Bezier lifted by `rise` x length, with a
+    little wobble, sampled every `step` metres (appended to pos / parent)."""
+    a = np.asarray(pos[start], np.float64)
+    b = a + (np.asarray(target, np.float64) - a) * reach
+    L = float(np.linalg.norm(b - a))
+    if L < p.step * 2:
+        return
+    ctrl = (a + b) * 0.5 + np.array([0, 0, 1.0]) * L * rise
+    n = max(2, int(L / p.step))
+    prev = start
+    wob = rng.normal(0, 0.06 * L, size=3)
+    for k in range(1, n + 1):
+        t = k / n
+        q = (1 - t) ** 2 * a + 2 * (1 - t) * t * ctrl + t * t * b + wob * math.sin(math.pi * t)
+        pos.append(q.astype(F))
+        parent.append(prev)
+        prev = len(pos) - 1
 
 
 def finalize(sk: Skeleton, base_radius: float, tip_radius: float, exponent: float, rng: np.random.Generator,
