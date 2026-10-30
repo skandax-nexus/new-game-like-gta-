@@ -11,9 +11,9 @@
  *      SMOKE_TIMEOUT_MS (per scene, default 240000), SMOKE_HEADED=1.
  *
  * Steps: vite build -> vite preview on a fixed port -> headless Chromium (SwiftShader WebGL2) ->
- * for each shot: open URL deep link, wait for window.__SAMRAJYA__.sceneReady, optionally advance
- * the sim, let the HUD catch up (SETTLE), save a PNG. Fails (exit 1) on console errors, page errors, crash
- * reports, timeouts or a blank frame (see BLANK below: a black / cleared / unpresented canvas, or a HUD over one,
+ * for each shot: open URL deep link, wait for window.__SAMRAJYA__.sceneReady and for the boot splash to be
+ * removed, optionally advance the sim, let the HUD catch up (SETTLE), save a PNG. Fails (exit 1) on console
+ * errors, page errors, crash reports, timeouts or a blank frame (see BLANK below: a black / cleared / unpresented canvas, or a HUD over one,
  * is retaken and then fails even with a clean console).
  * Note: SwiftShader is a software renderer - FPS numbers here are NOT representative.
  */
@@ -238,6 +238,13 @@ async function main() {
       try {
         await page.goto(url, { waitUntil: 'load', timeout: TIMEOUT });
         await page.waitForFunction(() => window.__SAMRAJYA__ && window.__SAMRAJYA__.ready && window.__SAMRAJYA__.sceneReady, null, { timeout: TIMEOUT, polling: 250 });
+        // main.ts hideSplash() fades #boot-splash (0.6 s) and removes it 700 ms after `ready`; a slow software frame
+        // could let the screenshot catch it mid-fade (TA-07: assetviewer-mobile). Every capture waits for its removal.
+        await page
+          .waitForFunction(() => !document.getElementById('boot-splash'), null, { timeout: TIMEOUT, polling: 100 })
+          .catch((err) => {
+            throw new Error(`boot splash still in the DOM after ready: ${err && err.message ? err.message : String(err)}`);
+          });
         if (shot.advance) {
           await page.evaluate((n) => {
             const api = window.__SAMRAJYA__;

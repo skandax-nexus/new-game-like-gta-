@@ -10,7 +10,8 @@ Contract with tools/assets/build.mjs (env vars, all optional for direct runs):
     SAMRAJYA_PREVIEW      "0" = skip the Cycles preview render (default on)
 
 Each script ends with ctx.finish(), which writes <out>/asset.json:
-    { schema, id, kind, draft, blender, files: [{role, path, ...}], material|model|hdri: {...} }
+    { schema, id, kind, draft, blender, files: [{role, path, ...}], <kind>: {...} }
+where <kind> is one of KINDS (kept in sync with KINDS in tools/assets/config.mjs).
 build.mjs validates it, optimizes the files and generates src/assets/manifest.ts from it.
 """
 from __future__ import annotations
@@ -30,7 +31,8 @@ import bpy
 import numpy as np
 
 SCHEMA_VERSION = 1
-KINDS = ("material", "model", "hdri")
+# Asset kinds; same set and order as KINDS in tools/assets/config.mjs (TA-07 added vat .. image).
+KINDS = ("material", "model", "hdri", "vat", "impostor", "flipbook", "lut", "image")
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 _T0 = time.time()
