@@ -43,6 +43,8 @@ function grid(state: BattleState, terrain: TerrainQuery): { cols: number; rows: 
   return { cols: g.cols, rows: g.rows, minX: g.minX, minZ: g.minZ, cell: g.cell, cls };
 }
 
+const DEEP = TERRAIN_CLASSES.indexOf('deep_water');
+
 function run(setup: BattleSetup, terrain: TerrainQuery, opts: { maxSec: number; every: number; commands?: (s: BattleState) => void; begin?: boolean }): unknown {
   const state = createBattle(setup, terrain);
   if (opts.begin) issueBattleCommand(state, 0, { kind: 'begin_battle' });
@@ -50,6 +52,12 @@ function run(setup: BattleSetup, terrain: TerrainQuery, opts: { maxSec: number; 
   const events: BattleEventRecord[] = [];
   const out: BattleEventRecord[] = [];
   let volleys = 0;
+  // Authoritative deep-water check: every tick, every formation centroid, exact positions against the battle grid
+  // itself (the 0.1 m rounding of the frames can put a centroid that slides along a river edge on the wrong side of
+  // a cell boundary).
+  const grid0 = battleContext(state, terrain).grid;
+  let deepTicks = 0;
+  let ticks = 0;
   const every = Math.round(opts.every / BATTLE_DT);
   for (let i = 0; i < opts.maxSec / BATTLE_DT && !state.outcome; i++) {
     opts.commands?.(state);
@@ -59,6 +67,8 @@ function run(setup: BattleSetup, terrain: TerrainQuery, opts: { maxSec: number; 
       if (e.kind === 'volley') volleys++;
       else events.push({ ...e, time: Math.round((e.time - state.deploymentEndsAt) * 10) / 10 });
     }
+    ticks++;
+    for (const f of state.formations) if (f.soldiers > 0 && grid0.tclass[grid0.cellAt(f.x, f.z)] === DEEP) deepTicks++;
     if (state.phase !== 'deployment' && state.tick % every === 0) frames.push(frame(state));
   }
   frames.push(frame(state));
@@ -78,6 +88,8 @@ function run(setup: BattleSetup, terrain: TerrainQuery, opts: { maxSec: number; 
     frames,
     events,
     volleys,
+    deepTicks,
+    ticks,
     outcome: state.outcome,
   };
 }

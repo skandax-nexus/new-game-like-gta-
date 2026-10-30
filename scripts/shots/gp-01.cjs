@@ -476,16 +476,25 @@ async function captureMaps(browser) {
   console.log('[gp-01] generating headless traces (vite-node tests/sim/tactical/tools/trace.ts)');
   execSync(`"${path.join(ROOT, 'node_modules', '.bin', 'vite-node')}" tests/sim/tactical/tools/trace.ts "${tracePath}"`, { cwd: ROOT, stdio: 'inherit' });
   const traces = JSON.parse(fs.readFileSync(tracePath, 'utf8'));
-  // River: never in deep water.
+  // River: never in deep water. Authoritative: trace.ts checks every formation centroid on every tick against the
+  // battle grid (exact positions). The 2 s frames are re-checked here too, but their positions are rounded to 0.1 m,
+  // so a sample within 0.05 m of a cell boundary (a router sliding along the river edge) cannot be classified and is
+  // skipped.
   const river = traces.river;
   const deepIdx = river.classes.indexOf('deep_water');
-  let deepTicks = 0;
+  let deepSamples = 0;
+  let boundarySamples = 0;
+  const cellOf = (v, min) => {
+    const u = (v - min) / river.grid.cell;
+    return Math.abs(u - Math.round(u)) * river.grid.cell < 0.051 ? -1 : Math.floor(u);
+  };
   for (const fr of river.frames) for (const f of fr.f) {
     if (f[5] <= 0) continue;
-    const c = Math.floor((f[0] - river.grid.minX) / river.grid.cell), r = Math.floor((f[1] - river.grid.minZ) / river.grid.cell);
-    if (c >= 0 && r >= 0 && c < river.grid.cols && r < river.grid.rows && river.grid.cls[r * river.grid.cols + c] === deepIdx) deepTicks++;
+    const c = cellOf(f[0], river.grid.minX), r = cellOf(f[1], river.grid.minZ);
+    if (c < 0 || r < 0) { boundarySamples++; continue; }
+    if (c < river.grid.cols && r < river.grid.rows && river.grid.cls[r * river.grid.cols + c] === deepIdx) deepSamples++;
   }
-  check('tactical-river: no formation centroid sampled in a deep-water cell', deepTicks === 0, deepTicks);
+  check('tactical-river: no formation centroid in a deep-water cell (every tick, exact; and every 2 s frame sample)', river.deepTicks === 0 && river.ticks > 0 && deepSamples === 0, { deepFormationTicks: river.deepTicks, ticks: river.ticks, deepFrameSamples: deepSamples, boundarySamplesSkipped: boundarySamples });
   for (const [key, o] of Object.entries({ plains: traces.plains, river: traces.river })) {
     const m = o.outcome ? o.outcome.durationSec / 60 : 0;
     check(`tactical-${key}: the 1,000-soldier skirmish ends in 3-8 min (or near it)`, !!o.outcome && m >= 2.5 && m <= 8, o.outcome && { winner: o.outcome.winner, reason: o.outcome.reason, minutes: Math.round(m * 100) / 100 });
