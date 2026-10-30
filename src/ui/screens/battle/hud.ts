@@ -4,27 +4,30 @@
  * dominant cause, fatigue tier, ammo pips, experience chevrons, current order / intent), command card (Orders /
  * Shapes / Intents pages, hotkeys per preset), commander Rally button with cooldown ring, event feed, battle minimap,
  * floating formation cards + hover bars anchored at the screen positions GP-04 supplies (props.anchors), the touch
- * radial wheel (long-press) and phone simple-mode presets. OWNER: UI Engineer - In-game HUD, Command Card, Minimap &
- * Input (UI-02).
+ * radial wheel (long-press), phone simple-mode presets and the control-group row (DESIGN_SPEC §8.8: five slots on touch,
+ * assigned groups on PC; fed by GP-04 through ctx.ui.feeds.setBattleGroups, else derived from the battle state).
+ * Formation cards carry short titles ("Levy I", "Guards"; ui/services/battleLabels.ts) so nothing is cut off.
+ * OWNER: UI Engineer - In-game HUD, Command Card, Minimap & Input (UI-02).
  */
 import type { AppContext, BattleRallyHud, FormationScreenAnchor, ScreenPropsMap } from '../../../app/contracts';
 import type { BattleEventRecord, BattleState, FormationState, InputActionEvent, MoraleInputs, SideIndex } from '../../../core/types';
 import { FACTIONS } from '../../../data/factions';
 import { UNITS } from '../../../data/units';
+import { battleGroupsFrom, formationTitles } from '../../services/battleLabels';
 import { RULES } from '../../../data/rules';
 import { fatigueTier, variantStats } from '../../../sim/tactical/stats';
 import { peekHeightfield, terrainKey } from '../../../core/terrain/cache';
 import { append, clockGate, fmtClock, fmtInt, h, label, setAttr, setClass, setHidden, setStyle, setText, syncList } from '../../dom';
 import type { Screen, UIManager } from '../../ui';
 import { icon, setIcon, unitIcon } from '../../components/icons';
-import { factionChip, meter, pips, ringProgress, setFactionChip, type Meter } from '../../components/widgets';
+import { factionChip, factionClass, meter, pips, ringProgress, setFactionChip, type Meter } from '../../components/widgets';
 import { CommandGrid } from '../../components/commandGrid';
 import { Minimap } from '../../components/minimap';
 import { BATTLE_PAGES, battleCard, battlePageIndex, nextBattlePage } from '../../services/commandCards';
 import { BATTLE_PRESETS, presetCommands } from '../../services/battlePresets';
 import { emitHud } from '../../services/hudCommands';
 import { cardSlotIndex } from '../../../input/bindings';
-import { runCardSlot } from '../world/cardActions';
+import { controlGroupRow, runCardSlot } from '../world/cardActions';
 import { RadialWheel, radialItemsFrom, type RadialItems } from './radial';
 
 const SPEEDS = [0.5, 1, 2, 4];
@@ -106,6 +109,7 @@ interface CardView {
   icon: HTMLElement;
   name: HTMLElement;
   count: HTMLElement;
+  state: HTMLElement;
   str: Meter;
   mor: Meter;
   cause: HTMLElement;
@@ -127,18 +131,20 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
   let page = 'orders';
   let moreOpen = false;
   let terrainSet = false;
+  let titles = new Map<number, string>();
+  let titlesFor = -1;
   const isSkirmish = ctx.session.mode === 'skirmish';
 
   // --- top: forces + clock + speed ------------------------------------------------------------
-  const side = [0, 1].map(() => ({ chip: factionChip(null, 'md'), name: h('b', { class: 'bh-side-name' }), num: h('span', { class: 'bh-side-num' }), str: meter('strength'), mor: meter('morale') }));
+  const side = [0, 1].map(() => ({ chip: factionChip(null, 'md'), name: h('b', { class: 'bh-side-name' }), you: h('span', { class: 'badge bh-you ui-hidden' }, 'You'), num: h('span', { class: 'bh-side-num' }), str: meter('strength'), mor: meter('morale') }));
   const clock = h('div', { class: 'bh-clock', role: 'timer' });
   const phase = h('div', { class: 'bh-phase' });
   const forces = h(
     'div',
     { class: 'bh-forces' },
-    h('div', { class: 'bh-side left' }, h('div', { class: 'bh-side-head' }, side[0]!.chip, side[0]!.name, side[0]!.num), side[0]!.str.el, side[0]!.mor.el),
+    h('div', { class: 'bh-side left' }, h('div', { class: 'bh-side-head' }, side[0]!.chip, side[0]!.name, side[0]!.you, side[0]!.num), side[0]!.str.el, side[0]!.mor.el),
     h('div', { class: 'bh-center' }, clock, phase),
-    h('div', { class: 'bh-side right' }, h('div', { class: 'bh-side-head' }, side[1]!.num, side[1]!.name, side[1]!.chip), side[1]!.str.el, side[1]!.mor.el),
+    h('div', { class: 'bh-side right' }, h('div', { class: 'bh-side-head' }, side[1]!.num, side[1]!.you, side[1]!.name, side[1]!.chip), side[1]!.str.el, side[1]!.mor.el),
   );
   const pauseBtn = h('button', { class: 'btn icon', type: 'button', 'aria-label': 'Pause (Space)', onclick: () => (ui.sfx('ui_click'), ctx.actions.togglePause()) }, icon('pause'));
   const speedWrap = h('div', { class: 'bh-speed', role: 'group', 'aria-label': 'Battle speed' }, pauseBtn);
@@ -182,6 +188,7 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
       icon: icon(unitIcon(f.unitClass)),
       name: h('span', { class: 'fc-name' }),
       count: h('span', { class: 'fc-count' }),
+      state: h('span', { class: 'fc-state' }),
       str: meter('strength'),
       mor: meter('morale'),
       cause: h('span', { class: 'fc-cause' }),
@@ -191,8 +198,17 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
       chev: h('span', { class: 'fc-chev', role: 'img', dataset: { rank: '0' } }, icon('chevron_up'), icon('chevron_up'), icon('chevron_up')),
       order: h('span', { class: 'fc-order' }),
     };
-    // Chevrons sit in the head row so the morale line keeps the full card width for its cause.
-    append(v.el, h('div', { class: 'fc-head' }, v.icon, v.name, v.chev, v.count), v.str.el, v.mor.el, h('div', { class: 'fc-line' }, h('span', { class: 'fc-morale' }, icon('lotus'), v.cause)), h('div', { class: 'fc-line' }, v.fatigue, v.ammo.el), v.order);
+    // Head: class icon, short title ("Levy II"), experience chevrons, then the men count behind a villager icon (a
+    // bare number after a chevron read as a trend). Fatigue tier and the current order share one line with the ammo.
+    append(
+      v.el,
+      h('div', { class: 'fc-head' }, v.icon, v.name, v.chev, h('span', { class: 'fc-men' }, icon('villager'), v.count)),
+      v.str.el,
+      v.mor.el,
+      h('div', { class: 'fc-line' }, h('span', { class: 'fc-morale' }, icon('lotus'), v.cause)),
+      h('div', { class: 'fc-line' }, v.state, v.ammo.el),
+    );
+    v.state.append(v.fatigue, h('span', { class: 'fc-sep', 'aria-hidden': 'true' }, '·'), v.order);
     v.el.addEventListener('click', (e) => {
       const now = performance.now();
       const dbl = now - (lastClick.get(f.index) ?? 0) < 320;
@@ -209,6 +225,7 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
       return {
         title: st.name,
         icon: unitIcon(st.unitClass),
+        text: `${UNITS[st.unitClass]?.name ?? label(st.unitClass)} · ${fmtInt(st.soldiers)} men`,
         rows: [
           ['Strength', `${fmtInt(st.soldiers)} / ${fmtInt(st.maxSoldiers)}`],
           ['Morale', `${Math.round(st.morale)}${moraleCause(st, props!.battle.time) ? ` - ${moraleCause(st, props!.battle.time)}` : ''}`, st.morale < 40 ? 'danger' : null],
@@ -267,7 +284,12 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
   const moreBtn = h('button', { class: 'btn small bh-more', type: 'button', 'aria-expanded': 'false', onclick: () => ((moreOpen = !moreOpen), ui.sfx('ui_click'), renderMode()) }, icon('more'), 'More');
   presets.append(moreBtn);
   const cardPanel = h('section', { class: 'bh-card panel', 'aria-label': 'Orders' }, grid.el, h('div', { class: 'bh-card-side' }, selAll));
-  const bottom = h('div', { class: 'bh-bottom passive' }, strip, presets, cardPanel);
+  // Control groups (§8.8 touch: a row of 5 slots above the cards; long-press assigns, tap selects, double-tap
+  // centres). PC shows the assigned groups only; landscape phones dock the row as a column on the left edge.
+  const groups = controlGroupRow(ctx);
+  groups.el.classList.add('bh-groups');
+  const forcesCol = h('div', { class: 'bh-forces-col' }, groups.el, strip);
+  const bottom = h('div', { class: 'bh-bottom passive' }, forcesCol, presets, cardPanel);
 
   // --- feed + radial + floating ---------------------------------------------------------------
   const feed = h('div', { class: 'bh-feed', role: 'log', 'aria-live': 'polite', dataset: { anchor: 'battle-feed' } });
@@ -490,7 +512,17 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
         const s = b.sides[i];
         const v = side[i]!;
         setFactionChip(v.chip, s.factionId);
-        setText(v.name, `${FACTIONS[s.factionId]?.shortName ?? s.factionId}${i === ps ? ' (you)' : ''}`);
+        // Your side: the gold "You" badge + gold underline instead of "(you)" (it truncated the name on phones).
+        setText(v.name, FACTIONS[s.factionId]?.shortName ?? s.factionId);
+        setHidden(v.you, i !== ps);
+        const sideEl = v.name.parentElement!.parentElement!;
+        setClass(sideEl, 'mine', i === ps);
+        // 3 px faction edge (theme token .f-<id> --faction, colour-blind remaps included) tells the two bar pairs apart.
+        if (sideEl.dataset.faction !== s.factionId) {
+          for (const c of [...sideEl.classList]) if (c.startsWith('f-')) sideEl.classList.remove(c);
+          sideEl.classList.add(factionClass(s.factionId).cls);
+          sideEl.dataset.faction = s.factionId;
+        }
         setText(v.num, fmtInt(s.soldiers));
         v.str.set(s.soldiers / Math.max(1, s.initialSoldiers));
         v.mor.set(s.averageMorale / 100, { warn: s.averageMorale < 40 });
@@ -515,12 +547,16 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
       // Cards strip
       const sel = new Set(p.selection);
       const own = b.formations.filter((f) => f.side === ps && f.soldiers > 0 && f.activity !== 'destroyed');
+      if (titlesFor !== b.formations.length) {
+        titlesFor = b.formations.length;
+        titles = formationTitles(b, ps);
+      }
       syncList(strip, own, (f) => String(f.index), makeCard, (node, f) => {
         const v = cardViews.get(f.index);
         if (!v) return;
         const stats = variantStats(b.sides[ps].factionId, f.unitClass);
         setIcon(v.icon, unitIcon(f.unitClass));
-        setText(v.name, f.name.length > 18 ? UNITS[f.unitClass].shortName ?? f.name : f.name);
+        setText(v.name, titles.get(f.index) ?? f.name);
         setText(v.count, fmtInt(f.soldiers));
         v.str.set(f.soldiers / Math.max(1, f.maxSoldiers));
         v.mor.set(f.morale / 100, { warn: f.morale < 40 });
@@ -545,6 +581,9 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
         setAttr(node, 'aria-selected', sel.has(f.index) ? 'true' : 'false');
         setAttr(node, 'aria-label', `${f.name}: ${fmtInt(f.soldiers)} men, morale ${Math.round(f.morale)}, ${label(tier)}, ${orderLabel(f)}`);
       });
+      // Control groups: GP-04's feed when pushed, else the battle state's groups (same rows either way).
+      const touchRow = ctx.input.touchMode || ui.layout !== 'pc';
+      groups.set(ui.feeds.battleGroups ?? battleGroupsFrom(b, ps, titles), touchRow);
       // Card (gated: selection / page / preset change at once, sim changes at most 4 Hz), rally, mode
       if (cardGate(`${p.selection.join(',')}|${page}|${ctx.input.preset}|${JSON.stringify(ctx.settings.keybindings ?? {})}`, b.tick)) renderCard();
       rallyState = p.rally ?? deriveRally(b, ps);

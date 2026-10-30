@@ -733,6 +733,9 @@ class Kit:
         ctx = self.ctx
         W, H = self.size
         target = self.preset.get("baseColor")
+        if os.environ.get("SAMRAJYA_QUICK") == "1":  # critique-loop iteration: numpy looks only, nothing published
+            self.quick(height, albedo, rough, ao_height_mix, orm_span_min)
+            return
         # Payload: texel-level noise in normals / roughness costs a lot of WebP bytes and reads as aliasing at
         # distance anyway. Soften the height a touch before the normals (H sets: 0.5 px) and roughness by 0.8 px.
         soften = (0.5 if self.cls == "H" else 0.0) if height_soften_px is None else height_soften_px
@@ -1124,6 +1127,39 @@ class Kit:
                                                    float(po.get("tiling_exposure", TILING_EXPOSURE))))
 
     # ------------------------------------------------------------------ fast numpy look (iteration only)
+    def quick(self, height: np.ndarray, albedo: np.ndarray, rough: np.ndarray, mix: float, span_min: float | None) -> None:
+        """SAMRAJYA_QUICK=1 (with SAMRAJYA_ASSET_OUT pointing at a scratch dir): seconds-fast numpy stand-ins for
+        the Cycles previews - quick_tiling.png (3 x 3 repeats, raking golden light 11 deg), quick_detail.png (one
+        tile at full internal res, raking 20 deg), quick_albedo.png (calibrated albedo) - plus QA and the ORM.r span
+        with horizon AO. Nothing is written to the cache and no asset.json is produced."""
+        target = self.preset.get("baseColor")
+        alb = self.calibrate(albedo, target) if target else self.clamp_limits(albedo)
+        n = self.N
+        k = max(1, n // 512)
+        h_s = tg.resize(height, n // k, n // k)
+        a_s = tg.resize(alb, n // k, n // k)
+        h3 = np.tile(h_s, (3, 3))
+        a3 = np.tile(a_s, (3, 3, 1))
+        tex = self.size[0] / h_s.shape[0]
+        ao3 = tg.horizon_ao(h3, tex, 0.08, 8, 6)
+        img = tg.shade(h3, tex, a3, light_deg=(11.0, 252.0), ambient=0.12, ao=ao3)
+        tg.write_png(self.ctx.path("quick_tiling.png"), img, 8)
+        kd = max(1, n // 1024)
+        h_d = tg.resize(height, n // kd, n // kd)
+        a_d = tg.resize(alb, n // kd, n // kd)
+        ao_d = tg.horizon_ao(h_d, self.size[0] / h_d.shape[0], 0.05, 8, 6)
+        tg.write_png(self.ctx.path("quick_detail.png"),
+                     tg.shade(h_d, self.size[0] / h_d.shape[0], a_d, light_deg=(20.0, 235.0), ambient=0.3, ao=ao_d), 8)
+        tg.write_png(self.ctx.path("quick_albedo.png"), tg.resize(alb, 512, 512), 8, srgb_encode=True)
+        qa = self.qa(tg.resize(alb, 1024, 1024), tg.resize(rough, 512, 512), target)
+        if mix > 0 or span_min:
+            dres = self.data_res if self.data_res <= 512 else 512
+            hd = tg.resize(height, dres, dres)
+            ao = np.clip(tg.blur(tg.horizon_ao(hd, self.size[0] / dres, 0.04, 8, 6), 0.7), 0.0, 1.0)
+            self.height_proxy(ao, hd, mix, span_min)
+            qa.update(self.orm_r_stats)
+        core.log("QUICK QA " + json.dumps(qa))
+
     def quicklook(self, height: np.ndarray, albedo: np.ndarray, name: str = "quicklook.png", res: int = 768,
                   light: tuple[float, float] = (14.0, 250.0)) -> Path:
         """Seconds-fast 2 x 2 repeat relief render (Lambert, raking light) for the critique loop."""

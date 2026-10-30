@@ -2,7 +2,8 @@
  * Settlement panel (DESIGN_SPEC §12.2): right drawer on PC, 60% bottom sheet on phones. Header, alerts (cut off,
  * siege, capture), vitals with reserve-day colours and "why" tooltips, labor allocation sliders summing <= 100%,
  * tax-rate slider, buildings grid (level pips, condition, repair), construction queue (progress, days, cancel),
- * recruitment queue, garrison. OWNER: UI Engineer - In-game HUD, Command Card, Minimap & Input (UI-02).
+ * recruitment queue (progress, cancel - enabled once the simulation has cancel_recruitment, services/recruitCancel.ts),
+ * garrison. OWNER: UI Engineer - In-game HUD, Command Card, Minimap & Input (UI-02).
  */
 import type { AppContext } from '../../../app/contracts';
 import type { LaborAllocation, SettlementState, WorldState } from '../../../core/types';
@@ -16,6 +17,7 @@ import type { Screen, UIManager } from '../../ui';
 import { icon, unitIcon } from '../../components/icons';
 import { factionChip, meter, panelFrame, pips, section, setFactionChip, slider, statCell, type Slider } from '../../components/widgets';
 import { factionName, sfx } from './common';
+import { cancelRecruitmentCommand, recruitCancelState } from '../../services/recruitCancel';
 
 const LABOR_KEYS: readonly (keyof LaborAllocation)[] = ['farming', 'construction', 'crafts', 'military'];
 const LABOR_LABEL: Record<keyof LaborAllocation, string> = { farming: 'Farming', construction: 'Construction', crafts: 'Crafts', military: 'Militia' };
@@ -229,17 +231,44 @@ export function settlementPanel(ctx: AppContext, ui: UIManager): Screen<'settlem
     syncList(
       recruitList,
       s.recruitment,
-      (r) => `${r.unitClass}:${r.startedDay}`,
+      (r) => `${r.unitClass}:${r.startedDay}:${r.formations}:${r.targetArmyId ?? ''}`,
       (r) => {
         const m = meter('progress');
-        const row = h('div', { class: 'queue-row' }, icon(unitIcon(r.unitClass)), h('div', { class: 'q-main' }, h('div', { class: 'q-line' }, h('span', { class: 'q-name' }), h('span', { class: 'q-days muted' })), m.el));
+        const cancel = h('button', { class: 'btn icon ghost q-cancel', type: 'button', 'aria-label': 'Cancel recruitment' }, icon('close'));
+        const row = h('div', { class: 'queue-row' }, icon(unitIcon(r.unitClass)), h('div', { class: 'q-main' }, h('div', { class: 'q-line' }, h('span', { class: 'q-name' }), h('span', { class: 'q-days muted' })), m.el), cancel);
         (row as unknown as { __m: typeof m }).__m = m;
+        const key = `${r.unitClass}:${r.startedDay}:${r.formations}:${r.targetArmyId ?? ''}`;
+        cancel.addEventListener('click', () => {
+          const wd = world;
+          const st = wd?.settlements[sid];
+          if (!wd || !st) return;
+          // The row's current queue index (earlier jobs may have finished or been cancelled since it was drawn).
+          const index = st.recruitment.findIndex((x) => `${x.unitClass}:${x.startedDay}:${x.formations}:${x.targetArmyId ?? ''}` === key);
+          const state = recruitCancelState((c) => commandReason(wd, wd.playerFactionId, c), sid, index, st.ownerFactionId === wd.playerFactionId);
+          if (index < 0 || !state.enabled) {
+            ui.tooltips.open(cancel, { title: 'Cancel recruitment', hint: state.reason, hintTone: 'danger' }, true);
+            sfx(ctx, 'ui_error');
+            return;
+          }
+          ctx.actions.issueStrategic(cancelRecruitmentCommand(sid, index));
+          sfx(ctx, 'ui_close');
+        });
+        ui.tooltips.attach(cancel, () => ({ title: 'Cancel recruitment', hint: cancel.dataset.reason ?? '', hintTone: cancel.classList.contains('disabled') ? 'danger' : null }));
         return row;
       },
       (row, r) => {
         setText(row.querySelector('.q-name')!, `${UNITS[r.unitClass].name} × ${r.formations}`);
-        setText(row.querySelector('.q-days')!, `${Math.round(r.progress * 100)}%${r.targetArmyId ? ` → ${w.armies[r.targetArmyId]?.name ?? 'army'}` : ''}`);
+        setText(row.querySelector('.q-days')!, `${Math.round(r.progress * 100)}%${r.progress <= 0 && s.recruitment[0] !== r ? ' · queued' : ''}${r.targetArmyId ? ` → ${w.armies[r.targetArmyId]?.name ?? 'army'}` : ''}`);
         (row as unknown as { __m: ReturnType<typeof meter> }).__m.set(r.progress);
+        // Same q-cancel button and reason tooltip as construction; disabled (still tappable: it says why) until the
+        // simulation knows cancel_recruitment.
+        const btn = row.querySelector('.q-cancel') as HTMLButtonElement;
+        const state = recruitCancelState((c) => commandReason(w, w.playerFactionId, c), s.id, s.recruitment.indexOf(r), mine);
+        setHidden(btn, !state.visible);
+        setClass(btn, 'disabled', !state.enabled);
+        btn.setAttribute('aria-disabled', state.enabled ? 'false' : 'true');
+        btn.dataset.reason = state.reason;
+        btn.setAttribute('aria-label', `Cancel recruitment - ${state.reason}`);
       },
     );
     setHidden(recruitList.parentElement!, s.recruitment.length === 0);

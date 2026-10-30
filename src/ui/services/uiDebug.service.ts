@@ -10,7 +10,7 @@ import type { InputAction, KeyPreset } from '../../core/types';
 import type { UiService } from '../screens/registry';
 import type { UIManager } from '../ui';
 import { uiClock } from '../dom';
-import type { GroundQuad, HudCommandKind, WorldControlGroup } from './hudCommands';
+import type { BattleControlGroup, GroundQuad, HudCommandKind, WorldControlGroup } from './hudCommands';
 
 export interface UiDebugApi {
   /** Sticky props patch merged into every push of a screen (null removes it). */
@@ -33,6 +33,8 @@ export interface UiDebugApi {
   /** Feed the minimap camera frustum / world control groups (normally the scenes do). */
   setCamera(quad: GroundQuad | null, heading: number): void;
   setWorldGroups(groups: WorldControlGroup[]): void;
+  /** Battle control-group row (null = derive from the battle state, as before GP-04 pushes groups). */
+  setBattleGroups(groups: BattleControlGroup[] | null): void;
   /** UI + input CPU counters (ms per frame, EMA) from the profiler. */
   profile(): { ui: number; input: number; total: number; max: number };
   /**
@@ -92,6 +94,7 @@ function start(ctx: AppContext, ui: UIManager): () => void {
     commands: () => log.slice(),
     setCamera: (quad, heading) => ui.feeds.setCamera(quad, heading),
     setWorldGroups: (groups) => ui.feeds.setWorldGroups(groups),
+    setBattleGroups: (groups) => ui.feeds.setBattleGroups(groups),
     profile: () => ({ ui: counter('ui.ms'), input: counter('input.ms'), total: counter('uiInput.ms'), max: counter('uiInput.maxMs') }),
     bench: (opts = {}) => {
       const id: ScreenId | null = ui.isVisible('battle_hud') ? 'battle_hud' : ui.isVisible('world_hud') ? 'world_hud' : ui.isVisible('hero_hud') ? 'hero_hud' : null;

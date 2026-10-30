@@ -58,6 +58,11 @@ export interface CardSlot {
   id: string;
   /** Short label under the icon (<= 9 characters where possible). */
   label: string;
+  /**
+   * Caps code of compact slots (landscape phones; ART_BIBLE §11.3 kit grammar: SPR ARC GRD ... FLD GRN MKT WRK).
+   * Absent = derived from the label by slotCode().
+   */
+  code?: string;
   /** Full name (tooltip title / aria-label). */
   name: string;
   icon: string;
@@ -138,6 +143,91 @@ const SHORT_BUILDING: Partial<Record<BuildingType, string>> = {
   workshop: 'Workshop',
 };
 
+/** Three-letter caps codes of the buildings (compact slots). */
+export const BUILDING_CODE: Readonly<Record<BuildingType, string>> = {
+  farm_fields: 'FLD',
+  irrigation_canal: 'CNL',
+  granary: 'GRN',
+  stepwell: 'WEL',
+  water_tank: 'TNK',
+  market: 'MKT',
+  workshop: 'WRK',
+  barracks: 'BRK',
+  stables: 'STB',
+  elephant_stables: 'ELE',
+  temple: 'TMP',
+  stupa: 'STP',
+  fort_walls: 'WAL',
+  watchtower: 'TWR',
+  road_station: 'STN',
+  harbor: 'HBR',
+  mine: 'QRY',
+  palace: 'PAL',
+  ghat: 'GHT',
+  housing: 'HSE',
+  sanitation: 'DRN',
+};
+
+/** Hand-picked codes where the first three letters would mislead or collide (others: slotCode()). */
+const SLOT_CODE: Readonly<Record<string, string>> = {
+  'screen:market': 'TRD',
+  'screen:economy': 'TRS',
+  'screen:ages': 'AGE',
+  'army:attack': 'ATK',
+  'army:retreat': 'RTR',
+  'army:forced_march': 'FRC',
+  'army:disband': 'DSB',
+  'stance:aggressive': 'BLD',
+  'stance:balanced': 'STD',
+  'stance:cautious': 'WRY',
+  'stance:defensive': 'STD',
+  'stance:skirmish': 'SKR',
+  'stance:hold_fire': 'HLD',
+  'order:order_hold': 'HLD',
+  'order:order_attack': 'ATK',
+  'order:order_charge': 'CHG',
+  'order:order_defend': 'DEF',
+  'order:order_withdraw': 'WDR',
+  'order:order_regroup': 'RGP',
+  'order:order_stance': 'STN',
+  'order:shape_line': 'LIN',
+  'order:shape_column': 'COL',
+  'order:shape_square': 'SQR',
+  'order:shape_wedge': 'WDG',
+  'order:shape_loose': 'LSE',
+  'shape:line': 'LIN',
+  'shape:column': 'COL',
+  'shape:square': 'SQR',
+  'shape:wedge': 'WDG',
+  'shape:loose': 'LSE',
+  'shape:circle': 'CRC',
+  'intent:hold_crossing': 'FRD',
+  'intent:protect_formation': 'PRT',
+  'intent:hold_high_ground': 'HGH',
+  'intent:screen_flank': 'SCR',
+  'intent:pursue_routers': 'PUR',
+  'intent:escort_supply': 'ESC',
+  'intent:clear': 'CLR',
+  rally_point: 'RLY',
+};
+
+/** Caps code of a slot for compact layouts: explicit code, hand-picked id code, else the label's first 3 letters. */
+export function slotCode(s: Pick<CardSlot, 'id' | 'label' | 'code'>): string {
+  if (s.code) return s.code;
+  const c = SLOT_CODE[s.id];
+  if (c) return c;
+  const letters = s.label.replace(/[^A-Za-z]/g, '');
+  return letters.slice(0, 3).toUpperCase();
+}
+
+/** Battle stance names on the card: one short word each (the strategic layer's Bold / Steady; tooltips keep the full name). */
+export const STANCE_SHORT: Readonly<Record<Stance, string>> = {
+  aggressive: 'Bold',
+  defensive: 'Steady',
+  skirmish: 'Skirmish',
+  hold_fire: 'Hold fire',
+};
+
 const SHORT_UNIT: Readonly<Record<UnitClass, string>> = {
   spearmen: 'Spears',
   archers: 'Archers',
@@ -204,6 +294,7 @@ export function settlementCard(world: Readonly<WorldState>, settlementId: string
         kind: 'strategic',
         cmd: { kind: 'recruit', settlementId, unitClass: cls, formations: 1, targetArmyId: null },
       });
+      sl.code = def.shortName;
       sl.enabled = !o?.reason;
       sl.reason = o?.reason ?? null;
       sl.badge = queued.length ? String(queued.reduce((n, r) => n + r.formations, 0)) : null;
@@ -243,6 +334,7 @@ export function settlementCard(world: Readonly<WorldState>, settlementId: string
     const sl = base(slot, `build:${b}`, SHORT_BUILDING[b] ?? def.name, upgrade ? `Upgrade ${def.name} to level ${o?.targetLevel ?? (have?.level ?? 0) + 1}` : def.name, buildingIcon(b), slotKey(ctx, scope, slot), command);
     sl.enabled = !o?.reason;
     sl.reason = o?.reason ?? null;
+    sl.code = BUILDING_CODE[b];
     sl.badge = have ? `L${have.level}` : null;
     sl.progress = job ? job.progress : null;
     sl.description = def.description;
@@ -448,7 +540,7 @@ export function battleCard(battle: Readonly<BattleState>, side: SideIndex, selec
       }
       if (d.action === 'order_stance' && sel.length > 0) {
         const st = sel[0]!.stance;
-        sl.label = labelOf(st);
+        sl.label = STANCE_SHORT[st] ?? labelOf(st);
         sl.name = `Stance: ${labelOf(st)} (cycle)`;
       }
       sl.reason = reason;
@@ -475,7 +567,7 @@ export function battleCard(battle: Readonly<BattleState>, side: SideIndex, selec
     STANCE_DEFS.forEach((d, i) => {
       const slot = 10 + i;
       const formations = sel.map((f) => f.index);
-      const sl = base(slot, `stance:${d.stance}`, d.label, `Stance: ${d.label}`, d.icon, slotKey(ctx, scopeN, slot), { kind: 'battle', cmd: { kind: 'set_stance', formations, stance: d.stance } });
+      const sl = base(slot, `stance:${d.stance}`, STANCE_SHORT[d.stance], `Stance: ${d.label}`, d.icon, slotKey(ctx, scopeN, slot), { kind: 'battle', cmd: { kind: 'set_stance', formations, stance: d.stance } });
       sl.description = d.desc;
       const reason = ended ?? none;
       sl.reason = reason;

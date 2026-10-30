@@ -49,6 +49,9 @@ export class ShimNode {
   get firstChild(): ShimNode | null {
     return this.childNodes[0] ?? null;
   }
+  get firstElementChild(): ShimNode | null {
+    return this.childNodes.find((c) => c.nodeType === 1) ?? null;
+  }
   get textContent(): string {
     return this.childNodes.map((c) => c.textContent).join('');
   }

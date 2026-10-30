@@ -3746,3 +3746,255 @@
   padding: 8px var(--panel-pad, 12px) calc(8px + var(--safe-bottom));
   background: linear-gradient(180deg, rgba(27, 24, 48, 0) 0%, var(--c-lacquer) 28%);
 }
+
+/* ================================================================== UI-02 rework round 1 (Lead + Art Director) */
+
+/* --- Command-card slot grammar (ui_kit): 18 x 18 single-key chip top-right, level badge top-left (4 px inset),
+   28 px icon kept 6 px clear of both chips, label at the foot. The shared modifier ("Alt") is printed once at the
+   end of the tab row. Compact slots (landscape phones) print the caps code. --- */
+.card-tabrow {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+.card-tabrow > .tabs {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.card-tabrow > .tabs.ui-hidden + .kbd.card-mod {
+  margin-left: auto;
+}
+.kbd.card-mod {
+  flex: none;
+  height: 20px;
+  min-width: 32px;
+  margin: 0 2px 8px auto;
+  padding: 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.kbd.card-mod.legend {
+  font-size: 10.5px;
+  letter-spacing: 0;
+  white-space: pre;
+}
+.btn.slot {
+  --slot-h: 68px;
+  height: var(--slot-h);
+  justify-content: flex-start;
+  gap: 0;
+  padding: 0 3px 4px;
+}
+.btn.slot > .icon {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  /* chips: 3 px + 18 px; + 6 px clearance */
+  margin-top: 27px;
+}
+.btn.slot > .slot-label {
+  margin-top: auto;
+  line-height: 1.1;
+}
+.btn.slot > .slot-label > .slot-code {
+  display: none;
+}
+.btn.slot > .kbd {
+  top: 3px;
+  right: 3px;
+  width: 18px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1;
+  border-bottom-width: 2px;
+}
+.btn.slot > .kbd.wide {
+  width: auto;
+  padding: 0 3px;
+}
+.btn.slot > .slot-badge {
+  top: 4px;
+  left: 4px;
+  min-width: 20px;
+  height: 17px;
+  font-size: 10px;
+  padding: 0 4px;
+}
+:root[data-layout='phone'] .btn.slot {
+  --slot-h: 70px;
+}
+/* Landscape phones: compact 52 x 58 slots with the kit's 700-weight caps codes (no words to truncate). */
+:root[data-layout='phone-landscape'] .btn.slot {
+  --slot-h: 58px;
+}
+:root[data-layout='phone-landscape'] .btn.slot > .icon {
+  width: 22px;
+  height: 22px;
+  margin-top: 23px;
+}
+:root[data-layout='phone-landscape'] .btn.slot > .slot-label > .slot-text {
+  display: none;
+}
+:root[data-layout='phone-landscape'] .btn.slot > .slot-label > .slot-code {
+  display: inline;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+}
+:root[data-layout='phone-landscape'] .btn.slot > .slot-badge {
+  top: 3px;
+  left: 3px;
+  height: 15px;
+  min-width: 18px;
+  font-size: 9.5px;
+}
+/* Touch phones print no key chips (portrait and landscape), so no modifier chip either. */
+:root[data-layout='phone-landscape'] .kbd.card-mod,
+:root[data-layout='phone'][data-touch='1'] .kbd.card-mod {
+  display: none;
+}
+
+/* --- Battle forces bar: your side carries the gold "You" badge and a gold underline; both sides a 3 px faction
+   edge (theme token, colour-blind remaps included) so the two bar pairs read as two teams. --- */
+.bh-side {
+  position: relative;
+}
+.bh-side.left {
+  padding-left: 7px;
+  border-left: 3px solid var(--faction, var(--ui-border-soft));
+}
+.bh-side.right {
+  padding-right: 7px;
+  border-right: 3px solid var(--faction, var(--ui-border-soft));
+}
+.bh-side.mine .bh-side-name {
+  text-decoration: underline 2px var(--c-gold);
+  text-underline-offset: 3px;
+}
+.badge.bh-you {
+  flex: none;
+  height: 16px;
+  min-width: 0;
+  padding: 0 5px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #1b0f08;
+  background: var(--c-gold);
+}
+
+/* --- Formation card: short title (Levy II), men behind a villager icon, chevrons separate; fatigue and order share
+   one line with the ammo pips (card 95 -> ~78 px). --- */
+.fcard {
+  min-height: 0;
+  gap: 3px;
+  padding: 5px 7px 6px;
+}
+.fc-name {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.fc-men {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+.fc-head .fc-men > .icon {
+  width: 12px;
+  height: 12px;
+  color: var(--c-gold-soft);
+}
+.fc-state {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fc-state > .fc-order {
+  font-size: 11px;
+  color: var(--c-gold-soft);
+}
+.fc-sep {
+  margin: 0 3px;
+  color: var(--ui-text-dim);
+}
+.fc-state > .fc-fatigue.warning {
+  color: var(--ui-warning);
+}
+.fc-state > .fc-fatigue.danger {
+  color: var(--ui-danger);
+}
+.fcard.routing .fc-state > .fc-order {
+  color: var(--ui-danger);
+}
+
+/* --- Battle control groups (§8.8): a row above the cards strip (PC: assigned groups only). --- */
+.bh-forces-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+  pointer-events: none;
+}
+.bh-forces-col > * {
+  pointer-events: auto;
+}
+.bh-groups {
+  flex-wrap: nowrap;
+}
+:root[data-layout='pc'] .bh-forces-col {
+  flex: 1 1 auto;
+  align-items: stretch;
+}
+:root[data-layout='pc'] .bh-forces-col > .bh-strip {
+  flex: none;
+}
+:root[data-layout='pc'] .bh-groups {
+  align-self: flex-start;
+  margin-left: 2px;
+}
+:root[data-layout='phone'] .bh-forces-col {
+  width: 100%;
+}
+:root[data-layout='phone'] .bh-groups > .group-slot {
+  flex: 1 1 0;
+  min-width: 0;
+}
+:root[data-layout='phone'] .bh-groups {
+  width: 100%;
+  padding: 0 4px;
+}
+/* Landscape phones: the five slots stand as a column on the left edge, below the minimap button. */
+:root[data-layout='phone-landscape'] .bh-groups {
+  position: fixed;
+  left: max(6px, var(--safe-left));
+  top: calc(max(6px, var(--safe-top)) + 124px);
+  flex-direction: column;
+  gap: 4px;
+}
+:root[data-layout='phone-landscape'] .bh-groups > .group-slot {
+  width: 52px;
+  min-width: 52px;
+  min-height: 44px;
+  height: 44px;
+  padding: 2px 4px;
+}
+:root[data-layout='phone-landscape'] .bh-groups .group-label {
+  max-width: 46px;
+  font-size: 10px;
+}
+
+/* --- Overlays: no HUD feed peeking out around an open modal (battle results), drawers above realm badges. --- */
+:root:has(.ui-layer-modal.has-modal) .bh-feed,
+:root:has(.ui-layer-modal.has-modal) .wh-feed {
+  visibility: hidden;
+}

@@ -9,9 +9,9 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 31449960,
-    "high": 17280501,
-    "mobile": 6029384
+    "ultra": 31475410,
+    "high": 17182241,
+    "mobile": 6012638
   },
   "assets": {
     "bamboo_lattice": {
@@ -5138,12 +5138,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_rock_basalt",
       "category": "terrain",
-      "hash": "d6dca73efb",
-      "description": "Deccan Trap basalt for triplanar projection (10 m, v = up): stepped flows, massive cores with columnar joints, rubbly vesicular red-brown tops, salt and water streaks, lichen.",
+      "hash": "56d6ef44e1",
+      "description": "Deccan Trap basalt for triplanar projection (10 m, v = up): three flows of unequal thickness, flat-faced angular columns 0.4-1.6 m with branching joints, hackly entablature, recessed rubbly flow tops with soil ledges and red bole, streaks, lichen.",
       "bytes": {
-        "ultra": 352620,
-        "high": 324102,
-        "mobile": 93274
+        "ultra": 388886,
+        "high": 354208,
+        "mobile": 95822
       },
       "tiers": [
         "ultra",
@@ -5164,51 +5164,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/terrain_rock_basalt/baseColor_1024.webp",
-            "bytes": 39794,
+            "bytes": 55122,
             "size": 1024
           },
           "high": {
             "url": "textures/terrain_rock_basalt/baseColor_512.webp",
-            "bytes": 11276,
+            "bytes": 20444,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_basalt/baseColor_256.webp",
-            "bytes": 3664,
+            "bytes": 6038,
             "size": 256
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/terrain_rock_basalt/normal_512.webp",
-            "bytes": 288546,
+            "bytes": 309170,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_basalt/normal_512.webp",
-            "bytes": 288546,
+            "bytes": 309170,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_basalt/normal_256.webp",
-            "bytes": 80364,
+            "bytes": 80496,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/terrain_rock_basalt/orm_512.webp",
-            "bytes": 24280,
+            "bytes": 24594,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_basalt/orm_512.webp",
-            "bytes": 24280,
+            "bytes": 24594,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_basalt/orm_256.webp",
-            "bytes": 9246,
+            "bytes": 9288,
             "size": 256
           }
         }
@@ -5218,12 +5218,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_rock_granite",
       "category": "terrain",
-      "hash": "f47bc945d6",
-      "description": "Granite tor for triplanar projection (8 m, v = up): rounded exfoliating masses, onion-skin sheets, speckled grain, black water stains, orange and grey lichen.",
+      "hash": "8453c61acc",
+      "description": "Granite tor for triplanar projection (8 m, v = up): joint-bounded blocks 0.8-3 m with open clefts and closed hairlines, corestone rounding, broad exfoliation steps, spall chips, speckled grain, black water streaks, orange and grey-green crustose lichen.",
       "bytes": {
-        "ultra": 402574,
-        "high": 313948,
-        "mobile": 86808
+        "ultra": 467194,
+        "high": 245586,
+        "mobile": 67472
       },
       "tiers": [
         "ultra",
@@ -5244,51 +5244,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/terrain_rock_granite/baseColor_1024.webp",
-            "bytes": 107474,
+            "bytes": 256668,
             "size": 1024
           },
           "high": {
             "url": "textures/terrain_rock_granite/baseColor_512.webp",
-            "bytes": 18848,
+            "bytes": 35060,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_granite/baseColor_256.webp",
-            "bytes": 5278,
+            "bytes": 6086,
             "size": 256
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/terrain_rock_granite/normal_512.webp",
-            "bytes": 259372,
+            "bytes": 192126,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_granite/normal_512.webp",
-            "bytes": 259372,
+            "bytes": 192126,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_granite/normal_256.webp",
-            "bytes": 66924,
+            "bytes": 53528,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/terrain_rock_granite/orm_512.webp",
-            "bytes": 35728,
+            "bytes": 18400,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_granite/orm_512.webp",
-            "bytes": 35728,
+            "bytes": 18400,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_granite/orm_256.webp",
-            "bytes": 14606,
+            "bytes": 7858,
             "size": 256
           }
         }
@@ -5298,12 +5298,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_rock_sandstone",
       "category": "terrain",
-      "hash": "ac4e363f8b",
-      "description": "Sandstone cliff for triplanar projection (10 m, v = up): beds of varying hardness with ledges and undercuts, cross-bedding, joints, honeycomb, varnish streaks, lichen.",
+      "hash": "659e85bdc0",
+      "description": "Sandstone cliff for triplanar projection (10 m, v = up): cross-bedded sets 0.3-2 m with tangential foresets, recessed soft beds under overhanging lips, irregular blocky joints, sparse tafoni, varnish streaks, lichen.",
       "bytes": {
-        "ultra": 460622,
-        "high": 403464,
-        "mobile": 94122
+        "ultra": 385186,
+        "high": 343460,
+        "mobile": 94164
       },
       "tiers": [
         "ultra",
@@ -5324,51 +5324,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/terrain_rock_sandstone/baseColor_1024.webp",
-            "bytes": 80540,
+            "bytes": 67724,
             "size": 1024
           },
           "high": {
             "url": "textures/terrain_rock_sandstone/baseColor_512.webp",
-            "bytes": 23382,
+            "bytes": 25998,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_sandstone/baseColor_256.webp",
-            "bytes": 6024,
+            "bytes": 7922,
             "size": 256
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/terrain_rock_sandstone/normal_512.webp",
-            "bytes": 355242,
+            "bytes": 294046,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_sandstone/normal_512.webp",
-            "bytes": 355242,
+            "bytes": 294046,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_sandstone/normal_256.webp",
-            "bytes": 78316,
+            "bytes": 77312,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/terrain_rock_sandstone/orm_512.webp",
-            "bytes": 24840,
+            "bytes": 23416,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_sandstone/orm_512.webp",
-            "bytes": 24840,
+            "bytes": 23416,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_sandstone/orm_256.webp",
-            "bytes": 9782,
+            "bytes": 8930,
             "size": 256
           }
         }

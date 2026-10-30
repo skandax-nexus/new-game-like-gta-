@@ -5,7 +5,7 @@
 @inputs tools/blender/assets/materials/_matkit.py
 
 Monsoon wet-mud overlay splat layer (class T, 3 m x 3 m, seamless, macro-neutral): churned, glossy dark mud -
-overlapping hoof and bare-foot prints, short curving wheel / drag churn (0.4-1.5 m, random directions, never
+overlapping hoof and bare-foot prints, short curving, intermittent wheel / drag churn (0.3-1.1 m, random directions, never
 world-aligned lines) with squeezed-up ridges, a few straw bits and
 pebbles pressed in, standing water in every hollow below the water line. PUDDLE MASK (1 = standing water): a
 cache-only file `<id>_puddleMask.png` today, destined for the baseColor ALPHA once publish.mjs keeps alpha (TA-01
@@ -35,23 +35,25 @@ with core.timer("churned mud"):
     # intermittent wheel / hoof-drag grooves in random directions with squeezed-up ridges; the long straight ruts
     # belong to terrain_road_earth and the decals_settlement rut end-cap.
     def churn(lu, lv, e1, e2):
-        L = 0.4 + 1.1 * e1
-        w = 0.035 + 0.04 * e2
-        bend = (e2 - 0.5) * 1.2 / L
+        L = 0.3 + 0.8 * e1
+        w = 0.025 + 0.035 * e2
+        bend = (e2 - 0.5) * 0.6 / L
         c = lv - bend * lu * lu
         tt = np.abs(lu) / (0.5 * L)
         inside = (tt < 1.0) & (np.abs(c) < w)
-        prof = np.clip(1.0 - (c / w) ** 2, 0, 1) ** 0.6 * np.clip((1.0 - tt) / 0.3, 0, 1)
-        return np.where(inside, 0.009 * (0.5 + 0.5 * e1) * prof, -1e9)
+        # intermittent: the groove pinches out and re-starts along its length (squelched, not cut)
+        brk = 0.55 + 0.45 * np.sin(lu * (9.0 + 8.0 * e2) + 6.28 * e1)
+        prof = np.clip(1.0 - (c / w) ** 2, 0, 1) ** 0.6 * np.clip((1.0 - tt) / 0.35, 0, 1) * brk
+        return np.where(inside, 0.006 * (0.5 + 0.5 * e1) * prof, -1e9)
 
     groove = np.zeros_like(h)
-    for cell, dens in ((0.9, 0.55), (0.6, 0.45)):
+    for cell, dens in ((0.6, 0.5), (0.42, 0.45)):
         g = kit.scatter(cell, churn, density=dens).height(0.0)
         groove = np.maximum(groove, g)
     h += 0.7 * np.clip(tg.blur(groove, kit.px(0.03)) - groove, 0.0, None) - groove
-    hooves = kit.scatter(0.15, shape_hoof(0.016, 0.075), density=0.32, scale=(0.75, 1.25),
+    hooves = kit.scatter(0.15, shape_hoof(0.016, 0.075), density=0.22, scale=(0.75, 1.25),
                          density_map=tg.smoothstep(0.3, 0.7, kit.fbm(0.4, 3) * 0.5 + 0.5))
-    feet = kit.scatter(0.35, shape_foot(0.013), density=0.35)
+    feet = kit.scatter(0.45, shape_foot(0.011), density=0.14)
     d = np.maximum(hooves.height(0.0), feet.height(0.0))
     h += 0.6 * np.clip(tg.blur(d, 3.0) - d, 0.0, None) - d  # squeezed-up rims
     specs = [
@@ -83,7 +85,7 @@ with core.timer("albedo"):
     col = np.where((idx == 0)[..., None], straw, peb)
     alb = np.where(over[..., None], K.mul(col, 0.8), mud)
     # standing water: dark, slightly silty-brown floor seen through it
-    alb = alb * (1.0 - puddle[..., None]) + K.mul(K.tint(alb, "#3a3226", 0.5), 0.6) * puddle[..., None]
+    alb = alb * (1.0 - puddle[..., None]) + K.mul(K.tint(alb, "#3a3226", 0.4), 0.75) * puddle[..., None]
     alb = K.compress_chroma(alb, 0.85)
 
 with core.timer("roughness"):

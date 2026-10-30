@@ -18,7 +18,8 @@
  * 'ui:world_select', 'ui:select_formations', 'ui:overlay'.
  *
  * Feeds (`ctx.ui.feeds`): the camera frustum quad + heading for the minimap (GFX-05 / scenes, ~4-10 Hz), world control groups
- * (GP-03 owns the army groups; battle groups come from BattleState.sides[].groups).
+ * (GP-03 owns the army groups) and battle control groups (GP-04: `setBattleGroups`; until it pushes them the battle
+ * HUD derives the row from BattleState.sides[playerSide].groups).
  */
 import { EventBus } from '../../core/events';
 import type { ArmyId, BuildingType, FormationIndex, IntentOrderType, SettlementId } from '../../core/types';
@@ -59,6 +60,9 @@ export interface WorldControlGroup {
   count: number;
 }
 
+/** One control group of the battle HUD row (group 1..9, 0; label = formation title or "3 formations"). */
+export type BattleControlGroup = WorldControlGroup;
+
 /** Scene -> HUD data that is not part of ScreenPropsMap (all optional; the HUD degrades gracefully). */
 export class HudFeeds {
   /** Camera footprint on the ground (minimap frustum quad). */
@@ -70,6 +74,8 @@ export class HudFeeds {
   cameraHeading = Math.PI;
   cameraVersion = 0;
   worldGroups: readonly WorldControlGroup[] = [];
+  /** Battle groups pushed by the scene; null = derive them from the battle state. */
+  battleGroups: readonly BattleControlGroup[] | null = null;
   groupsVersion = 0;
 
   setCamera(quad: GroundQuad | null, heading: number): void {
@@ -83,10 +89,17 @@ export class HudFeeds {
     this.groupsVersion++;
   }
 
+  /** Battle control groups (GP-04, whenever an assignment changes); null hands the row back to the battle state. */
+  setBattleGroups(groups: readonly BattleControlGroup[] | null): void {
+    this.battleGroups = groups;
+    this.groupsVersion++;
+  }
+
   reset(): void {
     this.cameraQuad = null;
     this.cameraHeading = Math.PI;
     this.worldGroups = [];
+    this.battleGroups = null;
     this.cameraVersion++;
     this.groupsVersion++;
   }

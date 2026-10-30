@@ -203,6 +203,33 @@ def joint_bands(kit: "K.Kit", spacing: tuple[float, float], amp: float, feature:
     return out
 
 
+def rock_blocks(kit: "K.Kit", levels: list[dict], warp_m: float = 0.3, warp_feature: float = 1.6) -> dict[str, np.ndarray]:
+    """Hierarchically jointed rock mass (granite tors, rubble faces): level 0 Voronoi blocks (cell m, aniso) on a
+    domain-warped plane; each block of level k-1 is split into level-k cells with probability levels[k]['split']
+    (decided per parent block), so block sizes vary several-fold across the tile instead of forming a lattice.
+    Returns d (m to the nearest joint of the texel's own hierarchy), size (cell size of the texel's block, m),
+    level, id (0..1 per final block), pid (0..1 per level-0 block)."""
+    xx, yy = kit.warp(warp_m, warp_feature, 3)
+    d = size = level = idv = pid = None
+    for k, L in enumerate(levels):
+        ax, ay = L.get("aniso", (1.0, 1.0))
+        wx, wy = (xx, yy) if k == 0 else kit.warp(0.25 * L["cell"], L["cell"] * 0.8, 2, x=xx, y=yy)
+        f1, f2, cid = kit.worley(L["cell"], L.get("jitter", 0.9), x=wx, y=wy, aniso=(ax, ay))
+        dk = ((f2 - f1) * 0.5 * L["cell"] * np.sqrt(ax * ay)).astype(F)
+        if k == 0:
+            d, idv, pid = dk, cid, cid
+            size = np.full(d.shape, L["cell"] * np.sqrt(ax * ay), F)
+            level = np.zeros(d.shape, F)
+            continue
+        hsh = (idv * 97.31 + 0.137 * k) % 1.0
+        split = (hsh < L["split"]) & (level == k - 1)
+        d = np.where(split, np.minimum(d, dk), d)
+        idv = np.where(split, (cid * 0.618 + idv * 7.31) % 1.0, idv)
+        size = np.where(split, L["cell"] * np.sqrt(ax * ay), size)
+        level = np.where(split, float(k), level)
+    return {"d": d.astype(F), "size": size.astype(F), "level": level.astype(F), "id": idv.astype(F), "pid": pid.astype(F)}
+
+
 def finish_terrain(kit: "K.Kit", height: np.ndarray, albedo: np.ndarray, rough: np.ndarray, description: str,
                    macro_sigma: float = 0.6, macro_amount: float = 0.9, height_hp: float = 0.85, ao_distance: float = 0.04,
                    ao_height_mix: float = 0.3, preview: str = "ground", preview_opts: dict | None = None,
@@ -215,4 +242,4 @@ def finish_terrain(kit: "K.Kit", height: np.ndarray, albedo: np.ndarray, rough: 
                ao_height_mix=ao_height_mix, orm_span_min=orm_span_min, description=description, preview=preview, preview_opts=po, **kw)
 
 
-__all__ = ["K", "finish_terrain", "joint_bands", "layers", "shape_foot", "shape_hoof", "shape_leaf_ovate"]
+__all__ = ["K", "finish_terrain", "joint_bands", "layers", "rock_blocks", "shape_foot", "shape_hoof", "shape_leaf_ovate"]
