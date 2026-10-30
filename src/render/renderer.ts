@@ -12,6 +12,8 @@ import type { Profiler, RenderStats } from '../core/profiler';
 import { PostPipeline, type PostLutHandle } from './post';
 import type { SkyAssetSource } from './environment/sky';
 import { installShaderGlobals, resetShaderGlobals } from './materials/chunks/globals';
+// Global shader patches (registered on import, applied by installShaderGlobals before any material compiles).
+import './lighting/shadowChunks';
 
 /**
  * Per-frame participant bound to one scene (EnvironmentRig): called right before that scene renders with the camera
@@ -101,7 +103,9 @@ export class RenderContext {
   private applyRendererQuality(): void {
     const q = this.quality;
     this.renderer.shadowMap.enabled = q.shadows.enabled;
-    this.renderer.shadowMap.type = q.shadows.soft ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+    // low: hard (one tap); medium: PCF with a radius from the sun's angular size; high / ultra: PCSS in the cascade
+    // chunk (lighting/shadowChunks.ts) - PCF is the define other shadowed lights fall back to.
+    this.renderer.shadowMap.type = q.shadows.soft ? THREE.PCFShadowMap : THREE.BasicShadowMap;
     this.renderer.shadowMap.needsUpdate = true;
   }
 

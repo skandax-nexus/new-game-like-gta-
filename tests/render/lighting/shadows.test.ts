@@ -1,0 +1,110 @@
+/**
+ * GFX-01 cascaded sun shadows (ART_BIBLE §13) and the global shadow chunk. OWNER: Graphics Developer - Lighting,
+ * Atmosphere & Post (GFX-01).
+ */
+import { describe, expect, it } from 'vitest';
+import * as THREE from 'three';
+import { buildQualitySettings } from '../../../src/core/quality';
+import { CascadedShadows, cascadeCountFor, practicalSplits, shadowDistanceFor, shadowFilterFor, CSM_BLEND } from '../../../src/render/lighting/csm';
+import { DIR_SHADOW_LINE, cascadeChunksInstalled } from '../../../src/render/lighting/shadowChunks';
+import { installShaderGlobals, G, g } from '../../../src/render/materials/chunks/globals';
+import { createZoomLook, resolveZoomLook, capZoomLook } from '../../../src/render/style/zoom';
+import { FLIP_CHUNK_HOOKS } from '../../../src/assets/loaders/flipbook';
+
+describe('tiers (ART_BIBLE §13)', () => {
+  it('cascades 1 / 2 / 3 / 4, filters hard / PCF / PCSS / PCSS, contact shadows on ultra only', () => {
+    const tiers = ['low', 'medium', 'high', 'ultra'] as const;
+    expect(tiers.map((t) => cascadeCountFor(buildQualitySettings(t)))).toEqual([1, 2, 3, 4]);
+    expect(tiers.map((t) => shadowFilterFor(buildQualitySettings(t)))).toEqual(['hard', 'pcf', 'pcss', 'pcss']);
+    expect(tiers.map((t) => buildQualitySettings(t).shadows.contact)).toEqual([false, false, false, true]);
+    expect(tiers.map((t) => buildQualitySettings(t).shadows.mapSize)).toEqual([1024, 2048, 4096, 4096]);
+    // Bands only scale down: contact shadows survive capZoomLook on ultra only.
+    for (const t of tiers) expect(capZoomLook(resolveZoomLook(20, createZoomLook()), t).shadows.contact).toBe(t === 'ultra');
+  });
+
+  it('CascadedShadows builds one shadowed light per cascade and rebuilds on tier change (old maps disposed)', () => {
+    const csm = new CascadedShadows(buildQualitySettings('ultra'));
+    csm.maxCascades = 4;
+    csm.rebuild();
+    expect(csm.lights.length).toBe(4);
+    expect(csm.lights.every((l) => l.castShadow)).toBe(true);
+    expect(csm.lights[0]!.name).toBe('sun');
+    csm.setQuality(buildQualitySettings('low'));
+    expect(csm.lights.length).toBe(1);
+    expect(csm.lights[0]!.shadow.mapSize.x).toBe(1024);
+    csm.dispose();
+  });
+});
+
+describe('splits and fitting', () => {
+  it('practical splits run near -> far, uniform at lambda 0 and logarithmic at 1', () => {
+    const s = practicalSplits(1, 1000, 4, 0, new Float32Array(5));
+    expect(Array.from(s)).toEqual([1, 250.75, 500.5, 750.25, 1000].map((v) => expect.closeTo(v, 3)));
+    const l = practicalSplits(1, 1000, 3, 1, new Float32Array(4));
+    expect(Array.from(l)).toEqual([1, 10, 100, 1000].map((v) => expect.closeTo(v, 3)));
+    const m = practicalSplits(0.5, 420, 3, 0.75, new Float32Array(4));
+    for (let i = 1; i < 4; i++) expect(m[i]!).toBeGreaterThan(m[i - 1]!);
+  });
+
+  it('the shadow distance follows the zoom band and always covers the focus', () => {
+    const q = buildQualitySettings('high');
+    const strategic = resolveZoomLook(2600, createZoomLook());
+    expect(shadowDistanceFor(strategic, q, 2600, 20000)).toBeGreaterThanOrEqual(2600 * 1.25);
+    const tactical = resolveZoomLook(220, createZoomLook());
+    expect(shadowDistanceFor(tactical, q, 220, 12000)).toBeCloseTo(420, 0);
+    const lowQ = buildQualitySettings('low');
+    expect(shadowDistanceFor(tactical, lowQ, 220, 12000)).toBeLessThan(shadowDistanceFor(tactical, q, 220, 12000));
+  });
+
+  it('texel snapping: sub-texel camera moves keep every cascade on the same texel grid; rotation keeps sizes', () => {
+    const q = buildQualitySettings('high');
+    const csm = new CascadedShadows(q);
+    csm.maxCascades = 4;
+    csm.rebuild();
+    const cam = new THREE.PerspectiveCamera(42, 16 / 9, 0.5, 12000);
+    const look = resolveZoomLook(220, createZoomLook());
+    const toLight = new THREE.Vector3(0.3, 0.8, 0.5).normalize();
+    const place = (x: number, yaw: number): void => {
+      cam.position.set(x + Math.sin(yaw) * 150, 160, Math.cos(yaw) * 150);
+      cam.lookAt(x, 0, 0);
+      cam.updateMatrixWorld();
+      csm.update(cam, toLight, look, 220);
+    };
+    place(0, 0);
+    const radii = csm.info.radii.slice(0, csm.cascadeCount);
+    // Light-space x of every cascade target must be a multiple of its texel.
+    const axisX = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), toLight).normalize();
+    for (let i = 0; i < csm.cascadeCount; i++) {
+      const t = csm.lights[i]!.target.position.dot(axisX) / csm.info.texels[i]!;
+      expect(Math.abs(t - Math.round(t))).toBeLessThan(1e-3);
+    }
+    place(0, 1.1);
+    expect(csm.info.radii.slice(0, csm.cascadeCount)).toEqual(radii);
+    // Cascade table in the shader globals: monotonic, overlapping by the blend band.
+    const c0 = g(G.CSM_CASCADE);
+    const c1 = g(G.CSM_CASCADE + 1);
+    expect(c1.x).toBeLessThan(c0.y);
+    expect(c0.y - c1.x).toBeCloseTo(CSM_BLEND * (c0.y - c0.x), 3);
+    expect(g(G.CSM_PARAMS).x).toBe(3);
+    expect(g(G.CSM_PARAMS).y).toBe(2);
+    csm.dispose();
+  });
+});
+
+describe('global shadow chunk', () => {
+  it('replaces only the directional shadow line and keeps the flipbook hook strings (TA-07)', () => {
+    installShaderGlobals();
+    expect(cascadeChunksInstalled()).toBe(true);
+    const begin = THREE.ShaderChunk.lights_fragment_begin;
+    expect(begin.includes(DIR_SHADOW_LINE)).toBe(false);
+    expect(begin).toContain('samDirShadow( UNROLLED_LOOP_INDEX');
+    expect(begin).toContain(FLIP_CHUNK_HOOKS.probe);
+    expect(begin).toContain(FLIP_CHUNK_HOOKS.hemi);
+    expect(THREE.ShaderChunk.lights_physical_pars_fragment).toContain(FLIP_CHUNK_HOOKS.directDotNL);
+    const pars = THREE.ShaderChunk.shadowmap_pars_fragment;
+    expect(pars).toContain('samShadowPCSS');
+    // Inserted inside the USE_SHADOWMAP block, after three's own getShadow().
+    expect(pars.indexOf('samShadowPCSS')).toBeGreaterThan(pars.indexOf('float getShadow('));
+    expect(pars.includes('vViewPosition')).toBe(false);
+  });
+});

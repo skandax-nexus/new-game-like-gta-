@@ -1,0 +1,126 @@
+/**
+ * Global shader patches for cascaded sun shadows and PCSS (ART_BIBLE §13, ARCHITECTURE §19). OWNER: Graphics
+ * Developer - Lighting, Atmosphere & Post (GFX-01). Registered on import; installed by installShaderGlobals().
+ *
+ * - `shadowmap_pars_fragment` gains `samDirShadow()`: for directional shadow light i below the cascade count
+ *   (samG CSM_PARAMS.x, written by CascadedShadows every frame; 0 when no rig drives the frame) it returns the
+ *   cascade weight for the fragment's view depth (cascades blend over the last CSM_BLEND of each slice; the weights
+ *   of all cascade lights sum to 1, so N lights still light like one sun) times that cascade's shadow:
+ *   hard / PCF through three's getShadow(), or PCSS (Vogel-disk blocker search, penumbra = receiver-blocker
+ *   distance x tan(sun angular radius), filtered with up to 32 rotated taps). Shadows fade out at the last split.
+ *   Lights at or above the count behave exactly like stock three.js (asset viewer suns, future rim lights).
+ * - `lights_fragment_begin`: only the directional `getShadow( directionalShadowMap[ i ] ...)` line is replaced;
+ *   every other line (incl. the light-probe / hemisphere calls TA-07's flipbook patches by string) is untouched.
+ * - ?csm=1 (CSM_PARAMS.z) tints each cascade (red, green, blue, yellow) for the debug screenshot.
+ */
+import * as THREE from 'three';
+import { registerChunkPatch, SAM_G_DECL } from '../materials/chunks/globals';
+import { CSM_DEBUG_COLORS } from './csm';
+
+const vec3 = (c: readonly number[]): string => `vec3( ${c.map((v) => v.toFixed(3)).join(', ')} )`;
+
+export const CSM_PARS_GLSL = /* glsl */ `
+#if NUM_DIR_LIGHT_SHADOWS > 0
+${SAM_G_DECL}
+float samShadowIGN( vec2 p ) {
+  return fract( 52.9829189 * fract( dot( p, vec2( 0.06711056, 0.00583715 ) ) ) );
+}
+vec2 samShadowVogel( int i, int n, float phi ) {
+  float r = sqrt( ( float( i ) + 0.5 ) / float( n ) );
+  float th = float( i ) * 2.39996323 + phi;
+  return r * vec2( cos( th ), sin( th ) );
+}
+// PCSS for an orthographic cascade: casc = ( split near, split far, texel world size, depth range ).
+float samShadowPCSS( sampler2D map, vec2 mapSize, float bias, vec4 coord, vec4 casc ) {
+  coord.xyz /= coord.w;
+  coord.z += bias;
+  if ( coord.x < 0.0 || coord.x > 1.0 || coord.y < 0.0 || coord.y > 1.0 || coord.z > 1.0 ) return 1.0;
+  vec4 p = samG[ SAM_G_CSM_PCSS ];
+  float texel = 1.0 / mapSize.x;
+  float frustumW = max( casc.z * mapSize.x, 1e-3 );
+  float phi = samShadowIGN( gl_FragCoord.xy ) * 6.2831853;
+  // Blocker search over the penumbra an occluder up to 30 m above the receiver could cast.
+  float searchUv = clamp( p.x * 30.0 / frustumW, texel * 2.0, texel * p.w );
+  float zSum = 0.0;
+  float nB = 0.0;
+  int nS = int( p.y );
+  for ( int k = 0; k < 16; k++ ) {
+    if ( k >= nS ) break;
+    float d = unpackRGBAToDepth( texture2D( map, coord.xy + samShadowVogel( k, nS, phi ) * searchUv ) );
+    if ( d < coord.z ) {
+      zSum += d;
+      nB += 1.0;
+    }
+  }
+  if ( nB < 0.5 ) return 1.0;
+  float dist = ( coord.z - zSum / nB ) * casc.w;
+  float pen = clamp( dist * p.x / frustumW, texel, texel * p.w );
+  int nF = int( p.z );
+  float lit = 0.0;
+  for ( int k = 0; k < 32; k++ ) {
+    if ( k >= nF ) break;
+    lit += step( coord.z, unpackRGBAToDepth( texture2D( map, coord.xy + samShadowVogel( k, nF, phi + 1.7 ) * pen ) ) );
+  }
+  return lit / float( nF );
+}
+// Fraction of the key light already handed to cascades after j at view depth d (1 for j < 0, 0 for the last).
+float samCsmOut( int j, float d ) {
+  if ( j < 0 ) return 1.0;
+  vec4 prm = samG[ SAM_G_CSM_PARAMS ];
+  if ( float( j ) >= prm.x - 1.0 ) return 0.0;
+  vec4 c = samG[ SAM_G_CSM_CASCADE + j ];
+  float band = prm.w * ( c.y - c.x );
+  return smoothstep( c.y - band, c.y, d );
+}
+vec3 samCsmTint( int i ) {
+  return i == 0 ? ${vec3(CSM_DEBUG_COLORS[0]!)} : i == 1 ? ${vec3(CSM_DEBUG_COLORS[1]!)} : i == 2 ? ${vec3(CSM_DEBUG_COLORS[2]!)} : ${vec3(CSM_DEBUG_COLORS[3]!)};
+}
+// depth = view-space depth of the fragment (the caller passes -geometryPosition.z; no view-position varying is
+// assumed here, so materials without one - three's ShadowMaterial - still compile).
+vec3 samDirShadow( const in int i, sampler2D map, DirectionalLightShadow s, vec4 coord, bool receive, float depth ) {
+  vec4 prm = samG[ SAM_G_CSM_PARAMS ];
+  if ( float( i ) >= prm.x ) {
+    // Not a cascade of the rig's sun: stock three.js behaviour.
+    return vec3( receive ? getShadow( map, s.shadowMapSize, s.shadowIntensity, s.shadowBias, s.shadowRadius, coord ) : 1.0 );
+  }
+  float w = samCsmOut( i - 1, depth ) - samCsmOut( i, depth );
+  if ( w <= 0.0 ) return vec3( 0.0 );
+  float sh = 1.0;
+  if ( receive ) {
+    vec4 c = samG[ SAM_G_CSM_CASCADE + i ];
+    if ( prm.y > 1.5 ) sh = samShadowPCSS( map, s.shadowMapSize, s.shadowBias, coord, c );
+    else sh = getShadow( map, s.shadowMapSize, 1.0, s.shadowBias, s.shadowRadius, coord );
+    if ( float( i ) >= prm.x - 1.0 ) {
+      float band = prm.w * ( c.y - c.x );
+      sh = mix( sh, 1.0, smoothstep( c.y - band, c.y, depth ) );
+    }
+    sh = mix( 1.0, sh, s.shadowIntensity );
+  }
+  vec3 tint = prm.z > 0.5 ? samCsmTint( i ) : vec3( 1.0 );
+  return tint * ( w * sh );
+}
+#endif
+`;
+
+/** The exact three r170 line replaced in lights_fragment_begin (a three upgrade that changes it fails loudly). */
+export const DIR_SHADOW_LINE =
+  'directLight.color *= ( directLight.visible && receiveShadow ) ? getShadow( directionalShadowMap[ i ], directionalLightShadow.shadowMapSize, directionalLightShadow.shadowIntensity, directionalLightShadow.shadowBias, directionalLightShadow.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;';
+export const DIR_SHADOW_REPLACEMENT =
+  'directLight.color *= samDirShadow( UNROLLED_LOOP_INDEX, directionalShadowMap[ i ], directionalLightShadow, vDirectionalShadowCoord[ i ], directLight.visible && receiveShadow, - geometryPosition.z );';
+
+registerChunkPatch('shadowmap_pars_fragment', 'gfx01-csm-pars', (src) => {
+  // Insert just before the #endif that closes USE_SHADOWMAP (getShadow / DirectionalLightShadow are declared above).
+  const idx = src.lastIndexOf('#endif');
+  if (idx < 0) return src;
+  return `${src.slice(0, idx)}${CSM_PARS_GLSL}\n${src.slice(idx)}`;
+});
+
+registerChunkPatch('lights_fragment_begin', 'gfx01-csm-weights', (src) => {
+  if (!src.includes(DIR_SHADOW_LINE)) throw new Error('gfx01-csm-weights: three.js lights_fragment_begin changed (directional shadow line not found)');
+  return src.replace(DIR_SHADOW_LINE, DIR_SHADOW_REPLACEMENT);
+});
+
+/** For tests / diagnostics: has the cascade patch been applied to three's chunks? */
+export function cascadeChunksInstalled(): boolean {
+  return (THREE.ShaderChunk.lights_fragment_begin as string).includes('samDirShadow(');
+}

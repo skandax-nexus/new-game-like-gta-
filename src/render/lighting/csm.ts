@@ -31,6 +31,8 @@ import { pcfRadiusFromSoftness } from './ibl';
 export const CSM_BLEND = 0.12;
 /** How far beyond a cascade's slice (toward the light) casters are captured (m). */
 export const CSM_CASTER_EXTENT_M = 220;
+/** First split starts at this fraction of the camera-to-focus distance (RTS cameras, focus > 12 m). */
+export const SPLIT_NEAR_OF_FOCUS = 0.3;
 /** Debug cascade tints (?csm=1): red, green, blue, yellow. */
 export const CSM_DEBUG_COLORS: readonly (readonly [number, number, number])[] = [
   [1, 0.35, 0.35],
@@ -90,7 +92,7 @@ export class CascadedShadows {
   private count = 1;
   private filter: ShadowFilter = 'hard';
   /** Max cascades honoured (4 = every tier as authored in ART_BIBLE §13). */
-  maxCascades = 1;
+  maxCascades = 4;
   debugColors = false;
   private readonly splits = new Float32Array(5);
   private readonly corners: THREE.Vector3[] = Array.from({ length: 8 }, () => new THREE.Vector3());
@@ -178,7 +180,10 @@ export class CascadedShadows {
     this.lightDir.copy(toLight).normalize();
     const q = this.quality;
     const persp = camera instanceof THREE.PerspectiveCamera ? camera : null;
-    const near = persp ? Math.max(0.05, persp.near) : 0.1;
+    // RTS cameras see no geometry in the first ~30 % of the focus distance: start the splits there so the first
+    // cascade covers visible ground (hero / close cameras keep the near plane).
+    const camNear = persp ? Math.max(0.05, persp.near) : 0.1;
+    const near = focusDistance > 12 ? Math.max(camNear, focusDistance * SPLIT_NEAR_OF_FOCUS) : camNear;
     const camFar = persp ? persp.far : 2000;
     const far = shadowDistanceFor(look, q, focusDistance, camFar);
     this.info.distance = far;
