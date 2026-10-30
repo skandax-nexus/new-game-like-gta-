@@ -13,13 +13,14 @@
  *             per-channel and luminance delta in %, PASS within +-6 %. -> deltas.md, report.json
  *   budgets   WP1 bytes per tier from the generated manifest vs the ASSET_LIST budget (36 / 16 / 5.3 MB)
  *   previews  Cycles previews in docs/screenshots/pipeline/wp1 (copied by the runner's --previews-dir) re-encoded
- *             to JPEG (q86) to keep the repository small
+ *             to JPEG (q82, tiling shots 768 px) to keep the repository small
  *   tiling    3 x 3 repeats under raking golden light (Cycles, the runner's preview_tiling) -> tiling/<id>.jpg +
  *             tiling_sheet.jpg
  *   swatches  256 px swatch board (target / measured chips) -> swatches.png, palette.png
  *   viewer    asset viewer lookdev (wall corner, column, sphere) at ~1.2 m (camera=detail) and ~9 m
  *             (camera=overview) under sky_day and sky_golden -> viewer/<id>.jpg (2 x 2 contact sheet)
- *   splat     4-layer height-blended splat lookdev of every BIOME_TERRAIN recipe -> splat/<biome>.jpg + splat_sheet.jpg
+ *   splat     4-layer height-blended splat lookdev of every BIOME_TERRAIN recipe under sky_golden and sky_day ->
+ *             splat/<biome>_<sky>.jpg + splat_sheet_golden.jpg / splat_sheet_day.jpg
  *   decals    the shipped decal atlas composited by its ORM.b opacity over wall (plaster) / ground (earth)
  *             backdrops per region, labelled with the metadata.decals regions -> decals_atlas.png
  *   stupa     stupa_sanchi as published (samrajya_set sandstone_carved_red) and re-skinned to sandstone_buff by
@@ -268,7 +269,9 @@ async function main() {
   if (run('previews') && fs.existsSync(PREVIEWS)) {
     for (const f of fs.readdirSync(PREVIEWS).filter((n) => n.endsWith('.png'))) {
       const src = path.join(PREVIEWS, f);
-      await sharp(src).jpeg({ quality: 86, mozjpeg: true }).toFile(src.replace(/\.png$/, '.jpg'));
+      let img = sharp(src);
+      if (f.includes('_tiling')) img = img.resize(768, 768);
+      await img.jpeg({ quality: 82, mozjpeg: true }).toFile(src.replace(/\.png$/, '.jpg'));
       fs.unlinkSync(src);
     }
   }
@@ -289,7 +292,7 @@ async function main() {
         continue;
       }
       const out = path.join(OUT, 'tiling', `${s.id}.jpg`);
-      await sharp(f).resize(768, 768).jpeg({ quality: 84, mozjpeg: true }).toFile(out);
+      await sharp(f).resize(640, 640).jpeg({ quality: 80, mozjpeg: true }).toFile(out);
       items.push({ file: out, label: `${s.id} (${s.cls})` });
     }
     await sheet(items, 6, 320, 320, path.join(OUT, 'tiling_sheet.jpg'), 'WP1 - 3 x 3 repeats under raking golden light (sun 11 deg, Cycles, shipped maps)');
@@ -463,9 +466,9 @@ async function main() {
           ['sky_golden', 'detail', '~1.2 m, sky_golden'],
           ['sky_golden', 'overview', '~9 m, sky_golden'],
         ];
-        // the decal atlas is not a surface material (ORM.b = opacity, not metalness): its lookdev is the Cycles atlas
-        // preview (docs/screenshots/pipeline/wp1/decals_settlement_cycles.jpg)
-        for (const s of SETS.filter((x) => x.cat !== 'decals')) {
+        // architecture sets only: terrain layers are judged in the splat group (their real context), and the decal
+        // atlas is not a surface material (ORM.b = opacity) - see decals_atlas.png and the Cycles atlas preview
+        for (const s of SETS.filter((x) => x.cat === 'materials')) {
           const items = [];
           for (const [sky, cam, label] of views) {
             const file = path.join(RAW, `viewer_${s.id}_${sky}_${cam}.png`);
@@ -482,21 +485,24 @@ async function main() {
         const layerAsset = {};
         for (const m of terr.matchAll(/^\s+(\w+): L\(\{ id: '(\w+)'.*?assetId: (?:'(\w+)'|null)/gm)) layerAsset[m[1]] = m[3] ?? null;
         const bt = terr.slice(terr.indexOf('export const BIOME_TERRAIN'));
-        const items = [];
-        for (const m of bt.matchAll(/^\s+(\w+): \{ layers: \[([^\]]+)\]/gm)) {
-          const biome = m[1];
-          const keys = m[2].split(',').map((x) => x.trim().replace(/'/g, ''));
-          const ids = keys.map((k) => layerAsset[k] ?? k);
-          const missing = ids.filter((id) => !MANIFEST_JSON.assets[id]);
-          const file = path.join(RAW, `splat_${biome}.png`);
-          await shoot(`splat ${biome}`, file, `splat=${ids.join(',')}&hdri=sky_golden&assets=ultra`);
-          const out = path.join(OUT, 'splat', `${biome}.jpg`);
-          if (fs.existsSync(file)) await sharp(file).jpeg({ quality: 84, mozjpeg: true }).toFile(out);
-          items.push({ file: out, label: `${biome}: ${keys.join(', ')}${missing.length ? ` (fallback: ${missing.join(', ')})` : ''}` });
-          report.splat = report.splat ?? {};
-          report.splat[biome] = { layers: keys, assets: ids, fallback: missing };
+        report.splat = report.splat ?? {};
+        for (const sky of ['sky_golden', 'sky_day']) {
+          const items = [];
+          for (const m of bt.matchAll(/^\s+(\w+): \{ layers: \[([^\]]+)\]/gm)) {
+            const biome = m[1];
+            const keys = m[2].split(',').map((x) => x.trim().replace(/'/g, ''));
+            const ids = keys.map((k) => layerAsset[k] ?? k);
+            const missing = ids.filter((id) => !MANIFEST_JSON.assets[id]);
+            const file = path.join(RAW, `splat_${biome}_${sky}.png`);
+            await shoot(`splat ${biome} ${sky}`, file, `splat=${ids.join(',')}&hdri=${sky}&assets=ultra`);
+            const out = path.join(OUT, 'splat', `${biome}_${sky.replace('sky_', '')}.jpg`);
+            if (fs.existsSync(file)) await sharp(file).jpeg({ quality: 84, mozjpeg: true }).toFile(out);
+            items.push({ file: out, label: `${biome}: ${keys.join(', ')}${missing.length ? ` (fallback: ${missing.join(', ')})` : ''}` });
+            report.splat[biome] = { layers: keys, assets: ids, fallback: missing };
+          }
+          await sheet(items, 3, 640, 360, path.join(OUT, `splat_sheet_${sky.replace('sky_', '')}.jpg`),
+            `BIOME_TERRAIN recipes - 4-layer height-blended splat (layers left -> right), ${sky}, 18 % grey card`);
         }
-        await sheet(items, 3, 640, 360, path.join(OUT, 'splat_sheet.jpg'), 'BIOME_TERRAIN recipes - 4-layer height-blended splat (layers left -> right), sky_golden, 18 % grey card');
       }
 
       if (run('stupa')) {

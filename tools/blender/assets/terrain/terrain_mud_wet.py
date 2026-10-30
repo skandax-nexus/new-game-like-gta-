@@ -6,10 +6,10 @@
 
 Monsoon wet-mud overlay splat layer (class T, 3 m x 3 m, seamless, macro-neutral): churned, glossy dark mud -
 overlapping hoof and bare-foot prints, cart-churned wheel slots and squeezed-up ridges, a few straw bits and
-pebbles pressed in, standing water in every hollow below the water line. The PUDDLE MASK is the baseColor ALPHA
-(1 = standing water; cache PNG RGBA - see the TA-01 report: publish.mjs currently strips alpha, the request to
-keep it is with the CTO) and is also implied by the height: water fills exactly the texels below the level, so
-ORM.r (height proxy) is lowest there. Puddles: flat (normal +Z), roughness ~0.04, albedo the darkened mud floor.
+pebbles pressed in, standing water in every hollow below the water line. PUDDLE MASK (1 = standing water): a
+cache-only file `<id>_puddleMask.png` today, destined for the baseColor ALPHA once publish.mjs keeps alpha (TA-01
+request to the CTO: its resize premultiplies, so an RGBA source darkens the high / mobile tiers); it is also
+implied by the height - water fills exactly the texels below the level, so ORM.r (height proxy) is lowest there. Puddles: flat (normal +Z), roughness ~0.04, albedo the darkened mud floor.
 Target (TERRAIN_LAYERS.mud_wet): average #4f4636, roughness 0.30.
 OWNER: Technical Artist A (TA-01).
 """
@@ -82,9 +82,11 @@ with core.timer("roughness"):
     rough = 0.42 + 0.06 * kit.fbm(0.05, 2) + 0.12 * crest - 0.05 * (1.0 - crest)
     rough = rough * (1.0 - puddle) + 0.02 * puddle
 
+# puddle mask: cache-only until publish.mjs ships baseColor alpha (an RGBA source is premultiplied by the resize)
+mask_png = tg.write_png(kit.ctx.path(f"{kit.ctx.id}_puddleMask.png"), kit._down(puddle, kit.albedo_res), 8)
+kit.ctx.add_file("puddleMask", mask_png, colorSpace="linear", ship=False)
 finish_terrain(kit, h_w, alb, rough, ao_distance=0.04, height_hp=0.0, ao_height_mix=0.45, macro_amount=0.85,
-               alpha=puddle, alpha_usage="puddleMask",
                description="Monsoon wet mud overlay (3 m): churned hoof and foot prints, cart slots, squeezed rims, "
-                           "straw; standing water below the level (puddle mask in baseColor alpha).",
-               extra_meta=dict(puddleMask=dict(channel="baseColor.a", heightPercentile=17,
-                                               note="also lowest ORM.r; publish keeps alpha once the CTO request lands")))
+                           "straw; standing water below the level (puddle mask: cache file, lowest ORM.r).",
+               extra_meta=dict(puddleMask=dict(file=f"{kit.ctx.id}_puddleMask.png", shipped=False, heightPercentile=17,
+                                               note="lowest ORM.r; moves to baseColor.a when publish keeps alpha")))

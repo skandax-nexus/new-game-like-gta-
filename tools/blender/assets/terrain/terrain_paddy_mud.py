@@ -5,8 +5,8 @@
 @inputs tools/blender/assets/materials/_matkit.py
 
 Puddled paddy-field mud splat layer (class T, 3 m x 3 m, seamless, macro-neutral): smooth, glossy, puddled clay
-levelled by the plank, sheet water standing over ~55 % of it (the STANDING-WATER MASK is the baseColor ALPHA,
-cache PNG RGBA; publish.mjs currently strips alpha - TA-01 report), low mud islands, footprints of the
+levelled by the plank, sheet water standing over ~55 % of it (STANDING-WATER MASK: cache-only `<id>_waterMask.png`
+until publish.mjs keeps baseColor alpha - TA-01 request; also lowest ORM.r), low mud islands, footprints of the
 transplanters, floating straw and duckweed specks, a film of algae at the water edges. Seedling rows are
 geometry / cards (GFX-03), not texture.
 Target (TERRAIN_LAYERS.paddy_mud): average #5b5443, roughness 0.35.
@@ -65,9 +65,11 @@ with core.timer("roughness"):
     rough = rough * (1.0 - water) + 0.02 * water
     rough = np.where(fl > 0, 0.7, rough)
 
+# standing-water mask: cache-only until publish.mjs ships baseColor alpha (an RGBA source is premultiplied by the resize)
+mask_png = tg.write_png(kit.ctx.path(f"{kit.ctx.id}_waterMask.png"), kit._down(water, kit.albedo_res), 8)
+kit.ctx.add_file("waterMask", mask_png, colorSpace="linear", ship=False)
 finish_terrain(kit, h_w, alb, rough, ao_distance=0.03, height_hp=0.0, ao_height_mix=0.45, macro_amount=0.85,
-               alpha=water, alpha_usage="standingWaterMask",
-               description="Puddled paddy mud (3 m): glossy levelled clay, standing water over ~55 % (mask in "
-                           "baseColor alpha), footprints, floating straw and duckweed, algae at the edges.",
-               extra_meta=dict(waterMask=dict(channel="baseColor.a", heightPercentile=55,
-                                              note="also lowest ORM.r; publish keeps alpha once the CTO request lands")))
+               description="Puddled paddy mud (3 m): glossy levelled clay, standing water over ~55 % (mask: cache "
+                           "file, lowest ORM.r), footprints, floating straw and duckweed, algae at the edges.",
+               extra_meta=dict(waterMask=dict(file=f"{kit.ctx.id}_waterMask.png", shipped=False, heightPercentile=55,
+                                              note="lowest ORM.r; moves to baseColor.a when publish keeps alpha")))

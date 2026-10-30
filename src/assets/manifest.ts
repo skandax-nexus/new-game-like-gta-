@@ -9,9 +9,9 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 31348860,
-    "high": 17366269,
-    "mobile": 6073056
+    "ultra": 31473126,
+    "high": 17329873,
+    "mobile": 6046370
   },
   "assets": {
     "bamboo_lattice": {
@@ -1839,12 +1839,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "granite_rubble",
       "category": "materials",
-      "hash": "f359c3f168",
+      "hash": "92bbbf969d",
       "description": "Dry-laid granite rubble (3 m): irregular rock-faced blocks, deep joints with chinking stones, speckled grain, water stains, orange and grey lichen.",
       "bytes": {
-        "ultra": 549864,
-        "high": 388690,
-        "mobile": 120152
+        "ultra": 506572,
+        "high": 349974,
+        "mobile": 108272
       },
       "tiers": [
         "ultra",
@@ -1865,51 +1865,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/granite_rubble/baseColor_1024.webp",
-            "bytes": 206186,
+            "bytes": 190848,
             "size": 1024
           },
           "high": {
             "url": "textures/granite_rubble/baseColor_512.webp",
-            "bytes": 45012,
+            "bytes": 34250,
             "size": 512
           },
           "mobile": {
             "url": "textures/granite_rubble/baseColor_256.webp",
-            "bytes": 15808,
+            "bytes": 11798,
             "size": 256
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/granite_rubble/normal_512.webp",
-            "bytes": 309328,
+            "bytes": 283494,
             "size": 512
           },
           "high": {
             "url": "textures/granite_rubble/normal_512.webp",
-            "bytes": 309328,
+            "bytes": 283494,
             "size": 512
           },
           "mobile": {
             "url": "textures/granite_rubble/normal_256.webp",
-            "bytes": 90270,
+            "bytes": 82564,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/granite_rubble/orm_512.webp",
-            "bytes": 34350,
+            "bytes": 32230,
             "size": 512
           },
           "high": {
             "url": "textures/granite_rubble/orm_512.webp",
-            "bytes": 34350,
+            "bytes": 32230,
             "size": 512
           },
           "mobile": {
             "url": "textures/granite_rubble/orm_256.webp",
-            "bytes": 14074,
+            "bytes": 13910,
             "size": 256
           }
         }
@@ -2178,12 +2178,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "lime_plaster_weathered",
       "category": "materials",
-      "hash": "776c8a2c3d",
+      "hash": "ee518c9cf1",
       "description": "Weathered hand-troweled lime plaster (3 m): trowel sweeps, craze and settlement cracks, fallen finish coat over brick, rain streaks, damp patches with salt fringes.",
       "bytes": {
-        "ultra": 2718520,
-        "high": 580104,
-        "mobile": 143888
+        "ultra": 2740120,
+        "high": 587076,
+        "mobile": 147086
       },
       "tiers": [
         "ultra",
@@ -2204,51 +2204,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/lime_plaster_weathered/baseColor_2048.webp",
-            "bytes": 95074,
+            "bytes": 96640,
             "size": 2048
           },
           "high": {
             "url": "textures/lime_plaster_weathered/baseColor_1024.webp",
-            "bytes": 29528,
+            "bytes": 29904,
             "size": 1024
           },
           "mobile": {
             "url": "textures/lime_plaster_weathered/baseColor_512.webp",
-            "bytes": 10186,
+            "bytes": 10308,
             "size": 512
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/lime_plaster_weathered/normal_2048.webp",
-            "bytes": 2500402,
+            "bytes": 2515104,
             "size": 2048
           },
           "high": {
             "url": "textures/lime_plaster_weathered/normal_1024.webp",
-            "bytes": 504556,
+            "bytes": 507370,
             "size": 1024
           },
           "mobile": {
             "url": "textures/lime_plaster_weathered/normal_512.webp",
-            "bytes": 120622,
+            "bytes": 121660,
             "size": 512
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/lime_plaster_weathered/orm_2048.webp",
-            "bytes": 123044,
+            "bytes": 128376,
             "size": 2048
           },
           "high": {
             "url": "textures/lime_plaster_weathered/orm_1024.webp",
-            "bytes": 46020,
+            "bytes": 49802,
             "size": 1024
           },
           "mobile": {
             "url": "textures/lime_plaster_weathered/orm_512.webp",
-            "bytes": 13080,
+            "bytes": 15118,
             "size": 512
           }
         }
@@ -2608,12 +2608,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "mud_brick_sundried",
       "category": "materials",
-      "hash": "919dd68c28",
+      "hash": "6aedf27bfe",
       "description": "Sun-dried mud brick (2 m): 0.4 x 0.1 m bricks in mud mortar, rain-rounded arrises and gullies, slumped and spalled bricks, straw temper, cracks.",
       "bytes": {
-        "ultra": 325322,
-        "high": 304868,
-        "mobile": 84390
+        "ultra": 316984,
+        "high": 298566,
+        "mobile": 82544
       },
       "tiers": [
         "ultra",
@@ -2634,51 +2634,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/mud_brick_sundried/baseColor_1024.webp",
-            "bytes": 31916,
+            "bytes": 29744,
             "size": 1024
           },
           "high": {
             "url": "textures/mud_brick_sundried/baseColor_512.webp",
-            "bytes": 11462,
+            "bytes": 11326,
             "size": 512
           },
           "mobile": {
             "url": "textures/mud_brick_sundried/baseColor_256.webp",
-            "bytes": 4112,
+            "bytes": 4078,
             "size": 256
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/mud_brick_sundried/normal_512.webp",
-            "bytes": 268398,
+            "bytes": 263784,
             "size": 512
           },
           "high": {
             "url": "textures/mud_brick_sundried/normal_512.webp",
-            "bytes": 268398,
+            "bytes": 263784,
             "size": 512
           },
           "mobile": {
             "url": "textures/mud_brick_sundried/normal_256.webp",
-            "bytes": 70554,
+            "bytes": 69488,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/mud_brick_sundried/orm_512.webp",
-            "bytes": 25008,
+            "bytes": 23456,
             "size": 512
           },
           "high": {
             "url": "textures/mud_brick_sundried/orm_512.webp",
-            "bytes": 25008,
+            "bytes": 23456,
             "size": 512
           },
           "mobile": {
             "url": "textures/mud_brick_sundried/orm_256.webp",
-            "bytes": 9724,
+            "bytes": 8978,
             "size": 256
           }
         }
@@ -4098,12 +4098,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_alluvial_silt",
       "category": "terrain",
-      "hash": "7a37ba3d83",
+      "hash": "90176a5a7e",
       "description": "Gangetic alluvial silt (4 m): dried ripple patches, curled mud-crack flakes, sparse hoof and foot prints, pale crests, damp hollows; macro-neutral.",
       "bytes": {
-        "ultra": 251340,
-        "high": 219524,
-        "mobile": 67938
+        "ultra": 229242,
+        "high": 201360,
+        "mobile": 55882
       },
       "tiers": [
         "ultra",
@@ -4124,51 +4124,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/terrain_alluvial_silt/baseColor_1024.webp",
-            "bytes": 53850,
+            "bytes": 45176,
             "size": 1024
           },
           "high": {
             "url": "textures/terrain_alluvial_silt/baseColor_512.webp",
-            "bytes": 22034,
+            "bytes": 17294,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_alluvial_silt/baseColor_256.webp",
-            "bytes": 8320,
+            "bytes": 5938,
             "size": 256
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/terrain_alluvial_silt/normal_512.webp",
-            "bytes": 177936,
+            "bytes": 166338,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_alluvial_silt/normal_512.webp",
-            "bytes": 177936,
+            "bytes": 166338,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_alluvial_silt/normal_256.webp",
-            "bytes": 52008,
+            "bytes": 42478,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/terrain_alluvial_silt/orm_512.webp",
-            "bytes": 19554,
+            "bytes": 17728,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_alluvial_silt/orm_512.webp",
-            "bytes": 19554,
+            "bytes": 17728,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_alluvial_silt/orm_256.webp",
-            "bytes": 7610,
+            "bytes": 7466,
             "size": 256
           }
         }
@@ -4498,12 +4498,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_grass_dry",
       "category": "terrain",
-      "hash": "bd209bb703",
+      "hash": "a0f6d9c3b9",
       "description": "Dry grass splat layer (3 m): straw-khaki bunch-grass tufts, fallen blades, seed stalks, 30 % bare dusty earth with crumbs, pebbles and cracks; macro-neutral.",
       "bytes": {
-        "ultra": 486582,
-        "high": 386678,
-        "mobile": 98884
+        "ultra": 514576,
+        "high": 404920,
+        "mobile": 101146
       },
       "tiers": [
         "ultra",
@@ -4524,51 +4524,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/terrain_grass_dry/baseColor_1024.webp",
-            "bytes": 150426,
+            "bytes": 144228,
             "size": 1024
           },
           "high": {
             "url": "textures/terrain_grass_dry/baseColor_512.webp",
-            "bytes": 50522,
+            "bytes": 34572,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_grass_dry/baseColor_256.webp",
-            "bytes": 15554,
+            "bytes": 11130,
             "size": 256
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/terrain_grass_dry/normal_512.webp",
-            "bytes": 311474,
+            "bytes": 340340,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_grass_dry/normal_512.webp",
-            "bytes": 311474,
+            "bytes": 340340,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_grass_dry/normal_256.webp",
-            "bytes": 73200,
+            "bytes": 77924,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/terrain_grass_dry/orm_512.webp",
-            "bytes": 24682,
+            "bytes": 30008,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_grass_dry/orm_512.webp",
-            "bytes": 24682,
+            "bytes": 30008,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_grass_dry/orm_256.webp",
-            "bytes": 10130,
+            "bytes": 12092,
             "size": 256
           }
         }
@@ -4738,12 +4738,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_mud_wet",
       "category": "terrain",
-      "hash": "d629ec0473",
-      "description": "Monsoon wet mud overlay (3 m): churned hoof and foot prints, cart slots, squeezed rims, straw; standing water below the level (puddle mask in baseColor alpha).",
+      "hash": "cf9bef1888",
+      "description": "Monsoon wet mud overlay (3 m): churned hoof and foot prints, cart slots, squeezed rims, straw; standing water below the level (puddle mask: cache file, lowest ORM.r).",
       "bytes": {
-        "ultra": 304378,
-        "high": 283570,
-        "mobile": 89716
+        "ultra": 306044,
+        "high": 264604,
+        "mobile": 82320
       },
       "tiers": [
         "ultra",
@@ -4764,51 +4764,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/terrain_mud_wet/baseColor_1024.webp",
-            "bytes": 64330,
+            "bytes": 65760,
             "size": 1024
           },
           "high": {
             "url": "textures/terrain_mud_wet/baseColor_512.webp",
-            "bytes": 43522,
+            "bytes": 24320,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_mud_wet/baseColor_256.webp",
-            "bytes": 20810,
+            "bytes": 7836,
             "size": 256
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/terrain_mud_wet/normal_512.webp",
-            "bytes": 197748,
+            "bytes": 198010,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_mud_wet/normal_512.webp",
-            "bytes": 197748,
+            "bytes": 198010,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_mud_wet/normal_256.webp",
-            "bytes": 51558,
+            "bytes": 57216,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/terrain_mud_wet/orm_512.webp",
-            "bytes": 42300,
+            "bytes": 42274,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_mud_wet/orm_512.webp",
-            "bytes": 42300,
+            "bytes": 42274,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_mud_wet/orm_256.webp",
-            "bytes": 17348,
+            "bytes": 17268,
             "size": 256
           }
         }
@@ -5218,12 +5218,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_rock_granite",
       "category": "terrain",
-      "hash": "bec9e61bf6",
+      "hash": "f47bc945d6",
       "description": "Granite tor for triplanar projection (8 m, v = up): rounded exfoliating masses, onion-skin sheets, speckled grain, black water stains, orange and grey lichen.",
       "bytes": {
-        "ultra": 389982,
-        "high": 307078,
-        "mobile": 89210
+        "ultra": 402574,
+        "high": 313948,
+        "mobile": 86808
       },
       "tiers": [
         "ultra",
@@ -5244,51 +5244,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/terrain_rock_granite/baseColor_1024.webp",
-            "bytes": 96942,
+            "bytes": 107474,
             "size": 1024
           },
           "high": {
             "url": "textures/terrain_rock_granite/baseColor_512.webp",
-            "bytes": 14038,
+            "bytes": 18848,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_granite/baseColor_256.webp",
-            "bytes": 4830,
+            "bytes": 5278,
             "size": 256
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/terrain_rock_granite/normal_512.webp",
-            "bytes": 262936,
+            "bytes": 259372,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_granite/normal_512.webp",
-            "bytes": 262936,
+            "bytes": 259372,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_granite/normal_256.webp",
-            "bytes": 72466,
+            "bytes": 66924,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/terrain_rock_granite/orm_512.webp",
-            "bytes": 30104,
+            "bytes": 35728,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_granite/orm_512.webp",
-            "bytes": 30104,
+            "bytes": 35728,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_granite/orm_256.webp",
-            "bytes": 11914,
+            "bytes": 14606,
             "size": 256
           }
         }
@@ -5298,12 +5298,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_rock_sandstone",
       "category": "terrain",
-      "hash": "52e3bca48a",
+      "hash": "ac4e363f8b",
       "description": "Sandstone cliff for triplanar projection (10 m, v = up): beds of varying hardness with ledges and undercuts, cross-bedding, joints, honeycomb, varnish streaks, lichen.",
       "bytes": {
-        "ultra": 467304,
-        "high": 408994,
-        "mobile": 97240
+        "ultra": 460622,
+        "high": 403464,
+        "mobile": 94122
       },
       "tiers": [
         "ultra",
@@ -5324,51 +5324,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/terrain_rock_sandstone/baseColor_1024.webp",
-            "bytes": 82398,
+            "bytes": 80540,
             "size": 1024
           },
           "high": {
             "url": "textures/terrain_rock_sandstone/baseColor_512.webp",
-            "bytes": 24088,
+            "bytes": 23382,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_sandstone/baseColor_256.webp",
-            "bytes": 6764,
+            "bytes": 6024,
             "size": 256
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/terrain_rock_sandstone/normal_512.webp",
-            "bytes": 359144,
+            "bytes": 355242,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_sandstone/normal_512.webp",
-            "bytes": 359144,
+            "bytes": 355242,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_sandstone/normal_256.webp",
-            "bytes": 79976,
+            "bytes": 78316,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/terrain_rock_sandstone/orm_512.webp",
-            "bytes": 25762,
+            "bytes": 24840,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_sandstone/orm_512.webp",
-            "bytes": 25762,
+            "bytes": 24840,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_sandstone/orm_256.webp",
-            "bytes": 10500,
+            "bytes": 9782,
             "size": 256
           }
         }
@@ -5442,12 +5442,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "thatch_grass",
       "category": "materials",
-      "hash": "2bd13a1053",
+      "hash": "52e0cfb64a",
       "description": "Grass/straw thatch (2 m): combed stems in 0.33 m courses, bundles, coir rope bands every 0.67 m, weathered grey top layer. u = along the eave, v = up the slope.",
       "bytes": {
-        "ultra": 1654284,
-        "high": 563504,
-        "mobile": 134160
+        "ultra": 1795108,
+        "high": 582702,
+        "mobile": 140712
       },
       "tiers": [
         "ultra",
@@ -5468,51 +5468,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/thatch_grass/baseColor_1024.webp",
-            "bytes": 116510,
+            "bytes": 110778,
             "size": 1024
           },
           "high": {
             "url": "textures/thatch_grass/baseColor_1024.webp",
-            "bytes": 116510,
+            "bytes": 110778,
             "size": 1024
           },
           "mobile": {
             "url": "textures/thatch_grass/baseColor_512.webp",
-            "bytes": 34186,
+            "bytes": 33948,
             "size": 512
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/thatch_grass/normal_1024.webp",
-            "bytes": 1418348,
+            "bytes": 1554680,
             "size": 1024
           },
           "high": {
             "url": "textures/thatch_grass/normal_512.webp",
-            "bytes": 408456,
+            "bytes": 427912,
             "size": 512
           },
           "mobile": {
             "url": "textures/thatch_grass/normal_256.webp",
-            "bytes": 89736,
+            "bytes": 95258,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/thatch_grass/orm_1024.webp",
-            "bytes": 119426,
+            "bytes": 129650,
             "size": 1024
           },
           "high": {
             "url": "textures/thatch_grass/orm_512.webp",
-            "bytes": 38538,
+            "bytes": 44012,
             "size": 512
           },
           "mobile": {
             "url": "textures/thatch_grass/orm_256.webp",
-            "bytes": 10238,
+            "bytes": 11506,
             "size": 256
           }
         }
