@@ -24,6 +24,7 @@ import type { Screen, UIManager } from '../../ui';
 import { defineScreen } from '../registry';
 import { icon, setIcon, unitIcon } from '../../components/icons';
 import { meter, panelFrame, section, sparkline } from '../../components/widgets';
+import { landmarkArt } from '../../components/landmarkArt';
 import { emitHud } from '../../services/hudCommands';
 import { marketHistory } from '../../services/marketHistory.service';
 import { hotkeyLabel } from '../../../input/bindings';
@@ -224,7 +225,9 @@ function agePanel(ctx: AppContext, ui: UIManager): Screen<'age_panel'> {
           h(
             'div',
             { class: `panel carved landmark-card status-${o.status}` },
-            h('div', { class: 'lm-head' }, icon('b_landmark'), h('div', null, h('div', { class: 'lm-name' }, lm.name), lm.localName ? h('div', { class: 'lm-local epigraph' }, lm.localName) : null)),
+            // Illustration band (interim ink silhouette per landmark; final: golden-hour model thumbnail).
+            h('div', { class: 'lm-band' }, landmarkArt(lm.id)),
+            h('div', { class: 'lm-head' }, h('div', null, h('div', { class: 'lm-name' }, lm.name), lm.localName ? h('div', { class: 'lm-local epigraph' }, lm.localName) : null)),
             h('div', { class: 'lm-age' }, `${AGES[lm.age].numeral} · ${AGES[lm.age].name}`),
             h('p', { class: 'lm-summary' }, lm.summary),
             h(
@@ -249,8 +252,21 @@ function agePanel(ctx: AppContext, ui: UIManager): Screen<'age_panel'> {
         if (next.unlockBuildings.length) unlocks.append(row('Buildings', next.unlockBuildings.map((b) => h('span', { class: 'unlock', title: BUILDINGS[b].name }, icon(`b_${b}`), BUILDINGS[b].name))));
         if (next.unlockUnits.length) unlocks.append(row('Units', next.unlockUnits.map((u) => h('span', { class: 'unlock', title: UNITS[u].name }, icon(unitIcon(u)), UNITS[u].name))));
         if (next.unlockTreaties.length) unlocks.append(row('Treaties', next.unlockTreaties.map((t) => h('span', { class: 'unlock' }, icon('diplomacy'), label(t)))));
-        const bon = Object.entries(next.bonuses).map(([k, v]) => `${label(k)} ×${Number(v).toFixed(2)}`);
-        unlocks.append(row('Bonuses', [h('span', { class: 'unlock-text' }, [...bon, `recruits +${Math.round(next.recruitBonus.experience * 100)}% experience, +${next.recruitBonus.morale} morale`, `${next.governorSlots} governors`, `buildings up to level ${next.maxBuildingLevel}`].join(' · '))]));
+        // Bonuses as an icon list (one chip per effect) instead of a run-on sentence.
+        const chip = (ic: string, text: string): HTMLElement => h('span', { class: 'unlock bonus' }, icon(ic), text);
+        const bon = Object.entries(next.bonuses).map(([k, v]) => {
+          const pct = Math.round((Number(v) - 1) * 100);
+          return chip('star', `${label(k)} ${pct >= 0 ? '+' : ''}${pct}%`);
+        });
+        unlocks.append(
+          row('Bonuses', [
+            ...bon,
+            chip('chevron_up', `Recruits +${Math.round(next.recruitBonus.experience * 100)}% experience`),
+            chip('lotus', `Recruits +${next.recruitBonus.morale} morale`),
+            chip('crown', `${next.governorSlots} governors`),
+            chip('b_palace', `Buildings to level ${next.maxBuildingLevel}`),
+          ]),
+        );
       }
       setHidden(unSection, !next);
     },

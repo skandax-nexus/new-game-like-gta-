@@ -244,6 +244,63 @@ export function battleBounds(battle: Readonly<BattleState>): Rect {
   return { minX: t.centerX - half, minZ: t.centerZ - half, maxX: t.centerX + half, maxZ: t.centerZ + half };
 }
 
+/**
+ * Battle minimap bounds fitted to the action (Art Director review UI-02 round 1): the union of both deploy zones,
+ * hold-area objectives, the fortification and every visible formation, plus a 25% margin of the span on each side,
+ * squared and clamped to the battle terrain. Pass the previous fit to grow it only (no jitter while units move:
+ * the map widens when a formation leaves it, never shrinks). Formations then draw several pixels wide instead of
+ * 2-4 px specks in the middle of a 2-4 km terrain disc.
+ */
+export function battleFitBounds(battle: Readonly<BattleState>, prev: Rect | null = null, margin = 0.25): Rect {
+  const full = battleBounds(battle);
+  let minX = Infinity;
+  let minZ = Infinity;
+  let maxX = -Infinity;
+  let maxZ = -Infinity;
+  const add = (x0: number, z0: number, x1: number, z1: number): void => {
+    minX = Math.min(minX, x0);
+    minZ = Math.min(minZ, z0);
+    maxX = Math.max(maxX, x1);
+    maxZ = Math.max(maxZ, z1);
+  };
+  for (const sd of battle.setup.sides) add(sd.deployZone.minX, sd.deployZone.minZ, sd.deployZone.maxX, sd.deployZone.maxZ);
+  for (const o of battle.setup.objectives) if (o.kind === 'hold_area') add(o.x - o.radius, o.z - o.radius, o.x + o.radius, o.z + o.radius);
+  const fo = battle.setup.fortification;
+  if (fo) add(fo.center.x - fo.radius, fo.center.z - fo.radius, fo.center.x + fo.radius, fo.center.z + fo.radius);
+  for (const f of battle.formations) {
+    if (f.soldiers <= 0 || f.activity === 'destroyed') continue;
+    const r = Math.max(f.width, f.depth) / 2;
+    add(f.x - r, f.z - r, f.x + r, f.z + r);
+  }
+  if (!Number.isFinite(minX)) return full;
+  if (prev && minX >= prev.minX && minZ >= prev.minZ && maxX <= prev.maxX && maxZ <= prev.maxZ) return prev;
+  const span = Math.max(maxX - minX, maxZ - minZ, 120);
+  const half = Math.min((full.maxX - full.minX) / 2, (span * (1 + margin * 2)) / 2);
+  let cx = (minX + maxX) / 2;
+  let cz = (minZ + maxZ) / 2;
+  if (prev) {
+    // Grow around the old view so it does not jump: keep the old centre while the new span covers the content.
+    const pcx = (prev.minX + prev.maxX) / 2;
+    const pcz = (prev.minZ + prev.maxZ) / 2;
+    const need = Math.max(Math.abs(minX - pcx), Math.abs(maxX - pcx), Math.abs(minZ - pcz), Math.abs(maxZ - pcz)) * (1 + margin);
+    if (need <= (full.maxX - full.minX) / 2) {
+      cx = pcx;
+      cz = pcz;
+      const h2 = Math.max(half, need);
+      return clampSquare(full, cx, cz, h2);
+    }
+  }
+  return clampSquare(full, cx, cz, half);
+}
+
+function clampSquare(full: Rect, cx: number, cz: number, half: number): Rect {
+  const fh = (full.maxX - full.minX) / 2;
+  const hh = Math.min(half, fh);
+  const x = Math.max(full.minX + hh, Math.min(full.maxX - hh, cx));
+  const z = Math.max(full.minZ + hh, Math.min(full.maxZ - hh, cz));
+  return { minX: x - hh, minZ: z - hh, maxX: x + hh, maxZ: z + hh };
+}
+
 export function battleLayers(battle: Readonly<BattleState>, playerSide: SideIndex, selection: readonly FormationIndex[]): BattleMapLayers {
   const sel = new Set(selection);
   const formations: MapFormation[] = [];

@@ -198,13 +198,13 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
       chev: h('span', { class: 'fc-chev', role: 'img', dataset: { rank: '0' } }, icon('chevron_up'), icon('chevron_up'), icon('chevron_up')),
       order: h('span', { class: 'fc-order' }),
     };
-    // Head: class icon, short title ("Levy II"), experience chevrons, then the men count behind a villager icon (a
-    // bare number after a chevron read as a trend). Fatigue tier and the current order share one line with the ammo.
+    // Head: class icon, short title ("Levy II"), experience chevrons. The men count (behind a villager icon: a bare
+    // number after a chevron read as a trend) sits beside the strength / morale bars. Fatigue tier and the current
+    // order share one line with the ammo pips.
     append(
       v.el,
-      h('div', { class: 'fc-head' }, v.icon, v.name, v.chev, h('span', { class: 'fc-men' }, icon('villager'), v.count)),
-      v.str.el,
-      v.mor.el,
+      h('div', { class: 'fc-head' }, v.icon, v.name, v.chev),
+      h('div', { class: 'fc-bars' }, h('div', { class: 'fc-meters' }, v.str.el, v.mor.el), h('span', { class: 'fc-men', title: 'Men' }, icon('villager'), v.count)),
       h('div', { class: 'fc-line' }, h('span', { class: 'fc-morale' }, icon('lotus'), v.cause)),
       h('div', { class: 'fc-line' }, v.state, v.ammo.el),
     );
@@ -476,7 +476,10 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
         const str = meter('strength');
         const mor = meter('morale');
         const name = h('span', { class: 'ff-name' });
-        const el = h('div', { class: `ffloat ${f.side === ps ? 'own' : 'enemy'}` }, h('div', { class: 'ff-head' }, icon(unitIcon(f.unitClass)), name), str.el, mor.el);
+        // Enemy bars: 2 px enemy-relation border + the side's emblem (a 1 px red hairline vanished on grass).
+        const emblem = f.side === ps ? null : factionChip(b.sides[f.side].factionId, 'sm');
+        emblem?.classList.add('ff-emblem');
+        const el = h('div', { class: `ffloat ${f.side === ps ? 'own' : 'enemy'}` }, emblem, h('div', { class: 'ff-head' }, icon(unitIcon(f.unitClass)), name), str.el, mor.el);
         v = { el, str, mor, name };
         floats.set(a.index, v);
         floatLayer.append(el);
@@ -503,9 +506,14 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
       const b = p.battle;
       const ps = p.playerSide;
       if (!terrainSet) {
-        terrainSet = true;
-        const hf = peekHeightfield(b.setup.terrain);
-        if (hf) minimap.setTerrain(hf, terrainKey(b.setup.terrain));
+        // The scene builds the low tier at 257 samples (BattleScene): try both specs, retry until one is cached.
+        const spec = b.setup.terrain;
+        const low = { ...spec, resolution: 257 };
+        const hf = peekHeightfield(spec) ?? peekHeightfield(low);
+        if (hf) {
+          terrainSet = true;
+          minimap.setTerrain(hf, terrainKey(hf.spec));
+        }
       }
       // Forces
       for (const i of [0, 1] as const) {
@@ -565,7 +573,9 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
         setText(v.cause, `${Math.round(f.morale)}${cause ? ` · ${cause}` : ''}`);
         setAttr(v.cause, 'title', `Morale ${Math.round(f.morale)}${cause ? ` - ${cause}` : ''}`);
         const tier = fatigueTier(f.fatigue);
-        setText(v.fatigue, label(tier));
+        // "Fresh" is the normal state: only a tired formation spends card width on its fatigue tier.
+        setText(v.fatigue, tier === 'fresh' ? '' : label(tier));
+        setClass(v.state, 'fresh', tier === 'fresh');
         setClass(v.fatigue, 'warning', tier === 'tired' || tier === 'exhausted');
         setClass(v.fatigue, 'danger', tier === 'spent');
         setHidden(v.ammo.el, stats.ammo <= 0);

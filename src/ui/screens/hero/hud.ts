@@ -177,8 +177,29 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
 
   const el = h('div', { class: 'screen-hero-hud hud-root' }, h('div', { class: 'hh-top passive' }, objBox, compass, leave), keysHint, prompt, caption, vitals, boss, touch, slowmo, flash);
 
+  // HUD boxes the anchored enemy bars must not slide under (landscape: "Bandit" went under the vitals box). Measured
+  // after layout changes / combat start (one rAF read), not per frame.
+  let reserved: { l: number; t: number; r: number; b: number }[] = [];
+  let measureQueued = false;
+  const measureReserved = (): void => {
+    if (measureQueued || typeof requestAnimationFrame !== 'function') return;
+    measureQueued = true;
+    requestAnimationFrame(() => {
+      measureQueued = false;
+      reserved = [vitals, boss, objBox]
+        .filter((e) => !e.classList.contains('ui-hidden'))
+        .map((e) => e.getBoundingClientRect())
+        .filter((r) => r.width > 0)
+        .map((r) => ({ l: r.left - 4, t: r.top - 4, r: r.right + 4, b: r.bottom + 4 }));
+    });
+  };
   const placeEnemy = (node: HTMLElement, e: HeroEnemyBar): void => {
     setStyle(node, 'transform', `translate(${Math.round(e.x)}px, ${Math.round(e.y)}px) translate(-50%, -100%) scale(${(ui.scale || 1).toFixed(2)})`);
+    const hw = 50 * (ui.scale || 1);
+    const hh = 36 * (ui.scale || 1);
+    let hidden = false;
+    for (const r of reserved) if (e.x + hw > r.l && e.x - hw < r.r && e.y > r.t && e.y - hh < r.b) hidden = true;
+    setClass(node, 'occluded', hidden);
   };
   const placeReticle = (c: HeroCombatHud): void => {
     if (c.lockOn) setStyle(reticle, 'transform', `translate(${Math.round(c.lockOn.x)}px, ${Math.round(c.lockOn.y)}px) translate(-50%, -50%) scale(${(ui.scale || 1).toFixed(2)})`);
@@ -215,7 +236,10 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
     if (!anchorLayer.contains(reticle)) anchorLayer.append(reticle);
   };
 
+  let lastBossShown = false;
+  const offLayout = ui.onLayout(() => measureReserved());
   const renderCombat = (c: HeroCombatHud | null | undefined): void => {
+    if (!!c !== !vitals.classList.contains('ui-hidden')) measureReserved();
     setHidden(vitals, !c);
     setHidden(boss, true);
     if (!c) {
@@ -240,6 +264,10 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
     }
     const b = c.enemies.find((e) => e.boss && e.visible);
     setHidden(boss, !b);
+    if (!!b !== lastBossShown) {
+      lastBossShown = !!b;
+      measureReserved();
+    }
     if (b) {
       setText(bossName, b.name);
       bossHp.set(b.hp / Math.max(1, b.hpMax));
@@ -313,6 +341,7 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
       }
     },
     dispose() {
+      offLayout();
       anchorLayer.remove();
       ctx.input.setVirtualStick(0, 0);
     },

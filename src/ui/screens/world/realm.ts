@@ -30,6 +30,17 @@ const PROPOSALS: readonly { type: ProposalType; label: string; icon: string }[] 
 
 const TREATY_ICON: Readonly<Record<string, string>> = { peace: 'diplomacy', trade: 'coins', military_access: 'a_move', mutual_defense: 'o_defend', tributary: 'crown', marriage_alliance: 'lotus', non_aggression: 'a_stance_cautious' };
 
+
+/**
+ * One AI reason line, coloured and iconed by its sign (Art Director polish: "+20" positive with a plus, "-13" danger
+ * with a minus; colour is never the only cue). Lines without a signed number stay neutral.
+ */
+function reasonItem(r: string): HTMLElement {
+  const m = /(^|\s|\()([+\-\u2212])\s?\d/.exec(r);
+  const sign = m ? (m[2] === '+' ? 'positive' : 'danger') : null;
+  return h('li', { class: sign ? `dip-reason ${sign}` : 'dip-reason' }, sign ? icon(sign === 'positive' ? 'plus' : 'minus', 'dip-sign') : null, h('span', null, r));
+}
+
 export function diplomacyScreen(ctx: AppContext, ui: UIManager): Screen<'diplomacy'> {
   let world: WorldState | null = null;
   let selected: FactionId | null = null;
@@ -73,6 +84,8 @@ export function diplomacyScreen(ctx: AppContext, ui: UIManager): Screen<'diploma
         const st = row.querySelector('.dip-status') as HTMLElement;
         setText(st, atWar ? `At war · score ${rel ? Math.round(rel.a === me ? rel.warScore : -rel.warScore) : 0}` : `Opinion ${Math.round(rel?.opinion ?? 0)} · trust ${fmtPct(rel?.trust ?? 0)}`);
         setClass(st, 'danger', atWar);
+        // At war: the chip carries the enemy ring style (spiked red ring), not only red text (ART_BIBLE §11.6).
+        setClass(row.querySelector('.faction-chip') as HTMLElement, 'rel-enemy', atWar);
         (row as unknown as { __op: ReturnType<typeof meter> }).__op.set(((rel?.opinion ?? 0) + 100) / 200, { warn: (rel?.opinion ?? 0) < -25 });
         const tr = row.querySelector('.dip-treaties') as HTMLElement;
         clear(tr);
@@ -101,7 +114,7 @@ export function diplomacyScreen(ctx: AppContext, ui: UIManager): Screen<'diploma
           'div',
           { class: 'card dip-incoming' },
           h('div', null, icon('scroll'), h('b', null, ` ${factionName(f)} proposes: ${label(p.type)}`), h('span', { class: 'muted' }, ` · ${p.daysLeft} days to answer`)),
-          h('ul', { class: 'dip-reasons' }, ...p.reasons.map((r) => h('li', null, r))),
+          h('ul', { class: 'dip-reasons' }, ...p.reasons.map(reasonItem)),
           h('div', { class: 'btn-row' }, h('button', { class: 'btn primary small', type: 'button', onclick: () => (ctx.actions.issueStrategic({ kind: 'respond_proposal', proposalId: p.id, accept: true }), sfx(ctx, 'ui_confirm')) }, 'Accept'), h('button', { class: 'btn small', type: 'button', onclick: () => (ctx.actions.issueStrategic({ kind: 'respond_proposal', proposalId: p.id, accept: false }), sfx(ctx)) }, 'Refuse')),
         ),
       );
@@ -155,7 +168,7 @@ export function diplomacyScreen(ctx: AppContext, ui: UIManager): Screen<'diploma
               'div',
               { class: `dip-reply ${acc.accept ? 'positive' : 'danger'}` },
               h('div', { class: 'dip-reply-head' }, icon(acc.accept ? 'check' : 'cross'), h('b', null, acc.accept ? 'They would likely accept' : 'They would likely refuse')),
-              h('ul', { class: 'dip-reasons' }, ...acc.reasons.map((r) => h('li', null, r))),
+              h('ul', { class: 'dip-reasons' }, ...acc.reasons.map(reasonItem)),
             )
           : null,
         reason ? h('div', { class: 'danger dip-why' }, icon('alert'), reason) : null,
@@ -169,7 +182,7 @@ export function diplomacyScreen(ctx: AppContext, ui: UIManager): Screen<'diploma
         detail,
         section(
           'Their replies',
-          ...past.map((p) => h('div', { class: `card dip-past ${p.status === 'accepted' ? 'positive' : 'danger'}` }, h('div', null, icon(p.status === 'accepted' ? 'check' : 'cross'), h('b', null, ` ${label(p.type)}: ${p.status}`), h('span', { class: 'muted' }, ` · day ${p.day}`)), h('ul', { class: 'dip-reasons' }, ...p.reasons.map((r) => h('li', null, r))))),
+          ...past.map((p) => h('div', { class: `card dip-past ${p.status === 'accepted' ? 'positive' : 'danger'}` }, h('div', null, icon(p.status === 'accepted' ? 'check' : 'cross'), h('b', null, ` ${label(p.type)}: ${p.status}`), h('span', { class: 'muted' }, ` · day ${p.day}`)), h('ul', { class: 'dip-reasons' }, ...p.reasons.map(reasonItem)))),
         ),
       );
     }

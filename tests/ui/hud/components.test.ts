@@ -39,8 +39,11 @@ describe('CommandGrid', () => {
     const el = g.el as unknown as ShimElement;
     const btns = el.querySelectorAll('.btn.slot');
     expect(btns).toHaveLength(15);
-    expect(btns[0]!.querySelector('.slot-label')!.textContent).toBe('L0');
-    expect(btns[0]!.querySelector('kbd')!.textContent).toBe('Alt+Q');
+    expect(btns[0]!.querySelector('.slot-text')!.textContent).toBe('L0');
+    // Kit grammar: the chip prints the key only; the shared modifier is printed once at the end of the tab row.
+    expect(btns[0]!.querySelector('kbd')!.textContent).toBe('Q');
+    expect(el.querySelector('.card-mod')!.textContent).toBe('Alt');
+    expect(el.querySelector('.card-mod')!.classList.contains('ui-hidden')).toBe(false);
     expect(btns[14]!.classList.contains('empty')).toBe(true);
     expect(btns[14]!.getAttribute('tabindex')).toBe('-1');
     expect(btns[3]!.classList.contains('disabled')).toBe(true);
@@ -83,9 +86,47 @@ describe('CommandGrid', () => {
     b.click();
     expect(onActivate).not.toHaveBeenCalled();
     expect(b.classList.contains('armed')).toBe(true);
-    expect(b.querySelector('.slot-label')!.textContent).toBe('Confirm?');
+    expect(b.querySelector('.slot-text')!.textContent).toBe('Confirm?');
     b.click();
     expect(onActivate).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('slot chips and codes', () => {
+  it('a shared modifier goes to the tab row; mixed pages print glyph + key; no modifier = bare keys', async () => {
+    const { planChips, splitHotkey } = await import('../../../src/ui/components/commandGrid');
+    expect(splitHotkey('Alt+Q')).toEqual({ mod: 'Alt', key: 'Q' });
+    expect(splitHotkey('Ctrl+Shift+K')).toEqual({ mod: 'Ctrl+Shift', key: 'K' });
+    expect(splitHotkey('H')).toEqual({ mod: '', key: 'H' });
+    expect(planChips(['Alt+Q', 'Alt+W', null, ''])).toEqual({ chips: ['Q', 'W', '', ''], mod: 'Alt', legend: false });
+    expect(planChips(['Q', 'W'])).toEqual({ chips: ['Q', 'W'], mod: '', legend: false });
+    // Classic battle Shapes page: J..K bare, Shift+K, Alt+Z..V.
+    const mixed = planChips(['J', 'Shift+K', 'Alt+Z']);
+    expect(mixed.chips).toEqual(['J', '⇧K', '⌥Z']);
+    expect(mixed.legend).toBe(true);
+    expect(mixed.mod).toContain('Alt');
+    expect(mixed.mod).toContain('Shift');
+  });
+
+  it('every real card prints single-key chips (Classic world cards: Alt in the tab row) and caps codes', async () => {
+    const { planChips } = await import('../../../src/ui/components/commandGrid');
+    const { settlementCard, armyCard, slotCode } = await import('../../../src/ui/services/commandCards');
+    const { campaign } = await import('../../sim/strategic/helpers');
+    const w = campaign(7);
+    const cap = w.factions[w.playerFactionId]!.capitalSettlementId!;
+    const army = Object.keys(w.armies).sort().find((id) => w.armies[id]!.factionId === w.playerFactionId)!;
+    for (const preset of ['classic', 'grid'] as const) {
+      const ctx = { preset, overrides: {} };
+      for (const m of [settlementCard(w, cap, 'economy', ctx), settlementCard(w, cap, 'recruit', ctx), armyCard(w, army, ctx)]) {
+        const plan = planChips(m.slots.map((x) => x?.hotkey));
+        expect(plan.legend).toBe(false);
+        expect(plan.mod).toBe(preset === 'classic' ? 'Alt' : '');
+        for (const c of plan.chips) expect(c.length).toBeLessThanOrEqual(1);
+        for (const sl of m.slots) if (sl) expect(slotCode(sl), sl.id).toMatch(/^[A-Z]{2,3}$/);
+      }
+    }
+    const rec = settlementCard(w, cap, 'recruit', { preset: 'classic' });
+    expect(rec.slots.filter(Boolean).map((x) => slotCode(x!))).toEqual(expect.arrayContaining(['SPR', 'ARC', 'GRD', 'CAV', 'ELE', 'SUP']));
   });
 });
 

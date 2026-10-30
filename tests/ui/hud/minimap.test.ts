@@ -1,11 +1,12 @@
 /**
  * Minimap projection + layers (src/ui/services/minimapModel.ts): north-up and rotating projections round-trip,
  * the camera heading points up, facing ticks follow the CLAUDE.md convention, fog hides unseen enemy armies, borders
- * and roads come from the world, battle layers show own + spotted enemy formations.
+ * and roads come from the world, battle layers show own + spotted enemy formations; the battle map fits the action
+ * (deploy zones + 25% margin, grow-only) so formations draw at least 6 x 3 px on a 220 px minimap.
  * OWNER: UI Engineer - In-game HUD, Command Card, Minimap & Input (UI-02).
  */
 import { describe, expect, it } from 'vitest';
-import { battleLayers, facingToMap, makeProjection, mapToWorld, relationOf, worldLayers, worldToMap } from '../../../src/ui/services/minimapModel';
+import { battleBounds, battleFitBounds, battleLayers, facingToMap, makeProjection, mapToWorld, relationOf, worldLayers, worldToMap } from '../../../src/ui/services/minimapModel';
 import { campaign } from '../../sim/strategic/helpers';
 import { testBattle } from '../../sim/tactical/helpers';
 
@@ -129,5 +130,45 @@ describe('battle layers', () => {
     L = battleLayers(b, 0, []);
     expect(L.formations.some((f) => f.relation === 'enemy')).toBe(true);
     if (b.phase === 'deployment') expect(L.zones.filter((z) => z.own)).toHaveLength(1);
+  });
+});
+
+describe('battle fit bounds', () => {
+  const tb = testBattle({
+    factions: ['heartland', 'highland'],
+    deploymentSec: 60,
+    sides: [[{ cls: 'spearmen', x: 0, z: 200 }, { cls: 'archers', x: 60, z: 220 }], [{ cls: 'spearmen', x: 0, z: -200 }]],
+  });
+  const b = tb.state;
+
+  it('covers both deploy zones and every formation with a 25% margin, square, inside the terrain', () => {
+    const full = battleBounds(b);
+    const fit = battleFitBounds(b);
+    expect(fit.maxX - fit.minX).toBeCloseTo(fit.maxZ - fit.minZ, 6);
+    expect(fit.maxX - fit.minX).toBeLessThan(full.maxX - full.minX);
+    expect(fit.minX).toBeGreaterThanOrEqual(full.minX - 1e-6);
+    expect(fit.maxZ).toBeLessThanOrEqual(full.maxZ + 1e-6);
+    for (const sd of b.setup.sides) {
+      expect(fit.minX).toBeLessThanOrEqual(sd.deployZone.minX);
+      expect(fit.maxX).toBeGreaterThanOrEqual(sd.deployZone.maxX);
+      expect(fit.minZ).toBeLessThanOrEqual(sd.deployZone.minZ);
+      expect(fit.maxZ).toBeGreaterThanOrEqual(sd.deployZone.maxZ);
+    }
+    for (const f of b.formations) {
+      expect(f.x).toBeGreaterThan(fit.minX);
+      expect(f.x).toBeLessThan(fit.maxX);
+    }
+    // A spearman block (tens of metres wide) maps to at least 6 px on a 220 px map.
+    const p = makeProjection(fit, 220, true, 0);
+    expect(b.formations[0]!.width / p.scale).toBeGreaterThanOrEqual(6);
+  });
+
+  it('grows (never shrinks) when a formation leaves the view; unchanged otherwise', () => {
+    const fit = battleFitBounds(b);
+    expect(battleFitBounds(b, fit)).toBe(fit);
+    const moved = { ...b, formations: b.formations.map((f, i) => (i === 0 ? { ...f, x: fit.maxX + 150 } : f)) } as typeof b;
+    const grown = battleFitBounds(moved, fit);
+    expect(grown.maxX).toBeGreaterThan(fit.maxX);
+    expect(grown.maxX - grown.minX).toBeGreaterThanOrEqual(fit.maxX - fit.minX);
   });
 });

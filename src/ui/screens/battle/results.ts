@@ -73,11 +73,13 @@ export function battleResults(ctx: AppContext, ui: UIManager): Screen<'battle_re
       frame.setTitle(draw ? 'An Indecisive Field' : won ? 'Victory' : 'Defeat', `${REASON[o.reason]} · ${fmtClock(o.durationSec)}${o.placeName ? ` · ${o.placeName}` : ''}`);
       clear(banner);
       banner.className = `br-banner ${draw ? 'mixed' : won ? 'victory' : 'defeat'}`;
-      append(banner, icon(draw ? 'lotus' : won ? 'crown' : 'flag'), ...o.summary.slice(0, 2).map((s) => h('span', null, s)));
+      // The chronicle quote is printed once (below): drop a banner line that repeats it verbatim.
+      const quote = (o.chronicle ?? '').trim();
+      append(banner, icon(draw ? 'lotus' : won ? 'crown' : 'flag'), ...o.summary.filter((s) => s.trim() !== quote).slice(0, 2).map((s) => h('span', null, s)));
       clear(table);
       table.append(h('thead', null, h('tr', null, h('th', null, ''), h('th', null, 'Started'), h('th', null, 'Survived'), h('th', null, 'Killed'), h('th', null, 'Captured'), h('th', null, 'In pursuit'))));
       const tb = h('tbody');
-      o.sides.forEach((s, i) => tb.append(h('tr', { class: i === ps ? 'mine' : '' }, h('td', null, factionChip(s.factionId, 'sm'), ` ${factionName(s.factionId)}${i === ps ? ' (you)' : ''}`), h('td', null, fmtInt(s.startSoldiers)), h('td', null, fmtInt(s.survivors)), h('td', null, fmtInt(s.killed)), h('td', null, fmtInt(s.captured)), h('td', null, fmtInt(s.pursuitLosses)))));
+      o.sides.forEach((s, i) => tb.append(h('tr', { class: i === ps ? 'mine' : '' }, h('td', null, factionChip(s.factionId, 'sm'), ` ${factionName(s.factionId)}`, i === ps ? h('span', { class: 'badge bh-you' }, 'You') : null), h('td', null, fmtInt(s.startSoldiers)), h('td', null, fmtInt(s.survivors)), h('td', null, fmtInt(s.killed)), h('td', null, fmtInt(s.captured)), h('td', null, fmtInt(s.pursuitLosses)))));
       table.append(tb);
       clear(forms);
       for (const f of o.sides[ps].formations) {

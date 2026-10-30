@@ -10,7 +10,12 @@
  * good news). Battle: formations as team-coloured rectangles (selection highlighted), deploy zones, objectives, walls.
  * Interaction: click / tap jumps the camera, right-click orders the selection to move there (PC), north-up toggle,
  * phone: collapses to a 56 px button (expands to 40% of the short side).
- * Relation shape coding (colour-blind): own solid ring, ally dashed, enemy spiked, neutral dotted.
+ * Relation shape coding (colour-blind): own solid ring, ally dashed, enemy spiked, neutral dotted. Faction colours are
+ * read from the theme tokens (--faction-<id>), so the canvas follows the colour-blind remaps: a change of
+ * html[data-colorblind] redraws it at once (MutationObserver), paused or not.
+ * Battle (Art Director review round 1): bounds fitted to the deploy zones + 25% margin (minimapModel.battleFitBounds,
+ * grow-only), formations at least 6 x 3 px with a facing tick, a soft terrain tint (about 15% relief, smoothed) and
+ * a flat biome tint when the battle heightfield is not cached (every quality tier shows ground, zones and units).
  */
 import type { BattleState, FactionId, FormationIndex, Rect, SideIndex, WorldState } from '../../core/types';
 import { BIOMES } from '../../core/types';
@@ -18,7 +23,7 @@ import type { Heightfield } from '../../core/terrain/heightfield';
 import { BIOME_COLORS, MATERIALS, hexToRgb } from '../../render/style/palette';
 import { h, setAttr, setClass, setHidden, uiClock } from '../dom';
 import type { HudFeeds } from '../services/hudCommands';
-import { battleLayers, facingToMap, makeProjection, mapToWorld, worldLayers, worldToMap, type BattleMapLayers, type MapProjection, type Relation, type Selection, type WorldMapLayers } from '../services/minimapModel';
+import { battleFitBounds, battleLayers, facingToMap, makeProjection, mapToWorld, worldLayers, worldToMap, type BattleMapLayers, type MapProjection, type Relation, type Selection, type WorldMapLayers } from '../services/minimapModel';
 import { icon } from './icons';
 
 export type PingSeverity = 'danger' | 'warning' | 'success';
@@ -60,9 +65,14 @@ function cssVar(st: CSSStyleDeclaration, name: string, fallback: string): string
   return v || fallback;
 }
 
-/** Terrain tint bitmap (north-up) of a heightfield: biome colours, water, NW hill shading. Cached per spec key. */
-function terrainBitmap(hf: Heightfield, key: string): HTMLCanvasElement {
-  const hit = terrainCache.get(key);
+/**
+ * Terrain tint bitmap (north-up) of a heightfield: biome colours, water, NW hill shading. Cached per spec key.
+ * `soft` (battle windows): colours box-blurred and the relief limited to +-15% from a wide-baseline slope, so the
+ * battle-scale detail noise does not read as dirt.
+ */
+function terrainBitmap(hf: Heightfield, key: string, soft = false): HTMLCanvasElement {
+  const ck = `${key}|${soft ? 's' : 'h'}`;
+  const hit = terrainCache.get(ck);
   if (hit) return hit;
   const c = document.createElement('canvas');
   c.width = TERRAIN_RES;
@@ -93,9 +103,11 @@ function terrainBitmap(hf: Heightfield, key: string): HTMLCanvasElement {
         b = shallow[2] + (deep[2] - shallow[2]) * d;
       } else {
         const col = pal[hf.biomes[i]!] ?? pal[0]!;
-        const step = Math.max(1, Math.round(res / TERRAIN_RES));
+        const step = Math.max(1, Math.round(res / TERRAIN_RES)) * (soft ? 6 : 1);
         const slope = (at(ix - step, iz - step) - at(ix + step, iz + step)) / (hf.cellSize * step * 2);
-        const shade = Math.max(0.62, Math.min(1.35, 1 + slope * 1.6 + ((hgt - hf.minHeight) / relief - 0.4) * 0.18));
+        const shade = soft
+          ? 1 + Math.max(-0.15, Math.min(0.15, slope * 0.9 + ((hgt - hf.minHeight) / relief - 0.5) * 0.1))
+          : Math.max(0.62, Math.min(1.35, 1 + slope * 1.6 + ((hgt - hf.minHeight) / relief - 0.4) * 0.18));
         r = col[0] * shade;
         g = col[1] * shade;
         b = col[2] * shade;
@@ -107,9 +119,42 @@ function terrainBitmap(hf: Heightfield, key: string): HTMLCanvasElement {
       img.data[o + 3] = 255;
     }
   }
+  if (soft) boxBlur(img.data, TERRAIN_RES, 3);
   ctx.putImageData(img, 0, 0);
-  terrainCache.set(key, c);
+  terrainCache.set(ck, c);
   return c;
+}
+
+/** In-place separable box blur (radius r) of an RGBA image (alpha untouched); runs once per cached bitmap. */
+function boxBlur(d: Uint8ClampedArray, n: number, r: number): void {
+  const tmp = new Float32Array(n * 3);
+  for (let pass = 0; pass < 2; pass++) {
+    for (let a = 0; a < n; a++) {
+      for (let b = 0; b < n; b++) {
+        let sr = 0;
+        let sg = 0;
+        let sb = 0;
+        let cnt = 0;
+        for (let k = -r; k <= r; k++) {
+          const q = Math.max(0, Math.min(n - 1, b + k));
+          const o = (pass === 0 ? a * n + q : q * n + a) * 4;
+          sr += d[o]!;
+          sg += d[o + 1]!;
+          sb += d[o + 2]!;
+          cnt++;
+        }
+        tmp[b * 3] = sr / cnt;
+        tmp[b * 3 + 1] = sg / cnt;
+        tmp[b * 3 + 2] = sb / cnt;
+      }
+      for (let b = 0; b < n; b++) {
+        const o = (pass === 0 ? a * n + b : b * n + a) * 4;
+        d[o] = tmp[b * 3]!;
+        d[o + 1] = tmp[b * 3 + 1]!;
+        d[o + 2] = tmp[b * 3 + 2]!;
+      }
+    }
+  }
 }
 
 export class Minimap {
@@ -142,6 +187,9 @@ export class Minimap {
   private camVersion = -1;
   private cssW = 0;
   private readonly ro: ResizeObserver | null = null;
+  private readonly mo: MutationObserver | null = null;
+  private fit: Rect | null = null;
+  private fitFor: Readonly<BattleState> | null = null;
 
   constructor(private readonly o: MinimapOptions) {
     this.canvas = h('canvas', { class: 'minimap-canvas', role: 'img', 'aria-label': 'Minimap: tap to move the camera' });
@@ -161,6 +209,14 @@ export class Minimap {
         }
       });
       this.ro.observe(this.canvas);
+    }
+    // Colour-blind remaps live in theme tokens: redraw as soon as the mode changes (even with the game paused).
+    if (typeof MutationObserver === 'function' && typeof document !== 'undefined') {
+      this.mo = new MutationObserver(() => {
+        this.tokens = null;
+        this.draw();
+      });
+      this.mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-colorblind', 'data-relation'] });
     }
   }
 
@@ -217,7 +273,14 @@ export class Minimap {
     this.battle = battle;
     this.feeds = feeds;
     const due = this.layersDue(`b|${side}|${selection.join(',')}`, battle.tick, 120) || fresh;
-    if (due) this.bl = battleLayers(battle, side, selection);
+    if (due) {
+      this.bl = battleLayers(battle, side, selection);
+      if (this.fitFor !== battle) {
+        this.fitFor = battle;
+        this.fit = null;
+      }
+      this.fit = battleFitBounds(battle, this.fit);
+    }
     const cam = feeds?.cameraVersion ?? 0;
     if (due || cam !== this.camVersion) {
       this.camVersion = cam;
@@ -250,6 +313,7 @@ export class Minimap {
     if (this.raf) cancelAnimationFrame(this.raf);
     this.raf = 0;
     this.ro?.disconnect();
+    this.mo?.disconnect();
     this.canvas.removeEventListener('pointerdown', this.onDown);
   }
 
@@ -332,7 +396,7 @@ export class Minimap {
       this.canvas.height = px;
     }
     const t = this.readTokens();
-    const bounds = this.mode === 'world' ? this.world?.region.bounds : this.battle ? battleBoundsOf(this.battle) : undefined;
+    const bounds = this.mode === 'world' ? this.world?.region.bounds : this.battle ? (this.fit ?? battleBoundsOf(this.battle)) : undefined;
     if (!bounds) return;
     const heading = this.feeds?.cameraHeading ?? Math.PI;
     const p = makeProjection(bounds, px, this.northUp, heading);
@@ -371,8 +435,16 @@ export class Minimap {
   }
 
   private drawTerrain(ctx: CanvasRenderingContext2D, p: MapProjection): void {
-    if (!this.hf) return;
-    const bmp = terrainBitmap(this.hf, this.hfKey);
+    if (!this.hf) {
+      // No cached heightfield (e.g. not built yet): a flat grassland tint with a soft vignette, never an empty disc.
+      const g = ctx.createRadialGradient(p.size / 2, p.size / 2, p.size * 0.1, p.size / 2, p.size / 2, p.size * 0.72);
+      g.addColorStop(0, BIOME_COLORS.grassland);
+      g.addColorStop(1, BIOME_COLORS.floodplain);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, p.size, p.size);
+      return;
+    }
+    const bmp = terrainBitmap(this.hf, this.hfKey, this.mode === 'battle');
     const hb = this.hf.bounds;
     const [u0, v0] = worldToMap(p, hb.minX, hb.minZ, this.tmp);
     ctx.save();
@@ -587,8 +659,9 @@ export class Minimap {
     const sideFaction = (s: SideIndex): FactionId => this.battle!.sides[s].factionId;
     for (const f of L.formations) {
       const [u, v] = worldToMap(p, f.x, f.z, this.tmp);
-      const w = Math.max(3 * dpr, f.width / p.scale);
-      const d = Math.max(2.4 * dpr, f.depth / p.scale);
+      // At least 6 x 3 CSS px so every formation reads as a block with a front.
+      const w = Math.max(6 * dpr, f.width / p.scale);
+      const d = Math.max(3 * dpr, f.depth / p.scale);
       ctx.save();
       ctx.translate(u, v);
       // Formation frame: facing theta maps through the projection rotation.
@@ -606,6 +679,9 @@ export class Minimap {
       ctx.beginPath();
       ctx.moveTo(-w / 2, d / 2);
       ctx.lineTo(w / 2, d / 2);
+      // Facing tick: a short spike out of the middle of the front edge.
+      ctx.moveTo(0, d / 2);
+      ctx.lineTo(0, d / 2 + 3.5 * dpr);
       ctx.stroke();
       ctx.restore();
       ctx.globalAlpha = 1;

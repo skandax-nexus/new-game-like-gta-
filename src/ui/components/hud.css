@@ -3998,3 +3998,289 @@
 :root:has(.ui-layer-modal.has-modal) .wh-feed {
   visibility: hidden;
 }
+.fc-bars {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.fc-meters {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.fc-bars > .fc-men {
+  font-size: 12px;
+  line-height: 1;
+}
+.fc-bars > .fc-men > .icon {
+  width: 11px;
+  height: 11px;
+  color: var(--c-gold-soft);
+}
+.fc-head > .fc-chev {
+  margin-left: auto;
+}
+/* Slots: 70 px tall on PC (chip 2 + 18, 6 px clear, icon 28, label 10.5) and 72 on portrait phones. */
+.btn.slot {
+  --slot-h: 70px;
+  padding: 0 3px 3px;
+}
+.btn.slot > .kbd {
+  top: 2px;
+  right: 2px;
+}
+.btn.slot > .icon {
+  margin-top: 26px;
+}
+.btn.slot > .slot-label {
+  line-height: 1;
+}
+:root[data-layout='phone'] .btn.slot {
+  --slot-h: 72px;
+}
+
+/* --- Phone minimap (Art Director round 1): expanded 232 px portrait / 184 px landscape; the collapse and north-up
+   buttons sit side by side above the map, never on it. --- */
+:root[data-layout='phone'] .minimap-frame {
+  width: 232px;
+  height: 232px;
+  margin-top: 54px;
+}
+:root[data-layout='phone-landscape'] .minimap-frame {
+  width: 184px;
+  height: 184px;
+  margin-top: 52px;
+}
+:root[data-layout='phone'] .minimap-north,
+:root[data-layout='phone-landscape'] .minimap-north {
+  top: 0;
+  left: 54px;
+  right: auto;
+  width: 48px;
+  height: 48px;
+}
+/* Landscape phones: an open battle minimap is a map view - the cards strip, presets and groups step aside. */
+:root[data-layout='phone-landscape']:has(.bh-minimap .minimap:not(.collapsed)) .bh-bottom,
+:root[data-layout='phone-landscape']:has(.bh-minimap .minimap:not(.collapsed)) .bh-groups {
+  display: none;
+}
+.fc-state.fresh > .fc-fatigue,
+.fc-state.fresh > .fc-sep {
+  display: none;
+}
+.fcard .ammo-pips {
+  flex: none;
+  gap: 3px;
+  padding-right: 1px;
+}
+.fcard .ammo-pips > i {
+  width: 6px;
+  height: 6px;
+}
+/* Portrait phones: the forces bar marks your side with the gold underline only (the badge would cut the name). */
+:root[data-layout='phone'] .badge.bh-you {
+  display: none;
+}
+/* Phones: an open drawer / bottom sheet owns the screen edge it covers. The realm buttons under it (and their alert
+   badges, which overhang by 6 px and poked through the drawer's corner) step aside until it closes. */
+:root[data-layout='phone']:has(.hud-drawer:not(.ui-hidden)) .wh-realm-btns,
+:root[data-layout='phone-landscape']:has(.hud-drawer:not(.ui-hidden)) .wh-realm-btns {
+  visibility: hidden;
+}
+
+/* --- Age panel landmark cards: illustration band (>= 96 x 72; interim ink silhouettes, components/landmarkArt.ts)
+   and a flat-stone disabled "Choose site" (ink at 60% on flat sandstone; no 45%-opacity mud). --- */
+.lm-band {
+  margin: -12px -12px 2px;
+  height: 88px;
+  overflow: hidden;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-bottom: 1px solid rgba(255, 230, 170, 0.45);
+  box-shadow: inset 0 -10px 18px rgba(40, 20, 8, 0.35);
+}
+.lm-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.lm-art .lm-ink {
+  fill: #2a1a10;
+}
+.lm-art .lm-ground {
+  fill: #3a2414;
+}
+.lm-art .lm-road {
+  fill: #c98b4a;
+}
+.lm-art .lm-cut {
+  fill: #f2b866;
+}
+.lm-art .lm-water {
+  fill: #6f9fb4;
+}
+.lm-art .lm-fire {
+  fill: #ffd27a;
+}
+.lm-art .lm-steps {
+  fill: #e7a85c;
+}
+.landmark-card .btn.stone:disabled,
+.landmark-card .btn.stone.disabled {
+  opacity: 1;
+  color: rgba(36, 22, 15, 0.6);
+  background: var(--c-sandstone, #c9a77a);
+  border-color: rgba(36, 22, 15, 0.35);
+  box-shadow: none;
+  text-shadow: none;
+  filter: none;
+}
+.landmark-card .btn.stone:disabled .icon {
+  color: rgba(36, 22, 15, 0.6);
+}
+.lm-art .lm-dash {
+  fill: #fde3a2;
+}
+/* Battle results on phones: the sticky Continue row sits on an opaque lacquer band with a 16 px top fade (rows no
+   longer show through it); the scroller keeps the footer height clear when focusing / scrolling to an element. */
+:root[data-layout='phone'] .battle-results .br-buttons,
+:root[data-layout='phone-landscape'] .battle-results .br-buttons {
+  margin-top: 8px;
+  padding-top: 20px;
+  background: linear-gradient(180deg, rgba(27, 24, 48, 0) 0, var(--c-lacquer) 16px, var(--c-lacquer) 100%);
+}
+:root[data-layout='phone'] .modal.battle-results,
+:root[data-layout='phone-landscape'] .modal.battle-results {
+  scroll-padding-bottom: 76px;
+}
+/* Sparkline empty state (market at day 0). */
+.sparkline .spark-base,
+.sparkline .spark-empty {
+  display: none;
+}
+.sparkline.empty .spark-base {
+  display: inline;
+  stroke: var(--ui-border-soft);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.sparkline.empty .spark-empty {
+  display: inline;
+  color: var(--ui-text-dim);
+  fill: currentColor;
+  font: 600 10px var(--font-body);
+}
+.sparkline.empty .spark-dot,
+.sparkline.empty .spark-area {
+  display: none;
+}
+/* Slider gauge: phones only (the range input is hidden there; the meter fills the gap between - and +). */
+.slider-row > .slider-gauge {
+  display: none;
+}
+:root[data-layout='phone'] .slider-row > .slider-gauge {
+  display: block;
+  flex: 1 1 auto;
+  height: 8px;
+  margin: 0 6px;
+}
+/* Army panel on portrait phones: unit rows in one column (they ran off the right edge as a sideways strip). */
+:root[data-layout='phone'] .ap-units {
+  flex-direction: column;
+  overflow-x: visible;
+  touch-action: pan-y;
+}
+:root[data-layout='phone'] .ap-unit {
+  flex: none;
+  width: 100%;
+}
+/* Diplomacy: reason lines by sign; the at-war realm's chip wears the enemy ring (dashed red, outset). */
+.dip-reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+.dip-reason > .icon.dip-sign {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  margin-top: 3px;
+}
+.dip-reasons li.dip-reason.positive {
+  color: var(--ui-positive);
+}
+.dip-reasons li.dip-reason.danger {
+  color: var(--ui-danger);
+}
+.faction-chip.rel-enemy {
+  outline: 2px dashed var(--rel-enemy);
+  outline-offset: 2px;
+}
+.ffloat.enemy {
+  border: 2px solid var(--rel-enemy);
+}
+.ffloat > .ff-emblem {
+  position: absolute;
+  left: -11px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  box-shadow: 0 0 0 1.5px var(--rel-enemy);
+}
+/* Hero: anchored enemy bars hide while they would slide under a HUD box (vitals, boss bar, objective). */
+.hh-enemy.occluded {
+  visibility: hidden;
+}
+/* Unblockable cue: a crisp danger inner glow (24 px, 180 ms pulse) instead of a muddy brown vignette. */
+.hh-flash {
+  box-shadow: inset 0 0 24px 6px var(--ui-danger), inset 0 0 0 2px var(--ui-danger);
+  animation: unblock-pulse 0.18s ease-in-out infinite alternate;
+}
+@keyframes unblock-pulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.45;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hh-flash {
+    animation: none;
+  }
+}
+:root[data-reduced-motion='1'] .hh-flash,
+:root[data-reduced-motion='true'] .hh-flash {
+  animation: none;
+}
+/* Portrait phones: the caption sits between the hero and the touch controls (top at 70% of the height). */
+:root[data-layout='phone'] .hh-caption {
+  top: 70%;
+  bottom: auto;
+  max-width: 92%;
+  width: max-content;
+}
+/* Landscape phones: the open radial wheel (374 px across on a 390 px screen) cannot clear the forces bar, so the
+   bar steps aside while the wheel is open (it overlapped it). */
+:root[data-layout='phone-landscape'] .screen-battle-hud:has(.radial:not(.ui-hidden)) .bh-top {
+  visibility: hidden;
+}
+/* Placement: the disabled tick is an opaque, desaturated stone disc (a 45%-opacity saffron disc went muddy over
+   terrain); the cross keeps the danger skin, the reason sits in the info panel. */
+.bp-touch .btn.big.bp-ok:disabled {
+  opacity: 1;
+  color: #8f8578;
+  background: #3a3446;
+  border-color: #5c5468;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  filter: none;
+}
+/* Event modal on portrait phones: the parchment sheet fits its content, anchored under the top edge (it filled the
+   screen and left ~40% empty parchment); it still scrolls when the text is long. */
+:root[data-layout='phone'] .modal.event-card {
+  height: auto;
+  max-height: 100%;
+  align-self: flex-start;
+}

@@ -189,6 +189,7 @@ export function slider(o: SliderOpts): Slider {
     value = clamp(v);
     range.value = String(value);
     setText(out, o.format(value));
+    show(value);
     o.onChange(value);
   };
   range.addEventListener('input', () => {
@@ -203,8 +204,13 @@ export function slider(o: SliderOpts): Slider {
   });
   const minus = h('button', { class: 'btn icon stepper-btn', type: 'button', 'aria-label': `Decrease ${o.label}`, onclick: () => commit(value - o.step) }, icon('minus'));
   const plus = h('button', { class: 'btn icon stepper-btn', type: 'button', 'aria-label': `Increase ${o.label}`, onclick: () => commit(value + o.step) }, icon('plus'));
-  const el = h('div', { class: 'slider' }, h('div', { class: 'slider-head' }, h('span', { class: 'slider-label' }, o.label), out), h('div', { class: 'slider-row' }, minus, range, plus), hint);
+  // Phones hide the range input (steppers only): a notched meter fills the gap between - and + instead.
+  const gauge = meter('progress', 'slider-gauge');
+  const span = Math.max(1e-9, o.max - o.min);
+  const show = (v: number): void => gauge.set((v - o.min) / span);
+  const el = h('div', { class: 'slider' }, h('div', { class: 'slider-head' }, h('span', { class: 'slider-label' }, o.label), out), h('div', { class: 'slider-row' }, minus, range, gauge.el, plus), hint);
   setText(out, o.format(value));
+  show(value);
   if (o.hint) setText(hint, o.hint);
   return {
     el,
@@ -226,6 +232,7 @@ export function slider(o: SliderOpts): Slider {
       const s = String(v);
       if (range.value !== s) range.value = s;
       setText(out, o.format(v));
+      show(v);
     },
   };
 }
@@ -257,17 +264,25 @@ export function sparkline(width = 96, height = 28): { el: SVGSVGElement; set(val
   const line = svg('polyline', { class: 'spark-line', fill: 'none' });
   const area = svg('polygon', { class: 'spark-area' });
   const dot = svg('circle', { class: 'spark-dot', r: 2.5 });
-  const el = svg('svg', { class: 'sparkline', width, height, viewBox: `0 0 ${width} ${height}`, role: 'img', 'aria-label': 'Price trend' }, area, line, dot);
+  // Empty state (fewer than two samples, e.g. day 0): a dashed baseline and "No trades yet" instead of a dark block.
+  const base = svg('line', { class: 'spark-base', x1: 3, x2: width - 3, y1: height / 2, y2: height / 2 });
+  const empty = svg('text', { class: 'spark-empty', x: width / 2, y: height / 2 - 4, 'text-anchor': 'middle' }, 'No trades yet');
+  const el = svg('svg', { class: 'sparkline', width, height, viewBox: `0 0 ${width} ${height}`, role: 'img', 'aria-label': 'Price trend' }, area, line, dot, base, empty);
   let key = '';
+  const setEmpty = (on: boolean): void => {
+    el.classList.toggle('empty', on);
+  };
   return {
     el,
     set(values) {
       const k = values.map((v) => v.toFixed(3)).join(',');
       if (k === key) return;
       key = k;
-      if (values.length === 0) {
+      setEmpty(values.length < 2);
+      if (values.length < 2) {
         line.setAttribute('points', '');
         area.setAttribute('points', '');
+        el.setAttribute('aria-label', 'No trades yet');
         return;
       }
       let lo = Infinity;
