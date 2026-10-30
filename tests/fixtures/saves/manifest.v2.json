@@ -1,5 +1,5 @@
 {
-  "capturedFrom": "save format v2 build (SAVE_VERSION 2, WORLD_SCHEMA_VERSION 2), parent of \"[CTO] Apply GP-01 requests\"",
+  "capturedFrom": "save format v2 build (SAVE_VERSION 2, WORLD_SCHEMA_VERSION 2), commit 0a4c642",
   "generator": "tests/fixtures/saves/capture-v2.ts",
   "fixtures": [
     {

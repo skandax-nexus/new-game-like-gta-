@@ -117,6 +117,10 @@ export class SceneManager implements LoopTarget {
     ctx.profiler.beginFrame();
     const s = this._current;
     if (s && !this.loading) {
+      // Dynamic resolution first: a resize clears the canvas, so it must be followed by this frame's render. Applied
+      // after the render (as before), the frame ended on a cleared canvas, and a loop stopped right then
+      // (__SAMRAJYA__.freeze, a hidden tab) kept presenting it - the blank 3D views seen in smoke / shots runs.
+      ctx.render.updateDynamicResolution(ctx.profiler.averageFrameMs(), performance.now());
       ctx.profiler.begin('frame');
       s.update(dt, alpha);
       ctx.profiler.end('frame');
@@ -126,7 +130,6 @@ export class SceneManager implements LoopTarget {
         ctx.ui.hideLoading();
         ctx.bus.emit('scene:ready', { scene: s.id });
       }
-      ctx.render.updateDynamicResolution(ctx.profiler.averageFrameMs(), performance.now());
     }
     this.onFrame?.();
     ctx.profiler.endFrame();

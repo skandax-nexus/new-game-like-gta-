@@ -2,7 +2,7 @@
  * OWNER: CTO. Purpose: one-off generator of the FROZEN save-format v2 fixtures in this folder
  * (tests/contracts/migration.test.ts loads them through every later migration, v2 -> v3 first).
  *
- * Captured from the v2 build (SAVE_VERSION 2, WORLD_SCHEMA_VERSION 2, the commit before "[CTO] Apply GP-01 requests")
+ * Captured from the v2 build (commit 0a4c642, SAVE_VERSION 2, WORLD_SCHEMA_VERSION 2, before save format 3)
  * by driving the real sim the way the game session does. Both fixtures hold a battle in progress whose log already
  * credits routs (`formation_routed` events with `other` = the formation that broke the enemy): the v2 -> v3
  * migration seeds `FormationState.routedEnemies` from exactly those credits, so the fixtures exercise a non-zero
@@ -204,6 +204,6 @@ mkdirSync(OUT, { recursive: true });
 
 writeFileSync(
   join(OUT, 'manifest.v2.json'),
-  `${JSON.stringify({ capturedFrom: `save format v2 build (SAVE_VERSION ${SAVE_VERSION}, WORLD_SCHEMA_VERSION ${WORLD_SCHEMA_VERSION}), parent of "[CTO] Apply GP-01 requests"`, generator: 'tests/fixtures/saves/capture-v2.ts', fixtures: manifest }, null, 2)}\n`,
+  `${JSON.stringify({ capturedFrom: `save format v2 build (SAVE_VERSION ${SAVE_VERSION}, WORLD_SCHEMA_VERSION ${WORLD_SCHEMA_VERSION}), commit 0a4c642`, generator: 'tests/fixtures/saves/capture-v2.ts', fixtures: manifest }, null, 2)}\n`,
 );
 console.log('[capture-v2] done');

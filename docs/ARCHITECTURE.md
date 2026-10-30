@@ -184,8 +184,9 @@ Generation: ~0.5 s for 513^2 in V8 (TODO: Web Worker).
 ## 8. Render pipeline
 
 `render/renderer.ts` (`RenderContext`): WebGL2, sRGB output, ACES Filmic, physically based lights,
-PCF(soft) shadows, HalfFloat HDR chain, dynamic resolution (frame-time controller), stats -> profiler,
-context-loss reporting, `capture()` for screenshots.
+PCF(soft) shadows, HalfFloat HDR chain, dynamic resolution (frame-time controller; `SceneManager.update` applies it
+BEFORE the scene renders, because a resize clears the canvas - applied after, a frame could end on a cleared canvas
+that a stopped loop kept presenting), stats -> profiler, context-loss reporting, `capture()` for screenshots.
 
 ```
 RenderPass (HDR) -> GTAO (high+, half-res on high) -> UnrealBloom (medium+, HDR threshold)
@@ -337,8 +338,8 @@ verifies, runs registered migrations `v -> v+1` up to `SAVE_VERSION`, validates.
 `LocalStorageSaveStore` (slots + index), `MemorySaveStore` (tests); export/import text for files.
 Mid-battle saves keep the formation-level `BattleState` (inside the world engagement for campaign
 battles). Autosave on each new month. Bump `SAVE_VERSION`/`WORLD_SCHEMA_VERSION` + add a migration for
-any state shape change. Current: save format **2** / world schema **2**; the v1 -> v2 migration and the
-`describeSaveProblems()` shape check are described in §21.3; frozen v1 fixtures live in `tests/fixtures/saves/`.
+any state shape change. Current: save format **3** / world schema **2**; the v1 -> v2 and v2 -> v3 migrations and
+the `describeSaveProblems()` shape check are described in §21.3; frozen v1 and v2 fixtures live in `tests/fixtures/saves/`.
 
 ## 14. Debug, QA and crash reporting
 
@@ -359,9 +360,11 @@ any state shape change. Current: save format **2** / world schema **2**; the v1 
 - Tests: `npm test` (unit, purity, determinism, asset manifest/budgets). Smoke: `npm run smoke` (14 shots
   incl. 5,000-soldier battle, phone viewports and the asset viewer - stupa hero/close-up, sandstone
   lookdev, mobile, `assets=off` fallback; fails on console errors, page errors, failed requests, crash
-  reports and a blank 3D view: each shot is re-measured with the DOM layers over `#game` hidden, and one colour
-  covering >= 50 % of it or a luma stdev < 3 - black / cleared / unpresented canvas - is re-rendered and retaken up
-  to 2 times, then fails; `view3d` stats and any blank attempts are in `smoke-report.json`; `allowBlank` per shot).
+  reports and a blank frame: before each capture the loop runs >= 3 frames and >= 500 ms so frame-timed HUDs catch
+  up with `advance` (the battle HUD refreshes every 0.12 s of frame time); the saved frame (HUD included) and a
+  canvas-only capture (DOM layers over `#game` hidden) are measured, and one colour covering >= 15 % of either, or a
+  canvas luma stdev < 3 - black / cleared / unpresented canvas, a HUD over one - is re-rendered and retaken up to 2
+  times, then fails; `frame` / `view3d` stats and any blank attempts are in `smoke-report.json`; `allowBlank` per shot).
 
 ## 15. Performance budgets
 
@@ -580,11 +583,13 @@ as exact diffs (STUDIO.md W2); never duplicate a contract type locally.
   `ctx.actions.startHeroMission?.(id)`, `if (scene.debugCommand) ...`. New screen props on existing screens
   (`hero_hud.combat`, `battle_hud.anchors`, ...) are optional too, so today's scenes keep compiling.
 - **Required-state convention (domain state).** New persistent fields in `core/types.ts` are REQUIRED, set
-  where the object is created (CORE-01 compile-fix initialisers: neutral values) and defaulted by the v1 -> v2
-  migration with the value a fresh object would get. `?` only where absence means something: placement
+  where the object is created (CORE-01 compile-fix initialisers: neutral values) and defaulted by the save migration
+  that introduces it (v1 -> v2, v2 -> v3, ...) with the value a fresh object would get. `?` only where absence means something: placement
   `cell` / `rot`, `ConstructionJob.landmarkId` / `repair`, `SettlementState.rallyPoint`,
-  `ArmyState.rebelSettlementId`, `SkirmishSetup.compositions`. Fields marked `@sprint1 <ticket>` in a doc
-  comment are contract-only until that ticket lands.
+  `ArmyState.rebelSettlementId`, `SkirmishSetup.compositions`, `FormationOrder` `move_to.width`. Transitional `?`:
+  a new field whose creation site belongs to another ticket (`FormationState.routedEnemies`, absent = 0) stays
+  optional until that ticket initialises it, then the CTO makes it required (§21.3). Fields marked
+  `@sprint1 <ticket>` in a doc comment are contract-only until that ticket lands.
 - **Grid placement.** `GridCell = [i, j]` on the settlement's 4 m grid: cell (0, 0) spans
   `[s.x, s.x + 4) x [s.z, s.z + 4)`, +i east, +j south; a footprint's `cell` is its minimum (north-west) cell and
   covers `w/4 x d/4` cells (swapped for odd `rot`); `rot` = quarter turns, facing `rot x PI/2` (0 = +Z).
@@ -616,6 +621,8 @@ as exact diffs (STUDIO.md W2); never duplicate a contract type locally.
 | Battle state | `BattleState.deploymentEndsAt`, `siege` (`BattleSiegeState`: 12 `segments`, `gates`, `towers`, `breaches`, `breachHold`), `works: EngineerWorkState[]` (+ `maxHp`, `progress`, `formation`); `wallHp` deprecated | GP-01 | GFX-06 (walls), GP-04, SIM-02 |
 | Battle state | `BattleSideState.rallyCooldownUntil`; `aiMemory` | GP-01; `aiMemory`: SIM-02 | UI-02 (rally ring), GP-04 |
 | Battle state | `FormationState.rallies`, `shapeChangeUntil`, `panicUntil`, `rallyingUntil`, `disengageUntil`, `chargeRun`, `orderTime`, `hidden` | GP-01 | SIM-02, GFX-04, UI-02 |
+| Battle state | `FormationState.routedEnemies?` (save format 3): enemy formations this one routed, a live counter so outcome credits and experience do not depend on the bounded log (`BATTLE_EVENT_LOG_LIMIT`); absent = 0, transitional `?` until GP-01's `makeFormation` writes 0 (§21.3) | GP-01 (writes, outcome reads) | UI-02 (results), SIM-02 |
+| Orders | `FormationOrder` `move_to.width?` (frontage in m on arrival, clamped by `formations.setFrontage`; absent = keep) | GP-01 (orders.ts) | GP-04 / UI-02 (drag-to-width), SIM-02 |
 | Battle setup | `BattleSideSetup.aggression` (autoresolve stance 0.75 / 0.5 / 0.3) | SIM-01 sets, SIM-02 reads | - |
 | Outcome | `BattleOutcome.warScore`, `chronicle`, `placeName`, `day`; `BattleSideResult.prisoners`, `routs`, `capturedSupply`, `commanderId`; `FormationResult.routedEnemies` | GP-01 fills, SIM-01 writes back (stamps `day`) | UI-02 (results), UI-01 (stats) |
 | Soldiers | `SoldierBuffers.animVariant` (Uint8), `animStart` (Float32); `SOLDIER_ANIM.reload/charge`; `SOLDIER_ANIM_VARIANTS`; `SOLDIER_FLAG.mounted/conch` | GP-01 writes | GFX-04 (VAT clip mapping), AUD-01 |
@@ -644,9 +651,10 @@ as exact diffs (STUDIO.md W2); never duplicate a contract type locally.
 | UI scaffolding | screen registry + placeholder, `UI_SERVICES` (ui/screens/index.ts, registry.ts, placeholder.ts) | CORE-01 (done); UIManager starts services: UI-02 | UI-01, UI-02 |
 | Boot | `index.html` splash: Tiro Devanagari Sanskrit (preloaded, Palatino fallback), radial indigo (ART_BIBLE §17) | CORE-01 (done) | - |
 
-### 21.3 Save format 2 and the v1 -> v2 migration
+### 21.3 Save formats 2 and 3, the v1 -> v2 and v2 -> v3 migrations
 
-`SAVE_VERSION = 2`, `WORLD_SCHEMA_VERSION = 2`. `core/save.ts` registers `migrateSave` step 1 -> 2:
+`SAVE_VERSION = 3`, `WORLD_SCHEMA_VERSION = 2` (format 3 changed only `BattleState` formations, not the WorldState's
+own fields). `core/save.ts` registers `migrateSave` step 1 -> 2:
 `migrateWorldV1toV2` / `migrateBattleV1toV2` add every v2 field only where absent (`fill`), with the value a fresh
 v2 object gets: faction `age` = `ScenarioDef.startingAges > FactionDef.startingAge > 'janapada'`, `materials` =
 `ScenarioDef.materials`, `monsoon.strength` = scenario (start year) / sandbox `monsoonStrength` else 1,
@@ -663,7 +671,21 @@ Guards (`tests/contracts/migration.test.ts`): the four frozen v1 fixtures (campa
 skirmish saved in melee, sandbox month 6, campaign field battle saved in melee inside its engagement) load,
 keep every v1 value, round-trip byte-identically, keep simulating deterministically; a fresh v2 world / battle
 stripped of its v2 fields migrates back to an identical hash (migration defaults == creation defaults; a finished
-battle's `orderTime`, play state a v1 save never held, is the one field checked against its load-time rule instead).
+battle's `orderTime`, play state a v1 save never held, is checked against its load-time rule instead).
+
+Step 2 -> 3 (`migrateBattleV2toV3` / `migrateWorldV2toV3`, GP-01 requests): every battle formation - the skirmish
+battle and each engagement's - gets `routedEnemies` = the rout credits its log already holds (`formation_routed`
+events crediting it as `other`), i.e. exactly what the v2 outcome would have counted for the routs so far, so a battle
+saved mid-fight keeps them once GP-01's outcome reads the live counter. A fresh battle (empty log) gets 0, the creation
+default; a v1 log credits nobody, so v1 saves get 0. `fill` keeps it idempotent. The shape check accepts an absent
+`routedEnemies` (a fresh battle from today's `makeFormation`) and rejects a non-number. Guards: two frozen v2 fixtures
+(`skirmish-routs.v2.sav`, `campaign-fieldbattle.v2.sav`: battles in progress whose logs credit routs; generator
+`tests/fixtures/saves/capture-v2.ts`, refuses to run on another format) load, seed the counters from the log credits
+(sums match `manifest.v2.json`), keep every v2 value, round-trip byte-identically and keep simulating
+deterministically; the v1 fixtures load with every counter at 0; the stripped fresh / finished battle runs the full
+v1 -> v2 -> v3 chain (a finished battle's `routedEnemies` is checked against the log-credit rule, then set to the live
+value). Follow-up when GP-01 initialises the field in `makeFormation`: make it required in types.ts and the shape
+check, and register `migrateBattleV2toV3` again as step 3 -> 4 (idempotent) so format-3 saves written before then gain it.
 
 ### 21.4 Parallel-work rule (who edits what)
 
