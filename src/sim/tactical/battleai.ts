@@ -1,109 +1,51 @@
 /**
- * Battle AI + intent translation. OWNER: Lead AI & Simulation Engineer. Baseline by the CTO.
+ * Battle AI + intent translation - public entry points. OWNER: AI Engineer - Battle AI, Intents & Campaign AI (SIM-02),
+ * reporting to the Lead AI & Simulation Engineer. Signatures kept from the CTO baseline (W15): `runBattleAI`,
+ * `translateIntent`.
  *
- * Runs inside stepBattle (deterministic) every AI_THINK_TICKS for AI-controlled sides and translates
- * player intent orders (GDD §5: "hold a crossing", "protect archers") into FormationOrders.
- * Required (owner): utility AI per formation (threat, opportunity, terrain value), keep lines intact,
- * protect archers/commander, flank with cavalry, use elephants as shock, retreat/regroup broken
- * formations, difficulty + personality scaling, avoid full decision trees per soldier (GDD §9).
+ * Both run INSIDE stepBattle (deterministic, part of the authoritative sim) every AI_THINK_TICKS (1 s), also during
+ * deployment, so the BattleScene, distant battles and autoresolve resolve the same battle identically.
+ *  - `runBattleAI(state, side, terrain)`: commands for an AI-controlled side. The side re-plans every
+ *    `DIFFICULTY_DEFS[difficulty].battleAiReplanSec` (3 / 2 / 1.5 / 1 s, an accumulated schedule over the 1 s thinks);
+ *    between plans it issues nothing. Field battles: ai/field.ts (deployment, posture, roles, line, missiles, mounted,
+ *    elephants, reserve, pursuit, rally, withdrawal). Sieges: ai/siege.ts. The plan lives in
+ *    `BattleSideState.aiMemory`; randomness comes from the side's own seeded stream in that memory. The AI sees only
+ *    what its side sees (ai/common.ts `perceive`). Formations carrying an intent are left to the intent translation.
+ *  - `translateIntent(state, index, intent, terrain)`: the DESIGN_SPEC §6.4 table (ai/intents.ts), for the player and
+ *    AI sides alike; null keeps the current order.
+ * Budget (ARCHITECTURE §15, SIM-02 spec 5): < 0.1 ms per think at 40 formations (tests/sim/ai/perf.test.ts).
  */
-import type { BattleCommand, BattleState, FormationIndex, FormationOrder, FormationState, IntentOrder, SideIndex, TerrainQuery } from '../../core/types';
-import { UNITS } from '../../data/units';
-import { dcos, dsin } from '../../core/math';
+import type { BattleCommand, BattleState, FormationIndex, FormationOrder, IntentOrder, SideIndex, TerrainQuery } from '../../core/types';
+import { battleContext } from './context';
+import { perceive, replanSeconds, saveRng } from './ai/common';
+import { runField } from './ai/field';
+import { runSiege } from './ai/siege';
+import { translateIntentOrder } from './ai/intents';
 
-function nearestEnemy(state: BattleState, f: FormationState, filter?: (o: FormationState) => boolean): FormationState | null {
-  let best: FormationState | null = null;
-  let bd = Infinity;
-  for (const o of state.formations) {
-    if (o.side === f.side || o.soldiers <= 0 || o.activity === 'routing' || o.activity === 'surrendered') continue;
-    if (filter && !filter(o)) continue;
-    const dx = o.x - f.x;
-    const dz = o.z - f.z;
-    const d = dx * dx + dz * dz;
-    if (d < bd) {
-      bd = d;
-      best = o;
-    }
-  }
-  return best;
-}
-
-/** Commands for an AI side this think. Baseline: archers skirmish, mounted flank/charge, rest attack. */
+/** Commands an AI-controlled side issues at this think (empty between re-plans). */
 export function runBattleAI(state: BattleState, side: SideIndex, terrain: TerrainQuery): BattleCommand[] {
-  void terrain;
-  const cmds: BattleCommand[] = [];
-  for (const f of state.formations) {
-    if (f.side !== side || f.soldiers <= 0 || f.activity === 'routing' || f.activity === 'surrendered') continue;
-    if (f.engagedWith.length > 0) continue;
-    const o = f.order;
-    const busy = o.type !== 'hold' && !(o.type === 'attack_target' && (state.formations[o.target]?.soldiers ?? 0) <= 0);
-    if (busy && state.tick % (20 * 8) !== 0) continue;
-    const def = UNITS[f.unitClass];
-    if (f.unitClass === 'supply_train' || f.unitClass === 'engineers') continue;
-    if (def.stats.rangedAttack > 0 && def.category === 'ranged') {
-      const t = nearestEnemy(state, f);
-      if (t) cmds.push({ kind: 'order', formations: [f.index], order: { type: 'skirmish', target: t.index }, queue: false });
-      continue;
-    }
-    if (def.category === 'mounted' || def.category === 'beast') {
-      const soft = nearestEnemy(state, f, (e) => e.unitClass === 'archers' || e.unitClass === 'engineers' || e.unitClass === 'supply_train');
-      const t = soft ?? nearestEnemy(state, f);
-      if (t) cmds.push({ kind: 'order', formations: [f.index], order: soft && def.category === 'mounted' ? { type: 'flank', target: t.index, side: f.index % 2 === 0 ? 'left' : 'right' } : { type: 'charge', target: t.index }, queue: false });
-      continue;
-    }
-    const t = nearestEnemy(state, f);
-    if (t) cmds.push({ kind: 'order', formations: [f.index], order: { type: 'attack_target', target: t.index, run: false }, queue: false });
+  const sideState = state.sides[side];
+  if (state.outcome || sideState.withdrawn || sideState.surrendered) return [];
+  const mem = sideState.aiMemory;
+  const t = state.time;
+  if (state.phase === 'deployment') {
+    if (mem.deployed === true) return [];
+  } else {
+    const next = mem.next;
+    if (typeof next === 'number' && t + 1e-6 < next) return [];
+    const step = replanSeconds(state, side);
+    // Accumulated schedule (1.5 s re-plans alternate 1 s / 2 s gaps over the 1 s thinks); never schedules in the past.
+    mem.next = typeof next === 'number' && next + step > t ? next + step : t + step;
   }
-  return cmds;
+  const ai = perceive(state, side, terrain);
+  const ctx = battleContext(state, terrain);
+  if (ctx.fort && state.siege) runSiege(ai, ctx.fort);
+  else runField(ai);
+  saveRng(ai);
+  return ai.cmds;
 }
 
-/** Translate an intent into a concrete order for one formation (null = keep current order). */
+/** Translate an intent into the concrete order formation `index` should execute now (null = keep its order). */
 export function translateIntent(state: BattleState, index: FormationIndex, intent: IntentOrder, terrain: TerrainQuery): FormationOrder | null {
-  const f = state.formations[index];
-  if (!f) return null;
-  void terrain;
-  switch (intent.type) {
-    case 'hold_crossing':
-    case 'hold_high_ground':
-      return { type: 'defend', x: intent.x, z: intent.z, radius: intent.radius };
-    case 'protect_formation': {
-      const p = state.formations[intent.target];
-      if (!p || p.soldiers <= 0) return { type: 'hold' };
-      const threat = nearestEnemy(state, p);
-      if (threat) {
-        const dx = threat.x - p.x;
-        const dz = threat.z - p.z;
-        if (dx * dx + dz * dz < 160 * 160) return { type: 'attack_target', target: threat.index, run: true };
-      }
-      // Stand between the protected formation and the nearest enemy.
-      const e = nearestEnemy(state, p);
-      const ex = e ? e.x - p.x : 0;
-      const ez = e ? e.z - p.z : 1;
-      const d = Math.sqrt(ex * ex + ez * ez) || 1;
-      return { type: 'move_to', x: p.x + (ex / d) * 30, z: p.z + (ez / d) * 30, facing: null, run: false };
-    }
-    case 'pin_enemy':
-      return { type: 'attack_target', target: intent.target, run: false };
-    case 'screen_flank': {
-      const p = state.formations[intent.protect];
-      if (!p) return null;
-      // right = (-cos f, sin f); left flank = -right.
-      const s = intent.side === 'left' ? -1 : 1;
-      const off = p.width / 2 + f.width / 2 + 20;
-      return { type: 'move_to', x: p.x - dcos(p.facing) * s * off, z: p.z + dsin(p.facing) * s * off, facing: p.facing, run: false };
-    }
-    case 'pursue_routers': {
-      let best: FormationState | null = null;
-      for (const o of state.formations) if (o.side !== f.side && o.activity === 'routing' && o.soldiers > 0) best = best && best.soldiers > o.soldiers ? best : o;
-      return best ? { type: 'attack_target', target: best.index, run: true } : { type: 'hold' };
-    }
-    case 'scout_area':
-      return { type: 'move_to', x: intent.x, z: intent.z, facing: null, run: true };
-    case 'escort_supply': {
-      const p = state.formations[intent.target];
-      return p ? { type: 'move_to', x: p.x, z: p.z + 15, facing: p.facing, run: false } : null;
-    }
-    default:
-      return null;
-  }
+  return translateIntentOrder(state, index, intent, terrain);
 }
