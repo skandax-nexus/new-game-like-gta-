@@ -9,9 +9,9 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 13331318,
-    "high": 6217273,
-    "mobile": 3407942
+    "ultra": 18929630,
+    "high": 7874059,
+    "mobile": 3830342
   },
   "assets": {
     "banner_cloth": {
@@ -2012,6 +2012,129 @@ export const ASSET_MANIFEST = {
       "materialSets": [],
       "sets": {},
       "footprintMeters": null
+    },
+    "sandstone_buff": {
+      "kind": "material",
+      "id": "sandstone_buff",
+      "category": "materials",
+      "hash": "65e39d2ba6",
+      "description": "Buff Sanchi/Chunar sandstone trim sheet (same bands as sandstone_carved_red): ashlar, creeper scroll, dentils, padma, bead-and-reel, lotus medallion frieze; black lichen, pink bedding, chipped arrises.",
+      "bytes": {
+        "ultra": 5598312,
+        "high": 1656786,
+        "mobile": 422400
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        2,
+        2
+      ],
+      "averageColor": "#c2a985",
+      "roughness": 0.76,
+      "metalness": 0,
+      "normalScale": 0.9,
+      "trims": [
+        {
+          "name": "ashlar_base",
+          "v0": 0,
+          "v1": 0.16,
+          "heightMeters": 0.32
+        },
+        {
+          "name": "vine_scroll",
+          "v0": 0.16,
+          "v1": 0.28,
+          "heightMeters": 0.24
+        },
+        {
+          "name": "dentil",
+          "v0": 0.28,
+          "v1": 0.34,
+          "heightMeters": 0.12
+        },
+        {
+          "name": "padma",
+          "v0": 0.34,
+          "v1": 0.44,
+          "heightMeters": 0.2
+        },
+        {
+          "name": "bead_reel",
+          "v0": 0.44,
+          "v1": 0.48,
+          "heightMeters": 0.08
+        },
+        {
+          "name": "medallion_frieze",
+          "v0": 0.48,
+          "v1": 0.68,
+          "heightMeters": 0.4
+        },
+        {
+          "name": "ashlar",
+          "v0": 0.68,
+          "v1": 1,
+          "heightMeters": 0.64
+        }
+      ],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/sandstone_buff/baseColor_2048.webp",
+            "bytes": 784006,
+            "size": 2048
+          },
+          "high": {
+            "url": "textures/sandstone_buff/baseColor_1024.webp",
+            "bytes": 239378,
+            "size": 1024
+          },
+          "mobile": {
+            "url": "textures/sandstone_buff/baseColor_512.webp",
+            "bytes": 63510,
+            "size": 512
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/sandstone_buff/normal_2048.webp",
+            "bytes": 3315338,
+            "size": 2048
+          },
+          "high": {
+            "url": "textures/sandstone_buff/normal_1024.webp",
+            "bytes": 990386,
+            "size": 1024
+          },
+          "mobile": {
+            "url": "textures/sandstone_buff/normal_512.webp",
+            "bytes": 261162,
+            "size": 512
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/sandstone_buff/orm_2048.webp",
+            "bytes": 1498968,
+            "size": 2048
+          },
+          "high": {
+            "url": "textures/sandstone_buff/orm_1024.webp",
+            "bytes": 427022,
+            "size": 1024
+          },
+          "mobile": {
+            "url": "textures/sandstone_buff/orm_512.webp",
+            "bytes": 97728,
+            "size": 512
+          }
+        }
+      }
     },
     "sandstone_carved_red": {
       "kind": "material",

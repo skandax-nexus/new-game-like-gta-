@@ -10,6 +10,7 @@ import type { EnvironmentState, QualitySettings, Season } from '../../core/types
 import type { RenderContext } from '../renderer';
 import { SkySystem } from './sky';
 import { EXPOSURE, GRADE_PRESETS, SEASON_TINT } from '../style/palette';
+import { resolveLighting, environmentIntensityFor, sunDirection as presetSunDirection } from '../style/lighting';
 import type { GradeParams } from '../post';
 
 export interface EnvironmentRigOptions {
@@ -49,7 +50,7 @@ export class EnvironmentRig {
     private readonly opts: EnvironmentRigOptions,
   ) {
     this.quality = ctx.quality;
-    this.sky = new SkySystem(ctx.pmrem, this.quality.envMapSize);
+    this.sky = new SkySystem(ctx.pmrem, this.quality.envMapSize, ctx.renderer);
     scene.add(this.sky.mesh);
     this.sun = new THREE.DirectionalLight(0xffffff, 3);
     this.sun.name = 'sun';
@@ -141,10 +142,23 @@ export class EnvironmentRig {
     // Wind.
     this.wind.set(Math.sin(w.windDirection), 0, Math.cos(w.windDirection));
     this.windStrength = Math.min(1, w.windSpeed / 12);
-    const envMap = this.sky.updateEnvironmentMap(w.cloudCover);
-    this.scene.environment = envMap;
-    this.scene.environmentIntensity = 0.3 + day * 0.5;
+    // Calibrated IBL (ART_BIBLE §4.4): disc-free sky, measured source irradiance, preset sky irradiance target.
+    const elevDeg = THREE.MathUtils.radToDeg(Math.asin(THREE.MathUtils.clamp(dir.y, -1, 1)));
+    const res = resolveLighting({ sunElevationDeg: elevDeg, hour: env.hour, season: env.season, weather: w });
+    const md = presetSunDirection(42, 150);
+    this.moonDir.set(md[0], md[1], md[2]);
+    this.sky.setLighting(res, dir, this.moonDir, w.cloudCover);
+    const bake = this.sky.bake(this.ctx.renderer, true);
+    this.scene.environment = bake?.envMap ?? this.sky.envMap;
+    this.calibration = environmentIntensityFor(res, this.sky.sourceIrradiance);
+    this.scene.environmentIntensity = this.calibration;
+    this.scene.backgroundIntensity = this.calibration;
+    this.sky.setFrame(this.calibration, 1, 0, this.wind.x, this.wind.z);
   }
+
+  private readonly moonDir = new THREE.Vector3(0, 1, 0);
+  /** IBL calibration factor (scene.environmentIntensity) of the current sky. */
+  calibration = 1;
 
   /** Per frame: keep the shadow frustum around the camera focus (texel-snapped). */
   update(dt: number, focus: THREE.Vector3): void {
