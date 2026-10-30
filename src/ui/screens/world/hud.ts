@@ -518,7 +518,14 @@ export function worldHud(ctx: AppContext, ui: UIManager): Screen<'world_hud'> {
           if (!f) continue;
           feedItems.push({ ...f, t: now });
           if (f.ping && f.focus && !alertsFromBus) minimap.ping(f.focus.x, f.focus.z, f.ping);
-          if (ui.layout !== 'pc' && !ui.modalOpen && (f.severity === 'danger' || f.severity === 'success')) ui.toast(f.text, f.severity, 3600);
+          // Phones: toast after the tick, so a prompt opened by the same events (engagement, event) suppresses it.
+          if (ui.layout !== 'pc' && (f.severity === 'danger' || f.severity === 'success')) {
+            const text = f.text;
+            const sev = f.severity;
+            setTimeout(() => {
+              if (!ui.modalOpen) ui.toast(text, sev, 3600);
+            }, 0);
+          }
         }
         renderFeed();
       });

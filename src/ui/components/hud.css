@@ -3388,10 +3388,18 @@
 }
 :root[data-layout='phone'] .bh-deploy,
 :root[data-layout='phone-landscape'] .bh-deploy {
-  top: auto;
-  bottom: calc(var(--safe-bottom) + 172px);
-  width: calc(100% - 16px);
   justify-content: space-between;
+}
+/* Portrait: under the top bar, right of the minimap button (the bottom belongs to the cards strip and presets). */
+:root[data-layout='phone'] .bh-deploy {
+  top: calc(var(--safe-top) + 118px);
+  bottom: auto;
+  left: calc(max(6px, var(--safe-left)) + 54px);
+  right: max(6px, var(--safe-right));
+  width: auto;
+  transform: none;
+  padding: 6px 8px 6px 12px;
+  gap: 8px;
 }
 :root[data-layout='phone-landscape'] .bh-deploy {
   bottom: auto;
@@ -3538,4 +3546,35 @@
 :root[data-layout='phone']:has(.wh-minimap .minimap:not(.collapsed)) .wh-objectives,
 :root[data-layout='phone-landscape']:has(.wh-minimap .minimap:not(.collapsed)) .wh-objectives {
   display: none;
+}
+:root[data-layout='phone-landscape'] .card-grid {
+  grid-template-columns: repeat(5, 52px);
+}
+:root[data-layout='phone-landscape'] .btn.slot {
+  --slot-size: 52px;
+}
+/* Touch landscape: no room for corner hotkeys next to level badges (hotkeys stay in the tooltips). */
+:root[data-layout='phone-landscape'] .btn.slot > .kbd {
+  display: none;
+}
+/* A drawer open on a landscape phone replaces the bottom card (it would peek out from behind it). */
+:root[data-layout='phone-landscape']:has(.hud-drawer:not(.ui-hidden)) .wh-bottom {
+  display: none;
+}
+/* Hero on phones: vitals and the boss bar never overlap (portrait: stacked; landscape: vitals top-left). */
+:root[data-layout='phone'] .hh-boss {
+  top: calc(var(--safe-top) + 178px);
+}
+:root[data-layout='phone-landscape'] .hh-vitals {
+  left: max(10px, var(--safe-left));
+  top: calc(var(--safe-top) + 64px);
+  transform: none;
+  width: 230px;
+}
+:root[data-layout='phone-landscape'] .hh-boss {
+  top: calc(var(--safe-top) + 50px);
+  width: min(400px, 44%);
+}
+:root[data-layout='phone-landscape'] .br-forms {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }

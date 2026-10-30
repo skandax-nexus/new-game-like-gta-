@@ -820,6 +820,7 @@ async function assetsOff(browser, base) {
   const server = spawn('npx', ['vite', 'preview', '--outDir', DIST, '--port', String(PORT), '--strictPort'], { cwd: ROOT, stdio: 'ignore', detached: true });
   const base = `http://localhost:${PORT}/`;
   let browser = null;
+  let runError = false;
   try {
     await waitForServer(base, 60000);
     browser = await requirePlaywright().chromium.launch({ args: LAUNCH_ARGS });
@@ -849,6 +850,7 @@ async function assetsOff(browser, base) {
     check(`contrast: every measured text run >= 4.5:1 (body) / 3:1 (large) on ${report.audits.length} captures`, cf.length === 0, { texts: report.audits.reduce((n, a) => n + a.texts, 0), fails: cf.slice(0, 20) });
     check('touch: every interactive element >= 44x44 px on phone captures', tf.length === 0, { targets: report.audits.reduce((n, a) => n + a.targets, 0), fails: tf.slice(0, 20) });
   } catch (err) {
+    runError = true;
     check('run', false, String(err && err.stack ? err.stack : err));
   } finally {
     if (browser) await browser.close();
@@ -857,7 +859,8 @@ async function assetsOff(browser, base) {
     } catch {
       server.kill();
     }
-    fs.writeFileSync(path.join(OUT, 'shots-report.json'), `${JSON.stringify(report, null, 2)}\n`);
+    // An interrupted run never replaces the last complete report.
+    fs.writeFileSync(path.join(OUT, runError ? 'shots-report.failed.json' : 'shots-report.json'), `${JSON.stringify(report, null, 2)}\n`);
     console.log(`[ui-02] ${failed ? 'FAILED' : 'passed'}: ${report.checks.filter((c) => c.ok).length}/${report.checks.length} checks, ${report.shots.length} shots -> ${path.relative(ROOT, OUT)}`);
     process.exit(failed ? 1 : 0);
   }
