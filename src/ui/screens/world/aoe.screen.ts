@@ -188,7 +188,7 @@ function agePanel(ctx: AppContext, ui: UIManager): Screen<'age_panel'> {
       const cur = AGES[f.age];
       const next = av.checklist.nextAge ? AGES[av.checklist.nextAge] : null;
       clear(banner);
-      append(banner, h('div', { class: 'age-numeral' }, cur.numeral), h('div', null, h('div', { class: 'panel-title' }, `${cur.name} Age`), h('div', { class: 'epigraph' }, cur.title), next ? h('div', { class: 'age-next' }, `Next: ${next.numeral}. ${next.name} - ${next.title}`) : h('div', { class: 'age-next' }, 'The last age: your realm is an empire.')));
+      append(banner, h('div', { class: 'age-numeral' }, cur.numeral), h('div', null, h('div', { class: 'panel-title' }, /\bAge$/.test(cur.name) ? cur.name : `${cur.name} Age`), h('div', { class: 'epigraph' }, cur.title), next ? h('div', { class: 'age-next' }, `Next: ${next.numeral}. ${next.name} - ${next.title}`) : h('div', { class: 'age-next' }, 'The last age: your realm is an empire.')));
       clear(checklist);
       for (const it of av.checklist.items) {
         const pct = it.id === 'legitimacy' || it.id === 'stability';

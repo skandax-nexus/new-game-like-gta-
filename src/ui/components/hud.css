@@ -140,7 +140,8 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, rgba(255, 240, 210, 0.35), transparent 60%), var(--faction, var(--c-indigo));
+  /* Faction colour darkened so the ivory monogram keeps >= 4.5:1 on light faction colours (saffron, gold). */
+  background: radial-gradient(circle at 35% 30%, rgba(255, 240, 210, 0.18), transparent 60%), linear-gradient(rgba(20, 12, 6, 0.48), rgba(20, 12, 6, 0.48)), var(--faction, var(--c-indigo));
   box-shadow: 0 0 0 2px var(--c-gold), 0 0 0 4px rgba(0, 0, 0, 0.45), 0 3px 8px rgba(0, 0, 0, 0.5);
 }
 .portrait-sm {
@@ -288,7 +289,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .stat {
-  padding: 6px 8px;
+  padding: 6px 6px;
   border-radius: var(--radius-sm);
   background: rgba(0, 0, 0, 0.28);
   border: 1px solid var(--ui-border-faint);
@@ -407,10 +408,10 @@
 }
 .hud-drawer {
   position: absolute;
-  top: calc(var(--safe-top) + 112px);
+  top: calc(max(6px, var(--safe-top)) + 132px);
   right: max(8px, var(--safe-right));
   bottom: calc(var(--safe-bottom) + 12px);
-  width: min(430px, 40%);
+  width: min(460px, 42%);
   display: flex;
   flex-direction: column;
   animation: drawer-in var(--dur-med) var(--ease-out);
@@ -472,7 +473,7 @@
 .wh-res {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 4px;
   flex: 1;
   min-width: 0;
 }
@@ -487,8 +488,8 @@
   gap: 4px;
 }
 .res-chip .icon {
-  width: 17px;
-  height: 17px;
+  width: 16px;
+  height: 16px;
 }
 .res-chip .res-value {
   color: var(--c-gold);
@@ -659,6 +660,13 @@
 .wh-bottom > * {
   pointer-events: auto;
 }
+:root[data-layout='pc']:has(.hud-drawer:not(.ui-hidden)) .wh-bottom {
+  right: calc(min(460px, 42%) + 20px);
+}
+:root[data-layout='pc']:has(.hud-drawer:not(.ui-hidden)) .wh-feed,
+:root[data-layout='pc']:has(.hud-drawer:not(.ui-hidden)) .wh-card .sel-info {
+  display: none;
+}
 .wh-card {
   display: flex;
   align-items: stretch;
@@ -761,7 +769,7 @@
   white-space: nowrap;
 }
 .group-slot.empty {
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(20, 17, 36, 0.9);
   border-style: dashed;
 }
 .wh-feed,
@@ -839,6 +847,8 @@
   color: var(--ui-text);
 }
 .btn.slot > .slot-label {
+  font-size: 10.5px;
+  letter-spacing: -0.01em;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -856,6 +866,9 @@
 }
 .btn.slot.disabled:not(.empty) {
   opacity: 0.5;
+}
+.btn.slot.active.disabled:not(.empty) {
+  opacity: 1;
 }
 .btn.slot.active {
   background: var(--btn-bg-active);
@@ -938,7 +951,7 @@
 }
 .labor-box {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 4px 12px;
 }
 .labor-idle {
@@ -1808,6 +1821,10 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+/* Deeper sandstone than the carved title card: body text on it keeps >= 4.5:1 (measured by scripts/shots/ui-02.cjs). */
+.panel.carved.landmark-card {
+  background: linear-gradient(180deg, rgba(255, 240, 210, 0.06), rgba(0, 0, 0, 0.12)), linear-gradient(180deg, #6e4d34 0%, #563b27 100%);
 }
 .landmark-card {
   display: flex;
@@ -2923,22 +2940,25 @@
   display: inline-flex;
 }
 :root[data-layout='phone'] .wh-res {
-  flex: 1 1 100%;
+  flex: 1 1 200px;
   order: 1;
 }
 :root[data-layout='phone'] .wh-res-more {
   order: 2;
 }
-:root[data-layout='phone'] .wh-date {
+:root[data-layout='phone'] .wh-menu {
   order: 3;
-  flex: 1;
+}
+:root[data-layout='phone'] .wh-date {
+  order: 4;
+  flex: 1 1 120px;
   align-items: flex-start;
   text-align: left;
 }
-:root[data-layout='phone'] .wh-speed {
-  order: 4;
+:root[data-layout='phone'] .wh-date-row {
+  font-size: var(--fs-sm);
 }
-:root[data-layout='phone'] .wh-menu {
+:root[data-layout='phone'] .wh-speed {
   order: 5;
 }
 :root[data-layout='phone'] .wh-date-sub,
@@ -3028,8 +3048,10 @@
   width: 48px;
   height: 48px;
 }
-:root[data-layout='phone'] .wh-objectives .wh-obj-toggle {
-  display: none;
+:root[data-layout='phone'] .wh-obj-toggle,
+:root[data-layout='phone-landscape'] .wh-obj-toggle {
+  width: 48px;
+  height: 48px;
 }
 :root[data-layout='phone'] .wh-bottom,
 :root[data-layout='phone'] .bh-bottom {
@@ -3068,8 +3090,32 @@
   margin-top: 0;
   margin-left: auto;
 }
-:root[data-layout='phone'] .command-card {
+:root[data-layout='phone'] .command-card,
+:root[data-layout='phone-landscape'] .command-card {
   align-items: center;
+}
+:root[data-layout='phone'] .command-card .tabs,
+:root[data-layout='phone-landscape'] .command-card .tabs {
+  width: 100%;
+  overflow: visible;
+}
+:root[data-layout='phone'] .command-card .tabs .btn.tab,
+:root[data-layout='phone-landscape'] .command-card .tabs .btn.tab {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: var(--touch-min);
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 2px;
+  font-size: 11px;
+  line-height: 1.1;
+}
+:root[data-layout='phone'] .command-card .tabs .btn.tab .tab-label,
+:root[data-layout='phone-landscape'] .command-card .tabs .btn.tab .tab-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 :root[data-layout='phone'] .card-grid {
   grid-template-columns: repeat(5, 62px);
@@ -3082,11 +3128,12 @@
 :root[data-layout='phone-landscape'] .sheet-handle {
   display: block;
   position: absolute;
-  top: 0;
+  top: -18px;
   left: 50%;
   transform: translateX(-50%);
-  width: 72px;
-  height: 22px;
+  width: 88px;
+  height: 44px;
+  z-index: 2;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -3096,7 +3143,7 @@
   content: '';
   position: absolute;
   left: 50%;
-  top: 7px;
+  top: 25px;
   width: 44px;
   height: 4px;
   margin-left: -22px;
@@ -3106,6 +3153,34 @@
 :root[data-layout='phone'] .wh-card.empty .sel-info,
 :root[data-layout='phone-landscape'] .wh-card.empty {
   display: none;
+}
+:root[data-layout='phone-landscape'] .wh-bottom {
+  left: max(6px, var(--safe-left));
+  right: max(6px, var(--safe-right));
+  bottom: 0;
+  align-items: stretch;
+  gap: 4px;
+}
+:root[data-layout='phone-landscape'] .wh-card {
+  width: 100%;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 8px calc(6px + var(--safe-bottom));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: none;
+}
+:root[data-layout='phone-landscape'] .sel-info {
+  width: 230px;
+  align-self: stretch;
+}
+:root[data-layout='phone-landscape'] .card-grid {
+  grid-template-columns: repeat(5, 56px);
+  gap: 4px;
+}
+:root[data-layout='phone-landscape'] .btn.slot {
+  --slot-size: 56px;
 }
 :root[data-layout='phone'] .wh-feed,
 :root[data-layout='phone'] .bh-feed,

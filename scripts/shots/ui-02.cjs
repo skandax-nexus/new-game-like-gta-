@@ -206,8 +206,11 @@ function collectUi() {
   const root = document.getElementById('ui-root') || document.body;
   const vw = innerWidth;
   const vh = innerHeight;
+  // With a modal open, the layers below sit under its backdrop (dimmed, not interactive): audit the modal and above.
+  const modalOpen = !!document.querySelector('.ui-layer-modal.has-modal');
   const visible = (el) => {
     if (el.closest('.ui-hidden, [hidden]')) return false;
+    if (modalOpen && !el.closest('.ui-layer-modal, .ui-layer-toast, .ui-layer-tooltip')) return false;
     for (let e = el; e && e !== document.documentElement; e = e.parentElement) {
       const cs = getComputedStyle(e);
       if (cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity) === 0) return false;
@@ -362,18 +365,75 @@ async function step(s, fn, label) {
   }
 }
 
-/** UI + input CPU per frame: run `n` frames unpaused, read the EMA counters. */
-async function profileUi(s, key, n = 240) {
+/**
+ * UI + input CPU per frame. (1) bench: a virtual 60 fps timeline (src/ui/services/uiDebug.service.ts) at 1x and 4x
+ * game speed - the number a player pays; (2) live: the profiler EMA counters over `n` real frames under SwiftShader,
+ * where every ~1 s frame carries a full HUD refresh (printed for transparency, not a budget).
+ */
+/** Answer a blocking prompt like a player (first available event choice, generals decide) and let the scene see it. */
+async function dismissPrompts(s) {
+  const clicked = await ev(s, () => {
+    const u = window.__SAMRAJYA_UI__;
+    if (u.visible('engagement_prompt')) {
+      const b = [...document.querySelectorAll('.engagement button')].find((x) => /generals/i.test(x.textContent || ''));
+      if (b) return b.click(), true;
+    }
+    if (u.visible('event_modal')) {
+      const b = document.querySelector('.event-choice:not(.disabled)');
+      if (b) return b.click(), true;
+    }
+    return false;
+  });
+  if (clicked) {
+    await frames(s, 3);
+    await ev(s, () => window.__SAMRAJYA__.pause());
+  }
+  return clicked;
+}
+
+/** Bench in 2 s chunks; prompts are answered between chunks so the world keeps simulating (a blocked world is free). */
+async function benchChunks(s, speed, chunks = 5) {
+  const parts = [];
+  for (let i = 0; i < chunks; i++) {
+    await dismissPrompts(s);
+    parts.push(await ev(s, (sp) => window.__SAMRAJYA_UI__.bench({ seconds: 2, speed: sp }), speed));
+  }
+  const frames = parts.reduce((a, p) => a + p.frames, 0);
+  const r3 = (v) => Math.round(v * 1000) / 1000;
+  return {
+    screen: parts[0].screen,
+    speed,
+    frames,
+    updates: parts.reduce((a, p) => a + p.updates, 0),
+    steps: parts.reduce((a, p) => a + p.steps, 0),
+    avgMs: r3(parts.reduce((a, p) => a + p.avgMs * p.frames, 0) / frames),
+    p95Ms: Math.max(...parts.map((p) => p.p95Ms)),
+    maxMs: Math.max(...parts.map((p) => p.maxMs)),
+  };
+}
+
+async function profileUi(s, key, n = 30) {
+  const b1 = await benchChunks(s, 1);
+  const b4 = await benchChunks(s, 4);
   await ev(s, () => window.__SAMRAJYA__.resume());
   await frames(s, n);
-  const p = await ev(s, () => window.__SAMRAJYA_UI__.profile());
+  const live = await ev(s, () => window.__SAMRAJYA_UI__.profile());
   await ev(s, () => window.__SAMRAJYA__.pause());
-  report.profile[key] = p;
-  console.log(`[ui-02] profiler ${key}: ui ${p.ui} ms + input ${p.input} ms = ${p.total} ms/frame (max over 120 frames ${p.max} ms)`);
-  check(`profiler ${key}: UI + input < 1 ms/frame (EMA)`, p.total < 1, p);
+  report.profile[key] = { bench1x: b1, bench4x: b4, liveSwiftShader: live };
+  console.log(`[ui-02] profiler ${key}: 60 fps bench 1x avg ${b1.avgMs} ms (p95 ${b1.p95Ms}, max ${b1.maxMs}, ${b1.updates} HUD updates, ${b1.steps} sim steps); 4x avg ${b4.avgMs} ms (p95 ${b4.p95Ms}, max ${b4.maxMs})`);
+  console.log(`[ui-02] profiler ${key}: live SwiftShader EMA ui ${live.ui} + input ${live.input} = ${live.total} ms/frame (a HUD refresh in every ~1 s frame)`);
+  check(`profiler ${key}: UI + input < 1 ms/frame at 60 fps (bench avg, 1x and 4x)`, b1.avgMs < 1 && b4.avgMs < 1, { bench1x: b1.avgMs, bench4x: b4.avgMs });
 }
 
 // ------------------------------------------------------------------------------------------------ world
+
+async function selectCap0(s) {
+  await ev(s, () => {
+    const w = window.__SAMRAJYA_UI__.props('world_hud').world;
+    window.__SAMRAJYA_UI__.emit('ui:world_select', { kind: 'settlement', id: w.factions[w.playerFactionId].capitalSettlementId });
+  });
+  await settle(s, 300);
+}
 
 async function worldSession(browser, base, vpName) {
   const s = await newPage(browser, vpName);
@@ -463,7 +523,6 @@ async function worldSession(browser, base, vpName) {
     if (phone) await click(s, '.minimap-toggle');
   }, 'world: minimap');
 
-  if (vpName === 'pc') await step(s, () => profileUi(s, 'world-1280x720'), 'world: profiler');
 
   // Prompts: step the campaign day by day until an event and an engagement appear (the Royal Host marches on the
   // nearest army of a realm at war with the player).
@@ -510,6 +569,10 @@ async function worldSession(browser, base, vpName) {
     check(`world (${vpName}): an engagement prompt was reached`, gotEngagement || !target, target);
   }, 'world: prompts');
 
+  if (vpName === 'pc') {
+    await selectCap0(s);
+    await step(s, () => profileUi(s, 'world-1280x720'), 'world: profiler');
+  }
   await finish(s, 'world');
 }
 

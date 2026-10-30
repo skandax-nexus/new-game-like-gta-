@@ -435,7 +435,8 @@ export function worldHud(ctx: AppContext, ui: UIManager): Screen<'world_hud'> {
     }
     const d = dateBlock(w);
     setText(dateText, d.date);
-    setText(seasonText, `${d.seasonName} (${d.seasonEnglish})`);
+    setText(seasonText, d.seasonName);
+    setAttr(seasonText, 'title', `${d.seasonName}: ${d.seasonEnglish}`);
     setIcon(seasonIcon, d.seasonIcon);
     setIcon(weatherIcon, d.weatherIcon);
     setText(weatherText, d.weatherLabel);
@@ -528,6 +529,10 @@ export function worldHud(ctx: AppContext, ui: UIManager): Screen<'world_hud'> {
     }),
     ctx.bus.on('settings:changed', ({ settings }) => minimap.setNorthUp(settings.minimapNorthUp)),
     ui.onLayout(() => {
+      if (ui.layout !== 'pc') {
+        setClass(objectives, 'collapsed', true);
+        setAttr(objToggle, 'aria-expanded', 'false');
+      }
       if (world) {
         renderTop();
         renderSpeed(lastProps);
@@ -536,6 +541,10 @@ export function worldHud(ctx: AppContext, ui: UIManager): Screen<'world_hud'> {
     }),
   ];
   minimap.setCollapsed(ui.layout !== 'pc');
+  if (ui.layout !== 'pc') {
+    setClass(objectives, 'collapsed', true);
+    setAttr(objToggle, 'aria-expanded', 'false');
+  }
   let lastProps = { timeScale: 1, paused: false };
   let lastSelKey = '';
   let terrainSet = false;
@@ -575,7 +584,9 @@ export function worldHud(ctx: AppContext, ui: UIManager): Screen<'world_hud'> {
       if (selGate(`${selKey}|${ui.layout}|${ctx.input.touchMode}`, hours)) renderSelection();
       if (cardGate(`${selKey}|${tab}|${ctx.input.preset}|${cardVersion}`, hours)) renderCard();
       if (objGate(w.scenarioId ?? '', hours)) renderObjectives();
-      groups.set(ui.feeds.worldGroups.map((g) => ({ group: g.group, label: g.label, count: g.count })), ctx.input.touchMode || ui.layout !== 'pc');
+      const groupList = ui.feeds.worldGroups.map((g) => ({ group: g.group, label: g.label, count: g.count }));
+      // Touch: the five slots (long-press assigns) only while an army is selected or a group exists.
+      groups.set(groupList, (ctx.input.touchMode || ui.layout !== 'pc') && (p.selection.kind === 'army' || groupList.length > 0));
       minimap.setWorld(w, p.selection, ui.feeds);
       if (p.paused !== lastPaused) lastPaused = p.paused;
       refreshPanels(w);

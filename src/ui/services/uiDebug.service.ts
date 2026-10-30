@@ -9,6 +9,7 @@ import { isScreenId } from '../../app/contracts';
 import type { InputAction, KeyPreset } from '../../core/types';
 import type { UiService } from '../screens/registry';
 import type { UIManager } from '../ui';
+import { uiClock } from '../dom';
 import type { GroundQuad, HudCommandKind, WorldControlGroup } from './hudCommands';
 
 export interface UiDebugApi {
@@ -34,6 +35,24 @@ export interface UiDebugApi {
   setWorldGroups(groups: WorldControlGroup[]): void;
   /** UI + input CPU counters (ms per frame, EMA) from the profiler. */
   profile(): { ui: number; input: number; total: number; max: number };
+  /**
+   * UI + input CPU per frame on a virtual 60 fps timeline (the render loop is stopped): the sim advances at `speed`,
+   * the visible HUD gets the scene's push rate (world 4 Hz, battle ~8 Hz, hero 10 Hz), throttles see the virtual
+   * clock. Headless SwiftShader renders ~1 frame/s, so the live EMA counts a full HUD refresh in every frame; this
+   * measures what a 60 fps player pays.
+   */
+  bench(opts?: { seconds?: number; speed?: number }): BenchResult;
+}
+
+export interface BenchResult {
+  screen: string;
+  frames: number;
+  updates: number;
+  steps: number;
+  speed: number;
+  avgMs: number;
+  p95Ms: number;
+  maxMs: number;
 }
 
 declare global {
@@ -74,6 +93,53 @@ function start(ctx: AppContext, ui: UIManager): () => void {
     setCamera: (quad, heading) => ui.feeds.setCamera(quad, heading),
     setWorldGroups: (groups) => ui.feeds.setWorldGroups(groups),
     profile: () => ({ ui: counter('ui.ms'), input: counter('input.ms'), total: counter('uiInput.ms'), max: counter('uiInput.maxMs') }),
+    bench: (opts = {}) => {
+      const id: ScreenId | null = ui.isVisible('battle_hud') ? 'battle_hud' : ui.isVisible('world_hud') ? 'world_hud' : ui.isVisible('hero_hud') ? 'hero_hud' : null;
+      if (!id) throw new Error('bench: no HUD visible');
+      const seconds = opts.seconds ?? 10;
+      const speed = opts.speed ?? 1;
+      const pushEvery = id === 'world_hud' ? 0.25 : id === 'battle_hud' ? 0.12 : 0.1;
+      const wasRunning = ctx.loop.running;
+      ctx.loop.stop();
+      const realNow = uiClock.now;
+      let vt = performance.now();
+      uiClock.now = () => vt;
+      ui.consumeUiMs();
+      ctx.input.consumeCpuMs();
+      const frames = Math.max(1, Math.round(seconds * 60));
+      const per: number[] = [];
+      let acc = 0;
+      let nextPush = 0;
+      let updates = 0;
+      let steps = 0;
+      try {
+        for (let f = 0; f < frames; f++) {
+          vt += 1000 / 60;
+          acc += speed / 60;
+          while (acc >= ctx.loop.fixedStep) {
+            acc -= ctx.loop.fixedStep;
+            ctx.loop.stepNow(1);
+            steps++;
+          }
+          ctx.input.frame();
+          if (f / 60 >= nextPush) {
+            nextPush += pushEvery;
+            const props = ui.propsOf(id);
+            if (props) {
+              ui.update(id, props as never);
+              updates++;
+            }
+          }
+          per.push(ui.consumeUiMs() + ctx.input.consumeCpuMs());
+        }
+      } finally {
+        uiClock.now = realNow;
+        if (wasRunning) ctx.loop.start();
+      }
+      const sorted = per.slice().sort((a, b) => a - b);
+      const r3 = (v: number): number => Math.round(v * 1000) / 1000;
+      return { screen: id, frames, updates, steps, speed, avgMs: r3(per.reduce((a, b) => a + b, 0) / frames), p95Ms: r3(sorted[Math.floor(frames * 0.95)] ?? 0), maxMs: r3(sorted[frames - 1] ?? 0) };
+    },
   };
   window.__SAMRAJYA_UI__ = api;
   return () => {

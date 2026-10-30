@@ -177,9 +177,9 @@ export function fmtDays(d: number): string {
   return r === 1 ? '1 day' : `${r} days`;
 }
 
-/** Title case for ids ('war_elephants' -> 'War elephants'). */
+/** Sentence case for ids ('war_elephants' -> 'War elephants', 'taxEfficiency' -> 'Tax efficiency'). */
 export function label(id: string): string {
-  const s = id.replace(/_/g, ' ');
+  const s = id.replace(/_/g, ' ').replace(/([a-z0-9])([A-Z])/g, (_m, a: string, b: string) => `${a} ${b.toLowerCase()}`);
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 

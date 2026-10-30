@@ -389,6 +389,13 @@ export class UIManager {
     this.uiMs += ms;
   }
 
+  /** UI CPU ms accumulated since the last frame tick (QA bench); resets the accumulator. */
+  consumeUiMs(): number {
+    const v = this.uiMs;
+    this.uiMs = 0;
+    return v;
+  }
+
   private frameTick(): void {
     const ctx = this.ctx;
     if (!ctx) return;
