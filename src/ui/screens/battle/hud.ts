@@ -191,7 +191,8 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
       chev: h('span', { class: 'fc-chev', role: 'img', dataset: { rank: '0' } }, icon('chevron_up'), icon('chevron_up'), icon('chevron_up')),
       order: h('span', { class: 'fc-order' }),
     };
-    append(v.el, h('div', { class: 'fc-head' }, v.icon, v.name, v.count), v.str.el, v.mor.el, h('div', { class: 'fc-line' }, h('span', { class: 'fc-morale' }, icon('lotus'), v.cause), v.chev), h('div', { class: 'fc-line' }, v.fatigue, v.ammo.el), v.order);
+    // Chevrons sit in the head row so the morale line keeps the full card width for its cause.
+    append(v.el, h('div', { class: 'fc-head' }, v.icon, v.name, v.chev, v.count), v.str.el, v.mor.el, h('div', { class: 'fc-line' }, h('span', { class: 'fc-morale' }, icon('lotus'), v.cause)), h('div', { class: 'fc-line' }, v.fatigue, v.ammo.el), v.order);
     v.el.addEventListener('click', (e) => {
       const now = performance.now();
       const dbl = now - (lastClick.get(f.index) ?? 0) < 320;

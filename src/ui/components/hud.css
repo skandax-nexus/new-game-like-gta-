@@ -3701,8 +3701,10 @@
   flex: 1 1 auto;
   min-width: 0;
   flex-wrap: wrap;
-  align-content: flex-end;
-  max-height: 196px;
+  /* flex-start: an overflowing third row scrolls downwards instead of being cut off above the strip. */
+  align-content: flex-start;
+  align-self: flex-end;
+  max-height: 218px;
   overflow-x: hidden;
   overflow-y: auto;
   touch-action: pan-y;
@@ -3710,6 +3712,14 @@
 }
 :root[data-layout='pc'] .bh-strip > .fcard {
   pointer-events: auto;
+  width: 122px;
+}
+.fc-morale {
+  overflow: hidden;
+}
+.fc-morale > .fc-cause {
+  min-width: 0;
+  white-space: nowrap;
 }
 :root[data-layout='pc'] .bh-card,
 :root[data-layout='pc'] .bh-presets {
