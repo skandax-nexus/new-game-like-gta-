@@ -1,0 +1,385 @@
+{
+  "build": "0.1.0+acfeced",
+  "quality": "high",
+  "shots": [
+    {
+      "name": "menu",
+      "url": "http://127.0.0.1:4454/?scene=menu&quality=high&noaudio=1",
+      "ms": 60154,
+      "errors": [],
+      "state": {
+        "scene": "menu",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "scene": "menu",
+          "center": {
+            "x": -534.3999999999999,
+            "z": -598.72
+          }
+        },
+        "fps": 2.7645387028319437,
+        "errors": 0
+      },
+      "frame": {
+        "dominantShare": 0.007,
+        "lumaStdev": 45.383,
+        "pageBgShare": 0.001
+      },
+      "view3d": {
+        "dominantShare": 0.003,
+        "lumaStdev": 41.487,
+        "pageBgShare": 0,
+        "layersHidden": 2
+      },
+      "blankAttempts": []
+    },
+    {
+      "name": "menu-mobile",
+      "url": "http://127.0.0.1:4454/?scene=menu&quality=low&noaudio=1",
+      "ms": 14151,
+      "errors": [],
+      "state": {
+        "scene": "menu",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "low",
+        "sceneState": {
+          "scene": "menu",
+          "center": {
+            "x": -534.3999999999999,
+            "z": -598.72
+          }
+        },
+        "fps": 6.219596253544247,
+        "errors": 0
+      },
+      "frame": {
+        "dominantShare": 0.018,
+        "lumaStdev": 49.769,
+        "pageBgShare": 0.004
+      },
+      "view3d": {
+        "dominantShare": 0.006,
+        "lumaStdev": 46.693,
+        "pageBgShare": 0,
+        "layersHidden": 2
+      },
+      "blankAttempts": []
+    },
+    {
+      "name": "assetviewer-stupa",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=hero&noui=1",
+      "ms": 57684,
+      "errors": [],
+      "state": {
+        "scene": "assetviewer",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "ultra",
+        "sceneState": {
+          "scene": "assetviewer",
+          "asset": "stupa_sanchi",
+          "kind": "model",
+          "mode": "model",
+          "tier": "ultra",
+          "fallback": false,
+          "hdri": "sky_golden",
+          "preset": "golden",
+          "sun": {
+            "azimuthDeg": 258,
+            "color": [
+              1,
+              0.5116,
+              0.1196
+            ],
+            "direction": [
+              -0.97086,
+              0.12187,
+              0.20636
+            ],
+            "elevationDeg": 7,
+            "intensity": 5.791
+          },
+          "ambientIrradiance": 0.7737,
+          "environmentIntensity": 0.5816207832493214,
+          "triangles": 45108,
+          "lod": 0,
+          "crowd": null,
+          "impostor": null,
+          "skinned": null,
+          "kit": null,
+          "lut": null,
+          "flipbooks": 0,
+          "fxQuads": null,
+          "prepass": "tagged",
+          "notes": []
+        },
+        "fps": 8.924309299162699,
+        "errors": 0
+      },
+      "frame": {
+        "dominantShare": 0.003,
+        "lumaStdev": 38.886,
+        "pageBgShare": 0
+      },
+      "view3d": {
+        "dominantShare": 0.003,
+        "lumaStdev": 38.886,
+        "pageBgShare": 0,
+        "layersHidden": 2
+      },
+      "blankAttempts": []
+    },
+    {
+      "name": "assetviewer-torana",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=close&noui=1",
+      "ms": 42983,
+      "errors": [],
+      "state": {
+        "scene": "assetviewer",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "ultra",
+        "sceneState": {
+          "scene": "assetviewer",
+          "asset": "stupa_sanchi",
+          "kind": "model",
+          "mode": "model",
+          "tier": "ultra",
+          "fallback": false,
+          "hdri": "sky_golden",
+          "preset": "golden",
+          "sun": {
+            "azimuthDeg": 258,
+            "color": [
+              1,
+              0.5116,
+              0.1196
+            ],
+            "direction": [
+              -0.97086,
+              0.12187,
+              0.20636
+            ],
+            "elevationDeg": 7,
+            "intensity": 5.791
+          },
+          "ambientIrradiance": 0.7737,
+          "environmentIntensity": 0.5816207832493214,
+          "triangles": 45108,
+          "lod": 0,
+          "crowd": null,
+          "impostor": null,
+          "skinned": null,
+          "kit": null,
+          "lut": null,
+          "flipbooks": 0,
+          "fxQuads": null,
+          "prepass": "tagged",
+          "notes": []
+        },
+        "fps": 10.92555005670892,
+        "errors": 0
+      },
+      "frame": {
+        "dominantShare": 0.028,
+        "lumaStdev": 49.656,
+        "pageBgShare": 0
+      },
+      "view3d": {
+        "dominantShare": 0.028,
+        "lumaStdev": 49.656,
+        "pageBgShare": 0,
+        "layersHidden": 2
+      },
+      "blankAttempts": []
+    },
+    {
+      "name": "assetviewer-sandstone",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=ultra&noaudio=1&asset=sandstone_carved_red&hdri=sky_day&noui=1",
+      "ms": 77702,
+      "errors": [],
+      "state": {
+        "scene": "assetviewer",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "ultra",
+        "sceneState": {
+          "scene": "assetviewer",
+          "asset": "sandstone_carved_red",
+          "kind": "material",
+          "mode": "material",
+          "tier": "ultra",
+          "fallback": false,
+          "hdri": "sky_day",
+          "preset": null,
+          "sun": {
+            "azimuthDeg": 128,
+            "color": [
+              1,
+              0.8442,
+              0.6412
+            ],
+            "direction": [
+              0.58561,
+              0.66913,
+              0.45753
+            ],
+            "elevationDeg": 42,
+            "intensity": 3.9414
+          },
+          "ambientIrradiance": 0.5766,
+          "environmentIntensity": 1.6,
+          "triangles": null,
+          "lod": null,
+          "crowd": null,
+          "impostor": null,
+          "skinned": null,
+          "kit": null,
+          "lut": null,
+          "flipbooks": 0,
+          "fxQuads": null,
+          "prepass": "tagged",
+          "notes": []
+        },
+        "fps": 6.441368427606477,
+        "errors": 0
+      },
+      "frame": {
+        "dominantShare": 0.002,
+        "lumaStdev": 39.284,
+        "pageBgShare": 0
+      },
+      "view3d": {
+        "dominantShare": 0.002,
+        "lumaStdev": 39.284,
+        "pageBgShare": 0,
+        "layersHidden": 2
+      },
+      "blankAttempts": []
+    },
+    {
+      "name": "assetviewer-mobile",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=low&noaudio=1&asset=stupa_sanchi&hdri=sky_day&camera=overview",
+      "ms": 18449,
+      "errors": [],
+      "state": {
+        "scene": "assetviewer",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "low",
+        "sceneState": {
+          "scene": "assetviewer",
+          "asset": "stupa_sanchi",
+          "kind": "model",
+          "mode": "model",
+          "tier": "mobile",
+          "fallback": false,
+          "hdri": "sky_day",
+          "preset": null,
+          "sun": {
+            "azimuthDeg": 128,
+            "color": [
+              1,
+              0.8442,
+              0.6412
+            ],
+            "direction": [
+              0.58561,
+              0.66913,
+              0.45753
+            ],
+            "elevationDeg": 42,
+            "intensity": 3.9414
+          },
+          "ambientIrradiance": 0.5766,
+          "environmentIntensity": 1.6,
+          "triangles": 45108,
+          "lod": 0,
+          "crowd": null,
+          "impostor": null,
+          "skinned": null,
+          "kit": null,
+          "lut": null,
+          "flipbooks": 0,
+          "fxQuads": null,
+          "prepass": "tagged",
+          "notes": []
+        },
+        "fps": 9.964369832826135,
+        "errors": 0
+      },
+      "frame": {
+        "dominantShare": 0.019,
+        "lumaStdev": 53.485,
+        "pageBgShare": 0
+      },
+      "view3d": {
+        "dominantShare": 0.01,
+        "lumaStdev": 51.049,
+        "pageBgShare": 0,
+        "layersHidden": 2
+      },
+      "blankAttempts": []
+    },
+    {
+      "name": "assetviewer-fallback",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&asset=stupa_sanchi&assets=off",
+      "ms": 31348,
+      "errors": [],
+      "state": {
+        "scene": "assetviewer",
+        "mode": null,
+        "paused": false,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "scene": "assetviewer",
+          "asset": "stupa_sanchi",
+          "kind": "model",
+          "mode": "model",
+          "tier": "off",
+          "fallback": true,
+          "hdri": null,
+          "preset": null,
+          "sun": null,
+          "ambientIrradiance": null,
+          "environmentIntensity": 1,
+          "triangles": 0,
+          "lod": null,
+          "crowd": null,
+          "impostor": null,
+          "skinned": null,
+          "kit": null,
+          "lut": null,
+          "flipbooks": 0,
+          "fxQuads": null,
+          "prepass": "tagged",
+          "notes": []
+        },
+        "fps": 6.404098589174692,
+        "errors": 0
+      },
+      "frame": {
+        "dominantShare": 0.02,
+        "lumaStdev": 53.782,
+        "pageBgShare": 0
+      },
+      "view3d": {
+        "dominantShare": 0.023,
+        "lumaStdev": 52.415,
+        "pageBgShare": 0,
+        "layersHidden": 2
+      },
+      "blankAttempts": []
+    }
+  ]
+}

@@ -6,7 +6,8 @@ Reproduce: `npx vite build --outDir .build/ta-01/dist --emptyOutDir` then
 
 ## What shipped
 
-39 texture sets + 1 decal atlas, all published with `flock .asset-cache/.publish.lock npm run assets -- <id>`:
+37 texture sets (WP1-01..29 and WP1-31..38: 20 materials incl. ground_dry_earth, 17 terrain layers) + 1 decal atlas
+(WP1-30) = 38 published ids, all published with `flock .asset-cache/.publish.lock npm run assets -- <id>`:
 
 | group | ids | class |
 |---|---|---|
