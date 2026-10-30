@@ -11,9 +11,11 @@ slight occlusion - the smoke column above a fire is fx_smoke). Seamless loop: th
 cross-fade into the first.
 Fuel bed (Art Director TA-07 R2-B2a): every hot spot is a DOME whose height follows the continuous noise (2 cm at
 its foot, ~20 cm at its crest; the old source was a slab with one flat 14 cm top), and the spots stay inside the
-inner ~80 % of the bed. A small spot is too weak to lift a tongue that stays above the ignition temperature, so all
-that showed of it was its source shape: the slab read as a detached flat-topped glowing block at the right of the bed
-for ~0.35 s of every loop; a dome reads as a rounded flamelet that licks up and curls into the body. Logged per
+inner 80 % of the bed ellipse (full to 60 %, none past 80 % - the bed is only 0.6 m deep, so its front / back rim
+projects to x ~ +-0.3 m in the front view). A rim spot had too little rising gas around it to lift a tongue that stays
+above the ignition temperature, so all that showed of it was its source shape: the slab read as a detached
+flat-topped glowing block at the right of the bed for ~0.35 s of every loop (a dome alone made it a rounded ball;
+confining the spots removes it). Logged per
 frame: the longest flat top of a DETACHED emissive region (straight_top_edge: sub-pixel top edge, within 1 px - the
 Art Director's criterion; the bake fails above 8 % of the frame width, target <= 10 %) and of any shouldered block
 (block_tops).
@@ -51,9 +53,10 @@ shape, EXT = kit.sim_box((S * 0.7, S * 0.5, S), H)
 sim = fb.FluidSim(shape, EXT, floor=True, vorticity=10.0, sponge=0.08, sponge_top=0.08)
 x, y, z = sim.world()
 # fuel bed: an ellipse 1.16 x 0.6 m whose hot spots flicker (time-scrolled value noise -> several separate tongues).
-# Hot spots only inside the inner ~80 % (full up to rx 0.30, gone at 0.37 of the bed's 0.40): see the module doc.
+# Hot spots only inside the inner 80 % of the bed ellipse (full up to rx 0.24 = 60 %, gone at 0.32 = 80 % of the bed's
+# 0.40): the bed is only 0.6 m deep, so a spot near its front / back rim projects to x ~ +-0.3 m in the front view.
 rx = np.sqrt((x / 1.45) ** 2 + (y / 0.75) ** 2)
-bed_xy = (np.clip((0.40 - rx) / 0.08, 0, 1) * kit.smooth01((0.37 - rx) / 0.07))[:, :, :1]
+bed_xy = (np.clip((0.40 - rx) / 0.08, 0, 1) * kit.smooth01((0.32 - rx) / 0.08))[:, :, :1]
 zc = z[:1, :1, :]
 TN = 160
 noise = fb.value_noise3((shape[0], shape[1], TN), 0.10 / H, 9, octaves=2)

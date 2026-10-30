@@ -666,24 +666,48 @@ async function main() {
 
       // R2-B2b: fire at night - emission added to the sky (shot - backdrop) never leans green / blue; 4x-boosted crops
       const chroma = [];
-      if (part('fire')) for (const tier of ['ultra', 'mobile']) {
+      // sky_day ultra is the control: the night preset's grade (cool tint, desaturation) acts on the composite, so a
+      // screen-space hue lean there is the grade's, not the atlas' (whose stored texels carry no chroma at all)
+      if (part('fire')) for (const [sky, tier] of [['sky_night', 'ultra'], ['sky_night', 'mobile'], ['sky_day', 'ultra']]) {
         const opts = tier === 'mobile' ? { quality: 'low', viewport: [390, 844], mobile: true } : { quality: 'ultra' };
-        const q = 'asset=fx_fire&hdri=sky_night&camera=front&phase=0.35&noui=1';
-        const name = `r2_fire_night_${tier}`;
+        const q = `asset=fx_fire&hdri=${sky}&camera=front&phase=0.35&noui=1`;
+        const name = `r2_fire_${sky.slice(4)}_${tier}`;
         const st = await shoot(name, q, opts);
         await shoot(`${name}_bg`, `${q}&hidefx=1`, opts);
         const A = await rgba(path.join(OUT, `${name}.png`));
         const B = await rgba(path.join(OUT, `${name}_bg.png`));
-        let px = 0;
-        let bad = 0;
+        // added light d = shot - backdrop. Premultiplied fire also occludes a little (alpha): where that subtraction of the
+        // warm backdrop outweighs the emission in a channel, d is negative there and its hue says nothing about the
+        // emission - those pixels are counted apart. Emission pixels: every channel gains, sum >= 12.
+        // The DIM emission around the tongues is where lossy chroma blocks showed (R2-B2b); in the bright core the tone
+        // curve's shoulder drives every channel towards white, and as R saturates first over a warm backdrop, dG can
+        // exceed dR there by a few levels - a property of the display transform, counted apart.
+        let dim = 0;
+        let dimBad = 0;
+        let bright = 0;
+        let brightBad = 0;
+        let occluded = 0;
         for (let i = 0; i < A.data.length; i += 4) {
           const d = [0, 1, 2].map((c) => A.data[i + c] - B.data[i + c]);
-          if (d[0] + d[1] + d[2] < 12) continue;
-          px++;
-          if (d[1] > d[0] + 2 || d[2] > d[1] + 2) bad++;
+          if (Math.abs(d[0]) + Math.abs(d[1]) + Math.abs(d[2]) < 12) continue;
+          if (Math.min(...d) < 0) {
+            occluded++;
+            continue;
+          }
+          const lean = d[1] > d[0] + 2 || d[2] > d[1] + 2;
+          if (Math.max(A.data[i], A.data[i + 1], A.data[i + 2]) < 200) {
+            dim++;
+            if (lean) dimBad++;
+          } else {
+            bright++;
+            if (lean) brightBad++;
+          }
         }
-        chroma.push({ tier, emittingPixels: px, greenOrBlueLeaning: bad });
-        console.log(`[ta-07] R2-B2b fx_fire night ${tier}: ${px} pixels with added emission, ${bad} lean green / blue (dG > dR or dB > dG by > 2)`);
+        chroma.push({ sky, tier, dimEmissionPixels: dim, dimLeaning: dimBad, brightPixels: bright, brightLeaning: brightBad, occlusionDominated: occluded });
+        console.log(
+          `[ta-07] R2-B2b fx_fire ${sky} ${tier}: dim emission ${dimBad} of ${dim} pixels lean green / blue on screen (dG > dR or dB > dG ` +
+            `by > 2); bright core (a channel >= 200, tone-curve shoulder) ${brightBad} of ${bright}; occlusion-dominated ${occluded}`,
+        );
         const r = st?.fxQuads?.[0];
         if (r) {
           // the flame tips and the air around them (where lossy chroma blocks showed), 4x nearest, brightness x4

@@ -226,10 +226,14 @@ where its channels quantised at different steps (R2-B2b, R2-B3). One channel can
 #### Effect artifact gates (rework round 2)
 
 - **fx_fire, no flat-topped blocks:** each hot spot of the fuel bed is a dome whose height follows the continuous
-  noise (the slab source with one flat top showed through the ignition threshold as a detached glowing block at the
-  rim, and as a flat foot at the base near the loop seam), confined to the inner ~80 % of the bed. The bake measures
-  the longest straight horizontal top edge of any emitting shape per frame (`_fxkit.straight_top_edge`) and fails
-  above 6 % of the frame width; the test re-measures the shipped atlas against the Art Director's 10 %.
+  noise (the slab source with one flat top showed through the ignition threshold as a detached glowing block), and
+  the spots are confined to the inner 80 % of the bed ellipse (full to 60 %): the bed is only 0.6 m deep, so its
+  front / back rim projects to x ~ +-0.3 m in the front view, where the block sat (a dome alone made it a rounded
+  ball). The bake logs, per frame, the longest flat top (sub-pixel top edge within 1 px) of a detached emissive
+  region (`_fxkit.straight_top_edge(detached_only=True)`, fails above 8 % of the frame width) and of any shouldered
+  block (`block_tops`); `tests/assets/fx-artifacts.test.ts` re-measures the shipped ultra atlas against the Art
+  Director's 10 %. Honest limit: these measures are lenient - the round-1 block itself scored only 6-8 % (its left side
+  runs into the body through a dim valley) - so the review evidence is the same-scale rim strip, round 1 vs round 2.
 - **parry_flash, never the wheel:** an open burst of 16 irregular streaks (jittered angles, varied length / width /
   curl, they leave the centre as they fly) and a soft gold core gone after 4 frames - no rim, no regular rays (the
   8-spoke wheel is the capital / heraldry motif, ART_BIBLE §1.3 / §1.5 / §8.7). The bake logs and the test checks
