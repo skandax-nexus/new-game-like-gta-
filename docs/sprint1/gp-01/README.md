@@ -14,85 +14,121 @@ never change results - proven by the resume tests below).
 | What | Command |
 |---|---|
 | Typecheck | `npm run typecheck` |
-| Tactical suites (86 tests) | `npx vitest run tests/sim/tactical` |
+| Tactical suites (90 tests) | `npx vitest run tests/sim/tactical` |
 | Pacing table (printed) | `npx vitest run tests/sim/tactical/pacing.test.ts` |
 | Perf numbers (printed) | `npx vitest run tests/sim/tactical/perf.test.ts` |
+| Composition examples and statistics (printed) | `npx vitest run tests/sim/tactical/compose.test.ts` |
+| Pairing / mirror / §13.3 probes (README tables) | `node_modules/.bin/vite-node tests/sim/tactical/tools/probes.ts pace,default,review,all21,...` (`N=<seeds>`) |
 | Headless traces only | `node_modules/.bin/vite-node tests/sim/tactical/tools/trace.ts out.json` |
-| All evidence images | `NODE_PATH=$(npm root -g) node scripts/shots/gp-01.cjs` (port 4407, builds into `.build/gp-01`; `--only=maps` / `--only=engine`, `SHOTS_SKIP_BUILD=1`) |
-| Smoke | `SMOKE_DIST=.build/gp-01 SMOKE_PORT=4407 SMOKE_OUT=docs/sprint1/gp-01/smoke npm run smoke -- --scenes=battle` |
+| All evidence images | `NODE_PATH=$(npm root -g) node scripts/shots/gp-01.cjs` (port 4407, builds into `.build/gp-01`; `--only=maps` / `--only=engine`, `SHOTS_SKIP_BUILD=1`, `SHOTS_DIST`, `SHOTS_OUT`) |
+| Smoke | `SMOKE_SKIP_BUILD=1 SMOKE_DIST=.build/gp-01 SMOKE_PORT=4407 SMOKE_OUT=docs/sprint1/gp-01/smoke npm run smoke -- --scenes=battle` |
 
 ## Evidence images (every image described)
 
-In-engine (the shipping build, battle stepped with `__SAMRAJYA__.step(n)` while paused, then rendered; SwiftShader):
+Re-captured in Creative Director rework round 2. Builds come from a clean export of `9aa38bd`; its tactical code is that of
+`f00d04b`. This excludes a teammate's uncommitted `src/sim/strategic/**` work. The capture script is the one committed with
+this README. `gp-01.cjs` passes 22 / 22 checks (`shots-report.json`).
 
-The plains captures run seed 2 with the in-engine defaults (Suvarna Balanced Host vs Giridurga Hill Fort Garrison,
-08:30) and press `begin_battle` at tick 0, so the clock is fighting time (no deployment). Re-captured after the
-Creative Director rework (round 1) against a clean export of commit `27c5686` (`.build/gp-01`).
+In-engine captures use the shipping build. The battle is stepped with `__SAMRAJYA__.step(n)` while paused, then rendered
+under SwiftShader. The plains captures run seed 2 with the in-engine defaults: Suvarna vs Giridurga, both on the Balanced
+Host (Giridurga's skirmish default since the CD commit `93a1755`), at 08:30. They press `begin_battle` at tick 0, so the
+clock shows fighting time and there is no deployment. The melee tick is chosen from the battle state: after 8 % losses, the
+script steps 50 ticks at a time until a Suvarna spear or guard block is fighting a Giridurga one. The battle state is read
+from a quick save, because the debug state has no positions.
 
-- **battle-melee.png** - The Open Plain, seed 2, 1,000 soldiers, AI vs AI, default camera 165 m behind the Suvarna
-  (orange) line at 1:24 (Suvarna 458, Giridurga 460). In the middle distance the forward Suvarna horse, scouts and
-  elephants are locked with the Giridurga (blue) line; behind them two Suvarna blocks march up in line. The toast
-  "A formation is breaking!" is up and the cavalry card reads `ROUT`. The formation cards show the new §10.1 split
-  (SPR 118 / 117, ARC 98, GRD 56, CAV, ELE 8, SCT 29, SUP 12 - no 4-man remainder formations any more).
-- **battle-melee-close.png** - the same tick, wheel-zoomed (cursor-anchored) to 45 m: the eight Suvarna elephants
-  (orange howdahs) push into a Giridurga block (blue soldiers between the rightmost elephants); on the left the
-  Suvarna horse and scouts fight the blue spear line (a fallen horse in the grass); two more Giridurga blocks stand
-  on the right; the 118-man Suvarna spear line with its standard and selection ring fills the foreground.
-- **battle-melee-overview.png** - the same tick from the overview camera (650 m): the whole open plain with its forest
-  patches; the two hosts are small clusters at the centre, the "A formation is breaking!" toast under the clock.
-- **battle-river-melee.png** - The Ford, seed 11, 17:00, overview camera, first clash at 1:24 (475 vs 474): the river
-  crosses the map east-west with the lighter shallow ford in the middle; the Suvarna host stands in the ford and meets
-  the Giridurga line on its north lip. Nobody is in the deep water.
-- **battle-result.png** - the plains battle stepped to its end (2:10 of fighting): the Victory screen with the outcome
-  chronicle from `outcome.ts` ("The Battle of The Open Plain: Suvarna defeated Giridurga; 190 fell", losses 76 / 114
-  killed, 16 taken, the Giridurga commander wounded, 60 men cut down or taken in the rout; 424 / 500 vs 370 / 500
-  remain). On the right edge the two Giridurga archer blocks still stand in formation. This end is a plain all-rout
-  cascade (a headless replay of the same setup shows both archer blocks routing with 11 arrows left), not the new
-  arrowless-archer rule; before this rework the same setup ended after 2:20. Four stacked "The enemy wavers" toasts
-  overlap the Victory title (noted for UI).
-- **battle-mobile-melee.png** - 390x844 @low quality, default camera, plains seed 2 mid-melee (1:24): Suvarna blocks
-  (selection ring) in the middle, the melee top right just under the HUD, the "A formation is breaking!" toast; the
-  mobile HUD and order bar cover about half of the screen (noted for UI).
-- **smoke/** - `npm run smoke --scenes=battle` against this build (4/4, no console errors in `smoke-report.json`):
-  `battle.png` (seed 7, deployment 0:25; cards SPR 118 / 117, ARC 98, GRD 59, CAV 59, ELE 8, SCT 29, SUP 12 -
-  exactly the largest-remainder split of 500), `battle-close.png` (0:35: eight elephants forward, the 118-man spear line with its
-  standard, the 59 guards in square on the right), `battle-river-5000.png` (5,000 soldiers deploying behind the ford:
-  SPR 118 x7 / 117 x3, ARC 98 x5, GRD 59 x3 ...), `battle-mobile.png` (Clash 600 @low: SPR 71 / 70, ARC 59, GRD 35,
-  CAV 35, ELE 5, SCT 18, SUP 7 - every formation at least half strength).
+- **battle-melee.png** - The Open Plain, seed 2, 1,000 soldiers, AI vs AI, 1:57 (Suvarna 444, Giridurga 393).
+  - Default camera, 165 m behind the Suvarna (orange) line. The selected 114-man spear block is in the foreground.
+  - In the middle distance, the Suvarna guards (ring) and the seven remaining elephants have closed on the Giridurga
+    (blue) spear blocks. Dust rises over the contact, and a second Suvarna spear line comes up on the left.
+  - A routed cavalry clump is on the left edge. The CAV and SCT cards read `ROUT`.
+- **battle-melee-close.png** - the same tick. The script selected the engaged Suvarna guards (57) through their HUD
+  card, focused the camera with `Home` (`camera_focus`) and wheel-zoomed to 45 m.
+  - The orange guards with their standard are locked front to front with a large blue Giridurga spear block.
+  - A second blue block stands behind with its ring. A Suvarna elephant (orange howdah) pushes into a blue block on
+    the left.
+  - Fallen men and horses lie on the right, where the cavalry fought.
+  - The focus check: the camera looks 17 m from the guards' centroid.
+- **battle-melee-overview.png** - the same tick from the overview camera (650 m). The whole open plain and its forest
+  patches are visible; the two hosts are small clusters in the centre.
+- **battle-river-melee.png** - The Ford, seed 11, 17:00, overview camera, first clash at 1:24 (476 vs 466).
+  - The river crosses the map east-west, with the lighter shallow ford in the middle.
+  - The Suvarna blocks stand in the ford and meet the Giridurga line on its north lip. Nobody is in the deep water.
+  - Fading toasts ("The enemy wavers", "A formation is breaking!") overlap the speed buttons (noted for UI).
+- **battle-result.png** - the plains battle stepped to its end (4:11 of fighting). The Victory screen shows the outcome
+  chronicle from `outcome.ts`:
+  - "The Battle of The Open Plain: Suvarna defeated Giridurga; 388 fell", and "carried the field after 4 minutes:
+    their foes broke and fled".
+  - Losses: 96 killed / 0 taken against 292 killed / 7 taken; Suvarna took 7 prisoners.
+  - The Giridurga commander was killed, and 31 Giridurga men were cut down or taken in the rout.
+  - 404 / 500 vs 201 / 500 remain.
+  - Behind the screen: a Suvarna spear block on the left and the dead of the cavalry fight on the right.
+- **battle-mobile-melee.png** - 390x844 @low quality, default camera, plains seed 2 at 0:54 (the 8 %-losses tick).
+  - The Suvarna elephants (ring) are in the middle, the Giridurga blocks at the top and the Suvarna spear blocks at
+    the bottom left.
+  - Three toasts overlap the speed buttons, and the order bar covers about 40 % of the screen (noted for UI).
+- **smoke/** - `npm run smoke --scenes=battle` against this build: 4 / 4 shots, no console errors
+  (`smoke-report.json`).
+  - `battle.png`: seed 7, deployment at 0:25. Cards: SPR 118 / 117, ARC 98, GRD 59, CAV 59, ELE 8, SCT 29, SUP 12. The
+    Balanced Host at Battle 1,000 is unchanged by the round-2 split rule.
+  - `battle-close.png`: 0:35. Eight elephants forward, the 118-man spear line with its standard, the guards in square
+    on the right.
+  - `battle-river-5000.png`: 5,000 soldiers deploying behind the ford. Cards: SPR 148 / 147 x 7, ARC 123 / 123 / 122 /
+    122, GRD 74 / 74 / 73 / 73, CAV 74 ... There are 61 formations; round 1 had 75, with SPR 118 x 7 / 117 x 3.
+  - `battle-mobile.png`: Clash 600 @low. Cards: SPR 141 (one block; round 1 split it 71 / 70), ARC 59, GRD 35, CAV
+    35, ELE 5, SCT 18, SUP 7.
+  - In the first smoke run, `battle-river-5000` came out with a blank 3D view and `battle-mobile` with a stale HUD
+    (0:00, 1x). This is the known SwiftShader frozen-frame issue (Known issues); `smoke.cjs` cannot detect it. A
+    re-run gave clean frames (dominant colour 1.0-2.2 %); all four were looked at.
 
-Top-down tactical maps from headless traces of the authoritative sim (`tests/sim/tactical/tools/trace.ts`, data in
-`traces.json`; blue = side 0, orange = side 1 - validated categorical pair; trails every 2 s, dashed while routing;
-footprints at the moment the most soldiers are in melee, black edge = front; x = melee contact, ring = rout):
+The top-down tactical maps come from headless traces of the authoritative sim (`tests/sim/tactical/tools/trace.ts`;
+the data is in `traces.json`). Drawing conventions:
+- Blue is side 0 and orange is side 1 (a validated categorical pair).
+- Trails are sampled every 2 s and are dashed while routing.
+- Footprints show the moment when the most soldiers are in melee; a black edge marks the front.
+- An x marks a melee contact; a ring marks a rout.
 
-- **tactical-plains.png** - The Open Plain, seed 2, Balanced Host vs Balanced Host: the Giridurga line comes down
-  from the north; footprints at 3:04 (most soldiers in melee) show the Suvarna cavalry / elephant / guard knot in the
-  centre locked with Giridurga spears and guards, routs (orange rings) cascading on the Giridurga side, the Giridurga
-  cavalry and carts routing off the north edge. Right: soldiers standing (Giridurga drops 500 -> 261 before the
-  pursuit, Suvarna 500 -> 412) and average morale (Giridurga stays above the wavering line until its commander falls
-  at 4:10; its last three formations break within seven seconds and its morale collapses to 0 at 4:17). Outcome:
-  Suvarna by rout after 4:17; Giridurga 267 killed / 7 captured / 35 lost in the pursuit, 6 formation routs,
-  commander killed; 13 routs and 5 rallies in all.
-- **tactical-river.png** - The Ford, seed 11: the deep river (dark blue) and the shallow ford (light blue). Every
-  trail of both hosts funnels through the ford; the melee is fought on the ford's north lip (footprints at 3:46). The
-  two hosts trade evenly (378 vs 378 standing before the pursuit, 16 routs and 8 rallies back and forth) until the
-  Giridurga commander falls at 5:16 and four Giridurga blocks break within six seconds; Suvarna wins by rout after
-  5:22 (Giridurga 147 killed, 7 captured, 32 lost in the pursuit).
-  The script asserts that no formation centroid ever sampled a deep-water cell.
-- **tactical-siege.png** - scripted assault on a level-2 town wall (radius 120 m, 12 segments, 2 gates). The
-  elephants batter the main (south) gate open at 1:18 (red X) while the ram engineers are still building under arrow
-  fire; the finished ram is carried off and abandoned outside the south-west wall when its crew routs
-  (`ram (abandoned)`). Engineers raise ladders on the east wall (`ladders up`) and the spearmen there fight the
-  defenders' reserve spear block. The garrison's gate spearmen rout at 2:30, the gate archers at 2:40; the west-wall
-  archer block has been out of arrows since 1:55 and stands idle on the wall. When the last defending spear block
-  routs at 3:54 the garrison is broken (CD amendment to §6.8: arrowless archers out of melee no longer hold the field)
-  and the attacker wins by rout - §6.6.5 "defenders are broken", which captures the town in the SIM-01 write-back just
-  like `siege_breach`. That is why the defenders' average morale still reads 71 at the end: only the intact wall
-  archers are left standing. (Before the amendment the same script ran on until the breach was held 60 s -> 
-  `siege_breach` at 4:26; the breach-hold path is covered by `siege.test.ts`.)
+The maps:
+
+- **tactical-plains.png** - The Open Plain, seed 2, Balanced Host vs Balanced Host (09:00).
+  - Footprints at 3:02 show the Suvarna guards and two spear blocks locked with the Giridurga guards and a spear block
+    in the centre. The Suvarna elephants have pushed north through to the Giridurga archers and supply train. A
+    Giridurga spear block routs in the north, and rings on both sides mark 13 routs and 5 rallies.
+  - Soldiers standing: Giridurga drops 500 -> 232 before the pursuit, Suvarna 500 -> 404.
+  - Average morale: Giridurga dips to the wavering line around 3:10 and recovers with a rally at 3:26. Its commander
+    falls at 4:05, its last three formations break between 4:08 and 4:12, and its morale collapses to 0.
+  - Outcome: Suvarna wins by rout after 4:12. Giridurga: 292 killed, 7 captured, 31 lost in the pursuit, 7 formation
+    routs, commander killed.
+- **tactical-river.png** - The Ford, seed 11, 17:00.
+  - The map shows the deep river (dark blue) and the shallow ford (light blue). Every trail of both hosts funnels
+    through the ford, and the melee is fought on its north lip (footprints at 2:36).
+  - The hosts trade evenly: 110 killed each, with 16 routs and 9 rallies back and forth. Both sides' archers are out of
+    arrows by 2:20.
+  - From 4:46 to 5:24 the Suvarna elephants, a spear block, the scouts, the cavalry, the guards and the last spear
+    block break in turn.
+  - Only Suvarna's dry archers and supply train are left standing, and those do not hold the field (§6.8 amendment). So
+    Giridurga wins by rout after 5:24, although Suvarna has more men on the field (421 vs 390 before the pursuit; 40
+    Suvarna men lost in it).
+  - Deep water: the trace checks every tick exactly, and 0 of 6,472 ticks had a formation centroid in a deep-water cell
+    (see R2-3a below for the check).
+- **tactical-siege.png** - a scripted Nilavana assault on a level-2 Kotanagara town wall (radius 120 m, 12 segments, 2
+  gates).
+  - The elephants batter the main (south) gate open at 1:18 (red X) while the ram engineers are still building under
+    arrow fire. The finished ram is abandoned outside the south-west wall when its crew routs at 3:27.
+  - Engineers raise ladders on the east wall (`ladders up`), and the spearmen there fight the defenders' reserve spear
+    block.
+  - The garrison's gate spearmen rout at 2:30 and the gate archers at 2:41. The west-wall archer block (100 men) has
+    been out of arrows since 1:55 and stands on its wall.
+  - The last defending spear block routs at 3:54. Under the round-2 rule the dry archers on their own wall still hold
+    the field, so the garrison is not broken.
+  - The attacker's guards have held the inside of the broken gate since 3:23. They win by `siege_breach` at 4:23,
+    60 s later; the CD's scratch prototype predicted 4.4 min.
+  - The defenders' average morale reads 70 at the end because only the wall archers are still standing.
+  - Totals: Nilavana 488 -> 374 standing; Kotanagara 410 -> 254 (150 killed, 6 captured, 25 lost in the pursuit of
+    its routers); 70 volleys.
 
 ## Numbers
 
-**Worked examples (DESIGN_SPEC §6, all within 10 %)** - `tests/sim/tactical/worked-examples.test.ts`
+**Worked examples (DESIGN_SPEC §6, all within 10 %)** - `tests/sim/tactical/worked-examples.test.ts` (unchanged in round 2)
 
 | Example | Spec | Simulated |
 |---|---|---|
@@ -106,39 +142,46 @@ footprints at the moment the most soldiers are in melee, black edge = front; x =
 | Ram vs gate (level 2) | 251 HP at 16 HP/s | broken 15.7 s after arrival |
 | Archers on the wall: range / hits | x1.44 hits | 230 m vs 160 m, x1.44 |
 
-**Pacing (§13.1)** - 1,000-soldier balanced skirmish (Balanced Host vs Balanced Host, Suvarna vs Giridurga), open
-plain, Minister, AI vs AI, full-resolution terrain: 10 / 10 seeds within 3-8 min (median 4.97 min). Seed table
-printed by `pacing.test.ts` (after the rework):
+**Pacing (§13.1)** - the 1,000-soldier balanced skirmish: Balanced Host vs Balanced Host, Suvarna vs Giridurga, open
+plain, Minister difficulty, AI vs AI, full-resolution terrain. 10 / 10 seeds end within 3-8 min (median 5.48 min, the
+CD's figure). Each row was printed by `pacing.test.ts` after the CD's ally_routed change (-0.15):
 
-| Seed | Minutes | Winner | Lines met | Losses 0 / 1 | Pursuit 0 / 1 |
-|---|---|---|---|---|---|
-| 1 | 6.20 | 0 | 127 s | 138 / 218 | 0 / 22 |
-| 2 | 4.51 | 0 | 134 s | 142 / 178 | 0 / 30 |
-| 3 | 6.47 | 0 | 67 s | 161 / 298 | 0 / 28 |
-| 4 | 5.19 | 0 | 121 s | 147 / 197 | 0 / 24 |
-| 5 | 4.86 | 0 | 50 s | 88 / 171 | 0 / 28 |
-| 6 | 4.75 | 0 | 120 s | 132 / 179 | 0 / 28 |
-| 7 | 4.62 | 0 | 135 s | 116 / 189 | 0 / 28 |
-| 8 | 4.16 | 0 | 99 s | 77 / 185 | 0 / 29 |
-| 9 | 5.52 | 0 | 61 s | 86 / 235 | 0 / 32 |
-| 10 | 5.07 | 0 | 133 s | 116 / 265 | 0 / 31 |
+| Seed | Minutes | Winner | Lines met | Losses 0 / 1 | Pursuit 0 / 1 | Routs 0 / 1 |
+|---|---|---|---|---|---|---|
+| 1 | 5.08 | 0 | 124 s | 145 / 211 | 0 / 22 | 3 / 5 |
+| 2 | 7.92 | 0 | 136 s | 184 / 261 | 0 / 32 | 5 / 7 |
+| 3 | 5.96 | 0 | 67 s | 149 / 227 | 0 / 40 | 4 / 7 |
+| 4 | 5.28 | 0 | 126 s | 139 / 205 | 0 / 23 | 4 / 5 |
+| 5 | 5.31 | 0 | 50 s | 110 / 197 | 0 / 28 | 4 / 6 |
+| 6 | 6.52 | 0 | 119 s | 134 / 265 | 0 / 29 | 5 / 7 |
+| 7 | 4.37 | 0 | 134 s | 125 / 181 | 0 / 28 | 3 / 5 |
+| 8 | 4.21 | 0 | 99 s | 78 / 188 | 0 / 29 | 2 / 6 |
+| 9 | 7.02 | 0 | 61 s | 139 / 254 | 0 / 12 | 3 / 7 |
+| 10 | 5.65 | 0 | 142 s | 92 / 206 | 0 / 43 | 2 / 7 |
 
-**Performance (node, `perf.test.ts`; median of 100-step chunks over approach + melee, best of two deterministic
-runs per chunk; camera on the front line, 'high' LOD distances)**
+**Performance** - measured in node by `perf.test.ts`: the median of 100-step chunks over approach and melee, taking the
+better of two deterministic runs per chunk, with the camera on the front line and 'high' LOD distances.
 
 | Size | Formations | Formation step (budget) | Soldier layer (budget) |
 |---|---|---|---|
-| 1,000 soldiers | 15 | 0.047-0.057 ms (0.3) | 0.24-0.29 ms (1.0) |
-| 5,000 soldiers | 75 | 0.33-0.36 ms (0.8) | 0.94-1.11 ms (3.0) |
+| 1,000 soldiers | 15 | 0.045-0.047 ms (0.3) | 0.24-0.25 ms (1.0) |
+| 5,000 soldiers | 61 (was 75) | 0.24-0.26 ms (0.8) | 0.92-1.02 ms (3.0) |
 
-After the rework: one solo run and one inside the full `npm test` run on the shared 4-core box (load average ~4);
-round-0 ranges were 0.05-0.18 / 0.26-0.44 and 0.30-0.45 / 0.91-1.11 ms. The face fix adds no allocation (shares are
-still counted over `engagedWith`). New-order pathing cost: median 0.76-1.14 ms, p90 0.86-1.47 ms (budget 2 ms). The
-river_crossing skirmish: 0 formation-ticks in deep water over 4 minutes.
+- These are two runs in round 2 on the shared 4-core box, with load average 2-5 (a teammate's build and Chromium
+  captures were running).
+- 5,000 soldiers now form 61 formations instead of 75, because of the round-2 split rule, so the formation step got
+  cheaper (round 1: 0.33-0.36 ms).
+- The wall-archer exception and the new split add no per-step allocation: `holdsTheField` reads the cached context, and
+  `composeArmy` runs once at setup.
+- New-order pathing cost: median 0.76 ms, p90 0.80 ms (budget 2 ms).
+- The river_crossing skirmish spends 0 formation-ticks in deep water over 4 minutes.
 
-**Determinism** - `determinism.test.ts`: identical runs hash-equal; a battle serialized and resumed during deployment,
-mid-melee and mid-siege (ram being built, gate under attack, ladders up) equals the uninterrupted run. In-engine,
-two page loads of the same seed stepped to the same tick give the same `__SAMRAJYA__.hash()` (shots-report.json).
+**Determinism** - `determinism.test.ts`:
+- Identical runs give equal hashes.
+- A battle serialized and resumed equals the uninterrupted run. This is tested during deployment, mid-melee and
+  mid-siege (ram being built, gate under attack, ladders up).
+- In-engine, two page loads of the same seed stepped to the same tick give the same `__SAMRAJYA__.hash()`: `a185ec15`
+  on both loads (`shots-report.json`).
 
 ## Decisions taken where the spec is silent (for Creative Director review)
 
@@ -162,6 +205,7 @@ two page loads of the same seed stepped to the same tick give the same `__SAMRAJ
   if his formation (or side) surrendered, otherwise a fallen commander is killed 50 % / wounded 30 % / captured 20 %;
   war score +-20 scaled by the loss ratio; `durationSec` counts fighting time only (deployment excluded).
 - Skirmish setup: 30 s deployment, 40 min time limit; world battles should pass 60 s / 30 min (request to SIM-01).
+  `composeArmy` follows §10.1 as amended for GP-01 (blocks up to 1.25 x `menPerFormation`; round 2 below).
 
 ## Lead review fixes (first review, Lead Gameplay Engineer)
 
@@ -181,6 +225,8 @@ two page loads of the same seed stepped to the same tick give the same `__SAMRAJ
 ## Creative Director rework (round 1)
 
 Three blocking rules items; commits `10fb4db` (A), `c4342e0` (B), `27c5686` (C); each stage green on its own.
+The numbers in this section are as of round 1, before the CD data commits `c104339` / `93a1755`. Round 2 below has
+the current figures, and its 1.25 x split rule supersedes the per-class split described under A.
 
 **A - `setup.ts` `composeArmy` (§10.1: no formation below half strength).** Class budgets are apportioned by largest
 remainder (they now sum to exactly the side budget; the per-class `Math.round` could exceed it). Per class
@@ -265,27 +311,147 @@ blank one: 32.7 %), re-renders and retakes at >= 15 % (up to 3 attempts), and re
 shot. Validated with `--only=engine`: `battle-river-melee` came out blank (70.1 %) on the first attempt and was
 retaken correctly; 17 / 17 checks. The committed images above all measure <= 2.3 % (none blank).
 
+## Creative Director rework (round 2)
+
+The review raised three items. Two are rule changes the developer asked for, recorded as [REQ GP-01] in the
+DESIGN_SPEC; the third is an evidence refresh after the CD's data commits. Every stage passes typecheck and the tests on
+its own. The commits:
+
+- `5b8b7bb`, R2-1 code and tests: a Studio Head WIP snapshot swept them in between the stage's green test run and its
+  commit. History is not rewritten; the empty commit `44bb5dd` records the stage.
+- `f00d04b`: R2-2.
+- `9aa38bd`: R2-3a.
+- The README commit: R2-3.
+
+**R2-1 - a siege garrison's dry archers on their own walls hold the field** (DESIGN_SPEC §6.8 and §6.6.5 [REQ GP-01],
+CD commit `c104339`).
+- `outcome.ts` `holdsTheField(f, ctx)` now takes the battle context (`FieldContext = Pick<BattleContext, 'fort'>`).
+  An archer-category formation that is out of arrows and not in melee still holds the field while it stands on its own
+  walls or towers (`morale.ts` `onWalls`: inside the ring, within `WALL_WALK_DEPTH` = 15 m of the radius).
+- `sideBroken(state, side, ctx?)` passes the context through. Without one, it uses `rulesContext(state)` (the cached
+  context, or a rules-only view) when the battle has a fortification.
+- `checkOutcome` and the `destroy_army` objective pass the step context. `onWalls` only reads `ctx.fort`.
+- Tests in `siege.test.ts`:
+  - (a) The garrison melee routs while its dry archers stand on intact walls. The side is not broken, the battle goes
+    on, and the defender wins `siege_held` at the time limit.
+  - (b) The same archers stepped off the walls, into the town square or outside the ring, are broken: the attacker
+    wins by `rout` within 10 s.
+  - (c) A breach held 60 s still ends a siege whose dry wall archers stand on the far side of the ring
+    (`siege_breach`).
+  - (a) and (c) fail with the exception disabled (checked).
+- The scripted siege trace now ends by `siege_breach` at 4:23; before, the garrison broke by `rout` at 3:54.
+- The `gp-01.cjs` siege check now requires `siege_breach`, the garrison's melee routed, and its dry archers still on
+  the walls. Observed: formation 8, 100 men.
+
+**R2-2 - skirmish blocks up to 25 % over strength** (DESIGN_SPEC §10.1 [REQ GP-01], CD commit `4752b58`).
+- `setup.ts` `splitClassBudget`: `k = max(1, ceil(budget / floor(1.25 x menPerFormation)))`, still capped by the room
+  under `MAX_FORMATIONS_PER_SIDE`. The class budget is split evenly.
+- New exports: `SKIRMISH_OVERSTRENGTH` (1.25) and `skirmishBlockCap(cls)`. The `composeArmy` signature and the
+  largest-remainder class apportionment are unchanged.
+- `compose.test.ts` checks every faction x composition x size combination:
+  - no formation above 1.25 x per;
+  - none below 0.5 x per, except a sole spearmen or archers formation;
+  - with k >= 2, none below 62.5 % (floor);
+  - k equals the rule for every class;
+  - even splits; total <= budget; roster only.
+  It prints the examples and the statistics below.
+
+| All 120 combinations (536 class allocations) | Round 1 rule | Round 2 rule |
+|---|---|---|
+| Overflow splits (more blocks than `round(budget / per)`) | 240 (CD count: 238) | 16 |
+| Average fill / range | 86.9 % / 50-100 % | 107.9 % / 55-125 % |
+| Formations / soldiers dropped | 1,988 / 0 | 1,604 / 0 |
+| Suvarna Riders, 500 a side | spearmen 61/61, archers 51/51, cavalry 46/46/46/45, chariots 16/16, scouts 21/20/20 | spearmen 122, archers 102, cavalry 61 x 3, chariots 16 x 2, scouts 31/30 |
+| Nilavana Elephant Shock, 500 a side | 12 formations: spearmen 90/90/89, archers 56/56, guards 34/33, elephants 6/6/6, scouts 17/17 | 7 formations: spearmen 135/134, archers 112, guards 67, elephants 9/9, scouts 34 |
+| Suvarna Balanced Host, Clash 600 / Battle 1,000 / Field of Kings 5,000 | SPR 71/70 / SPR 118/117 / 75 formations in all (both sides) | SPR 141 / SPR 118/117 (unchanged) / 61 formations |
+
+The effect of R2-2 alone, measured in the same harness at `44bb5dd` and at `f00d04b` (`tools/probes.ts`, full-resolution
+terrain, AI vs AI):
+
+| Probe | Before (`44bb5dd`) | After (`f00d04b`) |
+|---|---|---|
+| Elephant Shock mirror (Nilavana, 20 seeds) | 12 formations a side; median 4.36 min, 13 / 20 in 3-8; 7.5 rallies a battle | 7 a side; median 5.36 min, 14 / 20; 3.0 rallies |
+| Riders mirror (Marudesha, 20 seeds) | 13 a side; median 1.14 min, 2 / 20; wins 8 / 12 | 9 a side; median 1.44 min, 1 / 20; wins 16 / 4 |
+| 21 faction-default pairings x 4 | 52 / 84 in 3-8, 24 under 3, 8 over 8; median 4.00 | 50 / 84, 25 under 3, 9 over 8; median 4.30; 0 time limits and 0 draws in both |
+| Balanced Host probes (pacing, in-engine default, Balanced mirrors), Old Chariot Host, Hill Fort review pairing | identical | identical (these compositions do not change at 1,000) |
+
+The CD measured the Shock mirror at 3.6 -> 5.2 min and the pairings at 43 / 84 with a 129-resolution terrain harness.
+These figures use the in-engine full-resolution terrain; the direction is the same. The pairings that fall in or out of
+the band move both ways with only four seeds each. Examples: forest-forest 4.4 -> 5.9, frontier-citystates 3.2 -> 5.6,
+forest-citystates 3.1 -> 2.0.
+
+**R2-3 - the evidence refreshed after the CD's data commits.** `c104339` sets `BALANCE.morale.allyRoutShock` to -0.15,
+and `93a1755` makes Giridurga's skirmish default the Balanced Host.
+- Every table and image above was re-run or re-captured with both commits and R2-1 / R2-2.
+- R2-3a (`9aa38bd`):
+  - The re-capture changed the river trace. A routing spear block now slides along the river edge, with its centroid
+    on the boundary between a passable cell and a deep-water cell (x = -134.6, grid column 61.99999).
+  - The old `gp-01.cjs` check classified the 2 s frame samples, whose positions are rounded to 0.1 m, and counted 3 of
+    them in deep water.
+  - An instrumented replay that checks every tick against the battle grid itself finds that the centroid never enters
+    a deep-water cell. So the old check had a rounding artefact; the pathing was not at fault.
+  - `trace.ts` now counts deep-water formation-ticks on every tick, with exact positions against the battle grid (0 of
+    6,472). `gp-01.cjs` requires that count to be 0 and still re-checks the frames, skipping samples within 0.05 m of
+    a cell boundary.
+- The close-up no longer uses a fixed screen anchor. It focuses the camera on the player formation that is in melee,
+  found from the battle state, so it follows the melee when data changes move it (see the images).
+
+| Probe (`tools/probes.ts`, full-resolution terrain, AI vs AI, plains unless noted) | Round 1 README | Round 2 |
+|---|---|---|
+| §13.1 pacing, `pacing.test.ts` (10 seeds) | 10 / 10 in 3-8, median 4.97 min, wins 10 / 0 | 10 / 10, median 5.48 min (the CD's figure), wins 10 / 0 |
+| In-engine default: Suvarna vs Giridurga, faction defaults, 08:30 (20 seeds) | Balanced vs Hill Fort Garrison: median 2.95 min, 9 / 20 | Balanced vs Balanced: median 5.18 min, 19 / 20, wins 20 / 0 (CD: 4.6 min, 20 / 20 on 129-resolution terrain) |
+| Same on The Ford, the `?scene=battle` default preset (20 seeds) | - | median 6.22 min, 16 / 20, wins 19 / 1 |
+| Review pairing: Giridurga vs Kotanagara, Hill Fort Garrison both (10 seeds; `outcome.test.ts`) | median 13.2 min, 0 time limits, 0 draws, wins 3 / 7 | median 12.96 min (10.3-14.9), 0 time limits, 0 draws, wins 1 / 9 |
+| 21 faction-default pairings x 4 | 44 / 84 in 3-8, 16 over 8, 0 time limits, 0 draws | 50 / 84, 25 under 3, 9 over 8, 0 time limits, 0 draws; median 4.30 min |
+| Kotanagara Balanced mirror (30 seeds) | wins 20 / 10, 26 / 30 in band | wins 17 / 13, 26 / 30, median 5.86 min |
+| Suvarna Balanced mirror (30 seeds) | wins 15 / 15, 27 / 30 | wins 13 / 17, 30 / 30, median 6.09 min |
+| Riders mirror (Marudesha, 20 seeds) | median ~0.9 min | median 1.44 min, 1 / 20 (CD: 1.2 min) |
+| Elephant Shock mirror (Nilavana, 20 seeds) | - | median 5.36 min, 14 / 20 |
+| Old Chariot Host mirror (Suvarna, 20 seeds) | - | median 3.37 min, 10 / 20 |
+
+§13.3 matchups: Kotanagara on both sides, explicit armies through the skirmish line-order auto-deploy, default shapes,
+20 seeds (40 for the two marked *).
+
+| Matchup | Target | Round 1 | Round 2 |
+|---|---|---|---|
+| 3 spear vs 1.5 horse | spears >= 75 % | 20 / 20 | 20 / 20 |
+| 1 spear + 2 archers vs 1.5 horse | horse loses >= 60 % | 19 / 20 | 20 / 20 |
+| 1 elephant vs 2 horse | elephants >= 80 % | 16 / 20 | 16 / 20 |
+| 1 elephant vs 4 archers* | archers >= 60 % | 35 / 40 | 35 / 40 |
+| 4 spear + 2 archers vs 6 spear* | mixed >= 60 % | 3 / 40 | 1 / 40 (CD §14.4: 1-2 / 20) |
+| Guards vs 2.5 spear | guards 45-60 % | 0 / 20 | 0 / 20 |
+
+The two failing §13.3 targets, and the fast mounted pairings, are battle-AI / balance debts the CD recorded in §14.4.
+They are to be re-measured after SIM-02; neither round-2 rule change touches them, because explicit armies and field
+battles are unaffected.
+
 ## Known issues
 
-- `tests/contracts/migration.test.ts` > "battles (incl. a finished one with an outcome)" fails: the test strips v2
-  fields from a *finished* battle and expects the migration defaults to restore them, but GP-01 now writes live values
-  into `orderTime`, `outcome.warScore` and `outcome.sides[].formations[].routedEnemies`. CTO-owned; exact change
-  requested in the GP-01 report (unchanged since round 0).
-- `tests/core/assets.test.ts` > "publishes every referenced file with the recorded size" fails at HEAD itself
-  (`public/assets/fx/fx_dust/color_1024.webp` is 71,472 bytes, the manifest says 70,680 - both from the Studio Head WIP
-  snapshot a979c44 of TA-07's in-flight flipbook rework). Not tactical code; the TA-07 owner's.
-- For the CD (rules): the §6.8 amendment also applies in sieges. A garrison whose wall archers ran dry and whose melee
-  blocks all rout is broken, and the attacker takes the town without holding a breach (`tactical-siege.png`).
-  Exempting archers standing on the walls (`onWalls`) would keep the old siege behaviour; this is a one-line change
-  in `holdsTheField` if wanted.
-- For the CD / SIM-02 (balance, not rules bugs): Suvarna beats Giridurga on 10 / 10 balanced plains seeds (a roster
-  asymmetry: elephants; same-faction mirrors split); Hill Fort Garrison pairings still take 10-15 min because the
-  guards fight in their default square (the probe with guards in line: 6.8 min); the Riders mirror (frontier vs
-  frontier) ends in a median 0.9 min in both builds; the in-engine default pairing runs short (median ~3 min).
-- The battle camera cannot be placed from the debug API; `battle-melee-close.png` relies on a fixed screen anchor
-  for the deterministic seed-2 battle (request to the BattleScene owner for a `battle.focus` debug command).
+- `tests/contracts/migration.test.ts` > "battles (incl. a finished one with an outcome)" fails. This is the only failing
+  test in `npm test` (616 / 617).
+  - The test strips the v2 fields from a *finished* battle and expects the migration defaults to restore them.
+  - GP-01 writes live values into `orderTime`, `outcome.warScore` and `outcome.sides[].formations[].routedEnemies`.
+  - The test is CTO-owned. The exact change has been requested in the GP-01 report since round 0.
+- Balance, for the CD and SIM-02 (not rules bugs; measured with the baseline battle AI):
+  - Suvarna beats Giridurga on 10 / 10 pacing seeds and 20 / 20 in-engine default seeds. This is a roster asymmetry
+    (elephants); the same-faction mirrors split 13 / 17 and 17 / 13.
+  - Hill Fort Garrison pairings still take 10-15 min (Kotanagara mirror median 14.9 min), because the guards fight in
+    their default square.
+  - 25 of 84 faction-default pairings end under 3 min, mostly mounted or elephant matchups (Nilavana-Marudesha 1.3,
+    Marudesha mirror 1.5, Nilavana-Kotanagara 2.0). The Riders mirror is 1 / 20 in band.
+  - The §13.3 mixed-arms and guards targets fail (see above; CD §14.4).
+- The river trace shows a side breaking with more men on the field. Suvarna loses the ford battle with 421 men against
+  390, because its last melee block routs while its dry archers and carts do not hold the field. This follows §6.8 as
+  amended, and is noted so the CD sees it in play.
+- The battle camera cannot be placed from the debug API. The close-up therefore reads the battle state from a quick
+  save, which raises a "Chronicle saved" toast; the script waits for it to fade. It then focuses through the HUD card
+  and `Home`. The request to the BattleScene owner for a `battle.focus` / `battle.formations` debug command stands.
+- Toasts stack over the battle HUD's speed buttons (`battle-mobile-melee.png`, `battle-river-melee.png`), and the
+  mobile order bar covers about 40 % of the screen. Noted for UI.
 - The soldier renderer does not yet map `SOLDIER_ANIM.reload` (12) / `charge` (13) (request to GFX-04).
-- Under SwiftShader load a frozen frame can present a blank 3D view (3 of 23 frames in the lead re-review). This is
-  likely a dynamic-resolution canvas resize just before `__SAMRAJYA__.freeze(true)`, in renderer / debug-API code
-  outside GP-01. `gp-01.cjs` now detects and retakes such shots; `scripts/smoke.cjs` (CTO) only checks for errors
-  and could accept one (request to the CTO / GFX-01).
+- Under SwiftShader load, a frozen frame can present a blank 3D view or a stale HUD. In round 2, 2 of the 4 shots in the
+  first smoke run were affected; a re-run was clean.
+  - This is likely a dynamic-resolution canvas resize just before `__SAMRAJYA__.freeze(true)`, in renderer / debug-API
+    code outside GP-01.
+  - `gp-01.cjs` detects and retakes such shots. `scripts/smoke.cjs` (CTO) only checks for errors and accepts them;
+    the request to the CTO / GFX-01 stands.

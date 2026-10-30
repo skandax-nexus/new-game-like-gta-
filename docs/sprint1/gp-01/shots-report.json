@@ -56,18 +56,18 @@
       "observed": []
     },
     {
-      "name": "battle-melee: the lines are in melee (>= 8% losses, a player formation engaged) - t=60s phase=active soldiers 452/500 vs 451/500 morale 71/70",
+      "name": "battle-melee: the lines are in melee (>= 8% losses, a player spear / guard block fighting an enemy one) - t=117.5s phase=active soldiers 444/500 vs 393/500 morale 69/68",
       "ok": true,
       "observed": {
-        "tick": 1200,
-        "lost": 97,
+        "tick": 2350,
+        "lost": 163,
         "engaged": {
           "card": 3,
           "index": 3,
           "cls": "elite_guards",
-          "soldiers": 59,
+          "soldiers": 57,
           "enemies": [
-            "scouts"
+            "spearmen"
           ]
         }
       }
@@ -80,17 +80,17 @@
       }
     },
     {
-      "name": "battle-melee-close: camera zoomed onto the melee (distance 45 m, 13 m from the engaged elite_guards)",
+      "name": "battle-melee-close: camera zoomed onto the melee (distance 45 m, 17 m from the engaged elite_guards)",
       "ok": true,
       "observed": {
         "camera": {
-          "x": -573.0844724740356,
-          "z": -928.0917612028711,
+          "x": -593.7944734254229,
+          "z": -987.5982596273479,
           "distance": 44.96093663144529,
           "yaw": 0.19816684339273077,
           "tilt": 0
         },
-        "offsetFromFormation": 13.2
+        "offsetFromFormation": 17.2
       }
     },
     {
@@ -112,7 +112,7 @@
       "name": "battle-result: the 3D view rendered (not a blank canvas)",
       "ok": true,
       "observed": {
-        "dominantColourShare": 0.0232
+        "dominantColourShare": 0.0234
       }
     },
     {
@@ -121,18 +121,18 @@
       "observed": []
     },
     {
-      "name": "battle-melee-overview: the lines are in melee (>= 8% losses, a player formation engaged) - t=60s phase=active soldiers 452/500 vs 451/500 morale 71/70",
+      "name": "battle-melee-overview: the lines are in melee (>= 8% losses, a player spear / guard block fighting an enemy one) - t=117.5s phase=active soldiers 444/500 vs 393/500 morale 69/68",
       "ok": true,
       "observed": {
-        "tick": 1200,
-        "lost": 97,
+        "tick": 2350,
+        "lost": 163,
         "engaged": {
           "card": 3,
           "index": 3,
           "cls": "elite_guards",
-          "soldiers": 59,
+          "soldiers": 57,
           "enemies": [
-            "scouts"
+            "spearmen"
           ]
         }
       }
@@ -153,8 +153,8 @@
       "name": "in-engine plains battle is deterministic across page loads (same tick => same state hash)",
       "ok": true,
       "observed": [
-        "0948da35",
-        "0948da35"
+        "a185ec15",
+        "a185ec15"
       ]
     },
     {
@@ -169,7 +169,7 @@
       "name": "battle-river-melee: the 3D view rendered (not a blank canvas)",
       "ok": true,
       "observed": {
-        "dominantColourShare": 0.0186
+        "dominantColourShare": 0.0185
       }
     },
     {
@@ -188,7 +188,7 @@
       "name": "battle-mobile-melee: the 3D view rendered (not a blank canvas)",
       "ok": true,
       "observed": {
-        "dominantColourShare": 0.0183
+        "dominantColourShare": 0.0162
       }
     },
     {
@@ -212,11 +212,11 @@
     },
     {
       "name": "battle-melee.png",
-      "note": "plains seed 2, 1,000 soldiers AI vs AI, default camera (165 m behind the player line): t=60s phase=active soldiers 452/500 vs 451/500 morale 71/70"
+      "note": "plains seed 2, 1,000 soldiers AI vs AI, default camera (165 m behind the player line): t=117.5s phase=active soldiers 444/500 vs 393/500 morale 69/68"
     },
     {
       "name": "battle-melee-close.png",
-      "note": "the same tick, focused on the engaged elite_guards (59) fighting scouts and wheel-zoomed to 45 m: soldier layer in contact (attack / hit / die anims, gaps filled from behind)"
+      "note": "the same tick, focused on the engaged elite_guards (57) fighting spearmen and wheel-zoomed to 45 m: soldier layer in contact (attack / hit / die anims, gaps filled from behind)"
     },
     {
       "name": "battle-result.png",
@@ -224,7 +224,7 @@
     },
     {
       "name": "battle-melee-overview.png",
-      "note": "plains seed 2, 1,000 soldiers AI vs AI, overview camera (650 m): t=60s phase=active soldiers 452/500 vs 451/500 morale 71/70"
+      "note": "plains seed 2, 1,000 soldiers AI vs AI, overview camera (650 m): t=117.5s phase=active soldiers 444/500 vs 393/500 morale 69/68"
     },
     {
       "name": "battle-river-melee.png",
