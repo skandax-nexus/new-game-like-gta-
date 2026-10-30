@@ -160,18 +160,28 @@ function friendlyTerritory(world: WorldState, factionId: FactionId, owner: Facti
   return owner === null || owner === factionId || !!activeTreaty(world, factionId, owner, 'military_access');
 }
 
+/** Does the army stand where a supply line can start (an owned province, or one under a military-access treaty)? */
+function inSupplyTerritory(world: WorldState, a: ArmyState): boolean {
+  const pid = provinceAtPoint(world, a.x, a.z);
+  const prov = pid ? world.provinces[pid] : null;
+  if (!prov || !prov.ownerFactionId) return false;
+  return prov.ownerFactionId === a.factionId || !!activeTreaty(world, a.factionId, prov.ownerFactionId, 'military_access');
+}
+
+const NO_THREATS: ReadonlySet<string> = new Set();
+
 /**
  * Supply line to the royal reserve (§7.8 step 3). Returns the road distance (map m) to the nearest own settlement or
  * null when there is no safe line.
  */
 export function supplyLine(world: WorldState, a: ArmyState, threatCache: Map<string, Set<string>> = new Map()): { distance: number; settlementId: string } | null {
-  const pid = provinceAtPoint(world, a.x, a.z);
-  const prov = pid ? world.provinces[pid] : null;
-  if (!prov || !prov.ownerFactionId) return null;
-  if (prov.ownerFactionId !== a.factionId && !activeTreaty(world, a.factionId, prov.ownerFactionId, 'military_access')) return null;
+  if (!inSupplyTerritory(world, a)) return null;
+  return supplyLineOver(world, a, threatenedEdges(world, a.factionId, threatCache));
+}
+
+function supplyLineOver(world: WorldState, a: ArmyState, threats: ReadonlySet<string>): { distance: number; settlementId: string } | null {
   const start = nearestNode(world, a.x, a.z);
   if (!start.id) return null;
-  const threats = threatenedEdges(world, a.factionId, threatCache);
   // Dijkstra over usable roads through friendly / neutral settlements.
   const dist = new Map<string, number>([[start.id, start.dist]]);
   const done = new Set<string>();
@@ -277,6 +287,76 @@ function settlementDraw(s: SettlementState, room: number): number {
 function reserveKeep(distance: number): number {
   const km = (distance * BALANCE.military.travelScale) / 1000;
   return Math.max(0, 1 - 0.1 * (km / 30));
+}
+
+/** Why an army's daily draw brings no grain (ArmySupplyView.reasons); `{town}` strings name the settlement. */
+export const SUPPLY_SOURCE_REASONS = {
+  belowFloor: (town: string) => `${town} is below 30 days of grain`,
+  townBesieged: (town: string) => `${town} is besieged`,
+  townEmpty: (town: string) => `${town} has no grain left`,
+  reserveEmpty: 'The royal reserve is empty',
+  noSiegeDepot: 'No depot within 400 m of the siege',
+  depotEmpty: 'The depot is empty',
+  depotBuilding: 'The depot is still being built',
+  cutOff: 'Cut off: an enemy army holds the road',
+  outsideRealm: 'Outside your provinces: no supply line',
+  noRoad: 'No road to one of your towns',
+  tooFar: 'Too far from your towns: the convoys arrive empty',
+} as const;
+
+/** What feeds an army and, when its next draw brings nothing, why (the army supply panel; review S4). Pure. */
+export interface SupplyExplanation {
+  /** settlement (rule 1 or its garrison's store), depot (rule 2), reserve (rule 3), forage (no source or a forage /
+   *  raid order), or null (rebels live off their villages). */
+  sourceKind: SupplySourceKind | null;
+  /** Settlement / depot id; for `reserve` the own town the supply line reaches; for `forage` the town foraged. */
+  sourceId: string | null;
+  /** Grain the next daily draw puts in the train (0 when it is full or nothing delivers). */
+  delivering: number;
+  /** Every cause in rule order when the draw delivers nothing to a train with room (SUPPLY_SOURCE_REASONS). */
+  reasons: string[];
+}
+
+export function explainSupply(world: WorldState, a: ArmyState): SupplyExplanation {
+  const R = SUPPLY_SOURCE_REASONS;
+  if (isRebelFaction(a.factionId)) return { sourceKind: null, sourceId: a.rebelSettlementId ?? null, delivering: 0, reasons: [] };
+  const room = Math.max(0, a.supply.foodCapacity - a.supply.food);
+  const plan = planResupply(world, a);
+  const out: SupplyExplanation = { sourceKind: plan.kind, sourceId: plan.sourceId, delivering: plan.amount, reasons: [] };
+  const forageOrder = a.order.kind === 'forage' || a.order.kind === 'raid';
+  if (plan.kind === null || forageOrder) {
+    out.sourceKind = 'forage';
+    out.sourceId = settlementInRange(world, a, SUP.forageRadius, () => true)?.id ?? null;
+  }
+  const home = garrisonedIn(world, a);
+  if (home) {
+    if (home.foodStored <= 0) out.reasons.push(R.townEmpty(home.name));
+    return out;
+  }
+  if (plan.amount > 0 || room <= 1e-6) return out;
+  // Rule 1: an own town in range that cannot give.
+  const town = settlementInRange(world, a, SUP.resupplyRadius, (x) => x.ownerFactionId === a.factionId);
+  if (town) out.reasons.push(town.besiegedBy ? R.townBesieged(town.name) : R.belowFloor(town.name));
+  // Rule 2: depots in range that cannot give; a siege camp has no other source.
+  let depotSeen = false;
+  for (const id of stableKeys('depots', world.depots as Record<string, unknown>)) {
+    const d = world.depots[id]!;
+    if (d.factionId !== a.factionId || (d.x - a.x) * (d.x - a.x) + (d.z - a.z) * (d.z - a.z) > SUP.resupplyRadius * SUP.resupplyRadius) continue;
+    depotSeen = true;
+    out.reasons.push(d.readyOnDay > today(world) ? R.depotBuilding : R.depotEmpty);
+    break;
+  }
+  if (a.status === 'besieging' && !depotSeen) out.reasons.push(R.noSiegeDepot);
+  // Rule 3: the royal reserve.
+  const line = supplyLine(world, a);
+  if (line) {
+    if ((world.factions[a.factionId]?.foodReserve ?? 0) <= 0) out.reasons.push(R.reserveEmpty);
+    else if (reserveKeep(line.distance) <= 0) out.reasons.push(R.tooFar);
+  } else if (a.status !== 'besieging') {
+    if (!inSupplyTerritory(world, a)) out.reasons.push(R.outsideRealm);
+    else out.reasons.push(supplyLineOver(world, a, NO_THREATS) ? R.cutOff : R.noRoad);
+  }
+  return out;
 }
 
 /** Apply today's resupply. Returns true when a source (rules 1-3 or the garrison) serves the army. */

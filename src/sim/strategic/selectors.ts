@@ -8,6 +8,7 @@
  */
 import type {
   AgeId,
+  ArmyId,
   ArmyState,
   BuildingType,
   ConstructionJob,
@@ -29,7 +30,8 @@ import { reserveColor, reserveDays, projectLedger, settlementFoodBalance, type S
 import { garrisonSoldiers, loyaltyTerms, unrestTerms, type PoliticsTerm } from './politics';
 import { quoteMarketTrade, type MarketQuote } from './market';
 import { validateRecruit } from './recruitment';
-import { armyFoodNeed, supplyDays } from './supply';
+import { armyFoodNeed, explainSupply, supplyDays, type SupplySourceKind } from './supply';
+import { settlementCutOff } from './network';
 import { maxWallHp } from './construction';
 import { surrenderChance } from './siege';
 import { villagerAllocation, type VillagerAllocation } from './villagers';
@@ -94,6 +96,17 @@ export interface SettlementVitals {
   maxWallHp: number;
   besiegedBy: string | null;
   surrenderChance: number;
+  /**
+   * Not in the capital's road component (§7.3.5): no relief from the royal reserve and no internal market with the
+   * capital's towns (review S4). Besieged towns get neither either - see besiegedBy.
+   */
+  cutOff: boolean;
+  /** The enemy army holding the road that cuts it off (the nearest one on the way back to the capital), else null. */
+  cutOffBy: ArmyId | null;
+  /** Why, first cause (CUT_OFF_REASONS): 'Cut off: an enemy army holds the road', a ruined road, no road through own land. */
+  cutOffReason: string | null;
+  /** Every cause (an army can hold a road that is also in ruins). */
+  cutOffReasons: string[];
   construction: ConstructionView[];
   recruitment: { unitClass: UnitClass; formations: number; progress: number }[];
   loyaltyTerms: PoliticsTerm[];
@@ -104,6 +117,7 @@ export function settlementVitals(world: WorldState, settlementId: string): Settl
   const s = world.settlements[settlementId];
   if (!s) return null;
   const rd = reserveDays(s);
+  const cut = settlementCutOff(world, s);
   return {
     id: s.id,
     name: s.name,
@@ -131,6 +145,10 @@ export function settlementVitals(world: WorldState, settlementId: string): Settl
     maxWallHp: maxWallHp(world, s),
     besiegedBy: s.besiegedBy,
     surrenderChance: surrenderChance(s),
+    cutOff: cut.cutOff,
+    cutOffBy: cut.cutOffBy,
+    cutOffReason: cut.reasons[0] ?? null,
+    cutOffReasons: cut.reasons,
     construction: s.construction.map((j: ConstructionJob, index) => ({
       index,
       type: j.type,
@@ -200,12 +218,32 @@ export interface ArmySupplyView {
   morale: number;
   fatigue: number;
   forcedMarch: boolean;
+  /** Where its grain comes from (review S4): settlement / depot id, the town the supply line reaches, the town foraged. */
+  sourceId: string | null;
+  /** settlement (rule 1, or the store of the town it garrisons), depot (rule 2), reserve (rule 3), forage, or null. */
+  sourceKind: SupplySourceKind | null;
+  /** Grain the next daily draw brings (0 when the train is full or nothing delivers). */
+  delivering: number;
+  /**
+   * Why the daily draw brings nothing while the train has room - the first cause in rule order, e.g. 'Rajapura is below
+   * 30 days of grain', 'The royal reserve is empty', 'No depot within 400 m of the siege', 'Cut off: an enemy army holds
+   * the road' - else null.
+   */
+  reason: string | null;
+  /** Every cause in rule order (the panel lists them all: the Royal Host beside a hungry Rajapura shows two). */
+  reasons: string[];
 }
 
 export function armySupplyView(world: WorldState, armyId: string): ArmySupplyView | null {
   const a: ArmyState | undefined = world.armies[armyId];
   if (!a) return null;
+  const why = explainSupply(world, a);
   return {
+    sourceId: why.sourceId,
+    sourceKind: why.sourceKind,
+    delivering: why.delivering,
+    reason: why.reasons[0] ?? null,
+    reasons: why.reasons,
     armyId: a.id,
     soldiers: a.units.reduce((t, u) => t + u.soldiers, 0),
     food: a.supply.food,

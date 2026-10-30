@@ -199,6 +199,89 @@ export function realmComponents(world: WorldState, factionId: FactionId): Map<Se
   return out;
 }
 
+/** Why a settlement is cut off from its capital (settlementVitals.cutOff; review S4). */
+export interface CutOffView {
+  /** Not in the capital's road component: no relief from the royal reserve, no internal market with the capital. */
+  cutOff: boolean;
+  /** The enemy army holding the blocked road nearest the settlement on its way back to the capital's roads, else null. */
+  cutOffBy: ArmyId | null;
+  /** Every cause on that way, army first (CUT_OFF_REASONS); empty when connected. */
+  reasons: string[];
+}
+
+export const CUT_OFF_REASONS = {
+  army: 'Cut off: an enemy army holds the road',
+  roads: 'Cut off: the road to the capital is in ruins (repair it)',
+  land: 'Cut off: no road through your land to the capital',
+} as const;
+
+/** Detour weight of a blocked or ruined road when looking for the way back (prefer the way with fewest obstacles). */
+const OBSTACLE_WEIGHT = 10;
+
+/**
+ * Is `s` cut off from its owner's capital (§7.3.5)? Same components as the economy (realmComponents: roads with
+ * condition >= 0.5 not blocked for the owner, both ends owned). The causes are read on the owned road path back to the
+ * capital's component with the fewest obstacles (blocked / ruined roads weigh x10). Pure; `comps` may be passed in to
+ * share one realmComponents call.
+ */
+export function settlementCutOff(world: WorldState, s: SettlementState, comps: Map<SettlementId, number> | null = null): CutOffView {
+  const open: CutOffView = { cutOff: false, cutOffBy: null, reasons: [] };
+  const owner = s.ownerFactionId;
+  const capId = owner ? (world.factions[owner]?.capitalSettlementId ?? null) : null;
+  if (!owner || !capId || capId === s.id || world.settlements[capId]?.ownerFactionId !== owner) return open;
+  const c = comps ?? realmComponents(world, owner);
+  const capComp = c.get(capId);
+  if (capComp === undefined || c.get(s.id) === capComp) return open;
+  // Dijkstra over owned settlement-to-settlement roads; stop at the capital's component.
+  const dist = new Map<SettlementId, number>([[s.id, 0]]);
+  const via = new Map<SettlementId, RoadEdge>();
+  const done = new Set<SettlementId>();
+  let reached: SettlementId | null = null;
+  for (;;) {
+    let u: SettlementId | null = null;
+    let bd = Infinity;
+    for (const [k, v] of dist) if (!done.has(k) && v < bd) {
+      bd = v;
+      u = k;
+    }
+    if (u === null) break;
+    done.add(u);
+    if (c.get(u) === capComp) {
+      reached = u;
+      break;
+    }
+    for (const eid of world.roads.adjacency[`node_${u}`] ?? []) {
+      const e = world.roads.edges[eid];
+      if (!e) continue;
+      const [sa, sb] = edgeEnds(world, e);
+      const v = sa === u ? sb : sa;
+      if (!v || world.settlements[v]?.ownerFactionId !== owner) continue;
+      const nd = bd + e.length * (usableForTrade(world, e, owner) ? 1 : OBSTACLE_WEIGHT);
+      if (nd < (dist.get(v) ?? Infinity)) {
+        dist.set(v, nd);
+        via.set(v, e);
+      }
+    }
+  }
+  if (reached === null) return { cutOff: true, cutOffBy: null, reasons: [CUT_OFF_REASONS.land] };
+  // Walk back to `s`: the blocker nearest to `s` is the one to clear first.
+  let by: ArmyId | null = null;
+  let ruined = false;
+  let node: SettlementId = reached;
+  while (node !== s.id) {
+    const e = via.get(node) as RoadEdge;
+    const b = edgeBlocker(world, e, owner);
+    if (b) by = b;
+    if (e.condition < TRADE_ROAD_MIN_CONDITION) ruined = true;
+    const [sa, sb] = edgeEnds(world, e);
+    node = (sa === node ? sb : sa) as SettlementId;
+  }
+  const reasons: string[] = [];
+  if (by) reasons.push(CUT_OFF_REASONS.army);
+  if (ruined) reasons.push(CUT_OFF_REASONS.roads);
+  return { cutOff: true, cutOffBy: by, reasons };
+}
+
 /** Share of a settlement's adjacent roads usable for trade by its owner (0..1; 1 when it has no roads). */
 export function connectedRoadShare(world: WorldState, s: SettlementState): number {
   const node = world.roads.adjacency[`node_${s.id}`];
