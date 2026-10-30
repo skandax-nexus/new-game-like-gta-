@@ -1,11 +1,11 @@
 {
-  "build": "0.1.0+daeaef6",
+  "build": "0.1.0+9aa38bd",
   "quality": "high",
   "shots": [
     {
       "name": "world",
       "url": "http://127.0.0.1:4405/?scene=world&quality=high&noaudio=1&seed=7&paused=1",
-      "ms": 28633,
+      "ms": 29333,
       "errors": [],
       "state": {
         "scene": "world",
@@ -68,14 +68,14 @@
           },
           "blocked": false
         },
-        "fps": 3.8737744757573638,
+        "fps": 3.142677589460393,
         "errors": 0
       }
     },
     {
       "name": "world-overview",
       "url": "http://127.0.0.1:4405/?scene=world&quality=high&noaudio=1&seed=7&paused=1&camera=overview",
-      "ms": 37511,
+      "ms": 25559,
       "errors": [],
       "state": {
         "scene": "world",
@@ -138,7 +138,7 @@
           },
           "blocked": false
         },
-        "fps": 4.366267499191936,
+        "fps": 3.6065574091885946,
         "errors": 0
       }
     }

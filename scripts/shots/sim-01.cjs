@@ -11,7 +11,10 @@
  * Captures + assertions (exit 1 on any failure, console errors, page errors, failed requests or crash reports):
  *   world-day0.png         The Broken Crown at the start (overview camera)
  *   world-march.png        the Royal Host ordered to besiege Giridurg (issueStrategicCommand), 6 days of marching
- *   world-day60.png        60 simulated days later: harvest, prices, events, AI moves - the HUD numbers changed
+ *                          (rework round 2, review S1: once it besieges, a depot is built 150 m behind its camp and
+ *                          filled from Rajapura with requisition_grain, topped up on day 40 - the siege is fed)
+ *   world-day60.png        60 simulated days later: harvest, prices, events, AI moves - the HUD numbers changed;
+ *                          the Royal Host still besieges Giridurg, fed by its depot, with no starving day
  *                          (taken once the day-60 fog lifts, +2 days for seed 7)
  *   game-stats.png         showScreen('game_stats') after 60 days (statistics counters tracked by the sim)
  *   world-mobile.png       390x844 low quality after 10 days
@@ -150,6 +153,61 @@ async function advanceDays(page, days) {
   await page.evaluate(() => window.__SAMRAJYA__.waitFrames(2));
 }
 
+/**
+ * The live WorldState, read through a quick save into a probe slot (saving only serializes the world; the slot is
+ * removed again). Plain JSON - enough to read armies, depots and settlements.
+ */
+async function readWorld(page) {
+  return page.evaluate(() => {
+    const api = window.__SAMRAJYA__;
+    const before = api.hash();
+    const slot = api.save('sim01probe');
+    const key = Object.keys(localStorage).find((k) => k.startsWith('samrajya.save') && k.endsWith(slot));
+    const text = (key && localStorage.getItem(key)) || '';
+    if (key) localStorage.removeItem(key);
+    const nl = text.lastIndexOf('\n#');
+    const game = JSON.parse(nl >= 0 ? text.slice(0, nl) : text);
+    if (api.hash() !== before) throw new Error('saving changed the world');
+    return game.world;
+  });
+}
+
+/** Issue a strategic command and apply it with one simulated hour (the world is paused; commands apply on a step). */
+async function command(page, cmd) {
+  await page.evaluate((c) => {
+    const api = window.__SAMRAJYA__;
+    api.issueStrategicCommand(c);
+    api.step(1);
+  }, cmd);
+}
+
+/** Review S1 in the running game: build a depot behind the Royal Host's siege camp and fill it from Rajapura. */
+async function feedTheSiege(page) {
+  let w = await readWorld(page);
+  for (let i = 0; i < 6 && w.armies.army_royal && w.armies.army_royal.status !== 'besieging'; i++) {
+    await advanceDays(page, 1);
+    w = await readWorld(page);
+  }
+  const host = w.armies.army_royal;
+  const g = w.settlements.giridurg;
+  check('world: the Royal Host reaches Giridurg and besieges it', !!host && host.status === 'besieging' && g.besiegedBy === host.id, { day: Math.floor(w.calendar.totalHours / 24), status: host && host.status, besiegedBy: g.besiegedBy });
+  if (!host || host.status !== 'besieging') return null;
+  const dx = host.x - g.x;
+  const dz = host.z - g.z;
+  const len = Math.hypot(dx, dz) || 1;
+  const x = host.x + (dx / len) * 150;
+  const z = host.z + (dz / len) * 150;
+  await command(page, { kind: 'create_depot', x, z, settlementId: null });
+  w = await readWorld(page);
+  const depotId = Object.keys(w.depots).find((id) => w.depots[id].factionId === w.playerFactionId && Math.hypot(w.depots[id].x - x, w.depots[id].z - z) < 1) || null;
+  if (depotId) await command(page, { kind: 'requisition_grain', settlementId: 'rajapura', amount: 6000, toArmyId: null, toDepotId: depotId });
+  w = await readWorld(page);
+  const depot = depotId ? w.depots[depotId] : null;
+  check('world: a depot 150 m behind the siege camp, filled with 6,000 grain requisitioned from Rajapura', !!depot && depot.food >= 6000 - 1e-6, { depotId, food: depot && depot.food, readyOnDay: depot && depot.readyOnDay, x: Math.round(x), z: Math.round(z) });
+  report.siege = { day: Math.floor(w.calendar.totalHours / 24), depotId, depot: depot && { x: Math.round(depot.x), z: Math.round(depot.z), food: depot.food } };
+  return depotId;
+}
+
 async function captureWorld(browser, base) {
   const ctx = await newPage(browser, [1280, 720], false);
   const { page } = ctx;
@@ -166,8 +224,24 @@ async function captureWorld(browser, base) {
   check('world: the besiege order and six days change the authoritative state', march.hash !== start.hash, { before: start.hash, after: march.hash });
   report.march = march;
   await shot(page, 'world-march', 'army_royal ordered to besiege Giridurg (issueStrategicCommand), 6 days later');
-  await advanceDays(page, 54);
+  const depotId = await feedTheSiege(page);
+  // Top the depot up on day 40 (the Royal Host eats ~170 a day: 6,000 lasts ~35 days).
+  await advanceDays(page, 40 - (await worldInfo(page)).sceneState.world.day);
+  if (depotId) {
+    const w40 = await readWorld(page);
+    const room = Math.floor(w40.depots[depotId].capacity - w40.depots[depotId].food);
+    if (room > 0) await command(page, { kind: 'requisition_grain', settlementId: 'rajapura', amount: room, toArmyId: null, toDepotId: depotId });
+    report.siege.topUp = { day: Math.floor(w40.calendar.totalHours / 24), amount: room };
+  }
+  await advanceDays(page, 60 - (await worldInfo(page)).sceneState.world.day);
   let later = await worldInfo(page);
+  {
+    const w60 = await readWorld(page);
+    const host = w60.armies.army_royal;
+    const observed = host && { status: host.status, soldiers: host.units.reduce((n, u) => n + u.soldiers, 0), food: Math.round(host.supply.food), sourceId: host.supply.sourceId, starvationDays: host.supply.starvationDays, depotFood: depotId && Math.round(w60.depots[depotId].food), wallHp: Math.round(w60.settlements.giridurg.wallHp) };
+    report.siege.day60 = observed;
+    check('world: day 60 - the Royal Host besieging Giridurg is fed by its depot (review S1), not starving', !!host && host.status === 'besieging' && host.supply.sourceId === depotId && host.supply.starvationDays === 0, observed);
+  }
   check('world: 60 simulated days later the world has moved on', later.hash !== march.hash, { hash: later.hash, sceneState: later.sceneState });
   report.day60 = later;
   // Day 60 of seed 7 is a hemanta fog morning (the overview is a grey veil): the shot waits for the fog to lift
@@ -229,11 +303,20 @@ async function determinism(browser, base) {
     console.log('[sim-01] building...');
     execSync(`npx vite build --outDir ${DIST} --emptyOutDir`, { cwd: ROOT, stdio: 'inherit' });
   }
-  const preview = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort', '--outDir', DIST], { cwd: ROOT, stdio: 'ignore' });
+  // vite itself (not an npx wrapper), so kill() stops the server; a busy port fails the run instead of capturing
+  // whatever else is listening there.
+  const preview = spawn(process.execPath, [path.join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js'), 'preview', '--port', String(PORT), '--strictPort', '--outDir', DIST], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
+  let previewLog = '';
+  let previewExit = null;
+  preview.stdout.on('data', (d) => (previewLog += d));
+  preview.stderr.on('data', (d) => (previewLog += d));
+  preview.on('exit', (code) => (previewExit = code));
   const base = `http://localhost:${PORT}/`;
   let browser;
   try {
     await waitForServer(base, 60000);
+    await new Promise((r) => setTimeout(r, 500));
+    if (previewExit !== null) throw new Error(`vite preview exited (${previewExit}) - port ${PORT} busy? set SHOTS_PORT. ${previewLog.trim().split('\n').slice(-2).join(' | ')}`);
     const { chromium } = requirePlaywright();
     browser = await chromium.launch({ args: LAUNCH_ARGS });
     await captureWorld(browser, base);

@@ -6,7 +6,7 @@
    "name": "world: The Broken Crown loads paused with a state hash",
    "ok": true,
    "observed": {
-    "hash": "a803ad04",
+    "hash": "26e8f721",
     "paused": true
    }
   },
@@ -14,15 +14,48 @@
    "name": "world: the besiege order and six days change the authoritative state",
    "ok": true,
    "observed": {
-    "before": "a803ad04",
-    "after": "2cf3630b"
+    "before": "26e8f721",
+    "after": "22d66556"
+   }
+  },
+  {
+   "name": "world: the Royal Host reaches Giridurg and besieges it",
+   "ok": true,
+   "observed": {
+    "day": 7,
+    "status": "besieging",
+    "besiegedBy": "army_royal"
+   }
+  },
+  {
+   "name": "world: a depot 150 m behind the siege camp, filled with 6,000 grain requisitioned from Rajapura",
+   "ok": true,
+   "observed": {
+    "depotId": "depot_50",
+    "food": 6000,
+    "readyOnDay": 12,
+    "x": -1479,
+    "z": 1531
+   }
+  },
+  {
+   "name": "world: day 60 - the Royal Host besieging Giridurg is fed by its depot (review S1), not starving",
+   "ok": true,
+   "observed": {
+    "status": "besieging",
+    "soldiers": 671,
+    "food": 3978,
+    "sourceId": "depot_50",
+    "starvationDays": 0,
+    "depotFood": 3115,
+    "wallHp": 3119
    }
   },
   {
    "name": "world: 60 simulated days later the world has moved on",
    "ok": true,
    "observed": {
-    "hash": "e9e95708",
+    "hash": "0b770bac",
     "sceneState": {
      "world": {
       "day": 60,
@@ -33,7 +66,7 @@
        "hour": 0
       },
       "season": "hemanta",
-      "weather": "fog",
+      "weather": "clear",
       "factions": [
        {
         "id": "forest",
@@ -49,13 +82,13 @@
        },
        {
         "id": "heartland",
-        "treasury": 5098,
+        "treasury": 4825,
         "settlements": 5,
-        "soldiers": 1296
+        "soldiers": 1313
        },
        {
         "id": "highland",
-        "treasury": 3241,
+        "treasury": 3248,
         "settlements": 5,
         "soldiers": 1172
        }
@@ -89,7 +122,7 @@
    "name": "world-mobile: 10 days at low quality",
    "ok": true,
    "observed": {
-    "hash": "936eff6f",
+    "hash": "9c83be07",
     "day": 10
    }
   },
@@ -112,8 +145,8 @@
    "name": "determinism: two browser runs with the same seed and commands hash alike",
    "ok": true,
    "observed": [
-    "97421a44",
-    "97421a44"
+    "cbaee8bd",
+    "cbaee8bd"
    ]
   }
  ],
@@ -128,7 +161,7 @@
   },
   {
    "name": "world-day60.png",
-   "note": "60 days (+2 until the fog lifts): harvest, prices, events and AI moves (HUD values changed)"
+   "note": "60 days (+0 until the fog lifts): harvest, prices, events and AI moves (HUD values changed)"
   },
   {
    "name": "game-stats.png",
@@ -142,7 +175,7 @@
  "start": {
   "scene": "world",
   "paused": true,
-  "hash": "a803ad04",
+  "hash": "26e8f721",
   "sceneState": {
    "world": {
     "day": 0,
@@ -241,10 +274,6 @@
    "clicked": "Repair what we canSetupur loses 20% of i"
   },
   {
-   "day": 61,
-   "clicked": "Negotiate lower taxesTax rate x0.6 for {"
-  },
-  {
    "day": 1,
    "clicked": "Take up the regencyAct I begins: secure "
   },
@@ -264,7 +293,7 @@
  "march": {
   "scene": "world",
   "paused": true,
-  "hash": "2cf3630b",
+  "hash": "22d66556",
   "sceneState": {
    "world": {
     "day": 6,
@@ -321,10 +350,32 @@
    "blocked": false
   }
  },
+ "siege": {
+  "day": 7,
+  "depotId": "depot_50",
+  "depot": {
+   "x": -1479,
+   "z": 1531,
+   "food": 6000
+  },
+  "topUp": {
+   "day": 40,
+   "amount": 4879
+  },
+  "day60": {
+   "status": "besieging",
+   "soldiers": 671,
+   "food": 3978,
+   "sourceId": "depot_50",
+   "starvationDays": 0,
+   "depotFood": 3115,
+   "wallHp": 3119
+  }
+ },
  "day60": {
   "scene": "world",
   "paused": true,
-  "hash": "e9e95708",
+  "hash": "0b770bac",
   "sceneState": {
    "world": {
     "day": 60,
@@ -335,7 +386,7 @@
      "hour": 0
     },
     "season": "hemanta",
-    "weather": "fog",
+    "weather": "clear",
     "factions": [
      {
       "id": "forest",
@@ -351,13 +402,13 @@
      },
      {
       "id": "heartland",
-      "treasury": 5098,
+      "treasury": 4825,
       "settlements": 5,
-      "soldiers": 1296
+      "soldiers": 1313
      },
      {
       "id": "highland",
-      "treasury": 3241,
+      "treasury": 3248,
       "settlements": 5,
       "soldiers": 1172
      }
@@ -382,8 +433,8 @@
   }
  },
  "day60Shot": {
-  "waitedDays": 2,
-  "day": 62,
+  "waitedDays": 0,
+  "day": 60,
   "weather": "clear"
  },
  "screens": [
