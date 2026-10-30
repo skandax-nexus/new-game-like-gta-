@@ -7,8 +7,9 @@
  *  - Deployment (first think of the deployment phase): posture rolled from the battle profile, the best site in the
  *    deploy zone (height over the ground ahead, footing, forest cover for a holding side) and the line order around it:
  *    elephants 25 m in front, spears / guards in line, archers 20 m behind, horse on the wings, scouts forward, the
- *    reserve, engineers and carts to the rear. Shapes for the threat (guards square against horse or elephants, archers
- *    loose against missiles or elephants). Formations placed by the setup (scripted battles) keep their positions.
+ *    reserve, engineers and carts to the rear. Archers loose against missiles or elephants. Formations placed by the
+ *    setup (scripted battles) keep their positions. During the fight guards form square while horse, chariots or
+ *    elephants are within 100 m and return to line beyond 180 m.
  *  - Posture: `aggression` is the chance the side attacks rather than holds, shifted by the strength ratio, who
  *    out-shoots whom and the ground; a holding side attacks when the enemy will not come (patience 25-95 s by
  *    aggression), when it is out-shot, or when the enemy is beaten. `withdrawAt`: below that share of its starting
@@ -24,11 +25,11 @@
  *  - Elephants: shock against unbraced blocks (moving, or in melee seen from the flank), horse and chariots.
  *  - Reserve: committed when a line block wavers or is flanked, an enemy turns the flank, or the fight is decided.
  *  - Commander: stays behind the centre; Rally when it swings morale (routers that can rally, wavering blocks).
+ * Cost: per-think memos of per-enemy facts (engaged with us, gap to our archers, shielding spears) and a pruned target
+ * scan for the horse keep a 40-formation think under 0.1 ms (tests/sim/ai/perf.test.ts).
  */
 import type { FormationState, FormationOrder } from '../../../core/types';
 import { dcos, dlog, dsin, facingOf } from '../../../core/math';
-
-const LN2 = 0.6931471805599453;
 import { RULES } from '../../../data/rules';
 import { UNITS } from '../../../data/units';
 import { effectiveRange } from '../projectiles';
@@ -36,6 +37,9 @@ import { isShooter } from '../stats';
 import type { AiSide, Role } from './common';
 import { along, bracedAgainst, closing, counterLog, dist, formationStrength, gap, give, lateral, ROLE, shape, speedOf, stance } from './common';
 import { badFooting, siteScore } from './terrain';
+
+/** ln 2 (log2 x = dlog(x) / LN2; Math.log2 is not deterministic across engines). */
+const LN2 = 0.6931471805599453;
 
 // ---------------------------------------------------------------------------------------------------
 // Memory accessors
@@ -429,23 +433,91 @@ function underFire(ai: AiSide): boolean {
 // Target scoring
 // ---------------------------------------------------------------------------------------------------
 
+// Per-think memo of per-enemy facts (roles are fixed once assigned, positions do not change within a think).
+let thinkStamp = 0;
+let memoStamp = new Int32Array(64);
+let memoEngaged = new Int8Array(64);
+let memoMissileGap = new Float64Array(64);
+let memoShield = new Int32Array(64);
+const M_ENGAGED = 1;
+const M_GAP = 2;
+const M_SHIELD = 4;
+let memoFlags = new Int8Array(64);
+
+function memoFor(n: number): void {
+  if (memoStamp.length < n) {
+    memoStamp = new Int32Array(n * 2);
+    memoEngaged = new Int8Array(n * 2);
+    memoMissileGap = new Float64Array(n * 2);
+    memoShield = new Int32Array(n * 2);
+    memoFlags = new Int8Array(n * 2);
+  }
+}
+
+function memo(i: number): void {
+  if (memoStamp[i] !== thinkStamp) {
+    memoStamp[i] = thinkStamp;
+    memoFlags[i] = 0;
+  }
+}
+
+/** Height difference bound for the missile range pre-check (m; battle maps stay well within it). */
+const MAX_DH = 300;
+
 function engagedWithSide(ai: AiSide, e: FormationState): boolean {
-  for (const oi of e.engagedWith) if (ai.state.formations[oi]?.side === ai.side) return true;
-  return false;
+  const i = e.index;
+  memo(i);
+  if (memoFlags[i]! & M_ENGAGED) return memoEngaged[i] === 1;
+  let v = 0;
+  for (const oi of e.engagedWith) if (ai.state.formations[oi]?.side === ai.side) {
+    v = 1;
+    break;
+  }
+  memoEngaged[i] = v;
+  memoFlags[i] = memoFlags[i]! | M_ENGAGED;
+  return v === 1;
+}
+
+/** Smallest gap from `e` to any own (not routing) missile formation. */
+function missileGap(ai: AiSide, e: FormationState): number {
+  const i = e.index;
+  memo(i);
+  if (memoFlags[i]! & M_GAP) return memoMissileGap[i]!;
+  let g = Infinity;
+  for (const f of ai.ownAlive) {
+    if (roleOf(ai, f) !== ROLE.missile || f.activity === 'routing') continue;
+    const d = gap(f, e);
+    if (d < g) g = d;
+  }
+  memoMissileGap[i] = g;
+  memoFlags[i] = memoFlags[i]! | M_GAP;
+  return g;
 }
 
 /** Enemy within `r` m (gap) of any own missile formation. */
 function threatensArchers(ai: AiSide, e: FormationState, r: number): boolean {
-  for (const f of ai.ownAlive) {
-    if (roleOf(ai, f) !== ROLE.missile || f.activity === 'routing') continue;
-    if (gap(f, e) < r) return true;
-  }
-  return false;
+  return missileGap(ai, e) < r;
+}
+
+/** Enemy spears / guards standing free within 35 m of `e` (they would catch horse riding at it). */
+function shieldsOf(ai: AiSide, e: FormationState): number {
+  const i = e.index;
+  memo(i);
+  if (memoFlags[i]! & M_SHIELD) return memoShield[i]!;
+  let n = 0;
+  for (const o of ai.known) if ((o.unitClass === 'spearmen' || o.unitClass === 'elite_guards') && o.engagedWith.length === 0 && gap(o, e) < 35) n++;
+  memoShield[i] = n;
+  memoFlags[i] = memoFlags[i]! | M_SHIELD;
+  return n;
 }
 
 /** Missile target value of `e` for shooter `a` (-Infinity = out of range). */
 function missileScore(ai: AiSide, a: FormationState, e: FormationState, reach: number, halfLine: number): number {
   const d = dist(a, e);
+  // Cheap bound first: effectiveRange <= base x height bonus x walls x tower; far beyond it the exact range is moot.
+  const st = ai.ctx.stats[a.index]!;
+  const base = Math.min(st.range, RULES.battle.weather.rangeVsVisibility * ai.state.setup.environment.weather.visibility);
+  if (d > base * (1 + 0.01 * MAX_DH) * RULES.battle.walls.range * 1.2 * reach) return -Infinity;
   const r = effectiveRange(ai.state, ai.ctx, a, e);
   if (d > r * reach) return -Infinity;
   let s = 1 + 2 * counterLog(a, e);
@@ -462,25 +534,31 @@ function missileScore(ai: AiSide, a: FormationState, e: FormationState, reach: n
   return s;
 }
 
-/** Strike value of `e` for a mounted formation `f` (cavalry, chariots). */
-function mountedScore(ai: AiSide, f: FormationState, e: FormationState): number {
+/**
+ * Strike value of `e` for a mounted formation `f` (cavalry, chariots). `floor`: a caller looking for the best target
+ * passes its best score so far - the path check (which can only lower the score) is skipped when the rest cannot beat
+ * it (the result is then <= floor, never above the true score).
+ */
+function mountedScore(ai: AiSide, f: FormationState, e: FormationState, floor = -Infinity): number {
+  mDangerous = false;
   if (e.unitClass === 'war_elephants') return -10;
   // A square or circle is braced on every face and has no flank: never ride into one.
   if ((e.shape === 'square' || e.shape === 'circle') && (e.unitClass === 'spearmen' || e.unitClass === 'elite_guards')) return -9;
   const engaged = engagedWithSide(ai, e);
   if (bracedAgainst(e, f) && !engaged) return -8;
+  mDangerous = !engaged;
   let s = 2.5 * counterLog(f, e) - 1.5 * counterLog(e, f);
   const soft = e.unitClass === 'archers' || e.unitClass === 'engineers' || e.unitClass === 'supply_train' || e.unitClass === 'scouts';
   if (soft) s += 1.5;
   if (engaged) s += 1.6;
   if (UNITS[e.unitClass].category === 'mounted' && threatensArchers(ai, e, 160)) s += 1.5;
   // Shielded soft targets: enemy spears / guards standing close by (not in melee) would catch the horse.
-  if (soft) for (const o of ai.known) if ((o.unitClass === 'spearmen' || o.unitClass === 'elite_guards') && o.engagedWith.length === 0 && gap(o, e) < 35) s -= 1.5;
+  if (soft) for (let k = shieldsOf(ai, e); k > 0; k--) s -= 1.5;
   s -= dist(f, e) / 220;
   if (e.morale < 40) s += 0.5;
   if (e.index === f.target) s += 0.3;
   // Deep behind an enemy front that is not yet pinned, or across the path of its blocks: a ride to destruction.
-  if (!engaged) s -= 1.5 * dangerOnPath(ai, f, e);
+  if (!engaged && s > floor) s -= 1.5 * dangerOnPath(ai, f, e);
   return s;
 }
 
@@ -530,6 +608,8 @@ const lineList: FormationState[] = [];
 /** The field plan for this think. */
 export function runField(ai: AiSide): void {
   const s = ai.state;
+  thinkStamp = (thinkStamp + 1) | 0;
+  memoFor(s.formations.length);
   if (typeof ai.mem.roles !== 'string') assignRoles(ai);
   if (typeof ai.mem.initStr !== 'number') ai.mem.initStr = ai.ownStr;
   if (s.phase === 'deployment') {
@@ -972,6 +1052,11 @@ function elephants(ai: AiSide, f: FormationState, attacking: boolean): void {
 // Mounted
 // ---------------------------------------------------------------------------------------------------
 
+let mBase = new Float64Array(64);
+let mNeed = new Uint8Array(64);
+/** Set by mountedScore: the score is still subject to the path check (not in melee). */
+let mDangerous = false;
+
 function mounted(ai: AiSide, f: FormationState, attacking: boolean, halfLine: number): void {
   const role = roleOf(ai, f);
   // In melee: horse does not stay in a slogging match with spears, guards or elephants - break off and re-form.
@@ -994,13 +1079,32 @@ function mounted(ai: AiSide, f: FormationState, attacking: boolean, halfLine: nu
   if (f.order.type === 'withdraw') return;
   const linesEngaged = lineSlots.some((sl) => sl.f.engagedWith.length > 0);
   // Pursuit (mounted only): routers within 400 m when the enemy is beaten or nothing better is on offer.
+  // Best strike target. The path check only lowers a score, so it runs only for candidates whose other terms can still
+  // beat (or tie, earlier in perception order - the plain scan's tie rule) the best so far.
+  const k = ai.known.length;
+  if (mBase.length < k) {
+    mBase = new Float64Array(k * 2);
+    mNeed = new Uint8Array(k * 2);
+  }
+  let top = -1;
+  for (let i = 0; i < k; i++) {
+    mBase[i] = mountedScore(ai, f, ai.known[i]!, Infinity);
+    mNeed[i] = mDangerous ? 1 : 0;
+    if (top < 0 || mBase[i]! > mBase[top]!) top = i;
+  }
   let best: FormationState | null = null;
   let bs = -Infinity;
-  for (const e of ai.known) {
-    const sc = mountedScore(ai, f, e);
-    if (sc > bs) {
+  let bi = -1;
+  // The best base first (it sets a high bar), then every other candidate that could still beat or tie it.
+  for (let j = -1; j < k; j++) {
+    const i = j < 0 ? top : j;
+    if (i < 0 || (j >= 0 && i === top)) continue;
+    if (mBase[i]! < bs || (mBase[i] === bs && i > bi)) continue;
+    const sc = mNeed[i] ? mBase[i]! - 1.5 * dangerOnPath(ai, f, ai.known[i]!) : mBase[i]!;
+    if (sc > bs || (sc === bs && i < bi)) {
       bs = sc;
-      best = e;
+      best = ai.known[i]!;
+      bi = i;
     }
   }
   const beaten = ai.ownStr > 2 * ai.enemyStr;

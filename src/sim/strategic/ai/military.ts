@@ -15,7 +15,9 @@
  *    the garrison plus nearby enemy armies by 1.2-1.6x (aggression), carries engineers (or elephants) for walls, has
  *    food, and the fords are open (no long marches in flood). It assaults once the walls are breached (1.3x the
  *    defenders) or laddered (2x); a capital needs 1.6x more to be besieged and is stormed only through a breach at 2.5x,
- *    and a fortified capital (fort level 2+) is besieged only by an expansionist.
+ *    and a fortified capital (fort level 2+) is besieged only by an expansionist. While an enemy still has a host of
+ *    40% of ours in the field the main army fights near home (targets within 3,000 m of the capital or 1,500 m of an
+ *    own settlement).
  *    It lifts a siege that turned hopeless. No siege in a realm whose field strength (realm strength
  *    minus garrisons) outmatches the host x (1 - 0.4 aggression). Raiders (raid weight) send their horse to raid weakly
  *    held enemy settlements.
@@ -352,6 +354,8 @@ function offensive(sit: Situation, a: ArmyState, seen: readonly Contact[], ratio
   const reach = timid ? 2500 : 4500;
   const cap = sit.capital;
   const need = timid ? ratio + 0.4 : ratio;
+  let contested = false;
+  for (const e of sit.enemies) if (fieldStrength(sit, e) >= 0.4 * own) contested = true;
   // No siege in a realm whose field armies (wherever they are) outmatch this host: the strength of a realm is public
   // (the war rule uses it), the positions of its armies are not.
   const fieldOk = new Map<string, boolean>();
@@ -374,6 +378,9 @@ function offensive(sit: Situation, a: ArmyState, seen: readonly Contact[], ratio
     const d = dist(a, t);
     if (d > reach || (flood && d > 1500)) continue;
     if (!safe && cap && dist(cap, t) > 1500) continue;
+    // At war with a realm that still has a host in the field, the main army fights near home: no deep strikes or
+    // distant free towns while its own towns lie open.
+    if (contested && cap && dist(cap, t) > 3000 && nearestOwn(sit, t) > 1500) continue;
     if (t.fortLevel >= 1 && !tools) continue;
     const def = defenseOf(sit, t, seen);
     // A realm's capital is taken only with overwhelming force (its fall decides a war; its defenders fight to the end).

@@ -1,0 +1,2972 @@
+{
+ "seed": 3,
+ "days": 360,
+ "seconds": 5.517,
+ "rows": [
+  {
+   "day": 0,
+   "factionId": "citystates",
+   "alive": true,
+   "settlements": 0,
+   "population": 0,
+   "soldiers": 0,
+   "treasury": 3000,
+   "foodReserve": 2000,
+   "age": "mahajanapada",
+   "wars": []
+  },
+  {
+   "day": 0,
+   "factionId": "forest",
+   "alive": true,
+   "settlements": 2,
+   "population": 10900,
+   "soldiers": 632,
+   "treasury": 3000,
+   "foodReserve": 2000,
+   "age": "mahajanapada",
+   "wars": []
+  },
+  {
+   "day": 0,
+   "factionId": "frontier",
+   "alive": true,
+   "settlements": 2,
+   "population": 5700,
+   "soldiers": 632,
+   "treasury": 3000,
+   "foodReserve": 2000,
+   "age": "janapada",
+   "wars": []
+  },
+  {
+   "day": 0,
+   "factionId": "heartland",
+   "alive": true,
+   "settlements": 5,
+   "population": 38600,
+   "soldiers": 632,
+   "treasury": 3000,
+   "foodReserve": 2000,
+   "age": "mahajanapada",
+   "wars": [
+    "highland"
+   ]
+  },
+  {
+   "day": 0,
+   "factionId": "highland",
+   "alive": true,
+   "settlements": 5,
+   "population": 17400,
+   "soldiers": 632,
+   "treasury": 3000,
+   "foodReserve": 2000,
+   "age": "mahajanapada",
+   "wars": [
+    "heartland"
+   ]
+  },
+  {
+   "day": 0,
+   "factionId": "maritime",
+   "alive": true,
+   "settlements": 0,
+   "population": 0,
+   "soldiers": 0,
+   "treasury": 3000,
+   "foodReserve": 2000,
+   "age": "janapada",
+   "wars": []
+  },
+  {
+   "day": 90,
+   "factionId": "citystates",
+   "alive": true,
+   "settlements": 0,
+   "population": 0,
+   "soldiers": 0,
+   "treasury": 3000,
+   "foodReserve": 2000,
+   "age": "mahajanapada",
+   "wars": []
+  },
+  {
+   "day": 90,
+   "factionId": "forest",
+   "alive": true,
+   "settlements": 3,
+   "population": 16939,
+   "soldiers": 852,
+   "treasury": 1430,
+   "foodReserve": 21782,
+   "age": "mahajanapada",
+   "wars": []
+  },
+  {
+   "day": 90,
+   "factionId": "frontier",
+   "alive": true,
+   "settlements": 2,
+   "population": 5713,
+   "soldiers": 632,
+   "treasury": 1678,
+   "foodReserve": 6405,
+   "age": "janapada",
+   "wars": []
+  },
+  {
+   "day": 90,
+   "factionId": "heartland",
+   "alive": true,
+   "settlements": 7,
+   "population": 46110,
+   "soldiers": 1077,
+   "treasury": 2742,
+   "foodReserve": 66432,
+   "age": "mahajanapada",
+   "wars": [
+    "highland"
+   ]
+  },
+  {
+   "day": 90,
+   "factionId": "highland",
+   "alive": true,
+   "settlements": 3,
+   "population": 10023,
+   "soldiers": 771,
+   "treasury": 1000,
+   "foodReserve": 9594,
+   "age": "mahajanapada",
+   "wars": [
+    "heartland"
+   ]
+  },
+  {
+   "day": 90,
+   "factionId": "maritime",
+   "alive": true,
+   "settlements": 0,
+   "population": 0,
+   "soldiers": 0,
+   "treasury": 3000,
+   "foodReserve": 2000,
+   "age": "janapada",
+   "wars": []
+  },
+  {
+   "day": 180,
+   "factionId": "citystates",
+   "alive": true,
+   "settlements": 0,
+   "population": 0,
+   "soldiers": 0,
+   "treasury": 3000,
+   "foodReserve": 2000,
+   "age": "mahajanapada",
+   "wars": []
+  },
+  {
+   "day": 180,
+   "factionId": "forest",
+   "alive": true,
+   "settlements": 3,
+   "population": 16978,
+   "soldiers": 852,
+   "treasury": 2040,
+   "foodReserve": 21782,
+   "age": "mahajanapada",
+   "wars": []
+  },
+  {
+   "day": 180,
+   "factionId": "frontier",
+   "alive": true,
+   "settlements": 2,
+   "population": 5726,
+   "soldiers": 632,
+   "treasury": 1910,
+   "foodReserve": 101,
+   "age": "janapada",
+   "wars": []
+  },
+  {
+   "day": 180,
+   "factionId": "heartland",
+   "alive": true,
+   "settlements": 9,
+   "population": 50238,
+   "soldiers": 1121,
+   "treasury": 5998,
+   "foodReserve": 49126,
+   "age": "mahajanapada",
+   "wars": [
+    "highland"
+   ]
+  },
+  {
+   "day": 180,
+   "factionId": "highland",
+   "alive": true,
+   "settlements": 1,
+   "population": 6028,
+   "soldiers": 771,
+   "treasury": 512,
+   "foodReserve": 151,
+   "age": "mahajanapada",
+   "wars": [
+    "heartland"
+   ]
+  },
+  {
+   "day": 180,
+   "factionId": "maritime",
+   "alive": true,
+   "settlements": 0,
+   "population": 0,
+   "soldiers": 0,
+   "treasury": 3000,
+   "foodReserve": 2000,
+   "age": "janapada",
+   "wars": []
+  },
+  {
+   "day": 270,
+   "factionId": "citystates",
+   "alive": true,
+   "settlements": 0,
+   "population": 0,
+   "soldiers": 0,
+   "treasury": 3000,
+   "foodReserve": 2000,
+   "age": "mahajanapada",
+   "wars": []
+  },
+  {
+   "day": 270,
+   "factionId": "forest",
+   "alive": true,
+   "settlements": 3,
+   "population": 17016,
+   "soldiers": 852,
+   "treasury": 3436,
+   "foodReserve": 41688,
+   "age": "mahajanapada",
+   "wars": [
+    "highland"
+   ]
+  },
+  {
+   "day": 270,
+   "factionId": "frontier",
+   "alive": true,
+   "settlements": 4,
+   "population": 10452,
+   "soldiers": 632,
+   "treasury": 3738,
+   "foodReserve": 7181,
+   "age": "janapada",
+   "wars": [
+    "heartland"
+   ]
+  },
+  {
+   "day": 270,
+   "factionId": "heartland",
+   "alive": true,
+   "settlements": 7,
+   "population": 45121,
+   "soldiers": 1090,
+   "treasury": 2952,
+   "foodReserve": 123532,
+   "age": "mahajanapada",
+   "wars": [
+    "frontier",
+    "highland"
+   ]
+  },
+  {
+   "day": 270,
+   "factionId": "highland",
+   "alive": true,
+   "settlements": 1,
+   "population": 6040,
+   "soldiers": 642,
+   "treasury": 341,
+   "foodReserve": 198,
+   "age": "mahajanapada",
+   "wars": [
+    "forest",
+    "heartland"
+   ]
+  },
+  {
+   "day": 270,
+   "factionId": "maritime",
+   "alive": true,
+   "settlements": 0,
+   "population": 0,
+   "soldiers": 0,
+   "treasury": 3000,
+   "foodReserve": 2000,
+   "age": "janapada",
+   "wars": []
+  },
+  {
+   "day": 360,
+   "factionId": "citystates",
+   "alive": true,
+   "settlements": 0,
+   "population": 0,
+   "soldiers": 0,
+   "treasury": 3000,
+   "foodReserve": 2000,
+   "age": "mahajanapada",
+   "wars": []
+  },
+  {
+   "day": 360,
+   "factionId": "forest",
+   "alive": true,
+   "settlements": 3,
+   "population": 17055,
+   "soldiers": 852,
+   "treasury": 4922,
+   "foodReserve": 41688,
+   "age": "mahajanapada",
+   "wars": [
+    "frontier",
+    "highland"
+   ]
+  },
+  {
+   "day": 360,
+   "factionId": "frontier",
+   "alive": true,
+   "settlements": 1,
+   "population": 4440,
+   "soldiers": 313,
+   "treasury": 1103,
+   "foodReserve": 164,
+   "age": "janapada",
+   "wars": [
+    "forest",
+    "heartland"
+   ]
+  },
+  {
+   "day": 360,
+   "factionId": "heartland",
+   "alive": true,
+   "settlements": 10,
+   "population": 51264,
+   "soldiers": 903,
+   "treasury": 3275,
+   "foodReserve": 123064,
+   "age": "samrajya",
+   "wars": [
+    "frontier",
+    "highland"
+   ]
+  },
+  {
+   "day": 360,
+   "factionId": "highland",
+   "alive": true,
+   "settlements": 1,
+   "population": 6052,
+   "soldiers": 422,
+   "treasury": 573,
+   "foodReserve": 0,
+   "age": "mahajanapada",
+   "wars": [
+    "forest",
+    "heartland"
+   ]
+  },
+  {
+   "day": 360,
+   "factionId": "maritime",
+   "alive": true,
+   "settlements": 0,
+   "population": 0,
+   "soldiers": 0,
+   "treasury": 3000,
+   "foodReserve": 2000,
+   "age": "janapada",
+   "wars": []
+  }
+ ],
+ "wars": [
+  {
+   "day": 249,
+   "a": "heartland",
+   "b": "frontier",
+   "byAi": true,
+   "ruleBefore": true,
+   "ratio": 1.8024867310619825,
+   "threshold": 1.3,
+   "blockedBefore": null,
+   "other": null
+  },
+  {
+   "day": 253,
+   "a": "forest",
+   "b": "highland",
+   "byAi": true,
+   "ruleBefore": true,
+   "ratio": 1.7721165161581736,
+   "threshold": 1.6,
+   "blockedBefore": null,
+   "other": null
+  },
+  {
+   "day": 343,
+   "a": "forest",
+   "b": "frontier",
+   "byAi": true,
+   "ruleBefore": true,
+   "ratio": 4.4486265722006335,
+   "threshold": 1.6,
+   "blockedBefore": null,
+   "other": null
+  }
+ ],
+ "peace": [
+  {
+   "a": "highland",
+   "b": "heartland",
+   "belowSince": 47,
+   "sued": 47
+  },
+  {
+   "a": "highland",
+   "b": "heartland",
+   "belowSince": 48,
+   "sued": 58
+  },
+  {
+   "a": "highland",
+   "b": "heartland",
+   "belowSince": 73,
+   "sued": 77
+  },
+  {
+   "a": "highland",
+   "b": "heartland",
+   "belowSince": 78,
+   "sued": 107
+  },
+  {
+   "a": "highland",
+   "b": "heartland",
+   "belowSince": 108,
+   "sued": 137
+  },
+  {
+   "a": "highland",
+   "b": "heartland",
+   "belowSince": 138,
+   "sued": 167
+  },
+  {
+   "a": "highland",
+   "b": "heartland",
+   "belowSince": 168,
+   "sued": 197
+  },
+  {
+   "a": "highland",
+   "b": "heartland",
+   "belowSince": 198,
+   "sued": 227
+  },
+  {
+   "a": "highland",
+   "b": "heartland",
+   "belowSince": 228,
+   "sued": 257
+  },
+  {
+   "a": "highland",
+   "b": "heartland",
+   "belowSince": 258,
+   "sued": 287
+  },
+  {
+   "a": "highland",
+   "b": "heartland",
+   "belowSince": 288,
+   "sued": 317
+  },
+  {
+   "a": "highland",
+   "b": "heartland",
+   "belowSince": 318,
+   "sued": 347
+  },
+  {
+   "a": "highland",
+   "b": "heartland",
+   "belowSince": 348,
+   "sued": null
+  }
+ ],
+ "captures": [
+  {
+   "day": 6,
+   "settlementId": "tirthaghat",
+   "from": null,
+   "to": "forest"
+  },
+  {
+   "day": 41,
+   "settlementId": "shilapur",
+   "from": "highland",
+   "to": "heartland"
+  },
+  {
+   "day": 46,
+   "settlementId": "kandaravasa",
+   "from": "highland",
+   "to": "heartland"
+  },
+  {
+   "day": 58,
+   "settlementId": "shilapur",
+   "from": "heartland",
+   "to": "highland"
+  },
+  {
+   "day": 73,
+   "settlementId": "shilapur",
+   "from": "highland",
+   "to": "heartland"
+  },
+  {
+   "day": 106,
+   "settlementId": "dvaradurga",
+   "from": "highland",
+   "to": "heartland"
+  },
+  {
+   "day": 110,
+   "settlementId": "pashanagram",
+   "from": "highland",
+   "to": "heartland"
+  },
+  {
+   "day": 252,
+   "settlementId": "kusumpur",
+   "from": "heartland",
+   "to": "frontier"
+  },
+  {
+   "day": 264,
+   "settlementId": "dhanyagram",
+   "from": "heartland",
+   "to": "frontier"
+  },
+  {
+   "day": 336,
+   "settlementId": "kusumpur",
+   "from": "frontier",
+   "to": "heartland"
+  },
+  {
+   "day": 341,
+   "settlementId": "dhanyagram",
+   "from": "frontier",
+   "to": "heartland"
+  },
+  {
+   "day": 346,
+   "settlementId": "ushtragram",
+   "from": "frontier",
+   "to": "heartland"
+  }
+ ],
+ "ageUps": [
+  {
+   "day": 274,
+   "factionId": "heartland",
+   "age": "samrajya"
+  }
+ ],
+ "landmarkStarts": [
+  {
+   "day": 186,
+   "factionId": "heartland",
+   "landmarkId": "lm_edict_pillars"
+  }
+ ],
+ "worstDebtStreak": {
+  "heartland": 0,
+  "highland": 0,
+  "forest": 0,
+  "frontier": 0,
+  "maritime": 0,
+  "citystates": 0
+ },
+ "journal": [
+  {
+   "day": 1,
+   "factionId": "forest",
+   "kind": "economy",
+   "text": "Gajavana: 89% of the hands to the fields (grain margin 47 days at the next harvest)"
+  },
+  {
+   "day": 1,
+   "factionId": "forest",
+   "kind": "economy",
+   "text": "Nilavanapura: 86% of the hands to the fields (grain margin 47 days at the next harvest)"
+  },
+  {
+   "day": 1,
+   "factionId": "forest",
+   "kind": "age",
+   "text": "the Samrajya Age needs: Settlements 2/8, Provinces 1/3, People 10900/40000, Building types 10/12"
+  },
+  {
+   "day": 1,
+   "factionId": "forest",
+   "kind": "build",
+   "text": "builds Irrigation Canal at Gajavana (develop need, score 1.56)"
+  },
+  {
+   "day": 1,
+   "factionId": "frontier",
+   "kind": "goal",
+   "text": "top goal: develop lavanapura (utility 0.33)"
+  },
+  {
+   "day": 1,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: marches to besiege Tirthaghat (7623 against ~0 defenders, a free town)"
+  },
+  {
+   "day": 1,
+   "factionId": "heartland",
+   "kind": "economy",
+   "text": "Dhanyagram: 89% of the hands to the fields (grain margin 49 days at the next harvest)"
+  },
+  {
+   "day": 1,
+   "factionId": "heartland",
+   "kind": "economy",
+   "text": "Kusumpur: 89% of the hands to the fields (grain margin 49 days at the next harvest)"
+  },
+  {
+   "day": 1,
+   "factionId": "heartland",
+   "kind": "economy",
+   "text": "Rajapura: 88% of the hands to the fields (grain margin 49 days at the next harvest)"
+  },
+  {
+   "day": 1,
+   "factionId": "heartland",
+   "kind": "economy",
+   "text": "Ratnapura: 86% of the hands to the fields (grain margin 49 days at the next harvest)"
+  },
+  {
+   "day": 1,
+   "factionId": "heartland",
+   "kind": "economy",
+   "text": "Setupur: 87% of the hands to the fields (grain margin 49 days at the next harvest)"
+  },
+  {
+   "day": 1,
+   "factionId": "heartland",
+   "kind": "age",
+   "text": "the Samrajya Age needs: Settlements 5/8, People 38601/40000"
+  },
+  {
+   "day": 1,
+   "factionId": "heartland",
+   "kind": "recruit",
+   "text": "raises Royal Levy at Rajapura for the garrison of Rajapura (0/2 formations) (632 soldiers of 2007 wanted, 360 wealth)"
+  },
+  {
+   "day": 1,
+   "factionId": "heartland",
+   "kind": "recruit",
+   "text": "raises 4 x Engineers at Rajapura for Suvarnan Host (632 soldiers of 2007 wanted, 1200 wealth)"
+  },
+  {
+   "day": 1,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Granary at Ratnapura (develop need, score 0.89)"
+  },
+  {
+   "day": 1,
+   "factionId": "highland",
+   "kind": "diplomacy",
+   "text": "proposes trade to Kotanagara"
+  },
+  {
+   "day": 1,
+   "factionId": "highland",
+   "kind": "spy",
+   "text": "sends an agent: counter intelligence (at war)"
+  },
+  {
+   "day": 2,
+   "factionId": "heartland",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Giridurga (know the enemy)"
+  },
+  {
+   "day": 2,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: develop kandaravasa (utility 0.65)"
+  },
+  {
+   "day": 3,
+   "factionId": "forest",
+   "kind": "goal",
+   "text": "top goal: develop nilavanapura (utility 0.33)"
+  },
+  {
+   "day": 3,
+   "factionId": "forest",
+   "kind": "army",
+   "text": "Nilavanan Host: marches to besiege Tirthaghat (7909 against ~0 defenders, a free town)"
+  },
+  {
+   "day": 3,
+   "factionId": "frontier",
+   "kind": "economy",
+   "text": "Lavanapura: 89% of the hands to the fields (grain margin 47 days at the next harvest)"
+  },
+  {
+   "day": 3,
+   "factionId": "frontier",
+   "kind": "economy",
+   "text": "Ushtragram: 89% of the hands to the fields (grain margin 47 days at the next harvest)"
+  },
+  {
+   "day": 3,
+   "factionId": "frontier",
+   "kind": "age",
+   "text": "the Mahajanapada Age needs: Settlements 2/3, People 5700/12000"
+  },
+  {
+   "day": 3,
+   "factionId": "frontier",
+   "kind": "build",
+   "text": "builds Granary at Lavanapura (develop need, score 0.87)"
+  },
+  {
+   "day": 4,
+   "factionId": "frontier",
+   "kind": "diplomacy",
+   "text": "proposes trade to Kotanagara"
+  },
+  {
+   "day": 4,
+   "factionId": "frontier",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Suvarna (watch the strongest neighbour)"
+  },
+  {
+   "day": 4,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: develop dhanyagram (utility 0.26)"
+  },
+  {
+   "day": 4,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "Dvaradurga: 82% of the hands to the fields (grain margin 44 days at the next harvest)"
+  },
+  {
+   "day": 4,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "Giridurg: 83% of the hands to the fields (grain margin 44 days at the next harvest)"
+  },
+  {
+   "day": 4,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "Kandaravasa: 89% of the hands to the fields (grain margin 44 days at the next harvest)"
+  },
+  {
+   "day": 4,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "Pashanagram: 89% of the hands to the fields (grain margin 44 days at the next harvest)"
+  },
+  {
+   "day": 4,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "Shilapur: 82% of the hands to the fields (grain margin 44 days at the next harvest)"
+  },
+  {
+   "day": 4,
+   "factionId": "highland",
+   "kind": "age",
+   "text": "the Samrajya Age needs: Settlements 5/8, Provinces 2/3, People 17401/40000"
+  },
+  {
+   "day": 4,
+   "factionId": "highland",
+   "kind": "recruit",
+   "text": "raises Fort Wardens at Giridurg for the garrison of Giridurg (0/2 formations) (632 soldiers of 696 wanted, 360 wealth)"
+  },
+  {
+   "day": 4,
+   "factionId": "highland",
+   "kind": "recruit",
+   "text": "raises Engineers at Giridurg for Giridurgan Host (632 soldiers of 696 wanted, 300 wealth)"
+  },
+  {
+   "day": 4,
+   "factionId": "highland",
+   "kind": "build",
+   "text": "builds Granary at Kandaravasa (develop need, score 1.59)"
+  },
+  {
+   "day": 5,
+   "factionId": "forest",
+   "kind": "build",
+   "text": "builds Road Station at Nilavanapura (trade need, score 1.18)"
+  },
+  {
+   "day": 6,
+   "factionId": "forest",
+   "kind": "diplomacy",
+   "text": "proposes trade to Kotanagara"
+  },
+  {
+   "day": 6,
+   "factionId": "forest",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Suvarna (watch the strongest neighbour)"
+  },
+  {
+   "day": 6,
+   "factionId": "frontier",
+   "kind": "goal",
+   "text": "top goal: conquer tirthaghat (utility 0.72)"
+  },
+  {
+   "day": 6,
+   "factionId": "heartland",
+   "kind": "recruit",
+   "text": "raises Royal Levy at Rajapura for the garrison of Rajapura (1/2 formations) (632 soldiers of 2008 wanted, 360 wealth)"
+  },
+  {
+   "day": 6,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Granary at Setupur (develop need, score 0.89)"
+  },
+  {
+   "day": 8,
+   "factionId": "forest",
+   "kind": "goal",
+   "text": "top goal: conquer tirthaghat (utility 1.32)"
+  },
+  {
+   "day": 8,
+   "factionId": "forest",
+   "kind": "army",
+   "text": "Nilavanan Host: returns to its station at Nilavanapura"
+  },
+  {
+   "day": 8,
+   "factionId": "frontier",
+   "kind": "build",
+   "text": "builds Granary at Ushtragram (develop need, score 0.67)"
+  },
+  {
+   "day": 9,
+   "factionId": "highland",
+   "kind": "build",
+   "text": "builds Granary at Dvaradurga (develop need, score 1.23)"
+  },
+  {
+   "day": 10,
+   "factionId": "forest",
+   "kind": "economy",
+   "text": "Tirthaghat: 89% of the hands to the fields (grain margin 52 days at the next harvest)"
+  },
+  {
+   "day": 10,
+   "factionId": "forest",
+   "kind": "age",
+   "text": "the Samrajya Age needs: Settlements 3/8, Provinces 1/3, People 16904/40000"
+  },
+  {
+   "day": 10,
+   "factionId": "forest",
+   "kind": "recruit",
+   "text": "raises Spearmen at Nilavanapura for the garrison of Nilavanapura (0/2 formations) (632 soldiers of 473 wanted, 360 wealth)"
+  },
+  {
+   "day": 10,
+   "factionId": "forest",
+   "kind": "build",
+   "text": "builds Farm Fields (level 3) at Tirthaghat (develop need, score 0.64)"
+  },
+  {
+   "day": 11,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: returns to its station at Lavanapura"
+  },
+  {
+   "day": 13,
+   "factionId": "forest",
+   "kind": "goal",
+   "text": "top goal: stabilize tirthaghat (utility 0.84)"
+  },
+  {
+   "day": 14,
+   "factionId": "highland",
+   "kind": "build",
+   "text": "builds Granary at Pashanagram (develop need, score 1.23)"
+  },
+  {
+   "day": 16,
+   "factionId": "frontier",
+   "kind": "goal",
+   "text": "top goal: develop lavanapura (utility 0.28)"
+  },
+  {
+   "day": 19,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "sends 1500 grain from the royal granaries to Giridurg (59 days left, capital kept at 60 days)"
+  },
+  {
+   "day": 19,
+   "factionId": "highland",
+   "kind": "build",
+   "text": "builds Irrigation Canal at Giridurg (develop need, score 0.97)"
+  },
+  {
+   "day": 23,
+   "factionId": "frontier",
+   "kind": "economy",
+   "text": "sends 1500 grain from the royal granaries to Lavanapura (59 days left, capital kept at 60 days)"
+  },
+  {
+   "day": 24,
+   "factionId": "highland",
+   "kind": "build",
+   "text": "builds Irrigation Canal at Shilapur (develop need, score 0.97)"
+  },
+  {
+   "day": 25,
+   "factionId": "forest",
+   "kind": "recruit",
+   "text": "raises Archers at Nilavanapura for the garrison of Nilavanapura (1/2 formations) (752 soldiers of 474 wanted, 400 wealth)"
+  },
+  {
+   "day": 25,
+   "factionId": "forest",
+   "kind": "build",
+   "text": "builds Farm Fields (level 4) at Nilavanapura (develop need, score 0.54)"
+  },
+  {
+   "day": 27,
+   "factionId": "forest",
+   "kind": "economy",
+   "text": "sends 1500 grain from the royal granaries to Nilavanapura (60 days left, capital kept at 60 days)"
+  },
+  {
+   "day": 28,
+   "factionId": "frontier",
+   "kind": "build",
+   "text": "builds Workshops at Lavanapura (develop need, score 0.73)"
+  },
+  {
+   "day": 29,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "sends 2625 grain from the royal granaries to Giridurg (55 days left, capital kept at 60 days)"
+  },
+  {
+   "day": 31,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Irrigation Canal at Dhanyagram (develop need, score 0.92)"
+  },
+  {
+   "day": 31,
+   "factionId": "highland",
+   "kind": "diplomacy",
+   "text": "proposes trade to Nilavana"
+  },
+  {
+   "day": 31,
+   "factionId": "highland",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Suvarna (know the enemy)"
+  },
+  {
+   "day": 32,
+   "factionId": "heartland",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Giridurga (know the enemy)"
+  },
+  {
+   "day": 33,
+   "factionId": "frontier",
+   "kind": "economy",
+   "text": "sends 375 grain from the royal granaries to Lavanapura (56 days left, capital kept at 60 days)"
+  },
+  {
+   "day": 34,
+   "factionId": "frontier",
+   "kind": "diplomacy",
+   "text": "proposes trade to Nilavana"
+  },
+  {
+   "day": 34,
+   "factionId": "frontier",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Suvarna (watch the strongest neighbour)"
+  },
+  {
+   "day": 34,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches to besiege Dvaradurga (9183 against ~0 defenders)"
+  },
+  {
+   "day": 34,
+   "factionId": "highland",
+   "kind": "build",
+   "text": "builds Irrigation Canal at Kandaravasa (develop need, score 1.26)"
+  },
+  {
+   "day": 36,
+   "factionId": "forest",
+   "kind": "diplomacy",
+   "text": "proposes trade to Suvarna"
+  },
+  {
+   "day": 36,
+   "factionId": "forest",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Suvarna (watch the strongest neighbour)"
+  },
+  {
+   "day": 36,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Farm Fields (level 3) at Ratnapura (develop need, score 0.44)"
+  },
+  {
+   "day": 37,
+   "factionId": "forest",
+   "kind": "economy",
+   "text": "sends 375 grain from the royal granaries to Nilavanapura (56 days left, capital kept at 60 days)"
+  },
+  {
+   "day": 38,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host: falls back behind the walls of Dvaradurga: Suvarnan Host is too strong to meet in the field"
+  },
+  {
+   "day": 39,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: conquer dvaradurga (utility 1.92)"
+  },
+  {
+   "day": 39,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches to besiege Shilapur (8455 against ~0 defenders)"
+  },
+  {
+   "day": 39,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "sends 419 grain from the royal granaries to Giridurg (52 days left, capital kept at 60 days)"
+  },
+  {
+   "day": 39,
+   "factionId": "highland",
+   "kind": "build",
+   "text": "builds Workshops at Dvaradurga (develop need, score 1.02)"
+  },
+  {
+   "day": 40,
+   "factionId": "forest",
+   "kind": "build",
+   "text": "builds Workshops at Tirthaghat (develop need, score 0.59)"
+  },
+  {
+   "day": 41,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: storms Shilapur (the walls are breached; 9037 vs ~0)"
+  },
+  {
+   "day": 42,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: defend giridurg (utility 5.4)"
+  },
+  {
+   "day": 44,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: conquer shilapur (utility 1.92)"
+  },
+  {
+   "day": 44,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches to besiege Kandaravasa (9064 against ~0 defenders)"
+  },
+  {
+   "day": 44,
+   "factionId": "highland",
+   "kind": "build",
+   "text": "builds Irrigation Canal at Pashanagram (develop need, score 0.97)"
+  },
+  {
+   "day": 46,
+   "factionId": "heartland",
+   "kind": "economy",
+   "text": "Dhanyagram: 71% of the hands to the fields (grain margin 133 days at the next harvest)"
+  },
+  {
+   "day": 46,
+   "factionId": "heartland",
+   "kind": "age",
+   "text": "the Samrajya Age needs: Settlements 6/8"
+  },
+  {
+   "day": 46,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Granary at Shilapur (develop need, score 1.16)"
+  },
+  {
+   "day": 46,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host: falls back behind the walls of Giridurg: Suvarnan Host is too strong to meet in the field"
+  },
+  {
+   "day": 47,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches against Giridurgan Host to defend Shilapur (9053 vs 8453)"
+  },
+  {
+   "day": 47,
+   "factionId": "highland",
+   "kind": "peace",
+   "text": "sues Suvarna for peace: war score -30 < -20 (they refuse: They are wary of a peace (-10); They think ill of you (-8); They remember your raids (-3))"
+  },
+  {
+   "day": 49,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: stabilize kandaravasa (utility 0.72)"
+  },
+  {
+   "day": 49,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: returns to its station at Rajapura"
+  },
+  {
+   "day": 52,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: develop pashanagram (utility 1.41)"
+  },
+  {
+   "day": 52,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host: marches to besiege Shilapur (8568 against ~0 defenders)"
+  },
+  {
+   "day": 53,
+   "factionId": "forest",
+   "kind": "goal",
+   "text": "top goal: develop nilavanapura (utility 0.66)"
+  },
+  {
+   "day": 53,
+   "factionId": "frontier",
+   "kind": "build",
+   "text": "builds Workshops (level 2) at Lavanapura (develop need, score 0.59)"
+  },
+  {
+   "day": 53,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: falls back behind the walls of Setupur: Giridurgan Host is too strong to meet in the field"
+  },
+  {
+   "day": 54,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: defend shilapur (utility 3.4)"
+  },
+  {
+   "day": 54,
+   "factionId": "highland",
+   "kind": "build",
+   "text": "builds Farm Fields (level 3) at Giridurg (develop need, score 0.60)"
+  },
+  {
+   "day": 56,
+   "factionId": "heartland",
+   "kind": "economy",
+   "text": "Setupur: 88% of the hands to the fields (grain margin 105 days at the next harvest)"
+  },
+  {
+   "day": 56,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Watchtower at Kandaravasa (defend need, score 0.66)"
+  },
+  {
+   "day": 58,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches against Giridurgan Host to defend Shilapur (8794 vs 8366)"
+  },
+  {
+   "day": 58,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host: storms Shilapur (the ladders are ready; 8366 vs ~0)"
+  },
+  {
+   "day": 59,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: defend kandaravasa (utility 2.4)"
+  },
+  {
+   "day": 59,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches against Giridurgan Host to defend Kandaravasa (8384 vs 8368)"
+  },
+  {
+   "day": 59,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host: falls back behind the walls of Giridurg: Suvarnan Host is too strong to meet in the field"
+  },
+  {
+   "day": 59,
+   "factionId": "highland",
+   "kind": "rebels",
+   "text": "offers tax cut to Shilapur (tax refusal, loyalty 0.20)"
+  },
+  {
+   "day": 61,
+   "factionId": "forest",
+   "kind": "build",
+   "text": "builds Farm Fields (level 4) at Tirthaghat (develop need, score 0.54)"
+  },
+  {
+   "day": 61,
+   "factionId": "heartland",
+   "kind": "economy",
+   "text": "Kandaravasa: 71% of the hands to the fields (grain margin 134 days at the next harvest)"
+  },
+  {
+   "day": 61,
+   "factionId": "heartland",
+   "kind": "economy",
+   "text": "Setupur: 77% of the hands to the fields (grain margin 134 days at the next harvest)"
+  },
+  {
+   "day": 61,
+   "factionId": "heartland",
+   "kind": "recruit",
+   "text": "raises Royal Guards at Setupur for Suvarnan Host (1022 soldiers of 2104 wanted, 900 wealth)"
+  },
+  {
+   "day": 61,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Granary (level 2) at Kusumpur (develop need, score 0.73)"
+  },
+  {
+   "day": 61,
+   "factionId": "highland",
+   "kind": "diplomacy",
+   "text": "proposes trade to Marudesha"
+  },
+  {
+   "day": 61,
+   "factionId": "highland",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Suvarna (know the enemy)"
+  },
+  {
+   "day": 62,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: defend dvaradurga (utility 5.4)"
+  },
+  {
+   "day": 64,
+   "factionId": "frontier",
+   "kind": "diplomacy",
+   "text": "proposes trade to Suvarna"
+  },
+  {
+   "day": 64,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: stabilize kandaravasa (utility 0.71)"
+  },
+  {
+   "day": 64,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: returns to its station at Rajapura"
+  },
+  {
+   "day": 65,
+   "factionId": "forest",
+   "kind": "economy",
+   "text": "Tirthaghat: 69% of the hands to the fields (grain margin 91 days at the next harvest)"
+  },
+  {
+   "day": 65,
+   "factionId": "forest",
+   "kind": "build",
+   "text": "builds Market (level 2) at Nilavanapura (trade need, score 0.35)"
+  },
+  {
+   "day": 65,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host: falls back behind the walls of Dvaradurga: Suvarnan Host is too strong to meet in the field"
+  },
+  {
+   "day": 66,
+   "factionId": "forest",
+   "kind": "diplomacy",
+   "text": "proposes trade to Samudra"
+  },
+  {
+   "day": 66,
+   "factionId": "heartland",
+   "kind": "economy",
+   "text": "Kandaravasa: 81% of the hands to the fields (grain margin 134 days at the next harvest)"
+  },
+  {
+   "day": 67,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: defend shilapur (utility 5.4)"
+  },
+  {
+   "day": 68,
+   "factionId": "frontier",
+   "kind": "build",
+   "text": "builds Farm Fields (level 3) at Ushtragram (develop need, score 0.33)"
+  },
+  {
+   "day": 69,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches to besiege Shilapur (7838 against ~0 defenders)"
+  },
+  {
+   "day": 69,
+   "factionId": "highland",
+   "kind": "build",
+   "text": "builds Watchtower at Shilapur (defend need, score 1.49)"
+  },
+  {
+   "day": 70,
+   "factionId": "forest",
+   "kind": "economy",
+   "text": "Tirthaghat: 79% of the hands to the fields (grain margin 73 days at the next harvest)"
+  },
+  {
+   "day": 70,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host: marches against Suvarnan Host to defend Shilapur (8358 vs 7698)"
+  },
+  {
+   "day": 71,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Watchtower at Dhanyagram (defend need, score 0.66)"
+  },
+  {
+   "day": 73,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: storms Shilapur (the walls are breached; 7673 vs ~0)"
+  },
+  {
+   "day": 74,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: defend dhanyagram (utility 2.4)"
+  },
+  {
+   "day": 74,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches against Giridurgan Host to defend Kandaravasa (7993 vs 6796)"
+  },
+  {
+   "day": 74,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host: falls back behind the walls of Giridurg: Suvarnan Host is too strong to meet in the field"
+  },
+  {
+   "day": 76,
+   "factionId": "heartland",
+   "kind": "rebels",
+   "text": "offers tax cut to Shilapur (unrest, loyalty 0.00)"
+  },
+  {
+   "day": 77,
+   "factionId": "highland",
+   "kind": "peace",
+   "text": "sues Suvarna for peace: war score -32 < -20 (they refuse: They are wary of a peace (-10); They think ill of you (-7); They remember your raids (-5))"
+  },
+  {
+   "day": 77,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: defend dvaradurga (utility 5.4)"
+  },
+  {
+   "day": 79,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: stabilize shilapur (utility 0.91)"
+  },
+  {
+   "day": 79,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: returns to its station at Rajapura"
+  },
+  {
+   "day": 79,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "Giridurg: 86% of the hands to the fields (grain margin 27 days at the next harvest)"
+  },
+  {
+   "day": 79,
+   "factionId": "highland",
+   "kind": "build",
+   "text": "builds Farm Fields (level 3) at Dvaradurga (develop need, score 1.26)"
+  },
+  {
+   "day": 80,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host: falls back behind the walls of Dvaradurga: Suvarnan Host is too strong to meet in the field"
+  },
+  {
+   "day": 82,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: defend giridurg (utility 2.91)"
+  },
+  {
+   "day": 83,
+   "factionId": "forest",
+   "kind": "goal",
+   "text": "top goal: stabilize tirthaghat (utility 0.56)"
+  },
+  {
+   "day": 87,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: develop dvaradurga (utility 0.9)"
+  },
+  {
+   "day": 88,
+   "factionId": "frontier",
+   "kind": "build",
+   "text": "builds Temple at Lavanapura (defend need, score 0.28)"
+  },
+  {
+   "day": 89,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches to besiege Dvaradurga (11330 against ~8300 defenders)"
+  },
+  {
+   "day": 91,
+   "factionId": "forest",
+   "kind": "build",
+   "text": "builds Farm Fields (level 3) at Gajavana (develop need, score 0.49)"
+  },
+  {
+   "day": 91,
+   "factionId": "heartland",
+   "kind": "economy",
+   "text": "Kusumpur: 81% of the hands to the fields (grain margin 113 days at the next harvest)"
+  },
+  {
+   "day": 91,
+   "factionId": "heartland",
+   "kind": "recruit",
+   "text": "raises Horsemen at Rajapura for Suvarnan Host (1077 soldiers of 2398 wanted, 720 wealth)"
+  },
+  {
+   "day": 91,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Granary at Shilapur (develop need, score 1.16)"
+  },
+  {
+   "day": 91,
+   "factionId": "highland",
+   "kind": "diplomacy",
+   "text": "proposes trade to Samudra"
+  },
+  {
+   "day": 92,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: defend giridurg (utility 4.26)"
+  },
+  {
+   "day": 92,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host: falls back behind the walls of Giridurg: Suvarnan Host is too strong to meet in the field"
+  },
+  {
+   "day": 94,
+   "factionId": "frontier",
+   "kind": "diplomacy",
+   "text": "proposes trade to Samudra"
+  },
+  {
+   "day": 94,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: defend shilapur (utility 2.4)"
+  },
+  {
+   "day": 94,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches against Giridurgan Host to defend Shilapur (10458 vs 8059)"
+  },
+  {
+   "day": 94,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "tax policy heavy (treasury 440, projected month -82)"
+  },
+  {
+   "day": 96,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Workshops at Setupur (develop need, score 0.41)"
+  },
+  {
+   "day": 97,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: defend dvaradurga (utility 5.4)"
+  },
+  {
+   "day": 99,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: stabilize shilapur (utility 0.86)"
+  },
+  {
+   "day": 99,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches to besiege Dvaradurga (11293 against ~8309 defenders)"
+  },
+  {
+   "day": 99,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "tax policy standard (treasury 490, projected month -10)"
+  },
+  {
+   "day": 100,
+   "factionId": "forest",
+   "kind": "build",
+   "text": "builds Road Station at Tirthaghat (trade need, score 0.45)"
+  },
+  {
+   "day": 100,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host: falls back behind the walls of Giridurg: Suvarnan Host is too strong to meet in the field"
+  },
+  {
+   "day": 104,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: conquer dvaradurga (utility 1.92)"
+  },
+  {
+   "day": 104,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "tax policy heavy (treasury 529, projected month -91)"
+  },
+  {
+   "day": 106,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: storms Dvaradurga (the walls are breached; 11123 vs ~8328)"
+  },
+  {
+   "day": 106,
+   "factionId": "heartland",
+   "kind": "rebels",
+   "text": "offers relief to Shilapur (protest, loyalty 0.14)"
+  },
+  {
+   "day": 107,
+   "factionId": "highland",
+   "kind": "peace",
+   "text": "sues Suvarna for peace: war score -51 < -20 (they refuse: They are wary of a peace (-10); They remember your raids (-7); They think ill of you (-6))"
+  },
+  {
+   "day": 107,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: defend pashanagram (utility 5.4)"
+  },
+  {
+   "day": 109,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches to besiege Pashanagram (12704 against ~8335 defenders)"
+  },
+  {
+   "day": 109,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "tax policy standard (treasury 557, projected month -62)"
+  },
+  {
+   "day": 110,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host: falls back behind the walls of Giridurg: Suvarnan Host is too strong to meet in the field"
+  },
+  {
+   "day": 111,
+   "factionId": "forest",
+   "kind": "diplomacy",
+   "text": "proposes non aggression to Suvarna"
+  },
+  {
+   "day": 111,
+   "factionId": "heartland",
+   "kind": "age",
+   "text": "chooses Pillars of the Spoken Law for the Samrajya Age (All settlements +0.08 order, +0.05 loyalty. Governing costs -15%. +0.1 legitimacy and stability on completion.)"
+  },
+  {
+   "day": 112,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: defend giridurg (utility 1.5)"
+  },
+  {
+   "day": 114,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: conquer pashanagram (utility 1.92)"
+  },
+  {
+   "day": 114,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: returns to its station at Rajapura"
+  },
+  {
+   "day": 114,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "tax policy heavy (treasury 582, projected month -143)"
+  },
+  {
+   "day": 114,
+   "factionId": "highland",
+   "kind": "age",
+   "text": "the Samrajya Age needs: Settlements 1/8, Provinces 1/3, People 6017/40000, Building types 11/12"
+  },
+  {
+   "day": 119,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: stabilize pashanagram (utility 0.71)"
+  },
+  {
+   "day": 119,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "tax policy standard (treasury 607, projected month -99)"
+  },
+  {
+   "day": 121,
+   "factionId": "forest",
+   "kind": "build",
+   "text": "builds Market (level 2) at Tirthaghat (trade need, score 0.35)"
+  },
+  {
+   "day": 121,
+   "factionId": "highland",
+   "kind": "spy",
+   "text": "sends an agent: counter intelligence (at war)"
+  },
+  {
+   "day": 122,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: develop giridurg (utility 0.93)"
+  },
+  {
+   "day": 124,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: stabilize dvaradurga (utility 0.72)"
+  },
+  {
+   "day": 124,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "tax policy heavy (treasury 488, projected month -144)"
+  },
+  {
+   "day": 126,
+   "factionId": "heartland",
+   "kind": "rebels",
+   "text": "offers tax cut to Dvaradurga (protest, loyalty 0.22)"
+  },
+  {
+   "day": 129,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: stabilize pashanagram (utility 0.71)"
+  },
+  {
+   "day": 133,
+   "factionId": "forest",
+   "kind": "goal",
+   "text": "top goal: develop nilavanapura (utility 0.3)"
+  },
+  {
+   "day": 136,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "sends 7195 grain from the royal granaries to Giridurg (60 days left, capital kept at 60 days)"
+  },
+  {
+   "day": 137,
+   "factionId": "highland",
+   "kind": "peace",
+   "text": "sues Suvarna for peace: war score -74 < -20 (they refuse: They are wary of a peace (-10); They remember your raids (-7); They think ill of you (-6))"
+  },
+  {
+   "day": 141,
+   "factionId": "heartland",
+   "kind": "rebels",
+   "text": "offers tax cut to Pashanagram (protest, loyalty 0.23)"
+  },
+  {
+   "day": 143,
+   "factionId": "frontier",
+   "kind": "economy",
+   "text": "Lavanapura: 86% of the hands to the fields (grain margin 27 days at the next harvest)"
+  },
+  {
+   "day": 144,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: stabilize kandaravasa (utility 0.66)"
+  },
+  {
+   "day": 145,
+   "factionId": "forest",
+   "kind": "build",
+   "text": "builds Farm Fields (level 4) at Gajavana (develop need, score 0.42)"
+  },
+  {
+   "day": 149,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "tax policy standard (treasury 613, projected month -100)"
+  },
+  {
+   "day": 150,
+   "factionId": "frontier",
+   "kind": "economy",
+   "text": "sends 4803 grain from the royal granaries to Lavanapura (60 days left, capital kept at 60 days)"
+  },
+  {
+   "day": 153,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "sends 1799 grain from the royal granaries to Giridurg (60 days left, capital kept at 60 days)"
+  },
+  {
+   "day": 154,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "tax policy heavy (treasury 494, projected month -144)"
+  },
+  {
+   "day": 163,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "sends 449 grain from the royal granaries to Giridurg (56 days left, capital kept at 60 days)"
+  },
+  {
+   "day": 164,
+   "factionId": "frontier",
+   "kind": "economy",
+   "text": "sends 1201 grain from the royal granaries to Lavanapura (59 days left, capital kept at 60 days)"
+  },
+  {
+   "day": 167,
+   "factionId": "highland",
+   "kind": "peace",
+   "text": "sues Suvarna for peace: war score -82 < -20 (they refuse: They are wary of a peace (-10); They remember your raids (-6); They think ill of you (-5))"
+  },
+  {
+   "day": 169,
+   "factionId": "frontier",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Suvarna (watch the strongest neighbour)"
+  },
+  {
+   "day": 171,
+   "factionId": "forest",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Suvarna (watch the strongest neighbour)"
+  },
+  {
+   "day": 174,
+   "factionId": "frontier",
+   "kind": "economy",
+   "text": "sends 300 grain from the royal granaries to Lavanapura (54 days left, capital kept at 60 days)"
+  },
+  {
+   "day": 174,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches to besiege Giridurg (12887 against ~1555 defenders)"
+  },
+  {
+   "day": 179,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: conquer giridurg (utility 1.92)"
+  },
+  {
+   "day": 181,
+   "factionId": "forest",
+   "kind": "build",
+   "text": "builds Market (level 3) at Nilavanapura (trade need, score 0.28)"
+  },
+  {
+   "day": 181,
+   "factionId": "heartland",
+   "kind": "age",
+   "text": "buys 1200 stone for Pillars of the Spoken Law (1277)"
+  },
+  {
+   "day": 181,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "sends 2363 grain from the royal granaries to Giridurg (47 days left, capital kept at 60 days)"
+  },
+  {
+   "day": 181,
+   "factionId": "highland",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Suvarna (know the enemy)"
+  },
+  {
+   "day": 182,
+   "factionId": "heartland",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Giridurga (know the enemy)"
+  },
+  {
+   "day": 182,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: defend giridurg (utility 1.64)"
+  },
+  {
+   "day": 182,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host: falls back behind the walls of Giridurg: Suvarnan Host is too strong to meet in the field"
+  },
+  {
+   "day": 186,
+   "factionId": "heartland",
+   "kind": "age",
+   "text": "begins Pillars of the Spoken Law at Rajapura to enter the Samrajya Age"
+  },
+  {
+   "day": 186,
+   "factionId": "heartland",
+   "kind": "recruit",
+   "text": "raises Royal Levy at Dvaradurga for the garrison of Dvaradurga (0/2 formations) (1109 soldiers of 2613 wanted, 360 wealth)"
+  },
+  {
+   "day": 186,
+   "factionId": "heartland",
+   "kind": "recruit",
+   "text": "raises Archers at Pashanagram for Suvarnan Host (1109 soldiers of 2613 wanted, 400 wealth)"
+  },
+  {
+   "day": 186,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Temple at Dvaradurga (defend need, score 1.05)"
+  },
+  {
+   "day": 189,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "orders rationing: the stores will be 0 days short at the harvest in 41 days"
+  },
+  {
+   "day": 195,
+   "factionId": "highland",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Suvarna (know the enemy)"
+  },
+  {
+   "day": 196,
+   "factionId": "heartland",
+   "kind": "rebels",
+   "text": "offers relief to Kandaravasa (protest, loyalty 0.23)"
+  },
+  {
+   "day": 197,
+   "factionId": "highland",
+   "kind": "peace",
+   "text": "sues Suvarna for peace: war score -90 < -20 (they refuse: They are wary of a peace (-10); They remember your raids (-8); They are tired of war (+6))"
+  },
+  {
+   "day": 204,
+   "factionId": "forest",
+   "kind": "economy",
+   "text": "sends 14874 grain from the royal granaries to Nilavanapura (60 days left, capital kept at 60 days)"
+  },
+  {
+   "day": 205,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: builds a supply depot behind the siege camp at Giridurg"
+  },
+  {
+   "day": 206,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: 5344 grain requisitioned from Kandaravasa for the siege depot"
+  },
+  {
+   "day": 224,
+   "factionId": "highland",
+   "kind": "recruit",
+   "text": "splits 5 formation(s) off Giridurgan Host to stand them down (169 a month of upkeep; 438 in hand, -166 a month)"
+  },
+  {
+   "day": 226,
+   "factionId": "heartland",
+   "kind": "economy",
+   "text": "Rajapura: 70% of the hands to the fields (grain margin 136 days at the next harvest)"
+  },
+  {
+   "day": 226,
+   "factionId": "heartland",
+   "kind": "economy",
+   "text": "Setupur: 71% of the hands to the fields (grain margin 136 days at the next harvest)"
+  },
+  {
+   "day": 227,
+   "factionId": "highland",
+   "kind": "peace",
+   "text": "sues Suvarna for peace: war score -98 < -20 (they refuse: They are wary of a peace (-10); They remember your raids (-7); They are tired of war (+7))"
+  },
+  {
+   "day": 227,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host joins Giridurgan Host (detachment)"
+  },
+  {
+   "day": 228,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host (detachment): marches to resupply (9.3 days of food)"
+  },
+  {
+   "day": 229,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: defend kandaravasa (utility 2.4)"
+  },
+  {
+   "day": 229,
+   "factionId": "highland",
+   "kind": "recruit",
+   "text": "splits 5 formation(s) off Giridurgan Host (detachment) to stand them down (169 a month of upkeep; 446 in hand, -152 a month)"
+  },
+  {
+   "day": 235,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host (detachment) (detachment): marches to resupply (1.3 days of food)"
+  },
+  {
+   "day": 241,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Temple at Dvaradurga (defend need, score 0.81)"
+  },
+  {
+   "day": 241,
+   "factionId": "highland",
+   "kind": "spy",
+   "text": "sends an agent: counter intelligence (at war)"
+  },
+  {
+   "day": 249,
+   "factionId": "heartland",
+   "kind": "war",
+   "text": "declares war on Marudesha: strength ratio x opinion 1.80 > 1.30 (war ratio 1.3, aggression bonus 0.00)"
+  },
+  {
+   "day": 250,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: 6000 grain requisitioned from Shilapur for the siege depot"
+  },
+  {
+   "day": 251,
+   "factionId": "frontier",
+   "kind": "goal",
+   "text": "top goal: ally highland (utility 0.61)"
+  },
+  {
+   "day": 251,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: marches to besiege Kusumpur (8418 against ~0 defenders)"
+  },
+  {
+   "day": 251,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Watchtower at Pashanagram (defend need, score 0.51)"
+  },
+  {
+   "day": 252,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: breaks off its siege and marches against Marudeshi Host to defend Rajapura (10535 vs 8287)"
+  },
+  {
+   "day": 253,
+   "factionId": "forest",
+   "kind": "war",
+   "text": "declares war on Giridurga: strength ratio x opinion 1.78 > 1.60 (war ratio 1.6, aggression bonus 0.00)"
+  },
+  {
+   "day": 253,
+   "factionId": "frontier",
+   "kind": "economy",
+   "text": "Ushtragram: 79% of the hands to the fields (grain margin 94 days at the next harvest)"
+  },
+  {
+   "day": 253,
+   "factionId": "frontier",
+   "kind": "rebels",
+   "text": "offers tax cut to Kusumpur (unrest, loyalty 0.20)"
+  },
+  {
+   "day": 253,
+   "factionId": "frontier",
+   "kind": "age",
+   "text": "the Mahajanapada Age needs: People 7910/12000"
+  },
+  {
+   "day": 253,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "sends 590 grain from the royal granaries to Giridurg (53 days left, capital kept at 60 days)"
+  },
+  {
+   "day": 253,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host (detachment): falls back behind the walls of Giridurg: Suvarnan Host is too strong to meet in the field"
+  },
+  {
+   "day": 254,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: defend dhanyagram (utility 2.4)"
+  },
+  {
+   "day": 255,
+   "factionId": "highland",
+   "kind": "diplomacy",
+   "text": "proposes non aggression to Marudesha"
+  },
+  {
+   "day": 256,
+   "factionId": "frontier",
+   "kind": "goal",
+   "text": "top goal: conquer kusumpur (utility 0.72)"
+  },
+  {
+   "day": 256,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: marches to besiege Dhanyagram (8405 against ~0 defenders)"
+  },
+  {
+   "day": 256,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Watchtower at Shilapur (defend need, score 0.51)"
+  },
+  {
+   "day": 257,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: marches against Suvarnan Host to defend Kusumpur (8274 vs 8024)"
+  },
+  {
+   "day": 257,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches against Giridurgan Host (detachment) (detachment) to defend Pashanagram (8024 vs 4017)"
+  },
+  {
+   "day": 257,
+   "factionId": "heartland",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Marudesha (know the enemy)"
+  },
+  {
+   "day": 257,
+   "factionId": "highland",
+   "kind": "peace",
+   "text": "sues Suvarna for peace: war score -100 < -20 (they refuse: They are wary of a peace (-10); They remember your raids (-9); They are tired of war (+8))"
+  },
+  {
+   "day": 257,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: develop giridurg (utility 1.63)"
+  },
+  {
+   "day": 258,
+   "factionId": "forest",
+   "kind": "goal",
+   "text": "top goal: ally heartland (utility 1.01)"
+  },
+  {
+   "day": 258,
+   "factionId": "frontier",
+   "kind": "economy",
+   "text": "tax policy lenient (treasury 3118, projected month +85, 1 restless settlement(s))"
+  },
+  {
+   "day": 259,
+   "factionId": "frontier",
+   "kind": "spy",
+   "text": "sends an agent: sabotage supply against Suvarna (cut their supply)"
+  },
+  {
+   "day": 261,
+   "factionId": "forest",
+   "kind": "spy",
+   "text": "sends an agent: incite unrest against Giridurga (their loyalty is thin at Giridurg)"
+  },
+  {
+   "day": 261,
+   "factionId": "frontier",
+   "kind": "goal",
+   "text": "top goal: stabilize kusumpur (utility 0.6)"
+  },
+  {
+   "day": 261,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: marches to besiege Dhanyagram (7733 against ~0 defenders)"
+  },
+  {
+   "day": 261,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Watchtower at Ratnapura (defend need, score 0.51)"
+  },
+  {
+   "day": 262,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host (detachment) joins Giridurgan Host (detachment) (detachment)"
+  },
+  {
+   "day": 263,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host (detachment) (detachment): falls back behind the walls of Giridurg: Suvarnan Host is too strong to meet in the field"
+  },
+  {
+   "day": 264,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: returns to its station at Dhanyagram"
+  },
+  {
+   "day": 265,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: falls back behind the walls of Shilapur: Marudeshi Host is too strong to meet in the field"
+  },
+  {
+   "day": 266,
+   "factionId": "frontier",
+   "kind": "goal",
+   "text": "top goal: stabilize dhanyagram (utility 0.78)"
+  },
+  {
+   "day": 266,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: rides to raid Rajapura"
+  },
+  {
+   "day": 268,
+   "factionId": "frontier",
+   "kind": "rebels",
+   "text": "offers tax cut to Dhanyagram (tax refusal, loyalty 0.20)"
+  },
+  {
+   "day": 269,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: defend ratnapura (utility 2.4)"
+  },
+  {
+   "day": 270,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches against Marudeshi Host to defend Rajapura (8515 vs 8314)"
+  },
+  {
+   "day": 271,
+   "factionId": "frontier",
+   "kind": "goal",
+   "text": "top goal: defend dhanyagram (utility 2.1)"
+  },
+  {
+   "day": 271,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: marches against Suvarnan Host to defend Dhanyagram (8318 vs 8036)"
+  },
+  {
+   "day": 271,
+   "factionId": "heartland",
+   "kind": "economy",
+   "text": "Setupur: 81% of the hands to the fields (grain margin 111 days at the next harvest)"
+  },
+  {
+   "day": 271,
+   "factionId": "heartland",
+   "kind": "recruit",
+   "text": "raises Royal Levy at Setupur for the garrison of Setupur (0/2 formations) (1088 soldiers of 2346 wanted, 360 wealth)"
+  },
+  {
+   "day": 271,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Temple at Pashanagram (defend need, score 1.05)"
+  },
+  {
+   "day": 271,
+   "factionId": "highland",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Nilavana (know the enemy)"
+  },
+  {
+   "day": 273,
+   "factionId": "frontier",
+   "kind": "recruit",
+   "text": "raises Spearmen at Lavanapura for the garrison of Lavanapura (0/2 formations) (517 soldiers of 418 wanted, 360 wealth)"
+  },
+  {
+   "day": 274,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: defend kandaravasa (utility 2.4)"
+  },
+  {
+   "day": 276,
+   "factionId": "frontier",
+   "kind": "goal",
+   "text": "top goal: stabilize dhanyagram (utility 0.63)"
+  },
+  {
+   "day": 276,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: rides to raid Ratnapura"
+  },
+  {
+   "day": 276,
+   "factionId": "heartland",
+   "kind": "economy",
+   "text": "Ratnapura: 86% of the hands to the fields (grain margin 108 days at the next harvest)"
+  },
+  {
+   "day": 276,
+   "factionId": "heartland",
+   "kind": "recruit",
+   "text": "raises Royal Guards at Rajapura for Suvarnan Host (942 soldiers of 2347 wanted, 900 wealth)"
+  },
+  {
+   "day": 276,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Temple at Kandaravasa (defend need, score 0.81)"
+  },
+  {
+   "day": 277,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: falls back behind the walls of Shilapur: Marudeshi Host is too strong to meet in the field"
+  },
+  {
+   "day": 277,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host (detachment) (detachment): marches to besiege Shilapur (6290 against ~0 defenders)"
+  },
+  {
+   "day": 278,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: marches against Suvarnan Host to defend Dhanyagram (6598 vs 5039)"
+  },
+  {
+   "day": 278,
+   "factionId": "frontier",
+   "kind": "build",
+   "text": "builds Barracks at Dhanyagram (expand need, score 0.56)"
+  },
+  {
+   "day": 278,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host (detachment) (detachment): marches against Suvarnan Host to defend Giridurg (6223 vs 5039)"
+  },
+  {
+   "day": 280,
+   "factionId": "forest",
+   "kind": "build",
+   "text": "builds Market (level 3) at Tirthaghat (trade need, score 0.28)"
+  },
+  {
+   "day": 281,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: rides to raid Rajapura"
+  },
+  {
+   "day": 282,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches against Marudeshi Host to defend Rajapura (6115 vs 6103)"
+  },
+  {
+   "day": 282,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: defend giridurg (utility 4.16)"
+  },
+  {
+   "day": 283,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: marches against Suvarnan Host to defend Dhanyagram (5982 vs 4911)"
+  },
+  {
+   "day": 283,
+   "factionId": "frontier",
+   "kind": "rebels",
+   "text": "offers relief to Kusumpur (protest, loyalty 0.27)"
+  },
+  {
+   "day": 283,
+   "factionId": "frontier",
+   "kind": "build",
+   "text": "builds Barracks at Kusumpur (expand need, score 0.56)"
+  },
+  {
+   "day": 283,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host (detachment) (detachment): falls back behind the walls of Giridurg: Suvarnan Host is too strong to meet in the field"
+  },
+  {
+   "day": 284,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "tax policy standard (treasury 371, projected month -51)"
+  },
+  {
+   "day": 286,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: rides to raid Ratnapura"
+  },
+  {
+   "day": 287,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: falls back behind the walls of Shilapur: Marudeshi Host is too strong to meet in the field"
+  },
+  {
+   "day": 287,
+   "factionId": "heartland",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Marudesha (know the enemy)"
+  },
+  {
+   "day": 287,
+   "factionId": "highland",
+   "kind": "peace",
+   "text": "sues Suvarna for peace: war score -100 < -20 (they refuse: They remember your raids (-12); They are wary of a peace (-10); They are tired of war (+9))"
+  },
+  {
+   "day": 287,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: develop giridurg (utility 1.78)"
+  },
+  {
+   "day": 288,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: marches against Suvarnan Host to defend Dhanyagram (3610 vs 2209)"
+  },
+  {
+   "day": 288,
+   "factionId": "frontier",
+   "kind": "recruit",
+   "text": "raises Archers at Lavanapura for the garrison of Lavanapura (1/2 formations) (487 soldiers of 418 wanted, 400 wealth)"
+  },
+  {
+   "day": 289,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: defend ratnapura (utility 2.4)"
+  },
+  {
+   "day": 289,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "tax policy heavy (treasury 396, projected month -88)"
+  },
+  {
+   "day": 291,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: rides to raid Ratnapura"
+  },
+  {
+   "day": 292,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host (detachment) (detachment): marches to besiege Dvaradurga (4200 against ~1526 defenders)"
+  },
+  {
+   "day": 293,
+   "factionId": "frontier",
+   "kind": "build",
+   "text": "builds Barracks at Ushtragram (expand need, score 0.43)"
+  },
+  {
+   "day": 294,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: defend pashanagram (utility 2.4)"
+  },
+  {
+   "day": 294,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "tax policy standard (treasury 421, projected month -55)"
+  },
+  {
+   "day": 296,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches against Giridurgan Host (detachment) (detachment) to defend Dvaradurga (5319 vs 4293)"
+  },
+  {
+   "day": 297,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: defend giridurg (utility 5.4)"
+  },
+  {
+   "day": 298,
+   "factionId": "frontier",
+   "kind": "rebels",
+   "text": "offers autonomy to Dhanyagram (tax refusal, loyalty 0.26)"
+  },
+  {
+   "day": 298,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host (detachment) (detachment): lifts the siege of Dvaradurga (outmatched)"
+  },
+  {
+   "day": 299,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: defend ratnapura (utility 2.4)"
+  },
+  {
+   "day": 299,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host (detachment) (detachment): falls back behind the walls of Giridurg: Suvarnan Host is too strong to meet in the field"
+  },
+  {
+   "day": 299,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "tax policy heavy (treasury 446, projected month -88)"
+  },
+  {
+   "day": 301,
+   "factionId": "frontier",
+   "kind": "goal",
+   "text": "top goal: ally highland (utility 0.52)"
+  },
+  {
+   "day": 301,
+   "factionId": "heartland",
+   "kind": "recruit",
+   "text": "raises 2 x Horsemen at Rajapura for Suvarnan Host (835 soldiers of 2348 wanted, 1152 wealth)"
+  },
+  {
+   "day": 301,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Temple (level 2) at Dvaradurga (defend need, score 0.64)"
+  },
+  {
+   "day": 301,
+   "factionId": "highland",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Nilavana (know the enemy)"
+  },
+  {
+   "day": 302,
+   "factionId": "highland",
+   "kind": "goal",
+   "text": "top goal: develop giridurg (utility 1.7)"
+  },
+  {
+   "day": 303,
+   "factionId": "frontier",
+   "kind": "economy",
+   "text": "tax policy standard (treasury 2276, projected month +110)"
+  },
+  {
+   "day": 303,
+   "factionId": "frontier",
+   "kind": "economy",
+   "text": "Dhanyagram: 81% of the hands to the fields (grain margin 88 days at the next harvest)"
+  },
+  {
+   "day": 303,
+   "factionId": "frontier",
+   "kind": "economy",
+   "text": "Kusumpur: 81% of the hands to the fields (grain margin 88 days at the next harvest)"
+  },
+  {
+   "day": 304,
+   "factionId": "frontier",
+   "kind": "spy",
+   "text": "sends an agent: sabotage supply against Suvarna (cut their supply)"
+  },
+  {
+   "day": 304,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "tax policy standard (treasury 447, projected month -33)"
+  },
+  {
+   "day": 306,
+   "factionId": "forest",
+   "kind": "spy",
+   "text": "sends an agent: spread rumors against Giridurga (weaken their court)"
+  },
+  {
+   "day": 307,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host (detachment) (detachment): marches to besiege Shilapur (3152 against ~0 defenders)"
+  },
+  {
+   "day": 308,
+   "factionId": "frontier",
+   "kind": "economy",
+   "text": "Kusumpur: 71% of the hands to the fields (grain margin 92 days at the next harvest)"
+  },
+  {
+   "day": 308,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches against Giridurgan Host (detachment) (detachment) to defend Shilapur (3246 vs 3101)"
+  },
+  {
+   "day": 308,
+   "factionId": "highland",
+   "kind": "army",
+   "text": "Giridurgan Host (detachment) (detachment): falls back behind the walls of Giridurg: Suvarnan Host is too strong to meet in the field"
+  },
+  {
+   "day": 309,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: defend kandaravasa (utility 2.4)"
+  },
+  {
+   "day": 309,
+   "factionId": "highland",
+   "kind": "economy",
+   "text": "orders rationing: the stores will be 19 days short at the harvest in 101 days"
+  },
+  {
+   "day": 313,
+   "factionId": "frontier",
+   "kind": "economy",
+   "text": "Kusumpur: 81% of the hands to the fields (grain margin 90 days at the next harvest)"
+  },
+  {
+   "day": 314,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: defend ratnapura (utility 2.4)"
+  },
+  {
+   "day": 314,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: returns to its station at Ratnapura"
+  },
+  {
+   "day": 316,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: falls back behind the walls of Setupur: Marudeshi Host is too strong to meet in the field"
+  },
+  {
+   "day": 316,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Watchtower at Rajapura (defend need, score 0.51)"
+  },
+  {
+   "day": 317,
+   "factionId": "heartland",
+   "kind": "diplomacy",
+   "text": "proposes demand tribute to Giridurga"
+  },
+  {
+   "day": 317,
+   "factionId": "highland",
+   "kind": "peace",
+   "text": "sues Suvarna for peace: war score -100 < -20 (they refuse: They remember your raids (-14); They are wary of a peace (-10); They are tired of war (+10))"
+  },
+  {
+   "day": 321,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches against Marudeshi Host to defend Ratnapura (6594 vs 3868)"
+  },
+  {
+   "day": 326,
+   "factionId": "frontier",
+   "kind": "goal",
+   "text": "top goal: secure supply army_49 (utility 0.65)"
+  },
+  {
+   "day": 326,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: marches to resupply (0.0 days of food)"
+  },
+  {
+   "day": 328,
+   "factionId": "frontier",
+   "kind": "recruit",
+   "text": "raises Spearmen at Dhanyagram for the garrison of Dhanyagram (0/1 formations) (322 soldiers of 419 wanted, 360 wealth)"
+  },
+  {
+   "day": 328,
+   "factionId": "frontier",
+   "kind": "recruit",
+   "text": "raises 4 x Supply Train at Dhanyagram for Marudeshi Host (322 soldiers of 419 wanted, 1200 wealth)"
+  },
+  {
+   "day": 329,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: ally forest (utility 0.54)"
+  },
+  {
+   "day": 329,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: attacks Marudeshi Host (4864 vs 1135)"
+  },
+  {
+   "day": 331,
+   "factionId": "frontier",
+   "kind": "goal",
+   "text": "top goal: defend dhanyagram (utility 2.1)"
+  },
+  {
+   "day": 331,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: falls back behind the walls of Lavanapura: Suvarnan Host is too strong to meet in the field"
+  },
+  {
+   "day": 331,
+   "factionId": "heartland",
+   "kind": "recruit",
+   "text": "raises Royal Elephant Corps at Rajapura for Suvarnan Host (915 soldiers of 2350 wanted, 1600 wealth)"
+  },
+  {
+   "day": 331,
+   "factionId": "heartland",
+   "kind": "build",
+   "text": "builds Temple (level 2) at Kandaravasa (defend need, score 0.64)"
+  },
+  {
+   "day": 331,
+   "factionId": "highland",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Nilavana (know the enemy)"
+  },
+  {
+   "day": 333,
+   "factionId": "frontier",
+   "kind": "recruit",
+   "text": "raises 2 x Supply Train at Lavanapura for Marudeshi Host (249 soldiers of 419 wanted, 600 wealth)"
+  },
+  {
+   "day": 333,
+   "factionId": "frontier",
+   "kind": "recruit",
+   "text": "raises Engineers at Lavanapura for Marudeshi Host (249 soldiers of 419 wanted, 300 wealth)"
+  },
+  {
+   "day": 333,
+   "factionId": "frontier",
+   "kind": "build",
+   "text": "builds Watchtower at Kusumpur (defend need, score 0.58)"
+  },
+  {
+   "day": 334,
+   "factionId": "frontier",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Suvarna (know the enemy)"
+  },
+  {
+   "day": 334,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches to besiege Kusumpur (4602 against ~293 defenders)"
+  },
+  {
+   "day": 338,
+   "factionId": "frontier",
+   "kind": "build",
+   "text": "builds Watchtower at Lavanapura (defend need, score 0.45)"
+  },
+  {
+   "day": 339,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: conquer kusumpur (utility 1.92)"
+  },
+  {
+   "day": 339,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches to besiege Dhanyagram (4943 against ~1868 defenders)"
+  },
+  {
+   "day": 341,
+   "factionId": "frontier",
+   "kind": "goal",
+   "text": "top goal: defend ushtragram (utility 2.1)"
+  },
+  {
+   "day": 341,
+   "factionId": "heartland",
+   "kind": "rebels",
+   "text": "offers tax cut to Dhanyagram (protest, loyalty 0.20)"
+  },
+  {
+   "day": 343,
+   "factionId": "forest",
+   "kind": "war",
+   "text": "declares war on Marudesha: strength ratio x opinion 4.43 > 1.60 (war ratio 1.6, aggression bonus 0.00), +0.3 they are weakened"
+  },
+  {
+   "day": 343,
+   "factionId": "frontier",
+   "kind": "age",
+   "text": "the Mahajanapada Age needs: Settlements 2/3, People 5749/12000"
+  },
+  {
+   "day": 344,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: conquer dhanyagram (utility 1.92)"
+  },
+  {
+   "day": 344,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches to besiege Ushtragram (5310 against ~535 defenders)"
+  },
+  {
+   "day": 345,
+   "factionId": "highland",
+   "kind": "spy",
+   "text": "sends an agent: gather intel against Nilavana (know the enemy)"
+  },
+  {
+   "day": 347,
+   "factionId": "highland",
+   "kind": "peace",
+   "text": "sues Suvarna for peace: war score -100 < -20 (they refuse: They remember your raids (-12); They are tired of war (+11); They are wary of a peace (-10))"
+  },
+  {
+   "day": 349,
+   "factionId": "frontier",
+   "kind": "spy",
+   "text": "sends an agent: sabotage supply against Nilavana (cut their supply)"
+  },
+  {
+   "day": 349,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: conquer ushtragram (utility 1.92)"
+  },
+  {
+   "day": 349,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: returns to its station at Rajapura"
+  },
+  {
+   "day": 351,
+   "factionId": "forest",
+   "kind": "spy",
+   "text": "sends an agent: spread rumors against Marudesha (weaken their court)"
+  },
+  {
+   "day": 351,
+   "factionId": "frontier",
+   "kind": "goal",
+   "text": "top goal: defend lavanapura (utility 0.69)"
+  },
+  {
+   "day": 351,
+   "factionId": "heartland",
+   "kind": "rebels",
+   "text": "offers tax cut to Ushtragram (protest, loyalty 0.21)"
+  },
+  {
+   "day": 353,
+   "factionId": "frontier",
+   "kind": "economy",
+   "text": "sends 490 grain from the royal granaries to Lavanapura (60 days left, capital kept at 60 days)"
+  },
+  {
+   "day": 354,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: stabilize dhanyagram (utility 0.62)"
+  },
+  {
+   "day": 356,
+   "factionId": "frontier",
+   "kind": "goal",
+   "text": "top goal: develop lavanapura (utility 0.51)"
+  },
+  {
+   "day": 356,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: rides to raid Dhanyagram"
+  },
+  {
+   "day": 356,
+   "factionId": "heartland",
+   "kind": "army",
+   "text": "Suvarnan Host: marches against Marudeshi Host to defend Kusumpur (5198 vs 757)"
+  },
+  {
+   "day": 358,
+   "factionId": "frontier",
+   "kind": "army",
+   "text": "Marudeshi Host: falls back behind the walls of Lavanapura: Suvarnan Host is too strong to meet in the field"
+  },
+  {
+   "day": 359,
+   "factionId": "heartland",
+   "kind": "goal",
+   "text": "top goal: defend dhanyagram (utility 2.4)"
+  }
+ ]
+}

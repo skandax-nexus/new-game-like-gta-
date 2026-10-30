@@ -26,7 +26,7 @@
      "rout": 200
     },
     "pass": true,
-    "seconds": 12.621,
+    "seconds": 13.257,
     "runs": [
      {
       "seed": 1,
@@ -1257,7 +1257,7 @@
      "withdrawal": 20
     },
     "pass": true,
-    "seconds": 16.539,
+    "seconds": 17.783,
     "runs": [
      {
       "seed": 1,
@@ -2488,7 +2488,7 @@
      "rout": 17
     },
     "pass": true,
-    "seconds": 37.635,
+    "seconds": 39.596,
     "runs": [
      {
       "seed": 1,
@@ -3718,7 +3718,7 @@
      "withdrawal": 200
     },
     "pass": true,
-    "seconds": 10.717,
+    "seconds": 10.65,
     "runs": [
      {
       "seed": 1,
@@ -4949,7 +4949,7 @@
      "withdrawal": 71
     },
     "pass": true,
-    "seconds": 16.198,
+    "seconds": 15.066,
     "runs": [
      {
       "seed": 1,
@@ -6180,7 +6180,7 @@
      "rout": 66
     },
     "pass": true,
-    "seconds": 20.226,
+    "seconds": 20.393,
     "runs": [
      {
       "seed": 1,
@@ -7411,7 +7411,7 @@
      "rout": 18
     },
     "pass": true,
-    "seconds": 55.43,
+    "seconds": 58.871,
     "runs": [
      {
       "seed": 1,
@@ -8642,7 +8642,7 @@
      "withdrawal": 116
     },
     "pass": true,
-    "seconds": 68.292,
+    "seconds": 72.801,
     "runs": [
      {
       "seed": 1,
@@ -9876,7 +9876,7 @@
      "rout": 16
     },
     "pass": true,
-    "seconds": 86.916,
+    "seconds": 93.672,
     "runs": [
      {
       "seed": 1,

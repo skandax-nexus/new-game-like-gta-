@@ -10,8 +10,10 @@
  *    field army gets a supply train and, for realms that besiege, engineers.
  *  - Where: settlements that can train the class, have the recruits and the grain. Recruits join the main field
  *    army (`targetArmyId`) when there is one; otherwise the settlement's rally point musters a new host (the military
- *    planner merges it). A threatened settlement that no army can reach raises its own garrison.
- *  - Demobilisation: a money crisis of 30+ days disbands the smallest field army that is not the main host.
+ *    planner merges it). Standing garrisons first: two formations in the capital and forts at war, one in towns and
+ *    villages near an enemy; a threatened settlement that no army can reach raises its own.
+ *  - Demobilisation: a month in the red with the treasury below zero (or under four months of runway) for 10+ days
+ *    disbands the smallest secondary army, else splits the costliest formations off the main host to disband them.
  */
 import type { ArmyState, SettlementState, UnitClass } from '../../../core/types';
 import { sortedKeys } from '../../../core/ids';
@@ -162,7 +164,7 @@ export function planRecruitment(sit: Situation, crisis: boolean): void {
     if (!cls) return;
     const site = bestSite(sit, cls, main);
     if (!site) return;
-    const r = tryRecruit(sit, site, cls, main ? main.id : null, room, net, atWar, main ? `for ${main.name}` : 'to muster a new host');
+    const r = tryRecruit(sit, site, cls, main ? main.id : null, room, net, atWar, main ? `for ${main.name}` : 'to muster a new host', false, target - sit.soldiers - queued);
     if (!r) return;
     room -= r.wealth;
     net -= r.upkeep;
@@ -196,44 +198,76 @@ export function garrisonMinimum(sit: Situation, s: SettlementState): number {
   if (sit.capital?.id === s.id) return 2;
   if (s.kind === 'fort') return sit.enemies.length > 0 ? 2 : 1;
   if (sit.enemies.length === 0) return 0;
-  // Near an enemy: one formation in towns, villages rely on the field army.
-  if (s.kind === 'village') return 0;
+  // Near an enemy: one formation in towns within 3,500 m of an enemy-held settlement, villages within 2,500 m (an
+  // empty town falls to the first column that reaches it).
+  const reach = s.kind === 'village' ? 2500 : 3500;
   for (const id of sortedKeys(sit.world.settlements)) {
     const o = sit.world.settlements[id]!;
-    if (o.ownerFactionId && sit.enemies.includes(o.ownerFactionId) && dist(o, s) < 3500) return 1;
+    if (o.ownerFactionId && sit.enemies.includes(o.ownerFactionId) && dist(o, s) < reach) return 1;
   }
   return 0;
 }
 
-function tryRecruit(sit: Situation, s: SettlementState, cls: UnitClass, targetArmyId: string | null, room: number, net: number, atWar: boolean, why: string, garrison = false): { wealth: number; upkeep: number; soldiers: number } | null {
+/**
+ * Queue one recruitment job of 1-4 formations (a job trains its formations together, so a batch is as quick as one):
+ * as many as the gap to the target, the wealth room, the upkeep test, the recruits and the grain allow.
+ */
+function tryRecruit(sit: Situation, s: SettlementState, cls: UnitClass, targetArmyId: string | null, room: number, net: number, atWar: boolean, why: string, garrison = false, gap = 0): { wealth: number; upkeep: number; soldiers: number } | null {
   const { world, f } = sit;
-  const chk = validateRecruit(world, sit.fid, s.id, cls, 1, targetArmyId);
-  if (!chk.ok || chk.cost.wealth > room) return null;
-  const soldiers = chk.cost.recruits;
-  const upkeep = soldiers * UNITS[cls].stats.upkeepWealth;
-  const after = net - upkeep;
-  if (after < 0 && f.treasury < -after * (atWar ? 12 : 24)) return null;
-  // No army to join: the settlement's rally point musters a new host next to it.
-  if (!garrison && !targetArmyId && s.garrison.length >= 2 && !s.rallyPoint) {
-    issue(sit, { kind: 'set_rally_point', settlementId: s.id, rallyPoint: { kind: 'point', x: s.x + s.radius + 80, z: s.z + 40 } });
+  const per = recruitCost(world, sit.fid, cls, 1);
+  const want = garrison ? 1 : Math.max(1, Math.min(RULES.recruitment.maxFormationsPerJob, Math.floor(gap / Math.max(1, per.recruits))));
+  for (let n = want; n >= 1; n--) {
+    const chk = validateRecruit(world, sit.fid, s.id, cls, n, targetArmyId);
+    if (!chk.ok || chk.cost.wealth > room) continue;
+    const soldiers = chk.cost.recruits;
+    const upkeep = soldiers * UNITS[cls].stats.upkeepWealth;
+    const after = net - upkeep;
+    if (after < 0 && f.treasury < -after * (atWar ? 12 : 24)) continue;
+    // No army to join: the settlement's rally point musters a new host next to it.
+    if (!garrison && !targetArmyId && s.garrison.length >= 2 && !s.rallyPoint) {
+      issue(sit, { kind: 'set_rally_point', settlementId: s.id, rallyPoint: { kind: 'point', x: s.x + s.radius + 80, z: s.z + 40 } });
+    }
+    issue(sit, { kind: 'recruit', settlementId: s.id, unitClass: cls, formations: n, targetArmyId });
+    note(sit, 'recruit', `raises ${n > 1 ? `${n} x ` : ''}${FACTIONS[sit.fid]?.unitVariants?.[cls]?.name ?? UNITS[cls].name} at ${s.name} ${why} (${Math.round(sit.soldiers)} soldiers of ${Math.round(soldierTarget(sit))} wanted, ${Math.round(chk.cost.wealth)} wealth)`);
+    return { wealth: chk.cost.wealth, upkeep, soldiers };
   }
-  issue(sit, { kind: 'recruit', settlementId: s.id, unitClass: cls, formations: 1, targetArmyId });
-  note(sit, 'recruit', `raises ${FACTIONS[sit.fid]?.unitVariants?.[cls]?.name ?? UNITS[cls].name} at ${s.name} ${why} (${Math.round(sit.soldiers)} soldiers of ${Math.round(soldierTarget(sit))} wanted, ${Math.round(chk.cost.wealth)} wealth)`);
-  return { wealth: chk.cost.wealth, upkeep, soldiers };
+  return null;
 }
 
-/** A money crisis of 30+ days with the month still in the red: disband the smallest secondary field army. */
+/**
+ * Upkeep the treasury cannot carry: when the month is in the red and the treasury is below zero (or holds under four
+ * months of the deficit) for 10+ days, cut the army - the smallest secondary field army is disbanded; with only the
+ * main host left, its costliest formations (by upkeep) covering the deficit are split off, to be disbanded on the next
+ * run. Garrisons stay (they hold the towns).
+ */
 export function planDemobilize(sit: Situation): void {
+  const net = num(sit, 'net', 0);
+  if (net >= 0) return;
   const since = num(sit, 'crisisSince', -1);
-  if (since < 0 || sit.day - since < 30 || num(sit, 'net', 0) >= 0) return;
-  if (sit.enemies.length > 0 && sit.f.treasury > -500) return;
+  const runway = sit.f.treasury / -net;
+  if (since < 0 || sit.day - since < 10 || (sit.f.treasury >= 0 && runway >= 4)) return;
   const main = mainArmy(sit);
   let pick: ArmyState | null = null;
   for (const a of sit.armies) {
-    if (a === main || a.engagementId || a.status === 'besieging') continue;
+    if (a === main || a.engagementId || a.status === 'besieging' || a.status === 'in_battle') continue;
     if (!pick || armySoldiers(a) < armySoldiers(pick)) pick = a;
   }
-  if (!pick) return;
-  issue(sit, { kind: 'disband_army', armyId: pick.id });
-  note(sit, 'recruit', `disbands ${pick.name} (${armySoldiers(pick)} soldiers): the treasury cannot carry its upkeep`);
+  if (pick) {
+    issue(sit, { kind: 'disband_army', armyId: pick.id });
+    note(sit, 'recruit', `disbands ${pick.name} (${armySoldiers(pick)} soldiers): the treasury cannot carry its upkeep (${Math.round(sit.f.treasury)} in hand, ${Math.round(net)} a month)`);
+    return;
+  }
+  if (!main || main.engagementId || main.status === 'in_battle' || main.units.length < 2) return;
+  // Split off the costliest formations until the deficit is covered (never the whole host).
+  const units = main.units.slice().sort((a, b) => b.soldiers * UNITS[b.unitClass].stats.upkeepWealth - a.soldiers * UNITS[a.unitClass].stats.upkeepWealth || (a.id < b.id ? -1 : 1));
+  const ids: string[] = [];
+  let saved = 0;
+  for (const u of units) {
+    if (ids.length >= main.units.length - 1 || saved >= -net) break;
+    ids.push(u.id);
+    saved += u.soldiers * UNITS[u.unitClass].stats.upkeepWealth;
+  }
+  if (ids.length === 0) return;
+  issue(sit, { kind: 'split_army', armyId: main.id, unitIds: ids });
+  note(sit, 'recruit', `splits ${ids.length} formation(s) off ${main.name} to stand them down (${Math.round(saved)} a month of upkeep; ${Math.round(sit.f.treasury)} in hand, ${Math.round(net)} a month)`);
 }

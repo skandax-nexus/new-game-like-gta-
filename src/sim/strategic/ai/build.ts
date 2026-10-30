@@ -123,7 +123,8 @@ function need(sit: Situation, s: SettlementState, type: BuildingType, margin: nu
       n = restless ? 0.7 : 0.25;
       break;
     case 'barracks':
-      n = !realmHas(sit, 'barracks') ? 1.5 : sit.capital?.id === s.id && l === 0 ? 0.6 : 0.15;
+      // A second training ground when the realm is at war and its barracks are busy (one job trains at a time).
+      n = !realmHas(sit, 'barracks') ? 1.5 : sit.capital?.id === s.id && l === 0 ? 0.6 : l === 0 && sit.enemies.length > 0 && barracksBusy(sit) ? 0.9 : 0.15;
       break;
     case 'stables':
       if (!roster.some((c) => c === 'cavalry' || c === 'chariots' || c === 'scouts')) return 0;
@@ -144,6 +145,17 @@ function need(sit: Situation, s: SettlementState, type: BuildingType, margin: nu
   }
   if (wantTypes && !realmHas(sit, type)) n = n * 1.6 + 0.4;
   return n;
+}
+
+/** Every barracks town of the realm has a recruitment queue. */
+function barracksBusy(sit: Situation): boolean {
+  let any = false;
+  for (const s of sit.owned) {
+    if (level(s, 'barracks') <= 0) continue;
+    any = true;
+    if (s.recruitment.length === 0) return false;
+  }
+  return any;
 }
 
 interface BuildCandidate {

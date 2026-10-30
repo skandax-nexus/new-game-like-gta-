@@ -13,6 +13,7 @@
  */
 import type { BattleCommand, BattleState, FormationIndex, FormationOrder, FormationState, SideIndex, TerrainQuery } from '../../../core/types';
 import type { RngState } from '../../../core/types';
+import { UNIT_CLASSES } from '../../../core/types';
 import { Rng, deriveSeed, rngStateFromSeed } from '../../../core/rng';
 import { dcos, dlog, dsin, facingOf } from '../../../core/math';
 import { AI_PERSONALITY_DEFS, DIFFICULTY_DEFS } from '../../../data/difficulty';
@@ -111,9 +112,13 @@ export function replanSeconds(state: BattleState, side: SideIndex): number {
   return DIFFICULTY_DEFS[state.setup.sides[side].difficulty]?.battleAiReplanSec ?? 2;
 }
 
+/** The battle whose context stats `formationStrength` may use (set by `perceive`; the same values variantStats gives). */
+let statsState: BattleState | null = null;
+let statsCtx: BattleContext | null = null;
+
 /** Fighting strength of one formation (the sideStrength formula of outcome.ts). */
 export function formationStrength(state: BattleState, f: FormationState): number {
-  const st = variantStats(state.setup.sides[f.side].factionId, f.unitClass);
+  const st = (state === statsState && statsCtx ? statsCtx.stats[f.index] : undefined) ?? variantStats(state.setup.sides[f.side].factionId, f.unitClass);
   return f.soldiers * (st.meleeAttack + st.meleeDefense + st.rangedAttack) * (st.hp / 10) * (0.5 + f.morale / 200);
 }
 
@@ -191,6 +196,8 @@ function missileWeight(state: BattleState, ctx: BattleContext, f: FormationState
  */
 export function perceive(state: BattleState, side: SideIndex, terrain: TerrainQuery): AiSide {
   const ctx = battleContext(state, terrain);
+  statsState = state;
+  statsCtx = ctx;
   const mem = state.sides[side].aiMemory;
   const v = view;
   v.state = state;
@@ -314,10 +321,19 @@ export function closing(f: FormationState, e: FormationState): number {
   return (e.vx * dx + e.vz * dz) / d;
 }
 
+/** ln(bonusVs) for every class pair, built once (the unit table is static data). */
+const CLASS_INDEX: Readonly<Record<string, number>> = Object.fromEntries(UNIT_CLASSES.map((c, i) => [c, i]));
+const COUNTER_LOG = new Float64Array(UNIT_CLASSES.length * UNIT_CLASSES.length);
+for (let i = 0; i < UNIT_CLASSES.length; i++) {
+  for (let j = 0; j < UNIT_CLASSES.length; j++) {
+    const m = UNITS[UNIT_CLASSES[i]!].bonusVs[UNIT_CLASSES[j]!] ?? 1;
+    COUNTER_LOG[i * UNIT_CLASSES.length + j] = m === 1 ? 0 : dlog(m);
+  }
+}
+
 /** Natural log of a counter multiplier (bonusVs a -> b, 1 when absent). */
 export function counterLog(a: FormationState, b: FormationState): number {
-  const m = UNITS[a.unitClass].bonusVs[b.unitClass] ?? 1;
-  return m === 1 ? 0 : dlog(m);
+  return COUNTER_LOG[(CLASS_INDEX[a.unitClass] ?? 0) * UNIT_CLASSES.length + (CLASS_INDEX[b.unitClass] ?? 0)] as number;
 }
 
 /** The enemy formation in front of / at the front face of `e` toward `f`: is `f` in e's frontal arc (|angle| < 50 deg)? */
@@ -343,11 +359,6 @@ export function bracedAgainst(e: FormationState, f: FormationState): boolean {
 
 function q(v: number, step: number): number {
   return Math.round(v / step);
-}
-
-/** Memory key of the last order the AI gave a formation. */
-function orderKey(f: FormationState): string {
-  return `o${f.index}`;
 }
 
 /** Signature of an order for change detection (positions quantized to `posStep` m). */
@@ -420,11 +431,7 @@ function stillExecuting(f: FormationState, o: FormationOrder): boolean {
  */
 export function give(ai: AiSide, f: FormationState, o: FormationOrder): boolean {
   if (f.intent) return false;
-  if (stillExecuting(f, o)) {
-    ai.mem[orderKey(f)] = orderSignature(o);
-    return false;
-  }
-  ai.mem[orderKey(f)] = orderSignature(o);
+  if (stillExecuting(f, o)) return false;
   ai.cmds.push({ kind: 'order', formations: [f.index], order: o, queue: false });
   // Mirror the change locally so later decisions this think see it (the command applies right after).
   return true;

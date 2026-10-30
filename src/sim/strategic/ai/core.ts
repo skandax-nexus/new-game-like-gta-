@@ -33,7 +33,7 @@ export interface AiJournalEntry {
   text: string;
 }
 
-const JOURNAL_LIMIT = 600;
+let journalLimit = 600;
 const journal: AiJournalEntry[] = [];
 let journalOn = true;
 
@@ -41,7 +41,7 @@ let journalOn = true;
 export function note(sit: Situation, kind: AiJournalEntry['kind'], text: string): void {
   if (!journalOn) return;
   journal.push({ day: sit.day, factionId: sit.fid, kind, text });
-  if (journal.length > JOURNAL_LIMIT) journal.splice(0, journal.length - JOURNAL_LIMIT);
+  if (journal.length > journalLimit + 100) journal.splice(0, journal.length - journalLimit);
 }
 
 /** The campaign AI's recent decisions (oldest first). */
@@ -49,10 +49,11 @@ export function aiJournal(): readonly AiJournalEntry[] {
   return journal;
 }
 
-/** Clear the journal (QA runs start fresh) and optionally switch it off (perf measurements). */
-export function resetAiJournal(enabled = true): void {
+/** Clear the journal (QA runs start fresh), optionally switch it off (perf measurements) or keep more entries. */
+export function resetAiJournal(enabled = true, limit = 600): void {
   journal.length = 0;
   journalOn = enabled;
+  journalLimit = Math.max(1, Math.floor(limit));
 }
 
 // ---------------------------------------------------------------------------------------------------

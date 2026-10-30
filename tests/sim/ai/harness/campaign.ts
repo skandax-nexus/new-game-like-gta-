@@ -170,6 +170,8 @@ export function runAudited(w: WorldState, days: number, onDay?: (w: WorldState, 
       const f = w.factions[fid]!;
       if (!f.alive) {
         audit.debtStreak[fid] = 0;
+        // A fallen realm owes no peace proposal.
+        for (const p of audit.peace) if (p.a === fid && p.sued === null) p.sued = day;
         continue;
       }
       audit.debtStreak[fid] = f.treasury < 0 ? (audit.debtStreak[fid] ?? 0) + 1 : 0;
