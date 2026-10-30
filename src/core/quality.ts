@@ -142,7 +142,7 @@ export const QUALITY_PRESETS: Readonly<Record<QualityTier, QualitySettings>> = {
     ao: 'gtao',
     aoHalfRes: false,
     bloom: true,
-    antialias: 'smaa',
+    antialias: 'taa',
     colorGrading: true,
     vignette: true,
     fog: true,

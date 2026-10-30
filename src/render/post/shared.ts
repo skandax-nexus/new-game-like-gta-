@@ -33,6 +33,8 @@ export interface PostFrame {
   ssr: THREE.Texture | null;
   shafts: THREE.Texture | null;
   bloom: THREE.Texture | null;
+  /** Bloom amount for the final pass (strength x band x level normalisation; 0 = none). */
+  bloomIntensity: number;
   /** Sun: direction toward it (world), screen uv (xy), visibility 0..1 (z), and colour x intensity (linear). */
   sunDir: THREE.Vector3;
   sunScreen: THREE.Vector3;
@@ -62,6 +64,7 @@ export function createPostFrame(): PostFrame {
     ssr: null,
     shafts: null,
     bloom: null,
+    bloomIntensity: 0,
     sunDir: new THREE.Vector3(0, 1, 0),
     sunScreen: new THREE.Vector3(0.5, 0.5, 0),
     sunColor: new THREE.Color(1, 1, 1),

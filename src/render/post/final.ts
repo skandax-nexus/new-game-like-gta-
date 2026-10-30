@@ -198,6 +198,8 @@ export function identityLut(): THREE.Data3DTexture {
 
 export class FinalPass extends QuadPass {
   readonly name = 'final';
+  /** Lens-dirt intensity applied to bloom (ultra). */
+  dirtIntensity = 0;
   /** Named 'SamrajyaGrade' (asset viewer contract). */
   readonly material: THREE.ShaderMaterial;
   readonly uniforms: Record<string, THREE.IUniform>;
@@ -205,7 +207,7 @@ export class FinalPass extends QuadPass {
   constructor(
     private readonly frame: PostFrame,
     readonly features: FinalFeatures,
-    neutral: { black: THREE.Texture; lut: THREE.Data3DTexture },
+    private readonly neutral: { black: THREE.Texture; lut: THREE.Data3DTexture },
   ) {
     super();
     this.needsSwap = true;
@@ -262,8 +264,13 @@ export class FinalPass extends QuadPass {
 
   override render(renderer: THREE.WebGLRenderer, writeBuffer: THREE.WebGLRenderTarget): void {
     const f = this.frame;
-    this.uniforms.tHdr!.value = f.hdr;
-    this.uniforms.uTime!.value = f.time;
+    const u = this.uniforms;
+    u.tHdr!.value = f.hdr;
+    u.uTime!.value = f.time;
+    u.tBloom!.value = f.bloom ?? this.neutral.black;
+    u.uBloom!.value = f.bloom ? f.bloomIntensity : 0;
+    u.uDirt!.value = f.bloom ? this.dirtIntensity : 0;
+    u.tShafts!.value = f.shafts ?? this.neutral.black;
     this.draw(renderer, this.material, this.renderToScreen ? null : writeBuffer);
   }
 

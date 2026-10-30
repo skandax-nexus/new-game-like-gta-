@@ -30,6 +30,7 @@ import * as THREE from 'three';
 import type { EnvironmentState, HeroMood, QualitySettings, Rect, Season } from '../../core/types';
 import { currentUrlParams } from '../../core/params';
 import type { RenderContext, RenderAssetSource } from '../renderer';
+import type { PostLutHandle, PostSunInput } from '../post';
 import { SkySystem, sunDirection as solarDirection } from './sky';
 import { LIGHTING_PRESETS, resolveHeroMood, resolveLighting, environmentIntensityFor, type ResolvedLighting } from '../style/lighting';
 import { capZoomLook, createZoomLook, resolveZoomLook, type ZoomLook } from '../style/zoom';
@@ -116,6 +117,12 @@ export class EnvironmentRig {
   private readonly offQuality: () => void;
   private readonly offRestore: () => void;
   private readonly atmosphere: AtmosphereInputs;
+  private readonly postSun: PostSunInput;
+  /** LUT id requested / shown (dominant preset), lens-dirt image handle (WP7). */
+  private lutId: string | null = null;
+  private lutRequest = 0;
+  private dirtHandle: { texture: THREE.Texture; release(): void } | null = null;
+  private dirtRequested = false;
   private disposed = false;
 
   constructor(
@@ -160,6 +167,16 @@ export class EnvironmentRig {
       calibration: 1,
       skyMultiplier: 1,
     };
+    this.postSun = {
+      toSun: this.sunDir,
+      toKey: this.keyDir,
+      elevationDeg: 45,
+      shaftsStrength: 0,
+      shaftsDecay: 0.95,
+      shaftsDensity: 0.9,
+      shaftsTint: [1, 1, 1],
+      keyShare: 0.75,
+    };
     this.setAssets(opts.assets !== undefined ? opts.assets : (ctx.assets ?? null));
     this.offHook = ctx.addFrameHook({ scene, beforeRender: (camera, dt) => this.beforeRender(camera, dt), info: () => this.info() });
     this.offQuality = ctx.onQualityChange((nq) => this.setQuality(nq));
@@ -181,6 +198,7 @@ export class EnvironmentRig {
     this.sky.setEnvMapSize(q.envMapSize);
     this.atmosphere.mode = fogModeFor(q);
     this.scene.fog = q.fog ? this.fog : null;
+    this.updatePostAssets();
     if (this.env) this.applyResolved(false);
   }
 
@@ -200,7 +218,58 @@ export class EnvironmentRig {
         })
         .catch(() => undefined);
     }
+    this.lutId = null;
+    this.dirtRequested = false;
+    this.updatePostAssets();
     if (this.env) this.applyResolved(false);
+  }
+
+  /** Grading LUT (high / ultra, dominant preset) and lens dirt (ultra) follow the tier and the assets. */
+  private updatePostAssets(): void {
+    const q = this.quality;
+    const assets = this.assets;
+    const lutOn = !!assets?.loadLut && q.colorGrading && (q.tier === 'high' || q.tier === 'ultra');
+    const want = lutOn && this.env ? LIGHTING_PRESETS[(this.override ?? this.base).dominant].lut : null;
+    if (want !== this.lutId) {
+      this.lutId = want;
+      const req = ++this.lutRequest;
+      if (!want || !assets?.loadLut || (assets.has && !assets.has(want))) this.ctx.post.setLut(null);
+      else {
+        void assets
+          .loadLut(want)
+          .then((h: PostLutHandle | null) => {
+            if (this.disposed || req !== this.lutRequest) {
+              h?.release();
+              return;
+            }
+            this.ctx.post.setLut(h);
+          })
+          .catch(() => undefined);
+      }
+    }
+    const dirtOn = !!assets?.loadImage && q.lensEffects && q.bloom;
+    if (!dirtOn && this.dirtHandle) {
+      this.ctx.post.setLensDirt(null);
+      this.dirtHandle.release();
+      this.dirtHandle = null;
+      this.dirtRequested = false;
+    }
+    if (dirtOn && !this.dirtRequested && assets?.loadImage && (!assets.has || assets.has('lens_dirt'))) {
+      this.dirtRequested = true;
+      void assets
+        .loadImage('lens_dirt')
+        .then((h) => {
+          if (this.disposed || !h || !this.quality.lensEffects) {
+            h?.release();
+            if (!this.disposed) this.dirtRequested = false;
+            return;
+          }
+          this.dirtHandle?.release();
+          this.dirtHandle = h;
+          this.ctx.post.setLensDirt(h.texture);
+        })
+        .catch(() => undefined);
+    }
   }
 
   /** Map bounds for the aerial-perspective edge fade (world x / z). */
@@ -345,6 +414,15 @@ export class EnvironmentRig {
     post.setGrade(r.grade);
     post.setBloom(r.bloomStrength, r.bloomRadius, bloomThresholdLinear(r));
     post.setAmbientOcclusion(r.aoIntensity, r.aoRadiusM);
+    const ps = this.postSun;
+    ps.shaftsStrength = r.shaftsStrength;
+    ps.shaftsDecay = r.shaftsDecay;
+    ps.shaftsDensity = r.shaftsDensity;
+    ps.shaftsTint[0] = r.fogInscatter[0];
+    ps.shaftsTint[1] = r.fogInscatter[1];
+    ps.shaftsTint[2] = r.fogInscatter[2];
+    ps.keyShare = r.keyFill / (1 + r.keyFill);
+    this.updatePostAssets();
     // Wetness and practicals.
     MATERIAL_GLOBALS.wetness.value = Math.max(r.wetness, env?.weather.wetness ?? 0);
     g(G.MATERIAL_BOOST).w = MATERIAL_GLOBALS.wetness.value;
@@ -416,8 +494,12 @@ export class EnvironmentRig {
     this.shadows.update(camera, this.keyDir, this.look, focusDist);
     // Practicals.
     this.practicals.update(step, this.camPos);
-    // Post: zoom-look multipliers.
-    this.ctx.post.applyZoomLook(this.look);
+    // Material globals written per frame (the renderer zeroes samG before the hooks).
+    g(G.MATERIAL_BOOST).w = MATERIAL_GLOBALS.wetness.value;
+    // Post: zoom-look multipliers, auto focus, sun / shafts.
+    this.ctx.post.applyZoomLook(this.look, focusDist);
+    this.postSun.elevationDeg = this.sunElevationDeg;
+    this.ctx.post.setSun(this.postSun);
   }
 
   /** Find the map bounds from the terrain group (GFX-02 names it 'terrain'); retried for a few seconds. */
@@ -488,5 +570,12 @@ export class EnvironmentRig {
     if (this.scene.fog === this.fog) this.scene.fog = null;
     this.scene.environment = null;
     MATERIAL_GLOBALS.wetness.value = 0;
+    this.lutRequest++;
+    this.ctx.post.setLut(null);
+    if (this.dirtHandle) {
+      this.ctx.post.setLensDirt(null);
+      this.dirtHandle.release();
+      this.dirtHandle = null;
+    }
   }
 }

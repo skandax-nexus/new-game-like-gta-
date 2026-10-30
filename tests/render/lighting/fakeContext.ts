@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import type { QualitySettings, QualityTier } from '../../../src/core/types';
 import { buildQualitySettings } from '../../../src/core/quality';
 import type { FrameHook, RenderContext } from '../../../src/render/renderer';
-import type { GradeParams } from '../../../src/render/post';
+import type { GradeParams, PostLutHandle, PostSunInput } from '../../../src/render/post';
 import type { ZoomLook } from '../../../src/render/style/zoom';
 
 export interface FakePost {
@@ -14,10 +14,17 @@ export interface FakePost {
   bloom: [number, number, number] | null;
   ao: [number, number] | null;
   look: ZoomLook | null;
+  focus: number | null;
+  sun: { elevationDeg: number; shaftsStrength: number; keyShare: number } | null;
+  lut: PostLutHandle | null;
+  dirt: THREE.Texture | null;
   setGrade(g: GradeParams): void;
   setBloom(strength: number, radius: number, threshold: number): void;
   setAmbientOcclusion(intensity: number, radiusM: number): void;
-  applyZoomLook(look: ZoomLook): void;
+  applyZoomLook(look: ZoomLook, focusDistanceM?: number): void;
+  setSun(s: PostSunInput): void;
+  setLut(h: PostLutHandle | null): void;
+  setLensDirt(t: THREE.Texture | null): void;
 }
 
 export interface FakeRender {
@@ -40,6 +47,10 @@ export function fakeRenderContext(tier: QualityTier = 'high'): FakeRender {
     bloom: null,
     ao: null,
     look: null,
+    focus: null,
+    sun: null,
+    lut: null,
+    dirt: null,
     setGrade(g) {
       this.grade = { ...g, tint: [g.tint[0], g.tint[1], g.tint[2]] };
     },
@@ -49,8 +60,19 @@ export function fakeRenderContext(tier: QualityTier = 'high'): FakeRender {
     setAmbientOcclusion(i, r) {
       this.ao = [i, r];
     },
-    applyZoomLook(l) {
+    applyZoomLook(l, focus) {
       this.look = l;
+      this.focus = focus ?? null;
+    },
+    setSun(s) {
+      this.sun = { elevationDeg: s.elevationDeg, shaftsStrength: s.shaftsStrength, keyShare: s.keyShare };
+    },
+    setLut(h) {
+      if (h !== this.lut) this.lut?.release();
+      this.lut = h;
+    },
+    setLensDirt(t) {
+      this.dirt = t;
     },
   };
   const renderer = { toneMappingExposure: 1, extensions: { has: () => false } };

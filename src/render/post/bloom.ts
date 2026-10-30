@@ -70,6 +70,8 @@ export class BloomPass extends QuadPass {
   /** Scene-linear threshold, radius 0..1 (upsample spread). */
   threshold = 5;
   radius = 0.5;
+  /** Final strength (r.bloomStrength x ZoomLook bloomScale). */
+  strength = 0.2;
   /** Normalisation of the summed levels (read by the final pass). */
   normalisation = 1;
   private levels = 0;
@@ -123,6 +125,7 @@ export class BloomPass extends QuadPass {
     const f = this.frame;
     if (!f.hdr || this.levels === 0) {
       f.bloom = null;
+      f.bloomIntensity = 0;
       return;
     }
     const p = this.prefilter.uniforms;
@@ -157,6 +160,7 @@ export class BloomPass extends QuadPass {
     }
     this.normalisation = 1 / norm;
     f.bloom = this.up[0]!.texture;
+    f.bloomIntensity = this.strength * this.normalisation;
   }
 
   override dispose(): void {

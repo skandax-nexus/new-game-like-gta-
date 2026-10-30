@@ -50,7 +50,7 @@ export class CompositePass extends QuadPass {
     private readonly frame: PostFrame,
     features: { ao: boolean; contact: boolean; ssr: boolean },
     private readonly white: THREE.Texture,
-    private readonly clear: THREE.Texture,
+    private readonly clearTex: THREE.Texture,
   ) {
     super();
     this.needsSwap = false;
@@ -66,7 +66,7 @@ export class CompositePass extends QuadPass {
         tScene: { value: null },
         tAo: { value: white },
         tContact: { value: white },
-        tSsr: { value: clear },
+        tSsr: { value: clearTex },
         uContactStrength: { value: 0.7 },
       },
       defines,
@@ -84,7 +84,7 @@ export class CompositePass extends QuadPass {
     u.tScene!.value = f.sceneColor;
     u.tAo!.value = f.ao ?? this.white;
     u.tContact!.value = f.contact ?? this.white;
-    u.tSsr!.value = f.ssr ?? this.clear;
+    u.tSsr!.value = f.ssr ?? this.clearTex;
     u.uContactStrength!.value = this.contactStrength;
     this.draw(renderer, this.mat, this.out);
     f.hdr = this.out.texture;
