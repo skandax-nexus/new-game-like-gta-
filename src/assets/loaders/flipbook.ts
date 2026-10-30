@@ -17,9 +17,10 @@
  * installPrepassGuard(mesh, 'skip') on the particle system's own InstancedMesh) enforces it - loaders/prepass.ts.
  *
  * Lit books (smoke, dust, mist, leaves) are lit as a PARTICIPATING MEDIUM, not a solid (ADR 0003 "Lit flipbooks",
- * the contract for GFX-04): wrap lighting for the sun, (N.L + w) / (1 + w) with w = FLIP_WRAP (0.5), ambient from
+ * the contract for GFX-04): wrap lighting for the sun, (N.L + w) / (1 + w) with w = FLIP_WRAP (0.6), ambient from
  * the UPPER hemisphere (the IBL / hemisphere / probe irradiance is sampled along normalize(N * FLIP_AMBIENT_TILT + up),
- * never the dark ground below a puff) and no specular. Plain Lambert on a solid-looking normal turned lit smoke into
+ * never the dark ground below a puff) scaled by the sky visibility 1 - k (1 - N.up) / 2 (k = FLIP_SKY_VISIBILITY: the
+ * underside of a puff sees less sky, so a high sun still gives darker bases) and no specular. Plain Lambert on a solid-looking normal turned lit smoke into
  * creased lumps with near-black pockets under golden light (Art Director TA-07 R2-B1).
  *
  * Gradient-mapped books (`entry.ramp`, fx_fire / fx_weapon_trail): the color atlas stores ONE channel - v, the
@@ -65,12 +66,24 @@ export interface FlipbookMaterialOptions {
   opacity?: number;
   /** Lit books: sun wrap w in (N.L + w) / (1 + w); default FLIP_WRAP. 0 = Lambert. */
   wrap?: number;
+  /** Lit books: sky visibility k - ambient x (1 - k (1 - N.up) / 2); default FLIP_SKY_VISIBILITY. 0 = uniform. */
+  skyVisibility?: number;
+  /** Lit books, lookdev only: scales the atlas normals' tilt (xy) before normalising; default 1 (as baked). */
+  normalScale?: number;
 }
 
-/** Sun wrap of lit (participating-medium) books: (N.L + w) / (1 + w). */
-export const FLIP_WRAP = 0.5;
+/**
+ * Sun wrap of lit (participating-medium) books: (N.L + w) / (1 + w). 0.6 (the Art Director asked for ~0.5): with the
+ * baked sun-lit tops, 0.5 put golden-hour smoke's shadow / lit ratio just under 0.35 (TA-07 R2 measurements).
+ */
+export const FLIP_WRAP = 0.6;
 /** Lit books sample ambient irradiance along normalize(N * FLIP_AMBIENT_TILT + up): upper hemisphere only. */
 export const FLIP_AMBIENT_TILT = 0.5;
+/**
+ * Lit books: sky visibility of the medium - ambient x (1 - k (1 - N.up) / 2): a puff's underside sees less of the sky
+ * than its top (darker bases under a high sun), bounded below by (1 - k) of the sky irradiance (never the ground).
+ */
+export const FLIP_SKY_VISIBILITY = 0.5;
 /** Stops of a gradient-map ramp (`entry.ramp`), evenly spaced over v in [0, 1]. */
 export const FLIP_RAMP_MAX_STOPS = 33;
 
@@ -110,6 +123,11 @@ uniform sampler2D flipNormal;
 vec3 flipAmbientNormal( vec3 n ) {
   vec3 up = normalize( ( viewMatrix * vec4( 0.0, 1.0, 0.0, 0.0 ) ).xyz );
   return normalize( n * FLIP_AMBIENT_TILT + up );
+}
+// sky visibility: the underside of a puff sees less sky than its top (bounded: never below 1 - FLIP_SKY_VIS)
+float flipSkyVis( vec3 n ) {
+  vec3 up = normalize( ( viewMatrix * vec4( 0.0, 1.0, 0.0, 0.0 ) ).xyz );
+  return 1.0 - FLIP_SKY_VIS * ( 0.5 - 0.5 * dot( n, up ) );
 }
 #endif
 #ifdef FLIP_RAMP
@@ -168,6 +186,7 @@ const FLIP_NORMAL = /* glsl */ `
   #ifdef FLIP_NORMAL
   {
     vec3 fn = mix( texture2D( flipNormal, flipUv( flipK0, vUv, flipHp ) ).xyz, texture2D( flipNormal, flipUv( flipK1, vUv, flipHp ) ).xyz, flipA ) * 2.0 - 1.0;
+    fn.xy *= FLIP_NSCALE;
     vec3 fpos = -vViewPosition;
     vec3 fdx = dFdx( fpos );
     vec3 fdy = dFdy( fpos );
@@ -188,9 +207,12 @@ function patchMediumLighting(fragment: string): string {
     'float dotNL = saturate( ( dot( geometryNormal, directLight.direction ) + FLIP_WRAP ) / ( 1.0 + FLIP_WRAP ) );',
   );
   const begin = THREE.ShaderChunk.lights_fragment_begin
-    .replace(H.probe, 'getLightProbeIrradiance( lightProbe, flipAmbientNormal( geometryNormal ) )')
-    .replace(H.hemi, 'getHemisphereLightIrradiance( hemisphereLights[ i ], flipAmbientNormal( geometryNormal ) )');
-  const maps = THREE.ShaderChunk.lights_fragment_maps.replace(H.ibl, 'getIBLIrradiance( flipAmbientNormal( geometryNormal ) )');
+    .replace(H.probe, 'getLightProbeIrradiance( lightProbe, flipAmbientNormal( geometryNormal ) ) * flipSkyVis( geometryNormal )')
+    .replace(H.hemi, 'getHemisphereLightIrradiance( hemisphereLights[ i ], flipAmbientNormal( geometryNormal ) ) * flipSkyVis( geometryNormal )');
+  const maps = THREE.ShaderChunk.lights_fragment_maps.replace(
+    H.ibl,
+    'getIBLIrradiance( flipAmbientNormal( geometryNormal ) ) * flipSkyVis( geometryNormal )',
+  );
   return fragment
     .replace('#include <lights_physical_pars_fragment>', pars)
     .replace(
@@ -222,6 +244,8 @@ export function createFlipbookMaterial(h: FlipbookHandle, opts: FlipbookMaterial
   const ramp = e.ramp && e.ramp.length >= 2 ? e.ramp.slice(0, FLIP_RAMP_MAX_STOPS) : null;
   if (ramp) uniforms.flipRamp = { value: ramp.map((c) => new THREE.Vector3(c[0], c[1], c[2])) };
   const wrap = opts.wrap ?? FLIP_WRAP;
+  const skyVis = opts.skyVisibility ?? FLIP_SKY_VISIBILITY;
+  const nScale = opts.normalScale ?? 1;
   const blend = seq.blend ?? e.blend;
   const premul = blend === 'premultiplied';
   const additive = blend === 'additive';
@@ -254,7 +278,15 @@ export function createFlipbookMaterial(h: FlipbookHandle, opts: FlipbookMaterial
     shader.defines = {
       ...(shader.defines ?? {}),
       USE_UV: '',
-      ...(lit ? { FLIP_NORMAL: '', FLIP_WRAP: glslFloat(wrap), FLIP_AMBIENT_TILT: glslFloat(FLIP_AMBIENT_TILT) } : {}),
+      ...(lit
+        ? {
+            FLIP_NORMAL: '',
+            FLIP_WRAP: glslFloat(wrap),
+            FLIP_AMBIENT_TILT: glslFloat(FLIP_AMBIENT_TILT),
+            FLIP_SKY_VIS: glslFloat(skyVis),
+            FLIP_NSCALE: glslFloat(nScale),
+          }
+        : {}),
       ...(premul ? { FLIP_PREMULTIPLIED: '' } : {}),
       ...(additive ? { FLIP_ADDITIVE: '' } : {}),
       ...(ramp ? { FLIP_RAMP: String(ramp.length) } : {}),
@@ -266,7 +298,7 @@ export function createFlipbookMaterial(h: FlipbookHandle, opts: FlipbookMaterial
     if (lit) shader.fragmentShader = patchMediumLighting(shader.fragmentShader.replace('#include <normal_fragment_maps>', FLIP_NORMAL));
   };
   mat.customProgramCacheKey = () =>
-    `samrajya-flipbook|${lit ? `l${glslFloat(wrap)}` : ''}${premul ? 'p' : ''}${additive ? 'a' : ''}${ramp ? `r${ramp.length}` : ''}`;
+    `samrajya-flipbook|${lit ? `l${glslFloat(wrap)}s${glslFloat(skyVis)}n${glslFloat(nScale)}` : ''}${premul ? 'p' : ''}${additive ? 'a' : ''}${ramp ? `r${ramp.length}` : ''}`;
   mat.userData.flipbookFrame = frame;
   mat.userData.flipbookUniforms = uniforms;
   mat.userData[PREPASS_TAG] = 'skip';

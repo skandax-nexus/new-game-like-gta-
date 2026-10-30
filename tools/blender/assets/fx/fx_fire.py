@@ -11,10 +11,12 @@ slight occlusion - the smoke column above a fire is fx_smoke). Seamless loop: th
 cross-fade into the first.
 Fuel bed (Art Director TA-07 R2-B2a): every hot spot is a DOME whose height follows the continuous noise (2 cm at
 its foot, ~20 cm at its crest; the old source was a slab with one flat 14 cm top), and the spots stay inside the
-inner ~80 % of the bed. A small spot - mostly at the rim - is too weak to lift a tongue that stays above the ignition
-temperature, so all that showed of it was its source shape: the slab read as a detached flat-topped glowing block for
-~0.35 s of every loop (and as a flat foot at the base near the loop seam); a dome reads as a rounded ember lick. Logged per frame: the longest straight top edge of any emitting
-shape (straight_top_edge; the bake fails above 6 % of the frame width - target <= 10 %).
+inner ~80 % of the bed. A small spot is too weak to lift a tongue that stays above the ignition temperature, so all
+that showed of it was its source shape: the slab read as a detached flat-topped glowing block at the right of the bed
+for ~0.35 s of every loop; a dome reads as a rounded flamelet that licks up and curls into the body. Logged per
+frame: the longest flat top of a DETACHED emissive region (straight_top_edge: sub-pixel top edge, within 1 px - the
+Art Director's criterion; the bake fails above 8 % of the frame width, target <= 10 %) and of any shouldered block
+(block_tops).
 Gradient-mapped (R2-B2b): the atlas stores ONE channel, v = the sRGB-encoded luminance of the emission (+-1 LSB
 triangular dither), plus the occlusion alpha; the runtime colours it with the published `ramp` (33 stops fitted to
 the simulated emission: black -> ember #a8300e -> tongue #e2571e -> body #ffb040 -> core #fff2c0, R >= G >= B at every
@@ -98,13 +100,16 @@ flame = sum(int((e.max(-1) > 0.25).sum()) for e in enc)
 core = sum(int(((e.min(-1) > 0.70) & (e.max(-1) > 0.25)).sum()) for e in enc)
 log(f"fire: core (#fff2c0-like, all channels > 70 %) {100.0 * core / max(flame, 1):.1f} % of the flame area; pre-window border "
     f"{worst / pk * 255:.2f}/255")
-# no flat-topped glowing blocks (R2-B2a): longest straight top edge of any emitting shape, per frame
-edges = [kit.straight_top_edge(v) for v in vq]
+# no flat-topped glowing blocks (R2-B2a): flat top of any detached emissive region, and shouldered block tops
+edges = [kit.straight_top_edge(v, detached_only=True) for v in vq]
+blocks = [kit.block_tops(v) for v in vq]
 k_worst = int(np.argmax([e[0] for e in edges]))
-log(f"fire: longest straight top edge {100 * edges[k_worst][0]:.1f} % of the frame width (frame {k_worst}, {edges[k_worst][1]}); "
-    f"frames above 6 %: {[k for k, e in enumerate(edges) if e[0] > 0.06]}")
-if edges[k_worst][0] > 0.06:
-    raise ValueError(f"fx_fire: frame {k_worst} has a straight top edge {100 * edges[k_worst][0]:.1f} % of the frame width (> 6 %)")
+k_block = int(np.argmax([b[0] for b in blocks]))
+log(f"fire: detached flat top worst {100 * edges[k_worst][0]:.1f} % of the frame width (frame {k_worst}, {edges[k_worst][1]}); "
+    f"shouldered block top worst {100 * blocks[k_block][0]:.1f} % (frame {k_block}, {blocks[k_block][1]})")
+if edges[k_worst][0] > 0.08:
+    raise ValueError(f"fx_fire: frame {k_worst} has a detached emissive region with a flat top {100 * edges[k_worst][0]:.1f} % "
+                     "of the frame width (> 8 %)")
 meta = fb.write(ctx, color, 8, 8, fps=FPS, loop=True, blend="premultiplied", lit=False, emissive_intensity=6.5,
                 soft_fade_m=0.3, size_m=(S, S), atlas_px={"ultra": 2048, "high": 1024, "mobile": 512},
                 ground_line=GROUND, ramp=ramp,

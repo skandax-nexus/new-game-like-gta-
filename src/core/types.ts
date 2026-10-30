@@ -581,7 +581,15 @@ export type EngineerWork = (typeof ENGINEER_WORKS)[number];
 export type FormationOrder =
   | { type: 'hold' }
   | { type: 'advance'; /** meters along current facing */ distance: number }
-  | { type: 'move_to'; x: number; z: number; facing: number | null; run: boolean }
+  | {
+      type: 'move_to';
+      x: number;
+      z: number;
+      facing: number | null;
+      run: boolean;
+      /** Frontage (m) to take on arrival (drag-to-width orders); clamped by formations.setFrontage. Absent = keep. @sprint1 GP-01 */
+      width?: number;
+    }
   | { type: 'attack_target'; target: FormationIndex; run: boolean }
   | { type: 'charge'; target: FormationIndex }
   | { type: 'flank'; target: FormationIndex; side: 'left' | 'right' }
@@ -867,6 +875,15 @@ export interface FormationState {
   orderTime: number;
   /** Concealed (ambush / forest): unknown to the enemy until within 60 m or scouted (§6.10). */
   hidden: boolean;
+  // --- Save format 3 ---
+  /**
+   * Enemy formations this formation routed (credited when an enemy formation it fights routs); feeds
+   * FormationResult.routedEnemies and +0.05 experience each (DESIGN_SPEC §6.11) without depending on the bounded
+   * battle log (BATTLE_EVENT_LOG_LIMIT). Absent = 0. Transitional `?`: required once GP-01's makeFormation
+   * initialises it to 0 (the CTO then tightens it, ARCHITECTURE §21.3). The v2 -> v3 migration seeds it from the
+   * log's formation_routed credits. @sprint1 GP-01
+   */
+  routedEnemies?: number;
 }
 
 export type ProjectileKind = 'arrow' | 'fire_arrow' | 'javelin' | 'stone';

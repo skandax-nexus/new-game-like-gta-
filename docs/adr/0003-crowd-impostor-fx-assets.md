@@ -180,14 +180,24 @@ halves change:
   over covered pixels (alpha > 0.1) of the book or of any frame is below 0.8 (smoke 0.88 / worst frame 0.84, dust
   0.91 / 0.84; round 1 was 0.65 / 0.53). Every lit book logs mean z and its neighbour-angle p99.9.
   `tests/assets/fx-artifacts.test.ts` re-measures it on the shipped ultra and mobile atlases.
+- **Colour** (fx_smoke): `lit_frames(top_light=0.7)` bakes sky light from above into the occlusion colour (a key
+  from +z whose transmittance is marched down through the puff, ambient lowered by half that amount): self-shadowed
+  bases and lit tops under any sun - a high sun behind the camera (sky_noon) otherwise lit the camera-facing puff
+  flat (core shadow / lit 0.65). The map is **unit albedo** (unoccluded ~1), so the published `tint` IS the smoke
+  albedo - the Bible's `#4a4038`; the round-1 map multiplied a further 0.6, which made that a near-black 0.04.
 - **Runtime lighting** (`createFlipbookMaterial`, lit books; the particle system's own material must match):
-  - sun: **wrap lighting** `(N.L + w) / (1 + w)`, `w = FLIP_WRAP = 0.5` (`opts.wrap` overrides; 0 = Lambert);
+  - sun: **wrap lighting** `(N.L + w) / (1 + w)`, `w = FLIP_WRAP = 0.6` (`opts.wrap` overrides; 0 = Lambert;
+    measured: 0.5 put golden-hour smoke's shadow / lit ratio just under 0.35 once the bases are self-shadowed);
   - ambient (IBL / hemisphere lights / light probes): sampled along `normalize(N * FLIP_AMBIENT_TILT + up)`,
     `FLIP_AMBIENT_TILT = 0.5` - the **upper hemisphere** only: a puff is lit by the sky above it, never by the dark
-    ground below;
+    ground below - times the **sky visibility** `1 - k (1 - N.up) / 2`, `k = FLIP_SKY_VISIBILITY = 0.5`
+    (`opts.skyVisibility`): an underside sees less sky, bounded below by half the sky irradiance (never the ground);
   - **no specular** (direct, IBL, multi-scatter): a medium scatters, it does not reflect.
   Implementation: the three r170 physical chunks with three exact text substitutions (`FLIP_CHUNK_HOOKS`; a unit
-  test fails if a three upgrade changes them) and `material.specularColor = 0`, `specularF90 = 0`.
+  test fails if a three upgrade changes them) and `material.specularColor = 0`, `specularF90 = 0`. The asset viewer
+  takes `&wrap=&skyvis=&nscale=` for lookdev (`nscale` scales the atlas tilt; lookdev only, never shipped).
+- **Measured** (`scripts/shots/ta-07.cjs --only=r2`, fx_smoke frame 30, published tint, effect pixels = atlas alpha
+  >= 0.5, shading ratios on the core alpha >= 0.8): see docs/sprint1/ta-07/r2-measurements.txt.
 
 #### Gradient-mapped emission (`ramp`, rework round 2)
 

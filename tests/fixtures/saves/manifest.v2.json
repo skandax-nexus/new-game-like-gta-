@@ -1,0 +1,48 @@
+{
+  "capturedFrom": "save format v2 build (SAVE_VERSION 2, WORLD_SCHEMA_VERSION 2), parent of \"[CTO] Apply GP-01 requests\"",
+  "generator": "tests/fixtures/saves/capture-v2.ts",
+  "fixtures": [
+    {
+      "file": "skirmish-routs.v2.sav",
+      "description": "Skirmish seed 7 plains 1,000 soldiers, saved mid-battle after the first credited routs (SaveGame.battle)",
+      "saveVersion": 2,
+      "worldSchema": null,
+      "scene": "battle",
+      "worldHash": null,
+      "battleHash": "fc261ae8",
+      "creditedRouts": 2,
+      "bytes": 40962,
+      "notes": [
+        "t=145.0s",
+        "phase active",
+        "2 credited routs in the log",
+        "1 formations routing",
+        "2 formations in melee",
+        "9 log events",
+        "outcome none"
+      ]
+    },
+    {
+      "file": "campaign-fieldbattle.v2.sav",
+      "description": "Campaign broken_crown seed 42: the Royal Host fights a field battle, saved mid-battle after the first credited routs (engagement.battle)",
+      "saveVersion": 2,
+      "worldSchema": 2,
+      "scene": "battle",
+      "worldHash": "a2052423",
+      "battleHash": "08505c54",
+      "creditedRouts": 1,
+      "bytes": 148142,
+      "notes": [
+        "eng_48 on day 4",
+        "0 battles in history",
+        "t=46.5s",
+        "phase active",
+        "1 credited routs in the log",
+        "1 formations routing",
+        "2 formations in melee",
+        "4 log events",
+        "outcome none"
+      ]
+    }
+  ]
+}

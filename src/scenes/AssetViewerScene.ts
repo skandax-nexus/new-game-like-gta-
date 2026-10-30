@@ -10,7 +10,8 @@
  *                                                        idle / walk / attack mix), one InstancedMesh per LOD
  *   ?scene=assetviewer&asset=<impostor>&dist=220&mode=ab|mesh|impostor   impostor vs source mesh (distance slider)
  *   ?scene=assetviewer&asset=<flipbook>&sun=az,el&frame=N        flipbook playback (every sequence), lit by the sun
- *                                                        (&phase=0..1 still of every sequence, &tint=none|rrggbb)
+ *                                                        (&phase=0..1 still of every sequence, &tint=none|rrggbb,
+ *                                                        lit books: &wrap=w&skyvis=k&nscale=s medium-lighting lookdev)
  *   ?scene=assetviewer&asset=<lut>&split=0.5             LUT A/B split over the stupa (left ungraded)
  *   ?scene=assetviewer&asset=<image>                     image on a quad (sun sprite additive)
  *   ?scene=assetviewer&asset=<skinned model>&clip=attack two independent clones + clipEvents timeline (&memtest=1)
@@ -100,6 +101,11 @@ interface ViewerOptions {
   prepass: 'skip' | 'off' | null;
   /** Flipbooks: build the quads but hide them (backdrop-only reference shot for the GTAO card A/B). */
   hidefx: boolean;
+  /** Lit flipbooks: lookdev overrides of the medium lighting (`&wrap=0.5&skyvis=0.5`; default: the material's). */
+  wrap: number | null;
+  skyvis: number | null;
+  /** Lit flipbooks, lookdev: scale of the atlas normals' tilt (`&nscale=1.4`). */
+  nscale: number | null;
 }
 
 function viewerOptions(): ViewerOptions {
@@ -133,6 +139,9 @@ function viewerOptions(): ViewerOptions {
     tint: q.get('tint'),
     prepass: q.get('prepass') === 'skip' ? 'skip' : q.get('prepass') === 'off' ? 'off' : null,
     hidefx: q.get('hidefx') === '1',
+    wrap: num('wrap'),
+    skyvis: num('skyvis'),
+    nscale: num('nscale'),
   };
 }
 
@@ -744,7 +753,13 @@ export class AssetViewerScene implements GameScene {
     const cols = Math.min(seqs.length, 4);
     seqs.forEach((s, i) => {
       const tint = this.opts.tint === 'none' ? undefined : this.opts.tint ? `#${this.opts.tint.replace(/^#/, '')}` : e.tint !== '#ffffff' ? e.tint : undefined;
-      const mat = createFlipbookMaterial(fb, { sequence: s.name, tint });
+      const mat = createFlipbookMaterial(fb, {
+        sequence: s.name,
+        tint,
+        ...(this.opts.wrap !== null ? { wrap: this.opts.wrap } : {}),
+        ...(this.opts.skyvis !== null ? { skyVisibility: this.opts.skyvis } : {}),
+        ...(this.opts.nscale !== null ? { normalScale: this.opts.nscale } : {}),
+      });
       const geo = new THREE.PlaneGeometry(w, h);
       const mesh = new THREE.Mesh(geo, mat);
       // Particles never reach the GTAO / SSAO normal pre-pass (they were drawn as opaque cards there).

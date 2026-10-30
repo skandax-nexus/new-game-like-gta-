@@ -12,6 +12,7 @@
  * v2 world/battle would hold, computed from content where it depends on it (faction starting age and materials,
  * settlement owner at game start, scenario monsoon) - so this module reads src/data/** (campaign, factions,
  * region, balance). It is purely additive: every v1 value is kept (tests/contracts/migration.test.ts).
+ * v2 -> v3 (GP-01 requests) seeds FormationState.routedEnemies of every battle from its log's rout credits.
  *
  * Storage: `SaveStore` abstraction - LocalStorageSaveStore in the browser, MemorySaveStore in tests.
  * The sim never reads wall-clock time; `meta.createdAt` is informational only.
@@ -314,6 +315,14 @@ class ShapeChecker {
       else if (!kindOk(rec[k], kind)) this.problems.push(`${path}.${k} is not ${kind}`);
     }
   }
+  /** Optional members: absent is fine, present must have the right type. */
+  may(o: unknown, path: string, fields: Readonly<Record<string, Kind>>): void {
+    if (typeof o !== 'object' || o === null) return;
+    const rec = o as Record<string, unknown>;
+    for (const [k, kind] of Object.entries(fields)) {
+      if (k in rec && !kindOk(rec[k], kind)) this.problems.push(`${path}.${k} is not ${kind}`);
+    }
+  }
 }
 
 const COST_FIELDS = { wealth: 'number', timber: 'number', stone: 'number', labor: 'number' } as const;
@@ -331,7 +340,7 @@ function checkBattle(c: ShapeChecker, b: BattleState, path: string): void {
   if (b.phase !== 'deployment' && b.phase !== 'active' && b.phase !== 'ended') c.problems.push(`${path}.phase '${String(b.phase)}' unknown`);
   (b.setup?.sides ?? []).forEach((s, i) => c.need(s, `${path}.setup.sides[${i}]`, { aggression: 'number|null' }));
   (b.sides ?? []).forEach((s, i) => c.need(s, `${path}.sides[${i}]`, { rallyCooldownUntil: 'number', aiMemory: 'object' }));
-  (b.formations ?? []).forEach((f, i) =>
+  (b.formations ?? []).forEach((f, i) => {
     c.need(f, `${path}.formations[${i}]`, {
       rallies: 'number',
       shapeChangeUntil: 'number',
@@ -341,8 +350,10 @@ function checkBattle(c: ShapeChecker, b: BattleState, path: string): void {
       chargeRun: 'number',
       orderTime: 'number',
       hidden: 'boolean',
-    }),
-  );
+    });
+    // Save v3. Optional until GP-01's makeFormation writes it (types.ts): fresh battles may still lack it.
+    c.may(f, `${path}.formations[${i}]`, { routedEnemies: 'number' });
+  });
   b.works.forEach((w, i) => c.need(w, `${path}.works[${i}]`, { maxHp: 'number', progress: 'number', formation: 'number' }));
   if (b.siege) {
     c.need(b.siege, `${path}.siege`, { segments: 'array', gates: 'array', towers: 'array', breaches: 'array', breachHold: 'object|null' });
@@ -614,6 +625,33 @@ registerMigration(1, (raw: Raw): Raw => {
   if (game.world) migrateWorldV1toV2(game.world);
   if (game.battle) migrateBattleV1toV2(game.battle);
   if (game.session) fill(game.session, 'hero', game.session.scene === 'hero' ? { settlementId: null, missionId: null } : null);
+  return raw;
+});
+
+// ---------------------------------------------------------------------------------------------
+// Migration v2 -> v3 (GP-01 requests: live rout credits on the formation)
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Upgrade a v2 BattleState in place: every formation's `routedEnemies` = the rout credits its log already holds
+ * (formation_routed events crediting it as `other`) - exactly what the v2 outcome would have counted for the routs
+ * so far, so a battle saved mid-fight keeps them once the outcome reads the live counter. A fresh battle (empty log)
+ * gets 0, the creation default; a v1 log credits nobody, so v1 saves get 0. Idempotent (`fill`).
+ */
+export function migrateBattleV2toV3(b: BattleState): void {
+  const credits = routedCredits(b.events);
+  for (const f of b.formations) fill(f, 'routedEnemies', credits.get(f.index) ?? 0);
+}
+
+/** Upgrade a v2 WorldState in place (its engagements' battles; the world's own fields are unchanged). */
+export function migrateWorldV2toV3(w: WorldState): void {
+  for (const e of Object.values(w.engagements)) if (e.battle) migrateBattleV2toV3(e.battle);
+}
+
+registerMigration(2, (raw: Raw): Raw => {
+  const game = raw as unknown as SaveGame;
+  if (game.world) migrateWorldV2toV3(game.world);
+  if (game.battle) migrateBattleV2toV3(game.battle);
   return raw;
 });
 

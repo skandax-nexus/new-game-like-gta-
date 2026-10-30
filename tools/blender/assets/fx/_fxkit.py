@@ -117,7 +117,7 @@ def lit_frames(dens: Sequence[np.ndarray], extent: Sequence[float], h: float, px
                flatten: float = 0.45, fades: Sequence[float] | None = None, normal_blur: float = 2.0,
                normal_strength: float = 0.8, ambient_blur: float = 4.0, ground_fade: float | np.ndarray = 0.0,
                ground_soft: float = 0.12, normal_blur_frac: float | None = None,
-               normal_fade: tuple[float, float] | None = None,
+               normal_fade: tuple[float, float] | None = None, top_light: float = 0.0,
                window: tuple[float, float] = (0.02, 0.06)) -> tuple[list[np.ndarray], list[np.ndarray], float]:
     """Density frames (FluidSim grids) -> straight-alpha linear rgba frames + tangent normals, noise-free
     (flipbook.integrate_volume). Color = occlusion-only (ambient) albedo; directional light comes from the normals at
@@ -130,6 +130,9 @@ def lit_frames(dens: Sequence[np.ndarray], extent: Sequence[float], h: float, px
     by that fraction of the frame side (~0.035: the puff's big rounded forms, no internal creases; overrides
     `normal_blur`, in voxels) and `normal_fade` = (lo, hi) fades the tilt with the final alpha
     (flipbook.soften_normals), so thin fringes face the camera instead of carrying a hard silhouette.
+    `top_light` (0..1) bakes sky light from above into the colour: a key from +z whose transmittance is marched down
+    through the puff (self-shadowed bases, lit tops under any sun - ART_BIBLE §10 "sun-lit tops"), with the ambient
+    lowered by half that amount so the mean brightness stays put; 0 = occlusion-only.
     Returns (color, normals, worst pre-window border alpha)."""
     axis = 2 if view == "top" else 1
     peaks = [float((d.sum(axis=axis) * h).max()) for d in dens]
@@ -152,7 +155,9 @@ def lit_frames(dens: Sequence[np.ndarray], extent: Sequence[float], h: float, px
         sig = (d * (depth / top) * boost * f).astype(F)
         if z is not None:
             sig = (sig * z).astype(F)
-        rad = fb.light_volume(sig, h, albedo, key=(0.0, 0.0, 0.0), ambient=(1.0, 1.0, 1.0), ambient_blur=ambient_blur, ambient_k=0.35)
+        amb = 1.0 - 0.5 * top_light
+        rad = fb.light_volume(sig, h, albedo, key_dir=(0, 0, 1), key=(top_light,) * 3, ambient=(amb, amb, amb),
+                              ambient_blur=ambient_blur, ambient_k=0.35)
         nrm = fb.density_normals(sig, nblur)
         rgba, nm = fb.integrate_volume(sig, rad, extent, px, view=view, frame=frame, normals=nrm, normal_strength=normal_strength)
         s = fb.to_straight(rgba)
@@ -384,27 +389,69 @@ def flat_tops(v: np.ndarray, thresholds: Sequence[float] = (0.15, 0.3), min_px: 
     return worst, what
 
 
+def _region_tops(v: np.ndarray, pix: np.ndarray, thr: float) -> tuple[np.ndarray, np.ndarray]:
+    """Columns of a region and its top edge per column at sub-pixel precision (where v crosses thr)."""
+    cols = np.unique(pix[:, 1])
+    tops = []
+    for c in cols:
+        r = int(pix[pix[:, 1] == c, 0].min())
+        a, b = (float(v[r - 1, c]) if r > 0 else 0.0), float(v[r, c])
+        tops.append(r - (b - thr) / max(b - a, 1e-6))
+    return cols, np.array(tops)
+
+
+def block_tops(v: np.ndarray, thr: float = 0.2, spread: float = 1.5, shoulder: float = 4.0, reach: int = 3,
+               min_px: int = 12) -> tuple[float, str]:
+    """Longest flat-topped BLOCK top in one frame's intensity image `v` (encoded [0, 1], row 0 = top), as a fraction
+    of the frame width - the Art Director's "flat-topped glowing square lobe" (TA-07 R2-B2a, target <= 10 %).
+    For each region of v > thr, the top edge per column is found at sub-pixel precision; a plateau is a run of
+    adjacent columns whose tops stay within `spread` px, and it is a BLOCK top only when it ends in shoulders on both
+    sides: within `reach` columns past each end the top drops by >= `shoulder` px (or the region ends there). A
+    rounded crest falls away gradually past its flattest part and a flame tip is narrow, so neither counts; a square
+    lobe's flat top meets its vertical sides. Returns (fraction, description)."""
+    best, where = 0.0, "none"
+    for k, pix in enumerate(regions(v > thr)):
+        if len(pix) < min_px:
+            continue
+        cols, tops = _region_tops(v, pix, thr)
+        n = len(cols)
+        i0 = 0
+        for i in range(n):
+            if i > 0 and cols[i] != cols[i - 1] + 1:
+                i0 = i
+            while tops[i0:i + 1].max() - tops[i0:i + 1].min() > spread:
+                i0 += 1
+            run = i - i0 + 1
+            if run / v.shape[1] <= best or run < 3:
+                continue
+            level = tops[i0:i + 1].max()
+
+            def shouldered(j_from: int, step: int) -> bool:
+                for d in range(1, reach + 1):
+                    j = j_from + step * d
+                    if j < 0 or j >= n or cols[j] != cols[j_from] + step * d:
+                        return True  # the region ends: a vertical side
+                    if tops[j] - level >= shoulder:
+                        return True
+                return False
+
+            if shouldered(i0, -1) and shouldered(i, 1):
+                best = run / v.shape[1]
+                where = f"region {k} ({len(pix)} px), top row ~{tops[i0:i + 1].mean():.1f}, cols {int(cols[i0])}-{int(cols[i])}"
+    return best, where
+
+
 def straight_top_edge(v: np.ndarray, thr: float = 0.2, spread: float = 1.0, min_px: int = 12,
                       detached_only: bool = False) -> tuple[float, str]:
-    """Longest FLAT top edge of an emissive shape in one frame's intensity image `v` (encoded [0, 1], row 0 = top), as
-    a fraction of the frame width (Art Director TA-07 R2-B2a: a flat-topped glowing block, target <= 10 %).
-    For each region of v > thr (4-connected, >= min_px) and each of its columns, the top edge is located at sub-pixel
-    precision (where v crosses thr between the first covered pixel and the one above it); the longest run of adjacent
-    columns whose top positions stay within `spread` px of each other is the flat top. A rounded crest of radius R px
-    stays within 1 px only over ~2 sqrt(2R) columns (a 30 px dome: ~15 px); a block's top stays flat over its whole
-    width. `detached_only` skips the largest region (the flame body). Returns (fraction, description)."""
+    """Longest FLAT top edge of an emissive shape (any plateau within `spread` px, shoulders or not), as a fraction of
+    the frame width - a lenient companion of block_tops (a broad rounded crest also counts). `detached_only` skips the
+    largest region (the flame body). Returns (fraction, description)."""
     regs = regions(v > thr)
     best, where = 0.0, "none"
     for k, pix in enumerate(regs):
         if (detached_only and k == 0) or len(pix) < min_px:
             continue
-        cols = np.unique(pix[:, 1])
-        tops = []
-        for c in cols:
-            r = int(pix[pix[:, 1] == c, 0].min())
-            a, b = (float(v[r - 1, c]) if r > 0 else 0.0), float(v[r, c])
-            tops.append(r - (b - thr) / max(b - a, 1e-6))  # sub-pixel crossing between rows r - 1 and r
-        tops = np.array(tops)
+        cols, tops = _region_tops(v, pix, thr)
         i0 = 0
         for i in range(len(cols)):
             if i > 0 and cols[i] != cols[i - 1] + 1:

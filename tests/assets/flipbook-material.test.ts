@@ -18,6 +18,7 @@ import type { AssetEntry, FlipbookAssetEntry } from '../../src/assets/types';
 import {
   createFlipbookMaterial,
   FLIP_CHUNK_HOOKS,
+  FLIP_SKY_VISIBILITY,
   FLIP_WRAP,
   rampColor,
   type FlipbookHandle,
@@ -114,13 +115,21 @@ describe('lit flipbooks are lit as a participating medium (TA-07 R2-B1)', () => 
     expect(fragment).toContain('getLightProbeIrradiance( lightProbe, flipAmbientNormal( geometryNormal ) )');
     expect(fragment).toContain('material.specularColor = vec3( 0.0 );');
     expect(fragment).not.toContain('#include <lights_fragment_begin>');
+    // sky visibility: every ambient source is scaled by flipSkyVis (bounded below by 1 - k: never the ground)
+    expect(defines.FLIP_SKY_VIS).toBe(String(FLIP_SKY_VISIBILITY));
+    expect(fragment.match(/\* flipSkyVis\( geometryNormal \)/g)?.length).toBe(3);
+    expect(fragment).toContain('return 1.0 - FLIP_SKY_VIS * ( 0.5 - 0.5 * dot( n, up ) );');
+    expect(FLIP_WRAP).toBeGreaterThanOrEqual(0.4);
+    expect(FLIP_WRAP).toBeLessThanOrEqual(0.7);
     mat.dispose();
   });
 
   it('a wrap override changes the define and the program key; unlit books keep three lighting untouched', () => {
-    const a = createFlipbookMaterial(handle('fx_dust'), { wrap: 0 });
+    const a = createFlipbookMaterial(handle('fx_dust'), { wrap: 0, skyVisibility: 0 });
     const b = createFlipbookMaterial(handle('fx_dust'));
     expect(patchedFragment(a).defines.FLIP_WRAP).toBe('0.0');
+    expect(patchedFragment(a).defines.FLIP_SKY_VIS).toBe('0.0');
+    expect(patchedFragment(b).defines.FLIP_NSCALE).toBe('1.0');
     expect(a.customProgramCacheKey()).not.toBe(b.customProgramCacheKey());
     const fire = createFlipbookMaterial(handle('fx_fire'));
     const { fragment } = patchedFragment(fire);

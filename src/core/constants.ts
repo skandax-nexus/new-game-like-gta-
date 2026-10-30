@@ -71,8 +71,10 @@ export const BATTLE_EVENT_LOG_LIMIT = 500;
  * Bump when the SaveGame/WorldState shape changes; add a migration in core/save.ts.
  * v2 (Sprint 1, CORE-01 "Contracts v2"): ages, landmarks, materials, market, monsoon, statistics, placement,
  * sieges, rally, outcome write-back data... (migration v1 -> v2 with defaults in core/save.ts).
+ * v3 (Sprint 1, GP-01 requests): FormationState.routedEnemies, seeded from each battle log's rout credits
+ * (migration v2 -> v3). The WorldState's own fields did not change, so WORLD_SCHEMA_VERSION stays 2.
  */
-export const SAVE_VERSION: number = 2;
+export const SAVE_VERSION: number = 3;
 export const WORLD_SCHEMA_VERSION: number = 2;
 export const STORAGE_PREFIX = 'samrajya.';
 export const CHRONICLE_LIMIT = 300;

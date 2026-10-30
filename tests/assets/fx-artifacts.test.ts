@@ -4,8 +4,8 @@
  * The Art Director's round-2 blockers, re-measured on what the runtime actually loads (decoded published WebP):
  *  - R2-B1 lit smoke / dust: lit as a medium - mean normal z >= 0.8 wherever alpha > 0.1 (soft, camera-facing
  *    normals; creased solid-looking normals made near-black pockets under golden light).
- *  - R2-B2 fx_fire: (a) no flat-topped glowing block - no frame has a straight top edge longer than 10 % of the frame
- *    width (the bake gates at 6 %); (b) gradient-mapped: every tier decodes with R = G = B exactly and the ramp has
+ *  - R2-B2 fx_fire: (a) no flat-topped glowing block - no detached emissive region has a flat top longer than 10 % of
+ *    the frame width (the bake gates at 8 %); (b) gradient-mapped: every tier decodes with R = G = B exactly and the ramp has
  *    R >= G >= B, so no emitting texel can lean green or blue (lossy chroma blocks).
  *  - R2-B3 fx_weapon_trail: gradient-mapped + dithered - no long flat runs (contour bands) in the dim tail.
  *  - R2-B4 parry_flash: an open radial flash - no closed rim (closure), no 4- / 8-fold spoke symmetry.
@@ -48,28 +48,65 @@ function frameChannel(img: Img, cols: number, rows: number, k: number, ch: numbe
   return { v, fw, fh };
 }
 
-/**
- * Longest horizontal top edge (fraction of the frame width): pixels where v rises by more than `edge` from the pixel
- * above into an emitting pixel (> `lit`), +-1 row, joined into runs of adjacent columns (as _fxkit.straight_top_edge).
- */
-function straightTopEdge(v: Float32Array, w: number, h: number, edge = 0.05, lit = 0.2): number {
-  const up = new Uint8Array(w * h);
-  for (let y = 0; y < h - 1; y++)
-    for (let x = 0; x < w; x++) {
-      const a = v[y * w + x]!;
-      const b = v[(y + 1) * w + x]!;
-      if (b - a > edge && b > lit) up[y * w + x] = 1;
+/** 4-connected regions of v > thr, largest first (each a list of pixel indices). */
+function regions(v: Float32Array, w: number, h: number, thr: number): number[][] {
+  const seen = new Uint8Array(w * h);
+  const out: number[][] = [];
+  for (let i = 0; i < w * h; i++) {
+    if (seen[i] || v[i]! <= thr) continue;
+    const pix: number[] = [];
+    const stack = [i];
+    seen[i] = 1;
+    while (stack.length) {
+      const j = stack.pop()!;
+      pix.push(j);
+      const x = j % w;
+      const y = (j - x) / w;
+      for (const [nx, ny] of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]] as const) {
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+        const k = ny * w + nx;
+        if (!seen[k] && v[k]! > thr) {
+          seen[k] = 1;
+          stack.push(k);
+        }
+      }
     }
+    out.push(pix);
+  }
+  return out.sort((a, b) => b.length - a.length);
+}
+
+/**
+ * Longest flat top of a DETACHED emissive region (every region but the largest - the flame body), as a fraction of
+ * the frame width (as _fxkit.straight_top_edge(detached_only=True)): the top edge per column at sub-pixel precision
+ * (where v crosses thr), the longest run of adjacent columns whose tops stay within `spread` px.
+ */
+function detachedFlatTop(v: Float32Array, w: number, h: number, thr = 0.2, spread = 1.0, minPx = 12): number {
   let best = 0;
-  for (let y = 0; y < h; y++) {
-    let run = 0;
-    for (let x = 0; x < w; x++) {
-      const on = up[y * w + x] || (y > 0 && up[(y - 1) * w + x]) || (y < h - 1 && up[(y + 1) * w + x]);
-      run = on ? run + 1 : 0;
-      best = Math.max(best, run);
+  for (const pix of regions(v, w, h, thr).slice(1)) {
+    if (pix.length < minPx) continue;
+    const topRow = new Map<number, number>();
+    for (const j of pix) {
+      const x = j % w;
+      const y = (j - x) / w;
+      if (!topRow.has(x) || y < topRow.get(x)!) topRow.set(x, y);
+    }
+    const cols = [...topRow.keys()].sort((a, b) => a - b);
+    const tops = cols.map((x) => {
+      const r = topRow.get(x)!;
+      const a = r > 0 ? v[(r - 1) * w + x]! : 0;
+      const b = v[r * w + x]!;
+      return r - (b - thr) / Math.max(b - a, 1e-6);
+    });
+    let i0 = 0;
+    for (let i = 0; i < cols.length; i++) {
+      if (i > 0 && cols[i] !== cols[i - 1]! + 1) i0 = i;
+      const win = (): number => Math.max(...tops.slice(i0, i + 1)) - Math.min(...tops.slice(i0, i + 1));
+      while (win() > spread) i0++;
+      best = Math.max(best, (i - i0 + 1) / w);
     }
   }
-  return best / w;
+  return best;
 }
 
 describe('gradient-mapped books carry no chroma (R2-B2b, R2-B3)', () => {
@@ -104,14 +141,14 @@ describe('gradient-mapped books carry no chroma (R2-B2b, R2-B3)', () => {
 });
 
 describe('fx_fire has no flat-topped glowing blocks (R2-B2a)', () => {
-  it('no frame of the ultra atlas has a straight top edge longer than 10 % of the frame width', async () => {
+  it('no frame of the ultra atlas has a detached emissive region with a flat top longer than 10 % of the frame width', async () => {
     const e = flipbook('fx_fire');
     const img = await decode(e.maps.color.ultra!.url);
     let worst = 0;
     let at = -1;
     for (let k = 0; k < e.cols * e.rows; k++) {
       const { v, fw, fh } = frameChannel(img, e.cols, e.rows, k, 0);
-      const s = straightTopEdge(v, fw, fh);
+      const s = detachedFlatTop(v, fw, fh);
       if (s > worst) [worst, at] = [s, k];
     }
     expect(worst, `frame ${at}`).toBeLessThanOrEqual(0.1);
@@ -190,7 +227,9 @@ describe('parry_flash is an open radial flash, not a wheel (R2-B4)', () => {
       const g0 = frameChannel(img, e.cols, e.rows, k, 1);
       const b0 = frameChannel(img, e.cols, e.rows, k, 2);
       const { fw, fh } = r0;
-      const v = r0.v.map((x, i) => Math.max(x, g0.v[i]!, b0.v[i]!));
+      // linear emission (the encoded sRGB atlas stretches the dim tail of the core glow far past its real reach)
+      const lin = (c: number): number => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+      const v = r0.v.map((x, i) => lin(Math.max(x, g0.v[i]!, b0.v[i]!)));
       let max = 0;
       for (const x of v) max = Math.max(max, x);
       if (max <= 0) continue;

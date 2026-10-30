@@ -101,10 +101,13 @@ function quantile(arr, q) {
 /**
  * Lit-effect statistics of a viewer shot over the effect's own pixels: every screen pixel inside a quad rect whose
  * atlas alpha (frames k0 / k1 mixed by a, same uv as the quad) is >= minAlpha. V = HSV value (max channel / 255).
+ * Value floors (min, p2, median) use alpha >= 0.5 ("smoke pixels"); the shading ratios use the core (alpha >= 0.8),
+ * where the backdrop seen through a half-transparent fringe does not bias the shadow / lit spread.
  */
-async function litStats(file, rects, framesPerQuad, atlas, cols, rows, minAlpha = 0.5) {
+async function litStats(file, rects, framesPerQuad, atlas, cols, rows, minAlpha = 0.5, coreAlpha = 0.8) {
   const shot = await rgba(file);
   const V = [];
+  const C = [];
   for (let qi = 0; qi < rects.length; qi++) {
     const r = rects[qi];
     const { k0, k1, a } = framesPerQuad[qi];
@@ -115,18 +118,23 @@ async function litStats(file, rects, framesPerQuad, atlas, cols, rows, minAlpha 
         const al = atlasSample(atlas, cols, rows, k0, u, v, 3) * (1 - a) + atlasSample(atlas, cols, rows, k1, u, v, 3) * a;
         if (al < minAlpha) continue;
         const i = (y * shot.width + x) * 4;
-        V.push(Math.max(shot.data[i], shot.data[i + 1], shot.data[i + 2]) / 255);
+        const val = Math.max(shot.data[i], shot.data[i + 1], shot.data[i + 2]) / 255;
+        V.push(val);
+        if (al >= coreAlpha) C.push(val);
       }
   }
   const med = quantile(V, 0.5);
   return {
     pixels: V.length,
-    minValue: V.length ? Math.min(...V) : NaN,
+    corePixels: C.length,
+    minValue: V.length ? V.reduce((a, b) => Math.min(a, b), 1) : NaN,
     p2Value: quantile(V, 0.02),
     medianValue: med,
     p2OverMedian: quantile(V, 0.02) / med,
-    shadowOverLit: quantile(V, 0.05) / quantile(V, 0.95),
-    p10OverP90: quantile(V, 0.1) / quantile(V, 0.9),
+    shadowOverLit: quantile(C, 0.05) / quantile(C, 0.95),
+    p10OverP90: quantile(C, 0.1) / quantile(C, 0.9),
+    coreP10Value: quantile(C, 0.1),
+    coreP90Value: quantile(C, 0.9),
   };
 }
 
@@ -445,13 +453,158 @@ async function main() {
       report.numbers.gtaoCards = rows;
     }
 
+    // ---------------------------------------------------------------- round 2: shipped atlases, round 1 vs round 2
+    // Round 1 = the atlases of commit 3c59d84 (git show), round 2 = public/assets now. No browser needed.
+    if (run('r2') && (!process.env.R2_PARTS || process.env.R2_PARTS.split(',').includes('atlas'))) {
+      const R1 = '3c59d84';
+      const fromGit = async (rel) => {
+        const buf = execSync(`git show ${R1}:public/assets/${rel}`, { cwd: ROOT, maxBuffer: 64 << 20 });
+        const { data, info } = await sharp(buf, { limitInputPixels: false }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+        return { data, width: info.width, height: info.height };
+      };
+      const now = (rel) => rgba(path.join(PUB, rel));
+      const lin = (v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+      const cmp = {};
+      // R2-B2b fire: emitting texels (encoded max >= 8/255) whose COLOUR leans green / blue - R1 the stored rgb, R2 ramp(v)
+      const fire = MANIFEST_JSON.assets.fx_fire;
+      cmp.fireChroma = [];
+      for (const [tier, f] of Object.entries(fire.maps.color)) {
+        const size = f.width;
+        const rows = { tier, size };
+        for (const [label, img] of [['r1', await fromGit(`fx/fx_fire/color_${size}.webp`).catch(() => null)], ['r2', await now(f.url)]]) {
+          if (!img) continue;
+          let emit = 0;
+          let lean = 0;
+          let grey = 0;
+          for (let i = 0; i < img.width * img.height * 4; i += 4) {
+            const isRamp = label === 'r2' && fire.ramp;
+            const rgb = isRamp ? rampAt(fire.ramp, img.data[i] / 255).map((c) => encodeSrgb(Math.min(1, c)) * 255) : [img.data[i], img.data[i + 1], img.data[i + 2]];
+            if (Math.max(...rgb) < 8) continue;
+            emit++;
+            if (rgb[1] > rgb[0] + 0.5 || rgb[2] > rgb[1] + 0.5) lean++;
+            if (img.data[i] !== img.data[i + 1] || img.data[i + 1] !== img.data[i + 2]) grey++;
+          }
+          rows[label] = { emitting: emit, greenOrBlueLeaning: lean, storedTexelsNotGrey: grey };
+        }
+        cmp.fireChroma.push(rows);
+        console.log(`[ta-07] R2-B2b fx_fire ${tier} (${size}): R1 ${rows.r1 ? `${rows.r1.greenOrBlueLeaning} of ${rows.r1.emitting} emitting texels lean green / blue` : 'n/a'}; R2 ${rows.r2.greenOrBlueLeaning} of ${rows.r2.emitting} (stored texels with R != G != B: ${rows.r2.storedTexelsNotGrey})`);
+      }
+      // R2-B1 lit normals: mean decoded z where the colour alpha > 0.1
+      cmp.litNormals = [];
+      for (const id of ['fx_smoke', 'fx_dust']) {
+        const e = MANIFEST_JSON.assets[id];
+        const row = { id };
+        for (const [label, get] of [['r1', fromGit], ['r2', now]]) {
+          const col = await get(e.maps.color.ultra.url).catch(() => null);
+          const nrm = await get(e.maps.normal.ultra.url).catch(() => null);
+          if (!col || !nrm) continue;
+          let sum = 0;
+          let n = 0;
+          for (let y = 0; y < nrm.height; y++)
+            for (let x = 0; x < nrm.width; x++) {
+              const cx = Math.min(col.width - 1, Math.floor(((x + 0.5) / nrm.width) * col.width));
+              const cy = Math.min(col.height - 1, Math.floor(((y + 0.5) / nrm.height) * col.height));
+              if (col.data[(cy * col.width + cx) * 4 + 3] <= 25) continue;
+              const i = (y * nrm.width + x) * 4;
+              const v = [0, 1, 2].map((c) => (nrm.data[i + c] / 255) * 2 - 1);
+              sum += v[2] / Math.max(Math.hypot(...v), 1e-6);
+              n++;
+            }
+          row[label] = n ? sum / n : null;
+        }
+        cmp.litNormals.push(row);
+        console.log(`[ta-07] R2-B1 ${id} mean normal z where alpha > 0.1 (ultra): R1 ${row.r1?.toFixed(3)} -> R2 ${row.r2?.toFixed(3)} (>= 0.8)`);
+      }
+      // R2-B3 trail: the dim tail shown as the runtime does (x3 emission, 8-bit sRGB): flat runs along u and hue flips
+      const te = MANIFEST_JSON.assets.fx_weapon_trail;
+      cmp.trail = [];
+      for (const name of ['trail', 'trail_wide']) {
+        const sq = te.sequences.find((q) => q.name === name);
+        const row = { sequence: name };
+        for (const [label, img] of [['r1', await fromGit('fx/fx_weapon_trail/color_256.webp')], ['r2', await now(te.maps.color.ultra.url)]]) {
+          const fw = img.width / te.cols;
+          const x0 = (sq.start % te.cols) * fw;
+          const y0 = Math.floor(sq.start / te.cols) * fw;
+          let runs = 0;
+          let total = 0;
+          let longest = 0;
+          let flips = 0;
+          for (let y = Math.round(fw * 0.3); y < Math.round(fw * 0.7); y++) {
+            let prev = null;
+            let run = 1;
+            let prevRatio = null;
+            for (let x = Math.round(fw * 0.3); x < Math.round(fw * 0.9); x++) {
+              const i = ((y0 + y) * img.width + x0 + x) * 4;
+              const e = label === 'r2' && te.ramp ? rampAt(te.ramp, img.data[i] / 255) : [0, 1, 2].map((c) => lin(img.data[i + c] / 255));
+              const shown = e.map((c) => Math.round(encodeSrgb(Math.min(1, c * 3)) * 255));
+              const key = shown.join(',');
+              if (prev !== null && key === prev) run++;
+              else if (prev !== null) {
+                runs++;
+                total += run;
+                longest = Math.max(longest, run);
+                run = 1;
+              }
+              prev = key;
+              // hue flips: G / R ratio moving against its trend by more than one 8-bit step (red / green fringes)
+              if (shown[0] >= 8) {
+                const ratio = shown[1] / shown[0];
+                if (prevRatio !== null && ratio > prevRatio + 1.5 / shown[0]) flips++;
+                prevRatio = ratio;
+              }
+            }
+          }
+          row[label] = { meanFlatRun: total / Math.max(runs, 1), longestFlatRun: longest, greenwardHueSteps: flips };
+        }
+        cmp.trail.push(row);
+        console.log(`[ta-07] R2-B3 ${name} dim tail (x3, 8-bit): mean flat run R1 ${row.r1.meanFlatRun.toFixed(2)} -> R2 ${row.r2.meanFlatRun.toFixed(2)} px, longest ${row.r1.longestFlatRun} -> ${row.r2.longestFlatRun} px, greenward hue steps ${row.r1.greenwardHueSteps} -> ${row.r2.greenwardHueSteps}`);
+      }
+      report.numbers.r2atlas = cmp;
+      // before / after strips: fire rim frames (R1 rgb, R2 ramp) and the parry flash
+      const strip = async (img, cols, frames, file, shade, crop = [0, 0, 1, 1], scale = 2) => {
+        const fw = img.width / cols;
+        const [cx0, cy0, cx1, cy1] = crop.map((c) => Math.round(c * fw));
+        const w = cx1 - cx0;
+        const h = cy1 - cy0;
+        const out = Buffer.alloc(w * scale * frames.length * h * scale * 3);
+        const W = w * scale * frames.length;
+        frames.forEach((k, fi) => {
+          for (let y = 0; y < h * scale; y++)
+            for (let x = 0; x < w * scale; x++) {
+              const sx = (k % cols) * fw + cx0 + Math.floor(x / scale);
+              const sy = Math.floor(k / cols) * fw + cy0 + Math.floor(y / scale);
+              const j = (sy * img.width + sx) * 4;
+              const rgb = shade(img.data, j);
+              const o = (y * W + fi * w * scale + x) * 3;
+              for (let c = 0; c < 3; c++) out[o + c] = Math.max(0, Math.min(255, Math.round(rgb[c])));
+            }
+        });
+        await sharp(out, { raw: { width: W, height: h * scale, channels: 3 } }).png().toFile(file);
+      };
+      const gain = 2.5;
+      const r1Shade = (d, j) => [0, 1, 2].map((c) => encodeSrgb(Math.min(1, lin(d[j + c] / 255) * gain)) * 255 + 10);
+      const r2Shade = (d, j) => rampAt(fire.ramp, d[j] / 255).map((c) => encodeSrgb(Math.min(1, c * gain)) * 255 + 10);
+      const rimCrop = [0.47, 0.55, 0.84, 0.88];
+      await strip(await fromGit('fx/fx_fire/color_2048.webp'), 8, [16, 18, 20, 22, 24, 26, 28], path.join(OUT, 'r2_fire_rim_r1.png'), r1Shade, rimCrop, 2);
+      await strip(await now(fire.maps.color.ultra.url), 8, [16, 18, 20, 22, 24, 26, 28], path.join(OUT, 'r2_fire_rim_r2.png'), fire.ramp ? r2Shade : r1Shade, rimCrop, 2);
+      const sp = MANIFEST_JSON.assets.fx_sparks_embers;
+      const pf = sp.sequences.find((q) => q.name === 'parry_flash');
+      const add = (d, j) => [0, 1, 2].map((c) => d[j + c] + 10);
+      const pframes = Array.from({ length: pf.count }, (_, i) => pf.start + i);
+      await strip(await fromGit('fx/fx_sparks_embers/color_1024.webp'), sp.cols, pframes, path.join(OUT, 'r2_parry_flash_r1.png'), add, [0, 0, 1, 1], 1);
+      await strip(await now(sp.maps.color.ultra.url), sp.cols, pframes, path.join(OUT, 'r2_parry_flash_r2.png'), add, [0, 0, 1, 1], 1);
+    }
+
     // ---------------------------------------------------------------- round 2 (Art Director R2-B1 .. R2-B4)
     if (run('r2')) {
-      const r2 = {};
+      const r2 = { ...(((() => { try { return JSON.parse(fs.readFileSync(path.join(OUT, 'report.json'), 'utf8')).numbers.r2; } catch { return null; } })()) ?? {}) };
+      // R2_PARTS=lit,fire,trail,parry limits the round-2 group (iteration); default: all
+      const part = (n) => !process.env.R2_PARTS || process.env.R2_PARTS.split(',').includes(n);
       // R2-B1: lit smoke (frame 30, building-smoke tint) and dust (phase 0.35, ground tint) under golden and noon, on
       // ultra and on mobile (quality low, 390 x 844), plus smoke on mobile overcast. Effect pixels: atlas alpha >= 0.5.
       const litRows = [];
       const cases = [];
+      if (part('lit')) {
       for (const sky of ['sky_golden', 'sky_noon']) for (const tier of ['ultra', 'mobile']) cases.push(['fx_smoke', sky, tier], ['fx_dust', sky, tier]);
       cases.push(['fx_smoke', 'sky_overcast', 'mobile']);
       for (const [fx, sky, tier] of cases) {
@@ -472,7 +625,8 @@ async function main() {
         litRows.push({ fx, sky, tier, ...stats });
         console.log(
           `[ta-07] R2-B1 ${fx.padEnd(9)} ${sky.padEnd(12)} ${tier.padEnd(6)} ${stats.pixels} px: min V ${(stats.minValue * 100).toFixed(1)} % (>= 8), ` +
-            `p2 / median ${stats.p2OverMedian.toFixed(2)} (>= 0.30), shadow / lit p5 / p95 ${stats.shadowOverLit.toFixed(2)} (0.35-0.6), p10 / p90 ${stats.p10OverP90.toFixed(2)}`,
+            `p2 / median ${stats.p2OverMedian.toFixed(2)} (>= 0.30), median V ${(stats.medianValue * 100).toFixed(1)} %; core (alpha >= 0.8, ${stats.corePixels} px) shadow / lit ` +
+            `p5 / p95 ${stats.shadowOverLit.toFixed(2)} (0.35-0.6), p10 / p90 ${stats.p10OverP90.toFixed(2)}, p10 V ${(stats.coreP10Value * 100).toFixed(1)} %, p90 V ${(stats.coreP90Value * 100).toFixed(1)} %`,
         );
         // 2x crop of the effect (crease check)
         if (tier === 'ultra' && rects[0]) {
@@ -485,7 +639,7 @@ async function main() {
           await sharp(path.join(OUT, `${name}.png`)).extract({ left, top, width: w, height: h }).resize(w * 2, h * 2, { kernel: 'nearest' }).toFile(path.join(OUT, `${name}_2x.png`));
         }
       }
-      r2.lit = litRows;
+      if (part('lit')) r2.lit = litRows;
       // the sun east / west test inside the smoke (frame 20, untinted, alpha >= 0.1)
       {
         const st = await shoot('fx_smoke_sun_east', 'asset=fx_smoke&hdri=sky_day&camera=front&sun=90,25&frame=20&tint=none&noui=1', { quality: 'ultra' });
@@ -508,10 +662,11 @@ async function main() {
         r2.smokeEastWest = { pixels: n, meanAbsDiff: n ? sum / n : 0 };
         console.log(`[ta-07] R2-B1 fx_smoke sun east vs west inside the smoke (alpha >= 0.1, ${n} px): mean |diff| ${(n ? sum / n : 0).toFixed(2)} / 255 (>= 8)`);
       }
+      }
 
       // R2-B2b: fire at night - emission added to the sky (shot - backdrop) never leans green / blue; 4x-boosted crops
       const chroma = [];
-      for (const tier of ['ultra', 'mobile']) {
+      if (part('fire')) for (const tier of ['ultra', 'mobile']) {
         const opts = tier === 'mobile' ? { quality: 'low', viewport: [390, 844], mobile: true } : { quality: 'ultra' };
         const q = 'asset=fx_fire&hdri=sky_night&camera=front&phase=0.35&noui=1';
         const name = `r2_fire_night_${tier}`;
@@ -542,14 +697,14 @@ async function main() {
         }
         fs.rmSync(path.join(OUT, `${name}_bg.png`), { force: true });
       }
-      r2.fireChroma = chroma;
+      if (part('fire')) r2.fireChroma = chroma;
 
       // R2-B2a: fire frames 14-48 (as the Art Director's rim strip) from the shipped ultra atlas, ramp-shaded
-      await atlasStrip('fx_fire', 'ultra', [14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 36, 48], path.join(OUT, 'r2_fire_frames_14-48.png'), { cell: 160 });
-      await atlasStrip('fx_fire', 'ultra', [0, 1, 2, 3, 4, 60, 61, 62, 63], path.join(OUT, 'r2_fire_frames_loopseam.png'), { cell: 160 });
+      if (part('fire')) await atlasStrip('fx_fire', 'ultra', [14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 36, 48], path.join(OUT, 'r2_fire_frames_14-48.png'), { cell: 160 });
+      if (part('fire')) await atlasStrip('fx_fire', 'ultra', [0, 1, 2, 3, 4, 60, 61, 62, 63], path.join(OUT, 'r2_fire_frames_loopseam.png'), { cell: 160 });
 
       // R2-B3: weapon trail at ultra - 4x crop of the dim tail of `trail` and `trail_wide`
-      const ts = await shoot('r2_weapon_trail_ultra', 'asset=fx_weapon_trail&hdri=sky_day&camera=front&phase=0.35&noui=1', { quality: 'ultra' });
+      const ts = part('trail') ? await shoot('r2_weapon_trail_ultra', 'asset=fx_weapon_trail&hdri=sky_day&camera=front&phase=0.35&noui=1', { quality: 'ultra' }) : null;
       const tq = ts?.fxQuads ?? [];
       const te = MANIFEST_JSON.assets.fx_weapon_trail;
       const runs = [];
@@ -584,13 +739,13 @@ async function main() {
         runs.push({ sequence: name, meanFlatRun: total / Math.max(count, 1), longestFlatRun: longest });
         console.log(`[ta-07] R2-B3 fx_weapon_trail ${name} tail (screen, ultra): mean flat run ${(total / Math.max(count, 1)).toFixed(2)} px, longest ${longest} px`);
       }
-      r2.trailRuns = runs;
-      await atlasStrip('fx_weapon_trail', 'ultra', [1, 3], path.join(OUT, 'r2_weapon_trail_frames.png'), { cell: 256, gain: 3 });
+      if (part('trail')) r2.trailRuns = runs;
+      if (part('trail')) await atlasStrip('fx_weapon_trail', 'ultra', [1, 3], path.join(OUT, 'r2_weapon_trail_frames.png'), { cell: 256, gain: 3 });
 
       // R2-B4: parry_flash frames (atlas 11-18) and the finisher (19-29) from the shipped atlas, x6 like the runtime
-      await atlasStrip('fx_sparks_embers', 'ultra', [11, 12, 13, 14, 15, 16, 17, 18], path.join(OUT, 'r2_parry_flash_frames.png'), { cell: 160, gain: 1 });
-      await atlasStrip('fx_sparks_embers', 'ultra', [19, 21, 23, 25, 27, 29], path.join(OUT, 'r2_finisher_frames.png'), { cell: 160, gain: 1 });
-      await shoot('r2_sparks_parry_night', 'asset=fx_sparks_embers&hdri=sky_night&camera=front&phase=0.3&noui=1', { quality: 'ultra' });
+      if (part('parry')) await atlasStrip('fx_sparks_embers', 'ultra', [11, 12, 13, 14, 15, 16, 17, 18], path.join(OUT, 'r2_parry_flash_frames.png'), { cell: 160, gain: 1 });
+      if (part('parry')) await atlasStrip('fx_sparks_embers', 'ultra', [19, 21, 23, 25, 27, 29], path.join(OUT, 'r2_finisher_frames.png'), { cell: 160, gain: 1 });
+      if (part('parry')) await shoot('r2_sparks_parry_night', 'asset=fx_sparks_embers&hdri=sky_night&camera=front&phase=0.3&noui=1', { quality: 'ultra' });
       report.numbers.r2 = r2;
     }
 

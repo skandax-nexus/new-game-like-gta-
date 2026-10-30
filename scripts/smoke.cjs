@@ -12,8 +12,9 @@
  *
  * Steps: vite build -> vite preview on a fixed port -> headless Chromium (SwiftShader WebGL2) ->
  * for each shot: open URL deep link, wait for window.__SAMRAJYA__.sceneReady, optionally advance
- * the sim, save a PNG. Fails (exit 1) on console errors, page errors, crash reports, timeouts or a
- * blank 3D view (see BLANK below: a black / cleared / unpresented canvas fails even with a clean console).
+ * the sim, let the HUD catch up (SETTLE), save a PNG. Fails (exit 1) on console errors, page errors, crash
+ * reports, timeouts or a blank frame (see BLANK below: a black / cleared / unpresented canvas, or a HUD over one,
+ * is retaken and then fails even with a clean console).
  * Note: SwiftShader is a software renderer - FPS numbers here are NOT representative.
  */
 'use strict';
@@ -68,37 +69,40 @@ const SHOTS = [
 ];
 
 /**
- * Blank-view guard. After the shot, the DOM layers above the WebGL canvas (#ui-root, #overlay-root, splash, overlays)
- * are hidden for a second, unsaved capture, so HUD text cannot mask an empty canvas. The 3D view is blank when one
- * exact colour covers >= `dominant` of it (black viewport, cleared-but-not-drawn frame, page background #0d0b18 showing
- * through an unpresented canvas) or its luma spread is below `lumaStdev` (a flat frame). Rendered scenes measure far
- * from both (terrain, sky gradients, fog, soldiers: a few % dominant colour). A blank view is re-rendered and retaken
- * up to `retries` times (SwiftShader can present an empty frame after a resize under load); every blank attempt is
- * kept in the report, and a view still blank after the retries fails the shot.
+ * HUD settle. Scenes push HUD props on a timer of frame time, not every frame (BattleScene: every 0.12 s), and a
+ * low-tier frame under SwiftShader can take ~5 ms, so 3 frames after `advance` often left the battle HUD showing the
+ * pre-advance state ("0:00" with the sim at 20.8 s: 2 of 3 probe loads of battle-mobile; GP-01 round 2 smoke). Before
+ * every capture the loop runs at least `frames` frames AND `ms` of wall time (several HUD refresh periods).
  */
-const BLANK = { dominant: 0.5, lumaStdev: 3, retries: 2 };
+const SETTLE = { frames: 3, ms: 500 };
 
-/** Pixel statistics of the canvas-only view: dominant colour share, luma stdev, page-background share. */
-async function view3dStats(page) {
-  const hidden = await page.evaluate(() => {
-    const out = [];
-    for (const el of Array.from(document.body.children)) {
-      if (el.id === 'game' || !(el instanceof HTMLElement)) continue;
-      out.push([el, el.style.visibility]);
-      el.style.visibility = 'hidden';
-    }
-    window.__smokeHidden = out;
-    return out.length;
-  });
-  let png;
-  try {
-    png = await page.screenshot({ timeout: TIMEOUT });
-  } finally {
-    await page.evaluate(() => {
-      for (const [el, v] of window.__smokeHidden || []) el.style.visibility = v;
-      delete window.__smokeHidden;
-    });
-  }
+/** Run frames until both SETTLE minimums are met (the loop must be running, i.e. not frozen). */
+async function settle(page) {
+  await page.evaluate(async ({ frames, ms }) => {
+    const api = window.__SAMRAJYA__;
+    const t0 = performance.now();
+    for (let n = 0; n < frames || performance.now() - t0 < ms; n++) await api.waitFrames(1);
+  }, SETTLE);
+}
+
+/**
+ * Blank-frame guard, two measurements per shot:
+ *  - frame: the saved PNG (HUD included, what reviewers look at). One exact colour covering >= `dominant` of it
+ *    means a HUD over a blank / unpresented / partly presented canvas (GP-01 measured 32.7 % for a HUD over the page
+ *    background at 390x844; every smoke and evidence image measures <= 8.7 %, most 0.2-2.3 %). Same rule as
+ *    scripts/shots/gp-01.cjs.
+ *  - view3d: a second, unsaved capture with the DOM layers above the WebGL canvas (#ui-root, #overlay-root, splash,
+ *    overlays) hidden, so HUD text cannot mask an empty canvas. Blank when one exact colour covers >= `dominant` of it
+ *    (black viewport, cleared-but-not-drawn frame, page background #0d0b18 through an unpresented canvas) or its luma
+ *    spread is below `lumaStdev` (a flat frame). Rendered scenes measure 0.1-3.2 % dominant colour.
+ * A blank frame is re-rendered (SETTLE again) and retaken up to `retries` times (SwiftShader can present an empty
+ * frame after a resize under load); every blank attempt is kept in the report, and a frame still blank after the
+ * retries fails the shot. `allowBlank` per shot opts out.
+ */
+const BLANK = { dominant: 0.15, lumaStdev: 3, retries: 2 };
+
+/** Pixel statistics of a PNG: dominant colour share, luma stdev, page-background share (decoded in the page). */
+async function pngStats(page, png) {
   const stats = await page.evaluate(async (b64) => {
     const img = new Image();
     img.src = `data:image/png;base64,${b64}`;
@@ -132,12 +136,38 @@ async function view3dStats(page) {
     return { dominantShare: best / n, lumaStdev: Math.sqrt(Math.max(0, sum2 / n - mean * mean)), pageBgShare: bg / n };
   }, png.toString('base64'));
   const round = (v) => Math.round(v * 1000) / 1000;
-  return { dominantShare: round(stats.dominantShare), lumaStdev: round(stats.lumaStdev), pageBgShare: round(stats.pageBgShare), layersHidden: hidden };
+  return { dominantShare: round(stats.dominantShare), lumaStdev: round(stats.lumaStdev), pageBgShare: round(stats.pageBgShare) };
 }
 
-function blankReason(v) {
-  if (v.dominantShare >= BLANK.dominant) return `one colour covers ${(v.dominantShare * 100).toFixed(1)} % of the 3D view${v.pageBgShare >= BLANK.dominant ? ' (page background: canvas not presented)' : ''}`;
-  if (v.lumaStdev < BLANK.lumaStdev) return `flat 3D view (luma stdev ${v.lumaStdev})`;
+/** Pixel statistics of the canvas-only view (DOM layers over #game hidden for an unsaved capture). */
+async function view3dStats(page) {
+  const hidden = await page.evaluate(() => {
+    const out = [];
+    for (const el of Array.from(document.body.children)) {
+      if (el.id === 'game' || !(el instanceof HTMLElement)) continue;
+      out.push([el, el.style.visibility]);
+      el.style.visibility = 'hidden';
+    }
+    window.__smokeHidden = out;
+    return out.length;
+  });
+  let png;
+  try {
+    png = await page.screenshot({ timeout: TIMEOUT });
+  } finally {
+    await page.evaluate(() => {
+      for (const [el, v] of window.__smokeHidden || []) el.style.visibility = v;
+      delete window.__smokeHidden;
+    });
+  }
+  return { ...(await pngStats(page, png)), layersHidden: hidden };
+}
+
+/** Why a shot counts as blank (null = rendered): `frame` = the saved PNG, `view` = the canvas-only capture. */
+function blankReason(frame, view) {
+  if (frame.dominantShare >= BLANK.dominant) return `one colour covers ${(frame.dominantShare * 100).toFixed(1)} % of the saved frame (HUD over a blank or partly presented canvas)`;
+  if (view.dominantShare >= BLANK.dominant) return `one colour covers ${(view.dominantShare * 100).toFixed(1)} % of the 3D view${view.pageBgShare >= BLANK.dominant ? ' (page background: canvas not presented)' : ''}`;
+  if (view.lumaStdev < BLANK.lumaStdev) return `flat 3D view (luma stdev ${view.lumaStdev})`;
   return null;
 }
 
@@ -203,6 +233,7 @@ async function main() {
       const url = `${base}?scene=${shot.scene}&quality=${q}&noaudio=1${shot.query ? `&${shot.query}` : ''}`;
       let state = null;
       let view = null;
+      let frame = null;
       const blankAttempts = [];
       try {
         await page.goto(url, { waitUntil: 'load', timeout: TIMEOUT });
@@ -214,25 +245,26 @@ async function main() {
             api.step(n);
           }, shot.advance);
         }
-        await page.evaluate(() => window.__SAMRAJYA__.waitFrames(3));
+        await settle(page);
         state = await page.evaluate(() => window.__SAMRAJYA__.getState());
         // Freeze the loop so the screenshot does not wait for another software-rendered frame.
         await page.evaluate(() => window.__SAMRAJYA__.freeze(true));
         const crash = await page.evaluate(() => window.__SAMRAJYA__.getErrors().map((r) => r.message));
         for (const c of crash) errors.push(`crash: ${c}`);
-        await page.screenshot({ path: path.join(OUT, `${shot.name}.png`), timeout: TIMEOUT });
+        frame = await pngStats(page, await page.screenshot({ path: path.join(OUT, `${shot.name}.png`), timeout: TIMEOUT }));
         view = await view3dStats(page);
-        for (let attempt = 1; !shot.allowBlank && blankReason(view) && attempt <= BLANK.retries; attempt++) {
-          blankAttempts.push({ ...view, reason: blankReason(view) });
-          console.log(`[smoke] ${shot.name}: blank 3D view (${blankReason(view)}), re-rendering and retaking (retry ${attempt}/${BLANK.retries})`);
+        for (let attempt = 1; !shot.allowBlank && blankReason(frame, view) && attempt <= BLANK.retries; attempt++) {
+          blankAttempts.push({ frame, view3d: view, reason: blankReason(frame, view) });
+          console.log(`[smoke] ${shot.name}: blank frame (${blankReason(frame, view)}), re-rendering and retaking (retry ${attempt}/${BLANK.retries})`);
           // Paused / frozen state: these frames re-render the same state (no sim step).
           await page.evaluate(() => window.__SAMRAJYA__.freeze(false));
           await page.evaluate(() => window.__SAMRAJYA__.waitFrames(30));
+          await settle(page);
           await page.evaluate(() => window.__SAMRAJYA__.freeze(true));
-          await page.screenshot({ path: path.join(OUT, `${shot.name}.png`), timeout: TIMEOUT });
+          frame = await pngStats(page, await page.screenshot({ path: path.join(OUT, `${shot.name}.png`), timeout: TIMEOUT }));
           view = await view3dStats(page);
         }
-        if (!shot.allowBlank && blankReason(view)) errors.push(`blank: ${blankReason(view)} after ${BLANK.retries} re-renders (${JSON.stringify(view)})`);
+        if (!shot.allowBlank && blankReason(frame, view)) errors.push(`blank: ${blankReason(frame, view)} after ${BLANK.retries} re-renders (frame ${JSON.stringify(frame)}, view3d ${JSON.stringify(view)})`);
         if (!report.build) report.build = await page.evaluate(() => window.__SAMRAJYA__.version);
       } catch (err) {
         errors.push(`smoke: ${err && err.message ? err.message : String(err)}`);
@@ -243,8 +275,8 @@ async function main() {
         }
       }
       const ms = Date.now() - t0;
-      report.shots.push({ name: shot.name, url, ms, errors, state, view3d: view, blankAttempts });
-      const viewNote = view ? `  view3d dominant=${(view.dominantShare * 100).toFixed(1)}% lumaStdev=${view.lumaStdev.toFixed(1)}` : '';
+      report.shots.push({ name: shot.name, url, ms, errors, state, frame, view3d: view, blankAttempts });
+      const viewNote = view && frame ? `  frame dominant=${(frame.dominantShare * 100).toFixed(1)}%  view3d dominant=${(view.dominantShare * 100).toFixed(1)}% lumaStdev=${view.lumaStdev.toFixed(1)}` : '';
       console.log(`[smoke] ${errors.length ? 'FAIL' : 'ok  '} ${shot.name.padEnd(18)} ${String(ms).padStart(6)} ms  ${state ? `scene=${state.scene} quality=${state.quality}` : ''}${viewNote}`);
       for (const e of errors) console.log(`         ${e}`);
       if (errors.length) failures.push(shot.name);

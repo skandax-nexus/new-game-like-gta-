@@ -9,9 +9,9 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 13354596,
-    "high": 6302981,
-    "mobile": 3466324
+    "ultra": 13400386,
+    "high": 6242661,
+    "mobile": 3414932
   },
   "assets": {
     "banner_cloth": {
@@ -198,7 +198,7 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_dust",
       "category": "fx",
-      "hash": "5b77b266b1",
+      "hash": "aff24ad23e",
       "description": "Dust (Eulerian sims): rolling ground puffs (2), closed expanding ring (top view), hoof kick; neutral albedo + normals, tint by ground.",
       "bytes": {
         "ultra": 83442,
@@ -315,12 +315,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_fire",
       "category": "fx",
-      "hash": "2ec07246ca",
-      "description": "Looping flame (Eulerian sim, licking tongues), premultiplied emission x6.5 + slight occlusion, no soot; 64 frames at 24 fps.",
+      "hash": "f01afda066",
+      "description": "Looping flame (Eulerian sim, licking tongues), gradient-mapped premultiplied emission x6.5 + slight occlusion, no soot; 64 frames at 24 fps.",
       "bytes": {
-        "ultra": 258380,
-        "high": 119232,
-        "mobile": 49176
+        "ultra": 334940,
+        "high": 119622,
+        "mobile": 32176
       },
       "tiers": [
         "ultra",
@@ -348,19 +348,19 @@ export const ASSET_MANIFEST = {
         "color": {
           "ultra": {
             "url": "fx/fx_fire/color_2048.webp",
-            "bytes": 258380,
+            "bytes": 334940,
             "width": 2048,
             "height": 2048
           },
           "high": {
             "url": "fx/fx_fire/color_1024.webp",
-            "bytes": 119232,
+            "bytes": 119622,
             "width": 1024,
             "height": 1024
           },
           "mobile": {
             "url": "fx/fx_fire/color_512.webp",
-            "bytes": 49176,
+            "bytes": 32176,
             "width": 512,
             "height": 512
           }
@@ -376,13 +376,179 @@ export const ASSET_MANIFEST = {
       ],
       "groundLine": 0.13,
       "tint": "#ffffff",
-      "ramp": null
+      "ramp": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0.00599,
+          0.00095,
+          0.00011
+        ],
+        [
+          0.01527,
+          0.00267,
+          0.0003
+        ],
+        [
+          0.02615,
+          0.00492,
+          0.00053
+        ],
+        [
+          0.04021,
+          0.00809,
+          0.00085
+        ],
+        [
+          0.05765,
+          0.01229,
+          0.00126
+        ],
+        [
+          0.07825,
+          0.01762,
+          0.00179
+        ],
+        [
+          0.10226,
+          0.02437,
+          0.00247
+        ],
+        [
+          0.12939,
+          0.0325,
+          0.00331
+        ],
+        [
+          0.15939,
+          0.04223,
+          0.00435
+        ],
+        [
+          0.19228,
+          0.05368,
+          0.00562
+        ],
+        [
+          0.22812,
+          0.06684,
+          0.00717
+        ],
+        [
+          0.26692,
+          0.08198,
+          0.00906
+        ],
+        [
+          0.30796,
+          0.09906,
+          0.01134
+        ],
+        [
+          0.35284,
+          0.1182,
+          0.014
+        ],
+        [
+          0.39896,
+          0.13963,
+          0.01728
+        ],
+        [
+          0.44684,
+          0.16367,
+          0.02124
+        ],
+        [
+          0.49979,
+          0.18914,
+          0.02553
+        ],
+        [
+          0.55579,
+          0.21708,
+          0.03066
+        ],
+        [
+          0.61699,
+          0.24713,
+          0.03643
+        ],
+        [
+          0.68175,
+          0.27877,
+          0.04298
+        ],
+        [
+          0.73925,
+          0.31508,
+          0.05335
+        ],
+        [
+          0.80182,
+          0.35407,
+          0.06407
+        ],
+        [
+          0.87693,
+          0.39348,
+          0.06934
+        ],
+        [
+          0.93397,
+          0.44102,
+          0.07878
+        ],
+        [
+          0.97676,
+          0.49607,
+          0.09058
+        ],
+        [
+          0.99754,
+          0.55714,
+          0.10728
+        ],
+        [
+          0.99754,
+          0.55714,
+          0.10728
+        ],
+        [
+          0.99754,
+          0.55714,
+          0.10728
+        ],
+        [
+          0.99754,
+          0.55714,
+          0.10728
+        ],
+        [
+          0.99754,
+          0.55714,
+          0.10728
+        ],
+        [
+          0.99754,
+          0.55714,
+          0.10728
+        ],
+        [
+          0.99754,
+          0.55714,
+          0.10728
+        ]
+      ]
     },
     "fx_lightning": {
       "kind": "flipbook",
       "id": "fx_lightning",
       "category": "fx",
-      "hash": "e08b73b726",
+      "hash": "cf6d248a35",
       "description": "Four forked lightning bolts, white core + violet glow, additive x10 (high / ultra only).",
       "bytes": {
         "ultra": 53454,
@@ -480,7 +646,7 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_mist",
       "category": "fx",
-      "hash": "e8bfddc84e",
+      "hash": "cf585a8b36",
       "description": "Mist sprites: bank, wisp, puff, sheet - irregular, wide, noise-eroded clusters; zero at the edges, lit via soft normals.",
       "bytes": {
         "ultra": 16690,
@@ -597,7 +763,7 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_nature",
       "category": "fx",
-      "hash": "414aefefb7",
+      "hash": "271405f111",
       "description": "Nature: sal / peepal leaves and palash petals (8-frame tumbles), kash seed, fireflies + motes (additive).",
       "bytes": {
         "ultra": 21168,
@@ -734,7 +900,7 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_rain",
       "category": "fx",
-      "hash": "4e4df1ca1d",
+      "hash": "cb14f2a139",
       "description": "Rain: streak, 4x4 crown splash, 8-frame ripple (normal map), eave drip.",
       "bytes": {
         "ultra": 19306,
@@ -851,12 +1017,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_smoke",
       "category": "fx",
-      "hash": "e09e44dd9d",
+      "hash": "861c28d838",
       "description": "Billowing smoke puff over life (Eulerian sim, 64 frames, one-shot), lit via density-gradient normals; tint #4a4038 for fires.",
       "bytes": {
-        "ultra": 304974,
-        "high": 147822,
-        "mobile": 62436
+        "ultra": 316302,
+        "high": 129210,
+        "mobile": 56154
       },
       "tiers": [
         "ultra",
@@ -884,19 +1050,19 @@ export const ASSET_MANIFEST = {
         "color": {
           "ultra": {
             "url": "fx/fx_smoke/color_2048.webp",
-            "bytes": 269856,
+            "bytes": 281184,
             "width": 2048,
             "height": 2048
           },
           "high": {
             "url": "fx/fx_smoke/color_1024.webp",
-            "bytes": 130752,
+            "bytes": 112140,
             "width": 1024,
             "height": 1024
           },
           "mobile": {
             "url": "fx/fx_smoke/color_512.webp",
-            "bytes": 53998,
+            "bytes": 47716,
             "width": 512,
             "height": 512
           }
@@ -938,12 +1104,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_sparks_embers",
       "category": "fx",
-      "hash": "341a569312",
+      "hash": "240b983a45",
       "description": "Additive sparks (gold -> saffron): spark, embers, slash spark, parry flash, finisher burst with dust shockwave; premultiplied emission x6, lossless.",
       "bytes": {
-        "ultra": 126888,
-        "high": 126888,
-        "mobile": 29952
+        "ultra": 110572,
+        "high": 110572,
+        "mobile": 27624
       },
       "tiers": [
         "ultra",
@@ -1011,19 +1177,19 @@ export const ASSET_MANIFEST = {
         "color": {
           "ultra": {
             "url": "fx/fx_sparks_embers/color_1024.webp",
-            "bytes": 126888,
+            "bytes": 110572,
             "width": 1024,
             "height": 1024
           },
           "high": {
             "url": "fx/fx_sparks_embers/color_1024.webp",
-            "bytes": 126888,
+            "bytes": 110572,
             "width": 1024,
             "height": 1024
           },
           "mobile": {
             "url": "fx/fx_sparks_embers/color_512.webp",
-            "bytes": 29952,
+            "bytes": 27624,
             "width": 512,
             "height": 512
           }
@@ -1045,12 +1211,12 @@ export const ASSET_MANIFEST = {
       "kind": "flipbook",
       "id": "fx_weapon_trail",
       "category": "fx",
-      "hash": "7c2caa6670",
-      "description": "Weapon trail: gradient (edge -> saffron -> tail), wide variant, two u-tileable streak noises.",
+      "hash": "2824189309",
+      "description": "Weapon trail: dithered gradient-mapped intensity (warm-white edge -> gold -> saffron -> ember-red tail), wide variant, two u-tileable streak noises (raw .r).",
       "bytes": {
-        "ultra": 45886,
-        "high": 45886,
-        "mobile": 45886
+        "ultra": 20104,
+        "high": 20104,
+        "mobile": 20104
       },
       "tiers": [
         "ultra",
@@ -1122,19 +1288,19 @@ export const ASSET_MANIFEST = {
         "color": {
           "ultra": {
             "url": "fx/fx_weapon_trail/color_256.webp",
-            "bytes": 45886,
+            "bytes": 20104,
             "width": 256,
             "height": 256
           },
           "high": {
             "url": "fx/fx_weapon_trail/color_256.webp",
-            "bytes": 45886,
+            "bytes": 20104,
             "width": 256,
             "height": 256
           },
           "mobile": {
             "url": "fx/fx_weapon_trail/color_256.webp",
-            "bytes": 45886,
+            "bytes": 20104,
             "width": 256,
             "height": 256
           }
@@ -1150,7 +1316,173 @@ export const ASSET_MANIFEST = {
       ],
       "groundLine": null,
       "tint": "#ffffff",
-      "ramp": null
+      "ramp": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0.00886,
+          0.00074,
+          0.00012
+        ],
+        [
+          0.01895,
+          0.00155,
+          0.00024
+        ],
+        [
+          0.03347,
+          0.00271,
+          0.00042
+        ],
+        [
+          0.05303,
+          0.00423,
+          0.00065
+        ],
+        [
+          0.07807,
+          0.00616,
+          0.00094
+        ],
+        [
+          0.10896,
+          0.00851,
+          0.00129
+        ],
+        [
+          0.14606,
+          0.01129,
+          0.0017
+        ],
+        [
+          0.1897,
+          0.01452,
+          0.00218
+        ],
+        [
+          0.24019,
+          0.01822,
+          0.00272
+        ],
+        [
+          0.29568,
+          0.02294,
+          0.00435
+        ],
+        [
+          0.35437,
+          0.02919,
+          0.00804
+        ],
+        [
+          0.41926,
+          0.03633,
+          0.01248
+        ],
+        [
+          0.49051,
+          0.04436,
+          0.01771
+        ],
+        [
+          0.56829,
+          0.05334,
+          0.02375
+        ],
+        [
+          0.65276,
+          0.06328,
+          0.03062
+        ],
+        [
+          0.69076,
+          0.09075,
+          0.03156
+        ],
+        [
+          0.71321,
+          0.12632,
+          0.02971
+        ],
+        [
+          0.74705,
+          0.16168,
+          0.02853
+        ],
+        [
+          0.78938,
+          0.19781,
+          0.02777
+        ],
+        [
+          0.83858,
+          0.23526,
+          0.02728
+        ],
+        [
+          0.89369,
+          0.27439,
+          0.02699
+        ],
+        [
+          0.94601,
+          0.31729,
+          0.03245
+        ],
+        [
+          1,
+          0.36193,
+          0.03886
+        ],
+        [
+          1,
+          0.38628,
+          0.04304
+        ],
+        [
+          1,
+          0.4087,
+          0.0469
+        ],
+        [
+          1,
+          0.42941,
+          0.05046
+        ],
+        [
+          1,
+          0.49403,
+          0.11405
+        ],
+        [
+          1,
+          0.57281,
+          0.19667
+        ],
+        [
+          1,
+          0.65158,
+          0.27928
+        ],
+        [
+          1,
+          0.73036,
+          0.36189
+        ],
+        [
+          1,
+          0.80914,
+          0.4445
+        ],
+        [
+          1,
+          0.88792,
+          0.52712
+        ]
+      ]
     },
     "ground_dry_earth": {
       "kind": "material",

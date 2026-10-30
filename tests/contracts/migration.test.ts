@@ -1,13 +1,16 @@
 /**
- * OWNER: Engine Developer - Contracts & Save Schema (CORE-01). Save format v1 -> v2 migration guard.
+ * OWNER: CTO (written by the Engine Developer - Contracts & Save Schema, CORE-01). Save migration guard
+ * (v1 -> v2 -> v3).
  *
- * Every frozen v1 fixture (tests/fixtures/saves/*.v1.sav, captured from the v1 build before Contracts v2) must:
- *  - load through deserializeSave (checksum, migration, validation) with no shape problems,
- *  - keep every v1 value (the migration is purely additive),
+ * Every frozen fixture (tests/fixtures/saves/*.v1.sav captured from the v1 build before Contracts v2, *.v2.sav captured
+ * from the v2 build before save format 3) must:
+ *  - load through deserializeSave (checksum, migrations, validation) with no shape problems,
+ *  - keep every stored value (the migrations are purely additive),
  *  - re-serialize byte-identically (serialize -> deserialize -> serialize),
- *  - keep simulating with the v2 code (world ticks, battles step), deterministically after a reload.
- * Plus: a fresh v2 world / battle stripped of its v2 fields migrates back to itself (migration defaults ==
- * creation defaults), and malformed / newer / rebel-faction saves are rejected.
+ *  - keep simulating with the current code (world ticks, battles step), deterministically after a reload.
+ * v2 -> v3 seeds FormationState.routedEnemies from each battle log's rout credits (the v2 fixtures hold battles whose
+ * logs already credit routs). Plus: a fresh world / battle stripped of its newer fields migrates back to itself
+ * (migration defaults == creation defaults), and malformed / newer / rebel-faction saves are rejected.
  */
 import { describe, expect, it } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
@@ -15,7 +18,7 @@ import { join } from 'node:path';
 import type { BattleEventRecord, BattleState, SaveGame, SimEvent, WorldState } from '../../src/core/types';
 import { REBEL_FACTION_ID } from '../../src/core/types';
 import { BATTLE_DT, SAVE_VERSION, WORLD_SCHEMA_VERSION } from '../../src/core/constants';
-import { decodeJson, describeSaveProblems, deserializeSave, encodeJson, hashState, migrateBattleV1toV2, migrateWorldV1toV2, SaveError, serializeSave } from '../../src/core/save';
+import { decodeJson, describeSaveProblems, deserializeSave, encodeJson, hashState, migrateBattleV1toV2, migrateBattleV2toV3, migrateWorldV1toV2, SaveError, serializeSave } from '../../src/core/save';
 import { getHeightfield } from '../../src/core/terrain/cache';
 import { Heightfield } from '../../src/core/terrain/heightfield';
 import { createWorld, getRegionHeightfield, tickWorld } from '../../src/sim/strategic/world';
@@ -31,8 +34,22 @@ const MANIFEST = JSON.parse(readFileSync(join(DIR, 'manifest.v1.json'), 'utf8'))
   fixtures: { file: string; worldHash: string | null; battleHash: string | null; saveVersion: number; worldSchema: number | null }[];
 };
 
+const V2_FIXTURES = readdirSync(DIR)
+  .filter((f) => f.endsWith('.v2.sav'))
+  .sort();
+const MANIFEST_V2 = JSON.parse(readFileSync(join(DIR, 'manifest.v2.json'), 'utf8')) as {
+  fixtures: { file: string; worldHash: string | null; battleHash: string; saveVersion: number; worldSchema: number | null; creditedRouts: number }[];
+};
+
 function readFixture(file: string): string {
   return readFileSync(join(DIR, file), 'utf8');
+}
+
+/** Rout credits per formation index in a battle log (formation_routed events crediting `other`). */
+function logCredits(b: BattleState): number[] {
+  const out = b.formations.map(() => 0);
+  for (const e of b.events) if (e.kind === 'formation_routed' && e.other !== null && e.other >= 0 && e.other < out.length) out[e.other]!++;
+  return out;
 }
 
 /** The raw v1 object exactly as stored (checksum line stripped, no migration). */
@@ -116,12 +133,14 @@ describe('v1 save fixtures', () => {
         expect(battle ? hashState(battle) : null).toBe(entry!.battleHash);
       });
 
-      it('loads, migrates to v2 and validates', () => {
+      it('loads, migrates to the current format and validates', () => {
         const game = deserializeSave(text);
         expect(game.version).toBe(SAVE_VERSION);
-        expect(SAVE_VERSION).toBe(2);
+        expect(SAVE_VERSION).toBe(3);
         if (game.world) expect(game.world.schema).toBe(WORLD_SCHEMA_VERSION);
         expect(describeSaveProblems(game)).toEqual([]);
+        // v2 -> v3: a v1 log credits nobody (other: null), so every live rout counter starts at 0.
+        for (const b of battlesOf(game)) for (const f of b.formations) expect(f.routedEnemies).toBe(0);
       });
 
       it('keeps every v1 value (additive migration)', () => {
@@ -146,7 +165,7 @@ describe('v1 save fixtures', () => {
         expect(hashState(a.battle)).toBe(hashState(b.battle));
       });
 
-      it('keeps simulating with the v2 code (and a reload continues identically)', () => {
+      it('keeps simulating with the current code (and a reload continues identically)', () => {
         const game = deserializeSave(text);
         if (game.world) {
           const reloaded = deserializeSave(serializeSave(game)).world!;
@@ -167,6 +186,93 @@ describe('v1 save fixtures', () => {
   }
 });
 
+describe('v2 save fixtures', () => {
+  it('cover battles in progress whose logs already credit routs', () => {
+    expect(V2_FIXTURES).toEqual(['campaign-fieldbattle.v2.sav', 'skirmish-routs.v2.sav']);
+    const games = V2_FIXTURES.map((f) => deserializeSave(readFixture(f)));
+    expect(games.some((g) => g.battle !== null)).toBe(true); // skirmish
+    expect(games.some((g) => g.world && Object.values(g.world.engagements).some((e) => e.battle))).toBe(true); // world battle
+    for (const g of games) {
+      const battles = battlesOf(g);
+      expect(battles.length).toBeGreaterThan(0);
+      for (const b of battles) expect(b.outcome).toBeNull();
+      expect(battles.some((b) => b.formations.some((f) => (f.routedEnemies ?? 0) > 0))).toBe(true);
+    }
+  });
+
+  for (const file of V2_FIXTURES) {
+    describe(file, () => {
+      const text = readFixture(file);
+      const entry = MANIFEST_V2.fixtures.find((f) => f.file === file);
+
+      it('is an untouched v2 capture (matches manifest.v2.json)', () => {
+        const raw = rawV1(text) as unknown as SaveGame;
+        expect(entry).toBeDefined();
+        expect(raw.version).toBe(2);
+        expect(entry!.saveVersion).toBe(2);
+        expect(raw.world ? hashState(raw.world) : null).toBe(entry!.worldHash);
+        const battle = raw.battle ?? raw.world!.engagements[raw.session.activeEngagementId!]!.battle!;
+        expect(hashState(battle)).toBe(entry!.battleHash);
+        for (const f of battle.formations) expect('routedEnemies' in f).toBe(false);
+      });
+
+      it('loads, migrates to the current format and validates', () => {
+        const game = deserializeSave(text);
+        expect(game.version).toBe(SAVE_VERSION);
+        if (game.world) expect(game.world.schema).toBe(WORLD_SCHEMA_VERSION);
+        expect(describeSaveProblems(game)).toEqual([]);
+      });
+
+      it('seeds every formation rout counter from its log credits (what the v2 outcome counted)', () => {
+        const game = deserializeSave(text);
+        let total = 0;
+        for (const b of battlesOf(game)) {
+          const credits = logCredits(b);
+          b.formations.forEach((f, i) => expect(f.routedEnemies).toBe(credits[i]));
+          total += credits.reduce((a, n) => a + n, 0);
+        }
+        expect(total).toBe(entry!.creditedRouts);
+        expect(total).toBeGreaterThan(0);
+      });
+
+      it('keeps every v2 value (additive migration)', () => {
+        const before = rawV1(text);
+        const after = deserializeSave(text) as unknown as Record<string, unknown>;
+        expect(lostValues(before, after, '$', new Set(['$.version']), [])).toEqual([]);
+      });
+
+      it('serialize -> deserialize -> serialize is byte-identical', () => {
+        const a = serializeSave(deserializeSave(text));
+        expect(serializeSave(deserializeSave(a))).toBe(a);
+      });
+
+      it('migrates deterministically', () => {
+        const a = deserializeSave(text);
+        const b = deserializeSave(text);
+        expect(hashState(a.world)).toBe(hashState(b.world));
+        expect(hashState(a.battle)).toBe(hashState(b.battle));
+      });
+
+      it('keeps simulating with the current code (and a reload continues identically)', () => {
+        const game = deserializeSave(text);
+        for (const b of battlesOf(game)) {
+          const copy = decodeJson<BattleState>(encodeJson(b));
+          runBattle(b, 200);
+          runBattle(copy, 200);
+          expect(hashState(copy)).toBe(hashState(b));
+        }
+        if (game.world) {
+          const reloaded = deserializeSave(serializeSave(game)).world!;
+          runWorld(game.world, 48);
+          runWorld(reloaded, 48);
+          expect(hashState(reloaded)).toBe(hashState(game.world));
+        }
+        expect(describeSaveProblems(game)).toEqual([]);
+      });
+    });
+  }
+});
+
 // ---------------------------------------------------------------------------------------------------
 // Migration defaults == creation defaults
 // ---------------------------------------------------------------------------------------------------
@@ -175,6 +281,23 @@ const V2_WORLD = ['monsoon', 'statistics'] as const;
 const V2_FACTION = ['age', 'landmarks', 'materials', 'policies', 'marketPrices', 'ghosts', 'counterIntel', 'counterIntelUntilDay', 'protectCourtUntilDay', 'advisorIgnored', 'councilAdvice', 'culturePoints', 'prosperityDays'] as const;
 const V2_SETTLEMENT = ['initialOwnerFactionId', 'occupiedSinceDay', 'pendingCapture', 'starvationDays', 'revoltSinceDay', 'taxRelief', 'reliefThisMonth', 'ladderProgress', 'landmarks'] as const;
 const V2_FORMATION = ['rallies', 'shapeChangeUntil', 'panicUntil', 'rallyingUntil', 'disengageUntil', 'chargeRun', 'orderTime', 'hidden'] as const;
+const V3_FORMATION = ['routedEnemies'] as const;
+
+/** A v1 battle through every battle migration, as deserializeSave runs them (v1 -> v2 -> v3). */
+function migrateBattleToCurrent(b: BattleState): void {
+  migrateBattleV1toV2(b);
+  migrateBattleV2toV3(b);
+}
+
+/**
+ * `b` with its formations' `routedEnemies` at the creation default where absent: the field is optional (absent = 0)
+ * until GP-01's makeFormation writes it (types.ts), so this is a no-op from then on.
+ */
+function withCreationDefaults(b: BattleState): BattleState {
+  const out = decodeJson<BattleState>(encodeJson(b));
+  for (const f of out.formations) f.routedEnemies ??= 0;
+  return out;
+}
 
 function strip(o: object, keys: readonly string[]): void {
   for (const k of keys) delete (o as Record<string, unknown>)[k];
@@ -209,7 +332,7 @@ function toV1Battle(b: BattleState): BattleState {
   strip(v1, ['deploymentEndsAt', 'siege']);
   for (const s of v1.setup.sides) strip(s, ['aggression']);
   for (const s of v1.sides) strip(s, ['rallyCooldownUntil', 'aiMemory']);
-  for (const f of v1.formations) strip(f, V2_FORMATION);
+  for (const f of v1.formations) strip(f, [...V2_FORMATION, ...V3_FORMATION]);
   for (const w of v1.works) strip(w, ['maxHp', 'progress', 'formation']);
   if (v1.outcome) {
     strip(v1.outcome, ['warScore', 'chronicle', 'placeName', 'day']);
@@ -240,8 +363,8 @@ describe('migration defaults match creation defaults', () => {
     const terrain = getHeightfield({ ...setup.terrain, resolution: 129 });
     const fresh = createBattle(setup, terrain);
     const v1 = toV1Battle(fresh);
-    migrateBattleV1toV2(v1);
-    expect(hashState(v1)).toBe(hashState(fresh));
+    migrateBattleToCurrent(v1);
+    expect(hashState(v1)).toBe(hashState(withCreationDefaults(fresh)));
     const finished = autoresolveBattle(setup, terrain);
     expect(finished.outcome).not.toBeNull();
     // The finished battle exercises the derived outcome fields (war score from casualties, routs credited in the log).
@@ -249,11 +372,23 @@ describe('migration defaults match creation defaults', () => {
     expect(finished.outcome!.sides.some((s) => s.formations.some((f) => f.routedEnemies > 0))).toBe(true);
     const done = toV1Battle(finished);
     expect(hashState(done)).not.toBe(hashState(finished));
-    migrateBattleV1toV2(done);
-    // orderTime is when each formation's current order started - play state a v1 save never recorded. Past
-    // deployment the migration starts every order's clocks at load time; everything else must match exactly.
-    for (const f of done.formations) expect(f.orderTime).toBe(done.time);
-    done.formations.forEach((f, i) => (f.orderTime = finished.formations[i]!.orderTime));
+    migrateBattleToCurrent(done);
+    // Two fields are play state no older save recorded, so they are checked against their migration rule and then
+    // set to the live value; everything else must match exactly.
+    //  - orderTime (v2): when each formation's current order started. Past deployment the migration starts every
+    //    order's clocks at load time.
+    //  - routedEnemies (v3): enemy formations routed so far, seeded from the log's rout credits (this log was written
+    //    by the current build, so it credits routs; a real v1 log credits nobody). The live counter is GP-01's.
+    const credits = logCredits(finished);
+    expect(credits.some((n) => n > 0)).toBe(true);
+    done.formations.forEach((f, i) => {
+      expect(f.orderTime).toBe(done.time);
+      expect(f.routedEnemies).toBe(credits[i]);
+      const live = finished.formations[i]!;
+      f.orderTime = live.orderTime;
+      if (live.routedEnemies === undefined) delete f.routedEnemies;
+      else f.routedEnemies = live.routedEnemies;
+    });
     expect(hashState(done)).toBe(hashState(finished));
   });
 
@@ -294,7 +429,7 @@ describe('save validation', () => {
   });
 
   it('rejects saves from a newer build', () => {
-    const text = serializeSave(campaignSave()).replace('"version":2', `"version":${SAVE_VERSION + 1}`);
+    const text = serializeSave(campaignSave()).replace(`"version":${SAVE_VERSION}`, `"version":${SAVE_VERSION + 1}`);
     const body = text.slice(0, text.lastIndexOf('\n#'));
     expect(() => deserializeSave(body)).toThrow(/newer than this build/);
   });
