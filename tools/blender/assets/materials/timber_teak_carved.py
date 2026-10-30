@@ -41,8 +41,8 @@ def beam(u, v, length, height, rng):
     """Adzed plank face: shallow overlapping adze scallops along u, two plank seams."""
     seams = [0.37, 1.41]
     sid, jd = orn._stones_along(u % length, length, seams, rng)
-    ph = 0.0006 * np.sin(2 * np.pi * (u / 0.07 + 0.3 * np.sin(v * 9.0)))  # adze strokes ~7 cm
-    scal = np.abs(np.sin(np.pi * (u / 0.07 + 0.2 * np.sin(v * 7.0 + sid * 9.0)))) ** 0.5
+    ph = 0.0006 * np.sin(2 * np.pi * (u / (length / 29.0) + 0.3 * np.sin(v * 9.0)))  # adze strokes ~7 cm (29 per tile: seamless)
+    scal = np.abs(np.sin(np.pi * (u / (length / 29.0) + 0.2 * np.sin(v * 7.0 + sid * 9.0)))) ** 0.5
     h = 0.0005 * scal + 0.0002 * ph
     h = orn.cut_joint(h, jd, 0.003, 0.004, 0.01)
     return orn.BandResult(h.astype(F), sid, np.zeros_like(u), jd)
@@ -133,8 +133,8 @@ with core.timer("grain"):
     dx_d = np.minimum(lu_d, 0.5 - lu_d)
     stile = door_rows & (dx_d < 0.085)
     wx, wy = kit.warp(0.02, 0.4, 3)
-    ph_h = wy * H / 0.0075 + 5.0 * kit.fbm(0.3, 4, x=wx, y=wy, aniso=(10.0, 1.0)) + 1.2 * kit.fbm(0.04, 3, aniso=(15.0, 1.0))
-    ph_v = wx * W / 0.0075 + 5.0 * kit.fbm(0.3, 4, x=wx, y=wy, aniso=(1.0, 10.0)) + 1.2 * kit.fbm(0.04, 3, aniso=(1.0, 15.0))
+    ph_h = wy * 267.0 + 5.0 * kit.fbm(0.3, 4, x=wx, y=wy, aniso=(10.0, 1.0)) + 1.2 * kit.fbm(0.04, 3, aniso=(15.0, 1.0))
+    ph_v = wx * 267.0 + 5.0 * kit.fbm(0.3, 4, x=wx, y=wy, aniso=(1.0, 10.0)) + 1.2 * kit.fbm(0.04, 3, aniso=(1.0, 15.0))
     rings = np.sin(2 * np.pi * np.where(stile, ph_v, ph_h))
     lines = tg.smoothstep(0.55, 1.0, rings) * (0.6 + 0.4 * tg.smoothstep(-0.3, 0.5, kit.fbm(0.15, 3, aniso=(6.0, 1.0))))
     pores = np.where(stile, kit.fbm(0.002, 2, aniso=(1.0, 25.0)), kit.fbm(0.002, 2, aniso=(25.0, 1.0)))

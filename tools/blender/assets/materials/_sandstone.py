@@ -46,9 +46,13 @@ def build(kit: K.Kit, style: stone.StoneStyle, finish_layers: Callable, descript
     masks = {"stone": sheet.stone, "tool": sheet.tool, "carve": sheet.carve, "joint": sheet.joint}
     with core.timer("weathering"):
         height, wm = stone.weather_height(sheet.height, masks, SIZE, kit.rng, amount=weather_amount)
-    ao = bake.bake_heightfield_ao(height, SIZE, N, samples=kit.ctx.samples(64, 12), distance=0.06,
-                                  mesh_verts=min(N, 1280))
+    # AO at the shipped data resolution (S: 1024 from the 2048 master), upsampled for the surface synthesis
+    res = kit.data_res
+    ao = bake.bake_heightfield_ao(height if res == N else tg.resize(height, res, res), SIZE, res,
+                                  samples=kit.ctx.samples(64, 12), distance=0.06, mesh_verts=min(res, 1280))
     ao = tg.blur(ao, 0.6)
+    if res != N:
+        ao = tg.resize(ao, N, N)
     normal = tg.normal_from_height(height, kit.texel)
     with core.timer("surface"):
         albedo, rough = stone.surface(height, ao, masks, wm, SIZE, kit.rng, style, normal)
@@ -59,6 +63,18 @@ def build(kit: K.Kit, style: stone.StoneStyle, finish_layers: Callable, descript
                decals=sheet.decals(), preview="trim", preview_opts=dict(floor_band=(0.68, 1.0), samples=96))
 
 
+def iron_banding(kit: K.Kit, albedo: np.ndarray, strength: float = 1.0) -> np.ndarray:
+    """Seamless iron banding (broad tone waves + faint liesegang lines). Replaces lib/stone's banding, whose phase
+    uses non-integer cycles per tile (a faint seam at the tile border; requested fix in the TA-01 report): the
+    styles here set banding=0 and call this instead (integer wave vector: 5 cycles in v, 2 in u per 2 m tile)."""
+    wx, wy = kit.warp(0.16, 1.6, 3)
+    phase = wy * 5.0 + wx * 2.0
+    out = K.mul(albedo, 1.0 + 0.06 * np.sin(2 * np.pi * phase) * strength)
+    lines = tg.smoothstep(0.965, 0.995, np.sin(2 * np.pi * phase * 2.0)) * strength
+    lines = lines * tg.smoothstep(-0.1, 0.4, kit.fbm(1.4, 3))
+    return K.mul(out, 1.0 - 0.14 * lines)
+
+
 def block_jitter(albedo: np.ndarray, stone_id: np.ndarray, hue_turns: float = 0.03, value: float = 0.06) -> np.ndarray:
     """Per-block hue rotation within +-hue_turns of the colour circle and value within +-value."""
     j1 = (stone_id * 7.137 + 0.21) % 1.0 - 0.5
@@ -67,4 +83,4 @@ def block_jitter(albedo: np.ndarray, stone_id: np.ndarray, hue_turns: float = 0.
     return K.mul(out, 1.0 + j2 * 2.0 * value)
 
 
-__all__ = ["BANDS", "SIZE", "block_jitter", "build"]
+__all__ = ["BANDS", "SIZE", "block_jitter", "build", "iron_banding"]

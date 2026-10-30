@@ -45,7 +45,7 @@ def bird_track(lu, lv, e1, e2):
 
 with core.timer("ripples"):
     wx, wy = kit.warp(0.06, 0.35, 3)
-    lam = 0.105
+    lam = S / 29.0  # 29 ripples per tile: seamless
     # linguoid / sinuous crests: phase along u, bent by a v-dependent sinuosity
     sinu = 0.045 * kit.fbm(0.45, 3, x=wx, y=wy, aniso=(1.0, 1.4)) + 0.012 * kit.fbm(0.12, 2, x=wx, y=wy)
     ph = (wx * S + sinu) / lam + 0.4 * kit.fbm(0.5, 2)
@@ -93,4 +93,4 @@ with core.timer("roughness"):
 finish_terrain(kit, h, alb, rough, ao_distance=0.04, height_hp=0.6,
                description="River sand (3 m, flow along +u): asymmetric current ripples with dark heavy-mineral troughs, "
                            "pale crests, pebbles, shells, twigs, bird tracks; macro-neutral.",
-               extra_meta=dict(flowAxis="+u", rippleWavelengthMeters=0.105))
+               extra_meta=dict(flowAxis="+u", rippleWavelengthMeters=round(S / 29.0, 4)))

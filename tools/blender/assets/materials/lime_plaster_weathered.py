@@ -3,8 +3,9 @@
 @kind material
 @style materials:MATERIAL_PRESETS.lime_plaster_weathered, palette:ALBEDO_LIMITS, palette:SATURATION_LIMITS
 
-Hand-troweled lime plaster on fired brick (class H, 3 m x 3 m tile, seamless). Map v = 0 at the wall foot: the
-bottom 0.8 m carries rising damp (darker green-grey, glossier, a pale salt line at the damp front).
+Hand-troweled lime plaster on fired brick (class H, 3 m x 3 m tile, seamless). Fully periodic (no foot band): rising damp at
+the wall foot is the model macro map's job (uv1) plus the decals_settlement damp strips; the set carries only
+scattered damp patches with pale salt fringes.
 Layers: trowel swirls and arcs (1.5 mm), lime-wash coats of slightly different whiteness, sand grain and pores,
 craze cracks on 0.25 m cells (1 mm deep) plus a few long settlement cracks, ~6.5 % fallen finish coat (3 mm, grey
 base render) whose larger cores (~1 %) go 8 mm deep through to the brick masonry (0.42 x 0.07 m bricks, lime joints) with ragged, undercut plaster edges, rain
@@ -64,11 +65,13 @@ with core.timer("cracks"):
 
 with core.timer("fallen patches"):
     # ~6.5 % of the area has lost its lime finish coat (3 mm, revealing the coarse grey-buff base render); the cores
-    # of the larger losses (~1 %) go through to the brick (8 mm). Mixed scales so no single patch is a landmark
-    # that would betray the 3 m repeat; slightly more near the foot (damp spalls plaster).
-    pn = kit.fbm(0.35, 4) + 0.25 * kit.fbm(0.08, 3) + 0.08 * kit.fbm(0.02, 2) + 0.12 * tg.smoothstep(1.2, 0.0, vm)
+    # of the largest losses (~0.7 %) go through to the brick (8 mm). Losses cluster in 1-2 weathered zones per tile
+    # (mixed scales inside) so the wall does not read as an even scatter of specks.
+    # losses cluster (1-2 weathered zones per tile, 1.2 m features) instead of a uniform scatter of specks
+    cluster = kit.fbm(1.2, 3)
+    pn = 2.2 * cluster + 0.8 * kit.fbm(0.35, 4) + 0.25 * kit.fbm(0.08, 3) + 0.08 * kit.fbm(0.02, 2)
     thr = float(np.percentile(pn, 93.5))
-    thr_deep = float(np.percentile(pn, 98.9))
+    thr_deep = float(np.percentile(pn, 99.3))
     patch = tg.smoothstep(thr, thr + 0.015, pn)  # finish coat lost
     deep = tg.smoothstep(thr_deep, thr_deep + 0.015, pn)  # through to the brick
     edge = tg.smoothstep(thr - 0.05, thr, pn) * (1.0 - patch)  # loose, undercut rim around losses
@@ -103,15 +106,14 @@ with core.timer("albedo"):
     alb = K.tint(alb, "#6b6253", 0.55 * grime)
     # rain streaks: vertical stretched noise washing down (darker grey, -10 %), plus lighter washed runs
     streak = tg.smoothstep(0.62, 0.9, kit.fbm(0.06, 3, aniso=(1.0, 25.0)) * 0.5 + 0.5)
-    streak *= tg.smoothstep(0.0, 0.45, kit.fbm(0.8, 3)) * tg.smoothstep(0.4, 1.2, vm)
-    alb = K.mul(alb, 1.0 - 0.10 * streak * (1.0 - patch))
+    streak *= tg.smoothstep(0.0, 0.45, kit.fbm(0.8, 3))
+    alb = K.mul(alb, 1.0 - 0.14 * streak * (1.0 - patch))
     alb = K.tint(alb, "#b8b09f", 0.12 * streak * (1.0 - patch))
-    # rising damp 0-0.8 m: darker, green-grey, ragged front with a pale salt (efflorescence) line above it
-    front = 0.6 + 0.18 * kit.fbm(0.35, 4) + 0.06 * kit.fbm(0.05, 3)
-    damp = tg.smoothstep(front + 0.06, front - 0.4, vm) * (0.75 + 0.25 * tg.smoothstep(-0.3, 0.3, kit.fbm(0.3, 3)))
-    salt = tg.smoothstep(0.035, 0.0, np.abs(vm - front - 0.04)) * tg.smoothstep(-0.2, 0.4, kit.fbm(0.15, 3))
-    # (kept to a hint: a 3 m tile repeats up taller walls - the strong foot band belongs in the model macro map)
-    alb = K.tint(alb, "#b9b09a", 0.4 * damp)
+    # damp patches (periodic - the tile repeats up tall walls): the rising-damp band at the wall foot comes from
+    # the model macro map (uv1, ART_BIBLE §0.2 / ASSET_LIST §0.2) and the decals_settlement "damp_rising" strips
+    damp = tg.smoothstep(0.6, 0.85, kit.fbm(0.45, 4) * 0.5 + 0.5) * 0.6
+    salt = tg.smoothstep(0.03, 0.0, np.abs(kit.fbm(0.45, 4) * 0.5 + 0.5 - 0.6)) * tg.smoothstep(-0.2, 0.4, kit.fbm(0.15, 3)) * 0.5
+    alb = K.tint(alb, "#b9b09a", 0.45 * damp)
     alb = K.tint(alb, "#8f8f78", 0.12 * damp * tg.smoothstep(0.0, 0.6, kit.fbm(0.2, 3) * 0.5 + 0.5))
     alb = K.tint(alb, "#efeadf", 0.3 * salt * (1.0 - patch))
 
@@ -122,6 +124,5 @@ with core.timer("roughness"):
 
 kit.finish(height=h, albedo=alb, rough=rough, ao="cycles", ao_distance=0.03, ao_samples=48,
            description="Weathered hand-troweled lime plaster (3 m): trowel sweeps, craze and settlement cracks, "
-                       "8 % fallen patches showing brick, rain streaks, rising damp 0-0.8 m with a salt line.",
-           extra_meta=dict(vUp="v = 0 at the wall foot (rising damp band 0-0.8 m)"),
+                       "fallen finish coat over brick, rain streaks, damp patches with salt fringes.",
            preview="wall", preview_opts=dict(floor_band=None, samples=64))

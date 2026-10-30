@@ -28,7 +28,7 @@ import _matkit as K  # noqa: E402
 W = H = 2.0
 kit = K.Kit(__file__, cls="S", size=(W, H), target="materials:MATERIAL_PRESETS.roof_tile_terracotta",
             family="brickTerracotta")
-T = 0.018  # tile thickness = step at each course
+T = 0.024  # tile thickness = step at each course
 
 with core.timer("layout"):
     b = kit.bond(H / 6.0, (W / 7.0, W / 7.0), 0.004, stagger=0.5)
@@ -96,13 +96,13 @@ with core.timer("albedo"):
     alb = K.tint(alb, "#2e2620", 0.7 * gap)
     # lichen in rows along the lower edges (moisture held under the overlap) + grey crustose spots everywhere
     lrow = tg.smoothstep(0.12, 0.02, vexp) + 0.4 * tg.smoothstep(0.03, 0.0, du)
-    lf1, _, lid = kit.worley(0.02, 1.0)
-    dots = tg.smoothstep(0.45, 0.2, lf1) * (lid > 0.45)
-    lichen = np.clip((lrow + 0.6 * colony) * dots * tg.smoothstep(-0.2, 0.3, kit.fbm(0.4, 3)), 0, 1)
-    alb = K.tint(alb, "#8a8a5a", 0.75 * lichen)
-    cf1, _, cid = kit.worley(0.035, 1.0)
-    crust = tg.smoothstep(0.4, 0.25, cf1 + 0.1 * kit.fbm(0.01, 2)) * (cid > 0.86) * tg.smoothstep(0.0, 0.4, kit.fbm(0.5, 3))
-    alb = K.tint(alb, "#b9b2a2", 0.55 * crust)
+    # lichen: irregular rosettes in clusters (thresholded multi-scale noise, never round dots)
+    rosette = tg.smoothstep(0.58, 0.72, kit.fbm(0.012, 3) * 0.5 + 0.5 + 0.25 * kit.fbm(0.05, 2))
+    lichen = np.clip((lrow + 0.6 * colony) * rosette * tg.smoothstep(-0.2, 0.3, kit.fbm(0.4, 3)), 0, 1)
+    alb = K.tint(alb, "#8a8a5a", 0.7 * lichen)
+    # grey crustose lichen: sparse, lobed patches
+    crust = tg.smoothstep(0.7, 0.8, kit.fbm(0.018, 3) * 0.5 + 0.5 + 0.2 * kit.fbm(0.1, 2)) * tg.smoothstep(0.0, 0.4, kit.fbm(0.5, 3))
+    alb = K.tint(alb, "#b4ad9c", 0.45 * crust)
     alb = K.mul(alb, 1.0 - 0.25 * pits)
     # broken corners: shadowed lower tile, fresh fracture paler
     alb = np.where(lost[..., None], K.mul(alb, 0.55), alb)

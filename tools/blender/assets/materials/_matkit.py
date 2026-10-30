@@ -29,7 +29,7 @@ tierScale), tier max 2048 / 1024 / 512):
     S  1024 albedo, 1024 normal/ORM x0.5  -> albedo 1024 / 1024 / 512, normal+ORM 1024 / 512 / 256
     C  1024 albedo x0.5, 512 data x0.5    -> albedo 1024 / 512 / 256, normal+ORM 512 / 512 / 256
     T  as C (spec asks albedo 512 on mobile: needs a per-tier size map in publish.mjs, requested from the CTO)
-    A  as C (decal atlas, 1024 ultra)
+    A  1024 all maps x0.5                 -> 1024 / 512 / 256 (decal atlas: opacity in ORM.b needs the albedo res)
 """
 from __future__ import annotations
 
@@ -52,7 +52,7 @@ CLASSES: dict[str, dict[str, Any]] = {
     "S": dict(albedo=1024, data=1024, albedo_scale=1.0, data_scale=0.5, internal=2048),
     "C": dict(albedo=1024, data=512, albedo_scale=0.5, data_scale=0.5, internal=2048),
     "T": dict(albedo=1024, data=512, albedo_scale=0.5, data_scale=0.5, internal=2048),
-    "A": dict(albedo=1024, data=512, albedo_scale=0.5, data_scale=0.5, internal=2048),
+    "A": dict(albedo=1024, data=1024, albedo_scale=0.5, data_scale=0.5, internal=2048),
 }
 
 # Golden-hour raking light for the 3x3 tiling shot and golden lookdev (sun elevation in degrees).
@@ -470,6 +470,14 @@ class Kit:
             a = np.clip(a * k[..., None], 0.0, self.channel_max)
         return a.astype(F)
 
+    def clamp_limits(self, albedo: np.ndarray) -> np.ndarray:
+        """Per-pixel luminance clamp to ALBEDO_LIMITS without a target mean (decals, uncalibrated sets)."""
+        lo, hi = float(self.limits["min"]), float(self.limits["max"])
+        a = np.clip(albedo.astype(F), 1e-4, None)
+        lum = tg.luminance(a)
+        k = np.where(lum < lo, lo / np.maximum(lum, 1e-6), np.where(lum > hi, hi / lum, 1.0))
+        return np.clip(a * k[..., None], 0.0, self.channel_max).astype(F)
+
     def remap_roughness(self, rough: np.ndarray, mean_t: float, rng_t: tuple[float, float]) -> np.ndarray:
         """Monotone remap: 5th..95th percentiles -> rng_t, gamma solved so the mean hits mean_t."""
         p5, p95 = np.percentile(rough, [5, 95])
@@ -547,6 +555,8 @@ class Kit:
         normal_detail: np.ndarray | None = None,
         rough_blur_px: float = 0.8,
         height_soften_px: float | None = None,
+        remap_rough: bool = True,
+        normal: np.ndarray | None = None,
     ) -> None:
         """Write the set. `ao`: 'cycles' (ray-traced heightfield AO), 'horizon' (numpy), or an array.
         `ao_height_mix` (terrain): ORM.r = AO x lerp(1, normalized height, mix) so the splat's height blend
@@ -559,7 +569,10 @@ class Kit:
         # distance anyway. Soften the height a touch before the normals (H sets: 0.5 px) and roughness by 0.8 px.
         soften = (0.5 if self.cls == "H" else 0.0) if height_soften_px is None else height_soften_px
         with core.timer("normals"):
-            n_int = tg.normal_from_height(tg.blur(height, soften) if soften > 0 else height, self.texel)
+            if normal is not None:  # assembled per region (decal atlas: each region's own wrap, no cross-region slopes)
+                n_int = normal.astype(F)
+            else:
+                n_int = tg.normal_from_height(tg.blur(height, soften) if soften > 0 else height, self.texel)
             if normal_detail is not None:
                 n_int = tg.blend_normals(n_int, normal_detail)
             n = self._down(n_int, self.data_res)
@@ -590,11 +603,14 @@ class Kit:
         if calibrate and target:
             alb = self.calibrate(alb, target)
         else:
-            alb = np.clip(alb, 0.0, 0.98).astype(F)
+            alb = self.clamp_limits(alb)
         if rough_blur_px > 0:
             r_data = tg.blur(r_data, rough_blur_px)
-        mean_r = float(self.preset.get("roughness", float(r_data.mean())))
-        r_data = self.remap_roughness(r_data, mean_r, self.rough_range)
+        if remap_rough:
+            mean_r = float(self.preset.get("roughness", float(r_data.mean())))
+            r_data = self.remap_roughness(r_data, mean_r, self.rough_range)
+        else:  # authored absolute roughness (decal atlas: puddles 0.05 next to soot 0.95)
+            r_data = np.clip(r_data, 0.02, 1.0).astype(F)
         m_data = np.zeros_like(r_data) if metal is None else self._down(metal, self.data_res)
         if orm_b is not None:
             m_data = self._down(orm_b, self.data_res)
@@ -647,7 +663,8 @@ class Kit:
         if ctx.preview and preview:
             po = dict(preview_opts or {})
             self.preview_scene(preview, files, po)
-            self.preview_tiling(files, po)
+            if po.get("tiling", True):  # atlases are not tiling sets
+                self.preview_tiling(files, po)
         ctx.finish()
 
     # ------------------------------------------------------------------ previews (Cycles)
@@ -879,8 +896,8 @@ class Kit:
         nrm.colorspace_settings.name = "Non-Color"
         col = nb.image(img, uv, non_color=False).outputs["Color"]
         sep = nb.separate(nb.image(orm, uv).outputs["Color"])
-        x = nb.separate(nb.texcoord("UV") if False else uv)
-        half = nb.math("GREATER_THAN", x.outputs[0], 0.5)
+        u_sep = nb.separate(uv)  # U (red) picks the backdrop: plaster-white left half, earth right half
+        half = nb.math("GREATER_THAN", u_sep.outputs[0], 0.5)
         back = nb.mix((0.74, 0.70, 0.62, 1.0), (0.30, 0.22, 0.15, 1.0), half)
         c = nb.mix(back, col, sep.outputs[2])
         rough = nb.mix(0.9, sep.outputs[1], sep.outputs[2], data_type="FLOAT")

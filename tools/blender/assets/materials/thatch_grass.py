@@ -41,10 +41,11 @@ with core.timer("courses and bundles"):
     # ragged butt line: stem ends at very different lengths (blade-scale noise, +-8 cm)
     ragged = 0.06 * kit.fbm(0.012, 3, aniso=(1.0, 4.0)) + 0.03 * kit.fbm(0.05, 2)
     lvr = np.clip(lv + ragged / COURSE, 0.0, 1.0)
-    h = 0.007 * (1.0 - lvr) ** 0.8
+    h = 0.014 * (1.0 - lvr) ** 0.8
+    h += 0.006 * kit.fbm(0.3, 3) + 0.003 * kit.fbm(0.08, 2, aniso=(1.0, 3.0))  # shaggy, uneven coat
     # bundles: soft bulges between bundle seams (random widths), barely visible under the combed stems
     bund = np.sin(np.pi * np.clip(cb["lu"], 0, 1)) ** 0.5
-    h += 0.004 * bund * (0.6 + 0.4 * ((cb["id"] * 3.7) % 1.0))
+    h += 0.009 * bund * (0.6 + 0.4 * ((cb["id"] * 3.7) % 1.0))
 
 with core.timer("stems"):
     # stretched fibre noise (stems along v), two scales
@@ -70,7 +71,7 @@ with core.timer("ropes"):
     rv = rv + 0.004 * kit.fbm(0.3, 2)  # the rope sags a little
     R = 0.007
     rope_prof = np.sqrt(np.clip(1.0 - (rv / R) ** 2, 0.0, 1.0))
-    twist = 0.5 + 0.5 * np.sin(2 * np.pi * (x * W / 0.012 + rv / 0.01))
+    twist = 0.5 + 0.5 * np.sin(2 * np.pi * (x * 167.0 + rv / 0.01))  # 167 lays per tile: seamless
     rope = rope_prof * (0.75 + 0.25 * twist)
     pinch = tg.smoothstep(0.04, 0.008, np.abs(rv))
     h = h - 0.006 * pinch + rope * 0.014

@@ -9,9 +9,9 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 18929630,
-    "high": 7874059,
-    "mobile": 3830342
+    "ultra": 17523544,
+    "high": 7593689,
+    "mobile": 3782406
   },
   "assets": {
     "banner_cloth": {
@@ -1663,6 +1663,86 @@ export const ASSET_MANIFEST = {
       "hdrScale": 1,
       "usage": "bloom dirt mask: bloom *= 0.25 + dirt * strength (ultra only)"
     },
+    "lime_plaster_weathered": {
+      "kind": "material",
+      "id": "lime_plaster_weathered",
+      "category": "materials",
+      "hash": "b6c63f3cfb",
+      "description": "Weathered hand-troweled lime plaster (3 m): trowel sweeps, craze and settlement cracks, fallen finish coat over brick, rain streaks, damp patches with salt fringes.",
+      "bytes": {
+        "ultra": 2932224,
+        "high": 665754,
+        "mobile": 171350
+      },
+      "tiers": [
+        "ultra",
+        "high",
+        "mobile"
+      ],
+      "fallback": null,
+      "tileSizeMeters": [
+        3,
+        3
+      ],
+      "averageColor": "#e4dac6",
+      "roughness": 0.86,
+      "metalness": 0,
+      "normalScale": 0.6,
+      "trims": [],
+      "maps": {
+        "baseColor": {
+          "ultra": {
+            "url": "textures/lime_plaster_weathered/baseColor_2048.webp",
+            "bytes": 113374,
+            "size": 2048
+          },
+          "high": {
+            "url": "textures/lime_plaster_weathered/baseColor_1024.webp",
+            "bytes": 41928,
+            "size": 1024
+          },
+          "mobile": {
+            "url": "textures/lime_plaster_weathered/baseColor_512.webp",
+            "bytes": 15146,
+            "size": 512
+          }
+        },
+        "normal": {
+          "ultra": {
+            "url": "textures/lime_plaster_weathered/normal_2048.webp",
+            "bytes": 2645362,
+            "size": 2048
+          },
+          "high": {
+            "url": "textures/lime_plaster_weathered/normal_1024.webp",
+            "bytes": 551476,
+            "size": 1024
+          },
+          "mobile": {
+            "url": "textures/lime_plaster_weathered/normal_512.webp",
+            "bytes": 134654,
+            "size": 512
+          }
+        },
+        "orm": {
+          "ultra": {
+            "url": "textures/lime_plaster_weathered/orm_2048.webp",
+            "bytes": 173488,
+            "size": 2048
+          },
+          "high": {
+            "url": "textures/lime_plaster_weathered/orm_1024.webp",
+            "bytes": 72350,
+            "size": 1024
+          },
+          "mobile": {
+            "url": "textures/lime_plaster_weathered/orm_512.webp",
+            "bytes": 21550,
+            "size": 512
+          }
+        }
+      }
+    },
     "lut_dawn": {
       "kind": "lut",
       "id": "lut_dawn",
@@ -2017,12 +2097,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "sandstone_buff",
       "category": "materials",
-      "hash": "65e39d2ba6",
+      "hash": "ad1537e44b",
       "description": "Buff Sanchi/Chunar sandstone trim sheet (same bands as sandstone_carved_red): ashlar, creeper scroll, dentils, padma, bead-and-reel, lotus medallion frieze; black lichen, pink bedding, chipped arrises.",
       "bytes": {
-        "ultra": 5598312,
-        "high": 1656786,
-        "mobile": 422400
+        "ultra": 4496842,
+        "high": 1539520,
+        "mobile": 416468
       },
       "tiers": [
         "ultra",
@@ -2086,51 +2166,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/sandstone_buff/baseColor_2048.webp",
-            "bytes": 784006,
+            "bytes": 778446,
             "size": 2048
           },
           "high": {
             "url": "textures/sandstone_buff/baseColor_1024.webp",
-            "bytes": 239378,
+            "bytes": 238516,
             "size": 1024
           },
           "mobile": {
             "url": "textures/sandstone_buff/baseColor_512.webp",
-            "bytes": 63510,
+            "bytes": 63090,
             "size": 512
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/sandstone_buff/normal_2048.webp",
-            "bytes": 3315338,
+            "bytes": 2854562,
             "size": 2048
           },
           "high": {
             "url": "textures/sandstone_buff/normal_1024.webp",
-            "bytes": 990386,
+            "bytes": 936196,
             "size": 1024
           },
           "mobile": {
             "url": "textures/sandstone_buff/normal_512.webp",
-            "bytes": 261162,
+            "bytes": 258290,
             "size": 512
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/sandstone_buff/orm_2048.webp",
-            "bytes": 1498968,
+            "bytes": 863834,
             "size": 2048
           },
           "high": {
             "url": "textures/sandstone_buff/orm_1024.webp",
-            "bytes": 427022,
+            "bytes": 364808,
             "size": 1024
           },
           "mobile": {
             "url": "textures/sandstone_buff/orm_512.webp",
-            "bytes": 97728,
+            "bytes": 95088,
             "size": 512
           }
         }
@@ -2140,12 +2220,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "sandstone_carved_red",
       "category": "materials",
-      "hash": "544c1d8383",
-      "description": "Weathered carved red sandstone trim sheet: ashlar, creeper scroll, dentils, padma, bead-and-reel, lotus medallion frieze.",
+      "hash": "ac56657537",
+      "description": "Weathered carved red sandstone trim sheet: ashlar, creeper scroll, dentils, padma, bead-and-reel, lotus medallion frieze; per-block hue jitter, lichen and soot crusts (WP1-09 retune).",
       "bytes": {
-        "ultra": 4603642,
-        "high": 1348936,
-        "mobile": 346108
+        "ultra": 1366802,
+        "high": 520078,
+        "mobile": 132754
       },
       "tiers": [
         "ultra",
@@ -2157,8 +2237,8 @@ export const ASSET_MANIFEST = {
         2,
         2
       ],
-      "averageColor": "#753d2e",
-      "roughness": 0.866,
+      "averageColor": "#a8644c",
+      "roughness": 0.78,
       "metalness": 0,
       "normalScale": 1,
       "trims": [
@@ -2208,53 +2288,53 @@ export const ASSET_MANIFEST = {
       "maps": {
         "baseColor": {
           "ultra": {
-            "url": "textures/sandstone_carved_red/baseColor_2048.webp",
-            "bytes": 462406,
-            "size": 2048
+            "url": "textures/sandstone_carved_red/baseColor_1024.webp",
+            "bytes": 184484,
+            "size": 1024
           },
           "high": {
             "url": "textures/sandstone_carved_red/baseColor_1024.webp",
-            "bytes": 144814,
+            "bytes": 184484,
             "size": 1024
           },
           "mobile": {
             "url": "textures/sandstone_carved_red/baseColor_512.webp",
-            "bytes": 35688,
+            "bytes": 48454,
             "size": 512
           }
         },
         "normal": {
           "ultra": {
-            "url": "textures/sandstone_carved_red/normal_2048.webp",
-            "bytes": 3293946,
-            "size": 2048
-          },
-          "high": {
             "url": "textures/sandstone_carved_red/normal_1024.webp",
-            "bytes": 981344,
+            "bytes": 972872,
             "size": 1024
           },
-          "mobile": {
+          "high": {
             "url": "textures/sandstone_carved_red/normal_512.webp",
-            "bytes": 258408,
+            "bytes": 258874,
             "size": 512
+          },
+          "mobile": {
+            "url": "textures/sandstone_carved_red/normal_256.webp",
+            "bytes": 67116,
+            "size": 256
           }
         },
         "orm": {
           "ultra": {
-            "url": "textures/sandstone_carved_red/orm_2048.webp",
-            "bytes": 847290,
-            "size": 2048
-          },
-          "high": {
             "url": "textures/sandstone_carved_red/orm_1024.webp",
-            "bytes": 222778,
+            "bytes": 209446,
             "size": 1024
           },
-          "mobile": {
+          "high": {
             "url": "textures/sandstone_carved_red/orm_512.webp",
-            "bytes": 52012,
+            "bytes": 76720,
             "size": 512
+          },
+          "mobile": {
+            "url": "textures/sandstone_carved_red/orm_256.webp",
+            "bytes": 17184,
+            "size": 256
           }
         }
       }

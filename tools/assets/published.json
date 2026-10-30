@@ -2087,6 +2087,217 @@
         "mobile": 0
       }
     },
+    "lime_plaster_weathered": {
+      "id": "lime_plaster_weathered",
+      "kind": "material",
+      "category": "materials",
+      "script": "tools/blender/assets/materials/lime_plaster_weathered.py",
+      "inputHash": "b6c63f3cfb989d4d805dcd6180a6f24e7c46ba1642792335b224bbb19b9b0673",
+      "draft": false,
+      "blender": "5.2.3 LTS",
+      "meta": {
+        "averageColor": "#e4dac6",
+        "decals": [],
+        "description": "Weathered hand-troweled lime plaster (3 m): trowel sweeps, craze and settlement cracks, fallen finish coat over brick, rain streaks, damp patches with salt fringes.",
+        "heightRangeMeters": [
+          -0.00932,
+          0.00094
+        ],
+        "metalness": 0,
+        "normalScale": 0.6,
+        "qa": {
+          "albedoLimits": [
+            0.012,
+            0.84
+          ],
+          "deltaLumPct": -1.25,
+          "deltaRgbPct": [
+            0,
+            0,
+            0
+          ],
+          "family": "limePlaster",
+          "familyRange": [
+            0.5,
+            0.78
+          ],
+          "lumMean": 0.6983,
+          "lumP2": 0.4559,
+          "lumP98": 0.7512,
+          "meanColor": "#e4dac6",
+          "roughMean": 0.86,
+          "roughP5": 0.75,
+          "roughP95": 0.95,
+          "roughTarget": [
+            0.75,
+            0.95
+          ],
+          "satMean": 0.146,
+          "satP95": 0.183,
+          "saturationLimit": 0.45,
+          "target": "#e4dac6"
+        },
+        "roughness": 0.86,
+        "setClass": "H",
+        "tileSizeMeters": [
+          3,
+          3
+        ],
+        "trims": []
+      },
+      "files": [
+        {
+          "path": "textures/lime_plaster_weathered/baseColor_2048.webp",
+          "bytes": 113374,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "texture",
+          "map": "baseColor",
+          "size": 2048
+        },
+        {
+          "path": "textures/lime_plaster_weathered/baseColor_1024.webp",
+          "bytes": 41928,
+          "tiers": [
+            "high"
+          ],
+          "kind": "texture",
+          "map": "baseColor",
+          "size": 1024
+        },
+        {
+          "path": "textures/lime_plaster_weathered/baseColor_512.webp",
+          "bytes": 15146,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "texture",
+          "map": "baseColor",
+          "size": 512
+        },
+        {
+          "path": "textures/lime_plaster_weathered/normal_2048.webp",
+          "bytes": 2645362,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "texture",
+          "map": "normal",
+          "size": 2048
+        },
+        {
+          "path": "textures/lime_plaster_weathered/normal_1024.webp",
+          "bytes": 551476,
+          "tiers": [
+            "high"
+          ],
+          "kind": "texture",
+          "map": "normal",
+          "size": 1024
+        },
+        {
+          "path": "textures/lime_plaster_weathered/normal_512.webp",
+          "bytes": 134654,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "texture",
+          "map": "normal",
+          "size": 512
+        },
+        {
+          "path": "textures/lime_plaster_weathered/orm_2048.webp",
+          "bytes": 173488,
+          "tiers": [
+            "ultra"
+          ],
+          "kind": "texture",
+          "map": "orm",
+          "size": 2048
+        },
+        {
+          "path": "textures/lime_plaster_weathered/orm_1024.webp",
+          "bytes": 72350,
+          "tiers": [
+            "high"
+          ],
+          "kind": "texture",
+          "map": "orm",
+          "size": 1024
+        },
+        {
+          "path": "textures/lime_plaster_weathered/orm_512.webp",
+          "bytes": 21550,
+          "tiers": [
+            "mobile"
+          ],
+          "kind": "texture",
+          "map": "orm",
+          "size": 512
+        }
+      ],
+      "set": {
+        "maps": {
+          "baseColor": {
+            "ultra": {
+              "path": "textures/lime_plaster_weathered/baseColor_2048.webp",
+              "bytes": 113374,
+              "size": 2048
+            },
+            "high": {
+              "path": "textures/lime_plaster_weathered/baseColor_1024.webp",
+              "bytes": 41928,
+              "size": 1024
+            },
+            "mobile": {
+              "path": "textures/lime_plaster_weathered/baseColor_512.webp",
+              "bytes": 15146,
+              "size": 512
+            }
+          },
+          "normal": {
+            "ultra": {
+              "path": "textures/lime_plaster_weathered/normal_2048.webp",
+              "bytes": 2645362,
+              "size": 2048
+            },
+            "high": {
+              "path": "textures/lime_plaster_weathered/normal_1024.webp",
+              "bytes": 551476,
+              "size": 1024
+            },
+            "mobile": {
+              "path": "textures/lime_plaster_weathered/normal_512.webp",
+              "bytes": 134654,
+              "size": 512
+            }
+          },
+          "orm": {
+            "ultra": {
+              "path": "textures/lime_plaster_weathered/orm_2048.webp",
+              "bytes": 173488,
+              "size": 2048
+            },
+            "high": {
+              "path": "textures/lime_plaster_weathered/orm_1024.webp",
+              "bytes": 72350,
+              "size": 1024
+            },
+            "mobile": {
+              "path": "textures/lime_plaster_weathered/orm_512.webp",
+              "bytes": 21550,
+              "size": 512
+            }
+          }
+        }
+      },
+      "bytes": {
+        "ultra": 2932224,
+        "high": 665754,
+        "mobile": 171350
+      }
+    },
     "lut_dawn": {
       "id": "lut_dawn",
       "kind": "lut",
@@ -2623,7 +2834,7 @@
       "kind": "material",
       "category": "materials",
       "script": "tools/blender/assets/materials/sandstone_buff.py",
-      "inputHash": "65e39d2ba6e2830e1a355e44d1947adf3f308baed830573a62b8ea530ebf8c19",
+      "inputHash": "ad1537e44bfbb5e60dc763027ee011e0ffa56e5b3cdf0a5337ae22f1fa63b9e1",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -2726,7 +2937,7 @@
             0.012,
             0.84
           ],
-          "deltaLumPct": 0.04,
+          "deltaLumPct": 0.07,
           "deltaRgbPct": [
             0,
             0,
@@ -2737,9 +2948,9 @@
             0.18,
             0.42
           ],
-          "lumMean": 0.4155,
-          "lumP2": 0.1713,
-          "lumP98": 0.6164,
+          "lumMean": 0.4157,
+          "lumP2": 0.1698,
+          "lumP98": 0.6401,
           "meanColor": "#c2a985",
           "roughMean": 0.76,
           "roughP5": 0.6,
@@ -2807,7 +3018,7 @@
       "files": [
         {
           "path": "textures/sandstone_buff/baseColor_2048.webp",
-          "bytes": 784006,
+          "bytes": 778446,
           "tiers": [
             "ultra"
           ],
@@ -2817,7 +3028,7 @@
         },
         {
           "path": "textures/sandstone_buff/baseColor_1024.webp",
-          "bytes": 239378,
+          "bytes": 238516,
           "tiers": [
             "high"
           ],
@@ -2827,7 +3038,7 @@
         },
         {
           "path": "textures/sandstone_buff/baseColor_512.webp",
-          "bytes": 63510,
+          "bytes": 63090,
           "tiers": [
             "mobile"
           ],
@@ -2837,7 +3048,7 @@
         },
         {
           "path": "textures/sandstone_buff/normal_2048.webp",
-          "bytes": 3315338,
+          "bytes": 2854562,
           "tiers": [
             "ultra"
           ],
@@ -2847,7 +3058,7 @@
         },
         {
           "path": "textures/sandstone_buff/normal_1024.webp",
-          "bytes": 990386,
+          "bytes": 936196,
           "tiers": [
             "high"
           ],
@@ -2857,7 +3068,7 @@
         },
         {
           "path": "textures/sandstone_buff/normal_512.webp",
-          "bytes": 261162,
+          "bytes": 258290,
           "tiers": [
             "mobile"
           ],
@@ -2867,7 +3078,7 @@
         },
         {
           "path": "textures/sandstone_buff/orm_2048.webp",
-          "bytes": 1498968,
+          "bytes": 863834,
           "tiers": [
             "ultra"
           ],
@@ -2877,7 +3088,7 @@
         },
         {
           "path": "textures/sandstone_buff/orm_1024.webp",
-          "bytes": 427022,
+          "bytes": 364808,
           "tiers": [
             "high"
           ],
@@ -2887,7 +3098,7 @@
         },
         {
           "path": "textures/sandstone_buff/orm_512.webp",
-          "bytes": 97728,
+          "bytes": 95088,
           "tiers": [
             "mobile"
           ],
@@ -2901,60 +3112,60 @@
           "baseColor": {
             "ultra": {
               "path": "textures/sandstone_buff/baseColor_2048.webp",
-              "bytes": 784006,
+              "bytes": 778446,
               "size": 2048
             },
             "high": {
               "path": "textures/sandstone_buff/baseColor_1024.webp",
-              "bytes": 239378,
+              "bytes": 238516,
               "size": 1024
             },
             "mobile": {
               "path": "textures/sandstone_buff/baseColor_512.webp",
-              "bytes": 63510,
+              "bytes": 63090,
               "size": 512
             }
           },
           "normal": {
             "ultra": {
               "path": "textures/sandstone_buff/normal_2048.webp",
-              "bytes": 3315338,
+              "bytes": 2854562,
               "size": 2048
             },
             "high": {
               "path": "textures/sandstone_buff/normal_1024.webp",
-              "bytes": 990386,
+              "bytes": 936196,
               "size": 1024
             },
             "mobile": {
               "path": "textures/sandstone_buff/normal_512.webp",
-              "bytes": 261162,
+              "bytes": 258290,
               "size": 512
             }
           },
           "orm": {
             "ultra": {
               "path": "textures/sandstone_buff/orm_2048.webp",
-              "bytes": 1498968,
+              "bytes": 863834,
               "size": 2048
             },
             "high": {
               "path": "textures/sandstone_buff/orm_1024.webp",
-              "bytes": 427022,
+              "bytes": 364808,
               "size": 1024
             },
             "mobile": {
               "path": "textures/sandstone_buff/orm_512.webp",
-              "bytes": 97728,
+              "bytes": 95088,
               "size": 512
             }
           }
         }
       },
       "bytes": {
-        "ultra": 5598312,
-        "high": 1656786,
-        "mobile": 422400
+        "ultra": 4496842,
+        "high": 1539520,
+        "mobile": 416468
       }
     },
     "sandstone_carved_red": {
@@ -2962,11 +3173,11 @@
       "kind": "material",
       "category": "materials",
       "script": "tools/blender/assets/materials/sandstone_carved_red.py",
-      "inputHash": "544c1d8383523e0b7926cc12439c5365e40d002e9f6436703edf38254952041d",
+      "inputHash": "ac5665753702839dbc4c2a1ca5188c98de3c537f124703b769ce63ab0df60bdb",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
-        "averageColor": "#753d2e",
+        "averageColor": "#a8644c",
         "decals": [
           {
             "name": "spiral_rosette",
@@ -3053,14 +3264,47 @@
             "v": 0.58
           }
         ],
-        "description": "Weathered carved red sandstone trim sheet: ashlar, creeper scroll, dentils, padma, bead-and-reel, lotus medallion frieze.",
+        "description": "Weathered carved red sandstone trim sheet: ashlar, creeper scroll, dentils, padma, bead-and-reel, lotus medallion frieze; per-block hue jitter, lichen and soot crusts (WP1-09 retune).",
         "heightRangeMeters": [
-          -0.02291,
-          0.02235
+          -0.02283,
+          0.02229
         ],
         "metalness": 0,
         "normalScale": 1,
-        "roughness": 0.866,
+        "qa": {
+          "albedoLimits": [
+            0.012,
+            0.84
+          ],
+          "deltaLumPct": 0,
+          "deltaRgbPct": [
+            0,
+            0,
+            0
+          ],
+          "family": "sandstone",
+          "familyRange": [
+            0.18,
+            0.42
+          ],
+          "lumMean": 0.1796,
+          "lumP2": 0.0887,
+          "lumP98": 0.2736,
+          "meanColor": "#a8644c",
+          "roughMean": 0.78,
+          "roughP5": 0.62,
+          "roughP95": 0.92,
+          "roughTarget": [
+            0.62,
+            0.92
+          ],
+          "satMean": 0.549,
+          "satP95": 0.588,
+          "saturationLimit": 0.6,
+          "target": "#a8644c"
+        },
+        "roughness": 0.78,
+        "setClass": "S",
         "tileSizeMeters": [
           2,
           2
@@ -3112,19 +3356,10 @@
       },
       "files": [
         {
-          "path": "textures/sandstone_carved_red/baseColor_2048.webp",
-          "bytes": 462406,
-          "tiers": [
-            "ultra"
-          ],
-          "kind": "texture",
-          "map": "baseColor",
-          "size": 2048
-        },
-        {
           "path": "textures/sandstone_carved_red/baseColor_1024.webp",
-          "bytes": 144814,
+          "bytes": 184484,
           "tiers": [
+            "ultra",
             "high"
           ],
           "kind": "texture",
@@ -3133,7 +3368,7 @@
         },
         {
           "path": "textures/sandstone_carved_red/baseColor_512.webp",
-          "bytes": 35688,
+          "bytes": 48454,
           "tiers": [
             "mobile"
           ],
@@ -3142,20 +3377,10 @@
           "size": 512
         },
         {
-          "path": "textures/sandstone_carved_red/normal_2048.webp",
-          "bytes": 3293946,
+          "path": "textures/sandstone_carved_red/normal_1024.webp",
+          "bytes": 972872,
           "tiers": [
             "ultra"
-          ],
-          "kind": "texture",
-          "map": "normal",
-          "size": 2048
-        },
-        {
-          "path": "textures/sandstone_carved_red/normal_1024.webp",
-          "bytes": 981344,
-          "tiers": [
-            "high"
           ],
           "kind": "texture",
           "map": "normal",
@@ -3163,29 +3388,29 @@
         },
         {
           "path": "textures/sandstone_carved_red/normal_512.webp",
-          "bytes": 258408,
+          "bytes": 258874,
           "tiers": [
-            "mobile"
+            "high"
           ],
           "kind": "texture",
           "map": "normal",
           "size": 512
         },
         {
-          "path": "textures/sandstone_carved_red/orm_2048.webp",
-          "bytes": 847290,
+          "path": "textures/sandstone_carved_red/normal_256.webp",
+          "bytes": 67116,
           "tiers": [
-            "ultra"
+            "mobile"
           ],
           "kind": "texture",
-          "map": "orm",
-          "size": 2048
+          "map": "normal",
+          "size": 256
         },
         {
           "path": "textures/sandstone_carved_red/orm_1024.webp",
-          "bytes": 222778,
+          "bytes": 209446,
           "tiers": [
-            "high"
+            "ultra"
           ],
           "kind": "texture",
           "map": "orm",
@@ -3193,74 +3418,84 @@
         },
         {
           "path": "textures/sandstone_carved_red/orm_512.webp",
-          "bytes": 52012,
+          "bytes": 76720,
+          "tiers": [
+            "high"
+          ],
+          "kind": "texture",
+          "map": "orm",
+          "size": 512
+        },
+        {
+          "path": "textures/sandstone_carved_red/orm_256.webp",
+          "bytes": 17184,
           "tiers": [
             "mobile"
           ],
           "kind": "texture",
           "map": "orm",
-          "size": 512
+          "size": 256
         }
       ],
       "set": {
         "maps": {
           "baseColor": {
             "ultra": {
-              "path": "textures/sandstone_carved_red/baseColor_2048.webp",
-              "bytes": 462406,
-              "size": 2048
+              "path": "textures/sandstone_carved_red/baseColor_1024.webp",
+              "bytes": 184484,
+              "size": 1024
             },
             "high": {
               "path": "textures/sandstone_carved_red/baseColor_1024.webp",
-              "bytes": 144814,
+              "bytes": 184484,
               "size": 1024
             },
             "mobile": {
               "path": "textures/sandstone_carved_red/baseColor_512.webp",
-              "bytes": 35688,
+              "bytes": 48454,
               "size": 512
             }
           },
           "normal": {
             "ultra": {
-              "path": "textures/sandstone_carved_red/normal_2048.webp",
-              "bytes": 3293946,
-              "size": 2048
-            },
-            "high": {
               "path": "textures/sandstone_carved_red/normal_1024.webp",
-              "bytes": 981344,
+              "bytes": 972872,
               "size": 1024
             },
-            "mobile": {
+            "high": {
               "path": "textures/sandstone_carved_red/normal_512.webp",
-              "bytes": 258408,
+              "bytes": 258874,
               "size": 512
+            },
+            "mobile": {
+              "path": "textures/sandstone_carved_red/normal_256.webp",
+              "bytes": 67116,
+              "size": 256
             }
           },
           "orm": {
             "ultra": {
-              "path": "textures/sandstone_carved_red/orm_2048.webp",
-              "bytes": 847290,
-              "size": 2048
-            },
-            "high": {
               "path": "textures/sandstone_carved_red/orm_1024.webp",
-              "bytes": 222778,
+              "bytes": 209446,
               "size": 1024
             },
-            "mobile": {
+            "high": {
               "path": "textures/sandstone_carved_red/orm_512.webp",
-              "bytes": 52012,
+              "bytes": 76720,
               "size": 512
+            },
+            "mobile": {
+              "path": "textures/sandstone_carved_red/orm_256.webp",
+              "bytes": 17184,
+              "size": 256
             }
           }
         }
       },
       "bytes": {
-        "ultra": 4603642,
-        "high": 1348936,
-        "mobile": 346108
+        "ultra": 1366802,
+        "high": 520078,
+        "mobile": 132754
       }
     },
     "skin_test_character": {

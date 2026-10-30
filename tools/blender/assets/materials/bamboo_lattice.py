@@ -127,8 +127,9 @@ with core.timer("weave"):
     pithc = K.ramp(tw, [(0.0, "#a99a72"), (1.0, "#c2b48c")])
     wc = np.where(pith[..., None], pithc, skin)
     # lath nodes: darker bars across a lath every ~0.35 m along its length
-    nodepos = np.where(warp_top, vb, u) + lath_id * 0.35
-    nd = np.abs(((nodepos / 0.35) % 1.0) - 0.5) * 0.35
+    nper = np.where(warp_top, (v1 - v0) / 2.0, W / 4.0)  # node spacing that divides the band / tile: seamless
+    nodepos = np.where(warp_top, vb, u) + lath_id * nper
+    nd = np.abs(((nodepos / nper) % 1.0) - 0.5) * nper
     wc = K.tint(wc, "#6b5435", 0.55 * tg.smoothstep(0.006, 0.0, nd))
     wc = K.mul(wc, 1.0 - 0.6 * gap)
     wc = K.tint(wc, "#8a8170", 0.25 * tg.smoothstep(0.1, 0.6, kit.fbm(0.3, 3)))

@@ -41,7 +41,7 @@ BUFF = stone.StoneStyle(
     streak_dark=0.24,
     spots=0.3,
     lichen=0.8,
-    banding=0.55,
+    banding=0.0,  # seamless banding in _sandstone.iron_banding (see there)
     roughness=0.8,
     bed_color="#c9a08a",
     beds=0.55,
@@ -56,9 +56,10 @@ def finishing(kit: K.Kit, c: dict) -> tuple[np.ndarray, np.ndarray]:
     joint = c["masks"]["joint"]
     # per-block hue jitter +-3 % (half a turn-percent each way: +-5 deg), value +-6 % (ART_BIBLE §14)
     alb = SS.block_jitter(alb, sid, 0.015, 0.06)
+    alb = SS.iron_banding(kit, alb, 0.55)
     # faint pink-mauve bedding bands (sin y x noise, ~8 % #c9a08a)
     wx, wy = kit.warp(0.05, 0.6, 3)
-    band = np.sin(2 * np.pi * (wy * SS.SIZE[1] * 1.6 + 0.35 * kit.fbm(0.9, 3, x=wx, y=wy)))
+    band = np.sin(2 * np.pi * (wy * 3.0 + 0.35 * kit.fbm(0.9, 3, x=wx, y=wy)))  # 3 bands per tile: seamless
     band = tg.smoothstep(0.35, 0.95, band) * tg.smoothstep(-0.2, 0.35, kit.fbm(0.7, 3))
     alb = K.tint(alb, "#c9a08a", 0.16 * band)
     # black lichen colonies: noise(0.15, 4) > 0.72 -> #3a3630 at up to 70 %, on up-faces and in damp crusts
