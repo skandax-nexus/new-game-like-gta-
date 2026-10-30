@@ -33,7 +33,7 @@ with core.timer("planks"):
     # five planks across u (grain along v); seams wander slightly
     wob = 0.012 * kit.fbm(0.8, 3, aniso=(1.0, 4.0))
     widths = kit.rng.uniform(0.28, 0.55, 5)
-    widths = widths * W / widths.sum()
+    widths = widths * W / widths.sum(dtype=np.float64)
     edges = np.concatenate([[0.0], np.cumsum(widths)])
     uw = (x * W + wob) % W
     pid = np.clip(np.searchsorted(edges, uw, side="right") - 1, 0, 4)

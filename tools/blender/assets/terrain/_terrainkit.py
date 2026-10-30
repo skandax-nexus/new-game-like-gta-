@@ -91,15 +91,102 @@ def shape_hoof(depth: float = 0.012, size: float = 0.07) -> "callable":
     return fn
 
 
+def _cuts(rng, total: float, spacing: tuple[float, float]) -> list[float]:
+    """Random partition of [0, total) into pieces in `spacing` (rescaled to fill exactly); returns the cut starts."""
+    w: list[float] = []
+    while sum(w) < total - 1e-6:
+        w.append(float(rng.uniform(spacing[0], spacing[1])))
+    if len(w) > 1 and sum(w) - total > 0.5 * w[-1]:
+        w.pop()
+    sc = total / sum(w)
+    off = float(rng.uniform(0.0, total))
+    return sorted(((np.cumsum([0.0] + [a * sc for a in w[:-1]]) + off) % total).tolist())
+
+
+def joint_bands(kit: "K.Kit", spacing: tuple[float, float], amp: float, feature: float,
+                vspacing: tuple[float, float], carry: float = 0.3, tilt: float = 0.1, wander: float = 0.1,
+                vfeature: float = 0.8) -> dict[str, np.ndarray]:
+    """Rock-face joint system for triplanar rock layers (v = up), periodic over the tile:
+    sub-horizontal sheet / bedding joints (thickness drawn from `spacing`, each an independent wavy curve of
+    amplitude `amp`, so beds thin and thicken along u) and, per band, vertical joints (spacing `vspacing`), each
+    tilted (+-tilt m/m) and wandering (+-wander m); a fraction `carry` of a band's joints continue the joint of
+    the band below (offset a little), the rest stop at the bed boundary.
+    Returns band (index), below / above (m to the joint below / above), side (m to the nearest vertical joint),
+    left (m from the left joint), width (block width, m), lu (0..1 across the block), block (id 0..1),
+    rand1..rand3 (per-block randoms), open_h / open_v (per-joint openness bias of the nearest joint, 0..1),
+    thick (band thickness at this u, m), nb (number of bands)."""
+    W, H = kit.size
+    rng = kit.rng
+    u = kit.x * W
+    v = kit.y * H
+    starts = _cuts(rng, H, spacing)
+    nb = len(starts)
+    thick_min = min(((starts[(i + 1) % nb] - starts[i]) % H) or H for i in range(nb))
+    a_eff = min(amp, 0.3 * thick_min)
+    yc = np.zeros_like(kit.y)
+    curves = []
+    for k in range(nb):
+        n = kit.fbm(feature, 3, x=kit.x, y=yc + 0.173 * k)
+        curves.append(starts[k] + a_eff * n)
+    dks = np.stack([(v - c) % H for c in curves])  # height above each curve
+    band = np.argmin(dks, axis=0)
+    below = np.min(dks, axis=0)
+    above = np.min(np.stack([(c - v) % H for c in curves]), axis=0)
+    open_curve = rng.uniform(0.0, 1.0, nb)
+    up_idx = (band + 1) % nb
+    open_h = np.where(below < above, open_curve[band], open_curve[up_idx]).astype(F)
+    out = {k: np.zeros(u.shape, F) for k in ("side", "left", "width", "lu", "block", "rand1", "rand2", "rand3", "open_v")}
+    prev: list[float] = []
+    nv = kit.fbm(vfeature, 3, x=yc + 0.31, y=kit.y)  # wander along v (one noise, shifted per joint)
+    for b in range(nb):
+        cuts = _cuts(rng, W, vspacing)
+        for pu in prev:
+            if rng.uniform() < carry and cuts:
+                j = int(np.argmin([abs(((c - pu + W / 2) % W) - W / 2) for c in cuts]))
+                cuts[j] = (pu + float(rng.uniform(-0.12, 0.12))) % W
+        cuts = sorted(cuts)
+        prev = cuts
+        nj = len(cuts)
+        tilts = rng.uniform(-tilt, tilt, nj)
+        shifts = rng.uniform(0.0, 1.0, nj)
+        opens = rng.uniform(0.0, 1.0, nj)
+        rnd = rng.uniform(0.0, 1.0, (nj, 4))
+        mid = starts[b] + 0.5 * (((starts[(b + 1) % nb] - starts[b]) % H) or H)
+        sel = band == b
+        uu, vv = u[sel], v[sel]
+        dv_mid = ((vv - mid + H / 2) % H) - H / 2
+        nvs = nv[sel]
+        pos = np.stack([(c + tilts[j] * dv_mid + wander * np.roll(nvs, 0) * (0.6 + 0.8 * shifts[j])) for j, c in enumerate(cuts)])
+        e = (uu[None, :] - pos) % W  # distance to the right of each joint
+        jl = np.argmin(e, axis=0)
+        left = np.min(e, axis=0)
+        right = np.min((pos - uu[None, :]) % W, axis=0)
+        jr = np.argmin((pos - uu[None, :]) % W, axis=0)
+        width = left + right
+        out["left"][sel] = left
+        out["side"][sel] = np.minimum(left, right)
+        out["width"][sel] = width
+        out["lu"][sel] = left / np.maximum(width, 1e-4)
+        out["block"][sel] = rnd[jl, 0]
+        out["rand1"][sel] = rnd[jl, 1]
+        out["rand2"][sel] = rnd[jl, 2]
+        out["rand3"][sel] = rnd[jl, 3]
+        out["open_v"][sel] = np.where(left < right, opens[jl], opens[jr])
+    out.update(band=band.astype(F), below=below.astype(F), above=above.astype(F), open_h=open_h,
+               thick=(below + above).astype(F), nb=np.array(nb))
+    return out
+
+
 def finish_terrain(kit: "K.Kit", height: np.ndarray, albedo: np.ndarray, rough: np.ndarray, description: str,
                    macro_sigma: float = 0.6, macro_amount: float = 0.9, height_hp: float = 0.85, ao_distance: float = 0.04,
-                   ao_height_mix: float = 0.3, preview: str = "ground", preview_opts: dict | None = None, **kw) -> None:
+                   ao_height_mix: float = 0.3, preview: str = "ground", preview_opts: dict | None = None,
+                   orm_span_min: float = 0.32, **kw) -> None:
     alb = kit.macro_flatten(albedo, macro_sigma, macro_amount)
     h = kit.height_highpass(height, max(macro_sigma * 1.5, 0.5), height_hp)
     po = dict(samples=48)
     po.update(preview_opts or {})
     kit.finish(height=h, albedo=alb, rough=rough, ao="cycles", ao_distance=ao_distance, ao_samples=40,
-               ao_height_mix=ao_height_mix, description=description, preview=preview, preview_opts=po, **kw)
+               ao_height_mix=ao_height_mix, orm_span_min=orm_span_min, description=description, preview=preview, preview_opts=po, **kw)
 
 
-__all__ = ["K", "finish_terrain", "layers", "shape_foot", "shape_hoof"]
+__all__ = ["K", "finish_terrain", "joint_bands", "layers", "shape_foot", "shape_hoof"]

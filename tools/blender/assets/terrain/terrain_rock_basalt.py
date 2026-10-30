@@ -5,10 +5,16 @@
 @inputs tools/blender/assets/materials/_matkit.py
 
 Deccan Trap basalt splat layer for TRIPLANAR projection (class T, 10 m x 10 m, seamless; v = world up on the side
-projections): the escarpment's stepped flows - massive dark flow cores 2.4-5 m thick with vertical columnar
-joints, separated by rubbly, vesicular, red-brown weathered flow tops (the "steps" recess), spheroidal weathering of
-the joint blocks, brown weathering rind, white zeolite / calcite specks, pale salt streaks and dark water streaks
-running down the faces, lichen on the ledges.
+projections). It must read as a trap escarpment at 10-50 m: stepped flows of clearly UNEQUAL thickness (one thick,
+one medium, one thin per tile, boundaries undulating +-0.25 m), each flow
+- a COLONNADE of flat-faced, angular columns (prisms seen side-on: a broad planar face between two narrow oblique
+  faces meeting in sharp creases; widths 0.4-1.6 m; joints tilt, wander, and many stop or start at hairline
+  cross-joints so columns branch and merge; single columns recessed where they fell out);
+- a HACKLY ENTABLATURE above it (chaotic small planar fracture chips, darker, glassier), thickness varying per flow;
+- a RECESSED RUBBLY FLOW TOP (vesicular, red-brown weathered, 0.3 m back) holding a soil and talus ledge, with a
+  thin red bole at the flow contact;
+plus black water streaks and pale salt bloom running down from the ledges, sparse grey-white and orange lichen on
+the ledge lips, and fine vesicles / grain on every face.
 Target (TERRAIN_LAYERS.rock_basalt): average #5a5650, roughness 0.78.
 OWNER: Technical Artist A (TA-01).
 """
@@ -20,89 +26,122 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 import numpy as np  # noqa: E402
 
 from lib import core, texgen as tg  # noqa: E402
-from _terrainkit import K, finish_terrain  # noqa: E402
+from _terrainkit import K, finish_terrain, joint_bands  # noqa: E402
 
 S = 10.0
 kit = K.Kit(__file__, cls="T", size=(S, S), target="terrain:TERRAIN_LAYERS.rock_basalt", family="soilWet",
             rough_spread=0.09)
 x, y = kit.x, kit.y
+rng = kit.rng
+v = y * S
 
 with core.timer("flows"):
-    thick: list[float] = []
-    while sum(thick) < S:
-        thick.append(float(kit.rng.uniform(2.4, 5.2)))
-    sc = S / sum(thick)
-    tops = np.cumsum([t * sc for t in thick])
-    bottoms = np.concatenate([[0.0], tops[:-1]])
-    undul = 0.12 * kit.fbm(2.0, 3, aniso=(3.0, 1.0)) + 0.04 * kit.fbm(0.4, 3)
-    vm = (y * S + undul) % S
-    flow = np.searchsorted(tops, vm, side="right").clip(0, len(tops) - 1)
-    lv = (vm - bottoms[flow]) / (tops[flow] - bottoms[flow])
-    # rubbly vesicular top (upper 8-22 % of each flow, ragged boundary) recessed, massive core protruding
-    top_frac = (np.array([kit.rng.uniform(0.08, 0.22) for _ in thick], np.float32))[flow]
-    tf = np.clip(top_frac + 0.06 * kit.fbm(0.6, 3) + 0.03 * kit.fbm(0.15, 2), 0.03, 0.4)
-    rubble = tg.smoothstep(1.0 - tf - 0.03, 1.0 - tf + 0.03, lv)
-    core_p = np.sin(np.pi * np.clip(lv / (1.0 - tf), 0, 1)) ** 0.4
-    h = 0.25 * core_p * (1.0 - rubble) - 0.1 * rubble
-    # irregular columnar joints: per flow random column widths 0.5-1.6 m, wavy, some stopping short
-    dj = np.full(h.shape, 9.0, np.float32)
-    colid = np.zeros(h.shape, np.float32)
-    wav = 0.15 * kit.fbm(1.2, 3, aniso=(0.3, 1.0)) + 0.04 * kit.fbm(0.3, 2)
-    u = (x * S + wav) % S
-    for i in range(len(thick)):
-        sel = flow == i
-        if not np.any(sel):
-            continue
-        cuts: list[float] = []
-        while sum(cuts) < S:
-            cuts.append(float(kit.rng.uniform(0.5, 1.6)))
-        pos = np.cumsum([0.0] + [c * S / sum(cuts) for c in cuts[:-1]]) + kit.rng.uniform(0, S)
-        pos = np.sort(pos % S)
-        ext = np.concatenate([pos - S, pos, pos + S])
-        uu = u[sel]
-        k = np.searchsorted(ext, uu, side="right") - 1
-        dj[sel] = np.minimum(uu - ext[k], ext[np.minimum(k + 1, len(ext) - 1)] - uu)
-        ids = kit.rng.uniform(0, 1, len(pos)).astype(np.float32)
-        colid[sel] = ids[k % len(pos)]
-    stop = tg.smoothstep(-0.2, 0.2, kit.fbm(0.9, 2, aniso=(0.3, 1.0)))
-    vjoint = tg.smoothstep(0.05, 0.0, dj) * (1.0 - rubble) * stop
-    cj = tg.smoothstep(0.03, 0.0, np.abs(((lv * 5.0 + 0.4 * kit.fbm(0.8, 2)) % 1.0) - 0.5) - 0.47)
-    cross = cj * (1.0 - rubble) * tg.smoothstep(0.45, 0.75, kit.fbm(0.7, 2) * 0.5 + 0.5)
-    h -= 0.12 * vjoint + 0.05 * cross
-    # spheroidal weathering: column faces rounded near joints
-    h += 0.05 * np.clip(dj / 0.5, 0, 1) ** 0.5 * (1.0 - rubble) + 0.04 * (colid - 0.5) * (1.0 - rubble)
-    # vesicles + rubble clasts on flow tops
-    vf1, _, vid = kit.worley(0.03, 1.0)
-    ves = tg.smoothstep(0.4, 0.15, vf1) * (vid > 0.4) * rubble
-    clast = kit.scatter(0.2, K.shape_pebble(0.09, 0.07, 0.05, 0.5, 0.5), density=0.8, density_map=rubble)
-    h = np.maximum(h, h + clast.height(0.0) * 0.8) - 0.01 * ves
-    h += 0.02 * kit.fbm(0.5, 4) + 0.006 * kit.fbm(0.08, 3) + 0.0015 * kit.fbm(0.012, 2)
+    # three flows of clearly unequal thickness (~48 / 32 / 20 % of the tile, order shuffled), undulating contacts
+    fr = np.array([0.48, 0.32, 0.2]) * rng.uniform(0.9, 1.1, 3)
+    fr = fr[rng.permutation(3)]
+    fr = fr / fr.sum() * S
+    off = float(rng.uniform(0, S))
+    starts = (np.cumsum(np.concatenate([[0.0], fr[:-1]])) + off) % S
+    yc = np.zeros_like(y)
+    curves = [starts[k] + 0.25 * kit.fbm(2.5, 3, x=x, y=yc + 0.21 * k) + 0.06 * kit.fbm(0.6, 2, x=x, y=yc + 0.5 + 0.21 * k)
+              for k in range(3)]
+    dks = np.stack([(v - c) % S for c in curves])
+    flow = np.argmin(dks, axis=0)
+    fb = np.min(dks, axis=0)  # m above the flow base
+    ft = np.min(np.stack([(c - v) % S for c in curves]), axis=0)  # m below the flow top
+    fthick = fb + ft
+    fl = fb / np.maximum(fthick, 1e-3)  # 0 base .. 1 top
+    # per-flow zone fractions: colonnade top / entablature top (the rest is the rubbly flow top)
+    col_top = np.array(rng.uniform(0.35, 0.62, 3))[flow] + 0.05 * kit.fbm(1.5, 2)
+    ent_top = np.array(rng.uniform(0.8, 0.88, 3))[flow] + 0.03 * kit.fbm(1.0, 2)
+    top_zone = tg.smoothstep(ent_top - 0.015, ent_top + 0.015, fl)  # rubbly vesicular flow top
+    ent_zone = tg.smoothstep(col_top - 0.03, col_top + 0.03, fl) * (1.0 - top_zone)
+    col_zone = 1.0 - tg.smoothstep(col_top - 0.03, col_top + 0.03, fl)
+
+with core.timer("colonnade"):
+    # columns: vertical joints with branching / stopping across hairline cross-joints every 0.6-2.2 m
+    jb = joint_bands(kit, spacing=(0.6, 2.2), amp=0.05, feature=1.0, vspacing=(0.4, 1.6), carry=0.7, tilt=0.06,
+                     wander=0.05, vfeature=1.5)
+    left, width = jb["left"], jb["width"]
+    right = width - left
+    a = 0.35 + 0.9 * jb["rand1"]  # oblique face slopes (m/m) left and right
+    b = 0.35 + 0.9 * jb["rand2"]
+    plateau = (0.06 + 0.12 * jb["rand3"]) * np.clip(width, 0.4, 1.6)
+    prism = np.minimum(np.minimum(a * left, b * right), plateau)
+    # broad face: planar with a small random tilt per column segment (no convex bulge)
+    face_tilt = 0.04 * (jb["block"] - 0.5)
+    prism = prism + face_tilt * (left - 0.5 * width) * (prism >= plateau - 1e-4)
+    # cross-joints: hairline step at each segment boundary (segments sit at slightly different depths)
+    seg_off = 0.05 * (jb["rand3"] - 0.5) - 0.12 * (jb["block"] > 0.9)  # some columns fell out -> recessed
+    cross = tg.smoothstep(0.012, 0.0, np.minimum(jb["below"], jb["above"]))
+    col_h = prism + seg_off - 0.015 * cross
+    col_h += 0.006 * kit.fbm(0.25, 3) + 0.0015 * kit.fbm(0.03, 2)
+    joint_line = tg.smoothstep(0.03, 0.0, jb["side"])
+
+with core.timer("entablature"):
+    # hackly: chaotic small planar chips, steep, elongated a little in v, two scales
+    e1 = kit.facets(0.24, slope=0.55, aniso=(1.0, 1.8))
+    e2 = kit.facets(0.09, slope=0.4)
+    ent_h = e1["h"] * 0.6 + 0.35 * e2["h"] * (e2["id"] > 0.4)
+    ent_h = np.clip(ent_h, -0.12, 0.12) - 0.02 * tg.smoothstep(0.02, 0.0, e1["d"]) - 0.01 * tg.smoothstep(0.008, 0.0, e2["d"])
+    ent_h += 0.08 * (jb["rand1"] - 0.5)  # still loosely organised into irregular columns
+    ent_h += 0.003 * kit.fbm(0.03, 2)
+    ent_crack = tg.smoothstep(0.02, 0.0, e1["d"])
+
+with core.timer("flow tops"):
+    # recessed 0.3 m, rubbly and vesicular, with a soil / talus ledge at the foot of the flow above
+    rub = kit.scatter(0.12, K.shape_pebble(0.07, 0.05, 0.05, power=0.6, lump=0.35), density=0.9)
+    rub_h = rub.height(0.0)
+    vf1, _, vid = kit.worley(0.012, 1.0)
+    ves = tg.smoothstep(0.35, 0.12, vf1) * (vid > 0.55)
+    soil = tg.smoothstep(0.55, 0.85, (fl - ent_top) / np.maximum(1.0 - ent_top, 1e-3) + 0.25 * kit.fbm(0.4, 3))
+    top_h = -0.3 + 0.6 * rub_h - 0.004 * ves + soil * (0.05 + 0.02 * kit.fbm(0.08, 3))
+    top_h += 0.04 * kit.fbm(0.5, 3)
+    bole = tg.smoothstep(0.0, 0.03, ft) * tg.smoothstep(0.18, 0.06, ft)  # thin red bole below the contact
+
+with core.timer("compose"):
+    h = col_h * col_zone + ent_h * ent_zone + top_h * top_zone
+    # weathered, slightly rounded transition below the recessed top (the cliff lip of the step)
+    h = tg.blur(h, 0.6)
 
 with core.timer("albedo"):
-    t = np.clip(0.5 + 0.2 * (colid - 0.5) + 0.12 * kit.fbm(0.8, 3) + 0.08 * kit.fbm(0.05, 3), 0, 1)
-    rock = K.ramp(t, [(0.0, "#3a3835"), (0.4, "#4a4743"), (0.75, "#5a5651"), (1.0, "#6c6760")])
-    rind = K.ramp(t, [(0.0, "#4e4237"), (1.0, "#6a5646")])  # oxidized rubbly tops (with soil and dry grass)
-    rock = rock * (1.0 - rubble[..., None] * 0.6) + rind * (rubble[..., None] * 0.6)
-    rock = K.tint(rock, "#6e5a48", 0.2 * tg.smoothstep(0.2, 0.7, kit.fbm(0.4, 3)))  # brown weathering rind
-    rock = K.mul(rock, 1.0 - 0.35 * vjoint - 0.2 * cross - 0.3 * ves)
-    # white zeolite / calcite specks in the vesicular tops
-    zeo = tg.smoothstep(0.7, 0.9, kit.fbm(0.006, 2) * 0.5 + 0.5) * rubble
-    rock = K.tint(rock, "#d8d2c4", 0.5 * zeo)
-    # streaks: pale salt and dark water running down from the flow tops
-    src = rubble * tg.smoothstep(0.4, 0.7, kit.fbm(0.25, 3, aniso=(0.2, 1.0)) * 0.5 + 0.5)
-    streak = np.clip(tg.blur(tg.directional_blur_down(src, int(kit.px(1.5)), 0.99), 2.0), 0, 1) * (1.0 - rubble)
-    salt = streak * tg.smoothstep(0.0, 0.4, kit.fbm(1.5, 2))
-    rock = K.tint(rock, "#2a2826", 0.4 * streak * (1.0 - salt))
-    rock = K.tint(rock, "#9a968c", 0.3 * salt)
-    ledge = tg.smoothstep(0.02, 0.1, lv - (1.0 - tf)) * tg.smoothstep(0.5, 0.75, kit.fbm(0.1, 3) * 0.5 + 0.5)
-    rock = K.tint(rock, "#6f7458", 0.4 * ledge)
+    t = np.clip(0.5 + 0.12 * kit.fbm(0.8, 3) + 0.1 * (jb["rand2"] - 0.5) + 0.05 * kit.fbm(0.05, 2), 0, 1)
+    rock = K.ramp(t, [(0.0, "#3f3e3d"), (0.5, "#545250"), (1.0, "#69655f")])
+    rock = K.tint(rock, "#6e655a", 0.4 * tg.smoothstep(-0.1, 0.4, kit.fbm(1.2, 3)) * col_zone)  # brown weathering rind
+    rock = K.mul(rock, 1.0 - 0.18 * ent_zone)  # entablature darker, glassier
+    rock = K.tint(rock, "#2c2b2a", 0.6 * joint_line * col_zone + 0.4 * ent_crack * ent_zone + 0.35 * cross * col_zone)
+    fresh = (jb["block"] > 0.9) * col_zone
+    rock = K.tint(rock, "#3a3a3c", 0.4 * fresh)
+    topc = K.ramp(0.5 + 0.3 * kit.fbm(0.1, 3), [(0.0, "#5a4438"), (0.5, "#6b5142"), (1.0, "#7a6150")])
+    topc = K.mul(topc, 1.0 - 0.35 * ves)
+    topc = K.tint(topc, "#5b4a3b", 0.8 * soil)
+    rock = rock * (1.0 - top_zone[..., None]) + topc * top_zone[..., None]
+    rock = K.tint(rock, "#7a4a3a", 0.55 * bole * (1.0 - top_zone))
+    # white zeolite / calcite amygdales (clustered, size-varied, sparse)
+    zeo = kit.specks(0.05, coverage=0.004, size=(0.002, 0.012), cluster_m=0.6) * (ent_zone + top_zone)
+    rock = K.tint(rock, "#b8b3a6", 0.7 * zeo)
+    # water streaks (dark) and salt bloom (pale) running down from the ledges and joints
+    lip = tg.smoothstep(0.0, 0.06, ft) * tg.smoothstep(0.35, 0.1, ft)
+    src = (lip + 0.4 * joint_line * col_zone) * tg.smoothstep(0.5, 0.8, kit.fbm(0.2, 3, aniso=(0.3, 6.0)) * 0.5 + 0.5)
+    streak = tg.directional_blur_down(src, int(kit.px(2.2)), 0.99)
+    streak = np.clip(tg.blur(streak, 1.5) * 1.5, 0, 1) * (1.0 - top_zone)
+    salt = streak * tg.smoothstep(0.55, 0.75, kit.fbm(0.5, 3) * 0.5 + 0.5)
+    rock = K.tint(rock, "#262524", 0.5 * streak * (1.0 - salt))
+    rock = K.tint(rock, "#8e8a82", 0.35 * salt)
+    # lichen on the ledge lips (upper edge of each flow's cliff, just below the recess)
+    zone = tg.smoothstep(ent_top - 0.12, ent_top - 0.02, fl) * (1.0 - top_zone)
+    lic = kit.lichen(zone, coverage=0.04, patch_m=0.3, rosette_m=0.03, rosette_density=0.4)
+    rock = K.tint(rock, "#8f8d80", 0.5 * lic["crust"])
+    rock = K.tint(rock, "#a2794a", 0.45 * lic["rosette"] * (kit.white(0.08) > 0.6))
+    h = h + lic["h"]
     alb = K.compress_chroma(rock, 0.9)
 
 with core.timer("roughness"):
-    rough = 0.76 + 0.05 * kit.fbm(0.2, 3) + 0.1 * rubble - 0.08 * streak + 0.05 * ledge
+    rough = 0.76 + 0.04 * kit.fbm(0.2, 3) + 0.1 * top_zone - 0.06 * ent_zone - 0.08 * streak + 0.05 * lic["crust"]
 
-finish_terrain(kit, h, alb, rough, macro_sigma=2.5, macro_amount=0.5, height_hp=0.3, ao_distance=0.4,
+finish_terrain(kit, h, alb, rough, macro_sigma=2.5, macro_amount=0.45, height_hp=0.2, ao_distance=0.4,
                ao_height_mix=0.35, preview="cliff",
-               description="Deccan Trap basalt for triplanar projection (10 m, v = up): stepped flows, massive cores "
-                           "with columnar joints, rubbly vesicular red-brown tops, salt and water streaks, lichen.",
+               description="Deccan Trap basalt for triplanar projection (10 m, v = up): three flows of unequal "
+                           "thickness, flat-faced angular columns 0.4-1.6 m with branching joints, hackly "
+                           "entablature, recessed rubbly flow tops with soil ledges and red bole, streaks, lichen.",
                extra_meta=dict(projection="triplanar", vUp="v = world up on side projections"))

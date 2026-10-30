@@ -94,7 +94,7 @@ class Atlas:
         m.update(u0=round(x0 / W, 6), v0=round(y0 / S, 6), u1=round((x0 + w) / W, 6), v1=round((y0 + h) / S, 6),
                  sizeMeters=[round(w, 4), round(h, 4)])
         self.regions.append(m)
-        core.log(f"decal {m['name']}: rect u {m['u0']}-{m['u1']} v {m['v0']}-{m['v1']} coverage {float(op.mean()):.3f}")
+        core.log(f"decal {m['name']}: rect u {m['u0']}-{m['u1']} v {m['v0']}-{m['v1']} coverage {float(op.mean(dtype=np.float64)):.3f}")
 
     def finish_args(self) -> dict[str, Any]:
         return dict(height=self.h, albedo=self.alb, rough=self.rough, ao=self.ao, normal=self.normal, orm_b=self.op,

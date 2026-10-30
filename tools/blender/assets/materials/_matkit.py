@@ -67,6 +67,17 @@ PREVIEW_EXPOSURE = -1.0
 TILING_EXPOSURE = -0.2
 
 
+# Art Director desk rulings that land in src/render/style after this republish (docs/art/reviews/ta-01.md, AD-8:
+# roofs and ground are the largest RTS areas and sit next to the enemy colour #e0533d and saffron). Applied only while
+# the preset still holds the old value, so the AD's own preset change makes them no-ops. scripts/shots/ta-01.cjs
+# measures against the same table.
+AD_RULINGS: dict[str, tuple[str, str]] = {
+    "materials:MATERIAL_PRESETS.roof_tile_terracotta": ("#a65a3c", "#a6644a"),
+    "terrain:TERRAIN_LAYERS.laterite_soil": ("#8e5038", "#8e5a44"),
+    "materials:MATERIAL_PRESETS.laterite_block": ("#8f4a34", "#8f5240"),
+}
+
+
 # ------------------------------------------------------------------------------------------- style values
 def style(ref: str) -> Any:
     """A src/render/style value (`module:EXPORT.path`): from SAMRAJYA_STYLE (runner, declared via @style) or
@@ -121,7 +132,7 @@ def saturate_by(lin: np.ndarray, k: np.ndarray | float) -> np.ndarray:
 def compress_chroma(lin: np.ndarray, keep: float) -> np.ndarray:
     """Keep only `keep` of each pixel's chroma deviation from the set's mean chroma (value variation untouched):
     pixel = lum-scaled mean colour + keep x (pixel - lum-scaled mean colour). Tames hue / saturation noise."""
-    m = lin.reshape(-1, 3).mean(axis=0)
+    m = lin.reshape(-1, 3).mean(axis=0, dtype=np.float64)
     lm = float(tg.luminance(m[None, None, :])[0, 0])
     base = tg.luminance(lin)[..., None] / max(lm, 1e-6) * m[None, None, :]
     return np.clip(base + (lin - base) * keep, 0.0, None).astype(F)
@@ -216,6 +227,22 @@ def shape_disc(r: float, h: float, edge: float = 0.25) -> Callable:
     return fn
 
 
+def shape_rosette(r: float, h: float = 0.0006, lobes: tuple[int, int] = (7, 13)) -> Callable:
+    """Foliose / crustose lichen rosette: lobed margin (radius r +-60 %, 7-13 lobes, irregular), a slightly
+    raised rim of young lobes and an older, flatter centre. Returns height (m) inside, -1e9 outside; the scatter's
+    lu/lv let callers shade the paler centre."""
+    def fn(lu, lv, e1, e2):
+        rr = r * (0.4 + 1.2 * e1 * e1)
+        ang = np.arctan2(lv, lu)
+        k = lobes[0] + np.floor(e2 * (lobes[1] - lobes[0] + 1))
+        edge = rr * (1.0 + 0.18 * np.sin(k * ang + 6.28 * e2) + 0.1 * np.sin((k + 3) * ang + 3.1 * e1)
+                     + 0.08 * np.sin(2 * ang + 9.0 * e1))
+        d = np.sqrt(lu * lu + lv * lv) / np.maximum(edge, 1e-6)
+        prof = 0.55 + 0.45 * tg.smoothstep(0.45, 0.85, d)  # raised young rim, flatter old centre
+        return np.where(d < 1.0, h * prof, -1e9)
+    return fn
+
+
 # ------------------------------------------------------------------------------------------- kit
 class Kit:
     def __init__(self, script: str, cls: str, size: tuple[float, float], target: str | None = None,
@@ -238,7 +265,11 @@ class Kit:
         self.texel = W / self.N
         self.x, self.y = tg.coords(self.N, self.N, 1.0, 1.0)
         self.target_ref = target
-        self.preset: dict[str, Any] = style(target) if target else {}
+        self.preset: dict[str, Any] = dict(style(target)) if target else {}
+        ruling = AD_RULINGS.get(target or "")
+        if ruling and str(self.preset.get("baseColor", "")).lower() == ruling[0]:
+            core.log(f"AD-8 ruling: {target} baseColor {ruling[0]} -> {ruling[1]}")
+            self.preset["baseColor"] = ruling[1]
         self.limits: dict[str, Any] = style("palette:ALBEDO_LIMITS")
         self.sat_limits: dict[str, float] = style("palette:SATURATION_LIMITS")
         self.family = family
@@ -359,6 +390,86 @@ class Kit:
         best = np.where(best > -1e5, best, -1e9).astype(F)
         return Scatter(best, out["id"], out["lu"], out["lv"], out["ang"], out["e1"], out["e2"])
 
+    def facets(self, cell_m: float, slope: float = 0.3, jitter: float = 0.95, x: np.ndarray | None = None,
+               y: np.ndarray | None = None, aniso: tuple[float, float] = (1.0, 1.0)) -> dict[str, np.ndarray]:
+        """Angular fracture facets: periodic Voronoi cells, each a random plane through its seed (gradient up to
+        `slope` m/m), so neighbouring chips meet in sharp steps and creases instead of round pillows. Returns h (m,
+        the nearest cell's plane), id (0..1), d (m, ~distance to the cell border), f1 (m from the seed)."""
+        W, H = self.size
+        cx = max(1, int(round(W / (cell_m * aniso[0]))))
+        cy = max(1, int(round(H / (cell_m * aniso[1]))))
+        sx, sy = W / cx, H / cy
+        r = self.rng
+        jx = r.uniform(0.5 - 0.5 * jitter, 0.5 + 0.5 * jitter, (cy, cx)).astype(F)
+        jy = r.uniform(0.5 - 0.5 * jitter, 0.5 + 0.5 * jitter, (cy, cx)).astype(F)
+        ga = r.uniform(0.0, 2 * math.pi, (cy, cx)).astype(F)
+        gm = (slope * np.sqrt(r.uniform(0.0, 1.0, (cy, cx)))).astype(F)
+        gx, gy = gm * np.cos(ga), gm * np.sin(ga)
+        rid = r.uniform(0.0, 1.0, (cy, cx)).astype(F)
+        xx = self.x if x is None else x
+        yy = self.y if y is None else y
+        X, Y = xx * cx, yy * cy
+        ix = np.floor(X).astype(np.int64)
+        iy = np.floor(Y).astype(np.int64)
+        f1 = np.full(X.shape, 1e9, F)
+        f2 = np.full(X.shape, 1e9, F)
+        hh = np.zeros(X.shape, F)
+        idv = np.zeros(X.shape, F)
+        for oy in (-1, 0, 1):
+            for ox in (-1, 0, 1):
+                nx, ny = ix + ox, iy + oy
+                wx, wy = nx % cx, ny % cy
+                dx = (X - (nx + jx[wy, wx])) * sx
+                dy = (Y - (ny + jy[wy, wx])) * sy
+                d = np.sqrt(dx * dx + dy * dy).astype(F)
+                closer = d < f1
+                f2 = np.where(closer, f1, np.minimum(f2, d))
+                hh = np.where(closer, gx[wy, wx] * dx + gy[wy, wx] * dy, hh)
+                idv = np.where(closer, rid[wy, wx], idv)
+                f1 = np.where(closer, d, f1)
+        return {"h": hh.astype(F), "id": idv, "d": ((f2 - f1) * 0.5).astype(F), "f1": f1}
+
+    def lichen(self, zone: np.ndarray, coverage: float = 0.12, patch_m: float = 0.35,
+               rosette_m: float = 0.03, rosette_density: float = 0.5) -> dict[str, np.ndarray]:
+        """Lichen as nature grows it (AD-5: no round discs): crustose patches with fractal, domain-warped margins
+        that follow `zone` (0..1, e.g. upward faces and drip lines), plus clustered lobed rosettes of very varied
+        size (rosette_m +-60 %) inside and around the patches. Returns crust (0..1), rosette (0..1), centre (old,
+        paler rosette centres 0..1) and height (m)."""
+        wx, wy = self.warp(patch_m * 0.5, patch_m, 3)
+        n = (self.fbm(patch_m, 5, gain=0.55, x=wx, y=wy) * 0.5 + 0.5) + 0.55 * (zone - 0.5)
+        thr = float(np.percentile(n, 100.0 * (1.0 - coverage)))
+        crust = tg.smoothstep(thr, thr + 0.02, n + 0.04 * self.fbm(patch_m * 0.08, 2))
+        dens = np.clip(tg.smoothstep(thr - 0.12, thr + 0.02, n) * (0.4 + 0.6 * zone), 0.0, 1.0)
+        sc = self.scatter(rosette_m * 1.6, shape_rosette(rosette_m), density=rosette_density, density_map=dens)
+        ros = sc.mask
+        rel = np.sqrt(sc.lu ** 2 + sc.lv ** 2) / max(rosette_m, 1e-6)
+        centre = ros * tg.smoothstep(0.5, 0.1, rel * (0.6 + 0.8 * (1.0 - sc.e1)))
+        hgt = 0.0003 * crust + sc.height(0.0)
+        return {"crust": crust.astype(F), "rosette": ros, "centre": centre.astype(F), "h": hgt.astype(F)}
+
+    def specks(self, cell_m: float, coverage: float = 0.008, size: tuple[float, float] = (0.002, 0.012),
+               cluster_m: float = 0.4) -> np.ndarray:
+        """Clustered, size-varied specks (calcrete / salt / grit; AD-5: never an even polka-dot grid): angular
+        grains whose sizes follow a power law, seeded in fbm clusters. Mask 0..1 with ~`coverage` of the area."""
+        clus = tg.smoothstep(0.1, 0.7, self.fbm(cluster_m, 4) * 0.5 + 0.5)
+        lo, hi = size
+
+        def grain(lu, lv, e1, e2):
+            rr = lo + (hi - lo) * e1 ** 3
+            ang = np.arctan2(lv, lu)
+            edge = rr * (1.0 + 0.3 * np.sin(3 * ang + 6.28 * e2) + 0.15 * np.sin(5 * ang + 2.0 * e1))
+            return np.where(np.sqrt(lu * lu + lv * lv) < edge, 1.0, -1e9)
+
+        dens = 1.0
+        m = self.scatter(cell_m, grain, density=dens, density_map=clus).mask
+        for _ in range(6):  # density solved so the coverage target holds whatever the cluster map does
+            cov = float(m.mean(dtype=np.float64))
+            if abs(cov - coverage) < 0.15 * coverage or dens <= 0.02:
+                break
+            dens = float(np.clip(dens * coverage / max(cov, 1e-6), 0.02, 1.0))
+            m = self.scatter(cell_m, grain, density=dens, density_map=clus).mask
+        return m
+
     # ------------------------------------------------------------------ layouts
     def bond(self, course_h: float, length: tuple[float, float], joint: float, stagger: float | None = 0.5,
              x: np.ndarray | None = None, y: np.ndarray | None = None, course_jitter: float = 0.0,
@@ -444,11 +555,43 @@ class Kit:
         macro map supplies it at world scale; inside a 3-4 m tile it would read as repetition)."""
         lum = tg.luminance(albedo)
         lb = self.blur(lum, sigma_m)
-        g = (float(lum.mean()) / np.maximum(lb, 1e-4)) ** amount
+        g = (float(lum.mean(dtype=np.float64)) / np.maximum(lb, 1e-4)) ** amount
         return (albedo * g[..., None]).astype(F)
 
     def height_highpass(self, h: np.ndarray, sigma_m: float = 0.6, amount: float = 0.8) -> np.ndarray:
         return (h - amount * self.blur(h, sigma_m)).astype(F)
+
+    # ------------------------------------------------------------------ height-blend proxy
+    def height_proxy(self, ao: np.ndarray, h: np.ndarray, mix: float, span_min: float | None) -> np.ndarray:
+        """ORM.r = AO x lerp(1, hn, mix). hn is the height made half rank-equalized (order kept: stones bright,
+        cavities dark) so a few tall stones cannot squash the rest of the layer into one grey; the mix rises in
+        steps (max 0.75) until the 5th..95th percentile span of ORM.r reaches span_min. The splat shader blends
+        layers by w * (1 + ORM.r) with a 0.2 sharpness window, so a span >= 0.3 interlocks layer borders."""
+        hb = tg.blur(h, 0.8).astype(np.float64)
+        lo, hi = np.percentile(hb, [1, 99])
+        lin = np.clip((hb - lo) / max(hi - lo, 1e-12), 0.0, 1.0)
+        order = np.argsort(hb, axis=None, kind="stable")
+        rank = np.empty(hb.size, np.float64)
+        rank[order] = np.linspace(0.0, 1.0, hb.size)
+        hn = 0.5 * lin + 0.5 * rank.reshape(hb.shape)
+
+        def make(m: float) -> np.ndarray:
+            return np.clip(ao * (1.0 - m + m * hn), 0.0, 1.0).astype(F)
+
+        m = float(mix)
+        out = make(m)
+        if span_min:
+            while m < 0.75:
+                p5, p95 = np.percentile(out, [5, 95])
+                if p95 - p5 >= span_min:
+                    break
+                m = min(0.75, m + 0.05)
+                out = make(m)
+        p5, p95 = np.percentile(out, [5, 95])
+        self.orm_r_stats = dict(heightMix=round(m, 3), ormRP5=round(float(p5), 3), ormRP95=round(float(p95), 3),
+                                ormRSpan=round(float(p95 - p5), 3), ormRMean=round(float(out.mean(dtype=np.float64)), 3))
+        core.log(f"height proxy {self.orm_r_stats}")
+        return out
 
     # ------------------------------------------------------------------ output
     def _down(self, img: np.ndarray, res: int) -> np.ndarray:
@@ -463,7 +606,7 @@ class Kit:
         lo, hi = float(self.limits["min"]), float(self.limits["max"])
         a = np.clip(albedo.astype(F), 1e-4, None)
         for _ in range(iters):
-            m = a.reshape(-1, 3).mean(axis=0)
+            m = a.reshape(-1, 3).mean(axis=0, dtype=np.float64)
             a = a * (t / np.maximum(m, 1e-6))[None, None, :]
             lum = tg.luminance(a)
             k = np.where(lum < lo, lo / np.maximum(lum, 1e-6), np.where(lum > hi, hi / lum, 1.0))
@@ -493,7 +636,7 @@ class Kit:
         lo_g, hi_g = 0.15, 6.0
         for _ in range(40):
             mid = math.sqrt(lo_g * hi_g)
-            if float(apply(mid).mean()) > mean_t:
+            if float(apply(mid).mean(dtype=np.float64)) > mean_t:
                 lo_g = mid
             else:
                 hi_g = mid
@@ -501,18 +644,18 @@ class Kit:
 
     def qa(self, albedo: np.ndarray, rough: np.ndarray, target_hex: str | None) -> dict[str, Any]:
         s = srgb8(albedo)
-        mean_lin = albedo.reshape(-1, 3).mean(axis=0)
+        mean_lin = albedo.reshape(-1, 3).mean(axis=0, dtype=np.float64)
         mean_srgb = srgb8(mean_lin[None, None, :])[0, 0]
         lum = tg.luminance(albedo)
         sat = hsv_saturation(s / 255.0)
         out: dict[str, Any] = {
             "meanColor": tg.linear_to_hex(mean_lin),
-            "lumMean": round(float(lum.mean()), 4),
+            "lumMean": round(float(lum.mean(dtype=np.float64)), 4),
             "lumP2": round(float(np.percentile(lum, 2)), 4),
             "lumP98": round(float(np.percentile(lum, 98)), 4),
-            "satMean": round(float(sat.mean()), 3),
+            "satMean": round(float(sat.mean(dtype=np.float64)), 3),
             "satP95": round(float(np.percentile(sat, 95)), 3),
-            "roughMean": round(float(rough.mean()), 3),
+            "roughMean": round(float(rough.mean(dtype=np.float64)), 3),
             "roughP5": round(float(np.percentile(rough, 5)), 3),
             "roughP95": round(float(np.percentile(rough, 95)), 3),
             "roughTarget": [round(self.rough_range[0], 3), round(self.rough_range[1], 3)],
@@ -523,7 +666,7 @@ class Kit:
             rel = (mean_srgb - t) / np.maximum(t, 1.0)
             tl = float(tg.luminance(hexlin(target_hex)[None, None, :])[0, 0])
             out.update(target=target_hex, deltaRgbPct=[round(float(v) * 100, 2) for v in rel],
-                       deltaLumPct=round((float(lum.mean()) / tl - 1.0) * 100, 2))
+                       deltaLumPct=round((float(lum.mean(dtype=np.float64)) / tl - 1.0) * 100, 2))
         if self.family:
             fr = self.limits["ranges"][self.family]
             out["family"] = self.family
@@ -557,10 +700,12 @@ class Kit:
         height_soften_px: float | None = None,
         remap_rough: bool = True,
         normal: np.ndarray | None = None,
+        orm_span_min: float | None = None,
     ) -> None:
         """Write the set. `ao`: 'cycles' (ray-traced heightfield AO), 'horizon' (numpy), or an array.
         `ao_height_mix` (terrain): ORM.r = AO x lerp(1, normalized height, mix) so the splat's height blend
-        (ORM.r as height proxy) lets stones poke through and soil fill cracks. `orm_b` overrides the metalness
+        (ORM.r as height proxy) lets stones poke through and soil fill cracks; `orm_span_min` raises the mix until
+        ORM.r spans at least that much between its 5th and 95th percentiles (crisp height-blend borders). `orm_b` overrides the metalness
         channel with data (decal opacity); `alpha` adds a baseColor alpha channel (puddle mask)."""
         ctx = self.ctx
         W, H = self.size
@@ -597,9 +742,8 @@ class Kit:
                 ao_map = tg.horizon_ao(h_data, W / self.data_res, ao_distance, 8, 10)
                 ao_map = tg.blur(ao_map, 0.7)
             ao_map = np.clip(ao_map, 0.0, 1.0).astype(F)
-            if ao_height_mix > 0:
-                hn = tg.normalize01(tg.blur(h_data, 0.8))
-                ao_map = (ao_map * (1.0 - ao_height_mix + ao_height_mix * hn)).astype(F)
+            if ao_height_mix > 0 or orm_span_min:
+                ao_map = self.height_proxy(ao_map, h_data, ao_height_mix, orm_span_min)
         if calibrate and target:
             alb = self.calibrate(alb, target)
         else:
@@ -607,7 +751,7 @@ class Kit:
         if rough_blur_px > 0:
             r_data = tg.blur(r_data, rough_blur_px)
         if remap_rough:
-            mean_r = float(self.preset.get("roughness", float(r_data.mean())))
+            mean_r = float(self.preset.get("roughness", float(r_data.mean(dtype=np.float64))))
             r_data = self.remap_roughness(r_data, mean_r, self.rough_range)
         else:  # authored absolute roughness (decal atlas: puddles 0.05 next to soot 0.95)
             r_data = np.clip(r_data, 0.02, 1.0).astype(F)
@@ -615,6 +759,9 @@ class Kit:
         if orm_b is not None:
             m_data = self._down(orm_b, self.data_res)
         qa = self.qa(alb, r_data, target)
+        o5, o95 = np.percentile(ao_map, [5, 95])
+        qa.update(getattr(self, "orm_r_stats", None) or dict(ormRP5=round(float(o5), 3), ormRP95=round(float(o95), 3),
+                                                             ormRSpan=round(float(o95 - o5), 3)))
         core.log("QA " + json.dumps(qa))
         # ---- files
         cs = self.spec
@@ -646,8 +793,8 @@ class Kit:
         ctx.add_file("swatch", files["swatch"], ship=False)
         ctx.meta.update(
             tileSizeMeters=[W, H],
-            averageColor=tg.linear_to_hex(alb.reshape(-1, 3).mean(axis=0)),
-            roughness=round(float(r_data.mean()), 3),
+            averageColor=tg.linear_to_hex(alb.reshape(-1, 3).mean(axis=0, dtype=np.float64)),
+            roughness=round(float(r_data.mean(dtype=np.float64)), 3),
             metalness=0.0,
             normalScale=float(self.preset.get("normalScale", 1.0)),
             heightRangeMeters=[round(hmin, 5), round(hmax, 5)],
@@ -953,6 +1100,7 @@ class Kit:
 
 
 __all__ = [
+    "AD_RULINGS",
     "CLASSES",
     "Kit",
     "Scatter",
@@ -966,6 +1114,7 @@ __all__ = [
     "shape_disc",
     "shape_leaf",
     "shape_pebble",
+    "shape_rosette",
     "srgb8",
     "style",
     "tint",

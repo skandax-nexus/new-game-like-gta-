@@ -32,7 +32,7 @@ x, y = kit.x, kit.y
 with core.timer("boards"):
     wob = 0.01 * kit.fbm(0.8, 3, aniso=(1.0, 4.0))
     widths = kit.rng.uniform(0.2, 0.36, 7)
-    widths = widths * W / widths.sum()
+    widths = widths * W / widths.sum(dtype=np.float64)
     edges = np.concatenate([[0.0], np.cumsum(widths)])
     uw = (x * W + wob) % W
     pid = np.clip(np.searchsorted(edges, uw, side="right") - 1, 0, 6)
