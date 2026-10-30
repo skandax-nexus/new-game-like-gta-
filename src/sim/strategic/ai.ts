@@ -30,7 +30,7 @@ import { remember, situate } from './ai/core';
 import { considerPeace, considerTreaties, considerWar } from './ai/diplomacy';
 import { planGrain, planGrainDaily, planLabor, planTaxes, planTreasury } from './ai/economy';
 import { planAge, planConstruction } from './ai/build';
-import { planDemobilize, planRecruitment } from './ai/recruit';
+import { planDemobilize, planRecruitment, planStandDown } from './ai/recruit';
 import { planMilitary } from './ai/military';
 import { planEspionage, planEvents, planRebels } from './ai/politics';
 import { planGoals } from './ai/goals';
@@ -87,12 +87,13 @@ export function runCampaignAI(world: WorldState, factionId: FactionId, terrain: 
   const sit = situate(world, factionId);
   remember(sit, 'lastDay', day);
   f.ai.lastPlanHour = world.calendar.totalHours;
-  if (sit.owned.length === 0 && sit.armies.length === 0) return [];
+  if (sit.owned.length === 0 && sit.armies.length === 0 && sit.standDown.length === 0) return [];
   const when = aiSchedule(day, world.calendar.day, slotOf(world, factionId));
   // Daily: answers, peace, grain emergencies, supply and defence.
   planEvents(sit);
   considerPeace(sit);
   planGrainDaily(sit);
+  planStandDown(sit);
   if (when.strategy) {
     considerWar(sit);
     planGoals(sit);

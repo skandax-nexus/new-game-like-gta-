@@ -5,24 +5,27 @@
  * Attack (the side outside the ring):
  *  - Engineer works: the first engineer formation builds a ram out of bow shot (radius + 205 m, in front of the main
  *    gate) and carries it to the gate (orders.ts moves a finished ram to the nearest intact gate); further engineer
- *    formations raise ladders against the segments flanking the gate, away from the towers' arc where possible, and a
- *    palisade screen for the archers when the walls out-range them.
+ *    formations raise ladders against the segments flanking the gate (alternating sides). A ram whose crew routed is
+ *    taken over by the next free engineer formation (a construct 'ram' order at the abandoned ram re-crews it).
+ *    (No palisade work yet - SIM-02 review follow-up.)
  *  - Elephants batter the main gate (siege x soldiers HP/s) once the ram is on its way or no ram is coming.
  *  - Archers shoot the defenders on the walls over the gate, covering the ram crew.
  *  - Infantry waits out of bow shot until the gate breaks, a wall falls or ladders are up, then storms the breach: the
  *    first block in holds the inside of the breach (siege victory after 60 s uncontested, `breachHold`), the others
  *    fight the defenders contesting it; the mounted stay outside to run down sallies and routers.
- *  - Without engineers, elephants, breaches or ladders the assault is hopeless: after 30 s the side withdraws.
+ *  - Without engineers, elephants, a crewed ram, breaches or ladders the assault is hopeless: after 30 s of it the side
+ *    withdraws (an abandoned ram nobody is left to carry does not count).
  * Defence (the garrison):
  *  - Archers keep the wall walk (orders.ts keeps them at their post against enemies beyond the intact wall) and shift
- *    along it toward the threatened gate / ladders / breach.
+ *    along it toward the threatened gate / ladders / breach. (A tower is garrisoned only when an archer happens to stand
+ *    within 10 m of it - deliberate tower manning is a SIM-02 review follow-up.)
  *  - Spears and guards defend the inside of the main gate (radius 40 m), then the breach or the laddered segment.
  *  - Engineers repair a damaged gate (+10 HP/s).
  *  - Sally: mounted (else guards) ride out through an intact gate against a ram crew or engineers at work within 150 m
  *    of the walls when nothing stronger guards them, and come back inside afterwards.
  */
-import type { FormationState } from '../../../core/types';
-import { dcos, dsin, facingOf, PI } from '../../../core/math';
+import type { EngineerWorkState, FormationState } from '../../../core/types';
+import { dcos, dsin, PI } from '../../../core/math';
 import { UNITS } from '../../../data/units';
 import type { FortGeometry } from '../fort';
 import { angleFromCenter, distFromCenter, ringPoint, segmentMidAngle } from '../fort';
@@ -32,11 +35,6 @@ import type { AiSide } from './common';
 import { dist, formationStrength, gap, give, stance } from './common';
 
 const p = { x: 0, z: 0 };
-
-function num(ai: AiSide, key: string, def: number): number {
-  const v = ai.mem[key];
-  return typeof v === 'number' ? v : def;
-}
 
 /** Siege plan for one think (the side is attacker or defender of `g`). */
 export function runSiege(ai: AiSide, g: FortGeometry): void {
@@ -108,20 +106,36 @@ function attack(ai: AiSide, g: FortGeometry): void {
   const gateIntact = siege.gates.some((gt) => gt.hp > 0);
   const kind = assaultPoint(ai, g, p);
   const target = { x: p.x, z: p.z };
-  const hasTools = engineers.length > 0 || elephants.length > 0;
-  if (!kind && !hasTools && !s.works.some((w) => w.side === ai.side && w.work === 'ram' && w.progress >= 1)) {
+  // Finished rams: one still crewed (its crew standing - siege.ts drops the crew of a ram whose engineers rout) is a
+  // tool; an abandoned one is only a tool while an engineer formation is left to take it over.
+  let crewedRam = false;
+  let abandonedRam: EngineerWorkState | null = null;
+  for (const w of s.works) {
+    if (w.side !== ai.side || w.work !== 'ram' || w.progress < 1 || w.hp <= 0) continue;
+    if (w.formation >= 0) crewedRam = true;
+    else if (!abandonedRam) abandonedRam = w;
+  }
+  const hasTools = engineers.length > 0 || elephants.length > 0 || crewedRam;
+  if (!kind && !hasTools) {
     if (typeof ai.mem.hopeless !== 'number') ai.mem.hopeless = s.time;
     if (s.time - (ai.mem.hopeless as number) > 30 && !s.sides[ai.side].withdrawn) {
       ai.cmds.push({ kind: 'withdraw_all' });
       return;
     }
-  }
-  // --- Engineers: ram first, then ladders beside the main gate.
+  } else delete ai.mem.hopeless;
+  // --- Engineers: re-crew an abandoned ram, else the first builds a ram; the others raise ladders beside the main gate.
+  let recrew = gateIntact ? abandonedRam : null;
   engineers.forEach((f, i) => {
     if (f.engagedWith.length > 0) return;
     const ram = s.works.find((w) => w.side === ai.side && w.work === 'ram' && w.hp > 0 && w.formation === f.index);
     if (ram) return; // carrying a ram: orders.ts drives it to the gate
-    if (i === 0 && gateIntact) {
+    if (recrew) {
+      // A construct 'ram' order at an abandoned finished ram takes it over (orders.ts / siege.ts workNear).
+      give(ai, f, { type: 'construct', work: 'ram', x: recrew.x, z: recrew.z, facing: recrew.facing });
+      recrew = null;
+      return;
+    }
+    if (i === 0 && gateIntact && !abandonedRam) {
       const site = ringPoint(g, main, g.radius + 205, { x: 0, z: 0 });
       give(ai, f, { type: 'construct', work: 'ram', x: site.x, z: site.z, facing: main + PI });
       return;
@@ -337,7 +351,7 @@ function defend(ai: AiSide, g: FortGeometry): void {
   const sallyForce = mounted.length > 0 ? mounted : melee.filter((f) => f.unitClass === 'elite_guards' && !f.hasCommander);
   for (const f of sallyForce) {
     if (f.engagedWith.length > 0) continue;
-    if (sallyTarget && formationStrength(s, f) > 0.7 * guardStrength(ai, g, sallyTarget)) {
+    if (sallyTarget && formationStrength(s, f) > 0.7 * guardStrength(ai, sallyTarget)) {
       give(ai, f, { type: 'attack_target', target: sallyTarget.index, run: true });
       ai.mem.sally = s.time;
     }
@@ -390,8 +404,6 @@ function defend(ai: AiSide, g: FortGeometry): void {
       give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: ta, run: false });
     }
   }
-  void num;
-  void facingOf;
 }
 
 function angleDiff(a: number, b: number): number {
@@ -416,9 +428,8 @@ function sallyCandidate(ai: AiSide, g: FortGeometry): FormationState | null {
 }
 
 /** Strength of the enemy formations within 60 m of `t` (its guard), t included. */
-function guardStrength(ai: AiSide, g: FortGeometry, t: FormationState): number {
+function guardStrength(ai: AiSide, t: FormationState): number {
   let s = 0;
   for (const e of ai.known) if (gap(e, t) < 60) s += formationStrength(ai.state, e);
-  void g;
   return s;
 }

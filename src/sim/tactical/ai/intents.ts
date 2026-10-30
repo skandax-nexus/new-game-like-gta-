@@ -53,7 +53,6 @@ function standingEnemy(state: BattleState, f: FormationState, e: FormationState,
   if (e.side === f.side || e.soldiers <= 0 || e.activity === 'surrendered' || e.activity === 'destroyed' || e.activity === 'routing') return false;
   if (!e.spotted || e.hidden) return false;
   const b = terrain.bounds;
-  void state;
   return e.x >= b.minX && e.z >= b.minZ && e.x <= b.maxX && e.z <= b.maxZ;
 }
 

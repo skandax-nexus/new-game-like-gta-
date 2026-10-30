@@ -2,8 +2,9 @@
  * Campaign AI recruitment and demobilisation (DESIGN_SPEC §7.6, SIM-02 spec 4). OWNER: AI Engineer - Battle AI,
  * Intents & Campaign AI (SIM-02).
  *
- *  - Ceiling: 0.04 x realm population soldiers (x1.3 expansionist, x0.7 mercantile); at peace and unthreatened the
- *    realm keeps 70% of it (80% defensive). Never into upkeep it cannot pay: the projected month after the new
+ *  - Ceiling: 0.04 x realm population soldiers (x1.3 expansionist, x0.7 mercantile) - garrisons included, never
+ *    exceeded; at peace and unthreatened the realm's field target is 70% of it (80% defensive), the rest is headroom
+ *    for standing garrisons. Never into upkeep it cannot pay: the projected month after the new
  *    upkeep must stay >= 0, or the treasury must carry the deficit for two years (one year at war).
  *  - Composition: a personality doctrine (shares of spearmen, archers, horse, guards, elephants...) filtered by the
  *    roster, the age and the buildings that train them; the class furthest below its share is raised next; every
@@ -13,7 +14,9 @@
  *    planner merges it). Standing garrisons first: two formations in the capital and forts at war, one in towns and
  *    villages near an enemy; a threatened settlement that no army can reach raises its own.
  *  - Demobilisation: a month in the red with the treasury below zero (or under four months of runway) for 10+ days
- *    disbands the smallest secondary army, else splits the costliest formations off the main host to disband them.
+ *    disbands the smallest secondary army, else splits the costliest formations off the main host to disband them:
+ *    their unit ids are kept in plan memory (`standDown`), the detachment they form is no field army (never the main
+ *    host, never merged back) and is disbanded the next day (`planStandDown`, daily).
  */
 import type { ArmyState, SettlementState, UnitClass } from '../../../core/types';
 import { sortedKeys } from '../../../core/ids';
@@ -25,7 +28,7 @@ import { recruitCost, unlockedHere, validateRecruit } from '../recruitment';
 import { unitAgeReason } from '../ages';
 import { hasElephantSource } from '../recruitment';
 import type { Situation } from './core';
-import { dist, issue, note, num } from './core';
+import { dist, forget, issue, note, num, remember } from './core';
 import { spendable } from './economy';
 
 /** Doctrine shares per personality (formations). */
@@ -111,14 +114,15 @@ export function soldierTarget(sit: Situation): number {
 
 /** Recruitment run (staggered with economy runs). */
 export function planRecruitment(sit: Situation, crisis: boolean): void {
-  const { world, f } = sit;
   if (crisis) return;
   const target = soldierTarget(sit);
   let queued = 0;
   for (const s of sit.owned) for (const j of s.recruitment) queued += j.formations * 100;
-  // Garrisons may exceed the field target by 40% (walls before field armies), never more.
+  // Garrisons may use the headroom between the field target and the ceiling (walls before field armies), never more:
+  // 0.04 x population is the realm's ceiling for every soldier it raises (DESIGN_SPEC §7.14).
+  const cap = soldierCeiling(sit);
   let garrisonGap = false;
-  if (sit.soldiers + queued < 1.4 * soldierCeiling(sit)) for (const s of sit.owned) if (s.garrison.length < garrisonMinimum(sit, s) && s.recruitment.length === 0) garrisonGap = true;
+  if (sit.soldiers + queued < cap) for (const s of sit.owned) if (s.garrison.length < garrisonMinimum(sit, s) && s.recruitment.length === 0) garrisonGap = true;
   if (sit.soldiers + queued >= target && !garrisonGap) return;
   const main = mainArmy(sit);
   let room = spendable(sit);
@@ -134,11 +138,13 @@ export function planRecruitment(sit: Situation, crisis: boolean): void {
     if (have >= min || s.besiegedBy) continue;
     const cls: UnitClass | null = s.garrison.length % 2 === 1 && canTrain(sit, 'archers') && unlockedHere(s, 'archers') ? 'archers' : canTrain(sit, 'spearmen') && unlockedHere(s, 'spearmen') ? 'spearmen' : null;
     if (!cls) continue;
+    if (sit.soldiers + queued + recruitCost(sit.world, sit.fid, cls, 1).recruits > cap) continue;
     if (s.rallyPoint) issue(sit, { kind: 'set_rally_point', settlementId: s.id, rallyPoint: null });
     const r = tryRecruit(sit, s, cls, null, room, net, atWar, `for the garrison of ${s.name} (${have}/${min} formations)`, true);
     if (r) {
       room -= r.wealth;
       net -= r.upkeep;
+      queued += r.soldiers;
       jobs++;
     }
   }
@@ -151,17 +157,21 @@ export function planRecruitment(sit: Situation, crisis: boolean): void {
     if (near) continue;
     const cls = canTrain(sit, 'spearmen') && unlockedHere(t.s, 'spearmen') ? 'spearmen' : canTrain(sit, 'archers') && unlockedHere(t.s, 'archers') ? 'archers' : null;
     if (!cls) continue;
+    if (sit.soldiers + queued + recruitCost(sit.world, sit.fid, cls, 1).recruits > cap) continue;
     if (t.s.rallyPoint) issue(sit, { kind: 'set_rally_point', settlementId: t.s.id, rallyPoint: null });
     const r = tryRecruit(sit, t.s, cls, null, room, net, atWar, `to hold ${t.s.name}`, true);
     if (r) {
       room -= r.wealth;
       net -= r.upkeep;
+      queued += r.soldiers;
       jobs++;
     }
   }
   while (jobs < 2 && sit.soldiers + queued < target) {
     const cls = nextClass(sit, main);
     if (!cls) return;
+    // Never past the ceiling: the next formation must fit under it.
+    if (sit.soldiers + queued + recruitCost(sit.world, sit.fid, cls, 1).recruits > cap) return;
     const site = bestSite(sit, cls, main);
     if (!site) return;
     const r = tryRecruit(sit, site, cls, main ? main.id : null, room, net, atWar, main ? `for ${main.name}` : 'to muster a new host', false, target - sit.soldiers - queued);
@@ -172,8 +182,6 @@ export function planRecruitment(sit: Situation, crisis: boolean): void {
     if (sit.soldiers + queued + r.soldiers >= target) return;
     queued += r.soldiers;
   }
-  void f;
-  void world;
 }
 
 /** Settlement to raise `cls` in: can train it, has recruits and grain; nearest the main army (capital first). */
@@ -269,5 +277,31 @@ export function planDemobilize(sit: Situation): void {
   }
   if (ids.length === 0) return;
   issue(sit, { kind: 'split_army', armyId: main.id, unitIds: ids });
+  remember(sit, 'standDown', ids.join(','));
+  remember(sit, 'standDownDay', sit.day);
   note(sit, 'recruit', `splits ${ids.length} formation(s) off ${main.name} to stand them down (${Math.round(saved)} a month of upkeep; ${Math.round(sit.f.treasury)} in hand, ${Math.round(net)} a month)`);
+}
+
+/**
+ * Daily: disband the detachments split off by `planDemobilize` (once out of battle). The memory is dropped when no
+ * such detachment is left - or two days after a split that never happened (the command was refused).
+ */
+export function planStandDown(sit: Situation): void {
+  if (typeof sit.f.ai.memory.standDown !== 'string') return;
+  for (const a of sit.standDown) {
+    if (a.engagementId || a.status === 'in_battle') continue;
+    issue(sit, { kind: 'disband_army', armyId: a.id });
+    note(sit, 'recruit', `disbands ${a.name} (${armySoldiers(a)} soldiers stood down to save ${Math.round(standDownUpkeep(a))} a month)`);
+  }
+  const pending = sit.standDown.some((a) => a.engagementId || a.status === 'in_battle');
+  if (!pending && (sit.standDown.length > 0 || sit.day - num(sit, 'standDownDay', sit.day) >= 2)) {
+    forget(sit, 'standDown');
+    forget(sit, 'standDownDay');
+  }
+}
+
+function standDownUpkeep(a: ArmyState): number {
+  let w = 0;
+  for (const u of a.units) w += u.soldiers * UNITS[u.unitClass].stats.upkeepWealth;
+  return w;
 }

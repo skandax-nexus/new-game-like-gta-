@@ -872,15 +872,11 @@ function attackLine(ai: AiSide): void {
   if (nL === 0) return;
   if (nE === 0) {
     // Enemy unseen: advance on its last known centre / zone along the axis.
-    const ax = num(ai, 'ax', ai.ownX);
-    const az = num(ai, 'az', ai.ownZ);
     for (const sl of lineSlots) {
       at(ai.enemyX, ai.enemyZ, ai.facing, sl.lat, -60, tmpP);
       clampToMap(ai, tmpP);
       give(ai, sl.f, { type: 'move_to', x: tmpP.x, z: tmpP.z, facing: ai.facing, run: false });
     }
-    void ax;
-    void az;
     return;
   }
   // Pace: blocks far ahead of the slowest wait for it while the lines are still apart.
@@ -1145,7 +1141,6 @@ function stagingPoint(ai: AiSide, f: FormationState, sgn: number, out: { x: numb
   }
   out.x = end.x - ai.fwdX * (end.depth / 2 + 40) + ai.rightX * sgn * (end.width / 2 + f.width / 2 + 70);
   out.z = end.z - ai.fwdZ * (end.depth / 2 + 40) + ai.rightZ * sgn * (end.width / 2 + f.width / 2 + 70);
-  void f;
 }
 
 function atStaging(ai: AiSide, f: FormationState, sgn: number): boolean {
@@ -1277,13 +1272,6 @@ function reserveUnit(ai: AiSide, f: FormationState, committed: boolean): void {
     const side = flankSideOf(best, f);
     give(ai, f, gap(f, best) < 30 ? { type: 'attack_target', target: best.index, run: false } : { type: 'flank', target: best.index, side });
   } else engage(ai, f, best, gap(f, best));
-  // Guards with the commander: keep it out of a losing fight.
-  if (f.hasCommander && f.soldiers < f.maxSoldiers * 0.5 && f.engagedWith.length > 0) {
-    tmpP.x = f.x - ai.fwdX * 60;
-    tmpP.z = f.z - ai.fwdZ * 60;
-    clampToMap(ai, tmpP);
-    give(ai, f, { type: 'withdraw', x: tmpP.x, z: tmpP.z });
-  }
 }
 
 function reserveIndex(ai: AiSide, f: FormationState): number {

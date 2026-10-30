@@ -81,8 +81,10 @@ export interface Situation {
   owned: SettlementState[];
   capital: SettlementState | null;
   realmPop: number;
-  /** Own field armies (not garrison stand-ins, not in battle), sorted by id. */
+  /** Own field armies (not garrison stand-ins, not formations being stood down), sorted by id. */
   armies: ArmyState[];
+  /** Own armies made only of formations split off to be stood down (recruit.ts planDemobilize), sorted by id. */
+  standDown: ArmyState[];
   /** Soldiers in field armies and garrisons. */
   soldiers: number;
   /** factionStrength of every living faction. */
@@ -118,11 +120,16 @@ export function situate(world: WorldState, fid: FactionId): Situation {
     soldiers += garrisonSoldiers(s);
   }
   const armies: ArmyState[] = [];
+  const standDown: ArmyState[] = [];
+  const doomed = f.ai.memory.standDown;
+  const doomedIds = typeof doomed === 'string' && doomed.length > 0 ? doomed.split(',') : null;
   for (const id of sortedKeys(world.armies)) {
     const a = world.armies[id]!;
     if (a.factionId !== fid) continue;
     soldiers += armySoldiers(a);
-    if (isFieldArmy(a)) armies.push(a);
+    if (!isFieldArmy(a)) continue;
+    if (doomedIds && a.units.every((u) => doomedIds.includes(u.id))) standDown.push(a);
+    else armies.push(a);
   }
   const strength: Record<FactionId, number> = {};
   const enemies: FactionId[] = [];
@@ -144,6 +151,7 @@ export function situate(world: WorldState, fid: FactionId): Situation {
     capital: f.capitalSettlementId ? (world.settlements[f.capitalSettlementId] ?? null) : null,
     realmPop,
     armies,
+    standDown,
     soldiers,
     strength,
     enemies,

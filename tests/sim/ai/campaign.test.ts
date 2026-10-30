@@ -4,7 +4,7 @@
  * choice, schedule, passive switch, determinism). OWNER: AI Engineer - Battle AI, Intents & Campaign AI (SIM-02).
  */
 import { describe, expect, it } from 'vitest';
-import type { WorldState } from '../../../src/core/types';
+import type { SimEvent, WorldState } from '../../../src/core/types';
 import { decodeJson, encodeJson, hashState } from '../../../src/core/save';
 import { AI_PERSONALITY_DEFS } from '../../../src/data/difficulty';
 import { aiJournal, aiSchedule, resetAiJournal, runCampaignAI, setAiPassive, warRule } from '../../../src/sim/strategic/ai';
@@ -12,10 +12,11 @@ import { situate } from '../../../src/sim/strategic/ai/core';
 import { daysToNextHarvest, grainOutlook, planGrain, planLabor, planTaxes, planTreasury } from '../../../src/sim/strategic/ai/economy';
 import { preferredLandmark } from '../../../src/sim/strategic/ai/build';
 import { planMilitary } from '../../../src/sim/strategic/ai/military';
-import { planRecruitment, soldierCeiling } from '../../../src/sim/strategic/ai/recruit';
+import { planDemobilize, planRecruitment, soldierCeiling } from '../../../src/sim/strategic/ai/recruit';
 import { armyStrength, makeArmy } from '../../../src/sim/strategic/armies';
 import { createTreaty } from '../../../src/sim/strategic/diplomacy';
-import { getRegionHeightfield } from '../../../src/sim/strategic/world';
+import { recruitCost } from '../../../src/sim/strategic/recruitment';
+import { applyStrategicCommand, getRegionHeightfield } from '../../../src/sim/strategic/world';
 import { relationKey } from '../../../src/core/ids';
 import { campaign, runDays } from '../strategic/helpers';
 import type { CampaignAudit } from './harness/campaign';
@@ -202,14 +203,71 @@ describe('planners', () => {
     expect(soldierCeiling(sit)).toBeCloseTo(0.04 * sit.realmPop * 1.3, 6);
     w.factions.heartland!.ai.personality = 'mercantile';
     expect(soldierCeiling(situate(w, 'heartland'))).toBeCloseTo(0.04 * sit.realmPop * 0.7, 6);
-    // Over the ceiling: nothing is raised however rich the realm.
+    // At the ceiling: nothing is raised however rich the realm - garrisons included (the ceiling counts every soldier).
     w.factions.heartland!.treasury = 1e6;
     const host = Object.values(w.armies).find((a) => a.factionId === 'heartland')!;
-    while (host.units.length < 40) host.units.push({ ...host.units[0]!, id: `u_extra_${host.units.length}` });
+    while (situate(w, 'heartland').soldiers < soldierCeiling(situate(w, 'heartland'))) host.units.push({ ...host.units[0]!, id: `u_extra_${host.units.length}` });
+    for (const s of Object.values(w.settlements)) if (s.ownerFactionId === 'heartland') s.garrison = [];
+    setWar(w, 'heartland', 'highland', true);
     const over = situate(w, 'heartland');
-    expect(over.soldiers).toBeGreaterThan(1.4 * soldierCeiling(over));
+    expect(over.soldiers).toBeGreaterThanOrEqual(soldierCeiling(over));
+    expect(over.soldiers).toBeLessThan(1.4 * soldierCeiling(over));
     planRecruitment(over, false);
-    expect(over.commands.some((c) => c.cmd.kind === 'recruit')).toBe(false);
+    expect(over.commands.filter((c) => c.cmd.kind === 'recruit').map((c) => JSON.stringify(c.cmd))).toEqual([]);
+  });
+
+  it('every soldier raised fits under the ceiling (garrison levies and field recruits alike)', () => {
+    const w = aiSandbox(3);
+    w.factions.heartland!.treasury = 1e6;
+    setWar(w, 'heartland', 'highland', true);
+    for (const s of Object.values(w.settlements)) if (s.ownerFactionId === 'heartland') s.garrison = [];
+    const host = Object.values(w.armies).find((a) => a.factionId === 'heartland')!;
+    // Just under the ceiling: room for at most one more formation.
+    const sit0 = situate(w, 'heartland');
+    while (situate(w, 'heartland').soldiers + 130 < soldierCeiling(sit0)) host.units.push({ ...host.units[0]!, id: `u_extra_${host.units.length}` });
+    const sit = situate(w, 'heartland');
+    planRecruitment(sit, false);
+    let raised = 0;
+    for (const c of sit.commands) if (c.cmd.kind === 'recruit') raised += recruitCost(w, 'heartland', c.cmd.unitClass, c.cmd.formations).recruits;
+    expect(sit.soldiers + raised).toBeLessThanOrEqual(soldierCeiling(sit));
+  });
+
+  it('demobilisation: formations split off to be stood down are disbanded the next day, never merged back', () => {
+    const w = aiSandbox(3);
+    runDays(w, 12, { autoEvents: false, autoEngagements: false });
+    const hf = getRegionHeightfield(w);
+    const fid = 'heartland';
+    const f = w.factions[fid]!;
+    // One field host of several formations, a month in the red and an empty treasury for 20 days.
+    const hosts = Object.values(w.armies).filter((a) => a.factionId === fid && !a.id.startsWith('garrison_') && a.units.length > 0);
+    expect(hosts.length).toBe(1);
+    const host = hosts[0]!;
+    while (host.units.length < 6) host.units.push({ ...host.units[0]!, id: `u_more_${host.units.length}` });
+    const sit = situate(w, fid);
+    f.treasury = -200;
+    f.ai.memory.net = -400;
+    f.ai.memory.crisisSince = sit.day - 11;
+    planDemobilize(sit);
+    const split = sit.commands.find((c) => c.cmd.kind === 'split_army');
+    expect(split, JSON.stringify(sit.commands.map((c) => c.cmd.kind))).toBeDefined();
+    expect(typeof f.ai.memory.standDown).toBe('string');
+    const out: SimEvent[] = [];
+    for (const c of sit.commands) applyStrategicCommand(w, c, out, hf);
+    const detachments = Object.values(w.armies).filter((a) => a.factionId === fid && a.id !== host.id && !a.id.startsWith('garrison_') && a.units.length > 0);
+    expect(detachments.length).toBe(1);
+    const det = detachments[0]!;
+    // The detachment (the costliest formations, often the strongest) is no field army: never the main host, never merged.
+    const next = situate(w, fid);
+    expect(next.armies.map((a) => a.id)).not.toContain(det.id);
+    expect(next.standDown.map((a) => a.id)).toEqual([det.id]);
+    planMilitary(next, true);
+    expect(next.commands.some((c) => c.cmd.kind === 'merge_armies')).toBe(false);
+    // The realm's next daily run (in the real tick) disbands it and forgets the plan; the remaining host stays.
+    const left = host.units.length;
+    runDays(w, 1, { autoEvents: false, autoEngagements: false });
+    expect(w.armies[det.id]).toBeUndefined();
+    expect(w.armies[host.id]?.units.length).toBe(left);
+    expect(f.ai.memory.standDown).toBeUndefined();
   });
 
   it('the landmark follows the top weights: the expansionist Suvarna raise the Royal Granary, a mercantile court the Hall', () => {
