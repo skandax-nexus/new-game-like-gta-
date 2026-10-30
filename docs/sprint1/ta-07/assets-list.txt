@@ -1,14 +1,18 @@
+
+> samrajya@0.1.0 assets
+> node tools/assets/build.mjs --list
+
 id                           kind      category       pkg  tiers              KB ultra/high/mobile   state
 banner_cloth                 model     banners        wp7  ultra,high,mobile      58    58    58     published 7a6d2404
-fx_dust                      flipbook  fx             wp7  ultra,high,mobile      94    94    47     published 5e6639d8
-fx_fire                      flipbook  fx             wp7  ultra,high,mobile     252   116    48     published 2ec07246
-fx_lightning                 flipbook  fx             wp7  ultra,high             52    52     -     published e08b73b7
-fx_mist                      flipbook  fx             wp7  ultra,high,mobile      16    16    16     published e8bfddc8
-fx_nature                    flipbook  fx             wp7  ultra,high,mobile      21    21    21     published 414aefef
-fx_rain                      flipbook  fx             wp7  ultra,high,mobile      19    19    19     published 4e4df1ca
-fx_smoke                     flipbook  fx             wp7  ultra,high,mobile     347   163    68     published e19d11e2
-fx_sparks_embers             flipbook  fx             wp7  ultra,high,mobile     124   124    29     published 341a5693
-fx_weapon_trail              flipbook  fx             wp7  ultra,high,mobile      45    45    45     published 7c2caa66
+fx_dust                      flipbook  fx             wp7  ultra,high,mobile      81    81    42     published aff24ad2
+fx_fire                      flipbook  fx             wp7  ultra,high,mobile     260    92    25     published 033ad515
+fx_lightning                 flipbook  fx             wp7  ultra,high             52    52     -     published cf6d248a
+fx_mist                      flipbook  fx             wp7  ultra,high,mobile      16    16    16     published cf585a8b
+fx_nature                    flipbook  fx             wp7  ultra,high,mobile      21    21    21     published 271405f1
+fx_rain                      flipbook  fx             wp7  ultra,high,mobile      19    19    19     published cb14f2a1
+fx_smoke                     flipbook  fx             wp7  ultra,high,mobile     309   126    55     published 861c28d8
+fx_sparks_embers             flipbook  fx             wp7  ultra,high,mobile     108   108    27     published 240b983a
+fx_weapon_trail              flipbook  fx             wp7  ultra,high,mobile      20    20    20     published 28241893
 sky_dawn                     hdri      hdri           wp7  ultra,high,mobile     212    82    30     published c9075a2c
 sky_day                      hdri      hdri           wp7  ultra,high,mobile     255    98    36     published 080fff2b
 sky_dusk                     hdri      hdri           wp7  ultra,high,mobile     162    63    23     published c25f6dde
@@ -35,8 +39,8 @@ impostor_test_tree           impostor  pipeline_test  test ultra,high,mobile    
 model_test_tree              model     pipeline_test  test ultra,high,mobile     197   197   197     published acfac43a
 skin_test_character          model     pipeline_test  test ultra,high,mobile     175   175   175     published 0641ba4f
 vat_test_dummy               vat       pipeline_test  test ultra,high,mobile     189   189   189     published 282a6857
-[assets] totals: ultra 12.80 MB, high 6.04 MB, mobile 3.32 MB (budget 80.00 / 40.00 / 15.00 MB)
+[assets] totals: ultra 12.71 MB, high 5.93 MB, mobile 3.25 MB (budget 80.00 / 40.00 / 15.00 MB)
 [assets]   wp1    7.29 /  2.14 /  0.59 MB  of 36.00 / 16.00 / 5.30  WP1 materials & terrain
 [assets]   wp3    1.83 /  1.49 /  1.30 MB  of 9.00 / 5.50 / 2.30  WP3 monuments & fortifications
-[assets]   wp7    2.43 /  1.27 /  0.53 MB  of 4.00 / 2.00 / 0.60  WP7 skies, LUTs, VFX, banners
+[assets]   wp7    2.35 /  1.15 /  0.46 MB  of 4.00 / 2.00 / 0.60  WP7 skies, LUTs, VFX, banners
 [assets]   test   1.25 /  1.15 /  0.90 MB  of 4.00 / 3.00 / 1.50  Pipeline test assets (viewer / QA)

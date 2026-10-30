@@ -1,49 +1,97 @@
-> npm run assets -- --selftest   (PASS / FAIL lines; full log in .asset-cache/_selftest/build.log)
-[  21.41s] PASS skin: vertex groups - 21 groups
-[  21.41s] PASS anim: rejects non-standard names
-[  21.41s] PASS anim: clips stashed - ['attack', 'idle', 'walk']
-[  21.91s] PASS export: animations - ['attack', 'idle', 'walk']
-[  21.91s] PASS export: skin
-[  21.91s] PASS export: TEXCOORD_0 + TEXCOORD_1 - ['JOINTS_0', 'NORMAL', 'POSITION', 'TANGENT', 'TEXCOORD_0', 'TEXCOORD_1', 'WEIGHTS_0']
-[  21.91s] PASS export: TANGENT
-[  21.91s] PASS export: JOINTS/WEIGHTS
-[  21.91s] PASS export: binding extras - {'samrajya_set': 'selftest_set', 'samrajya_tint': '#c08060', 'samrajya_macro': 'mannequin:macro'}
-[  21.91s] PASS export: no images
-[  21.91s] PASS export: scene extras - {'samrajya_id': 'mannequin'}
-[  21.91s] PASS export: +Y up bounds - {'min': [-0.7976, -0.0162, -0.11], 'max': [0.7976, 1.75, 0.205], 'center': [0.0, 0.8669, 0.0475], 'radius': 1.2003}
-[  22.05s] PASS lod: decimate ratios - 3968 -> [3968, 1984, 792]
-[  22.05s] PASS lod: names
-[  22.12s] PASS bake: high->low normals carry the bevel - tilted fraction 0.27
-[  22.29s] PASS bake: procedural texture set - std 0.112
-[  22.29s] PASS bake: torus4d mapping tiles seamlessly - edge delta 0.0071
-[  22.37s] PASS vat: reconstruction error <= 1 mm - 0.2225 / 0.2225 mm
-[  22.37s] PASS vat: clip table (loop excludes the end frame, one-shot includes it) - [{'name': 'attack', 'startFrame': 0, 'frames': 7, 'fps': 15, 'loop': False, 'strideMeters': None, 'speed': None}, {'name': 'walk', 'startFrame': 7, 'frames': 8, 'fps': 15, 'loop': True, 'strideMeters': None, 'speed': None}]
-[  22.37s] PASS vat: texture layout
-[  22.37s] PASS vat: GLB vertex count == VAT columns - 96 vs 96
-[  22.37s] PASS vat: decoded files reproduce the deformed mesh - 0.219 mm
-[  22.38s] PASS vat: octahedral RG8 normals < 1.5 deg - 0.88 deg
-[  22.38s] PASS impostor: hemi-octahedral encode(decode(uv)) == uv
-[  22.82s] PASS impostor: atlas size - (128, 128, 4)
-[  22.82s] PASS impostor: coverage - 0.41
-[  22.82s] PASS impostor: object-space normals (top face +Y seen from above) - mean n.y 0.68
-[  22.82s] PASS impostor: albedo is the base color (no lighting) - [0.753 0.251 0.125]
-[  22.82s] PASS impostor: radius / switch distance - 0.866
-[  22.83s] PASS flipbook: curl noise is divergence-free - max |div| 0.0006, mean |v| 1.124
-[  34.78s] PASS flipbook: Cycles renders the numpy volume (alpha) - [1. 1. 1.]
-[  42.65s] PASS flipbook: each frame renders its own volume - alpha centroid x 15.4 -> 23.6 px
-[  42.65s] PASS flipbook: normals from density are unit vectors
-[  42.65s] PASS flipbook: loop blend is continuous across the wrap - [8.0, 7.0, 6.0, 5.0, 4.0, 5.0, 6.0, 7.0]
-[  42.66s] PASS flipbook: atlas files + metadata
-[  42.67s] PASS fluid: pressure projection removes the divergence - |k.U| / (|k| |U|) 0.506 -> 2.53e-07
-[  42.78s] PASS fluid: buoyant hot blob rises - density centroid z 0.350 -> 0.423 m
-[  42.78s] PASS fluid: free-slip floor stops flow into the ground - mean |w| in the first cell 0.000 (was 1.0)
-[  46.88s] PASS integrator: exact emission-absorption matches Cycles (uniform sphere) - mean |alpha diff| 0.0095, mean |rgb diff| 0.0048; centre alpha cycles 0.885 exact 0.902
-[  46.89s] PASS integrator: density-gradient normals point outward (right edge +x, top +y) - right [ 0.99 -0.05  0.1 ], top [0.06 0.98 0.17]
-[  46.98s] PASS flipbook border guard: centred puff passes - worst 0.002/255
-[  46.98s] PASS flipbook border guard: puff cut by the right edge fails - frame 1 (all) color right edge 242.5/255 at 128 px
-[  46.98s] PASS flipbook border guard: open_edges opts a sequence out per edge
-[  46.98s] PASS flipbook border guard: additive emission at the edge fails - frame 0 (all) color right edge 198.9/255 at 128 px
-[  46.98s] PASS flipbook border guard: also checked at the smallest shipped frame size - source 0 / 32 px 1
-[  46.98s] PASS flipbook border guard: write() fails the bake - selftest_flipbook_border: flipbook border guard - 1 frame edges carry content (> 2/255 in the outer 2 px):
-[  46.99s] PASS flipbook border guard: open edges published as openEdges (the runner re-checks encoded atlases) - [('ok', None), ('ribbon', ['right'])]
-[  46.99s] selftest: 47/47 passed
+
+> samrajya@0.1.0 assets
+> node tools/assets/build.mjs --selftest
+
+  _selftest [  18.72s] PASS skin: vertex groups - 21 groups
+  _selftest [  18.72s] PASS anim: rejects non-standard names
+  _selftest [  18.72s] PASS anim: clips stashed - ['attack', 'idle', 'walk']
+  _selftest [  19.17s] exported mannequin.glb: 756 tris, 117 KiB
+  _selftest [  19.17s] PASS export: animations - ['attack', 'idle', 'walk']
+  _selftest [  19.17s] PASS export: skin
+  _selftest [  19.17s] PASS export: TEXCOORD_0 + TEXCOORD_1 - ['JOINTS_0', 'NORMAL', 'POSITION', 'TANGENT', 'TEXCOORD_0', 'TEXCOORD_1', 'WEIGHTS_0']
+  _selftest [  19.17s] PASS export: TANGENT
+  _selftest [  19.17s] PASS export: JOINTS/WEIGHTS
+  _selftest [  19.17s] PASS export: binding extras - {'samrajya_set': 'selftest_set', 'samrajya_tint': '#c08060', 'samrajya_macro': 'mannequin:macro'}
+  _selftest [  19.17s] PASS export: no images
+  _selftest [  19.17s] PASS export: scene extras - {'samrajya_id': 'mannequin'}
+  _selftest [  19.17s] PASS export: +Y up bounds - {'min': [-0.7976, -0.0162, -0.11], 'max': [0.7976, 1.75, 0.205], 'center': [0.0, 0.8669, 0.0475], 'radius': 1.2003}
+  _selftest [  19.27s] PASS lod: decimate ratios - 3968 -> [3968, 1984, 792]
+  _selftest [  19.27s] PASS lod: names
+  _selftest [  19.33s] bake NORMAL 128x128 on low (+1 high): 0.02s
+  _selftest [  19.33s] PASS bake: high->low normals carry the bevel - tilted fraction 0.27
+  _selftest [  19.40s] bake EMIT 128x128 on Plane (+0 high): 0.01s
+  _selftest [  19.41s] bake EMIT 128x128 on Plane (+0 high): 0.01s
+  _selftest [  19.42s] bake EMIT 128x128 on Plane (+0 high): 0.01s
+  _selftest [  19.54s] bake AO 128x128 on Plane (+0 high): 0.12s
+  _selftest [  19.55s] PASS bake: procedural texture set - std 0.112
+  _selftest [  19.55s] PASS bake: torus4d mapping tiles seamlessly - edge delta 0.0071
+  _selftest [  19.65s] asset 'selftest_vat' kind=model draft=False out=/home/user/new-game-like-gta-/.asset-cache/_selftest/vat
+  _selftest [  19.67s] VAT lod0: 96 vertices, 168 tris, texture 96x15 (1 rows/frame), 15 frames - max reconstruction error 0.2225 mm (limit 1.0 mm), max normal error 0.82 deg
+  _selftest [  19.67s] VAT lod0 (tube_lod0): 0.01s
+  _selftest [  19.68s] VAT lod1: 54 vertices, 84 tris, texture 54x15 (1 rows/frame), 15 frames - max reconstruction error 0.2225 mm (limit 1.0 mm), max normal error 0.81 deg
+  _selftest [  19.69s] VAT lod1 (tube_lod1): 0.02s
+  _selftest [  19.69s] PASS vat: reconstruction error <= 1 mm - 0.2225 / 0.2225 mm
+  _selftest [  19.69s] PASS vat: clip table (loop excludes the end frame, one-shot includes it) - [{'name': 'attack', 'startFrame': 0, 'frames': 7, 'fps': 15, 'loop': False, 'strideMeters': None, 'speed': None}, {'name': 'walk', 'startFrame': 7, 'frames': 8, 'fps': 15, 'loop': True, 'strideMeters': None, 'speed': None}]
+  _selftest [  19.69s] PASS vat: texture layout
+  _selftest [  19.69s] PASS vat: GLB vertex count == VAT columns - 96 vs 96
+  _selftest [  19.69s] PASS vat: decoded files reproduce the deformed mesh - 0.219 mm
+  _selftest [  19.69s] PASS vat: octahedral RG8 normals < 1.5 deg - 0.88 deg
+  _selftest [  19.69s] PASS impostor: hemi-octahedral encode(decode(uv)) == uv
+  _selftest [  19.77s] asset 'selftest_impostor' kind=model draft=False out=/home/user/new-game-like-gta-/.asset-cache/_selftest/impostor
+  _selftest [  20.11s] impostor capture 4x4 @ 32px: 0.33s
+  _selftest [  20.11s] impostor: radius 0.866 m, center [0.0, 0.5, 0.0], switch 40.0 m
+  _selftest [  20.18s] PASS impostor: atlas size - (128, 128, 4)
+  _selftest [  20.18s] PASS impostor: coverage - 0.41
+  _selftest [  20.18s] PASS impostor: object-space normals (top face +Y seen from above) - mean n.y 0.68
+  _selftest [  20.18s] PASS impostor: albedo is the base color (no lighting) - [0.753 0.251 0.125]
+  _selftest [  20.18s] PASS impostor: radius / switch distance - 0.866
+  _selftest [  20.18s] PASS flipbook: curl noise is divergence-free - max |div| 0.0006, mean |v| 1.124
+  _selftest [  20.30s] asset 'selftest_flipbook' kind=model draft=False out=/home/user/new-game-like-gta-/.asset-cache/_selftest/flipbook
+  _selftest [  40.04s] cycles volume frames x3 @ 32x32: 19.70s
+  _selftest [  40.05s] PASS flipbook: Cycles renders the numpy volume (alpha) - [1. 1. 1.]
+  _selftest [  53.68s] cycles volume frames x2 @ 32x32: 13.62s
+  _selftest [  53.68s] PASS flipbook: each frame renders its own volume - alpha centroid x 15.4 -> 23.6 px
+  _selftest [  53.68s] PASS flipbook: normals from density are unit vectors
+  _selftest [  53.68s] PASS flipbook: loop blend is continuous across the wrap - [8.0, 7.0, 6.0, 5.0, 4.0, 5.0, 6.0, 7.0]
+  _selftest [  53.68s] flipbook: border guard ok - worst closed edge 0.23/255 (limit 2/255, 2 px, checked at 32 px)
+  _selftest [  53.68s] flipbook: lit normals - mean z 0.991 where alpha > 0.1 (worst frame 0.991), neighbour angle p99.9 1.9 deg, 0.000 % of pairs > 8 deg/px
+  _selftest [  53.70s] flipbook: 3 frames in 2x2 (64x64 px), blend alpha, lit True
+  _selftest [  53.70s] PASS flipbook: atlas files + metadata
+  _selftest [  53.71s] PASS fluid: pressure projection removes the divergence - |k.U| / (|k| |U|) 0.506 -> 2.53e-07
+  _selftest [  53.81s] PASS fluid: buoyant hot blob rises - density centroid z 0.350 -> 0.423 m
+  _selftest [  53.81s] PASS fluid: free-slip floor stops flow into the ground - mean |w| in the first cell 0.000 (was 1.0)
+  _selftest [  59.49s] cycles volume frames x1 @ 32x32: 5.62s
+  _selftest [  59.49s] PASS integrator: exact emission-absorption matches Cycles (uniform sphere) - mean |alpha diff| 0.0095, mean |rgb diff| 0.0048; centre alpha cycles 0.885 exact 0.902
+  _selftest [  59.50s] PASS integrator: density-gradient normals point outward (right edge +x, top +y) - right [ 0.99 -0.05  0.1 ], top [0.06 0.98 0.17]
+  _selftest [  59.59s] asset 'selftest_flipbook_border' kind=model draft=False out=/home/user/new-game-like-gta-/.asset-cache/_selftest/flipbook_border
+  _selftest [  59.59s] PASS flipbook border guard: centred puff passes - worst 0.002/255
+  _selftest [  59.59s] PASS flipbook border guard: puff cut by the right edge fails - frame 1 (all) color right edge 242.5/255 at 128 px
+  _selftest [  59.59s] PASS flipbook border guard: open_edges opts a sequence out per edge
+  _selftest [  59.59s] PASS flipbook border guard: additive emission at the edge fails - frame 0 (all) color right edge 198.9/255 at 128 px
+  _selftest [  59.59s] PASS flipbook border guard: also checked at the smallest shipped frame size - source 0 / 32 px 1
+  _selftest [  59.59s] PASS flipbook border guard: write() fails the bake - selftest_flipbook_border: flipbook border guard - 1 frame edges carry content (> 2/255 in the outer 2 px):
+  _selftest [  59.59s] flipbook: border guard ok - worst closed edge 0.00/255 (limit 2/255, 2 px, checked at 128 px)
+  _selftest [  59.59s] flipbook: 2 frames in 2x1 (256x128 px), blend alpha, lit False
+  _selftest [  59.59s] PASS flipbook border guard: open edges published as openEdges (the runner re-checks encoded atlases) - [('ok', None), ('ribbon', ['right'])]
+  _selftest [  59.67s] asset 'selftest_flipbook_ramp' kind=model draft=False out=/home/user/new-game-like-gta-/.asset-cache/_selftest/flipbook_ramp
+  _selftest [  59.67s] PASS medium: soften_normals - thin fringe faces the camera, thick core keeps its tilt - thin z 1.0000, thick x 0.900
+  _selftest [  59.67s] PASS medium: normal_stats mean z rises when the tilt fades - 0.436 -> 0.806
+  _selftest [  59.67s] flipbook: border guard ok - worst closed edge 0.00/255 (limit 2/255, 2 px, checked at 64 px)
+  _selftest [  59.67s] flipbook: lit normals - mean z 0.436 where alpha > 0.1 (worst frame 0.436), neighbour angle p99.9 0.0 deg, 0.000 % of pairs > 8 deg/px
+  _selftest [  59.67s] PASS medium: write(min_normal_z) fails a solid-looking lit book - selftest_flipbook_ramp: lit-medium guard - mean normal z 0.436 (worst frame 0.436) < 0.8 where alpha > 0.1: soften the n
+  _selftest [  59.67s] flipbook: border guard ok - worst closed edge 0.00/255 (limit 2/255, 2 px, checked at 64 px)
+  _selftest [  59.67s] flipbook: lit normals - mean z 1.000 where alpha > 0.1 (worst frame 1.000), neighbour angle p99.9 0.0 deg, 0.000 % of pairs > 8 deg/px
+  _selftest [  59.68s] flipbook: 1 frames in 1x1 (64x64 px), blend alpha, lit True
+  _selftest [  59.68s] PASS medium: flat normals pass the guard
+  _selftest [  59.68s] PASS ramp: ramp_fit is black at 0 and R >= G >= B - []
+  _selftest [  59.68s] PASS ramp: ramp(v) reproduces a colour that is a function of luminance - mean encoded error 0.52/255
+  _selftest [  59.68s] PASS ramp: ramp_encode quantises to 8 bit and the dither breaks flat runs - mean flat run 32.8 -> 2.2 px
+  _selftest [  59.68s] PASS ramp: ramp_from_hues is monotone in hue order and luminance - []
+  _selftest [  59.68s] flipbook: border guard ok - worst closed edge 0.00/255 (limit 2/255, 2 px, checked at 64 px)
+  _selftest [  59.69s] flipbook: 1 frames in 1x1 (64x64 px), blend premultiplied, lit False
+  _selftest [  59.69s] PASS ramp: write(ramp) publishes the ramp
+  _selftest [  59.69s] flipbook: border guard ok - worst closed edge 0.00/255 (limit 2/255, 2 px, checked at 64 px)
+  _selftest [  59.69s] PASS ramp: write(ramp) rejects colour frames (R = G = B required) - selftest_flipbook_ramp: a gradient-mapped book stores v in every rgb channel (R = G = B); spread 1.042127013206482
+  _selftest [  59.69s] PASS ramp: ramp_problems rejects green drift
+  _selftest [  59.69s] selftest: 58/58 passed
+[assets] selftest passed

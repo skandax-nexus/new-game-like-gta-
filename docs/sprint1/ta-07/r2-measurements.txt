@@ -1,0 +1,80 @@
+TA-07 rework round 2 - measurements (Art Director R2-B1 .. R2-B4)
+OWNER: Technical Artist G (TA-07). Reproduce: NODE_PATH=$(npm root -g) node scripts/shots/ta-07.cjs --only=r2
+(R2_PARTS=lit,fire,trail,parry,atlas limits it). Round 1 = the atlases of commit 3c59d84 (git show); round 2 = the
+published atlases now. Viewer shots: .build/ta-07, port 4402, SwiftShader. Full logs: report.json numbers.r2 / r2atlas.
+
+R2-B1  lit smoke / dust (fx_smoke frame 30 with its published tint #4a4038; fx_dust phase 0.35, tint #b0956e)
+-------------------------------------------------------------------------------------------------------------
+Bake: density gradient from the density blurred by 3.5 % of the frame, tilt faded with alpha smoothstep(0.1, 0.7),
+strength 0.6 (smoke) / 0.55 (dust); smoke colour at unit albedo with baked sky light from above (top_light 0.7).
+Runtime: wrap 0.6, upper-hemisphere ambient (tilt 0.5), sky visibility 0.5, no specular.
+Mean decoded normal z where alpha > 0.1 (shipped ultra atlas):  smoke R1 0.650 -> R2 0.881   dust R1 0.572 -> R2 0.918
+Bake log (lit-medium guard >= 0.8):  smoke 0.880 (worst frame 0.840), neighbour angle p99.9 29.6 -> 17.5 deg
+                                     dust  0.910 (worst frame 0.838)
+
+Viewer, "smoke pixels" = atlas alpha >= 0.5; shading ratios on the core (alpha >= 0.8, no backdrop showing through)
+                         min V   p2/median  median V  core p5/p95 (0.35-0.6)  core p10/p90
+  smoke golden  ultra    12.5 %    0.51      27.8 %         0.37               0.44
+  smoke golden  mobile   13.7 %    0.54      28.2 %         0.43               0.48
+  smoke noon    ultra    14.1 %    0.66      23.9 %         0.57               0.63
+  smoke noon    mobile   14.1 %    0.66      24.3 %         0.59               0.63
+  smoke overcast mobile   9.4 %    0.67      15.3 %         0.63               0.69   (no sun: ambient only)
+  dust  golden  ultra    21.6 %    0.51      56.5 %         0.51               0.56
+  dust  noon    ultra    23.9 %    0.59      46.3 %         0.56               0.68
+  (dust mobile: 98 core pixels - the four quads are tiny at 390 px - ratio 0.69-0.72, min V 40-46 %)
+Targets (smoke, golden + noon, ultra + mobile): min V >= 8 % ok; p2/median >= 0.30 ok; core shadow/lit 0.35-0.6 ok;
+no creases at 2x ok (r2_smoke_golden_ultra_2x.png); east / west sun inside the smoke (alpha >= 0.1) 32.5 / 255 (>= 8) ok.
+Round-1 smoke at golden for comparison (Art Director): darkest pixel RGB (9, 0, 0), p2 at 3 % value.
+How the numbers moved (same tint #4a4038):
+  normals only (wrap 0.5, no top light, 0.6 albedo):  golden min 8.2 %, noon core p5/p95 0.65 (noon front-lit flat)
+  + unit albedo (the tint IS the albedo #4a4038):       golden min 12.9 %, noon 0.64
+  + baked sky light from above (top_light 0.7):         noon 0.57, golden 0.37 (with wrap 0.6; wrap 0.5 put it < 0.35)
+
+R2-B2  fx_fire
+--------------
+(a) Rim block. Source: dome-shaped hot spots (height follows the continuous noise; was a slab with one flat 14 cm top)
+    confined to the inner 80 % of the bed ellipse (full to 60 %). Same-scale strips, frames 16-28 at the right of the
+    bed: r2_fire_rim_r1.png (round 1: a squat flat-topped block with vertical sides) / r2_fire_rim_r2.png (round 2:
+    no block - a low attached shoulder). Full loop: r2_fire_frames_14-48.png, r2_fire_frames_loopseam.png.
+    Bake: detached flat top (sub-pixel top edge within 1 px) worst 7.0 % of the frame width (frame 14, a separated
+    tongue), gate 8 %; shouldered block top worst 6.6 %. Test: <= 10 % on the shipped ultra atlas. Honest limit: the
+    automated measures are lenient - the round-1 block itself scored only 6-8 % (its left side runs into the body
+    through a dim valley) - the strips are the evidence.
+(b) Chroma. Gradient-mapped: one channel v (sRGB-encoded luminance, +-1 LSB triangular dither) + alpha, lossless on
+    every tier; colour = ramp(v), 33 stops fitted to the simulated emission (mean |ramp(v) - simulated| 2.3/255),
+    R >= G >= B at every stop.
+    Emitting texels whose colour leans green / blue (encoded max >= 8):
+      ultra 2048   R1 7866 of 550646  ->  R2 0 of 341304   (stored texels with R != G != B: 0)
+      high  1024   R1 3723 of 115267  ->  R2 0 of 52516
+      mobile 512   R1 1391 of 34381   ->  R2 0 of 14794
+    On screen (added light = shot - backdrop-only shot): dim emission (every channel < 200) leaning green / blue:
+      night ultra 0 of 13307, night mobile 0 of 2610, day ultra 0 of 9166 pixels. In the bright core, where the tone
+      curve's shoulder drives every channel towards white over a warm backdrop, dG exceeds dR by a few levels on
+      1706 / 493 / 1482 pixels - the display transform, not the atlas (it is identical by day and night).
+    4x-boosted night crops: r2_fire_night_ultra_x4.png, r2_fire_night_mobile_x4.png (no colour blocks; compare
+    docs/art/reviews/ta-07/r2_fire_night_*_chroma_x4.jpg).
+    Clipping (fxclip, effect pixels): day 0.0 % near-white / 0.9 % pale core; night 0.0 % / 4.6 % (R1 5.1 / 11.9 %).
+    Payload: ultra 260 KB, high 92 KB, mobile 25 KB (R1 lossy rgb 252 / 116 / 48 KB).
+
+R2-B3  fx_weapon_trail
+----------------------
+Gradient-mapped + dithered: v drawn at 256 px, area-filtered to 128 px, then +-1 LSB triangular dither and 8-bit;
+ramp ember red #8f2a0c -> #c2412d -> saffron #e8892b -> gold #ffb040 -> warm-white #fff2c0 (authored, luminance-matched);
+the 256 atlas ships natively on every tier (no resample re-quantises the dither). Lossless, 20 KB (R1 45 KB).
+Dim tail shown as the runtime does (x3 emission, 8-bit sRGB), rows 30-70 %, age 30-90 %:
+                      greenward hue steps (red / green fringes)   mean flat run   longest flat run
+  trail       R1 -> R2          1171 -> 1                          1.06 -> 1.11 px      3 -> 2 px
+  trail_wide  R1 -> R2          1251 -> 5                          1.02 -> 1.18 px      2 -> 3 px
+Viewer at ultra, 4x crops of the tail: r2_weapon_trail_tail_x4.png, r2_weapon_trail_wide_tail_x4.png (mean flat run
+1.03 / 1.04 px, longest 3 px: no contour bands).
+
+R2-B4  parry_flash
+------------------
+16 irregular streaks (angles jittered +-0.38 of the even spacing, length 0.28-0.82, width 0.006-0.024, slight curl,
+they leave the centre as they fly), no rim, soft gold core gone after 4 frames (8 frames, 60 fps).
+  closure (share of 360 angles lit at the best radius beyond the core; a ring ~1.0):  R1 1.00 -> R2 0.20 (test < 0.5)
+  4- / 8-fold angular power vs the mean (spokes / wheel):                            R1 0.374 -> R2 0.222 (test < 0.3)
+Strips: r2_parry_flash_r1.png / r2_parry_flash_r2.png; night: r2_sparks_parry_night.png. finisher_burst unchanged
+(the shared random stream is preserved: r2_finisher_frames.png).
+
+Budgets: WP7 2.35 / 1.15 / 0.46 MB of 4.00 / 2.00 / 0.60 (R1 2.43 / 1.27 / 0.53) - assets-list.txt.
