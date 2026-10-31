@@ -3,7 +3,7 @@
  * TA-01 evidence capture (WP1 PBR materials, terrain layers, decal atlas). OWNER: Technical Artist A (TA-01).
  *
  *   npx vite build --outDir .build/ta-01/dist --emptyOutDir
- *   NODE_PATH=$(npm root -g) node scripts/shots/ta-01.cjs [--only=deltas,budgets,previews,tiling,swatches,decals,viewer,splat,stupa,mobile,varsha]
+ *   NODE_PATH=$(npm root -g) node scripts/shots/ta-01.cjs [--only=deltas,budgets,previews,tiling,swatches,decals,viewer,splat,slope,stupa,mobile,varsha]
  *                                                         [--ids=a,b] [--fast] [--reuse]
  *
  * Env: SHOTS_PORT (default 4404), SHOTS_DIST (default .build/ta-01/dist), SHOTS_OUT (default docs/sprint1/ta-01).
@@ -31,6 +31,8 @@
  *             rewriting the GLB JSON chunk in flight (page.route) -> proves the shared trim-band layout; golden + day
  *   mobile    every P0 set on the MOBILE texture tier (assets=mobile, quality=low): architecture in the viewer at
  *             ~1.2 m and ~9 m under sky_day, terrain layers as a single-layer splat patch -> mobile/<id>.jpg
+ *   slope     the three triplanar rock layers on a 38-58 deg escarpment (world-space triplanar injected into the
+ *             viewer page, v = up), ultra golden / day / day close and mobile day -> slope/<id>_*.jpg + slope_sheet.jpg
  *   varsha    marsh and farmland splat recipes wet (monsoon): the splat wetness uniform (MATERIAL_GLOBALS.wetness,
  *             reached through three.js' __THREE_DEVTOOLS__ observe hook) at 0.85 -> varsha_sheet.jpg
  * Fails (exit 1) on console errors, page errors, failed requests or a delta outside +-6 %.
@@ -244,6 +246,107 @@ function rewriteGlb(buf, from, to) {
   chunk.writeUInt32LE(jb.length, 0);
   chunk.writeUInt32LE(jsonType, 4);
   return { buf: Buffer.concat([header, chunk, jb, rest]), count };
+}
+
+/**
+ * Page function (runs in the asset viewer with `asset=<rock layer>`): the review asked for the triplanar rock layers
+ * on a real 35-60 deg slope, not a flat splat patch (AD-11). The viewer's material lookdev has already loaded the
+ * shipped texture set; this hides the lookdev pieces and adds a 40 m escarpment (faces 41-59 deg, flat top and foot)
+ * whose material samples the SAME textures with world-space TRIPLANAR projection (v = world up on the side
+ * projections, as the layers are authored; the top projection on the ledges; blend weights |n|^4). The camera is
+ * set in scene.onBeforeRender (the viewer's camera is not reachable otherwise). three.js is not global: the
+ * constructors come from the viewer's own objects.
+ */
+function SLOPE_LOOKDEV(o) {
+  const scenes = window.__ta01Scenes || [];
+  let src = null;
+  let scene = null;
+  for (const sc of scenes)
+    sc.traverse((m) => {
+      if (!src && m.isMesh && m.material && m.material.map && m.material.normalMap && m.geometry && m.geometry.type === 'PlaneGeometry') {
+        src = m;
+        scene = sc;
+      }
+    });
+  if (!src) return 'no lookdev mesh with a texture set found';
+  const sm = src.material;
+  scene.traverse((m) => {
+    if (m.isMesh && m.material && m.material.map === sm.map) m.visible = false;
+    if (m.isMesh && m.material && sm.normalMap && m.material.normalMap === sm.normalMap) m.visible = false;
+  });
+  const geo = new src.geometry.constructor(44, 36, 220, 180);
+  geo.rotateX(-Math.PI / 2);
+  const pos = geo.getAttribute('position');
+  const H = 13;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const z = pos.getZ(i);
+    const zc = -4 + 2.4 * Math.sin(0.23 * x + 0.4) + 1.3 * Math.sin(0.61 * x + 1.0);
+    const k = 3.0 + 0.95 * Math.sin(0.19 * x + 2.0); // max slope H / 4k: 0.79..1.6 m/m = 38..58 deg
+    const t = (zc - z) / k;
+    const y = H / (1 + Math.exp(-t)) + 0.35 * Math.sin(0.9 * x) * Math.exp(-t * t);
+    pos.setY(i, y + 0.03);
+  }
+  geo.computeVertexNormals();
+  const mat = new sm.constructor({ map: sm.map, normalMap: sm.normalMap, roughnessMap: sm.roughnessMap, aoMap: sm.roughnessMap, metalness: 0, roughness: 1 });
+  mat.normalScale.copy(sm.normalScale);
+  mat.aoMapIntensity = 1;
+  mat.customProgramCacheKey = () => 'ta01-triplanar';
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.uTpTile = { value: 1 / o.tile };
+    shader.uniforms.uTpVs = { value: sm.map.flipY ? 1 : -1 };
+    shader.vertexShader = 'varying vec3 vTpPos;\nvarying vec3 vTpN;\n' + shader.vertexShader.replace('#include <fog_vertex>',
+      '#include <fog_vertex>\n vTpPos = (modelMatrix * vec4(transformed, 1.0)).xyz;\n vTpN = normalize(mat3(modelMatrix) * objectNormal);');
+    const fns = `
+vec3 tpW() { vec3 n = normalize(vTpN); vec3 w = pow(abs(n), vec3(4.0)); return w / (w.x + w.y + w.z); }
+vec2 tpUvX() { float s = vTpN.x >= 0.0 ? 1.0 : -1.0; return vec2(-s * vTpPos.z, uTpVs * vTpPos.y) * uTpTile; }
+vec2 tpUvY() { return vec2(vTpPos.x, vTpPos.z) * uTpTile; }
+vec2 tpUvZ() { float s = vTpN.z >= 0.0 ? 1.0 : -1.0; return vec2(s * vTpPos.x, uTpVs * vTpPos.y) * uTpTile; }
+vec4 tpSample(sampler2D t) { vec3 w = tpW(); return texture2D(t, tpUvX()) * w.x + texture2D(t, tpUvY()) * w.y + texture2D(t, tpUvZ()) * w.z; }
+vec3 tpNormal() {
+  vec3 w = tpW();
+  vec3 a = texture2D(normalMap, tpUvX()).xyz * 2.0 - 1.0; a.xy *= normalScale;
+  vec3 b = texture2D(normalMap, tpUvY()).xyz * 2.0 - 1.0; b.xy *= normalScale;
+  vec3 c = texture2D(normalMap, tpUvZ()).xyz * 2.0 - 1.0; c.xy *= normalScale;
+  float sx = vTpN.x >= 0.0 ? 1.0 : -1.0; float sy = vTpN.y >= 0.0 ? 1.0 : -1.0; float sz = vTpN.z >= 0.0 ? 1.0 : -1.0;
+  vec3 nx = vec3(sx * a.z, uTpVs * a.y, -sx * a.x);
+  vec3 ny = vec3(b.x, sy * b.z, b.y);
+  vec3 nz = vec3(sz * c.x, uTpVs * c.y, sz * c.z);
+  return normalize(nx * w.x + ny * w.y + nz * w.z);
+}
+`;
+    shader.fragmentShader = 'varying vec3 vTpPos;\nvarying vec3 vTpN;\nuniform float uTpTile;\nuniform float uTpVs;\n' + shader.fragmentShader
+      .replace('#include <clipping_planes_pars_fragment>', '#include <clipping_planes_pars_fragment>\n' + fns)
+      .replace('#include <map_fragment>', 'diffuseColor *= tpSample( map );')
+      .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = roughness * tpSample( roughnessMap ).g;')
+      .replace('#include <metalnessmap_fragment>', 'float metalnessFactor = 0.0;')
+      .replace('#include <normal_fragment_maps>', 'normal = normalize( ( viewMatrix * vec4( tpNormal(), 0.0 ) ).xyz );')
+      .replace('#include <aomap_fragment>', `float ambientOcclusion = ( tpSample( aoMap ).r - 1.0 ) * aoMapIntensity + 1.0;
+reflectedLight.indirectDiffuse *= ambientOcclusion;
+#if defined( USE_ENVMAP ) && defined( STANDARD )
+  float dotNV = saturate( dot( geometryNormal, geometryViewDir ) );
+  reflectedLight.indirectSpecular *= computeSpecularOcclusion( dotNV, ambientOcclusion, material.roughness );
+#endif`);
+  };
+  const hill = new src.constructor(geo, mat);
+  hill.name = 'ta01_slope_lookdev';
+  hill.castShadow = false;
+  hill.receiveShadow = false;
+  scene.add(hill);
+  const prev = scene.onBeforeRender;
+  const eye = o.eye;
+  const at = o.at;
+  scene.onBeforeRender = function (renderer, sc, camera, rt) {
+    if (prev) prev.call(this, renderer, sc, camera, rt);
+    if (camera && camera.isPerspectiveCamera) {
+      camera.position.set(eye[0], eye[1], eye[2]);
+      camera.lookAt(at[0], at[1], at[2]);
+      camera.far = Math.max(camera.far, 3000);
+      camera.updateProjectionMatrix();
+      camera.updateMatrixWorld(true);
+    }
+  };
+  return 'ok';
 }
 
 async function main() {
@@ -489,7 +592,7 @@ async function main() {
   }
 
   // ---------------------------------------------------------------- browser groups
-  const needBrowser = run('viewer') || run('splat') || run('stupa') || run('mobile') || run('varsha');
+  const needBrowser = run('viewer') || run('splat') || run('slope') || run('stupa') || run('mobile') || run('varsha');
   if (needBrowser) {
     if (!fs.existsSync(path.join(ROOT, DIST, 'index.html'))) throw new Error(`${DIST} not built: npx vite build --outDir ${DIST} --emptyOutDir`);
     const { chromium } = requirePlaywright();
@@ -515,7 +618,7 @@ async function main() {
       page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
       page.on('requestfailed', (r) => errors.push(`requestfailed: ${r.url()} ${r.failure()?.errorText ?? ''}`));
       let routed = null;
-      if (opts.wet !== undefined) {
+      if (opts.wet !== undefined || opts.slope) {
         // three.js r170 announces every Scene to window.__THREE_DEVTOOLS__ ('observe'); keep them so the splat
         // material's shared wetness uniform (MATERIAL_GLOBALS.wetness) can be set like the weather rig does.
         await page.addInitScript(() => {
@@ -562,6 +665,11 @@ async function main() {
           }, opts.wet);
           if (!n) errors.push('varsha: no splat material with a uWetness uniform found');
           await page.evaluate((n2) => window.__SAMRAJYA__.waitFrames(n2), 3);
+        }
+        if (opts.slope) {
+          const res = await page.evaluate(SLOPE_LOOKDEV, opts.slope);
+          if (res !== 'ok') errors.push(`slope: ${res}`);
+          await page.evaluate((n2) => window.__SAMRAJYA__.waitFrames(n2), 6);
         }
         state = await page.evaluate(() => window.__SAMRAJYA__.getState().sceneState);
         await page.evaluate(() => window.__SAMRAJYA__.freeze(true));
@@ -650,6 +758,26 @@ async function main() {
         }
       }
 
+      if (run('slope')) {
+        // AD-11: the three triplanar rock layers on a 38-58 deg escarpment (world-space triplanar, v = up), ultra
+        // golden / ultra day / mobile day, at ~24 m (escarpment read) and ~7 m (face read)
+        fs.mkdirSync(path.join(OUT, 'slope'), { recursive: true });
+        const rocks = ['terrain_rock_sandstone', 'terrain_rock_granite', 'terrain_rock_basalt'].filter((id) => SETS.some((x) => x.id === id));
+        const items = [];
+        for (const id of rocks) {
+          const tile = MANIFEST_JSON.assets[id]?.tileSizeMeters?.[0] ?? 10;
+          for (const [tier, sky, cam, quality] of [['ultra', 'sky_golden', 'far', 'high'], ['ultra', 'sky_day', 'far', 'high'], ['ultra', 'sky_day', 'near', 'high'], ['mobile', 'sky_day', 'far', 'low']]) {
+            const view = cam === 'far' ? { eye: [-3, 4.5, 22], at: [0, 6.5, -3] } : { eye: [-1.5, 6.5, 3.0], at: [0.0, 6.2, -4.5] };
+            const file = path.join(RAW, `slope_${id}_${tier}_${sky}_${cam}.png`);
+            if (!(args.reuse && fs.existsSync(file)))
+              await shoot(`slope ${id} ${tier} ${sky} ${cam}`, file, `asset=${id}&hdri=${sky}&camera=overview&assets=${tier}`, { quality, slope: { tile, ...view } });
+            const out = path.join(OUT, 'slope', `${id}_${tier}_${sky.replace('sky_', '')}_${cam}.jpg`);
+            if (fs.existsSync(file)) await sharp(file).jpeg({ quality: 84, mozjpeg: true }).toFile(out);
+            items.push({ file: out, label: `${id} - ${tier} tier, ${sky}, ${cam === 'far' ? '~24 m' : '~7 m'}, triplanar 38-58 deg face` });
+          }
+        }
+        await sheet(items, 4, 480, 270, path.join(OUT, 'slope_sheet.jpg'), 'Rock layers on a 38-58 deg escarpment, world-space triplanar (v = up): ultra golden / ultra day / ultra day close / mobile day');
+      }
       if (run('mobile')) {
         // P0 sets on the mobile texture tier, as a phone renders them (quality=low)
         fs.mkdirSync(path.join(OUT, 'mobile'), { recursive: true });

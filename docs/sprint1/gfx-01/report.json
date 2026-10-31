@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-31T06:10:06.190Z",
+  "generated": "2026-10-31T06:24:56.669Z",
   "shots": [
     {
       "name": "battle-dawn-ultra",
@@ -1639,7 +1639,7 @@
     {
       "name": "battle-noon-low",
       "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=low&noui=1&hour=12.5&season=sharad&weather=clear",
-      "ms": 77823,
+      "ms": 63264,
       "drawCalls": 24,
       "shadowDrawCalls": 5,
       "triangles": 442519,
@@ -1680,7 +1680,7 @@
     {
       "name": "hero-noon-low",
       "query": "scene=hero&quality=low&noui=1&hour=12.5&season=sharad&weather=clear",
-      "ms": 59104,
+      "ms": 72109,
       "drawCalls": 41,
       "shadowDrawCalls": 11,
       "triangles": 245817,
@@ -1739,7 +1739,8 @@
             3.12
           ],
           "maxScreenPxPerTexel": 14.15,
-          "nDotL": -0.13
+          "nDotL": -0.13,
+          "occluder": null
         },
         {
           "object": "arch_brick_house_heartland_brick",
@@ -1763,7 +1764,8 @@
             3.65
           ],
           "maxScreenPxPerTexel": 16.85,
-          "nDotL": -0.13
+          "nDotL": -0.13,
+          "occluder": null
         },
         {
           "object": "arch_brick_house_heartland_brick",
@@ -1787,7 +1789,8 @@
             4.09
           ],
           "maxScreenPxPerTexel": 19.22,
-          "nDotL": -0.13
+          "nDotL": -0.13,
+          "occluder": null
         }
       ],
       "errors": []
@@ -1795,7 +1798,7 @@
     {
       "name": "battle-golden-low",
       "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=low&noui=1&hour=17.4&season=sharad&weather=clear",
-      "ms": 55675,
+      "ms": 48544,
       "drawCalls": 24,
       "shadowDrawCalls": 5,
       "triangles": 442519,
@@ -1836,7 +1839,7 @@
     {
       "name": "hero-golden-low",
       "query": "scene=hero&quality=low&noui=1&hour=17.4&season=sharad&weather=clear",
-      "ms": 80170,
+      "ms": 81475,
       "drawCalls": 40,
       "shadowDrawCalls": 10,
       "triangles": 245229,
@@ -1895,7 +1898,16 @@
             1.55
           ],
           "maxScreenPxPerTexel": 1.55,
-          "nDotL": -0.984
+          "nDotL": -0.984,
+          "occluder": {
+            "object": "arch_fort_wall_heartland_brick",
+            "distance": 77.38,
+            "point": [
+              -606.87,
+              20.51,
+              -406.91
+            ]
+          }
         },
         {
           "object": "arch_brick_house_heartland_brick",
@@ -1919,7 +1931,8 @@
             1.81
           ],
           "maxScreenPxPerTexel": 1.81,
-          "nDotL": -0.984
+          "nDotL": -0.984,
+          "occluder": null
         },
         {
           "object": "arch_brick_house_heartland_brick",
@@ -1943,7 +1956,8 @@
             2.03
           ],
           "maxScreenPxPerTexel": 2.03,
-          "nDotL": -0.984
+          "nDotL": -0.984,
+          "occluder": null
         }
       ],
       "errors": []
@@ -1951,7 +1965,7 @@
     {
       "name": "battle-night-low",
       "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=low&noui=1&hour=22&season=sharad&weather=clear",
-      "ms": 62660,
+      "ms": 55015,
       "drawCalls": 24,
       "shadowDrawCalls": 5,
       "triangles": 442519,
@@ -1992,7 +2006,7 @@
     {
       "name": "hero-night-low",
       "query": "scene=hero&quality=low&noui=1&hour=22&season=sharad&weather=clear",
-      "ms": 100383,
+      "ms": 30166,
       "drawCalls": 41,
       "shadowDrawCalls": 11,
       "triangles": 245817,
@@ -2051,7 +2065,16 @@
             4.54
           ],
           "maxScreenPxPerTexel": 4.54,
-          "nDotL": 0.498
+          "nDotL": 0.498,
+          "occluder": {
+            "object": "arch_brick_house_heartland_brick",
+            "distance": 4.02,
+            "point": [
+              -528.69,
+              15.49,
+              -416.47
+            ]
+          }
         },
         {
           "object": "arch_brick_house_heartland_brick",
@@ -2075,7 +2098,16 @@
             5.3
           ],
           "maxScreenPxPerTexel": 5.3,
-          "nDotL": 0.498
+          "nDotL": 0.498,
+          "occluder": {
+            "object": "arch_brick_house_heartland_brick",
+            "distance": 3.3,
+            "point": [
+              -528.97,
+              15.49,
+              -414.56
+            ]
+          }
         },
         {
           "object": "arch_brick_house_heartland_brick",
@@ -2099,7 +2131,8 @@
             5.94
           ],
           "maxScreenPxPerTexel": 5.94,
-          "nDotL": 0.498
+          "nDotL": 0.498,
+          "occluder": null
         }
       ],
       "errors": []
@@ -2107,7 +2140,7 @@
     {
       "name": "hero-noon-low-phone",
       "query": "scene=hero&quality=low&noui=1&hour=12.5&season=sharad&weather=clear",
-      "ms": 41353,
+      "ms": 33043,
       "drawCalls": 36,
       "shadowDrawCalls": 11,
       "triangles": 240791,
@@ -2166,7 +2199,8 @@
             2.95
           ],
           "maxScreenPxPerTexel": 4.38,
-          "nDotL": -0.13
+          "nDotL": -0.13,
+          "occluder": null
         },
         {
           "object": "arch_brick_house_heartland_brick",
@@ -2190,7 +2224,8 @@
             3.13
           ],
           "maxScreenPxPerTexel": 4.62,
-          "nDotL": -0.13
+          "nDotL": -0.13,
+          "occluder": null
         }
       ],
       "errors": []
@@ -2198,7 +2233,7 @@
     {
       "name": "hero-golden-low-phone",
       "query": "scene=hero&quality=low&noui=1&hour=17.4&season=sharad&weather=clear",
-      "ms": 19082,
+      "ms": 33654,
       "drawCalls": 35,
       "shadowDrawCalls": 10,
       "triangles": 240203,
@@ -2257,7 +2292,8 @@
             1.46
           ],
           "maxScreenPxPerTexel": 1.46,
-          "nDotL": -0.984
+          "nDotL": -0.984,
+          "occluder": null
         },
         {
           "object": "arch_brick_house_heartland_brick",
@@ -2281,7 +2317,16 @@
             1.55
           ],
           "maxScreenPxPerTexel": 1.55,
-          "nDotL": -0.984
+          "nDotL": -0.984,
+          "occluder": {
+            "object": "arch_fort_wall_heartland_brick",
+            "distance": 77.85,
+            "point": [
+              -607.34,
+              20.15,
+              -407.08
+            ]
+          }
         }
       ],
       "errors": []
@@ -2336,8 +2381,8 @@
       "pass": true
     },
     "nightLowerHalf_low": {
-      "luma": 0.1482,
-      "linear": 0.022,
+      "luma": 0.148,
+      "linear": 0.0219,
       "pass": true
     },
     "csm_ultra": {
@@ -2790,7 +2835,8 @@
               3.12
             ],
             "maxScreenPxPerTexel": 14.15,
-            "nDotL": -0.13
+            "nDotL": -0.13,
+            "occluder": null
           },
           {
             "object": "arch_brick_house_heartland_brick",
@@ -2814,7 +2860,8 @@
               3.65
             ],
             "maxScreenPxPerTexel": 16.85,
-            "nDotL": -0.13
+            "nDotL": -0.13,
+            "occluder": null
           },
           {
             "object": "arch_brick_house_heartland_brick",
@@ -2838,7 +2885,8 @@
               4.09
             ],
             "maxScreenPxPerTexel": 19.22,
-            "nDotL": -0.13
+            "nDotL": -0.13,
+            "occluder": null
           }
         ],
         "maxScreenPxPerTexel": 19.22
@@ -2868,7 +2916,16 @@
               1.55
             ],
             "maxScreenPxPerTexel": 1.55,
-            "nDotL": -0.984
+            "nDotL": -0.984,
+            "occluder": {
+              "object": "arch_fort_wall_heartland_brick",
+              "distance": 77.38,
+              "point": [
+                -606.87,
+                20.51,
+                -406.91
+              ]
+            }
           },
           {
             "object": "arch_brick_house_heartland_brick",
@@ -2892,7 +2949,8 @@
               1.81
             ],
             "maxScreenPxPerTexel": 1.81,
-            "nDotL": -0.984
+            "nDotL": -0.984,
+            "occluder": null
           },
           {
             "object": "arch_brick_house_heartland_brick",
@@ -2916,7 +2974,8 @@
               2.03
             ],
             "maxScreenPxPerTexel": 2.03,
-            "nDotL": -0.984
+            "nDotL": -0.984,
+            "occluder": null
           }
         ],
         "maxScreenPxPerTexel": 2.03
@@ -2946,7 +3005,16 @@
               4.54
             ],
             "maxScreenPxPerTexel": 4.54,
-            "nDotL": 0.498
+            "nDotL": 0.498,
+            "occluder": {
+              "object": "arch_brick_house_heartland_brick",
+              "distance": 4.02,
+              "point": [
+                -528.69,
+                15.49,
+                -416.47
+              ]
+            }
           },
           {
             "object": "arch_brick_house_heartland_brick",
@@ -2970,7 +3038,16 @@
               5.3
             ],
             "maxScreenPxPerTexel": 5.3,
-            "nDotL": 0.498
+            "nDotL": 0.498,
+            "occluder": {
+              "object": "arch_brick_house_heartland_brick",
+              "distance": 3.3,
+              "point": [
+                -528.97,
+                15.49,
+                -414.56
+              ]
+            }
           },
           {
             "object": "arch_brick_house_heartland_brick",
@@ -2994,7 +3071,8 @@
               5.94
             ],
             "maxScreenPxPerTexel": 5.94,
-            "nDotL": 0.498
+            "nDotL": 0.498,
+            "occluder": null
           }
         ],
         "maxScreenPxPerTexel": 5.94
@@ -3024,7 +3102,8 @@
               2.95
             ],
             "maxScreenPxPerTexel": 4.38,
-            "nDotL": -0.13
+            "nDotL": -0.13,
+            "occluder": null
           },
           {
             "object": "arch_brick_house_heartland_brick",
@@ -3048,7 +3127,8 @@
               3.13
             ],
             "maxScreenPxPerTexel": 4.62,
-            "nDotL": -0.13
+            "nDotL": -0.13,
+            "occluder": null
           }
         ],
         "maxScreenPxPerTexel": 4.62
@@ -3078,7 +3158,8 @@
               1.46
             ],
             "maxScreenPxPerTexel": 1.46,
-            "nDotL": -0.984
+            "nDotL": -0.984,
+            "occluder": null
           },
           {
             "object": "arch_brick_house_heartland_brick",
@@ -3102,7 +3183,16 @@
               1.55
             ],
             "maxScreenPxPerTexel": 1.55,
-            "nDotL": -0.984
+            "nDotL": -0.984,
+            "occluder": {
+              "object": "arch_fort_wall_heartland_brick",
+              "distance": 77.85,
+              "point": [
+                -607.34,
+                20.15,
+                -407.08
+              ]
+            }
           }
         ],
         "maxScreenPxPerTexel": 1.55

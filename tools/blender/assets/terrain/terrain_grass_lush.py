@@ -25,7 +25,14 @@ from _terrainkit import K, finish_terrain, layers  # noqa: E402
 S = 3.0
 # AD-4: olive-emerald, never lime - every texel at HSV saturation <= 0.5 and value <= 0.55 (enforced in calibration)
 kit = K.Kit(__file__, cls="T", size=(S, S), target="terrain:TERRAIN_LAYERS.grass_lush", family="grass",
-            rough_spread=0.05, sat_cap=0.5, value_cap=0.55)
+            rough_spread=0.05, sat_cap=0.47, value_cap=0.55)
+# AD-4 (round 2): the shipped baseColor is lossy WebP (q88, 4:2:0); its quantisation moves the dark blue channel of
+# an olive green by +-3 levels = +-0.03 HSV saturation, so a sward calibrated to the preset's own saturation (0.477)
+# cannot ship at p98 <= 0.50. Calibrate to an encode-safe mean inside the +-6 % tolerance instead: #606e3c =
+# preset #5f6f3a with R +1 %, G -1 %, B +3.4 % (luminance -0.4 %), saturation 0.455 (measured in ta-01.cjs stats).
+ENCODE_SAFE = "#606e3c"
+kit.preset["baseColor"] = ENCODE_SAFE
+SAT_T = 0.455
 
 
 def clover(lu, lv, e1, e2):
@@ -50,40 +57,90 @@ with core.timer("soil"):
     sward = 1.0 - 0.75 * thin
     clover_zone = tg.smoothstep(0.64, 0.78, kit.fbm(0.12, 3) * 0.5 + 0.5 + 0.12 * kit.fbm(0.03, 2))
 
+with core.timer("tufts"):
+    # AD-4: blades grow in TUFTS (clumps 6-14 cm) that radiate from their crowns; the sward is denser and higher at
+    # the crown, so the height map carries the clumping
+    tf1, _, tid = kit.worley(0.09, 0.95)
+    tuft_r = 0.09 * (0.7 + 0.6 * tid)
+    crown = np.clip(1.0 - tf1 * 0.09 / tuft_r, 0.0, 1.0)  # 1 at the tuft centre .. 0 at the rim
+    gy_, gx_ = np.gradient(kit.blur(tf1, 0.004))
+    radial = np.arctan2(-gy_, gx_).astype(np.float32)  # blades lean away from the crown (image rows run down)
+    tdens = np.clip(sward * (0.55 + 0.6 * crown), 0.0, 1.0)
+
 with core.timer("grass layers"):
-    lean = 0.6  # prevailing lean (rad) with spread
+    lean = 0.6  # weak prevailing lean (rad) on top of the radial splay
+    # blades of varied width (2-4.5 mm) and taper, lengths 3-9 cm (shape_blade varies both per blade)
     specs = [
-        dict(cell=0.03, shape=K.shape_blade(0.05, 0.0018, 0.004, 0.35), z=0.000, density=0.95, density_map=sward),
-        dict(cell=0.026, shape=K.shape_blade(0.045, 0.0016, 0.004, 0.35), z=0.002, density=0.9, density_map=sward),
-        dict(cell=0.022, shape=K.shape_blade(0.04, 0.0015, 0.004, 0.3), z=0.004, density=0.85, density_map=sward,
+        dict(cell=0.034, shape=K.shape_blade(0.055, 0.0032, 0.004, 0.35), z=0.000, density=0.95, density_map=tdens,
+             angle=(-0.5, 0.5), angle_map=radial),
+        dict(cell=0.028, shape=K.shape_blade(0.05, 0.0026, 0.004, 0.35), z=0.002, density=0.9, density_map=tdens,
+             angle=(-0.7, 0.7), angle_map=radial),
+        dict(cell=0.024, shape=K.shape_blade(0.045, 0.0022, 0.004, 0.3), z=0.004, density=0.85, density_map=tdens,
              angle=(lean - 1.4, lean + 1.4)),
         dict(cell=0.012, shape=clover, z=0.002, density=0.8, density_map=clover_zone),
-        dict(cell=0.024, shape=K.shape_blade(0.06, 0.0017, 0.004, 0.25), z=0.006, density=0.6, density_map=sward,
-             angle=(lean - 1.0, lean + 1.0)),
-        dict(cell=0.05, shape=K.shape_blade(0.07, 0.0013, 0.003, 0.4), z=0.008, density=0.25),  # dry straw blades
+        dict(cell=0.026, shape=K.shape_blade(0.065, 0.0036, 0.004, 0.25), z=0.006, density=0.6, density_map=tdens,
+             angle=(-0.4, 0.4), angle_map=radial),
+        dict(cell=0.05, shape=K.shape_blade(0.07, 0.0016, 0.003, 0.4), z=0.008, density=0.22),  # dry straw blades
     ]
     L = layers(kit, specs)
     veg = L["h"] > -1e5
     h = np.where(veg, np.maximum(L["h"], soil), soil)
+    h = h + 0.012 * crown ** 1.5 * veg  # tuft crowns stand up out of the sward
 
 with core.timer("albedo"):
-    # soil gaps not much darker than the sward: a dark soil would force the blades brighter and more saturated
-    # (lime) to hit the layer mean
-    soil_col = K.ramp(np.clip(0.5 + 0.3 * kit.fbm(0.05, 3), 0, 1), [(0.0, "#3a3226"), (0.5, "#463b2c"), (1.0, "#544633")])
+    # soil gaps: olive-brown thatch of dead blades, close to the sward in value AND chroma (AD-4: the lossy
+    # 4:2:0 WebP re-attaches blade chroma to darker neighbours - a dark gap next to a saturated blade turns lime)
+    soil_col = K.ramp(np.clip(0.5 + 0.3 * kit.fbm(0.05, 3), 0, 1), [(0.0, "#434029"), (0.5, "#4d4930"), (1.0, "#575236")])
     idx = L["idx"]
     gid = L["id"]
-    # blade colour: olive to emerald-olive, lighter tips, darker lower layers (self-shadowed sward)
+    # blade colour: olive to emerald-olive, lighter tips, darker lower layers (self-shadowed sward); narrow value
+    # range - the blade detail is carried by the normal map and the AO, not by albedo contrast
     tip = np.clip(L["lu"] / 0.06, 0, 1)
-    g = np.clip(0.5 + 0.45 * (gid - 0.5) + 0.25 * tip + 0.1 * kit.fbm(0.1, 3), 0, 1)
-    grass = K.ramp(g, [(0.0, "#3e4a26"), (0.35, "#4f5f2e"), (0.65, "#5d6c37"), (1.0, "#6c7740")])
+    g = np.clip(0.5 + 0.35 * (gid - 0.5) + 0.2 * tip + 0.1 * kit.fbm(0.1, 3) + 0.15 * (crown - 0.5), 0, 1)
+    grass = K.ramp(g, [(0.0, "#46522b"), (0.35, "#505e30"), (0.65, "#5a6835"), (1.0, "#64703c")])
     depth = np.clip(idx.astype(np.float32) / 5.0, 0.0, 1.0)
-    grass = K.mul(grass, 0.8 + 0.2 * depth)
-    clov = K.ramp(np.clip(0.5 + 0.3 * (gid - 0.5), 0, 1), [(0.0, "#2f3a22"), (1.0, "#3b4628")])  # darker, olive, not teal
-    straw = K.ramp(np.clip(gid, 0, 1), [(0.0, "#8f8455"), (1.0, "#b0a46c")])
+    grass = K.mul(grass, 0.88 + 0.12 * depth)
+    clov = K.ramp(np.clip(0.5 + 0.3 * (gid - 0.5), 0, 1), [(0.0, "#38432a"), (1.0, "#434e2f")])  # darker, olive, not teal
+    straw = K.ramp(np.clip(gid, 0, 1), [(0.0, "#7f7650"), (1.0, "#958a5e")])
     col = np.where((idx == 3)[..., None], clov, grass)
     col = np.where((idx == 5)[..., None], straw, col)
     alb = np.where(veg[..., None], col, soil_col)
     alb = K.compress_chroma(alb, 0.7)
+    # AD-4: pre-filter chroma to the shipped resolution's 2 x 2 block (what the 4:2:0 encoder keeps anyway): the
+    # chroma becomes smooth at 6 mm, so the encode cannot move blade chroma onto darker texels (no lime, p98 holds)
+    srgb = tg.linear_to_srgb(np.clip(alb, 0.0, 1.0))
+    Y = 0.299 * srgb[..., 0] + 0.587 * srgb[..., 1] + 0.114 * srgb[..., 2]
+    cb = kit.blur(srgb[..., 2] - Y, 0.006)
+    cr = kit.blur(srgb[..., 0] - Y, 0.006)
+    Y = 0.35 * Y + 0.65 * kit.blur(Y, 0.003)  # albedo luma smooth at the shipped 2 x 2 block too (blade detail lives in the normal map)
+    r_ = Y + cr
+    b_ = Y + cb
+    g_ = (Y - 0.299 * r_ - 0.114 * b_) / 0.587
+    alb = tg.srgb_to_linear(np.clip(np.stack([r_, g_, b_], axis=-1), 0.0, 1.0)).astype(np.float32)
+    # AD-4: tight saturation - every texel keeps its value but its HSV saturation is set from the target's (brighter
+    # tips a little less saturated, as sunlit blades are) and its hue is held within +-5 deg of the sward mean, so the
+    # shipped lossy WebP (quantisation error ~+-0.02 S) stays at p98 <= 0.50 and never reaches lime
+    srgb = tg.linear_to_srgb(np.clip(alb, 0.0, 1.0)).astype(np.float32)
+    mx = srgb.max(axis=-1)
+    mn = srgb.min(axis=-1)
+    v_mean = float(mx.mean(dtype=np.float64))
+    hsv_h = np.zeros_like(mx)
+    d = np.maximum(mx - mn, 1e-6)
+    r0, g0, b0 = srgb[..., 0], srgb[..., 1], srgb[..., 2]
+    hsv_h = np.where(mx == r0, ((g0 - b0) / d) % 6.0, np.where(mx == g0, (b0 - r0) / d + 2.0, (r0 - g0) / d + 4.0)) * 60.0
+    is_veg = veg & (idx != 5)
+    h_mean = float(np.median(hsv_h[is_veg]))
+    hue = np.where(is_veg, h_mean + np.clip(hsv_h - h_mean, -5.0, 5.0), hsv_h)
+    sat = np.where(is_veg, SAT_T - 0.06 * np.clip((mx - v_mean) / max(v_mean, 1e-3), -0.5, 0.5), np.minimum((mx - mn) / np.maximum(mx, 1e-6), 0.44))
+    c = mx * sat
+    hp = (hue / 60.0) % 6.0
+    xx = c * (1.0 - np.abs(hp % 2.0 - 1.0))
+    z = np.zeros_like(c)
+    hq = hp[..., None]
+    rgb = np.select([hq < 1, hq < 2, hq < 3, hq < 4, hq < 5], [np.stack([c, xx, z], -1), np.stack([xx, c, z], -1), np.stack([z, c, xx], -1),
+                    np.stack([z, xx, c], -1), np.stack([xx, z, c], -1)], np.stack([c, z, xx], -1))
+    rgb = rgb + (mx - c)[..., None]
+    alb = tg.srgb_to_linear(np.clip(rgb, 0.0, 1.0)).astype(np.float32)
 
 with core.timer("roughness"):
     rough = np.where(veg, 0.86 + 0.06 * (gid - 0.5), 0.97) + 0.02 * kit.fbm(0.05, 2)

@@ -42,25 +42,40 @@ with core.timer("blocks"):
     # B3: a jointed tor face, not a lattice of equal pillows. Hierarchical joints: large sheet-jointed blocks
     # (2.4 m, elongated along the sheets), about half of them split into 1.1 m blocks, a third of those into
     # 0.5 m blocks - so block sizes vary ~5x across the tile and no single cell dominates.
-    rb = rock_blocks(kit, [dict(cell=2.4, aniso=(1.5, 0.75)), dict(cell=1.1, split=0.5, aniso=(1.2, 0.85)),
-                           dict(cell=0.55, split=0.22)], warp_m=0.35, warp_feature=1.8)
+    # B3 round 2: isotropic warped level-0 blocks (no shared long axis -> no fish-scale rows), narrow clefts
+    rb = rock_blocks(kit, [dict(cell=2.0, jitter=1.0), dict(cell=1.0, split=0.5, aniso=(1.1, 0.9)),
+                           dict(cell=0.5, split=0.25)], warp_m=0.55, warp_feature=2.2)
     d, size, lvl, bid = rb["d"], rb["size"], rb["level"], rb["id"]
     # joint openness varies ALONG each joint (open clefts, closed hairlines); big (level-0) joints open more
-    openness = np.clip(tg.smoothstep(-0.35, 0.35, kit.fbm(1.3, 3)) * (1.0 - 0.38 * lvl) + 0.25 * (lvl < 0.5), 0.0, 1.0)
-    # corestone rounding: flat-ish block faces with rounded shoulders; radius scales with block size and openness
-    r_round = size * (0.1 + 0.3 * openness) * (0.7 + 0.6 * bid)
+    openness = np.clip(tg.smoothstep(-0.35, 0.35, kit.fbm(1.3, 3)) * (1.0 - 0.38 * lvl) + 0.15 * (lvl < 0.5), 0.0, 1.0)
+    # corestone rounding: flat-ish block faces with rounded shoulders; NARROW radius (no triangular hollows where
+    # three joints meet - those read as dark wedges repeating every tile)
+    r_round = np.minimum(size * (0.05 + 0.12 * openness) * (0.7 + 0.6 * bid), 0.22)
     tq = np.clip(d / np.maximum(r_round, 1e-3), 0.0, 1.0)
     prof = np.sqrt(np.clip(1.0 - (1.0 - tq) ** 2, 0.0, 1.0))  # quarter circle 0 (joint) -> 1 (face)
-    # open clefts read dark but not as bottomless wedges (a single salient black wedge repeats at 3 x 3)
-    depth = (0.02 + 0.13 * openness * openness) * np.clip(size / 2.4, 0.3, 1.0)
+    # open clefts stay shallow: no single joint may be the darkest feature of the tile (B3)
+    depth = (0.012 + 0.045 * openness * openness) * np.clip(size / 2.0, 0.35, 1.0)
     h = depth * (prof - 1.0)
-    # each block at its own depth and with a gentle crown / tilt (whaleback faces of different height)
-    h += 0.08 * (bid - 0.5) * np.clip(size / 2.4, 0.3, 1.0)
+    # per-block planar tilt in a RANDOM direction (whaleback faces lean every way, never one shared orientation)
+    q = np.round(bid * 1e6).astype(np.int64)
+    _, lab = np.unique(q, return_inverse=True)
+    lab = lab.reshape(q.shape)
+    nlab = int(lab.max()) + 1
+    cxs = np.arctan2(np.bincount(lab.ravel(), np.sin(2 * np.pi * x).ravel(), nlab), np.bincount(lab.ravel(), np.cos(2 * np.pi * x).ravel(), nlab)) / (2 * np.pi)
+    cys = np.arctan2(np.bincount(lab.ravel(), np.sin(2 * np.pi * y).ravel(), nlab), np.bincount(lab.ravel(), np.cos(2 * np.pi * y).ravel(), nlab)) / (2 * np.pi)
+    ang = rng.uniform(0.0, 2 * np.pi, nlab)
+    mag = rng.uniform(0.015, 0.055, nlab)
+    dxl = (((x - cxs[lab]) + 0.5) % 1.0 - 0.5) * S
+    dyl = (((y - cys[lab]) + 0.5) % 1.0 - 0.5) * S
+    tilt = (mag[lab] * (np.cos(ang[lab]) * dxl + np.sin(ang[lab]) * dyl)).astype(np.float32)
+    h += tilt * prof
+    # each block at its own depth, with a low crown (whaleback faces of different height)
+    h += 0.05 * (bid - 0.5) * np.clip(size / 2.0, 0.3, 1.0)
     crown = tg.smoothstep(0.0, 0.6, d / np.maximum(size, 1e-3))
-    h += 0.09 * crown * np.clip(size / 2.4, 0.25, 1.0) * (0.5 + bid)
+    h += 0.05 * crown * np.clip(size / 2.0, 0.25, 1.0) * (0.5 + bid)
     # hairline for closed joints, a dark cleft for open ones, grus fill at the bottom of the open clefts
     hair = tg.smoothstep(0.01, 0.0, d) * (1.0 - openness) * (0.5 + 0.5 * tg.smoothstep(-0.2, 0.2, kit.fbm(0.6, 2)))
-    open_cleft = tg.smoothstep(0.08, 0.0, d) * tg.smoothstep(0.35, 0.7, openness)
+    open_cleft = tg.smoothstep(0.05, 0.0, d) * tg.smoothstep(0.35, 0.7, openness)
     h -= 0.012 * hair
     # rock-surface undulation at several scales (domes are not smooth spheres)
     h += 0.03 * (kit.fbm(1.6, 3, ridged=True) - 0.5) + 0.012 * kit.fbm(0.35, 3)
@@ -78,14 +93,14 @@ with core.timer("exfoliation"):
     sheet = tg.smoothstep(t1, t1 + 0.02, cw) * gate * arc
     lip = tg.smoothstep(0.0, 0.25, sheet) * tg.smoothstep(1.0, 0.75, sheet) * gate
     peel = gate * (1.0 - sheet) * tg.smoothstep(t1 - 0.25, t1 - 0.02, cw)
-    h += (0.02 + 0.02 * bid) * sheet
+    h += (0.007 + 0.008 * bid) * kit.blur(sheet, 0.03)  # low, soft sheet steps: no stamped dark dashes at 3 x 3
     prof = tg.smoothstep(0.0, 0.25, crest)
 
 with core.timer("spalls and grain"):
     fc = kit.facets(0.22, slope=0.18)
     chip_gate = tg.smoothstep(0.62, 0.7, kit.fbm(0.5, 3) * 0.5 + 0.5) * (fc["id"] > 0.45) * prof
     chip = chip_gate * tg.smoothstep(0.0, 0.006, fc["d"])
-    h += chip * (-0.012 + 0.6 * fc["h"] * 0.05)
+    h += chip * (-0.006 + 0.3 * fc["h"] * 0.05)
     # grain: feldspar phenocrysts, quartz, biotite (2-12 mm), weathering pits
     g1, g2, gid = kit.worley(0.006, 1.0)
     pits = tg.smoothstep(0.35, 0.1, g1) * (gid > 0.86)
@@ -105,15 +120,15 @@ with core.timer("albedo"):
     rock = K.tint(rock, "#ab9585", 0.35 * peel)  # fresher, pinker rock where the sheet peeled
     rock = K.tint(rock, "#9a9187", 0.25 * chip)
     rock = K.tint(rock, "#4a423a", 0.08 * lip)  # faint grime under the sheet edge (relief carries the step)
-    rock = K.tint(rock, "#4a443d", 0.5 * hair)
-    rock = K.tint(rock, "#6e5d4b", 0.5 * grus)
+    rock = K.tint(rock, "#4a443d", 0.3 * hair)
+    rock = K.tint(rock, "#7a6a58", 0.4 * grus)
     # black water streaks from the block shoulders and joint lips, running down v
     gyy = np.gradient(tg.blur(h, kit.px(0.1)), axis=0) / kit.texel  # row 0 = v 1: > 0 means the surface falls with v
     shoulder = tg.smoothstep(0.05, 0.4, gyy) * tg.smoothstep(0.05, 0.4, crest)
     src = np.clip(shoulder + 0.6 * lip, 0, 1) * tg.smoothstep(0.55, 0.8, kit.fbm(0.15, 3, aniso=(0.3, 6.0)) * 0.5 + 0.5)
-    streak = tg.directional_blur_down(src, int(kit.px(1.4)), 0.988)
-    streak = np.clip(tg.blur(streak, 1.5) * 1.6, 0, 1) * (0.6 + 0.4 * tg.smoothstep(-0.3, 0.3, kit.fbm(0.8, 2)))
-    rock = K.tint(rock, "#2b2a28", 0.6 * streak)
+    streak = tg.directional_blur_down(kit.blur(src, 0.04), int(kit.px(2.0)), 0.992)
+    streak = np.clip(kit.blur(streak, 0.05) * 1.3, 0, 1) * (0.6 + 0.4 * tg.smoothstep(-0.3, 0.3, kit.fbm(0.8, 2)))
+    rock = K.tint(rock, "#3a3835", 0.38 * streak)  # soft long streaks, never a stamped dark mark
     # lichen on the upward-facing shoulders (dh/dv > 0 seen on a wall = surface facing the sky)
     gy = np.gradient(tg.blur(h, kit.px(0.05)), axis=0) * -1.0 / kit.texel  # +v slope
     up = tg.smoothstep(0.0, 0.25, -gy) * prof * (1.0 - streak)

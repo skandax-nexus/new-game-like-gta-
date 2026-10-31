@@ -40,7 +40,7 @@ rng = kit.rng
 with core.timer("sets and joints"):
     # widely spaced joints (3.5-9 m; denser joints turn the face into block masonry), and each joint shows only
     # along part of its length (see `joint` below) so they never form a steady rhythm at 3 x 3 (B5)
-    jb = joint_bands(kit, spacing=(0.4, 2.8), amp=0.45, feature=2.5, vspacing=(3.5, 9.0), carry=0.9, tilt=0.12,
+    jb = joint_bands(kit, spacing=(0.55, 2.7), amp=0.45, feature=2.5, vspacing=(3.5, 9.0), carry=0.9, tilt=0.12,
                      wander=0.35, vfeature=1.4, pinch=True)
     band = jb["band"].astype(np.int64)
     nb = int(jb["nb"])
@@ -69,7 +69,7 @@ with core.timer("bed profiles"):
     h = hard_h * (1.0 - soft) + soft_h * soft
     # blocks: each joint-bounded block at its own depth and slight tilt
     h += 0.02 * (jb["block"] - 0.5) * (1.0 - 0.6 * soft) + 0.03 * (jb["rand2"] - 0.5) * (jb["lu"] - 0.5)
-    h += (0.09 * kit.fbm(1.5, 3, aniso=(2.0, 1.0)) + 0.03 * kit.fbm(0.4, 3)) * (1.0 - soft)  # weathered, undulating bed faces
+    h += (0.06 * kit.fbm(1.5, 3, aniso=(2.0, 1.0)) + 0.012 * kit.fbm(0.4, 3)) * (1.0 - soft)  # weathered, undulating bed faces
     # joints: broken V-grooves, open ones wider and deeper
     # most joints are closed hairlines (barely a relief line); only some open into weathered clefts
     jopen = tg.smoothstep(0.45, 0.85, jb["open_v"])
@@ -84,7 +84,7 @@ with core.timer("bed profiles"):
     bedding = tg.smoothstep(0.02, 0.0, np.minimum(below, above)) * (1.0 - soft)
     h -= (0.004 + 0.03 * jb["open_h"] ** 2) * bedding * (0.4 + 0.6 * tg.smoothstep(0.5, 1.2, thick))
     # massive hard beds weather into lumpy, undulating fronts (no planks)
-    h += (0.05 * kit.fbm(0.9, 3) + 0.04 * kit.fbm(2.5, 2, aniso=(2.0, 1.0))) * (1.0 - soft)
+    h += (0.018 * kit.fbm(0.9, 3) + 0.035 * kit.fbm(2.5, 2, aniso=(2.0, 1.0))) * (1.0 - soft)  # AD-11: no blotchy 'leopard' relief
 
 with core.timer("cross-bedding"):
     sp_b = rng.uniform(0.07, 0.16, nb)
@@ -100,13 +100,15 @@ with core.timer("cross-bedding"):
     phi = g / sp - kb * x * xb + 0.15 * kit.fbm(2.0, 2)  # planar foresets, barely warped (no wood-grain rings)
     saw = phi - np.floor(phi)
     lam = tg.smoothstep(0.0, 0.25, saw) * tg.smoothstep(1.0, 0.6, saw)  # etched rib profile
-    lam_amp = (0.005 + 0.003 * soft) * tg.smoothstep(0.0, 0.08, lv) * (0.4 + 0.6 * tg.smoothstep(-0.3, 0.3, kit.fbm(1.0, 2)))
+    lam_amp = (0.009 + 0.004 * soft)  # AD-11: the strata read is carried by relief (normal), not albedo
+    lam_amp = lam_amp * tg.smoothstep(0.0, 0.08, lv) * (0.4 + 0.6 * tg.smoothstep(-0.3, 0.3, kit.fbm(1.0, 2)))
     h += lam_amp * lam
     lam_tone = (np.floor(phi) * 0.618) % 1.0  # lamina-to-lamina tone variation
 
 with core.timer("tafoni"):
     # sparse and broken up: small irregular honeycomb clusters, never one salient stamp per tile
-    tz = tg.smoothstep(0.8, 0.88, kit.fbm(2.5, 3) * 0.5 + 0.5 + 0.12 * soft + 0.1 * under_lip + 0.12 * kit.fbm(0.35, 3))
+    taf_b = (rng.uniform(0, 1, nb) < 0.3).astype(np.float32)  # AD-11: tafoni only in a few beds, each its own field
+    tz = tg.smoothstep(0.8, 0.88, kit.fbm(2.5, 3) * 0.5 + 0.5 + 0.12 * soft + 0.1 * under_lip + 0.12 * kit.fbm(0.35, 3)) * taf_b[band]
     hf1, hf2, hid = kit.worley(0.07, 0.9)
     wall = tg.smoothstep(0.0, 0.12, hf2 - hf1)
     bowl = np.clip(1.0 - (hf1 / (0.55 + 0.25 * hid)) ** 2, 0.0, 1.0)
@@ -115,25 +117,26 @@ with core.timer("tafoni"):
     h -= 0.06 * honey + 0.04 * tz
 
 with core.timer("surface"):
-    h += 0.025 * kit.fbm(0.8, 3) + 0.008 * kit.fbm(0.15, 3) + 0.0012 * kit.fbm(0.02, 3)
+    h += 0.012 * kit.fbm(0.8, 3) + 0.005 * kit.fbm(0.15, 3) + 0.0012 * kit.fbm(0.02, 3)
     # granular disintegration pits and fresh spall scars (planar chips) on hard beds
     fc = kit.facets(0.3, slope=0.12)
     spall = tg.smoothstep(0.7, 0.76, kit.fbm(0.7, 3) * 0.5 + 0.5) * (fc["id"] > 0.5) * (1.0 - soft)
     h += spall * (-0.015 + 0.3 * fc["h"] * 0.05)
 
 with core.timer("albedo"):
-    t = np.clip(0.5 + 0.3 * (tone - 0.5) + 0.12 * kit.fbm(0.9, 3) + 0.45 * (lam_tone - 0.5) * xb + 0.04 * kit.fbm(0.04, 2), 0, 1)
-    alb = K.ramp(t, [(0.0, "#8c6450"), (0.3, "#9c785e"), (0.55, "#ab8b6c"), (0.8, "#bda27f"), (1.0, "#c9b18f")])
-    alb = K.tint(alb, "#857269", 0.35 * tg.smoothstep(0.8, 0.97, tone))  # purple-grey reduced sets
-    alb = K.tint(alb, "#a2624a", 0.25 * tg.smoothstep(0.2, 0.04, tone))  # iron-red sets
-    alb = K.mul(alb, 1.0 + 0.1 * (lam - 0.5) * (0.6 + 0.6 * soft) * (0.4 + 0.6 * xb))
+    # AD-11: laminae differ by <= 8 % in value (relief carries them); bed tones differ gently
+    t = np.clip(0.5 + 0.22 * (tone - 0.5) + 0.1 * kit.fbm(0.9, 3) + 0.07 * (lam_tone - 0.5) * xb + 0.035 * kit.fbm(0.04, 2), 0, 1)
+    alb = K.ramp(t, [(0.0, "#937660"), (0.3, "#9f8268"), (0.55, "#ab8d6f"), (0.8, "#b89c7e"), (1.0, "#c3aa8d")])
+    alb = K.tint(alb, "#8e7d70", 0.18 * tg.smoothstep(0.8, 0.97, tone))  # purple-grey reduced sets
+    alb = K.tint(alb, "#a67858", 0.12 * tg.smoothstep(0.2, 0.04, tone))  # iron-red sets
+    alb = K.mul(alb, 1.0 + 0.04 * (lam - 0.5) * (0.6 + 0.6 * soft) * (0.4 + 0.6 * xb))
     # Liesegang iron rings (wavy, faint)
     lies = 0.5 + 0.5 * np.sin(2 * np.pi * (kit.fbm(1.5, 3) * 6.0))
-    alb = K.tint(alb, "#9b6a4c", 0.05 * lies * tg.smoothstep(0.2, 0.6, kit.fbm(2.0, 2)))  # faint: strong rings read as wood grain
+    alb = K.tint(alb, "#a07a5c", 0.04 * lies * tg.smoothstep(0.2, 0.6, kit.fbm(2.0, 2)))  # faint: strong rings read as wood grain
     alb = K.mul(alb, 1.0 - 0.55 * under_lip)  # overhang shadow line under every hard lip
     alb = K.tint(alb, "#5a4a3e", 0.5 * joint * jopen)
-    alb = K.mul(alb, 1.0 - 0.4 * honey - 0.06 * tz)
-    alb = K.tint(alb, "#c39878", 0.3 * spall)
+    alb = K.mul(alb, 1.0 - 0.12 * honey - 0.03 * tz)  # tafoni read by relief / AO, not dark dots
+    alb = K.tint(alb, "#bb9c7c", 0.25 * spall)
     # varnish streaks from the lips and joints
     src = (tg.smoothstep(0.1, 0.0, below) * soft_below_bed * (1.0 - soft) + 0.5 * joint)
     src = src * tg.smoothstep(0.45, 0.75, kit.fbm(0.2, 3, aniso=(0.25, 5.0)) * 0.5 + 0.5)
@@ -145,7 +148,7 @@ with core.timer("albedo"):
     lic = kit.lichen(zone, coverage=0.06, patch_m=0.3, rosette_m=0.03, rosette_density=0.35)
     alb = K.tint(alb, "#7f7d64", 0.5 * lic["crust"] + 0.4 * lic["rosette"])
     h = h + lic["h"]
-    alb = K.compress_chroma(alb, 0.82)
+    alb = K.compress_chroma(alb, 0.78)
 
 with core.timer("roughness"):
     rough = 0.82 + 0.04 * kit.fbm(0.3, 3) + 0.06 * honey + 0.05 * lic["crust"] - 0.08 * streak - 0.05 * spall
