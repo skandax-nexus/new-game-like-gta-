@@ -42,20 +42,23 @@ further down; every one was opened and looked at.
 | `world-settlement-recruit-pc` | Same, Recruit tab: Spears, Archers, Guards, Horse, Chariots / Elephants, Engineers, Scouts, Supply at their `UnitDef.commandSlot`, Rally point on slot 14. |
 | `world-settlement-*-portrait` / `-landscape` | Phone layouts. Portrait: two-row top bar (Grain / Wealth / Recruits + expand chevron + menu; date + pause/1x/2x/4x), minimap and objectives behind 48 px buttons, realm buttons as a right column, the card as a bottom sheet with icon-over-label tabs. Landscape: one-row top bar, realm buttons in a row, compact card docked bottom-right (48 px slots) so the map stays visible. |
 | `world-army-card-pc` | Royal Host selected: food / morale meters, and the army card - Move, Attack, Besiege, Garrison, Raid / Forage, Retreat, Bold, Steady (current, highlighted), Wary / Forced, Split, Merge, Disband (confirm), Visit. |
+| `world-colorblind-{protan,deutan,tritan}-pc` | `settings.colorblind` applied (`<html data-colorblind>`): realm emblem, Recruit badge, card icons and the minimap canvas (territories, settlements, armies) take the Art Director remaps from `theme.css` / `FACTION_ART.colorblind`; the canvas redraws on the attribute change (MutationObserver), paused or not. Protan and deutan share one remap in `theme.css`, so those two captures are identical by design; tritan turns the player saffron to red. |
 
 ### Drawers, AoE screens, realm screens and prompts
 
 | Image | What it shows |
 |---|---|
 | `settlement-panel-pc` | Settlement drawer (right, under the realm buttons): eight vitals with a why-tooltip each (population / housing, grain days + stored, grain price, water / irrigation, loyalty, unrest stage, public order, health / sanitation), labor sliders with -/+ steppers (sum <= 100%), tax slider; the command card stays usable on the left with the selection info hidden. Phones: a bottom sheet (portrait) / right panel under the top bar (landscape), steppers instead of range sliders. |
+| `settlement-panel-lower-*` | The same drawer / bottom sheet scrolled to its lower half after the script queued a granary upgrade and two recruitments through `GameActions`: buildings grid (icon, name, level pips, condition bar), Construction (Granary -> 3, progress bar, "no builders · Laying foundations", 48 px cancel), Recruitment (Spearmen x 2, Archers x 1 queued, progress, cancel button disabled with its reason until SIM-01 / CTO add `cancel_recruitment` - see requests), Garrison. |
 | `army-panel-pc` / phones | Army drawer: commander portrait (monogram on a darkened faction colour, role badge) with skills, supply (27 days, 4,575 / 4,575, 170 a day) with the line state and its source, stances (Steady active) + forced march, unit rows with strength / morale bars and the split selection. |
 | `build-placement-*` | Placement HUD for a granary (props pushed by the script until GP-03 drives the ghost): costs, "Needs flat ground inside the walls" (invalid), facing east (rot 1), keys LMB / Shift / R / RMB-Esc on PC; on phones the card, objectives and realm buttons step aside and the cross / rotate / tick buttons (64 px, tick disabled while invalid) sit at the bottom. |
 | `market-*` | Market opened from the Economy tab "Trade" slot: grain / timber / stone with stock, buy / sell price per lot, fairness factor, price sparkline (flat at day 0: no history yet), Buy / Sell, x5 lots toggle (Shift-click on PC; the phone hint names the toggle). |
 | `age-panel-*` | Ages and landmarks: carved banner (II Mahajanapada Age, next III Samrajya), requirements checklist (met green, unmet red), unlock bonuses in words, the two landmark cards (cost chips, red when short; "The age requirements are not met yet" on the locked Choose site). |
 | `economy-panel-*` | Treasury and granaries: ledger last month / projected, tax policy (Lenient / Standard / Heavy / Emergency with factors), royal reserve + Hold the reserve, rationing, granary rows with reserve days by colour. |
 | `diplomacy-*` | Realm list with opinion / trust / treaty icons, Giridurga (at war) selected: Peace / Ceasefire composer and the AI reply from `evaluateAcceptance` with its reasons ("They fear your army (+20)", "They think ill of you (-13)", "They are wary of a peace (-10)"). Phones: list and detail as two steps with an "All realms" back button. |
-| `minimap-world-*` | The minimap element: terrain hillshade bitmap, faction territories (hatched when contested), roads, settlements by relation (capital star, selection ring), armies, the N marker on the rotating rim, north-up toggle. Phones: opened from its 48 px button. |
+| `minimap-world-*` | The minimap element: flat biome tint with soft relief, faction territories (hatched when contested), roads, settlements by relation (capital star, selection ring), armies, the N marker on the rotating rim, north-up toggle. Phones: opened from its 48 px button, 232 px (portrait) / 184 px (landscape) with both buttons above the map (checked). |
 | `event-modal-*` | "The Broken Crown" (reached by stepping the campaign): illustration band, narrative text, countdown with the default choice, choice card with its consequence. Parchment modal; full-screen on portrait. |
+| `event-modal-advisors-*` | "Whispers in the Hall of Pillars" (the succession event, reached by stepping the campaign to the day it fires): countdown with the default choice; choice 1 "Recommended by the Chief Minister, Mantri Haridatta" with his portrait (monogram + seat badge); choice 2 locked - dimmed, "Recommended by the Court Scholar" portrait, and the lock line with its reason ("Requires an earlier decision": the nobles have not been won in the Hall of Pillars); choice 3. Portrait: full-screen parchment that scrolls. |
 | `engagement-prompt-*` | Battle is Joined at Shilapur (the Royal Host ordered to attack the Host of the Seven Peaks): both sides with commanders and soldiers, "You" tag, win chance bar with the 50% mark, expected losses, advisor factors, Take command / Let the generals decide / Retreat. Phone toasts wait while the modal is open. |
 
 ### Battle HUD, radial wheel, results
@@ -63,18 +66,20 @@ further down; every one was opened and looked at.
 | Image | What it shows |
 |---|---|
 | `battle-deployment-*` | Deployment: forces bar (both realms, soldiers, strength and morale bars), DEPLOYING clock, speeds (0.5x..8x on PC, 1/2/4x on phones), the deployment bar with the countdown and Begin battle, the formation cards strip (class icon, count, strength / morale bars, morale with its cause, fatigue tier, ammo pips, experience chevrons, current order), the Orders page of the card on PC (Hold H, Advance T, Attack X, Charge C, Flank Y / Defend U, Withdraw B, Regroup G, Run N, Stance M / Line J (current), Column I, Square O, Wedge P, Loose K - disabled for these troops) + Select all; simple presets (Line up / Archers behind / Horse to the wings / More) on phones; the battle minimap with both deploy zones; Rally ring button. |
-| `battle-live-*` | 30 s into the battle, two Royal Levy blocks selected (gold cards), morale causes ("general nearby"), floating formation cards over the troops and compact bars over the enemy (anchors computed by the capture script from the RTS camera model until GP-04 pushes `battle_hud.anchors`), Rally ring ready. Phones: rally above the strip, presets row, card behind More. |
+| `battle-live-*` | 30 s into the battle, Levy I and Levy II selected (gold cards). Control-group row above the strip, fed through the real input path (`group_assign` on 1, 2, 4): on PC only the assigned groups ("1 · 2 formations", "2 · Archers", "4 · 2 formations"), on phones all five slots (empty ones read "Hold to set"; tap selects, double-tap centres, long-press assigns). Cards carry short unique titles (Levy I / Levy II / Archers / Guards / Horse / Elephants / Scouts / Supply; full name in the tooltip), men beside the bars, morale + its cause, fatigue only when not fresh, ammo pips; the stance slot reads "Bold". Forces bar: gold "You" badge + 2 px gold underline (no "(you)" text), 3 px faction edge per side. Floating cards over the troops and enemy bars with a 2 px enemy border + emblem (anchors from the camera model until GP-04 pushes them). |
 | `battle-radial-*` | The touch radial wheel (long press): inner ring = the nine orders + stance, outer ring = six shapes + eight intents (Pursue and Loose disabled with their reasons), cancel in the centre; the HUD below dims behind it. 50 px items, no overlap, fits the 390 px phone. Esc closes it without opening the pause menu (checked). |
+| `battle-colorblind-{protan,deutan,tritan}-pc` | The live battle under each remap: forces-bar faction edges and emblems, card class icons, floating bars and the minimap formations follow it. |
 | `battle-intents-pc` | Tab moved the card to the Intents page: Crossing, Protect, Heights, Pin, Screen / Pursue (disabled: "Only horse, chariots and scouts pursue"), Scout, Escort, Clear (disabled: no intent); Classic Alt+letters. |
-| `minimap-battle-*` | Battle minimap: hillshaded battle window, formations by side with facing, selection. |
+| `minimap-battle-*` | Battle minimap fitted to both deploy zones + 25 % margin (grow-only), so formations draw as >= 6 x 3 px blocks with a facing tick; soft flat tint (+-15 % relief) at every tier - the low-tier phone map is no longer an empty disc. Phones (expanded): 232 px portrait / 184 px landscape, collapse and north-up buttons side by side above the map (checked). |
 | `battle-results-*` | The same battle stepped to its end (withdrawal at 9:28): Victory banner with the summary, per-side table (started / survived / killed / captured / in pursuit; the last two columns hidden on portrait), the player's formations (start -> survivors, experience gained, routed), commander fates, chronicle line, Return to Menu. |
+| `battle-results-prisoners-*` | The same outcome shown as a won world battle (the script adds `engagementId`, which the session does not pass yet - GP-03, and keeps the numbers consistent: the men taken leave the foe's survivors and show in the table, the summary line and the header): "N prisoners" with Ransom / Release (`prisoners` strategic command; both disable after a choice), commander fates (the enemy commander taken), Return to the Realm. The event-feed toasts are hidden under every modal (no clipped toasts at the edge); landscape: sticky footer on an opaque lacquer band with a 16 px fade. |
 
 ### Hero HUD
 
 | Image | What it shows |
 |---|---|
-| `hero-explore-*` | Exploring Rajapura (v2 props patched until GP-02 pushes them): objective with the place, compass strip on a dark band (E / SE / S), prompt bubble at its anchor ("Speak with the potter", E key / tap), caption with the speaker, key hints on a pill (PC), Leave. Phones: move stick, look-drag hint, 76 px interact button. |
-| `hero-combat-*` | Combat with Durjaya: HP / stamina / salve pips, boss bar with poise (name red: unblockable telegraphed, red edge flash), enemy bars with names over their heads, lock-on reticle. Phones: attack (84 px), heavy, roll, guard, salve (charges badge), lock buttons. |
+| `hero-explore-*` | Hero HUD on a real target: `?scene=lab&lab=hero-hud` (`src/ui/screens/hero/hero-hud.lab.ts`) projects 3D figures through its camera every frame and pushes the `hero_hud` v2 props exactly as GP-02 will. Prompt bubble on the potter's projected head (checked within a few px), objective with the place, compass strip, caption with the speaker, key hints (PC). Phones: move stick, "Drag to look", 76 px interact button. |
+| `hero-combat-*` | Same lab in combat: lock-on reticle on the bandit captain (projected, checked), enemy bars over the bandits' projected heads (clamped inside the screen edge; hidden under the HUD boxes), boss bar with poise and the unblockable red cue, HP / stamina / salve pips. Phones: attack (84 px), heavy, roll, guard, salve (charges badge), lock. `hero-scene-pc`: the live HeroScene with the props GP-02 pushes today. |
 
 ## Critique loop (screenshot -> read -> fix)
 
@@ -173,6 +178,26 @@ HTML) both succeed. Smoke: `docs/sprint1/ui-02/smoke/` (all 14 smoke shots passe
   (measured 4.4-4.6:1 at 12 px).
 - Lead AI & Simulation Engineer (SIM-01 `src/sim/strategic/selectors.ts`): memoize `buildOptions` per settlement per
   day - its placement search is the 12-17 ms one-frame spike in the world bench (the HUD already calls it <= 2 Hz).
+- CTO (`src/core/types.ts`) + Lead AI & Simulation Engineer (SIM-01, `src/sim/strategic/commands.ts` and the
+  recruitment module) - **recruitment cancel** (ticket item 2): add the StrategicCommand member
+  `{ kind: 'cancel_recruitment'; settlementId: SettlementId; index: number }` (`index` into
+  `SettlementState.recruitment`), validate it (own settlement, index in range: reasons "No such settlement" / "No such
+  recruitment"), and apply it with the refund rule of `cancel_construction` (`RULES.construction.cancelRefund` = 0.9):
+  the recruits go back to `recruitPool` in full, wealth and grain come back at (1 - progress) x 0.9 of what was paid
+  (an unstarted queued job refunds 0.9 of everything); cover it in tests/sim/strategic. The panel needs no change: the
+  cancel button (`src/ui/services/recruitCancel.ts`) feature-detects the command through `validateCommand` and enables
+  itself; until then it shows disabled with "Recruits already called up cannot be sent home yet". Once the member
+  exists, the cast in `cancelRecruitmentCommand` can go.
+- Lead Gameplay Engineer / GP-04 (`src/scenes/BattleScene.ts`): push the battle control groups with
+  `ctx.ui.feeds.setBattleGroups([{ group, label, count }])` whenever a group is assigned or loses formations (the row
+  derives them from `BattleState` meanwhile); the row's taps go through `ctx.input.injectAction('group_select' |
+  'group_assign' | 'camera_focus', { group })`.
+- Lead Gameplay Engineer / GP-03 (`src/app/session.ts`): pass `engagementId` in the `battle_results` props of a world
+  battle so the prisoners choice (Ransom / Release, `prisoners` command) appears in play; today only the capture script
+  supplies it.
+- Technical Art Director (with the Art Director): golden-hour thumbnails of the landmark models (image assets, about
+  192 x 144) for the age panel's illustration band; the cards use one ink silhouette per landmark
+  (`src/ui/components/landmarkArt.ts`) until then and take an image by landmark id as soon as one is published.
 
 ## Known issues
 
@@ -181,9 +206,13 @@ HTML) both succeed. Smoke: `docs/sprint1/ui-02/smoke/` (all 14 smoke shots passe
   v2 fields are pushed by the script, the world control-group row and the minimap camera frustum stay empty until
   the world scene feeds them. Everything renders as soon as the props / feeds arrive.
 - The cards strip scrolls sideways when a host has more formations than fit; there is no scroll hint yet.
-- `npm test` in this tree has 5 failures outside UI-02 (strategic siege / politics, contracts migration, SIM-02
-  campaign AI) that come with the SIM-02 / snapshot commits after `5829cd1` (they pass on a clean export of
-  `5829cd1`, fail on a clean export of HEAD); every UI and input suite passes.
+- `npm test` in this tree (2026-10-31): 906 pass, 10 fail - all outside UI-02 paths: strategic siege x3, construction
+  (Palace days), politics (careful year), contracts migration (battles), tactical determinism (mid-siege resume), and
+  three CPU budget tests (battle AI cost, tactical perf 1k / 5k soldiers) that are sensitive to the shared 4-CPU box
+  while two capture runs render under SwiftShader. Every UI and input suite passes (14 files, 122 tests).
+- Recruitment cancel is visible but disabled until the simulation has `cancel_recruitment` (request above).
+- The prisoners capture adds `engagementId` itself; in play the choice appears once GP-03 passes it.
+- Landmark cards show ink silhouettes; the final golden-hour thumbnails are requested from Technical Art.
 
 ## Lead UI/UX review, round 1 (reviewer fixes and re-captures)
 
@@ -212,3 +241,28 @@ above). Single-file build 2,618 kB.
 Still open for the developer (round 2): see the review verdict - battle control-group row on touch, recruitment
 queue cancel (needs a command), and evidence for the settlement panel's lower half, an event with advisor
 recommendations and a locked choice, and the prisoners choice.
+
+## Rework round 1 (developer): Lead UI/UX blocking items and the Art Director co-sign list
+
+Commits `[UI Engineer ...] UI-02 R1 ...` (part of the code was picked up by the Studio Head WIP snapshots `b23d282`
+/ `e65d2ae` before `4edd6b6`). Every item below was re-captured and looked at.
+
+| Item (reviewer) | Fix | Evidence |
+|---|---|---|
+| L1 Battle HUD has no control-group row | `controlGroupRow` reused in `src/ui/screens/battle/hud.ts`: 5 slots on touch / phones (empty: "Hold to set"), assigned groups only on PC, above the strip and presets (landscape: a column on the left edge). Fed by `ctx.ui.feeds.setBattleGroups` (`src/ui/services/hudCommands.ts`, GP-04 request) else derived from `BattleState`; QA hook `__SAMRAJYA_UI__.setBattleGroups`. Taps: `injectAction('group_select' / 'group_assign' / 'camera_focus', {group})`. `tests/ui/hud/battleGroups.test.ts` | `battle-live-*` (groups assigned through the input path, checked on PC), touch audit |
+| L2 Recruitment queue has no cancel, no request filed | Cancel button on every recruitment row (same 48 px `q-cancel` skin and reason tooltip as construction), feature-detected through `validateCommand` (`src/ui/services/recruitCancel.ts`), disabled with its reason until the command exists; exact command + refund rule requested from the CTO and SIM-01 (Requests). `tests/ui/hud/queues.test.ts` (disabled with the reason today; enabled per row with the refund hint once the validator knows the kind; an inconclusive probe is not memoized; both queues' rows carry a cancel button) | `settlement-panel-lower-*` |
+| L3 Missing evidence: settlement panel lower half, advisors + locked choice, prisoners | Script queues a build and two recruits, scrolls the drawer / sheet; steps the campaign to the succession event (advisor portraits, a locked choice); shows the battle outcome as a won world battle with consistent prisoner numbers | `settlement-panel-lower-*`, `event-modal-advisors-*`, `battle-results-prisoners-*` (pc, portrait, landscape; contrast + touch audited) |
+| AD1 kbd chips collide with level badges and icons | ui_kit slot grammar (`src/ui/components/commandGrid.ts`): 18 x 18 single-key chip top-right; a modifier shared by the whole card printed once as an "Alt" chip at the end of the tab row (and in each tooltip); mixed pages use one-glyph modifiers with a legend; level badge top-left with a 4 px inset; 28 px icon with 6 px clearance. Chip plans tested per card and preset | `world-settlement-*-pc`, `world-army-card-pc`, `battle-intents-pc` |
+| AD2 Truncated labels | Formation titles = class short name + roman index when repeated (`src/ui/services/battleLabels.ts`: Levy I / Levy II / Guards / Horse / Elephants / Supply), Mukta 600 13 px, full name in the tooltip; stance slot "Bold"; compact landscape slots use the 700-weight caps codes (SPR / ARC / ELE / ENG / WRK ...); portrait forces bar drops "(you)" for the gold "You" badge / underline. Hero enemy bars near the screen edge are clamped inside it (portrait "ndit", round 2) | `battle-live-*`, `battle-deployment-*`, `world-settlement-*-landscape`, `hero-combat-portrait` |
+| AD3 Phone minimap small, buttons on the map, empty low-tier battle map, strip over it | 232 px portrait / 184 px landscape; both buttons side by side above the map - round 2 found the earlier fix defeated by margin collapse (the frame's top margin collapsed through `.minimap`, so the buttons still sat on the map and the toggle jumped when tapped): `.minimap` is now `display: flow-root` on phones, and the capture checks that both buttons end above the canvas. Flat biome tint + deploy-zone fills at every tier; battle bounds fitted to the deploy zones + 25 %; formations >= 6 x 3 px with a facing tick; PC relief reduced to +-15 %; landscape: an open battle minimap hides the strip, presets and groups | `minimap-*-portrait` / `-landscape`, `battle-deployment-pc` |
+| AD4 Overlay leaks | (a) HUD feeds hidden under any modal (no clipped toasts behind results); (b) landscape results footer on an opaque lacquer band with a 16 px top fade, scroller padded by the footer; (c) realm buttons step aside under an open drawer (no Chronicle badge through the sheet) | `battle-results-*`, `settlement-panel-*`, `army-panel-*` |
+| AD5 Landmark cards have no picture; disabled Choose site a mud blob | 96+ x 72 px illustration band per card with a distinct ink silhouette per landmark (`src/ui/components/landmarkArt.ts`, coverage test); flat-stone disabled skin (ink 60 % on flat sandstone); final thumbnails requested from Technical Art | `age-panel-*` |
+| AD6 Evidence: real hero targets, colour-blind captures, minimap following the remaps | Hero HUD lab projects real 3D targets (bubble / reticle positions checked against the projected heads); colour-blind captures of the world and battle HUD per mode; the minimap canvas redraws on `data-colorblind` changes (it did not before) | `hero-*`, `world-colorblind-*-pc`, `battle-colorblind-*-pc` |
+
+Round 2 self-review (this pass) also fixed: the prisoners staging (the header said 120 prisoners while the table said
+0 captured), the capture script's clicks waiting for throttled HUD renders (a landscape run failed on a starved
+SwiftShader), and the two phone issues above (minimap buttons, clipped hero enemy bar).
+
+Final capture ({{SHOTS}} shots, {{CHECKS}} checks): contrast {{TEXTS}} text runs on {{CAPS}} captures, 0 below 4.5:1 / 3:1;
+touch {{TARGETS}} phone targets, 0 under 44 px; no console / page errors, failed requests or crash reports. UI + input
+on the 60 fps bench at 1280 x 720: {{BENCH}}. Smoke: {{SMOKE}}. Single-file build {{SINGLE}}.

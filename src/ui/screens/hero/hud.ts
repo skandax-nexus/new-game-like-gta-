@@ -180,12 +180,15 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
   // HUD boxes the anchored enemy bars must not slide under (landscape: "Bandit" went under the vitals box). Measured
   // after layout changes / combat start (one rAF read), not per frame.
   let reserved: { l: number; t: number; r: number; b: number }[] = [];
+  // Viewport width for clamping the enemy bars (read with the reserved boxes, never per frame); 0 = unknown.
+  let viewW = typeof innerWidth === 'number' ? innerWidth : 0;
   let measureQueued = false;
   const measureReserved = (): void => {
     if (measureQueued || typeof requestAnimationFrame !== 'function') return;
     measureQueued = true;
     requestAnimationFrame(() => {
       measureQueued = false;
+      viewW = innerWidth;
       reserved = [vitals, boss, objBox]
         .filter((e) => !e.classList.contains('ui-hidden'))
         .map((e) => e.getBoundingClientRect())
@@ -194,11 +197,15 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
     });
   };
   const placeEnemy = (node: HTMLElement, e: HeroEnemyBar): void => {
-    setStyle(node, 'transform', `translate(${Math.round(e.x)}px, ${Math.round(e.y)}px) translate(-50%, -100%) scale(${(ui.scale || 1).toFixed(2)})`);
     const hw = 50 * (ui.scale || 1);
     const hh = 36 * (ui.scale || 1);
-    let hidden = false;
-    for (const r of reserved) if (e.x + hw > r.l && e.x - hw < r.r && e.y > r.t && e.y - hh < r.b) hidden = true;
+    // A head near the screen edge keeps its whole bar on screen (portrait: "Bandit" was cut to "ndit"); a head off
+    // screen hides its bar rather than pinning a misleading one to the edge.
+    const off = viewW > 0 && (e.x < 0 || e.x > viewW);
+    const x = viewW > 2 * hw ? Math.min(Math.max(e.x, hw), viewW - hw) : e.x;
+    setStyle(node, 'transform', `translate(${Math.round(x)}px, ${Math.round(e.y)}px) translate(-50%, -100%) scale(${(ui.scale || 1).toFixed(2)})`);
+    let hidden = off;
+    for (const r of reserved) if (x + hw > r.l && x - hw < r.r && e.y > r.t && e.y - hh < r.b) hidden = true;
     setClass(node, 'occluded', hidden);
   };
   const placeReticle = (c: HeroCombatHud): void => {

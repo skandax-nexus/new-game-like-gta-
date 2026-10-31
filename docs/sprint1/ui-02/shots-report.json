@@ -8,7 +8,35 @@
       "observed": []
     },
     {
+      "name": "world (pc): a construction job and a recruitment job are queued for the lower-panel capture",
+      "ok": true,
+      "observed": {
+        "construction": 1,
+        "recruitment": 2
+      }
+    },
+    {
+      "name": "world (pc): colour-blind mode protan applied to <html>",
+      "ok": true,
+      "observed": "protan"
+    },
+    {
+      "name": "world (pc): colour-blind mode deutan applied to <html>",
+      "ok": true,
+      "observed": "deutan"
+    },
+    {
+      "name": "world (pc): colour-blind mode tritan applied to <html>",
+      "ok": true,
+      "observed": "tritan"
+    },
+    {
       "name": "world (pc): an event modal was reached",
+      "ok": true,
+      "observed": null
+    },
+    {
+      "name": "world (pc): an event with advisor portraits and a locked choice was reached",
       "ok": true,
       "observed": null
     },
@@ -24,14 +52,23 @@
       "name": "profiler world-1280x720: UI + input < 1 ms/frame at 60 fps (bench avg, 1x and 4x)",
       "ok": true,
       "observed": {
-        "bench1x": 0.077,
-        "bench4x": 0.133
+        "bench1x": 0.062,
+        "bench4x": 0.272
       }
     },
     {
       "name": "world (pc): no console errors, page errors, failed requests or crash reports",
       "ok": true,
       "observed": []
+    },
+    {
+      "name": "battle (pc): the control-group row shows the assigned groups 1, 2, 4",
+      "ok": true,
+      "observed": [
+        "1",
+        "2",
+        "4"
+      ]
     },
     {
       "name": "battle HUD (pc): open map areas pass pointer events through to the game",
@@ -50,8 +87,8 @@
       "name": "profiler battle-1280x720: UI + input < 1 ms/frame at 60 fps (bench avg, 1x and 4x)",
       "ok": true,
       "observed": {
-        "bench1x": 0.051,
-        "bench4x": 0.012
+        "bench1x": 0.049,
+        "bench4x": 0.028
       }
     },
     {
@@ -63,58 +100,52 @@
       }
     },
     {
+      "name": "battle (pc): the prisoners choice (Ransom / Release) is shown for a won world battle",
+      "ok": true,
+      "observed": true
+    },
+    {
       "name": "battle (pc): no console errors, page errors, failed requests or crash reports",
       "ok": true,
       "observed": []
     },
     {
-      "name": "battle HUD (portrait): open map areas pass pointer events through to the game",
-      "ok": true,
-      "observed": []
-    },
-    {
-      "name": "battle (portrait): Esc closes the radial wheel without opening the pause menu",
+      "name": "hero (pc): the prompt bubble points at the potter (projected head)",
       "ok": true,
       "observed": {
-        "radial": false,
-        "pause": false
+        "bubble": {
+          "x": 880,
+          "bottom": 274.20001220703125
+        },
+        "potter": {
+          "x": 880.3022098238275,
+          "y": 283.39948143533195,
+          "visible": true
+        }
       }
     },
     {
-      "name": "battle (portrait): no console errors, page errors, failed requests or crash reports",
-      "ok": true,
-      "observed": []
-    },
-    {
-      "name": "battle HUD (landscape): open map areas pass pointer events through to the game",
-      "ok": true,
-      "observed": []
-    },
-    {
-      "name": "battle (landscape): Esc closes the radial wheel without opening the pause menu",
+      "name": "hero (pc): the lock-on reticle sits on the bandit captain (projected)",
       "ok": true,
       "observed": {
-        "radial": false,
-        "pause": false
+        "reticle": {
+          "x": 668,
+          "y": 320
+        },
+        "boss": {
+          "x": 668.7919759841825,
+          "y": 260.81957684191207,
+          "visible": true
+        }
       }
-    },
-    {
-      "name": "battle (landscape): no console errors, page errors, failed requests or crash reports",
-      "ok": true,
-      "observed": []
-    },
-    {
-      "name": "assets=off: the world HUD shows",
-      "ok": true,
-      "observed": true
-    },
-    {
-      "name": "assets=off world (pc): no console errors, page errors, failed requests or crash reports",
-      "ok": true,
-      "observed": []
     },
     {
       "name": "hero HUD (pc): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero lab (pc): no console errors, page errors, failed requests or crash reports",
       "ok": true,
       "observed": []
     },
@@ -124,32 +155,25 @@
       "observed": []
     },
     {
-      "name": "hero HUD (portrait): open map areas pass pointer events through to the game",
-      "ok": true,
-      "observed": []
-    },
-    {
-      "name": "hero (portrait): no console errors, page errors, failed requests or crash reports",
-      "ok": true,
-      "observed": []
-    },
-    {
-      "name": "hero HUD (landscape): open map areas pass pointer events through to the game",
-      "ok": true,
-      "observed": []
-    },
-    {
-      "name": "hero (landscape): no console errors, page errors, failed requests or crash reports",
-      "ok": true,
-      "observed": []
-    },
-    {
       "name": "world HUD (portrait): open map areas pass pointer events through to the game",
       "ok": true,
       "observed": []
     },
     {
+      "name": "world (portrait): a construction job and a recruitment job are queued for the lower-panel capture",
+      "ok": true,
+      "observed": {
+        "construction": 1,
+        "recruitment": 2
+      }
+    },
+    {
       "name": "world (portrait): an event modal was reached",
+      "ok": true,
+      "observed": null
+    },
+    {
+      "name": "world (portrait): an event with advisor portraits and a locked choice was reached",
       "ok": true,
       "observed": null
     },
@@ -167,12 +191,102 @@
       "observed": []
     },
     {
-      "name": "world HUD (landscape): open map areas pass pointer events through to the game",
+      "name": "battle (portrait): the control-group row shows the assigned groups 1, 2, 4",
+      "ok": true,
+      "observed": [
+        "1",
+        "2",
+        "4"
+      ]
+    },
+    {
+      "name": "battle HUD (portrait): open map areas pass pointer events through to the game",
       "ok": true,
       "observed": []
     },
     {
+      "name": "battle (portrait): Esc closes the radial wheel without opening the pause menu",
+      "ok": true,
+      "observed": {
+        "radial": false,
+        "pause": false
+      }
+    },
+    {
+      "name": "battle (portrait): the prisoners choice (Ransom / Release) is shown for a won world battle",
+      "ok": true,
+      "observed": true
+    },
+    {
+      "name": "battle (portrait): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero (portrait): the prompt bubble points at the potter (projected head)",
+      "ok": true,
+      "observed": {
+        "bubble": {
+          "x": 360,
+          "bottom": 360.20001220703125
+        },
+        "potter": {
+          "x": 359.71373930880765,
+          "y": 369.4946241441965,
+          "visible": true
+        }
+      }
+    },
+    {
+      "name": "hero (portrait): the lock-on reticle sits on the bandit captain (projected)",
+      "ok": true,
+      "observed": {
+        "reticle": {
+          "x": 216,
+          "y": 392
+        },
+        "boss": {
+          "x": 216.42810951380014,
+          "y": 348.1860675966069,
+          "visible": true
+        }
+      }
+    },
+    {
+      "name": "hero HUD (portrait): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero lab (portrait): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "world: settlement selected (landscape)",
+      "ok": false,
+      "observed": "nothing to click: .command-card .tabs .btn.tab /economy/"
+    },
+    {
+      "name": "world: settlement panel (landscape)",
+      "ok": false,
+      "observed": "nothing to click: .sel-action "
+    },
+    {
+      "name": "world (landscape): a construction job and a recruitment job are queued for the lower-panel capture",
+      "ok": true,
+      "observed": {
+        "construction": 1,
+        "recruitment": 2
+      }
+    },
+    {
       "name": "world (landscape): an event modal was reached",
+      "ok": true,
+      "observed": null
+    },
+    {
+      "name": "world (landscape): an event with advisor portraits and a locked choice was reached",
       "ok": true,
       "observed": null
     },
@@ -190,10 +304,92 @@
       "observed": []
     },
     {
-      "name": "contrast: every measured text run >= 4.5:1 (body) / 3:1 (large) on 53 captures",
+      "name": "battle (landscape): the control-group row shows the assigned groups 1, 2, 4",
+      "ok": true,
+      "observed": [
+        "1",
+        "2",
+        "4"
+      ]
+    },
+    {
+      "name": "battle HUD (landscape): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "battle (landscape): Esc closes the radial wheel without opening the pause menu",
       "ok": true,
       "observed": {
-        "texts": 1839,
+        "radial": false,
+        "pause": false
+      }
+    },
+    {
+      "name": "battle (landscape): the prisoners choice (Ransom / Release) is shown for a won world battle",
+      "ok": true,
+      "observed": true
+    },
+    {
+      "name": "battle (landscape): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero (landscape): the prompt bubble points at the potter (projected head)",
+      "ok": true,
+      "observed": {
+        "bubble": {
+          "x": 552,
+          "bottom": 145.1999969482422
+        },
+        "potter": {
+          "x": 552.1636969879066,
+          "y": 153.50805244413812,
+          "visible": true
+        }
+      }
+    },
+    {
+      "name": "hero (landscape): the lock-on reticle sits on the bandit captain (projected)",
+      "ok": true,
+      "observed": {
+        "reticle": {
+          "x": 437,
+          "y": 173
+        },
+        "boss": {
+          "x": 437.5956536580988,
+          "y": 141.27727078936903,
+          "visible": true
+        }
+      }
+    },
+    {
+      "name": "hero HUD (landscape): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "hero lab (landscape): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "assets=off: the world HUD shows",
+      "ok": true,
+      "observed": true
+    },
+    {
+      "name": "assets=off world (pc): no console errors, page errors, failed requests or crash reports",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "contrast: every measured text run >= 4.5:1 (body) / 3:1 (large) on 66 captures",
+      "ok": true,
+      "observed": {
+        "texts": 2532,
         "fails": []
       }
     },
@@ -201,7 +397,7 @@
       "name": "touch: every interactive element >= 44x44 px on phone captures",
       "ok": true,
       "observed": {
-        "targets": 866,
+        "targets": 1142,
         "fails": []
       }
     }
@@ -218,6 +414,10 @@
     {
       "name": "settlement-panel-pc.png",
       "note": "settlement panel (drawer / bottom sheet): vitals, labor, tax, buildings, queues, garrison"
+    },
+    {
+      "name": "settlement-panel-lower-pc.png",
+      "note": "settlement panel, lower half: buildings grid (level pips, condition bars), construction queue (progress, days, cancel), recruitment queue (progress, cancel with its reason), garrison"
     },
     {
       "name": "world-army-card-pc.png",
@@ -252,8 +452,24 @@
       "note": "world minimap: terrain bitmap, borders, roads, settlements by relation, armies, fog"
     },
     {
+      "name": "world-colorblind-protan-pc.png",
+      "note": "world HUD with settings.colorblind = protan: faction colours, emblems and the minimap canvas follow the remap"
+    },
+    {
+      "name": "world-colorblind-deutan-pc.png",
+      "note": "world HUD with settings.colorblind = deutan: faction colours, emblems and the minimap canvas follow the remap"
+    },
+    {
+      "name": "world-colorblind-tritan-pc.png",
+      "note": "world HUD with settings.colorblind = tritan: faction colours, emblems and the minimap canvas follow the remap"
+    },
+    {
       "name": "event-modal-pc.png",
       "note": "event modal: illustration band, text, choices with advisor recommendation and requirements"
+    },
+    {
+      "name": "event-modal-advisors-pc.png",
+      "note": "event modal: the succession event - advisor portraits (\"Recommended by the ...\"), a locked choice with its requirement, auto-resolve countdown"
     },
     {
       "name": "engagement-prompt-pc.png",
@@ -265,7 +481,19 @@
     },
     {
       "name": "battle-live-pc.png",
-      "note": "battle HUD in battle: cards strip (strength, morale + cause, fatigue, ammo), selection card, rally ring, floating formation cards (anchors from the camera model), feed"
+      "note": "battle HUD in battle: control-group row (groups assigned through the input path), cards strip (short titles, men, morale + cause, fatigue, ammo), command card, rally ring, floating formation cards (anchors from the camera model), feed"
+    },
+    {
+      "name": "battle-colorblind-protan-pc.png",
+      "note": "battle HUD with settings.colorblind = protan: forces-bar edges, floating bars and minimap formations follow the remap"
+    },
+    {
+      "name": "battle-colorblind-deutan-pc.png",
+      "note": "battle HUD with settings.colorblind = deutan: forces-bar edges, floating bars and minimap formations follow the remap"
+    },
+    {
+      "name": "battle-colorblind-tritan-pc.png",
+      "note": "battle HUD with settings.colorblind = tritan: forces-bar edges, floating bars and minimap formations follow the remap"
     },
     {
       "name": "battle-radial-pc.png",
@@ -284,68 +512,20 @@
       "note": "battle results: banner, per-side table, formations, fates, chronicle, Continue"
     },
     {
-      "name": "battle-deployment-portrait.png",
-      "note": "battle HUD in deployment: forces bar, deployment timer + Begin, cards strip, command card, simple presets"
-    },
-    {
-      "name": "battle-live-portrait.png",
-      "note": "battle HUD in battle: cards strip (strength, morale + cause, fatigue, ammo), selection card, rally ring, floating formation cards (anchors from the camera model), feed"
-    },
-    {
-      "name": "battle-radial-portrait.png",
-      "note": "radial wheel (long press): inner ring orders, outer ring shapes / intents, cancel centre"
-    },
-    {
-      "name": "minimap-battle-portrait.png",
-      "note": "battle minimap: terrain, deploy zones, formations by side with facing, selection"
-    },
-    {
-      "name": "battle-results-portrait.png",
-      "note": "battle results: banner, per-side table, formations, fates, chronicle, Continue"
-    },
-    {
-      "name": "battle-deployment-landscape.png",
-      "note": "battle HUD in deployment: forces bar, deployment timer + Begin, cards strip, command card, simple presets"
-    },
-    {
-      "name": "battle-live-landscape.png",
-      "note": "battle HUD in battle: cards strip (strength, morale + cause, fatigue, ammo), selection card, rally ring, floating formation cards (anchors from the camera model), feed"
-    },
-    {
-      "name": "battle-radial-landscape.png",
-      "note": "radial wheel (long press): inner ring orders, outer ring shapes / intents, cancel centre"
-    },
-    {
-      "name": "minimap-battle-landscape.png",
-      "note": "battle minimap: terrain, deploy zones, formations by side with facing, selection"
-    },
-    {
-      "name": "battle-results-landscape.png",
-      "note": "battle results: banner, per-side table, formations, fates, chronicle, Continue"
+      "name": "battle-results-prisoners-pc.png",
+      "note": "battle results of a won world battle: prisoners choice (Ransom / Release), commander fates, Return to the Realm"
     },
     {
       "name": "hero-explore-pc.png",
-      "note": "hero HUD exploring: objective, compass strip, prompt bubble at its anchor, caption; phones: stick + interact"
+      "note": "hero HUD exploring (lab hero-hud): prompt bubble on the potter (projected 3D target), objective, compass strip, caption; phones: stick + interact"
     },
     {
       "name": "hero-combat-pc.png",
-      "note": "hero HUD in combat: HP / stamina / salves, boss bar (unblockable cue), enemy bars, lock-on reticle; phones: combat buttons"
+      "note": "hero HUD in combat (lab hero-hud): lock-on reticle on the bandit captain, enemy bars over the bandits (projected), boss bar with the unblockable cue, HP / stamina / salves; phones: combat buttons"
     },
     {
-      "name": "hero-explore-portrait.png",
-      "note": "hero HUD exploring: objective, compass strip, prompt bubble at its anchor, caption; phones: stick + interact"
-    },
-    {
-      "name": "hero-combat-portrait.png",
-      "note": "hero HUD in combat: HP / stamina / salves, boss bar (unblockable cue), enemy bars, lock-on reticle; phones: combat buttons"
-    },
-    {
-      "name": "hero-explore-landscape.png",
-      "note": "hero HUD exploring: objective, compass strip, prompt bubble at its anchor, caption; phones: stick + interact"
-    },
-    {
-      "name": "hero-combat-landscape.png",
-      "note": "hero HUD in combat: HP / stamina / salves, boss bar (unblockable cue), enemy bars, lock-on reticle; phones: combat buttons"
+      "name": "hero-scene-pc.png",
+      "note": "live HeroScene: hero HUD with the props GP-02 pushes today (objective fallback, compass, keys hint)"
     },
     {
       "name": "world-settlement-economy-portrait.png",
@@ -358,6 +538,10 @@
     {
       "name": "settlement-panel-portrait.png",
       "note": "settlement panel (drawer / bottom sheet): vitals, labor, tax, buildings, queues, garrison"
+    },
+    {
+      "name": "settlement-panel-lower-portrait.png",
+      "note": "settlement panel, lower half: buildings grid (level pips, condition bars), construction queue (progress, days, cancel), recruitment queue (progress, cancel with its reason), garrison"
     },
     {
       "name": "army-panel-portrait.png",
@@ -392,20 +576,48 @@
       "note": "event modal: illustration band, text, choices with advisor recommendation and requirements"
     },
     {
+      "name": "event-modal-advisors-portrait.png",
+      "note": "event modal: the succession event - advisor portraits (\"Recommended by the ...\"), a locked choice with its requirement, auto-resolve countdown"
+    },
+    {
       "name": "engagement-prompt-portrait.png",
       "note": "engagement prompt: both sides, prediction bar, advisor factors, queue"
     },
     {
-      "name": "world-settlement-economy-landscape.png",
-      "note": "world HUD, Rajapura selected: resource bar, date/season/forecast, speed, realm buttons, objectives, minimap, command card Economy tab"
+      "name": "battle-deployment-portrait.png",
+      "note": "battle HUD in deployment: forces bar, deployment timer + Begin, cards strip, command card, simple presets"
     },
     {
-      "name": "world-settlement-recruit-landscape.png",
-      "note": "command card Recruit tab (recruit slots by UnitDef.commandSlot, rally point slot 14)"
+      "name": "battle-live-portrait.png",
+      "note": "battle HUD in battle: control-group row (groups assigned through the input path), cards strip (short titles, men, morale + cause, fatigue, ammo), command card, rally ring, floating formation cards (anchors from the camera model), feed"
     },
     {
-      "name": "settlement-panel-landscape.png",
-      "note": "settlement panel (drawer / bottom sheet): vitals, labor, tax, buildings, queues, garrison"
+      "name": "battle-radial-portrait.png",
+      "note": "radial wheel (long press): inner ring orders, outer ring shapes / intents, cancel centre"
+    },
+    {
+      "name": "minimap-battle-portrait.png",
+      "note": "battle minimap: terrain, deploy zones, formations by side with facing, selection"
+    },
+    {
+      "name": "battle-results-portrait.png",
+      "note": "battle results: banner, per-side table, formations, fates, chronicle, Continue"
+    },
+    {
+      "name": "battle-results-prisoners-portrait.png",
+      "note": "battle results of a won world battle: prisoners choice (Ransom / Release), commander fates, Return to the Realm"
+    },
+    {
+      "name": "hero-explore-portrait.png",
+      "note": "hero HUD exploring (lab hero-hud): prompt bubble on the potter (projected 3D target), objective, compass strip, caption; phones: stick + interact"
+    },
+    {
+      "name": "hero-combat-portrait.png",
+      "note": "hero HUD in combat (lab hero-hud): lock-on reticle on the bandit captain, enemy bars over the bandits (projected), boss bar with the unblockable cue, HP / stamina / salves; phones: combat buttons"
+    },
+    {
+      "name": "settlement-panel-lower-landscape.png",
+      "note": "settlement panel, lower half: buildings grid (level pips, condition bars), construction queue (progress, days, cancel), recruitment queue (progress, cancel with its reason), garrison"
     },
     {
       "name": "army-panel-landscape.png",
@@ -440,8 +652,44 @@
       "note": "event modal: illustration band, text, choices with advisor recommendation and requirements"
     },
     {
+      "name": "event-modal-advisors-landscape.png",
+      "note": "event modal: the succession event - advisor portraits (\"Recommended by the ...\"), a locked choice with its requirement, auto-resolve countdown"
+    },
+    {
       "name": "engagement-prompt-landscape.png",
       "note": "engagement prompt: both sides, prediction bar, advisor factors, queue"
+    },
+    {
+      "name": "battle-deployment-landscape.png",
+      "note": "battle HUD in deployment: forces bar, deployment timer + Begin, cards strip, command card, simple presets"
+    },
+    {
+      "name": "battle-live-landscape.png",
+      "note": "battle HUD in battle: control-group row (groups assigned through the input path), cards strip (short titles, men, morale + cause, fatigue, ammo), command card, rally ring, floating formation cards (anchors from the camera model), feed"
+    },
+    {
+      "name": "battle-radial-landscape.png",
+      "note": "radial wheel (long press): inner ring orders, outer ring shapes / intents, cancel centre"
+    },
+    {
+      "name": "minimap-battle-landscape.png",
+      "note": "battle minimap: terrain, deploy zones, formations by side with facing, selection"
+    },
+    {
+      "name": "battle-results-landscape.png",
+      "note": "battle results: banner, per-side table, formations, fates, chronicle, Continue"
+    },
+    {
+      "name": "battle-results-prisoners-landscape.png",
+      "note": "battle results of a won world battle: prisoners choice (Ransom / Release), commander fates, Return to the Realm"
+    },
+    {
+      "name": "hero-explore-landscape.png",
+      "note": "hero HUD exploring (lab hero-hud): prompt bubble on the potter (projected 3D target), objective, compass strip, caption; phones: stick + interact"
+    },
+    {
+      "name": "hero-combat-landscape.png",
+      "note": "hero HUD in combat (lab hero-hud): lock-on reticle on the bandit captain, enemy bars over the bandits (projected), boss bar with the unblockable cue, HP / stamina / salves; phones: combat buttons"
     }
   ],
   "audits": [
@@ -467,43 +715,50 @@
       "smallTargets": []
     },
     {
+      "shot": "settlement-panel-lower-pc.png",
+      "texts": 74,
+      "contrastFails": [],
+      "targets": 49,
+      "smallTargets": []
+    },
+    {
       "shot": "world-army-card-pc.png",
-      "texts": 65,
+      "texts": 67,
       "contrastFails": [],
       "targets": 35,
       "smallTargets": []
     },
     {
       "shot": "army-panel-pc.png",
-      "texts": 91,
+      "texts": 93,
       "contrastFails": [],
       "targets": 43,
       "smallTargets": []
     },
     {
       "shot": "build-placement-pc.png",
-      "texts": 87,
+      "texts": 86,
       "contrastFails": [],
       "targets": 41,
       "smallTargets": []
     },
     {
       "shot": "market-pc.png",
-      "texts": 28,
+      "texts": 31,
       "contrastFails": [],
       "targets": 8,
       "smallTargets": []
     },
     {
       "shot": "age-panel-pc.png",
-      "texts": 45,
+      "texts": 52,
       "contrastFails": [],
       "targets": 3,
       "smallTargets": []
     },
     {
       "shot": "economy-panel-pc.png",
-      "texts": 59,
+      "texts": 65,
       "contrastFails": [],
       "targets": 12,
       "smallTargets": []
@@ -516,10 +771,38 @@
       "smallTargets": []
     },
     {
+      "shot": "world-colorblind-protan-pc.png",
+      "texts": 70,
+      "contrastFails": [],
+      "targets": 41,
+      "smallTargets": []
+    },
+    {
+      "shot": "world-colorblind-deutan-pc.png",
+      "texts": 70,
+      "contrastFails": [],
+      "targets": 41,
+      "smallTargets": []
+    },
+    {
+      "shot": "world-colorblind-tritan-pc.png",
+      "texts": 70,
+      "contrastFails": [],
+      "targets": 41,
+      "smallTargets": []
+    },
+    {
       "shot": "event-modal-pc.png",
       "texts": 7,
       "contrastFails": [],
       "targets": 1,
+      "smallTargets": []
+    },
+    {
+      "shot": "event-modal-advisors-pc.png",
+      "texts": 12,
+      "contrastFails": [],
+      "targets": 3,
       "smallTargets": []
     },
     {
@@ -531,16 +814,37 @@
     },
     {
       "shot": "battle-deployment-pc.png",
-      "texts": 73,
+      "texts": 78,
       "contrastFails": [],
       "targets": 37,
       "smallTargets": []
     },
     {
       "shot": "battle-live-pc.png",
-      "texts": 71,
+      "texts": 81,
       "contrastFails": [],
-      "targets": 36,
+      "targets": 39,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-colorblind-protan-pc.png",
+      "texts": 81,
+      "contrastFails": [],
+      "targets": 39,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-colorblind-deutan-pc.png",
+      "texts": 81,
+      "contrastFails": [],
+      "targets": 39,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-colorblind-tritan-pc.png",
+      "texts": 81,
+      "contrastFails": [],
+      "targets": 39,
       "smallTargets": []
     },
     {
@@ -552,72 +856,23 @@
     },
     {
       "shot": "battle-intents-pc.png",
-      "texts": 65,
+      "texts": 70,
       "contrastFails": [],
-      "targets": 36,
+      "targets": 39,
       "smallTargets": []
     },
     {
       "shot": "battle-results-pc.png",
-      "texts": 50,
+      "texts": 51,
       "contrastFails": [],
       "targets": 1,
       "smallTargets": []
     },
     {
-      "shot": "battle-deployment-portrait.png",
-      "texts": 31,
+      "shot": "battle-results-prisoners-pc.png",
+      "texts": 55,
       "contrastFails": [],
-      "targets": 16,
-      "smallTargets": []
-    },
-    {
-      "shot": "battle-live-portrait.png",
-      "texts": 29,
-      "contrastFails": [],
-      "targets": 15,
-      "smallTargets": []
-    },
-    {
-      "shot": "battle-radial-portrait.png",
-      "texts": 22,
-      "contrastFails": [],
-      "targets": 25,
-      "smallTargets": []
-    },
-    {
-      "shot": "battle-results-portrait.png",
-      "texts": 44,
-      "contrastFails": [],
-      "targets": 1,
-      "smallTargets": []
-    },
-    {
-      "shot": "battle-deployment-landscape.png",
-      "texts": 45,
-      "contrastFails": [],
-      "targets": 19,
-      "smallTargets": []
-    },
-    {
-      "shot": "battle-live-landscape.png",
-      "texts": 43,
-      "contrastFails": [],
-      "targets": 18,
-      "smallTargets": []
-    },
-    {
-      "shot": "battle-radial-landscape.png",
-      "texts": 22,
-      "contrastFails": [],
-      "targets": 25,
-      "smallTargets": []
-    },
-    {
-      "shot": "battle-results-landscape.png",
-      "texts": 35,
-      "contrastFails": [],
-      "targets": 0,
+      "targets": 3,
       "smallTargets": []
     },
     {
@@ -629,49 +884,28 @@
     },
     {
       "shot": "hero-combat-pc.png",
-      "texts": 9,
+      "texts": 10,
       "contrastFails": [],
       "targets": 1,
       "smallTargets": []
     },
     {
-      "shot": "hero-explore-portrait.png",
-      "texts": 10,
+      "shot": "hero-scene-pc.png",
+      "texts": 6,
       "contrastFails": [],
-      "targets": 3,
-      "smallTargets": []
-    },
-    {
-      "shot": "hero-combat-portrait.png",
-      "texts": 14,
-      "contrastFails": [],
-      "targets": 7,
-      "smallTargets": []
-    },
-    {
-      "shot": "hero-explore-landscape.png",
-      "texts": 10,
-      "contrastFails": [],
-      "targets": 3,
-      "smallTargets": []
-    },
-    {
-      "shot": "hero-combat-landscape.png",
-      "texts": 15,
-      "contrastFails": [],
-      "targets": 7,
+      "targets": 1,
       "smallTargets": []
     },
     {
       "shot": "world-settlement-economy-portrait.png",
-      "texts": 46,
+      "texts": 35,
       "contrastFails": [],
       "targets": 39,
       "smallTargets": []
     },
     {
       "shot": "world-settlement-recruit-portrait.png",
-      "texts": 40,
+      "texts": 30,
       "contrastFails": [],
       "targets": 39,
       "smallTargets": []
@@ -680,14 +914,21 @@
       "shot": "settlement-panel-portrait.png",
       "texts": 37,
       "contrastFails": [],
-      "targets": 19,
+      "targets": 15,
+      "smallTargets": []
+    },
+    {
+      "shot": "settlement-panel-lower-portrait.png",
+      "texts": 22,
+      "contrastFails": [],
+      "targets": 26,
       "smallTargets": []
     },
     {
       "shot": "army-panel-portrait.png",
       "texts": 35,
       "contrastFails": [],
-      "targets": 24,
+      "targets": 20,
       "smallTargets": []
     },
     {
@@ -699,7 +940,7 @@
     },
     {
       "shot": "market-portrait.png",
-      "texts": 28,
+      "texts": 31,
       "contrastFails": [],
       "targets": 8,
       "smallTargets": []
@@ -708,14 +949,14 @@
       "shot": "age-panel-portrait.png",
       "texts": 34,
       "contrastFails": [],
-      "targets": 2,
+      "targets": 1,
       "smallTargets": []
     },
     {
       "shot": "economy-panel-portrait.png",
-      "texts": 44,
+      "texts": 49,
       "contrastFails": [],
-      "targets": 8,
+      "targets": 7,
       "smallTargets": []
     },
     {
@@ -733,6 +974,13 @@
       "smallTargets": []
     },
     {
+      "shot": "event-modal-advisors-portrait.png",
+      "texts": 12,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": []
+    },
+    {
       "shot": "engagement-prompt-portrait.png",
       "texts": 22,
       "contrastFails": [],
@@ -740,24 +988,59 @@
       "smallTargets": []
     },
     {
-      "shot": "world-settlement-economy-landscape.png",
-      "texts": 35,
+      "shot": "battle-deployment-portrait.png",
+      "texts": 38,
       "contrastFails": [],
-      "targets": 39,
+      "targets": 21,
       "smallTargets": []
     },
     {
-      "shot": "world-settlement-recruit-landscape.png",
-      "texts": 30,
+      "shot": "battle-live-portrait.png",
+      "texts": 36,
       "contrastFails": [],
-      "targets": 39,
+      "targets": 20,
       "smallTargets": []
     },
     {
-      "shot": "settlement-panel-landscape.png",
-      "texts": 30,
+      "shot": "battle-radial-portrait.png",
+      "texts": 22,
       "contrastFails": [],
-      "targets": 13,
+      "targets": 25,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-results-portrait.png",
+      "texts": 44,
+      "contrastFails": [],
+      "targets": 1,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-results-prisoners-portrait.png",
+      "texts": 46,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-explore-portrait.png",
+      "texts": 9,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-combat-portrait.png",
+      "texts": 15,
+      "contrastFails": [],
+      "targets": 7,
+      "smallTargets": []
+    },
+    {
+      "shot": "settlement-panel-lower-landscape.png",
+      "texts": 17,
+      "contrastFails": [],
+      "targets": 20,
       "smallTargets": []
     },
     {
@@ -776,7 +1059,7 @@
     },
     {
       "shot": "market-landscape.png",
-      "texts": 20,
+      "texts": 22,
       "contrastFails": [],
       "targets": 6,
       "smallTargets": []
@@ -790,9 +1073,9 @@
     },
     {
       "shot": "economy-panel-landscape.png",
-      "texts": 25,
+      "texts": 30,
       "contrastFails": [],
-      "targets": 5,
+      "targets": 1,
       "smallTargets": []
     },
     {
@@ -810,10 +1093,66 @@
       "smallTargets": []
     },
     {
+      "shot": "event-modal-advisors-landscape.png",
+      "texts": 8,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": []
+    },
+    {
       "shot": "engagement-prompt-landscape.png",
       "texts": 22,
       "contrastFails": [],
       "targets": 3,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-deployment-landscape.png",
+      "texts": 50,
+      "contrastFails": [],
+      "targets": 24,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-live-landscape.png",
+      "texts": 48,
+      "contrastFails": [],
+      "targets": 23,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-radial-landscape.png",
+      "texts": 22,
+      "contrastFails": [],
+      "targets": 25,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-results-landscape.png",
+      "texts": 28,
+      "contrastFails": [],
+      "targets": 1,
+      "smallTargets": []
+    },
+    {
+      "shot": "battle-results-prisoners-landscape.png",
+      "texts": 32,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-explore-landscape.png",
+      "texts": 10,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": []
+    },
+    {
+      "shot": "hero-combat-landscape.png",
+      "texts": 14,
+      "contrastFails": [],
+      "targets": 7,
       "smallTargets": []
     }
   ],
@@ -825,9 +1164,9 @@
         "frames": 600,
         "updates": 40,
         "steps": 120,
-        "avgMs": 0.077,
-        "p95Ms": 0.4,
-        "maxMs": 12.5
+        "avgMs": 0.062,
+        "p95Ms": 0.6,
+        "maxMs": 20.3
       },
       "bench4x": {
         "screen": "world_hud",
@@ -835,15 +1174,15 @@
         "frames": 600,
         "updates": 40,
         "steps": 480,
-        "avgMs": 0.133,
-        "p95Ms": 1.5,
-        "maxMs": 16.9
+        "avgMs": 0.272,
+        "p95Ms": 2.3,
+        "maxMs": 27
       },
       "liveSwiftShader": {
-        "ui": 3.23,
-        "input": 0.002,
-        "total": 3.232,
-        "max": 36.3
+        "ui": 3.381,
+        "input": 0.013,
+        "total": 3.393,
+        "max": 70.8
       }
     },
     "battle-1280x720": {
@@ -853,9 +1192,9 @@
         "frames": 600,
         "updates": 85,
         "steps": 200,
-        "avgMs": 0.051,
+        "avgMs": 0.049,
         "p95Ms": 1.5,
-        "maxMs": 4.7
+        "maxMs": 3.2
       },
       "bench4x": {
         "screen": "battle_hud",
@@ -863,15 +1202,15 @@
         "frames": 600,
         "updates": 85,
         "steps": 795,
-        "avgMs": 0.012,
-        "p95Ms": 0,
-        "maxMs": 2.7
+        "avgMs": 0.028,
+        "p95Ms": 0.2,
+        "maxMs": 5.1
       },
       "liveSwiftShader": {
-        "ui": 2.416,
-        "input": 0.004,
-        "total": 2.42,
-        "max": 86.8
+        "ui": 5.402,
+        "input": 0.005,
+        "total": 5.406,
+        "max": 179.3
       }
     }
   }

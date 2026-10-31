@@ -31,89 +31,14 @@
       "observed": "tritan"
     },
     {
-      "name": "world (pc): an event modal was reached",
-      "ok": true,
-      "observed": null
-    },
-    {
-      "name": "world (pc): an event with advisor portraits and a locked choice was reached",
-      "ok": true,
-      "observed": null
-    },
-    {
-      "name": "world (pc): an engagement prompt was reached",
-      "ok": true,
-      "observed": {
-        "id": "army_giri",
-        "d": 2018.0439178570916
-      }
-    },
-    {
-      "name": "profiler world-1280x720: UI + input < 1 ms/frame at 60 fps (bench avg, 1x and 4x)",
-      "ok": true,
-      "observed": {
-        "bench1x": 0.047,
-        "bench4x": 0.271
-      }
-    },
-    {
-      "name": "world (pc): no console errors, page errors, failed requests or crash reports",
-      "ok": true,
-      "observed": []
-    },
-    {
-      "name": "battle (pc): the control-group row shows the assigned groups 1, 2, 4",
-      "ok": true,
-      "observed": [
-        "1",
-        "2",
-        "4"
-      ]
-    },
-    {
-      "name": "battle HUD (pc): open map areas pass pointer events through to the game",
-      "ok": true,
-      "observed": []
-    },
-    {
-      "name": "battle: live (pc)",
+      "name": "world: prompts (pc)",
       "ok": false,
       "observed": "page.evaluate: Target page, context or browser has been closed"
-    },
-    {
-      "name": "battle: radial (pc)",
-      "ok": false,
-      "observed": "page.evaluate: Target page, context or browser has been closed"
-    },
-    {
-      "name": "battle: intents page (pc)",
-      "ok": false,
-      "observed": "page.evaluate: Target page, context or browser has been closed"
-    },
-    {
-      "name": "battle: minimap (pc)",
-      "ok": false,
-      "observed": "page.waitForTimeout: Target page, context or browser has been closed"
-    },
-    {
-      "name": "battle: profiler (pc)",
-      "ok": false,
-      "observed": "page.evaluate: Target page, context or browser has been closed"
-    },
-    {
-      "name": "battle: results (pc)",
-      "ok": false,
-      "observed": "page.evaluate: Target page, context or browser has been closed"
-    },
-    {
-      "name": "battle (pc): no console errors, page errors, failed requests or crash reports",
-      "ok": true,
-      "observed": []
     },
     {
       "name": "run",
       "ok": false,
-      "observed": "browserContext.close: Target page, context or browser has been closed\nBrowser logs:\n\n<launching> /opt/pw-browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,BlockOriginHeaderModificationOnRedirect,Translate,AutoDeElevate,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --disable-updater-scheduler --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist --autoplay-policy=no-user-gesture-required --user-data-dir=/tmp/playwright_chromiumdev_profile-AW8NFG --remote-debugging-pipe --no-startup-window\n<launched> pid=450\n[pid=450][err] [1030/204157.682541:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket: No such file or directory\n[pid=450][err] [1030/204157.682645:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are \"tcp\" and on UNIX \"unix\")\n[pid=450][err] [1030/204157.685466:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket: No such file or directory\n[pid=450][err] [1030/204157.685562:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Failed to connect to socket /run/dbus/system_bus_socket: No such file or directory\n[pid=450][err] [1030/204157.698477:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: \n[pid=450][err] [1030/204157.698616:WARNING:device/bluetooth/dbus/bluez_dbus_manager.cc:209] Floss manager service not available, cannot set Floss enable/disable.\n[pid=450][err] [1030/204157.702111:ERROR:dbus/bus.cc:405] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are \"tcp\" and on UNIX \"unix\")\n[pid=450][err] [1030/204157.702778:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.NameHasOwner: object_path= /org/freedesktop/DBus: unknown error type: \n[pid=450][err] [1030/204157.715713:WARNING:media/gpu/vaapi/vaapi_wrapper.cc:1660] drmGetDevices2() has not found any devices\n[pid=450][err] [1030/204157.725630:WARNING:sandbox/policy/linux/sandbox_linux.cc:405] InitializeSandbox() called with multiple threads in process gpu-process.\n[pid=450][err] [1030/204157.813905:ERROR:net/socket/socket_posix.cc:121] CreatePlatformSocket() failed: Address family not supported by protocol (97)\n[pid=450][err] [1030/204157.844429:ERROR:net/socket/socket_posix.cc:121] CreatePlatformSocket() failed: Address family not supported by protocol (97)\n[pid=450][err] [1030/204157.844946:ERROR:net/socket/socket_posix.cc:121] CreatePlatformSocket() failed: Address family not supported by protocol (97)\n[pid=450][err] [1030/204157.845391:ERROR:net/socket/socket_posix.cc:121] CreatePlatformSocket() failed: Address family not supported by protocol (97)\n[pid=450][err] [1030/204201.580930:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x3fdc001a1600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels\n[pid=450][err] [1030/204202.518016:ERROR:gpu/command_buffer/service/gl_utils.cc:427] [.WebGL-0x3fdc001a1600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)\n[pid=450][err] [1030/204206.753473:INFO:CONSOLE:0] \"[.WebGL-0x3fdc001a1600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels\", source: http://localhost:4415/?scene=world&seed=7&paused=1&quality=medium&noaudio=1 (0)\n[pid=450][err] [1030/204206.753584:INFO:CONSOLE:0] \"[.WebGL-0x3fdc001a1600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)\", source: http://localhost:4415/?scene=world&seed=7&paused=1&quality=medium&noaudio=1 (0)\n[pid=450][err] [1030/204817.586193:ERROR:net/socket/socket_posix.cc:121] CreatePlatformSocket() failed: Address family not supported by protocol (97)\n[pid=450][err] [1030/210011.698384:ERROR:net/socket/socket_posix.cc:121] CreatePlatformSocket() failed: Address family not supported by protocol (97)\n[pid=450][err] [1030/210011.724263:ERROR:net/socket/socket_posix.cc:121] CreatePlatformSocket() failed: Address family not supported by protocol (97)\n[pid=450][err] [1030/210011.724744:ERROR:net/socket/socket_posix.cc:121] CreatePlatformSocket() failed: Address family not supported by protocol (97)\n[pid=450][err] [1030/210011.727250:ERROR:net/socket/socket_posix.cc:121] CreatePlatformSocket() failed: Address family not supported by protocol (97)\n[pid=450] <gracefully close start>\n[pid=450][err] [1030/210159.495262:WARNING:content/common/zygote/zygote_communication_linux.cc:301] Error reading message from zygote: Connection reset by peer (104)\n    at async finish (/home/user/new-game-like-gta-/scripts/shots/ui-02.cjs:382:3)\n    at async battleSession (/home/user/new-game-like-gta-/scripts/shots/ui-02.cjs:856:3)\n    at async /home/user/new-game-like-gta-/scripts/shots/ui-02.cjs:1000:40"
+      "observed": "page.evaluate: Target page, context or browser has been closed\n    at ev (/home/user/new-game-like-gta-/scripts/shots/ui-02.cjs:330:35)\n    at selectCap0 (/home/user/new-game-like-gta-/scripts/shots/ui-02.cjs:492:9)\n    at worldSession (/home/user/new-game-like-gta-/scripts/shots/ui-02.cjs:701:11)\n    at async /home/user/new-game-like-gta-/scripts/shots/ui-02.cjs:1029:39"
     }
   ],
   "shots": [
@@ -176,26 +101,6 @@
     {
       "name": "world-colorblind-tritan-pc.png",
       "note": "world HUD with settings.colorblind = tritan: faction colours, emblems and the minimap canvas follow the remap"
-    },
-    {
-      "name": "event-modal-pc.png",
-      "note": "event modal: illustration band, text, choices with advisor recommendation and requirements"
-    },
-    {
-      "name": "event-modal-advisors-pc.png",
-      "note": "event modal: the succession event - advisor portraits (\"Recommended by the ...\"), a locked choice with its requirement, auto-resolve countdown"
-    },
-    {
-      "name": "engagement-prompt-pc.png",
-      "note": "engagement prompt: both sides, prediction bar, advisor factors, queue"
-    },
-    {
-      "name": "battle-deployment-pc.png",
-      "note": "battle HUD in deployment: forces bar, deployment timer + Begin, cards strip, command card, simple presets"
-    },
-    {
-      "name": "battle-live-pc.png",
-      "note": "battle HUD in battle: control-group row (groups assigned through the input path), cards strip (short titles, men, morale + cause, fatigue, ammo), command card, rally ring, floating formation cards (anchors from the camera model), feed"
     }
   ],
   "audits": [
@@ -222,9 +127,9 @@
     },
     {
       "shot": "settlement-panel-lower-pc.png",
-      "texts": 77,
+      "texts": 74,
       "contrastFails": [],
-      "targets": 54,
+      "targets": 49,
       "smallTargets": []
     },
     {
@@ -250,7 +155,7 @@
     },
     {
       "shot": "market-pc.png",
-      "texts": 28,
+      "texts": 31,
       "contrastFails": [],
       "targets": 8,
       "smallTargets": []
@@ -296,71 +201,7 @@
       "contrastFails": [],
       "targets": 41,
       "smallTargets": []
-    },
-    {
-      "shot": "event-modal-pc.png",
-      "texts": 7,
-      "contrastFails": [],
-      "targets": 1,
-      "smallTargets": []
-    },
-    {
-      "shot": "event-modal-advisors-pc.png",
-      "texts": 17,
-      "contrastFails": [],
-      "targets": 4,
-      "smallTargets": []
-    },
-    {
-      "shot": "engagement-prompt-pc.png",
-      "texts": 22,
-      "contrastFails": [],
-      "targets": 3,
-      "smallTargets": []
-    },
-    {
-      "shot": "battle-deployment-pc.png",
-      "texts": 78,
-      "contrastFails": [],
-      "targets": 37,
-      "smallTargets": []
-    },
-    {
-      "shot": "battle-live-pc.png",
-      "texts": 81,
-      "contrastFails": [],
-      "targets": 39,
-      "smallTargets": []
     }
   ],
-  "profile": {
-    "world-1280x720": {
-      "bench1x": {
-        "screen": "world_hud",
-        "speed": 1,
-        "frames": 600,
-        "updates": 40,
-        "steps": 120,
-        "avgMs": 0.047,
-        "p95Ms": 0.2,
-        "maxMs": 8.9
-      },
-      "bench4x": {
-        "screen": "world_hud",
-        "speed": 4,
-        "frames": 600,
-        "updates": 40,
-        "steps": 480,
-        "avgMs": 0.271,
-        "p95Ms": 3.6,
-        "maxMs": 23.6
-      },
-      "liveSwiftShader": {
-        "ui": 2.043,
-        "input": 0.01,
-        "total": 2.053,
-        "max": 75.3
-      }
-    }
-  }
+  "profile": {}
 }

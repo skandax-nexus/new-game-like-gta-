@@ -4043,6 +4043,12 @@
 
 /* --- Phone minimap (Art Director round 1): expanded 232 px portrait / 184 px landscape; the collapse and north-up
    buttons sit side by side above the map, never on it. --- */
+/* flow-root: without it the frame's top margin collapses through .minimap, which then starts 54 px lower - the
+   absolutely placed buttons (top 0) landed on the map and the toggle jumped down when tapped (round 2 probe). */
+:root[data-layout='phone'] .minimap,
+:root[data-layout='phone-landscape'] .minimap {
+  display: flow-root;
+}
 :root[data-layout='phone'] .minimap-frame {
   width: 232px;
   height: 232px;

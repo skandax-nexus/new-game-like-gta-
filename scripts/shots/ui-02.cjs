@@ -364,6 +364,16 @@ async function elementShot(s, selector, name, note) {
   console.log(`[ui-02] shot ${name}-${s.vpName}.png  ${note}`);
 }
 
+/** Phones, minimap expanded: the collapse and north-up buttons sit above the drawn map, never on it (AD round 1). */
+async function minimapButtonsClear(s, scope) {
+  const r = await ev(s, (sc) => {
+    const q = (sel) => { const e = document.querySelector(`${sc} ${sel}`); const b = e && e.getBoundingClientRect(); return b && { x: Math.round(b.x), y: Math.round(b.y), w: Math.round(b.width), h: Math.round(b.height) }; };
+    return { toggle: q('.minimap-toggle'), north: q('.minimap-north'), canvas: q('.minimap-canvas') };
+  }, scope);
+  const clear = (b) => !!b && !!r.canvas && b.y + b.h <= r.canvas.y;
+  check(`${scope} minimap (${s.vpName}): expanded >= ${s.vp.size[0] > s.vp.size[1] ? 180 : 220} px with both buttons above the map`, clear(r.toggle) && clear(r.north) && !!r.canvas && r.canvas.w + 12 >= (s.vp.size[0] > s.vp.size[1] ? 180 : 220), r);
+}
+
 /** Taps / clicks on open map areas reach the game (no transparent HUD container swallowing them). */
 async function passThrough(s, label, points) {
   const hits = await ev(s, (pts) => {
@@ -383,6 +393,15 @@ async function finish(s, label) {
 }
 
 async function click(s, selector, textRe) {
+  // The HUD renders on a 4-10 Hz throttle and SwiftShader can be starved by a concurrent capture: wait (up to 15 s)
+  // for the target to exist before clicking instead of failing on the first look.
+  await s.page
+    .waitForFunction(
+      ([sel, re]) => [...document.querySelectorAll(sel)].some((e) => !e.closest('.ui-hidden') && (!re || new RegExp(re, 'i').test(e.textContent || e.getAttribute('aria-label') || ''))),
+      [selector, textRe ? textRe.source : null],
+      { timeout: 15000, polling: 200 },
+    )
+    .catch(() => {});
   const ok = await s.page.evaluate(
     ([sel, re]) => {
       const els = [...document.querySelectorAll(sel)].filter((e) => !e.closest('.ui-hidden'));
@@ -599,6 +618,7 @@ async function worldSession(browser, base, vpName) {
 
   await step(s, async () => {
     if (phone) await click(s, '.minimap-toggle');
+    if (phone) await minimapButtonsClear(s, '.wh-minimap');
     await elementShot(s, '.wh-minimap', 'minimap-world', 'world minimap: terrain bitmap, borders, roads, settlements by relation, armies, fog');
     if (phone) await click(s, '.minimap-toggle');
   }, 'world: minimap');
@@ -809,6 +829,7 @@ async function battleSession(browser, base, vpName, outcomeHolder) {
 
   await step(s, async () => {
     if (phone) await click(s, '.minimap-toggle');
+    if (phone) await minimapButtonsClear(s, '.bh-minimap');
     await elementShot(s, '.bh-minimap', 'minimap-battle', 'battle minimap: terrain, deploy zones, formations by side with facing, selection');
     if (phone) await click(s, '.minimap-toggle');
   }, 'battle: minimap');
@@ -843,7 +864,16 @@ async function battleSession(browser, base, vpName, outcomeHolder) {
       const ps = p.playerSide;
       o.winner = ps;
       const foe = o.sides[1 - ps];
-      o.sides[ps].prisoners = Math.max(o.sides[ps].prisoners || 0, foe.captured || 0, 120);
+      // Keep the staged outcome self-consistent: the men taken come out of the foe's survivors, and the table,
+      // the summary line and the prisoners header all show the same number.
+      const taken = Math.max(foe.captured || 0, Math.min(120, Math.floor((foe.survivors || 0) * 0.4)));
+      foe.survivors = Math.max(0, (foe.survivors || 0) - (taken - (foe.captured || 0)));
+      foe.captured = taken;
+      o.sides[ps].prisoners = taken;
+      o.summary = o.summary.map((line) => {
+        let i = 0; // the losses line lists side 0 then side 1 (sim/tactical/outcome.ts)
+        return line.replace(/(\d[\d,]*) killed, (\d[\d,]*) taken\./g, (m, k) => (i++ === 1 - ps ? `${k} killed, ${taken} taken.` : m));
+      });
       foe.commanderFate = foe.commanderFate === 'safe' ? 'captured' : foe.commanderFate;
       window.__SAMRAJYA__.showScreen('battle_results', { ...p, outcome: o, engagementId: 'eng_ui02_capture', continueLabel: 'Return to the Realm' });
     });
@@ -1008,9 +1038,12 @@ async function assetsOff(browser, base) {
       const names = new Set(report.shots.map((x) => x.name));
       const checks = new Set(report.checks.map((x) => x.name));
       const summary = (n) => n.startsWith('contrast:') || n.startsWith('touch:');
+      // A passing step records no check, so an old step failure of a session + viewport this run covered would
+      // otherwise survive the merge: drop every old check of the re-run sessions on the re-run viewports.
+      const rerun = (n) => (!ONLY || [...ONLY].some((o) => n.startsWith(o) || n.startsWith(`${o} `))) && VPS.some((v) => n.includes(`(${v})`));
       report.shots = [...old.shots.filter((x) => !names.has(x.name)), ...report.shots];
       report.audits = [...old.audits.filter((x) => !names.has(x.shot)), ...report.audits];
-      report.checks = [...old.checks.filter((x) => !checks.has(x.name) && !summary(x.name)), ...report.checks];
+      report.checks = [...old.checks.filter((x) => !checks.has(x.name) && !summary(x.name) && !rerun(x.name)), ...report.checks];
       report.profile = { ...old.profile, ...report.profile };
       failed = report.checks.some((c) => !c.ok);
     }
