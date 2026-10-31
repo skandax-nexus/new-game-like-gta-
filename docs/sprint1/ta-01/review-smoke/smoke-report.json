@@ -1,11 +1,11 @@
 {
-  "build": "0.1.0+acfeced",
+  "build": "0.1.0+2a10dc3",
   "quality": "high",
   "shots": [
     {
       "name": "menu",
       "url": "http://127.0.0.1:4454/?scene=menu&quality=high&noaudio=1",
-      "ms": 60154,
+      "ms": 100226,
       "errors": [],
       "state": {
         "scene": "menu",
@@ -20,17 +20,181 @@
             "z": -598.72
           }
         },
-        "fps": 2.7645387028319437,
+        "fps": 1.291133851482412,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.007,
-        "lumaStdev": 45.383,
+        "lumaStdev": 44.74,
         "pageBgShare": 0.001
       },
       "view3d": {
         "dominantShare": 0.003,
-        "lumaStdev": 41.487,
+        "lumaStdev": 40.817,
+        "pageBgShare": 0,
+        "layersHidden": 2
+      },
+      "blankAttempts": []
+    },
+    {
+      "name": "world",
+      "url": "http://127.0.0.1:4454/?scene=world&quality=high&noaudio=1&seed=7&paused=1",
+      "ms": 81328,
+      "errors": [],
+      "state": {
+        "scene": "world",
+        "mode": "campaign",
+        "paused": true,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "world": {
+            "day": 0,
+            "date": {
+              "year": -300,
+              "month": 6,
+              "day": 0,
+              "hour": 8
+            },
+            "season": "sharad",
+            "weather": "clear",
+            "factions": [
+              {
+                "id": "forest",
+                "treasury": 1800,
+                "settlements": 2,
+                "soldiers": 478
+              },
+              {
+                "id": "frontier",
+                "treasury": 1500,
+                "settlements": 2,
+                "soldiers": 266
+              },
+              {
+                "id": "heartland",
+                "treasury": 4000,
+                "settlements": 5,
+                "soldiers": 1650
+              },
+              {
+                "id": "highland",
+                "treasury": 2600,
+                "settlements": 5,
+                "soldiers": 1172
+              }
+            ],
+            "armies": 7,
+            "engagements": 0,
+            "pendingEvents": 0,
+            "victory": "ongoing"
+          },
+          "selection": {
+            "kind": "none",
+            "id": null
+          },
+          "camera": {
+            "x": -534.3999999999999,
+            "z": -538.72,
+            "distance": 900,
+            "yaw": 0.5,
+            "tilt": 0
+          },
+          "blocked": false
+        },
+        "fps": 0.8455542309039374,
+        "errors": 0
+      },
+      "frame": {
+        "dominantShare": 0.01,
+        "lumaStdev": 40.273,
+        "pageBgShare": 0.001
+      },
+      "view3d": {
+        "dominantShare": 0.002,
+        "lumaStdev": 21.571,
+        "pageBgShare": 0,
+        "layersHidden": 2
+      },
+      "blankAttempts": []
+    },
+    {
+      "name": "world-overview",
+      "url": "http://127.0.0.1:4454/?scene=world&quality=high&noaudio=1&seed=7&paused=1&camera=overview",
+      "ms": 75665,
+      "errors": [],
+      "state": {
+        "scene": "world",
+        "mode": "campaign",
+        "paused": true,
+        "timeScale": 1,
+        "quality": "high",
+        "sceneState": {
+          "world": {
+            "day": 0,
+            "date": {
+              "year": -300,
+              "month": 6,
+              "day": 0,
+              "hour": 8
+            },
+            "season": "sharad",
+            "weather": "clear",
+            "factions": [
+              {
+                "id": "forest",
+                "treasury": 1800,
+                "settlements": 2,
+                "soldiers": 478
+              },
+              {
+                "id": "frontier",
+                "treasury": 1500,
+                "settlements": 2,
+                "soldiers": 266
+              },
+              {
+                "id": "heartland",
+                "treasury": 4000,
+                "settlements": 5,
+                "soldiers": 1650
+              },
+              {
+                "id": "highland",
+                "treasury": 2600,
+                "settlements": 5,
+                "soldiers": 1172
+              }
+            ],
+            "armies": 7,
+            "engagements": 0,
+            "pendingEvents": 0,
+            "victory": "ongoing"
+          },
+          "selection": {
+            "kind": "none",
+            "id": null
+          },
+          "camera": {
+            "x": -534.3999999999999,
+            "z": -538.72,
+            "distance": 4200,
+            "yaw": 0.5,
+            "tilt": 0
+          },
+          "blocked": false
+        },
+        "fps": 0.8972920832800612,
+        "errors": 0
+      },
+      "frame": {
+        "dominantShare": 0.01,
+        "lumaStdev": 39.729,
+        "pageBgShare": 0.001
+      },
+      "view3d": {
+        "dominantShare": 0.019,
+        "lumaStdev": 19.713,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -39,7 +203,7 @@
     {
       "name": "menu-mobile",
       "url": "http://127.0.0.1:4454/?scene=menu&quality=low&noaudio=1",
-      "ms": 14151,
+      "ms": 32069,
       "errors": [],
       "state": {
         "scene": "menu",
@@ -54,17 +218,17 @@
             "z": -598.72
           }
         },
-        "fps": 6.219596253544247,
+        "fps": 4.101971940298156,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.018,
-        "lumaStdev": 49.769,
+        "lumaStdev": 49.969,
         "pageBgShare": 0.004
       },
       "view3d": {
-        "dominantShare": 0.006,
-        "lumaStdev": 46.693,
+        "dominantShare": 0.005,
+        "lumaStdev": 46.833,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -73,7 +237,7 @@
     {
       "name": "assetviewer-stupa",
       "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=hero&noui=1",
-      "ms": 57684,
+      "ms": 112956,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -119,17 +283,17 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 8.924309299162699,
+        "fps": 5.292326193232185,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.003,
-        "lumaStdev": 38.886,
+        "lumaStdev": 38.571,
         "pageBgShare": 0
       },
       "view3d": {
         "dominantShare": 0.003,
-        "lumaStdev": 38.886,
+        "lumaStdev": 38.571,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -138,7 +302,7 @@
     {
       "name": "assetviewer-torana",
       "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=close&noui=1",
-      "ms": 42983,
+      "ms": 103621,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -184,17 +348,17 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 10.92555005670892,
+        "fps": 13.908470920600125,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.028,
-        "lumaStdev": 49.656,
+        "lumaStdev": 49.616,
         "pageBgShare": 0
       },
       "view3d": {
         "dominantShare": 0.028,
-        "lumaStdev": 49.656,
+        "lumaStdev": 49.616,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -203,7 +367,7 @@
     {
       "name": "assetviewer-sandstone",
       "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=ultra&noaudio=1&asset=sandstone_carved_red&hdri=sky_day&noui=1",
-      "ms": 77702,
+      "ms": 52948,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -249,17 +413,17 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 6.441368427606477,
+        "fps": 10.365803730720513,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.002,
-        "lumaStdev": 39.284,
+        "lumaStdev": 39.398,
         "pageBgShare": 0
       },
       "view3d": {
         "dominantShare": 0.002,
-        "lumaStdev": 39.284,
+        "lumaStdev": 39.398,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -268,7 +432,7 @@
     {
       "name": "assetviewer-mobile",
       "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=low&noaudio=1&asset=stupa_sanchi&hdri=sky_day&camera=overview",
-      "ms": 18449,
+      "ms": 19192,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -314,17 +478,17 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 9.964369832826135,
+        "fps": 12.035467799353315,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.019,
-        "lumaStdev": 53.485,
+        "lumaStdev": 53.307,
         "pageBgShare": 0
       },
       "view3d": {
-        "dominantShare": 0.01,
-        "lumaStdev": 51.049,
+        "dominantShare": 0.009,
+        "lumaStdev": 50.847,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -333,7 +497,7 @@
     {
       "name": "assetviewer-fallback",
       "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&asset=stupa_sanchi&assets=off",
-      "ms": 31348,
+      "ms": 30897,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -365,17 +529,17 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 6.404098589174692,
+        "fps": 4.809109333524089,
         "errors": 0
       },
       "frame": {
-        "dominantShare": 0.02,
-        "lumaStdev": 53.782,
+        "dominantShare": 0.019,
+        "lumaStdev": 53.696,
         "pageBgShare": 0
       },
       "view3d": {
-        "dominantShare": 0.023,
-        "lumaStdev": 52.415,
+        "dominantShare": 0.022,
+        "lumaStdev": 52.327,
         "pageBgShare": 0,
         "layersHidden": 2
       },
