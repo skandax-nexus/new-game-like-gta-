@@ -16,8 +16,12 @@
  *   shadow distance (ZoomLook.shadows.distanceM x tier scale, never closer than 1.25 x the focus distance).
  * - Stability: each cascade is fitted with the bounding sphere of its frustum slice (rotation-invariant size,
  *   radius quantised) and its centre is snapped to whole shadow texels in light space (no shimmering when panning).
- * - Biases scale with the cascade texel: normalBias = 1.4 texels (world m), depth bias = 0.6 texel / depth range.
- * - Filter per tier: low hard (BasicShadowMap), medium PCF with a radius from the sun's angular size, high / ultra
+ * - Biases scale with the cascade texel: normalBias = 1.4 texels (world m), depth bias = 0.6 texel / depth range;
+ *   low's hard cascade 2.2 / 0.8 texels plus a slope-scaled depth bias (NORMAL_BIAS_TEXELS, SLOPE_BIAS_TEXELS).
+ * - Casters render back faces into the map (three's default shadowSide for FrontSide materials: closed architecture
+ *   self-shadows from its far side, so lit faces never compare against themselves).
+ * - Filter per tier: low hard = a fixed tent of nine bilinear (2x2) depth compares in one 4x4 fetch (shadowChunks.ts
+ *   samShadowTent: no penumbra growth, but no aliased saw-tooth edges either - AD round 1), medium PCF with a radius from the sun's angular size, high / ultra
  *   PCSS (blocker search + penumbra from r.sunSoftnessDeg x ZoomLook softnessScale).
  * - Far bands use fewer cascades than the tier allows (activeCascadesFor: strategic 1, operational 2). From far away
  *   every caster on the map falls inside every cascade, so each extra cascade re-draws the whole map for detail
@@ -38,6 +42,17 @@ export const CSM_BLEND = 0.12;
 export const CSM_CASTER_EXTENT_M = 220;
 /** First split starts at this fraction of the camera-to-focus distance (RTS cameras, focus > 12 m). */
 export const SPLIT_NEAR_OF_FOCUS = 0.3;
+/**
+ * Biases per filter (in shadow texels of the cascade). The low tier's single 'hard' cascade covers the whole hero /
+ * close band with 1024^2 texels (~0.1 m each in the hero band), so it gets a wider normal offset and a slope-scaled
+ * depth bias (shadowChunks.ts) against acne on grazing-lit walls (AD round 1, blocker 2).
+ */
+export const NORMAL_BIAS_TEXELS: Readonly<Record<ShadowFilter, number>> = { hard: 2.2, pcf: 1.4, pcss: 1.4 };
+export const DEPTH_BIAS_TEXELS: Readonly<Record<ShadowFilter, number>> = { hard: 0.8, pcf: 0.6, pcss: 0.6 };
+/** Slope-scaled depth bias of the hard filter: texels per unit tan(light angle), tan capped (grazing light). */
+export const SLOPE_BIAS_TEXELS = 0.6;
+export const SLOPE_BIAS_MAX_TAN = 6;
+
 /** Debug cascade tints (?csm=1): red, green, blue, yellow. */
 export const CSM_DEBUG_COLORS: readonly (readonly [number, number, number])[] = [
   [1, 0.35, 0.35],
@@ -292,8 +307,8 @@ export class CascadedShadows {
       cam.far = back + r;
       cam.updateProjectionMatrix();
       const depthRange = cam.far - cam.near;
-      l.shadow.normalBias = texel * 1.4;
-      l.shadow.bias = -(texel * 0.6) / depthRange;
+      l.shadow.normalBias = texel * NORMAL_BIAS_TEXELS[this.filter];
+      l.shadow.bias = -(texel * DEPTH_BIAS_TEXELS[this.filter]) / depthRange;
       l.shadow.radius = this.filter === 'pcf' ? pcfRadiusFromSoftness(this.softnessDeg * look.shadows.softnessScale, texel) : 1;
       g(G.CSM_CASCADE + i).set(s0, s1, texel, depthRange);
       this.info.texels[i] = texel;

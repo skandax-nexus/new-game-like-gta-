@@ -6,7 +6,8 @@
  *   (samG CSM_PARAMS.x, written by CascadedShadows every frame; 0 when no rig drives the frame) it returns the
  *   cascade weight for the fragment's view depth (cascades blend over the last CSM_BLEND of each slice; the weights
  *   of all cascade lights sum to 1, so N lights still light like one sun) times that cascade's shadow:
- *   hard / PCF through three's getShadow(), or PCSS (Vogel-disk blocker search, penumbra = receiver-blocker
+ *   hard (low tier: samShadowTent, a fixed tent of nine bilinear compares (16 fetches) plus a slope-scaled depth bias - no
+ *   penumbra growth, no stair steps), PCF through three's getShadow(), or PCSS (Vogel-disk blocker search, penumbra = receiver-blocker
  *   distance x tan(sun angular radius), filtered with up to 32 rotated taps). Shadows fade out at the last split.
  *   Idle cascades (far zoom bands use fewer, csm.ts activeCascadesFor) carry texel 0 in their slot: weight 0, and the
  *   cascade before them is the last one in use.
@@ -17,7 +18,7 @@
  */
 import * as THREE from 'three';
 import { registerChunkPatch, SAM_G_DECL } from '../materials/chunks/globals';
-import { CSM_DEBUG_COLORS } from './csm';
+import { CSM_DEBUG_COLORS, SLOPE_BIAS_MAX_TAN, SLOPE_BIAS_TEXELS } from './csm';
 
 const vec3 = (c: readonly number[]): string => `vec3( ${c.map((v) => v.toFixed(3)).join(', ')} )`;
 
@@ -65,6 +66,30 @@ float samShadowPCSS( sampler2D map, vec2 mapSize, float bias, vec4 coord, vec4 c
   }
   return lit / float( nF );
 }
+// Low tier 'hard' filter: nine bilinear (2x2) depth compares at -1 / 0 / +1 texel, folded into one 4x4 fetch with
+// weights (1 - f, 1, 1, f) per axis (16 fetches, like three's PCF). A fixed ~3-texel tent: no penumbra growth with
+// blocker distance, and an edge between lit and shadowed texels becomes a smooth ramp instead of a stair step
+// (AD round 1, blocker 2: eave combs on walls, ridge-shadow teeth at golden hour).
+float samShadowTent( sampler2D map, vec2 size, float bias, vec4 coord ) {
+  coord.xyz /= coord.w;
+  coord.z += bias;
+  if ( coord.x < 0.0 || coord.x > 1.0 || coord.y < 0.0 || coord.y > 1.0 || coord.z > 1.0 ) return 1.0;
+  vec2 texel = 1.0 / size;
+  vec2 st = coord.xy * size - 0.5;
+  vec2 f = fract( st );
+  vec2 base = ( floor( st ) - 0.5 ) * texel;
+  vec4 wx = vec4( 1.0 - f.x, 1.0, 1.0, f.x );
+  vec4 wy = vec4( 1.0 - f.y, 1.0, 1.0, f.y );
+  float sum = 0.0;
+  for ( int j = 0; j < 4; j++ ) {
+    vec4 row;
+    for ( int i = 0; i < 4; i++ ) {
+      row[ i ] = step( coord.z, unpackRGBAToDepth( texture2D( map, base + vec2( float( i ), float( j ) ) * texel ) ) );
+    }
+    sum += dot( row, wx ) * wy[ j ];
+  }
+  return sum / 9.0;
+}
 // Is cascade i the last one in use? (the tier's last, or the one before an idle cascade: texel 0 in its slot)
 bool samCsmLast( int i ) {
   return float( i ) >= samG[ SAM_G_CSM_PARAMS ].x - 1.0 || samG[ SAM_G_CSM_CASCADE + i + 1 ].z <= 0.0;
@@ -83,7 +108,9 @@ vec3 samCsmTint( int i ) {
 }
 // depth = view-space depth of the fragment (the caller passes -geometryPosition.z; no view-position varying is
 // assumed here, so materials without one - three's ShadowMaterial - still compile).
-vec3 samDirShadow( const in int i, sampler2D map, DirectionalLightShadow s, vec4 coord, bool receive, float depth ) {
+// ndl = dot( normal, toLight ): the hard (low tier) filter adds a slope-scaled depth bias (SLOPE_BIAS_TEXELS texels x
+// tan(angle), capped at SLOPE_BIAS_MAX_TAN) so grazing-lit walls do not streak with acne.
+vec3 samDirShadow( const in int i, sampler2D map, DirectionalLightShadow s, vec4 coord, bool receive, float depth, float ndl ) {
   vec4 prm = samG[ SAM_G_CSM_PARAMS ];
   if ( float( i ) >= prm.x ) {
     // Not a cascade of the rig's sun: stock three.js behaviour.
@@ -97,7 +124,13 @@ vec3 samDirShadow( const in int i, sampler2D map, DirectionalLightShadow s, vec4
   float sh = 1.0;
   if ( receive ) {
     if ( prm.y > 1.5 ) sh = samShadowPCSS( map, s.shadowMapSize, s.shadowBias, coord, c );
-    else sh = getShadow( map, s.shadowMapSize, 1.0, s.shadowBias, s.shadowRadius, coord );
+    else {
+      if ( prm.y < 0.5 ) {
+        float cs = clamp( ndl, 0.02, 1.0 );
+        float tanT = min( sqrt( max( 1.0 - cs * cs, 0.0 ) ) / cs, ${SLOPE_BIAS_MAX_TAN.toFixed(1)} );
+        sh = samShadowTent( map, s.shadowMapSize, s.shadowBias - ${SLOPE_BIAS_TEXELS.toFixed(2)} * tanT * c.z / max( c.w, 1e-3 ), coord );
+      } else sh = getShadow( map, s.shadowMapSize, 1.0, s.shadowBias, s.shadowRadius, coord );
+    }
     if ( samCsmLast( i ) ) {
       float band = prm.w * ( c.y - c.x );
       sh = mix( sh, 1.0, smoothstep( c.y - band, c.y, depth ) );
@@ -114,7 +147,7 @@ vec3 samDirShadow( const in int i, sampler2D map, DirectionalLightShadow s, vec4
 export const DIR_SHADOW_LINE =
   'directLight.color *= ( directLight.visible && receiveShadow ) ? getShadow( directionalShadowMap[ i ], directionalLightShadow.shadowMapSize, directionalLightShadow.shadowIntensity, directionalLightShadow.shadowBias, directionalLightShadow.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;';
 export const DIR_SHADOW_REPLACEMENT =
-  'directLight.color *= samDirShadow( UNROLLED_LOOP_INDEX, directionalShadowMap[ i ], directionalLightShadow, vDirectionalShadowCoord[ i ], directLight.visible && receiveShadow, - geometryPosition.z );';
+  'directLight.color *= samDirShadow( UNROLLED_LOOP_INDEX, directionalShadowMap[ i ], directionalLightShadow, vDirectionalShadowCoord[ i ], directLight.visible && receiveShadow, - geometryPosition.z, dot( geometryNormal, directLight.direction ) );';
 
 registerChunkPatch('shadowmap_pars_fragment', 'gfx01-csm-pars', (src) => {
   // Insert just before the #endif that closes USE_SHADOWMAP (getShadow / DirectionalLightShadow are declared above).

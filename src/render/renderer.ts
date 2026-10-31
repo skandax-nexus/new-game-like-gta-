@@ -164,9 +164,10 @@ export class RenderContext {
   private applyRendererQuality(): void {
     const q = this.quality;
     this.renderer.shadowMap.enabled = q.shadows.enabled;
-    // low: hard (one tap); medium: PCF with a radius from the sun's angular size; high / ultra: PCSS in the cascade
-    // chunk (lighting/shadowChunks.ts) - PCF is the define other shadowed lights fall back to.
-    this.renderer.shadowMap.type = q.shadows.soft ? THREE.PCFShadowMap : THREE.BasicShadowMap;
+    // low: 'hard' = PCF with a fixed 1-texel radius (no penumbra growth, but no aliased saw-tooth edges either - AD
+    // round 1); medium: PCF with a radius from the sun's angular size; high / ultra: PCSS in the cascade chunk
+    // (lighting/shadowChunks.ts) - PCF is the define other shadowed lights fall back to.
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.shadowMap.needsUpdate = true;
   }
 

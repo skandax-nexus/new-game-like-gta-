@@ -231,6 +231,10 @@ async function maxRowJump(file, y0, y1) {
         await shot(`battle-${p.id}-low`, `${BATTLE}&quality=low&noui=1&${p.env}`, { advance: 200 });
         await shot(`hero-${p.id}-low`, `${HERO}&quality=low&noui=1&${p.env}`);
       }
+      // Phone portrait (AD round 1, blocker 2): the low tier's single cascade at 390x844 (no acne, no saw-tooth).
+      for (const p of PRESETS.filter((x) => ['noon', 'golden'].includes(x.id))) {
+        await shot(`hero-${p.id}-low-phone`, `${HERO}&quality=low&noui=1&${p.env}`, { vp: [390, 844], mobile: true });
+      }
     }
     // Night readability: lower half of the tactical battle (the armies) must stay >= 12 % mean luma.
     for (const tier of ['ultra', 'low']) {

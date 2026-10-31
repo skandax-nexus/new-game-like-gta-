@@ -634,6 +634,8 @@ export class EnvironmentRig {
       activeCascades: this.shadows.activeCascadeCount,
       shadowFilter: this.shadows.filterMode,
       shadowDistance: Math.round(this.shadows.info.distance),
+      shadowTexelM: this.shadows.info.texels.slice(0, this.shadows.cascadeCount).map((t) => Math.round(t * 1000) / 1000),
+      shadowRadiusM: this.shadows.info.radii.slice(0, this.shadows.cascadeCount).map((t) => Math.round(t * 10) / 10),
       practicals: this.practicals.size,
       practicalLightsLit: this.practicals.litCount,
       wetness: MATERIAL_GLOBALS.wetness.value,

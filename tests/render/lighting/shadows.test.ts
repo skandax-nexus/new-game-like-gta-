@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { buildQualitySettings } from '../../../src/core/quality';
-import { activeCascadesFor, CascadedShadows, cascadeCountFor, cascadeMapSize, practicalSplits, shadowDistanceFor, shadowFilterFor, shadowMapBytes, CSM_BLEND } from '../../../src/render/lighting/csm';
+import { activeCascadesFor, DEPTH_BIAS_TEXELS, NORMAL_BIAS_TEXELS, SLOPE_BIAS_TEXELS, CascadedShadows, cascadeCountFor, cascadeMapSize, practicalSplits, shadowDistanceFor, shadowFilterFor, shadowMapBytes, CSM_BLEND } from '../../../src/render/lighting/csm';
 import { CSM_PARS_GLSL } from '../../../src/render/lighting/shadowChunks';
 import { DIR_SHADOW_LINE, cascadeChunksInstalled } from '../../../src/render/lighting/shadowChunks';
 import { installShaderGlobals, G, g } from '../../../src/render/materials/chunks/globals';
@@ -165,6 +165,37 @@ describe('far zoom bands use fewer cascades (review: ARCHITECTURE §15 world < 3
   });
 });
 
+describe('low tier: no acne, no saw-tooth (AD round 1, blocker 2)', () => {
+  it('the hard filter is a fixed tent of bilinear compares with a slope-scaled bias, not an unfiltered compare', () => {
+    // Nine bilinear compares folded into one 4x4 fetch, weights (1 - f, 1, 1, f) per axis, normalised by 9.
+    expect(CSM_PARS_GLSL).toContain('float samShadowTent( sampler2D map, vec2 size, float bias, vec4 coord )');
+    expect(CSM_PARS_GLSL).toContain('vec4 wx = vec4( 1.0 - f.x, 1.0, 1.0, f.x );');
+    expect(CSM_PARS_GLSL).toContain('return sum / 9.0;');
+    // Hard filter (CSM_PARAMS.y = 0) -> tent with slope bias; PCF / PCSS unchanged.
+    expect(CSM_PARS_GLSL).toContain('if ( prm.y < 0.5 ) {');
+    expect(CSM_PARS_GLSL).toMatch(/sh = samShadowTent\( map, s\.shadowMapSize, s\.shadowBias - [0-9.]+ \* tanT \* c\.z/);
+    expect(SLOPE_BIAS_TEXELS).toBeGreaterThan(0);
+  });
+
+  it('the single low cascade gets >= 2 texels of normal bias and a larger depth bias than the filtered tiers', () => {
+    expect(NORMAL_BIAS_TEXELS.hard).toBeGreaterThanOrEqual(2);
+    expect(DEPTH_BIAS_TEXELS.hard).toBeGreaterThan(DEPTH_BIAS_TEXELS.pcf);
+    const csm = new CascadedShadows(buildQualitySettings('low'));
+    const cam = new THREE.PerspectiveCamera(50, 16 / 9, 0.1, 3000);
+    cam.position.set(0, 2.2, 5);
+    cam.lookAt(0, 1.5, 0);
+    cam.updateMatrixWorld();
+    const look = resolveZoomLook(4.5, createZoomLook());
+    csm.update(cam, new THREE.Vector3(0.3, 0.8, 0.2).normalize(), look, 4.5);
+    const texel = csm.info.texels[0]!;
+    expect(csm.lights[0]!.shadow.normalBias).toBeCloseTo(texel * NORMAL_BIAS_TEXELS.hard, 9);
+    // Fitted to the hero band (~45-50 m of shadow distance on low).
+    expect(csm.info.distance).toBeGreaterThan(40);
+    expect(csm.info.distance).toBeLessThan(60);
+    csm.dispose();
+  });
+});
+
 describe('global shadow chunk', () => {
   it('replaces only the directional shadow line and keeps the flipbook hook strings (TA-07)', () => {
     installShaderGlobals();
@@ -172,6 +203,7 @@ describe('global shadow chunk', () => {
     const begin = THREE.ShaderChunk.lights_fragment_begin;
     expect(begin.includes(DIR_SHADOW_LINE)).toBe(false);
     expect(begin).toContain('samDirShadow( UNROLLED_LOOP_INDEX');
+    expect(begin).toContain('dot( geometryNormal, directLight.direction ) );');
     expect(begin).toContain(FLIP_CHUNK_HOOKS.probe);
     expect(begin).toContain(FLIP_CHUNK_HOOKS.hemi);
     expect(THREE.ShaderChunk.lights_physical_pars_fragment).toContain(FLIP_CHUNK_HOOKS.directDotNL);
