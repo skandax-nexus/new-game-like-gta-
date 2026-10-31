@@ -180,6 +180,19 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
 
   // --- formation cards strip ------------------------------------------------------------------
   const strip = h('div', { class: 'bh-strip', role: 'listbox', 'aria-label': 'Your formations', 'aria-multiselectable': 'true', dataset: { anchor: 'formation-cards' } });
+  // Phones: when more cards wait to the right the strip's edge fades (a scroll hint instead of a hard-cut card).
+  // One rAF read after the card count, the layout or the scroll position changes - never per frame.
+  let edgeQueued = false;
+  let stripCount = -1;
+  const checkStripEdge = (): void => {
+    if (edgeQueued || typeof requestAnimationFrame !== 'function') return;
+    edgeQueued = true;
+    requestAnimationFrame(() => {
+      edgeQueued = false;
+      setClass(strip, 'more-right', strip.scrollWidth - strip.scrollLeft - strip.clientWidth > 4);
+    });
+  };
+  strip.addEventListener('scroll', checkStripEdge, { passive: true });
   const cardViews = new Map<number, CardView>();
   const lastClick = new Map<number, number>();
   const makeCard = (f: FormationState): HTMLButtonElement => {
@@ -453,6 +466,7 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
     ui.onLayout(() => {
       renderMode();
       minimap.setCollapsed(ui.layout !== 'pc');
+      checkStripEdge();
     }),
   ];
   minimap.setCollapsed(ui.layout !== 'pc');
@@ -591,6 +605,10 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
         setAttr(node, 'aria-selected', sel.has(f.index) ? 'true' : 'false');
         setAttr(node, 'aria-label', `${f.name}: ${fmtInt(f.soldiers)} men, morale ${Math.round(f.morale)}, ${label(tier)}, ${orderLabel(f)}`);
       });
+      if (own.length !== stripCount) {
+        stripCount = own.length;
+        checkStripEdge();
+      }
       // Control groups: GP-04's feed when pushed, else the battle state's groups (same rows either way).
       const touchRow = ctx.input.touchMode || ui.layout !== 'pc';
       groups.set(ui.feeds.battleGroups ?? battleGroupsFrom(b, ps, titles), touchRow);

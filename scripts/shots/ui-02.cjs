@@ -334,22 +334,40 @@ async function settle(s, ms = 450) {
 }
 
 /** Screenshot + contrast / touch audit. */
+/** Visible UI text cut to an ellipsis (text-overflow: ellipsis and wider than its box) - Art Director round 1. */
+function collectTruncated() {
+  const root = document.getElementById('ui-root') || document.body;
+  const out = [];
+  for (const e of root.querySelectorAll('*')) {
+    if (!e.firstChild || e.closest('.ui-hidden')) continue;
+    const cs = getComputedStyle(e);
+    if (cs.textOverflow !== 'ellipsis' || cs.display === 'none' || cs.visibility === 'hidden') continue;
+    const r = e.getBoundingClientRect();
+    if (r.width <= 0 || r.bottom < 0 || r.right < 0 || r.top > innerHeight || r.left > innerWidth) continue;
+    // Off-screen nodes are skipped above; anything on screen wider than its box is a cut label.
+    if (e.scrollWidth > e.clientWidth + 1) out.push({ text: (e.textContent || '').trim().slice(0, 40), w: e.clientWidth, need: e.scrollWidth, cls: String(e.className).slice(0, 40) });
+  }
+  return out;
+}
+
 async function shot(s, name, note) {
   await settle(s, 350);
   const file = path.join(OUT, `${name}-${s.vpName}.png`);
   await s.page.evaluate(() => window.__SAMRAJYA__.freeze(true)).catch(() => undefined);
   const buf = await s.page.screenshot({ path: file, timeout: TIMEOUT });
   const ui = await s.page.evaluate(collectUi);
+  const truncated = await s.page.evaluate(collectTruncated);
   await s.page.evaluate(() => window.__SAMRAJYA__.freeze(false)).catch(() => undefined);
   const img = decodePng(buf);
   const contrast = contrastAudit(img, ui.texts);
   const small = s.vp.mobile ? ui.targets.filter((t) => t.w < 43.5 || t.h < 43.5) : [];
-  const audit = { shot: `${name}-${s.vpName}.png`, texts: contrast.checked, contrastFails: contrast.fails, targets: ui.targets.length, smallTargets: small };
+  const audit = { shot: `${name}-${s.vpName}.png`, texts: contrast.checked, contrastFails: contrast.fails, targets: ui.targets.length, smallTargets: small, truncated };
   report.audits.push(audit);
   report.shots.push({ name: `${name}-${s.vpName}.png`, note });
   console.log(`[ui-02] shot ${name}-${s.vpName}.png  ${note}  (texts ${contrast.checked}, contrast fails ${contrast.fails.length}${s.vp.mobile ? `, targets ${ui.targets.length}, < 44 px ${small.length}` : ''})`);
   for (const f of contrast.fails.slice(0, 8)) console.log(`         contrast ${f.ratio} < ${f.need}: "${f.text}" ${f.color} on ${f.bg} (${f.cls})`);
   for (const t of small.slice(0, 8)) console.log(`         target ${t.w}x${t.h}: "${t.label}" (${t.cls})`);
+  for (const t of truncated.slice(0, 8)) console.log(`         truncated "${t.text}" ${t.w}/${t.need} px (${t.cls})`);
   return audit;
 }
 
@@ -1037,7 +1055,7 @@ async function assetsOff(browser, base) {
       const old = JSON.parse(fs.readFileSync(file, 'utf8'));
       const names = new Set(report.shots.map((x) => x.name));
       const checks = new Set(report.checks.map((x) => x.name));
-      const summary = (n) => n.startsWith('contrast:') || n.startsWith('touch:');
+      const summary = (n) => n.startsWith('contrast:') || n.startsWith('touch:') || n.startsWith('truncation:');
       // A passing step records no check, so an old step failure of a session + viewport this run covered would
       // otherwise survive the merge: drop every old check of the re-run sessions on the re-run viewports.
       const rerun = (n) => (!ONLY || [...ONLY].some((o) => n.startsWith(o) || n.startsWith(`${o} `))) && VPS.some((v) => n.includes(`(${v})`));
@@ -1052,6 +1070,8 @@ async function assetsOff(browser, base) {
     const tf = report.audits.flatMap((a) => a.smallTargets.map((t) => ({ shot: a.shot, ...t })));
     check(`contrast: every measured text run >= 4.5:1 (body) / 3:1 (large) on ${report.audits.length} captures`, cf.length === 0, { texts: report.audits.reduce((n, a) => n + a.texts, 0), fails: cf.slice(0, 20) });
     check('touch: every interactive element >= 44x44 px on phone captures', tf.length === 0, { targets: report.audits.reduce((n, a) => n + a.targets, 0), fails: tf.slice(0, 20) });
+    const cut = report.audits.flatMap((a) => (a.truncated || []).map((t) => ({ shot: a.shot, ...t })));
+    check(`truncation: no visible label cut to an ellipsis on ${report.audits.length} captures`, cut.length === 0, { fails: cut.slice(0, 30) });
   } catch (err) {
     runError = true;
     check('run', false, String(err && err.stack ? err.stack : err));

@@ -40,7 +40,7 @@ further down; every one was opened and looked at.
 |---|---|
 | `world-settlement-economy-pc` | Full world HUD with Rajapura selected. Top bar: realm emblem, name and age; six resources (grain 2,91,500 -416/d, timber 600 +16/d, stone 300, wealth 4,000 +683/mo, villagers 17,370 with the idle-builders badge 5, recruits 1,158 +191/mo); date, season, weather; pause + 1x/2x/4x/8x; menu. Realm buttons (Chronicle badge 1). Act I objectives. Rotating minimap with terrain, borders, roads and the N marker. Bottom: selection info (population, grain reserve days in reserve colour, loyalty, order) with Govern / Visit, and the Economy tab of the 5 x 3 card: Fields L3, Canal, Granary L2, Tank, Stepwell / Market L2, Workshop L2, Quarry (disabled - no deposit), Harbor, Station / Treasury, Trade; Classic hotkeys Alt+Q..B in the corners. |
 | `world-settlement-recruit-pc` | Same, Recruit tab: Spears, Archers, Guards, Horse, Chariots / Elephants, Engineers, Scouts, Supply at their `UnitDef.commandSlot`, Rally point on slot 14. |
-| `world-settlement-*-portrait` / `-landscape` | Phone layouts. Portrait: two-row top bar (Grain / Wealth / Recruits + expand chevron + menu; date + pause/1x/2x/4x), minimap and objectives behind 48 px buttons, realm buttons as a right column, the card as a bottom sheet with icon-over-label tabs. Landscape: one-row top bar, realm buttons in a row, compact card docked bottom-right (48 px slots) so the map stays visible. |
+| `world-settlement-*-portrait` / `-landscape` | Phone layouts (tabs span the slot grid and read in full; landscape slots print the kit's caps codes FLD / CNL / GRN ... with the level badge top-left). Portrait: two-row top bar (Grain / Wealth / Recruits + expand chevron + menu; date + pause/1x/2x/4x), minimap and objectives behind 48 px buttons, realm buttons as a right column, the card as a bottom sheet with icon-over-label tabs. Landscape: one-row top bar, realm buttons in a row, compact card docked bottom-right (52 x 58 px slots) so the map stays visible. |
 | `world-army-card-pc` | Royal Host selected: food / morale meters, and the army card - Move, Attack, Besiege, Garrison, Raid / Forage, Retreat, Bold, Steady (current, highlighted), Wary / Forced, Split, Merge, Disband (confirm), Visit. |
 | `world-colorblind-{protan,deutan,tritan}-pc` | `settings.colorblind` applied (`<html data-colorblind>`): realm emblem, Recruit badge, card icons and the minimap canvas (territories, settlements, armies) take the Art Director remaps from `theme.css` / `FACTION_ART.colorblind`; the canvas redraws on the attribute change (MutationObserver), paused or not. Protan and deutan share one remap in `theme.css`, so those two captures are identical by design; tritan turns the player saffron to red. |
 
@@ -259,9 +259,21 @@ Commits `[UI Engineer ...] UI-02 R1 ...` (part of the code was picked up by the 
 | AD5 Landmark cards have no picture; disabled Choose site a mud blob | 96+ x 72 px illustration band per card with a distinct ink silhouette per landmark (`src/ui/components/landmarkArt.ts`, coverage test); flat-stone disabled skin (ink 60 % on flat sandstone); final thumbnails requested from Technical Art | `age-panel-*` |
 | AD6 Evidence: real hero targets, colour-blind captures, minimap following the remaps | Hero HUD lab projects real 3D targets (bubble / reticle positions checked against the projected heads); colour-blind captures of the world and battle HUD per mode; the minimap canvas redraws on `data-colorblind` changes (it did not before) | `hero-*`, `world-colorblind-*-pc`, `battle-colorblind-*-pc` |
 
-Round 2 self-review (this pass) also fixed: the prisoners staging (the header said 120 prisoners while the table said
-0 captured), the capture script's clicks waiting for throttled HUD renders (a landscape run failed on a starved
-SwiftShader), and the two phone issues above (minimap buttons, clipped hero enemy bar).
+Round 2 self-review (this pass, every capture re-opened) found and fixed:
+
+- Phone minimap buttons still on the map (margin collapse, above) - now checked by the capture script.
+- Phone command-card tabs cut to "Econ..." / "Milit..." / "Defe..." and only 41 px wide in landscape (below the 44 px
+  touch minimum): `.command-card` centres its children, so the tab row shrank to its content. The row now spans the
+  slot grid (portrait 334 px: 65 px tabs; landscape: the card's width, 54 px tabs) and every tab reads in full.
+- Landscape battle control-group column cut "Hold to set" / "2 formations" in its 52 px slots: it prints the number
+  over "×N" formations; an empty slot is the number on the dashed skin (aria-label and long-press keep the hint).
+- Phone cards strip hard-cut its last card at the screen edge ("Elepha"): the edge fades over 40 px while more cards
+  wait to the right (one rAF read when the card count, layout or scroll position changes).
+- Hero enemy bar cut at the portrait screen edge ("ndit"): clamped inside the viewport; off-screen heads hide theirs.
+- Prisoners staging said 120 prisoners while the table said 0 captured: the staged outcome is self-consistent.
+- The capture script now also audits truncation (any visible label cut to an ellipsis fails the run), waits for
+  throttled HUD renders before clicking (a landscape run failed on a starved SwiftShader), and a merged partial
+  re-run drops the old checks of the sessions it re-ran.
 
 Final capture ({{SHOTS}} shots, {{CHECKS}} checks): contrast {{TEXTS}} text runs on {{CAPS}} captures, 0 below 4.5:1 / 3:1;
 touch {{TARGETS}} phone targets, 0 under 44 px; no console / page errors, failed requests or crash reports. UI + input

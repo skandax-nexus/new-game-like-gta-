@@ -89,7 +89,9 @@ export function controlGroupRow(ctx: AppContext): { el: HTMLElement; set(groups:
   const make = (g: GroupSlotView): HTMLElement => {
     const num = h('b', { class: 'group-num' }, String(g.group));
     const lbl = h('span', { class: 'group-label' });
-    const btn = h('button', { class: 'btn group-slot', type: 'button' }, num, lbl);
+    // Compact layouts (the landscape battle column, 52 px) print "×N" formations instead of the label (no ellipsis).
+    const cnt = h('span', { class: 'group-count', 'aria-hidden': 'true' });
+    const btn = h('button', { class: 'btn group-slot', type: 'button' }, num, lbl, cnt);
     btn.addEventListener('click', (e) => {
       const now = performance.now();
       const prev = lastTap.get(g.group) ?? 0;
@@ -119,6 +121,7 @@ export function controlGroupRow(ctx: AppContext): { el: HTMLElement; set(groups:
         make,
         (node, g) => {
           setText(node.querySelector('.group-label')!, g.count > 0 ? (g.label || String(g.count)) : 'Hold to set');
+          setText(node.querySelector('.group-count')!, g.count > 0 ? `\u00d7${g.count}` : '');
           setClass(node, 'empty', g.count === 0);
           node.setAttribute('aria-label', g.count > 0 ? `Group ${g.group}: ${g.label || g.count}` : `Group ${g.group}: empty, long-press to assign`);
         },

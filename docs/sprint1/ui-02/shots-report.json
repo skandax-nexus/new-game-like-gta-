@@ -52,8 +52,8 @@
       "name": "profiler world-1280x720: UI + input < 1 ms/frame at 60 fps (bench avg, 1x and 4x)",
       "ok": true,
       "observed": {
-        "bench1x": 0.062,
-        "bench4x": 0.272
+        "bench1x": 0.055,
+        "bench4x": 0.379
       }
     },
     {
@@ -87,8 +87,8 @@
       "name": "profiler battle-1280x720: UI + input < 1 ms/frame at 60 fps (bench avg, 1x and 4x)",
       "ok": true,
       "observed": {
-        "bench1x": 0.049,
-        "bench4x": 0.028
+        "bench1x": 0.068,
+        "bench4x": 0.027
       }
     },
     {
@@ -168,6 +168,30 @@
       }
     },
     {
+      "name": ".wh-minimap minimap (portrait): expanded >= 220 px with both buttons above the map",
+      "ok": true,
+      "observed": {
+        "toggle": {
+          "x": 6,
+          "y": 112,
+          "w": 48,
+          "h": 48
+        },
+        "north": {
+          "x": 60,
+          "y": 112,
+          "w": 48,
+          "h": 48
+        },
+        "canvas": {
+          "x": 12,
+          "y": 172,
+          "w": 220,
+          "h": 220
+        }
+      }
+    },
+    {
       "name": "world (portrait): an event modal was reached",
       "ok": true,
       "observed": null
@@ -210,6 +234,30 @@
       "observed": {
         "radial": false,
         "pause": false
+      }
+    },
+    {
+      "name": ".bh-minimap minimap (portrait): expanded >= 220 px with both buttons above the map",
+      "ok": true,
+      "observed": {
+        "toggle": {
+          "x": 6,
+          "y": 112,
+          "w": 48,
+          "h": 48
+        },
+        "north": {
+          "x": 60,
+          "y": 112,
+          "w": 48,
+          "h": 48
+        },
+        "canvas": {
+          "x": 12,
+          "y": 172,
+          "w": 220,
+          "h": 220
+        }
       }
     },
     {
@@ -263,14 +311,9 @@
       "observed": []
     },
     {
-      "name": "world: settlement selected (landscape)",
-      "ok": false,
-      "observed": "nothing to click: .command-card .tabs .btn.tab /economy/"
-    },
-    {
-      "name": "world: settlement panel (landscape)",
-      "ok": false,
-      "observed": "nothing to click: .sel-action "
+      "name": "world HUD (landscape): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
     },
     {
       "name": "world (landscape): a construction job and a recruitment job are queued for the lower-panel capture",
@@ -278,6 +321,30 @@
       "observed": {
         "construction": 1,
         "recruitment": 2
+      }
+    },
+    {
+      "name": ".wh-minimap minimap (landscape): expanded >= 180 px with both buttons above the map",
+      "ok": true,
+      "observed": {
+        "toggle": {
+          "x": 6,
+          "y": 58,
+          "w": 48,
+          "h": 48
+        },
+        "north": {
+          "x": 60,
+          "y": 58,
+          "w": 48,
+          "h": 48
+        },
+        "canvas": {
+          "x": 12,
+          "y": 116,
+          "w": 172,
+          "h": 172
+        }
       }
     },
     {
@@ -323,6 +390,30 @@
       "observed": {
         "radial": false,
         "pause": false
+      }
+    },
+    {
+      "name": ".bh-minimap minimap (landscape): expanded >= 180 px with both buttons above the map",
+      "ok": true,
+      "observed": {
+        "toggle": {
+          "x": 6,
+          "y": 58,
+          "w": 48,
+          "h": 48
+        },
+        "north": {
+          "x": 60,
+          "y": 58,
+          "w": 48,
+          "h": 48
+        },
+        "canvas": {
+          "x": 12,
+          "y": 116,
+          "w": 172,
+          "h": 172
+        }
       }
     },
     {
@@ -386,19 +477,130 @@
       "observed": []
     },
     {
-      "name": "contrast: every measured text run >= 4.5:1 (body) / 3:1 (large) on 66 captures",
+      "name": "contrast: every measured text run >= 4.5:1 (body) / 3:1 (large) on 69 captures",
       "ok": true,
       "observed": {
-        "texts": 2532,
+        "texts": 2627,
         "fails": []
       }
     },
     {
       "name": "touch: every interactive element >= 44x44 px on phone captures",
-      "ok": true,
+      "ok": false,
       "observed": {
-        "targets": 1142,
-        "fails": []
+        "targets": 1233,
+        "fails": [
+          {
+            "shot": "world-settlement-economy-landscape.png",
+            "w": 41.1,
+            "h": 44,
+            "label": "Economy",
+            "cls": "btn tab active",
+            "at": [
+              583,
+              151
+            ]
+          },
+          {
+            "shot": "world-settlement-economy-landscape.png",
+            "w": 41.1,
+            "h": 44,
+            "label": "Military",
+            "cls": "btn tab",
+            "at": [
+              626,
+              151
+            ]
+          },
+          {
+            "shot": "world-settlement-economy-landscape.png",
+            "w": 41.1,
+            "h": 44,
+            "label": "Civic",
+            "cls": "btn tab",
+            "at": [
+              669,
+              151
+            ]
+          },
+          {
+            "shot": "world-settlement-economy-landscape.png",
+            "w": 41.1,
+            "h": 44,
+            "label": "Defense",
+            "cls": "btn tab",
+            "at": [
+              713,
+              151
+            ]
+          },
+          {
+            "shot": "world-settlement-economy-landscape.png",
+            "w": 41.1,
+            "h": 44,
+            "label": "Recruit",
+            "cls": "btn tab",
+            "at": [
+              756,
+              151
+            ]
+          },
+          {
+            "shot": "world-settlement-recruit-landscape.png",
+            "w": 41.1,
+            "h": 44,
+            "label": "Economy",
+            "cls": "btn tab",
+            "at": [
+              583,
+              151
+            ]
+          },
+          {
+            "shot": "world-settlement-recruit-landscape.png",
+            "w": 41.1,
+            "h": 44,
+            "label": "Military",
+            "cls": "btn tab",
+            "at": [
+              626,
+              151
+            ]
+          },
+          {
+            "shot": "world-settlement-recruit-landscape.png",
+            "w": 41.1,
+            "h": 44,
+            "label": "Civic",
+            "cls": "btn tab",
+            "at": [
+              669,
+              151
+            ]
+          },
+          {
+            "shot": "world-settlement-recruit-landscape.png",
+            "w": 41.1,
+            "h": 44,
+            "label": "Defense",
+            "cls": "btn tab",
+            "at": [
+              713,
+              151
+            ]
+          },
+          {
+            "shot": "world-settlement-recruit-landscape.png",
+            "w": 41.1,
+            "h": 44,
+            "label": "Recruit",
+            "cls": "btn tab active",
+            "at": [
+              756,
+              151
+            ]
+          }
+        ]
       }
     }
   ],
@@ -614,6 +816,18 @@
     {
       "name": "hero-combat-portrait.png",
       "note": "hero HUD in combat (lab hero-hud): lock-on reticle on the bandit captain, enemy bars over the bandits (projected), boss bar with the unblockable cue, HP / stamina / salves; phones: combat buttons"
+    },
+    {
+      "name": "world-settlement-economy-landscape.png",
+      "note": "world HUD, Rajapura selected: resource bar, date/season/forecast, speed, realm buttons, objectives, minimap, command card Economy tab"
+    },
+    {
+      "name": "world-settlement-recruit-landscape.png",
+      "note": "command card Recruit tab (recruit slots by UnitDef.commandSlot, rally point slot 14)"
+    },
+    {
+      "name": "settlement-panel-landscape.png",
+      "note": "settlement panel (drawer / bottom sheet): vitals, labor, tax, buildings, queues, garrison"
     },
     {
       "name": "settlement-panel-lower-landscape.png",
@@ -1037,6 +1251,129 @@
       "smallTargets": []
     },
     {
+      "shot": "world-settlement-economy-landscape.png",
+      "texts": 35,
+      "contrastFails": [],
+      "targets": 39,
+      "smallTargets": [
+        {
+          "w": 41.1,
+          "h": 44,
+          "label": "Economy",
+          "cls": "btn tab active",
+          "at": [
+            583,
+            151
+          ]
+        },
+        {
+          "w": 41.1,
+          "h": 44,
+          "label": "Military",
+          "cls": "btn tab",
+          "at": [
+            626,
+            151
+          ]
+        },
+        {
+          "w": 41.1,
+          "h": 44,
+          "label": "Civic",
+          "cls": "btn tab",
+          "at": [
+            669,
+            151
+          ]
+        },
+        {
+          "w": 41.1,
+          "h": 44,
+          "label": "Defense",
+          "cls": "btn tab",
+          "at": [
+            713,
+            151
+          ]
+        },
+        {
+          "w": 41.1,
+          "h": 44,
+          "label": "Recruit",
+          "cls": "btn tab",
+          "at": [
+            756,
+            151
+          ]
+        }
+      ]
+    },
+    {
+      "shot": "world-settlement-recruit-landscape.png",
+      "texts": 30,
+      "contrastFails": [],
+      "targets": 39,
+      "smallTargets": [
+        {
+          "w": 41.1,
+          "h": 44,
+          "label": "Economy",
+          "cls": "btn tab",
+          "at": [
+            583,
+            151
+          ]
+        },
+        {
+          "w": 41.1,
+          "h": 44,
+          "label": "Military",
+          "cls": "btn tab",
+          "at": [
+            626,
+            151
+          ]
+        },
+        {
+          "w": 41.1,
+          "h": 44,
+          "label": "Civic",
+          "cls": "btn tab",
+          "at": [
+            669,
+            151
+          ]
+        },
+        {
+          "w": 41.1,
+          "h": 44,
+          "label": "Defense",
+          "cls": "btn tab",
+          "at": [
+            713,
+            151
+          ]
+        },
+        {
+          "w": 41.1,
+          "h": 44,
+          "label": "Recruit",
+          "cls": "btn tab active",
+          "at": [
+            756,
+            151
+          ]
+        }
+      ]
+    },
+    {
+      "shot": "settlement-panel-landscape.png",
+      "texts": 30,
+      "contrastFails": [],
+      "targets": 13,
+      "smallTargets": []
+    },
+    {
       "shot": "settlement-panel-lower-landscape.png",
       "texts": 17,
       "contrastFails": [],
@@ -1164,9 +1501,9 @@
         "frames": 600,
         "updates": 40,
         "steps": 120,
-        "avgMs": 0.062,
-        "p95Ms": 0.6,
-        "maxMs": 20.3
+        "avgMs": 0.055,
+        "p95Ms": 0.5,
+        "maxMs": 16.3
       },
       "bench4x": {
         "screen": "world_hud",
@@ -1174,15 +1511,15 @@
         "frames": 600,
         "updates": 40,
         "steps": 480,
-        "avgMs": 0.272,
+        "avgMs": 0.379,
         "p95Ms": 2.3,
-        "maxMs": 27
+        "maxMs": 33.5
       },
       "liveSwiftShader": {
-        "ui": 3.381,
-        "input": 0.013,
-        "total": 3.393,
-        "max": 70.8
+        "ui": 2.513,
+        "input": 0.018,
+        "total": 2.531,
+        "max": 75.2
       }
     },
     "battle-1280x720": {
@@ -1192,9 +1529,9 @@
         "frames": 600,
         "updates": 85,
         "steps": 200,
-        "avgMs": 0.049,
-        "p95Ms": 1.5,
-        "maxMs": 3.2
+        "avgMs": 0.068,
+        "p95Ms": 1.8,
+        "maxMs": 5.2
       },
       "bench4x": {
         "screen": "battle_hud",
@@ -1202,15 +1539,15 @@
         "frames": 600,
         "updates": 85,
         "steps": 795,
-        "avgMs": 0.028,
+        "avgMs": 0.027,
         "p95Ms": 0.2,
-        "maxMs": 5.1
+        "maxMs": 3
       },
       "liveSwiftShader": {
-        "ui": 5.402,
-        "input": 0.005,
-        "total": 5.406,
-        "max": 179.3
+        "ui": 4.242,
+        "input": 0.019,
+        "total": 4.261,
+        "max": 23.6
       }
     }
   }

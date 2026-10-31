@@ -3175,6 +3175,15 @@
   grid-template-columns: repeat(5, 62px);
   gap: 6px;
 }
+/* The tab row spans the slot grid (round 2): .command-card centres its children, so the row shrank to its content and
+   the tabs truncated ("Econ...", "Milit...", "Defe..."). Portrait: the grid's own width; landscape: the card is the
+   grid's width, so stretch. */
+:root[data-layout='phone'] .command-card > .card-tabrow {
+  width: calc(5 * 62px + 4 * 6px);
+}
+:root[data-layout='phone-landscape'] .command-card > .card-tabrow {
+  align-self: stretch;
+}
 :root[data-layout='phone'] .btn.slot {
   --slot-size: 62px;
 }
@@ -3414,6 +3423,12 @@
 :root[data-layout='phone'] .bh-strip,
 :root[data-layout='phone-landscape'] .bh-strip {
   width: 100%;
+}
+/* Round 2: more cards to the right - fade the last 40 px instead of hard-cutting a card ("Elepha"). */
+:root[data-layout='phone'] .bh-strip.more-right,
+:root[data-layout='phone-landscape'] .bh-strip.more-right {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
 }
 :root[data-layout='phone'] .fcard,
 :root[data-layout='phone-landscape'] .fcard {
@@ -3991,6 +4006,20 @@
 :root[data-layout='phone-landscape'] .bh-groups .group-label {
   max-width: 46px;
   font-size: 10px;
+}
+/* Round 2: the 52 px column cut "Hold to set" / "2 formations" to an ellipsis. It prints the number over "×N"
+   formations; an empty slot is the number on the dashed skin (hint in the aria-label; long-press assigns). */
+.group-count {
+  display: none;
+}
+:root[data-layout='phone-landscape'] .bh-groups .group-label {
+  display: none;
+}
+:root[data-layout='phone-landscape'] .bh-groups .group-count {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.1;
 }
 
 /* --- Overlays: no HUD feed peeking out around an open modal (battle results), drawers above realm badges. --- */
