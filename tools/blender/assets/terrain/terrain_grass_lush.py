@@ -31,6 +31,7 @@ kit = K.Kit(__file__, cls="T", size=(S, S), target="terrain:TERRAIN_LAYERS.grass
 # cannot ship at p98 <= 0.50. Calibrate to an encode-safe mean inside the +-6 % tolerance instead: #606c3c =
 # preset #5f6f3a with R +1 %, G -2.7 %, B +3.4 % (hue 75 deg, saturation 0.444; measured in ta-01.cjs deltas/stats).
 ENCODE_SAFE = "#606c3c"
+x, y = kit.x, kit.y
 kit.preset["baseColor"] = ENCODE_SAFE
 SAT_T = 0.444
 
@@ -57,35 +58,142 @@ with core.timer("soil"):
     sward = 1.0 - 0.75 * thin
     clover_zone = tg.smoothstep(0.64, 0.78, kit.fbm(0.12, 3) * 0.5 + 0.5 + 0.12 * kit.fbm(0.03, 2))
 
+TUFT = 0.11  # tuft (clump) spacing, m
+
+
+def blade(length: float, width: float, hgt: float):
+    """Folded, tapered grass blade seen from above (root at lu = 0, along +u): narrow at the sheath, widest at ~25 %
+    of its length, tapering to a fine point; a V-fold along the midrib (crease in the normal map), arching down to
+    the tip; a gentle sideways curve. Length / width vary per blade (e1, e2); `lu` along the blade feeds the tip
+    colour."""
+    def fn(lu, lv, e1, e2):
+        L = length * (0.55 + 0.9 * e1)
+        Wd = width * (0.6 + 0.8 * e2)
+        t = lu / L
+        tc = np.clip(t, 0.0, 1.0)
+        cv = lv - 0.22 * L * (e2 - 0.5) * tc * tc
+        w = Wd * np.clip(1.0 - tc, 0.0, 1.0) ** 0.75 * (0.55 + 0.45 * np.clip(tc / 0.25, 0.0, 1.0))
+        inside = (t >= 0.0) & (t <= 1.0) & (np.abs(cv) < w)
+        rel = np.abs(cv) / np.maximum(w, 1e-6)
+        return np.where(inside, hgt * (0.5 + 0.5 * e1) * (1.0 - 0.6 * tc) * (1.0 - 0.45 * rel), -1e9)
+    return fn
+
+
+def tuft_scatter(cell: float, shape, density: float, spread: float, z_lift: float):
+    """One blade per lattice cell (jittered); each blade points AWAY from the centre of its tuft (per seed, so
+    blades stay straight - a per-texel angle bends them into rings), +-`spread` rad; blades near a crown stand up
+    (shorter seen from above, higher), outer ones lie flatter and lower. Returns the kit's Scatter fields plus
+    the tuft-relative radius of the winning blade."""
+    W = S
+    cx = cy = max(1, int(round(W / cell)))
+    sx = W / cx
+    r = kit.rng
+    jx = r.uniform(0.0, 1.0, (cy, cx)).astype(np.float32)
+    jy = r.uniform(0.0, 1.0, (cy, cx)).astype(np.float32)
+    pres = r.uniform(0.0, 1.0, (cy, cx)).astype(np.float32)
+    rid = r.uniform(0.0, 1.0, (cy, cx)).astype(np.float32)
+    e1 = r.uniform(0.0, 1.0, (cy, cx)).astype(np.float32)
+    e2 = r.uniform(0.0, 1.0, (cy, cx)).astype(np.float32)
+    jit = r.normal(0.0, spread, (cy, cx)).astype(np.float32)
+    # seed positions (m) and their tuft centres (periodic jittered lattice of TUFT spacing)
+    gi, gj = np.meshgrid(np.arange(cx), np.arange(cy))
+    px = (gi + jx) * sx
+    py = (gj + jy) * sx
+    best_d = np.full(px.shape, 1e9, np.float32)
+    vx = np.zeros(px.shape, np.float32)
+    vy = np.zeros(px.shape, np.float32)
+    for oy in (-1, 0, 1):
+        for ox in (-1, 0, 1):
+            ti = np.floor(px / (W / NT)).astype(np.int64) + ox
+            tj = np.floor(py / (W / NT)).astype(np.int64) + oy
+            cxp = (ti + TJX[tj % NT, ti % NT]) * (W / NT)
+            cyp = (tj + TJY[tj % NT, ti % NT]) * (W / NT)
+            dx, dy = px - cxp, py - cyp
+            d = np.sqrt(dx * dx + dy * dy)
+            closer = d < best_d
+            best_d = np.where(closer, d, best_d)
+            vx = np.where(closer, dx, vx)
+            vy = np.where(closer, dy, vy)
+    ang = (np.arctan2(vy, vx) + jit).astype(np.float32)
+    rad = np.clip(best_d / (0.6 * W / NT), 0.0, 1.0).astype(np.float32)  # 0 crown .. 1 tuft rim
+    X = x * cx
+    Y = y * cy
+    ix = np.floor(X).astype(np.int64)
+    iy = np.floor(Y).astype(np.int64)
+    best = np.full(X.shape, -1e9, np.float32)
+    out = {k: np.zeros(X.shape, np.float32) for k in ("id", "lu", "e1", "rad")}
+    for oy in (-1, 0, 1):
+        for ox in (-1, 0, 1):
+            nx = ix + ox
+            ny = iy + oy
+            wx = nx % cx
+            wy = ny % cy
+            dx = (X - (nx + jx[wy, wx])) * sx
+            dy = (Y - (ny + jy[wy, wx])) * sx
+            a = ang[wy, wx]
+            ca, sa = np.cos(a), np.sin(a)
+            lu = dx * ca + dy * sa
+            lv = -dx * sa + dy * ca
+            rr = rad[wy, wx]
+            foreshort = 0.45 + 0.55 * rr  # crown blades stand up: shorter seen from above
+            hh = shape(lu / foreshort, lv, e1[wy, wx], e2[wy, wx]) + z_lift * (1.0 - rr)
+            gate = pres[wy, wx] < density
+            hh = np.where(gate, hh, -1e9)
+            better = hh > best
+            best = np.where(better, hh, best)
+            for k, v in (("id", rid[wy, wx]), ("lu", lu / foreshort), ("e1", e1[wy, wx]), ("rad", rr)):
+                out[k] = np.where(better, v, out[k])
+    return best, out
+
+
 with core.timer("tufts"):
-    # AD-4: blades grow in TUFTS (clumps 6-14 cm) that radiate from their crowns; the sward is denser and higher at
-    # the crown, so the height map carries the clumping
-    tf1, _, tid = kit.worley(0.09, 0.95)
-    tuft_r = 0.09 * (0.7 + 0.6 * tid)
-    crown = np.clip(1.0 - tf1 * 0.09 / tuft_r, 0.0, 1.0)  # 1 at the tuft centre .. 0 at the rim
-    gy_, gx_ = np.gradient(kit.blur(tf1, 0.004))
-    radial = np.arctan2(-gy_, gx_).astype(np.float32)  # blades lean away from the crown (image rows run down)
-    tdens = np.clip(sward * (0.3 + 0.95 * crown), 0.0, 1.0)
+    # AD-4: blades grow in TUFTS (clumps ~11 cm) and radiate from their crowns; the crown stands up out of the sward
+    NT = max(1, int(round(S / TUFT)))
+    TJX = kit.rng.uniform(0.15, 0.85, (NT, NT)).astype(np.float32)
+    TJY = kit.rng.uniform(0.15, 0.85, (NT, NT)).astype(np.float32)
+    tf1, _, tid = kit.worley(TUFT, 0.95)
+    crown = np.clip(1.0 - tf1 * 1.6, 0.0, 1.0)  # 1 at a tuft centre .. 0 between tufts (approx.)
+    tdens = np.clip(sward * (0.45 + 0.75 * crown), 0.0, 1.0)
 
 with core.timer("grass layers"):
-    lean = 0.6  # weak prevailing lean (rad) on top of the radial splay
-    # blades of varied width (2-4.5 mm) and taper, lengths 3-9 cm (shape_blade varies both per blade)
-    specs = [
-        dict(cell=0.034, shape=K.shape_blade(0.055, 0.0032, 0.004, 0.35), z=0.000, density=0.95, density_map=tdens,
-             angle=(-0.5, 0.5), angle_map=radial),
-        dict(cell=0.028, shape=K.shape_blade(0.05, 0.0026, 0.004, 0.35), z=0.002, density=0.9, density_map=tdens,
-             angle=(-0.7, 0.7), angle_map=radial),
-        dict(cell=0.024, shape=K.shape_blade(0.045, 0.0022, 0.004, 0.3), z=0.004, density=0.85, density_map=tdens,
-             angle=(lean - 1.4, lean + 1.4)),
-        dict(cell=0.012, shape=clover, z=0.002, density=0.8, density_map=clover_zone),
-        dict(cell=0.026, shape=K.shape_blade(0.065, 0.0036, 0.004, 0.25), z=0.006, density=0.6, density_map=tdens,
-             angle=(-0.4, 0.4), angle_map=radial),
-        dict(cell=0.05, shape=K.shape_blade(0.07, 0.0016, 0.003, 0.4), z=0.008, density=0.22),  # dry straw blades
-    ]
-    L = layers(kit, specs)
+    hb = np.full(x.shape, -1e9, np.float32)
+    idx = np.full(x.shape, -1, np.int16)
+    gid = np.zeros(x.shape, np.float32)
+    glu = np.zeros(x.shape, np.float32)
+    ge1 = np.zeros(x.shape, np.float32)
+    grad = np.zeros(x.shape, np.float32)
+    # blades of varied width (2-6 mm) and taper, apparent length 3-10 cm, three stacked layers
+    for k, (cell, ln, wd, z, dn, sp) in enumerate(((0.03, 0.06, 0.0034, 0.000, 0.95, 0.45),
+                                                   (0.026, 0.055, 0.003, 0.003, 0.9, 0.55),
+                                                   (0.022, 0.05, 0.0026, 0.006, 0.8, 0.6))):
+        bh, bo = tuft_scatter(cell, blade(ln, wd, 0.004), dn, sp, 0.012)
+        bh = np.where(bh > -1e5, bh + z, -1e9)
+        gate = kit.white() < tdens  # thin sward: some blades missing
+        bh = np.where(gate | (k == 0), bh, -1e9)
+        better = bh > hb
+        hb = np.where(better, bh, hb)
+        idx = np.where(better, k, idx)
+        gid = np.where(better, bo["id"], gid)
+        glu = np.where(better, bo["lu"], glu)
+        ge1 = np.where(better, bo["e1"], ge1)
+        grad = np.where(better, bo["rad"], grad)
+    # clover patches and a few dry straw blades on top
+    sc_cl = kit.scatter(0.012, clover, density=0.8, density_map=clover_zone)
+    ch = np.where(sc_cl.h > -1e5, sc_cl.h + 0.004, -1e9)
+    better = ch > hb
+    hb = np.where(better, ch, hb)
+    idx = np.where(better, 3, idx)
+    gid = np.where(better, sc_cl.id, gid)
+    sc_st = kit.scatter(0.05, K.shape_blade(0.07, 0.0016, 0.003, 0.4), density=0.2)
+    sth = np.where(sc_st.h > -1e5, sc_st.h + 0.012, -1e9)
+    better = sth > hb
+    hb = np.where(better, sth, hb)
+    idx = np.where(better, 5, idx)
+    gid = np.where(better, sc_st.id, gid)
+    L = {"h": hb, "idx": idx, "id": gid, "lu": glu}
     veg = L["h"] > -1e5
     h = np.where(veg, np.maximum(L["h"], soil), soil)
-    h = h + 0.025 * crown ** 1.5 * veg  # tuft crowns stand up out of the sward
+    h = h + 0.02 * crown ** 1.5 * veg  # tuft crowns stand up out of the sward
 
 with core.timer("albedo"):
     # soil gaps: olive-brown thatch of dead blades, close to the sward in value AND chroma (AD-4: the lossy
@@ -95,10 +203,10 @@ with core.timer("albedo"):
     gid = L["id"]
     # blade colour: olive to emerald-olive, lighter tips, darker lower layers (self-shadowed sward); narrow value
     # range - the blade detail is carried by the normal map and the AO, not by albedo contrast
-    tip = np.clip(L["lu"] / 0.06, 0, 1)
+    tip = np.clip(L["lu"] / 0.07, 0, 1)
     g = np.clip(0.5 + 0.35 * (gid - 0.5) + 0.2 * tip + 0.1 * kit.fbm(0.1, 3) + 0.15 * (crown - 0.5), 0, 1)
     grass = K.ramp(g, [(0.0, "#46522b"), (0.35, "#505e30"), (0.65, "#5a6835"), (1.0, "#64703c")])
-    depth = np.clip(idx.astype(np.float32) / 5.0, 0.0, 1.0)
+    depth = np.clip(idx.astype(np.float32) / 2.0, 0.0, 1.0)  # upper blade layers are lit, lower ones self-shadowed
     grass = K.mul(grass, 0.88 + 0.12 * depth)
     clov = K.ramp(np.clip(0.5 + 0.3 * (gid - 0.5), 0, 1), [(0.0, "#38432a"), (1.0, "#434e2f")])  # darker, olive, not teal
     straw = K.ramp(np.clip(gid, 0, 1), [(0.0, "#7f7650"), (1.0, "#958a5e")])

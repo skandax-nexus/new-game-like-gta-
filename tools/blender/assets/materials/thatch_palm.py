@@ -38,7 +38,7 @@ rng = kit.rng
 
 with core.timer("leaflets"):
     # P2 round 2 (AD-7): irregular overlapping leaflet TUFTS, not a comb. Each course is a row of frond leaflets tied
-    # at its attachment line (wandering +-2 cm); every leaflet has its own width (12-45 mm), length (0.22-0.6 m, so
+    # at its attachment line (wandering +-2 cm); every leaflet has its own width (20-60 mm), length (0.22-0.6 m, so
     # tips land at all heights over the course below - no aligned tip row), lean (+-14 deg), droop curve and
     # twist; leaflets bunch into tufts (a frond = 5-12 leaflets fanning from one point). Visibility: the leaflet tied
     # HIGHEST (largest drop below its attachment) lies on top - higher courses overlap lower ones, cyclic over the tile.
@@ -58,7 +58,7 @@ with core.timer("leaflets"):
             fan = float(rng.uniform(0.25, 0.6))
             base_len = float(rng.uniform(0.25, 0.5))
             for k in range(nleaf):
-                ww = float(rng.uniform(0.012, 0.045))
+                ww = float(rng.uniform(0.02, 0.06))  # broad flat leaflets (cadjan), not straw
                 L = base_len * float(rng.uniform(0.7, 1.25))
                 lean = (k / max(nleaf - 1, 1) - 0.5) * fan + float(rng.uniform(-0.08, 0.08))
                 droop = float(rng.uniform(-0.25, 0.25))

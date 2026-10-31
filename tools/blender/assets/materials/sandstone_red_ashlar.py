@@ -36,9 +36,11 @@ with core.timer("blocks"):
     # back 10-30 mm, varying along each edge (bruised, chipped), so the joint reads as a soft shadowed groove at
     # 1-3 m instead of a pencil line
     inside = tg.smoothstep(0.0015, 0.0035, d)
-    wear_r = 0.01 + 0.02 * tg.smoothstep(-0.4, 0.5, kit.fbm(0.12, 3))
-    arris = K.Kit.edge_round(np.maximum(d - 0.002, 0.0), wear_r, 0.0035 + 0.003 * tg.smoothstep(-0.3, 0.4, kit.fbm(0.2, 2)))
-    chips = tg.smoothstep(0.15, 0.45, kit.fbm(0.05, 4)) * tg.smoothstep(0.045, 0.0, d)
+    wear_r = 0.015 + 0.025 * tg.smoothstep(-0.4, 0.5, kit.fbm(0.12, 3))
+    arris = K.Kit.edge_round(np.maximum(d - 0.002, 0.0), wear_r, 0.004 + 0.005 * tg.smoothstep(-0.3, 0.4, kit.fbm(0.2, 2)))
+    # angular spalls off the arrises (planar chips 2-6 cm, on ~8 % of the edge length), not blobs
+    fch = kit.facets(0.035, slope=0.25)
+    chips = (tg.smoothstep(0.58, 0.75, kit.fbm(0.15, 3) * 0.5 + 0.5) * (fch["id"] > 0.6) * tg.smoothstep(0.04, 0.025, d)).astype(np.float32)
     tilt = 0.0015 * (((bid * 7.7) % 1.0) - 0.5) * (b["lu"] - 0.5) + 0.0012 * (((bid * 3.1) % 1.0) - 0.5)
     pillow = 0.0012 * np.sin(np.pi * np.clip(b["lu"], 0, 1)) ** 0.5 * np.sin(np.pi * np.clip(b["lv"], 0, 1)) ** 0.5
     dress = 0.0003 * kit.fbm(0.006, 2) + 0.0005 * kit.fbm(0.05, 3) + 0.0006 * kit.fbm(0.3, 3) + pillow
@@ -52,18 +54,19 @@ with core.timer("blocks"):
         dd = np.sqrt((lu / 1.4) ** 2 + lv * lv) / r
         return np.where(dd < 1.0, 0.0022 * (0.5 + 0.5 * e2) * np.sqrt(np.clip(1.0 - dd * dd, 0, 1)), -1e9)
 
-    tx_, ty_ = kit.x + kit.y, kit.y  # sheared lattice (integer shear: seamless) -> diagonal rows
-    pk = kit.scatter(0.016, pock, density=0.8, jitter=0.55, angle=(0.6, 1.0), x=tx_ % 1.0, y=ty_)
+    # random punch pits (a point is struck by hand: no lattice), denser and sharper where the face is fresher
+    pk = kit.scatter(0.012, pock, density=0.75, jitter=1.0, angle=(0.6, 1.0),
+                     density_map=np.clip(0.55 + 0.6 * kit.fbm(0.25, 3), 0.15, 1.0).astype(np.float32))
     tool = tg.blur(pk.height(0.0), 0.6) * (1.0 - margin) * tg.smoothstep(0.02, 0.035, d)
     tool = tool * (0.5 + 0.5 * tg.smoothstep(-0.3, 0.3, kit.fbm(0.4, 2)))  # worn off in places
-    h = (dress + arris + tilt - 0.006 * chips - tool + batter) * inside - 0.006 * (1.0 - inside)
+    h = (dress + arris + tilt + chips * (-0.007 + 0.25 * np.minimum(fch["h"], 0.0)) - tool + batter) * inside - 0.006 * (1.0 - inside)
 
 with core.timer("albedo"):
     t = np.clip(0.5 + 0.12 * kit.fbm(0.25, 3) + 0.06 * kit.fbm(0.03, 2), 0, 1)
     rock = K.ramp(t, [(0.0, "#8a4c3a"), (0.4, "#9c5a45"), (0.75, "#ac6a52"), (1.0, "#b9785e")])
     j1 = (bid * 7.137 + 0.21) % 1.0 - 0.5
     j2 = (bid * 3.711 + 0.57) % 1.0 - 0.5
-    rock = K.mul(K.hue_rotate(rock, j1 * 0.02), 1.0 + j2 * 0.15)
+    rock = K.mul(K.hue_rotate(rock, j1 * 0.04), 1.0 + j2 * 0.3)  # each block from its own bed
     # cross-bedding: faint inclined laminae, per block a different dip (block-local, so seamless)
     vl = b["lv"] * (H / 7.0)
     ul = b["lu"] * b["ulen"]
@@ -83,7 +86,7 @@ with core.timer("albedo"):
     rock = K.mul(rock, 1.0 + 0.04 * margin)  # the smoother drafted margin reads a touch lighter
     weathered = tg.smoothstep(0.45, 0.8, kit.fbm(0.5, 3, aniso=(1.0, 3.0)) * 0.5 + 0.5)  # rain-washed runs
     rock = K.tint(rock, "#9a7a68", 0.18 * weathered)
-    rock = K.tint(rock, "#c08a70", 0.35 * chips)
+    rock = K.tint(rock, "#b07e66", 0.15 * chips)  # fresher stone in the spall scar
     grime = tg.smoothstep(0.12, 0.0, b["lv"]) * tg.smoothstep(0.3, 0.7, kit.fbm(0.2, 3) * 0.5 + 0.5)
     rock = K.tint(rock, "#4a3a32", 0.25 * grime)
     patina = tg.smoothstep(0.55, 0.85, kit.fbm(0.6, 3) * 0.5 + 0.5)

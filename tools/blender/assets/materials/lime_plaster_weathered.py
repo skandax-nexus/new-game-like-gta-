@@ -93,10 +93,19 @@ with core.timer("cracks"):
     c1, c2, ccid = kit.worley(0.25, 1.0, x=cx, y=cy)
     craze_gate = tg.smoothstep(0.1, 0.4, kit.fbm(0.6, 3)) * (ccid > 0.3)
     craze = tg.smoothstep(0.014, 0.0, c2 - c1) * craze_gate
-    # a few faint hairline settlement cracks (wandering, gated hard - no salient lines)
-    sx, sy = kit.warp(0.12, 0.5, 3)
-    s1, s2, sid = kit.worley(0.75, 1.0, x=sx, y=sy)
-    settle = tg.smoothstep(0.006, 0.0, s2 - s1) * tg.smoothstep(0.55, 0.75, kit.fbm(0.6, 3) * 0.5 + 0.5)
+    # a few settlement cracks: OPEN-ENDED wandering lines 0.6-1.6 m (never closed loops); `near` (0..1 within
+    # ~0.25 m of a crack) clusters the losses along them (AD-10)
+    def crack_shape(lu, lv, e1, e2):
+        L = 0.6 + 1.0 * e2
+        t = lu / (0.5 * L)
+        cv = lv - 0.08 * L * (e1 - 0.5) * (1.0 - t * t)
+        p = 1.0 - np.abs(cv) / 0.25
+        return np.where((np.abs(t) < 1.0) & (p > 0.0), p * np.sqrt(np.clip(1.0 - t ** 4, 0.0, 1.0)), -1e9)
+
+    sx, sy = kit.warp(0.06, 0.25, 3)
+    scr = kit.scatter(0.85, crack_shape, density=0.55, x=sx, y=sy)
+    near_p = np.where(scr.h > -1e5, scr.h, 0.0).astype(np.float32)
+    settle = tg.smoothstep(1.0 - 0.0035 / 0.25, 1.0 - 0.0008 / 0.25, near_p) * (0.5 + 0.5 * tg.smoothstep(-0.3, 0.3, kit.fbm(0.4, 2)))
     crack = np.clip(craze * 0.8 + settle * 0.7, 0.0, 1.0)
     h -= 0.001 * craze + 0.0012 * settle
 
@@ -106,10 +115,9 @@ with core.timer("losses"):
     # Two-step depth: the finish coat goes to a 2-3 mm buff-grey lime undercoat (with a chipped, raised, light-catching
     # rim), and in the largest losses (~1/3 of the loss area) the undercoat has gone too, exposing the fired brick
     # courses 8 mm deep. Total loss 5-12 % (solved).
-    zone = tg.smoothstep(0.45, 0.62, kit.fbm(1.4, 3) * 0.5 + 0.5 + 0.06 * kit.fbm(0.5, 2))  # weathered zones
-    dcrack = (s2 - s1) * 0.5 * 0.75  # m to the nearest settlement crack line
-    near = np.exp(-dcrack / 0.15)
-    pfield = zone * (0.45 + near) + 0.22 * kit.fbm(0.22, 3)
+    zone = tg.smoothstep(0.45, 0.62, kit.fbm(0.9, 3) * 0.5 + 0.5 + 0.08 * kit.fbm(0.4, 2))  # weathered zones (several per tile)
+    near = near_p ** 2  # 1 on a settlement crack, 0 beyond ~0.25 m
+    pfield = zone * (0.4 + 0.8 * near) + 0.2 * kit.fbm(0.22, 3)
     # flake nets: the loss edge follows flake polygons (per-flake random offset), so patches are connected, ragged
     # and polygonal, with a few detached flakes at their margins - not confetti
     jit = np.zeros_like(x)
@@ -120,10 +128,14 @@ with core.timer("losses"):
     score = pfield + jit + 0.03 * kit.fbm(0.015, 2)
     thr = float(np.percentile(score, 100.0 * (1.0 - 0.085)))  # 8.5 % of the wall
     loss = tg.smoothstep(thr - 0.004, thr + 0.004, score).astype(np.float32)
+    # drop flakes under ~3 cm (opening: blur, then re-threshold); the lost area is re-solved below
+    lo_ = kit.blur(loss, 0.008)
+    thr2 = float(np.percentile(lo_, 100.0 * (1.0 - 0.085)))
+    loss = tg.smoothstep(max(thr2, 0.45) - 0.05, max(thr2, 0.45) + 0.05, lo_).astype(np.float32)
     loss_size = kit.blur(loss, 0.1)  # local loss density ~ patch size
     # brick: in the interior of the large patches only (eroded mask), and only in part of them
     # brick share solved to ~1/3 of the loss area, in the interior of the large patches (eroded mask)
-    bscore = kit.blur(loss, 0.035) + 0.25 * kit.fbm(0.15, 3)
+    bscore = kit.blur(loss, 0.05) + 0.08 * kit.fbm(0.15, 3)  # interiors of the LARGER patches only
     inside = loss > 0.5
     bthr = float(np.percentile(bscore[inside], 100.0 * (1.0 - 0.33))) if inside.any() else 9.0
     deep = (bscore > bthr).astype(np.float32) * loss
@@ -155,8 +167,9 @@ with core.timer("albedo"):
     # exposed fired brick (#9c5a40) with per-brick tone, lime mortar and lime residue clinging to the brick faces
     btone = np.clip(0.5 + 0.5 * (b["id"] - 0.5) + 0.15 * kit.fbm(0.03, 2), 0, 1)
     brick_col = K.ramp(btone, [(0.0, "#8a4e38"), (0.5, "#9c5a40"), (1.0, "#ab6a4c")])
-    brick_col = K.tint(brick_col, "#c9bfa9", 0.75 * mortar)
-    brick_col = K.tint(brick_col, "#c4baa4", 0.35 * tg.smoothstep(0.55, 0.8, kit.fbm(0.03, 3) * 0.5 + 0.5))
+    brick_col = K.tint(brick_col, "#b9af9a", 0.55 * mortar)
+    brick_col = K.tint(brick_col, "#c4baa4", 0.45 * tg.smoothstep(0.45, 0.8, kit.fbm(0.03, 3) * 0.5 + 0.5))  # lime residue
+    brick_col = K.tint(brick_col, "#5e4a3e", 0.25 * tg.smoothstep(-0.2, 0.5, kit.fbm(0.08, 2)))  # grime, weathered faces
     under_col = render_col * (1.0 - deep[..., None]) + brick_col * deep[..., None]
     alb = alb * (1.0 - patch[..., None]) + under_col * patch[..., None]
     # grime: cracks, loss rims (dust and soot collect in the undercut)

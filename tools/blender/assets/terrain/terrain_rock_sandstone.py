@@ -40,13 +40,13 @@ rng = kit.rng
 with core.timer("sets and joints"):
     # widely spaced joints (3.5-9 m; denser joints turn the face into block masonry), and each joint shows only
     # along part of its length (see `joint` below) so they never form a steady rhythm at 3 x 3 (B5)
-    jb = joint_bands(kit, spacing=(0.55, 2.7), amp=0.45, feature=2.5, vspacing=(3.5, 9.0), carry=0.9, tilt=0.12,
+    jb = joint_bands(kit, spacing=(0.55, 2.7), amp=0.45, feature=2.5, vspacing=(3.5, 9.0), carry=0.45, tilt=0.12,
                      wander=0.35, vfeature=1.4, pinch=True)
     band = jb["band"].astype(np.int64)
     nb = int(jb["nb"])
     below, above, thick = jb["below"], jb["above"], jb["thick"]
     lv = below / np.maximum(thick, 1e-3)
-    soft_b = rng.uniform(0, 1, nb) < 0.22
+    soft_b = rng.uniform(0, 1, nb) < 0.35
     tone_b = rng.uniform(0, 1, nb)
     soft = soft_b[band].astype(np.float32)
     soft = np.where(thick > 1.3, 0.0, soft)  # thick sets are the massive hard cliff formers
@@ -62,22 +62,25 @@ with core.timer("bed profiles"):
     bstrength = 0.25 + 0.75 * jb["open_h"] ** 2  # most bedding planes are faint; a few are strong weathering breaks
     hard_h = 0.1 - r_top * (1.0 - np.sqrt(np.clip(1.0 - (1.0 - t_top) ** 2, 0.0, 1.0))) * (0.6 + 0.4 * soft_above_bed) * bstrength
     hard_h = hard_h + 0.02 * np.sin(np.pi * np.clip(lv, 0, 1)) ** 0.5 * np.clip(thick / 1.2, 0.3, 1.0)  # faint weathered loaf profile
-    rec = 0.1 + 0.08 * tone
+    rec = 0.13 + 0.1 * tone
     soft_h = 0.1 - rec - 0.05 * np.sin(np.pi * np.clip(lv, 0, 1)) ** 0.7
     # where a soft bed sits under a hard bed, its top is shadowed by the overhanging lip
     under_lip = soft * (1.0 - soft_above_bed) * tg.smoothstep(0.12, 0.0, above)
     h = hard_h * (1.0 - soft) + soft_h * soft
+    # each bed weathers back by its own amount: beds step in and out (the strata read lives in the relief)
+    bed_off = (rng.uniform(-0.5, 0.5, nb) * 0.08).astype(np.float32)
+    h += bed_off[band] * (1.0 - 0.5 * soft)
     # blocks: each joint-bounded block at its own depth and slight tilt
-    h += 0.02 * (jb["block"] - 0.5) * (1.0 - 0.6 * soft) + 0.03 * (jb["rand2"] - 0.5) * (jb["lu"] - 0.5)
+    # joints fade in and out along their length, and thin beds (< ~0.9 m) rarely show them: a packet of thin beds
+    # cut by joints at a steady rhythm reads as a brick / plank wall (B5) - the block steps fade with them
+    thin_fade = tg.smoothstep(1.0, 2.2, thick) * (0.35 + 0.65 * tg.smoothstep(0.3, 0.7, jb["rand3"]))
+    h += (0.02 * (jb["block"] - 0.5) * (1.0 - 0.6 * soft) + 0.03 * (jb["rand2"] - 0.5) * (jb["lu"] - 0.5)) * thin_fade
     h += (0.06 * kit.fbm(1.5, 3, aniso=(2.0, 1.0)) + 0.012 * kit.fbm(0.4, 3)) * (1.0 - soft)  # weathered, undulating bed faces
     # joints: broken V-grooves, open ones wider and deeper
     # most joints are closed hairlines (barely a relief line); only some open into weathered clefts
     jopen = tg.smoothstep(0.45, 0.85, jb["open_v"])
     jw = 0.02 + 0.09 * jopen * (0.6 + 0.4 * (kit.fbm(0.8, 2) * 0.5 + 0.5))
     jd = jb["side"] + 0.015 * kit.fbm(0.05, 2)
-    # joints fade in and out along their length, and thin beds (< ~0.8 m) rarely show them: a packet of thin beds
-    # cut by joints at a steady rhythm reads as a brick / plank wall (B5)
-    thin_fade = tg.smoothstep(0.5, 1.1, thick) * (0.35 + 0.65 * tg.smoothstep(0.3, 0.7, jb["rand3"]))
     joint = tg.smoothstep(jw, 0.0, jd) * tg.smoothstep(-0.05, 0.4, kit.fbm(0.9, 3, aniso=(0.35, 1.0))) * thin_fade
     jr = 0.08 + 0.1 * jopen  # weathered, rounded joint shoulders (not a cut line)
     h -= (0.006 + 0.15 * jopen) * joint + 0.07 * jopen * thin_fade * (1.0 - np.sqrt(np.clip(1.0 - (1.0 - np.clip(jd / jr, 0, 1)) ** 2, 0, 1)))
@@ -89,18 +92,19 @@ with core.timer("bed profiles"):
 with core.timer("cross-bedding"):
     sp_b = rng.uniform(0.07, 0.16, nb)
     tan_b = np.tan(np.radians(rng.uniform(18.0, 32.0, nb)))
-    xbed_b = (rng.uniform(0, 1, nb) < 0.7).astype(np.float32)  # the rest are planar-laminated (horizontal) sets
-    sign_b = np.where(rng.uniform(0, 1, nb) < 0.5, -1.0, 1.0)
+    xbed_b = (rng.uniform(0, 1, nb) < 0.5).astype(np.float32)  # the rest are planar-laminated (horizontal) sets
+    s0 = 1.0 if rng.uniform() < 0.5 else -1.0
+    sign_b = np.where(rng.uniform(0, 1, nb) < 0.8, s0, -s0)  # one palaeocurrent: mostly the same dip (no herringbone)
     k_b = np.round(tan_b * S / sp_b) * sign_b  # integer laminae per tile in u: seamless
     sp = sp_b[band].astype(np.float32)
     kb = k_b[band].astype(np.float32)
     zr = np.clip(lv, 0, 1)
-    g = below + 0.18 * thick * (1.0 - zr) ** 4  # straight foresets, curving tangentially only at the set's base
+    g = y * S + 0.18 * thick * (1.0 - zr) ** 4  # STRAIGHT planar foresets (not following the wavy base), tangential at the base
     xb = xbed_b[band]
-    phi = g / sp - kb * x * xb + 0.15 * kit.fbm(2.0, 2)  # planar foresets, barely warped (no wood-grain rings)
+    phi = g / sp - kb * x * xb + 0.04 * kit.fbm(2.0, 2)  # planar foresets, barely warped (no wood-grain rings)
     saw = phi - np.floor(phi)
-    lam = tg.smoothstep(0.0, 0.25, saw) * tg.smoothstep(1.0, 0.6, saw)  # etched rib profile
-    lam_amp = (0.009 + 0.004 * soft)  # AD-11: the strata read is carried by relief (normal), not albedo
+    lam = tg.smoothstep(0.0, 0.35, saw) * tg.smoothstep(1.0, 0.5, saw)  # etched rib profile
+    lam_amp = (0.006 + 0.003 * soft) * (0.35 + 0.65 * xb)  # AD-11: the strata read is carried by relief (normal), not albedo
     lam_amp = lam_amp * tg.smoothstep(0.0, 0.08, lv) * (0.4 + 0.6 * tg.smoothstep(-0.3, 0.3, kit.fbm(1.0, 2)))
     h += lam_amp * lam
     lam_tone = (np.floor(phi) * 0.618) % 1.0  # lamina-to-lamina tone variation
