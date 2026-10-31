@@ -345,3 +345,24 @@ Builds and smoke (round 2): `tsc` is clean. `tests/render/lighting` + `tests/cor
 tests). The full suite has 10 failures, all in sim / contracts suites owned by other tickets: the round-1 set plus the
 CPU-load-sensitive battle-AI perf test. `vite build` and `--mode single` both build. Smoke on port 4403
 (`smoke/`): 14/14 shots, no console errors, every shot looked at.
+
+## Lead Graphics Engineer re-review, round 2
+
+Re-run from a clean tree (`.build/gfx-01-review`, port 4453):
+- `tsc` clean. `tests/render` + `tests/core`: 145/146. The one failure is `tests/core/assets.test.ts`
+  (`terrain_grass_lush` WebP size). It comes from TA-01's concurrent republish of `public/assets`, not from GFX-01.
+- `vite build` and `--mode single` both build.
+- `scripts/shots/gfx-01.cjs --only=twilight,low,tiers` into a scratch folder: `failures: []`. The run reproduced the
+  committed numbers:
+  - twilight lit:shadow 1.11 / 1.25 / 1.14 / 1.24, every key at moon 25 deg (2.14x caster);
+  - low texel 2.03 px (desktop) and 1.55 px (phone);
+  - `battle-*-low` at 24 draws (5 shadow);
+  - tier cycling x3 leak-free (11 textures / 30 geometries / 3 RT).
+- Review smoke (`review-smoke/`): 14/14, no console errors. I looked at the contact sheet.
+
+Visual check, all 46 PNGs plus `r2/`:
+- **R2-1:** the twilight black ribbons and bands are gone.
+- **R2-2:** golden-low keeps a faint, soft merlon undulation at 3x. At 1x it does not read as teeth.
+- **Dawn 6.2 h** is the one visible side effect. Mean linear luminance is unchanged (battle 0.0401 -> 0.0396, hero
+  0.0396 -> 0.0408), but the frame is cooler: R/G drops from 0.94 to 0.89 on battle. The removed warm key now comes
+  back as cool hemisphere fill. The Art Director rules on this via `TWILIGHT_KEY_CAP` / `SUN_KEY_FULL_DEG`.
