@@ -59,15 +59,17 @@ with core.timer("albedo"):
     rock = K.tint(rock, "#b0aca4", 0.25 * ((gid > 0.2) & (gid < 0.32)))
     rock = K.tint(rock, "#2e2b28", 0.45 * ((gid > 0.92) & (g1 < 0.45)))
     rock = K.tint(rock, "#9a948a", 0.07 * tg.smoothstep(0.004, 0.0, fac["d"]))  # faint fresh facet arrises
-    soil = K.ramp(np.clip(0.5 + 0.3 * kit.fbm(0.03, 2), 0, 1), [(0.0, "#4a4136"), (1.0, "#665a4a")])
-    soil = K.mul(soil, 1.0 - 0.6 * void)  # deep voids read dark
+    # AD-5: joint fill close to the stone value (dusty grus and soil, only the deep voids dark), so calibration does
+    # not have to push the stones toward white to reach the set mean: stones stay within +-10 % of #8a8680
+    soil = K.ramp(np.clip(0.5 + 0.3 * kit.fbm(0.03, 2), 0, 1), [(0.0, "#6a6255"), (1.0, "#7e7566")])
+    soil = K.mul(soil, 1.0 - 0.45 * void)  # deep voids read dark (AO adds the rest)
     chink = K.ramp(ch.id, [(0.0, "#77726a"), (1.0, "#8d877e")])
     alb = rock * inside[..., None] + soil * (1.0 - inside[..., None])
     alb = np.where(chm[..., None], chink, alb)
     # water staining from the joints downward, dirt rim around blocks
     src = (1.0 - inside) * tg.smoothstep(0.3, 0.6, kit.fbm(0.1, 3, aniso=(0.3, 1.0)) * 0.5 + 0.5)
     stain = np.clip(tg.blur(tg.directional_blur_down(src, int(kit.px(0.25)), 0.97), 1.5), 0, 1) * inside
-    alb = K.tint(alb, "#4a4741", 0.3 * stain)
+    alb = K.tint(alb, "#5a5650", 0.25 * stain)
     alb = K.tint(alb, "#5e564b", 0.25 * tg.smoothstep(gap + 0.025, gap, d) * inside)
     # lichen: crustose patches and lobed rosettes on the upward faces and along the drip lines (AD-5)
     gy = -np.gradient(tg.blur(h, kit.px(0.03)), axis=0) / kit.texel

@@ -84,10 +84,10 @@ with core.timer("joint plants"):
 
 with core.timer("albedo"):
     tone = jb["block"]
-    t = np.clip(0.5 + 0.4 * (tone - 0.5) + 0.16 * kit.fbm(0.35, 3) + 0.07 * kit.fbm(0.06, 3) + 0.04 * kit.fbm(0.015, 2), 0, 1)
+    t = np.clip(0.5 + 0.22 * (tone - 0.5) + 0.16 * kit.fbm(0.35, 3) + 0.07 * kit.fbm(0.06, 3) + 0.04 * kit.fbm(0.015, 2), 0, 1)
     stone = K.ramp(t, [(0.0, "#857a68"), (0.35, "#9a8e7a"), (0.7, "#ada08a"), (1.0, "#bfb29b")])
-    stone = np.where(((sid * 3.3) % 1.0 < 0.25)[..., None], K.tint(stone, "#b0948a", 0.3), stone)  # pinkish slabs
-    stone = np.where(((sid * 9.1) % 1.0 < 0.2)[..., None], K.tint(stone, "#8d8a80", 0.35), stone)  # grey slabs
+    stone = np.where(((sid * 3.3) % 1.0 < 0.25)[..., None], K.tint(stone, "#b0948a", 0.14), stone)  # pinkish slabs (subtle: no slab may stand out in the 3 x 3 repeat)
+    stone = np.where(((sid * 9.1) % 1.0 < 0.2)[..., None], K.tint(stone, "#8d8a80", 0.16), stone)  # grey slabs
     stone = K.mul(stone, 1.0 + 0.08 * wear)
     stone = K.mul(stone, 1.0 - 0.25 * pits)
     stone = K.tint(stone, "#b8a68e", 0.08 * spall + 0.2 * chips)
