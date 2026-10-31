@@ -26,6 +26,20 @@ export function circleOfConfusionPx(z: number, focus: number, fStop: number, max
   return maxPx * strength * Math.min(1, (k * Math.abs(z - focus)) / Math.max(1e-3, z));
 }
 
+/**
+ * Near-layer opacity (pure mirror of the blend shader): coverage = share of the gather taps whose near-field disc
+ * reaches the pixel, times smoothstep(0, 1, dilated near CoC / 2 px). Alpha from the tile CoC alone (without the
+ * coverage term) would replace every pixel of a dilated tile - including the in-focus scene beside a blurred
+ * foreground - with the near gather; the coverage term keeps those pixels sharp outside the foreground's reach.
+ */
+export function nearFieldAlpha(coverage: number, dilatedNearCocPx: number): number {
+  const t = Math.min(1, Math.max(0, dilatedNearCocPx / 2));
+  return Math.min(1, Math.max(0, coverage)) * t * t * (3 - 2 * t);
+}
+
+/** Tile size of the near-CoC max reduction (full-res pixels). */
+export const DOF_TILE_PX = 8;
+
 const COC_GLSL = /* glsl */ `
 uniform vec4 uLens; // focus (m), k = DOF_APERTURE_K x 2.8 / fStop, max CoC (px at this resolution), unused
 float samCoc( float z ) {

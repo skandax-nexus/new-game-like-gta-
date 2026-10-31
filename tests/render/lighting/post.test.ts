@@ -9,7 +9,7 @@ import { buildQualitySettings } from '../../../src/core/quality';
 import { planPasses, PostPipeline } from '../../../src/render/post';
 import { createZoomLook } from '../../../src/render/style/zoom';
 import { shaftsActive, SHAFTS_MAX_ELEVATION_DEG } from '../../../src/render/post/shafts';
-import { circleOfConfusionPx } from '../../../src/render/post/dof';
+import { circleOfConfusionPx, DofPass, DOF_TILE_PX, nearFieldAlpha } from '../../../src/render/post/dof';
 import { halton, TAA_JITTER_PHASES } from '../../../src/render/post/scenePass';
 import { lensDirtPixels, LENS_DIRT_SIZE } from '../../../src/render/post/bloom';
 import { SSR_MASK_GLSL } from '../../../src/render/post/ssr';
@@ -158,5 +158,39 @@ describe('PostPipeline per-scene inputs (the pipeline outlives scenes)', () => {
     expect(post.info().look).toBeNull();
     expect(post.toneMapping).toBe('aces');
     post.dispose();
+  });
+});
+
+describe('near-field DoF (AD round 1, blocker 3)', () => {
+  it('tile max (8x8 px) + 3x3 dilation + near gather + composite with coverage x smoothstep(dilated / 2 px)', () => {
+    const dof = new DofPass(createPostFrame());
+    const mats = dof as unknown as Record<string, THREE.ShaderMaterial>;
+    expect(DOF_TILE_PX).toBe(8);
+    // Tile max over 4x4 half-res texels (= 8x8 full res) of the near CoC only.
+    expect(mats.tileMat!.fragmentShader).toContain('floor( gl_FragCoord.xy ) * 4.0');
+    expect(mats.tileMat!.fragmentShader).toContain('return z < uLens.x ? samCoc( z ) * 0.5 : 0.0;');
+    // 3x3 neighbourhood max.
+    expect(mats.dilateMat!.fragmentShader).toContain('for ( int j = -1; j <= 1; j++ )');
+    // Near gather with the dilated radius, from near-field samples only.
+    expect(mats.nearMat!.fragmentShader).toContain('float R = min( texture2D( tTileMax, vUv ).r, uLens.z * 0.5 );');
+    expect(mats.nearMat!.fragmentShader).toContain('smoothstep( r - 0.5, r + 0.5, samNearCoc( s.a ) )');
+    // Composite over the far / in-focus result.
+    expect(mats.blendMat!.fragmentShader).toContain('smoothstep( 0.0, 1.0, dil / 2.0 )');
+    expect(mats.blendMat!.fragmentShader).toContain('mix( col, near.rgb, a )');
+    // The far field keeps its rule: a sample behind the centre never blurs over it by more than the centre's CoC.
+    expect(mats.gatherMat!.fragmentShader).toContain('if ( s.a > cz ) sc = min( sc, cc * 2.0 );');
+    expect(dof.drawCount()).toBe(6);
+    dof.nearField = false;
+    expect(dof.drawCount()).toBe(3);
+    dof.dispose();
+  });
+
+  it('near-layer opacity: 0 with no foreground reach, half at a blurred silhouette, full inside it', () => {
+    expect(nearFieldAlpha(0, 6)).toBe(0);
+    expect(nearFieldAlpha(0.5, 6)).toBeCloseTo(0.5, 6);
+    expect(nearFieldAlpha(1, 6)).toBe(1);
+    // Sub-2 px foregrounds fade in smoothly (no near layer for nearly sharp geometry).
+    expect(nearFieldAlpha(1, 0)).toBe(0);
+    expect(nearFieldAlpha(1, 1)).toBeCloseTo(0.5, 6);
   });
 });

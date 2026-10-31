@@ -271,6 +271,25 @@ async function maxRowJump(file, y0, y1) {
       report.checks.labHeroTaa = (await shot('lab-post-hero-taa-on', `${lab}&quality=ultra&taa=1`, { after: info })).extra;
       report.checks.labHeroNoTaa = (await shot('lab-post-hero-taa-off', `${lab}&quality=ultra&taa=0`, { after: info })).extra;
       report.checks.labHeroFocus = (await shot('lab-post-hero-dof-focus12', `${lab}&quality=ultra&focus=12`, { after: info })).extra;
+      // Near-field DoF (AD round 1, blocker 3): the same frame with the single-layer DoF ('before'), and a pillar
+      // 1.6 m in front of the lens with the focus on the hero (4.5 m), both layers vs single layer.
+      await shot('lab-post-hero-dof-focus12-single', `${lab}&quality=ultra&focus=12&dofnear=0`);
+      await shot('lab-post-hero-dof-nearpillar', `${lab}&quality=ultra&focus=4.5&near=1`);
+      await shot('lab-post-hero-dof-nearpillar-single', `${lab}&quality=ultra&focus=4.5&near=1&dofnear=0`);
+      {
+        // Bands beside the cape's left edge (x ~600 px at 1280x720, rows 340-470): just outside (the foreground must
+        // spread over the scene behind it: darker with the near layer) and just inside (background bitten into the
+        // cape by the far gather: darker = fewer bites).
+        const band = (x0, x1) => [x0 / 1280, x1 / 1280, 340 / 720, 470 / 720];
+        const out = {};
+        for (const [id, box] of [['outside', band(590, 598)], ['inside', band(600, 606)]]) {
+          const a = await regionLuminance(path.join(OUT, 'lab-post-hero-dof-focus12-single.png'), box);
+          const b = await regionLuminance(path.join(OUT, 'lab-post-hero-dof-focus12.png'), box);
+          out[id] = { singleLayer: +a.luma.toFixed(4), nearLayer: +b.luma.toFixed(4) };
+        }
+        report.checks.dofNearField = out;
+        console.log(JSON.stringify({ dofNearField: out }));
+      }
       await shot('lab-post-hero-agx', `${lab}&quality=ultra&tonemap=agx`);
       report.checks.labBattleSmaa = (await shot('lab-post-battle-smaa-ultra', `${lab}&quality=ultra&view=battle`, { after: info })).extra;
       report.checks.labBattleMerged = (await shot('lab-post-battle-merged-low', `${lab}&quality=low&view=battle`, { after: info })).extra;
