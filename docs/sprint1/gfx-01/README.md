@@ -205,3 +205,24 @@ Draw calls, before -> after:
 | battle mobile @low | 26 | 24 (5 shadow) |
 
 The post-stack draw count rises by 3 when DoF runs (tiles, dilation, near gather).
+
+## Lead Graphics Engineer re-review (rework round 1)
+
+Re-run on HEAD with build `.build/gfx-01-review` (shots on port 4454, smoke on 4453):
+- `tsc` is clean. `tests/render/lighting/**` plus `tests/core/quality` and `purity` pass (94 tests). The full suite has 9
+  failures, all in sim / contracts suites owned by other tickets; GFX-01 touches none of their code.
+- `vite build` and `--mode single` both build. Smoke: 14/14 shots, no console errors (`review-smoke/`).
+- `gfx-01.cjs --only=low,labs,budgets,tiers` reports `failures: []`:
+  - the low shots are pixel-identical to the committed evidence;
+  - lab-post-hero golden: 0.00 % clipped, p98 240;
+  - draw calls 72 / 72 / 24;
+  - tier cycling is leak-free.
+- B1: an amplified wet/dry difference of `hero-monsoon-ultra(-dry)` shows every scene MeshStandard darkening (plaster,
+  red bases, the hero's cloth). Terrain is excluded by design (its own term). On screen the wet/dry ratio is 0.82-0.87
+  in display luma.
+- B2: the acne streaks and the noon eave comb are gone. At golden hour on low a soft, wavy ridge remains on the red
+  wall: 1024^2 texels over the bounding sphere of the hero band, about 8 px per texel. It is softened rather than
+  removed (see follow-ups).
+- B3: the near layer is implemented as ruled (tile max, dilation, near gather, coverage alpha). The visible spread is
+  small: the pillar-edge ramp widens from ~11 to ~13 px at 720p, because hero DoF is capped at f/2.8 / 10 px.
+- B4: fixed and measured. Saturation of the lab frame drops ~6 %; the game preset shots do not change.
