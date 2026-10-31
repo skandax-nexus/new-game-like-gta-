@@ -326,6 +326,9 @@ function SLOPE_LOOKDEV(o) {
     pos.setY(i, y + 0.03);
   }
   geo.computeVertexNormals();
+  // move the escarpment (and the camera, below) 30 m east of the viewer's lookdev rig: whatever the rig leaves in
+  // its screen-space buffers (contact shadow / AO of the hidden column) then stays out of frame
+  geo.translate(30, 0, 0);
   const mat = new sm.constructor({ map: sm.map, normalMap: sm.normalMap, roughnessMap: sm.roughnessMap, aoMap: sm.roughnessMap, metalness: 0, roughness: 1 });
   mat.normalScale.copy(sm.normalScale);
   mat.aoMapIntensity = 1;
@@ -386,8 +389,8 @@ reflectedLight.indirectDiffuse *= ambientOcclusion;
   hill.receiveShadow = false;
   scene.add(hill);
   const prev = scene.onBeforeRender;
-  const eye = o.eye;
-  const at = o.at;
+  const eye = [o.eye[0] + 30, o.eye[1], o.eye[2]];
+  const at = [o.at[0] + 30, o.at[1], o.at[2]];
   scene.onBeforeRender = function (renderer, sc, camera, rt) {
     if (prev) prev.call(this, renderer, sc, camera, rt);
     if (renderer && renderer.shadowMap) renderer.shadowMap.needsUpdate = true; // re-render shadows without the hidden pieces

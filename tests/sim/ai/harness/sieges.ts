@@ -203,7 +203,7 @@ export function summarize(b: TestBattle, maxSec = 1800, log?: (line: string) => 
       const mem = st.sides[0].aiMemory;
       const works = st.works.map((w) => `${w.work}[s${w.side}] ${(w.progress * 100).toFixed(0)}% hp ${w.hp.toFixed(0)} @${w.x.toFixed(0)},${w.z.toFixed(0)} crew ${w.formation}`).join(', ');
       log(`t=${t.toFixed(0)} phase ${String(mem.sgPhase ?? '-')} gates ${sg.gates.map((x) => x.hp.toFixed(0)).join('/')} breaches ${sg.breaches.length} towers ${sg.towers.map((x) => x.garrison).join(',')} hold ${JSON.stringify(sg.breachHold ?? null)} works ${works}`);
-      log(`   ${st.formations.map((f) => `${f.index} ${f.unitClass.slice(0, 3)}${f.side} @${f.x.toFixed(0)},${f.z.toFixed(0)} ${f.shape.slice(0, 2)} ${f.order.type} ${f.activity} n${f.soldiers}${f.ammo > 0 || f.unitClass === 'archers' ? ` a${f.ammo}` : ''}`).join(' | ')}`);
+      log(`   ${st.formations.map((f) => `${f.index} ${f.unitClass.slice(0, 3)}${f.side} @${f.x.toFixed(0)},${f.z.toFixed(0)} ${f.shape.slice(0, 2)} ${f.order.type} ${f.activity} n${f.soldiers} m${f.morale.toFixed(0)}${f.ammo > 0 || f.unitClass === 'archers' ? ` a${f.ammo}` : ''}`).join(' | ')}`);
     }
   }
   sum.outcome = st.outcome ? st.outcome.reason : 'running';
