@@ -477,6 +477,16 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
     const s = Math.max(0.6, Math.min(1.2, a.scale)) * (ui.scale || 1);
     setStyle(v.el, 'transform', `translate(${Math.round(a.x)}px, ${Math.round(a.y)}px) translate(-50%, -100%) scale(${s.toFixed(2)})`);
   };
+  /** Short unique formation titles (battleLabels), recomputed when the formation list changes. */
+  const refreshTitles = (b: Readonly<BattleState>, ps: SideIndex): void => {
+    if (titlesFor === b.formations.length) return;
+    titlesFor = b.formations.length;
+    titles = formationTitles(b, ps);
+  };
+  const titleOf = (b: Readonly<BattleState>, ps: SideIndex, index: number, fallback: string): string => {
+    refreshTitles(b, ps);
+    return titles.get(index) ?? fallback;
+  };
   const seenFloats = new Set<number>();
   const renderFloats = (anchors: readonly FormationScreenAnchor[] | undefined, b: Readonly<BattleState>, ps: SideIndex, sel: ReadonlySet<number>): void => {
     const seen = seenFloats;
@@ -502,7 +512,8 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
       setClass(v.el, 'selected', selected);
       setClass(v.el, 'routing', f.activity === 'routing');
       setClass(v.el, 'compact', !selected);
-      setText(v.name, selected ? `${f.name} · ${fmtInt(f.soldiers)}` : '');
+      // Short unique title like the strip ("Levy II · 117"; "Royal Levy · 118" was cut and ambiguous - round 2 audit).
+      setText(v.name, selected ? `${titleOf(b, ps, a.index, f.name)} · ${fmtInt(f.soldiers)}` : '');
       v.str.set(f.soldiers / Math.max(1, f.maxSoldiers));
       v.mor.set(f.morale / 100, { warn: f.morale < 40 });
       placeFloat(v, a);
@@ -569,10 +580,7 @@ export function battleHud(ctx: AppContext, ui: UIManager): Screen<'battle_hud'> 
       // Cards strip
       const sel = new Set(p.selection);
       const own = b.formations.filter((f) => f.side === ps && f.soldiers > 0 && f.activity !== 'destroyed');
-      if (titlesFor !== b.formations.length) {
-        titlesFor = b.formations.length;
-        titles = formationTitles(b, ps);
-      }
+      refreshTitles(b, ps);
       syncList(strip, own, (f) => String(f.index), makeCard, (node, f) => {
         const v = cardViews.get(f.index);
         if (!v) return;
