@@ -686,8 +686,21 @@ async function worldSession(browser, base, vpName) {
           s,
           ([f, a, d]) => {
             const w = JSON.parse(JSON.stringify(window.__SAMRAJYA_UI__.props('world_hud').world));
+            // Samudra (maritime) and Kotanagara (citystates) are in no shipped start (the campaign has four realms, the
+            // sandbox rivals are highland / forest / frontier), but their landmarks exist: the world copy gets a stand-in
+            // record for them (the frontier record re-keyed) holding one settlement, so the real panel renders the pair.
+            if (!w.factions[f]) {
+              const donor = w.factions.frontier || Object.values(w.factions).find((x) => x.id !== w.playerFactionId);
+              const stand = JSON.parse(JSON.stringify(donor));
+              stand.id = f;
+              const home = Object.keys(w.settlements).find((k) => w.settlements[k].ownerFactionId === donor.id);
+              if (home) {
+                w.settlements[home].ownerFactionId = f;
+                stand.capitalSettlementId = home;
+              }
+              w.factions[f] = stand;
+            }
             const fac = w.factions[f];
-            if (!fac) return null;
             fac.age = a;
             fac.landmarks = d.slice();
             const sid = fac.capitalSettlementId && w.settlements[fac.capitalSettlementId] ? fac.capitalSettlementId : Object.keys(w.settlements).find((k) => w.settlements[k].ownerFactionId === f);

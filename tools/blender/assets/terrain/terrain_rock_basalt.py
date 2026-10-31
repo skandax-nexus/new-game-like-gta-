@@ -260,7 +260,10 @@ with core.timer("albedo"):
     streak = np.clip(tg.blur(np.maximum(s_long * 0.8, s_short), 1.5) * 1.2, 0, 1) * (1.0 - top_zone)
     rock = K.tint(rock, "#2f2e2d", 0.35 * streak)
     # sparse lichen on the lip and on fallen talus blocks
-    zone = np.clip(lip + 0.6 * (tal.h > -1e5), 0, 1)
+    # reviewer R2: the lip band is ~2 % of the tile, so a solid lip zone made the 2.5 % lichen fill it end to end
+    # as one pale line along the contact; lichen now holds only in sparse patches along the lip (u-only noise)
+    lip_patch = tg.smoothstep(0.62, 0.8, kit.fbm(1.6, 3, x=x, y=yc + 0.47) * 0.5 + 0.5)
+    zone = np.clip(0.8 * lip * lip_patch + 0.6 * (tal.h > -1e5), 0, 1)
     lic = kit.lichen(zone, coverage=0.025, patch_m=0.3, rosette_m=0.03, rosette_density=0.3)
     rock = K.tint(rock, "#7a786e", 0.35 * lic["crust"])
     rock = K.tint(rock, "#8d7150", 0.3 * lic["rosette"] * (kit.white(0.08) > 0.6))
