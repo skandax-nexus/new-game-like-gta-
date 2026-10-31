@@ -21,6 +21,10 @@ export interface RenderStats {
   pixelRatio: number;
   width: number;
   height: number;
+  /** Shadow-map draw calls inside drawCalls (optional; the overlay falls back to counter `render.shadowDraws`). */
+  shadowDrawCalls?: number;
+  /** Enabled post passes this frame (optional; the overlay falls back to counter `render.postPasses`). */
+  postPasses?: number;
 }
 
 export interface SystemTiming {
@@ -260,6 +264,11 @@ class ProfilerOverlay {
       `geo ${r.geometries}  tex ${r.textures}  res ${(r.resolutionScale * 100).toFixed(0)}% @${r.pixelRatio.toFixed(2)}x`,
       `${r.width}x${r.height}${s.memoryMb !== null ? `  heap ${s.memoryMb.toFixed(0)} MB` : ''}`,
     ];
+    const shadowDraws = r.shadowDrawCalls ?? s.counters['render.shadowDraws'];
+    const postPasses = r.postPasses ?? s.counters['render.postPasses'];
+    if (shadowDraws !== undefined || postPasses !== undefined) {
+      lines.splice(2, 0, `shadow draws ${shadowDraws ?? '-'}  post passes ${postPasses ?? '-'}`);
+    }
     const names = Object.keys(s.systems).sort();
     for (const k of names) {
       const t = s.systems[k] as SystemTiming;

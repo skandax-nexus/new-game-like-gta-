@@ -238,6 +238,8 @@ async function main() {
       try {
         await page.goto(url, { waitUntil: 'load', timeout: TIMEOUT });
         await page.waitForFunction(() => window.__SAMRAJYA__ && window.__SAMRAJYA__.ready && window.__SAMRAJYA__.sceneReady, null, { timeout: TIMEOUT, polling: 250 });
+        // GFX-01 evidence hygiene: pin dynamic resolution to 1 so shots show the quality tier, not SwiftShader speed.
+        await page.evaluate(() => window.__SAMRAJYA_GFX__ && window.__SAMRAJYA_GFX__.pinResolutionScale && window.__SAMRAJYA_GFX__.pinResolutionScale(1));
         // main.ts hideSplash() fades #boot-splash (0.6 s) and removes it 700 ms after `ready`; a slow software frame
         // could let the screenshot catch it mid-fade (TA-07: assetviewer-mobile). Every capture waits for its removal.
         await page

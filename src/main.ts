@@ -83,6 +83,8 @@ async function boot(): Promise<void> {
     anisotropy: quality.settings.anisotropy,
   });
   registerDefaultFallbacks(assets);
+  // GFX-01: game scenes (not only the labs) get the baked WP7 skies, per-preset LUT grade, lens dirt and sun sprite.
+  render.attachAssets(assets);
   quality.onChange((q) => {
     render.setQuality(q);
     if (!params.assetTier) assets.setTier(assetTierForQuality(q.tier), q.anisotropy);
