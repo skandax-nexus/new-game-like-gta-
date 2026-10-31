@@ -1,0 +1,136 @@
+{
+  "port": 4465,
+  "dist": ".build/ui-02-review",
+  "checks": [
+    {
+      "name": "world HUD (pc): open map areas pass pointer events through to the game",
+      "ok": true,
+      "observed": []
+    },
+    {
+      "name": "world (pc): a construction job and a recruitment job are queued for the lower-panel capture",
+      "ok": true,
+      "observed": {
+        "construction": 1,
+        "recruitment": 2
+      }
+    },
+    {
+      "name": "world: build placement (pc)",
+      "ok": false,
+      "observed": "page.evaluate: Target page, context or browser has been closed"
+    },
+    {
+      "name": "world: market (pc)",
+      "ok": false,
+      "observed": "page.evaluate: Target page, context or browser has been closed"
+    },
+    {
+      "name": "world: age / economy panels (pc)",
+      "ok": false,
+      "observed": "page.evaluate: Target page, context or browser has been closed"
+    },
+    {
+      "name": "world: diplomacy (pc)",
+      "ok": false,
+      "observed": "page.evaluate: Target page, context or browser has been closed"
+    },
+    {
+      "name": "world: minimap (pc)",
+      "ok": false,
+      "observed": "page.waitForTimeout: Target page, context or browser has been closed"
+    },
+    {
+      "name": "world: colour-blind modes (pc)",
+      "ok": false,
+      "observed": "page.evaluate: Target page, context or browser has been closed"
+    },
+    {
+      "name": "world: prompts (pc)",
+      "ok": false,
+      "observed": "page.evaluate: Target page, context or browser has been closed"
+    },
+    {
+      "name": "run",
+      "ok": false,
+      "observed": "page.evaluate: Target page, context or browser has been closed\n    at ev (/home/user/new-game-like-gta-/scripts/shots/ui-02.cjs:330:35)\n    at selectCap0 (/home/user/new-game-like-gta-/scripts/shots/ui-02.cjs:510:9)\n    at worldSession (/home/user/new-game-like-gta-/scripts/shots/ui-02.cjs:719:11)\n    at async /home/user/new-game-like-gta-/scripts/shots/ui-02.cjs:1047:39"
+    }
+  ],
+  "shots": [
+    {
+      "name": "world-settlement-economy-pc.png",
+      "note": "world HUD, Rajapura selected: resource bar, date/season/forecast, speed, realm buttons, objectives, minimap, command card Economy tab"
+    },
+    {
+      "name": "world-settlement-recruit-pc.png",
+      "note": "command card Recruit tab (recruit slots by UnitDef.commandSlot, rally point slot 14)"
+    },
+    {
+      "name": "settlement-panel-pc.png",
+      "note": "settlement panel (drawer / bottom sheet): vitals, labor, tax, buildings, queues, garrison"
+    },
+    {
+      "name": "settlement-panel-lower-pc.png",
+      "note": "settlement panel, lower half: buildings grid (level pips, condition bars), construction queue (progress, days, cancel), recruitment queue (progress, cancel with its reason), garrison"
+    },
+    {
+      "name": "world-army-card-pc.png",
+      "note": "army selected: army command card (orders, stances, forced march, split, merge, disband, visit)"
+    },
+    {
+      "name": "army-panel-pc.png",
+      "note": "army panel: commander, supply with reasons, stance, units with split selection"
+    }
+  ],
+  "audits": [
+    {
+      "shot": "world-settlement-economy-pc.png",
+      "texts": 71,
+      "contrastFails": [],
+      "targets": 41,
+      "smallTargets": [],
+      "truncated": []
+    },
+    {
+      "shot": "world-settlement-recruit-pc.png",
+      "texts": 65,
+      "contrastFails": [],
+      "targets": 41,
+      "smallTargets": [],
+      "truncated": []
+    },
+    {
+      "shot": "settlement-panel-pc.png",
+      "texts": 93,
+      "contrastFails": [],
+      "targets": 52,
+      "smallTargets": [],
+      "truncated": []
+    },
+    {
+      "shot": "settlement-panel-lower-pc.png",
+      "texts": 74,
+      "contrastFails": [],
+      "targets": 49,
+      "smallTargets": [],
+      "truncated": []
+    },
+    {
+      "shot": "world-army-card-pc.png",
+      "texts": 67,
+      "contrastFails": [],
+      "targets": 35,
+      "smallTargets": [],
+      "truncated": []
+    },
+    {
+      "shot": "army-panel-pc.png",
+      "texts": 93,
+      "contrastFails": [],
+      "targets": 43,
+      "smallTargets": [],
+      "truncated": []
+    }
+  ],
+  "profile": {}
+}

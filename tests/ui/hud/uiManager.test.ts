@@ -123,4 +123,20 @@ describe('UIManager: throttle, anchor tracking, press hold', () => {
       restore();
     }
   });
+
+  it('opening a modal drops transient (feed-duplicate) toasts; explicit toasts stay', async () => {
+    vi.useFakeTimers();
+    const { ui, restore } = await setup('modal');
+    try {
+      const layer = (ui as unknown as { layers: { toast: ShimElement } }).layers.toast;
+      ui.toast('Objective complete', 'success', 3600, true);
+      ui.toast('Chronicle saved', 'success', 1600);
+      expect(layer.children.length).toBe(2);
+      ui.show('council', { n: 1 } as never);
+      expect(ui.modalOpen).toBe(true);
+      expect(layer.children.map((c) => c.textContent)).toEqual(['Chronicle saved']);
+    } finally {
+      restore();
+    }
+  });
 });

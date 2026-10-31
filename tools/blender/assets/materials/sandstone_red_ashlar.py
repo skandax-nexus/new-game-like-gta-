@@ -32,22 +32,31 @@ kit = K.Kit(__file__, cls="C", size=(W, H), target="materials:MATERIAL_PRESETS.s
 with core.timer("blocks"):
     b = kit.bond(H / 7.0, (0.7, 1.1), 0.004, stagger=None)
     d, bid = b["d"], b["id"]
-    inside = tg.smoothstep(0.0018, 0.004, d)
-    arris = K.Kit.edge_round(np.maximum(d - 0.002, 0.0), 0.012, 0.004)
-    chips = tg.smoothstep(0.12, 0.45, kit.fbm(0.04, 4)) * tg.smoothstep(0.04, 0.0, d)
-    tilt = 0.0015 * (((bid * 7.7) % 1.0) - 0.5) * (b["lu"] - 0.5) + 0.001 * (((bid * 3.1) % 1.0) - 0.5)
-    dress = 0.0003 * kit.fbm(0.006, 2) + 0.0005 * kit.fbm(0.05, 3) + 0.0007 * kit.fbm(0.3, 3)
-    # point tooling: pocks struck in loose diagonal rows across each face, softened by weathering
+    # P2 round 2: 4 mm joints recessed 6 mm with weathered lime mortar; ARRIS WEAR - the block edges are rounded
+    # back 10-30 mm, varying along each edge (bruised, chipped), so the joint reads as a soft shadowed groove at
+    # 1-3 m instead of a pencil line
+    inside = tg.smoothstep(0.0015, 0.0035, d)
+    wear_r = 0.01 + 0.02 * tg.smoothstep(-0.4, 0.5, kit.fbm(0.12, 3))
+    arris = K.Kit.edge_round(np.maximum(d - 0.002, 0.0), wear_r, 0.0035 + 0.003 * tg.smoothstep(-0.3, 0.4, kit.fbm(0.2, 2)))
+    chips = tg.smoothstep(0.15, 0.45, kit.fbm(0.05, 4)) * tg.smoothstep(0.045, 0.0, d)
+    tilt = 0.0015 * (((bid * 7.7) % 1.0) - 0.5) * (b["lu"] - 0.5) + 0.0012 * (((bid * 3.1) % 1.0) - 0.5)
+    pillow = 0.0012 * np.sin(np.pi * np.clip(b["lu"], 0, 1)) ** 0.5 * np.sin(np.pi * np.clip(b["lv"], 0, 1)) ** 0.5
+    dress = 0.0003 * kit.fbm(0.006, 2) + 0.0005 * kit.fbm(0.05, 3) + 0.0006 * kit.fbm(0.3, 3) + pillow
+    # drafted margin: a 25-35 mm chisel-dressed band round each face (fine parallel batter lines), the field inside
+    # point-tooled with pocks 4-8 mm in loose diagonal rows (large enough to survive the 512 px data maps)
+    margin = tg.smoothstep(0.03, 0.022, d)
+    batter = 0.00025 * np.sin(2 * np.pi * (b["du"] + b["dv"]) / 0.004) * margin
+
     def pock(lu, lv, e1, e2):
-        r = 0.0015 + 0.0016 * e1
-        dd = np.sqrt((lu / 1.3) ** 2 + lv * lv) / r
-        return np.where(dd < 1.0, 0.0016 * (0.5 + 0.5 * e2) * np.sqrt(np.clip(1.0 - dd * dd, 0, 1)), -1e9)
+        r = 0.002 + 0.002 * e1
+        dd = np.sqrt((lu / 1.4) ** 2 + lv * lv) / r
+        return np.where(dd < 1.0, 0.0022 * (0.5 + 0.5 * e2) * np.sqrt(np.clip(1.0 - dd * dd, 0, 1)), -1e9)
 
     tx_, ty_ = kit.x + kit.y, kit.y  # sheared lattice (integer shear: seamless) -> diagonal rows
-    pk = kit.scatter(0.009, pock, density=0.75, jitter=0.6, angle=(0.6, 1.0), x=tx_ % 1.0, y=ty_)
-    tool = tg.blur(pk.height(0.0), 0.6) * tg.smoothstep(0.004, 0.012, d)
-    tool = tool * (0.55 + 0.45 * tg.smoothstep(-0.3, 0.3, kit.fbm(0.4, 2)))  # worn off in places
-    h = (dress + arris + tilt - 0.005 * chips - tool) * inside - 0.008 * (1.0 - inside)
+    pk = kit.scatter(0.016, pock, density=0.8, jitter=0.55, angle=(0.6, 1.0), x=tx_ % 1.0, y=ty_)
+    tool = tg.blur(pk.height(0.0), 0.6) * (1.0 - margin) * tg.smoothstep(0.02, 0.035, d)
+    tool = tool * (0.5 + 0.5 * tg.smoothstep(-0.3, 0.3, kit.fbm(0.4, 2)))  # worn off in places
+    h = (dress + arris + tilt - 0.006 * chips - tool + batter) * inside - 0.006 * (1.0 - inside)
 
 with core.timer("albedo"):
     t = np.clip(0.5 + 0.12 * kit.fbm(0.25, 3) + 0.06 * kit.fbm(0.03, 2), 0, 1)
@@ -70,7 +79,8 @@ with core.timer("albedo"):
     rock = K.tint(rock, "#b77a5c", 0.18 * tg.smoothstep(0.35, 0.15, kit.fbm(0.35, 4, x=wx, y=wy, aniso=(2.5, 1.0)) * 0.5 + 0.5))
     lies = 0.5 + 0.5 * np.sin(2 * np.pi * (kit.fbm(0.8, 3, aniso=(3.0, 1.0)) * 5.0))
     rock = K.mul(rock, 1.0 - 0.06 * lies * tg.smoothstep(0.0, 0.5, kit.fbm(1.0, 2)))
-    rock = K.mul(rock, 1.0 - 0.3 * tg.smoothstep(0.0, 0.0012, tool))  # pocks hold shade and dust
+    rock = K.mul(rock, 1.0 - 0.18 * tg.smoothstep(0.0, 0.0015, tool))  # pocks hold shade and dust
+    rock = K.mul(rock, 1.0 + 0.04 * margin)  # the smoother drafted margin reads a touch lighter
     weathered = tg.smoothstep(0.45, 0.8, kit.fbm(0.5, 3, aniso=(1.0, 3.0)) * 0.5 + 0.5)  # rain-washed runs
     rock = K.tint(rock, "#9a7a68", 0.18 * weathered)
     rock = K.tint(rock, "#c08a70", 0.35 * chips)
@@ -78,7 +88,9 @@ with core.timer("albedo"):
     rock = K.tint(rock, "#4a3a32", 0.25 * grime)
     patina = tg.smoothstep(0.55, 0.85, kit.fbm(0.6, 3) * 0.5 + 0.5)
     rock = K.tint(rock, "#6e6458", 0.18 * patina)
-    joint = K.ramp(np.clip(0.5 + 0.3 * kit.fbm(0.03, 2), 0, 1), [(0.0, "#3e2e26"), (1.0, "#57443a")])  # recessed, dark
+    # weathered lime mortar, dirtied: mid value (the recess and the worn arrises carry the shadow, not a black line)
+    joint = K.ramp(np.clip(0.5 + 0.3 * kit.fbm(0.03, 2), 0, 1), [(0.0, "#7a6658"), (1.0, "#958271")])
+    rock = K.tint(rock, "#5a3a2e", 0.25 * tg.smoothstep(0.012, 0.0, d) * inside)  # grime in the worn arris
     alb = rock * inside[..., None] + joint * (1.0 - inside[..., None])
     alb = K.compress_chroma(alb, 0.8)
 
@@ -87,6 +99,7 @@ with core.timer("roughness"):
     rough = rough * inside + 0.9 * (1.0 - inside)
 
 kit.finish(height=h, albedo=alb, rough=rough, ao="cycles", ao_distance=0.02, ao_samples=32,
-           description="Red sandstone ashlar (3 m): 0.43 m courses, 4 mm recessed dark joints, point-tooled faces, "
+           description="Red sandstone ashlar (3 m): 0.43 m courses, 4 mm recessed lime joints, worn arrises, drafted "
+                       "margins, point-tooled fields, "
                        "soft rust bleeds and liesegang bands, cross-bedding, chipped arrises, grime.",
            preview="wall", preview_opts=dict(floor_band=None, samples=64))

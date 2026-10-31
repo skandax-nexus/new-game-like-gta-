@@ -134,6 +134,44 @@ async function hsvStats(file) {
   return { satP98: +pct(sat, 0.98).toFixed(3), valueP98: +pct(val, 0.98).toFixed(3), limePct: +((lime / n) * 100).toFixed(2) };
 }
 
+/** HSV hue (deg) / saturation / value per pixel of an sRGB image (optionally resized to `size`). */
+async function hsvPixels(file, size = null) {
+  let img = sharp(file).removeAlpha();
+  if (size) img = img.resize(size, size, { kernel: 'lanczos3', fit: 'fill' });
+  const { data, info } = await img.raw().toBuffer({ resolveWithObject: true });
+  const n = info.width * info.height;
+  const H = new Float32Array(n);
+  const S = new Float32Array(n);
+  const V = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const r = data[i * 3] / 255;
+    const g = data[i * 3 + 1] / 255;
+    const b = data[i * 3 + 2] / 255;
+    const mx = Math.max(r, g, b);
+    const mn = Math.min(r, g, b);
+    let hue = 0;
+    if (mx - mn > 1e-6) {
+      if (mx === r) hue = 60 * (((g - b) / (mx - mn)) % 6);
+      else if (mx === g) hue = 60 * ((b - r) / (mx - mn) + 2);
+      else hue = 60 * ((r - g) / (mx - mn) + 4);
+      if (hue < 0) hue += 360;
+    }
+    H[i] = hue;
+    S[i] = mx > 1e-6 ? (mx - mn) / mx : 0;
+    V[i] = mx;
+  }
+  return { H, S, V, n, width: info.width };
+}
+const pctl = (a, q) => Float32Array.from(a).sort()[Math.min(a.length - 1, Math.floor(q * a.length))];
+const hexHue = (hex) => {
+  const [r, g, b] = hexToRgb(hex).map((v) => v / 255);
+  const mx = Math.max(r, g, b);
+  const mn = Math.min(r, g, b);
+  if (mx - mn < 1e-6) return 0;
+  let h = mx === r ? 60 * (((g - b) / (mx - mn)) % 6) : mx === g ? 60 * ((b - r) / (mx - mn) + 2) : 60 * ((r - g) / (mx - mn) + 4);
+  return h < 0 ? h + 360 : h;
+};
+
 /** 5th / 95th percentile of a channel (0..1) of an image. */
 async function channelSpan(file, ch) {
   const { data, info } = await sharp(file).raw().toBuffer({ resolveWithObject: true });
@@ -349,6 +387,95 @@ reflectedLight.indirectDiffuse *= ambientOcclusion;
   return 'ok';
 }
 
+/** Review round 2 measurements (AD-4 on every tier, AD-11 sandstone laminae, B4 basalt flow top). */
+async function round2Stats(failures, report) {
+  const out = ['## Review round 2', ''];
+  // AD-4: grass_lush saturation p98 <= 0.50 and lime 0 % in the SHIPPED WebP on every tier
+  const g = MANIFEST_JSON.assets.terrain_grass_lush;
+  if (g) {
+    out.push('**AD-4 terrain_grass_lush** (shipped lossy WebP; target sat p98 <= 0.50, lime 0 %, blade hue 65-85 deg, V p98 <= 0.55):', '');
+    out.push('| tier | file | sat p98 | value p98 | lime % | hue p5 / p50 / p95 (deg) |', '|---|---|---|---|---|---|');
+    const rows = {};
+    for (const t of TIERS) {
+      const m = g.maps?.baseColor?.[t];
+      if (!m) continue;
+      const f = path.join(PUB, m.url);
+      const hs = await hsvStats(f);
+      const px = await hsvPixels(f);
+      const hues = px.H.filter((_, i) => px.S[i] > 0.2);
+      const hq = [0.05, 0.5, 0.95].map((q) => pctl(hues, q).toFixed(0));
+      rows[t] = { ...hs, hue: hq.map(Number) };
+      out.push(`| ${t} | ${m.url} | ${hs.satP98} | ${hs.valueP98} | ${hs.limePct} | ${hq.join(' / ')} |`);
+      if (hs.satP98 > 0.5 || hs.limePct > 0) failures.push(`terrain_grass_lush ${t}: sat p98 ${hs.satP98} / lime ${hs.limePct} % (AD-4)`);
+    }
+    report.ad4 = rows;
+    out.push('');
+  }
+  // AD-11: rock_sandstone lamina hue within +-6 deg of #a88a6c, saturation <= 0.45, value contrast <= 8 % at the
+  // lamina scale (value high-passed at ~0.3 m: |V - local mean| / mean, p95)
+  const sd = MANIFEST_JSON.assets.terrain_rock_sandstone;
+  if (sd) {
+    const m = sd.maps.baseColor.ultra;
+    const px = await hsvPixels(path.join(PUB, m.url));
+    const th = hexHue('#a88a6c');
+    const dh = Float32Array.from(px.H, (h) => ((h - th + 540) % 360) - 180);
+    const w = px.width;
+    const tile = sd.tileSizeMeters?.[0] ?? 10;
+    const rad = Math.max(1, Math.round((0.3 / tile) * w));
+    // box mean of V over a (2 rad + 1)^2 window (wrapping), via a summed-area table
+    const sat = new Float64Array((w + 1) * (w + 1));
+    for (let y = 0; y < w; y++) for (let x = 0; x < w; x++) sat[(y + 1) * (w + 1) + x + 1] = px.V[y * w + x] + sat[y * (w + 1) + x + 1] + sat[(y + 1) * (w + 1) + x] - sat[y * (w + 1) + x];
+    const box = (x0, y0, x1, y1) => sat[y1 * (w + 1) + x1] - sat[y0 * (w + 1) + x1] - sat[y1 * (w + 1) + x0] + sat[y0 * (w + 1) + x0];
+    const rel = new Float32Array(w * w);
+    let k = 0;
+    for (let y = rad; y < w - rad; y++)
+      for (let x = rad; x < w - rad; x++) {
+        const mu = box(x - rad, y - rad, x + rad + 1, y + rad + 1) / ((2 * rad + 1) ** 2);
+        rel[k++] = Math.abs(px.V[y * w + x] - mu) / Math.max(mu, 1e-4);
+      }
+    const relv = rel.subarray(0, k);
+    const res = {
+      hueDevP5: +pctl(dh, 0.05).toFixed(1),
+      hueDevP95: +pctl(dh, 0.95).toFixed(1),
+      satP98: +pctl(px.S, 0.98).toFixed(3),
+      laminaValueContrastP90: +(pctl(relv, 0.9) * 100).toFixed(1),
+    };
+    report.ad11 = res;
+    out.push('**AD-11 terrain_rock_sandstone** (ultra baseColor; target hue within +-6 deg of #a88a6c, saturation <= 0.45, lamina value contrast <= 8 %):', '');
+    out.push(`- hue deviation from #a88a6c (${th.toFixed(0)} deg): p5 ${res.hueDevP5} / p95 ${res.hueDevP95} deg`);
+    out.push(`- HSV saturation p98: ${res.satP98}`);
+    out.push(`- value contrast at the lamina scale (|V - 0.3 m local mean| / mean), p90: ${res.laminaValueContrastP90} %`, '');
+    if (Math.abs(res.hueDevP5) > 6 || Math.abs(res.hueDevP95) > 6 || res.satP98 > 0.45 || res.laminaValueContrastP90 > 8)
+      failures.push(`terrain_rock_sandstone: AD-11 ${JSON.stringify(res)}`);
+  }
+  // B4: basalt flow-top value within -10 % / +8 % of #5a5650 (flow top = the recessed band: lowest 8 % of the cached
+  // height, measured on the shipped ultra baseColor)
+  const bs = MANIFEST_JSON.assets.terrain_rock_basalt;
+  const hpng = path.join(CACHE, 'terrain_rock_basalt', 'terrain_rock_basalt_height.png');
+  if (bs && fs.existsSync(hpng)) {
+    const m = bs.maps.baseColor.ultra;
+    const px = await hsvPixels(path.join(PUB, m.url));
+    const { data: hd, info: hi } = await sharp(hpng).resize(px.width, px.width, { kernel: 'cubic', fit: 'fill' }).extractChannel(0).raw({ depth: 'ushort' }).toBuffer({ resolveWithObject: true });
+    const hv = new Float32Array(hi.width * hi.height);
+    const u16 = new Uint16Array(hd.buffer, hd.byteOffset, hv.length);
+    for (let i = 0; i < hv.length; i++) hv[i] = u16[i];
+    const thr = pctl(hv, 0.08);
+    let s = 0;
+    let n = 0;
+    for (let i = 0; i < hv.length; i++) if (hv[i] <= thr) {
+      s += px.V[i];
+      n++;
+    }
+    const target = Math.max(...hexToRgb('#5a5650')) / 255;
+    const ratio = n ? s / n / target - 1 : null;
+    report.b4 = { flowTopValue: n ? +(s / n).toFixed(3) : null, target: +target.toFixed(3), deltaPct: ratio === null ? null : +(ratio * 100).toFixed(1) };
+    out.push('**B4 terrain_rock_basalt** flow top (recessed band = lowest 8 % of the height) mean HSV value vs #5a5650:', '');
+    out.push(`- ${report.b4.flowTopValue} vs ${report.b4.target}: ${report.b4.deltaPct} % (target -10 % .. +8 %)`, '');
+    if (ratio !== null && (ratio < -0.1 || ratio > 0.08)) failures.push(`terrain_rock_basalt: flow-top value ${report.b4.deltaPct} % (B4)`);
+  }
+  return out;
+}
+
 async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   fs.mkdirSync(RAW, { recursive: true });
@@ -430,7 +557,7 @@ async function main() {
     fs.writeFileSync(
       path.join(OUT, 'stats.md'),
       [
-        '# TA-01 - review round 1 statistics (published ultra WebP)',
+        '# TA-01 - review statistics (published WebP)',
         '',
         '- **B2**: the cache QA mean (asset.json `material.qa.meanColor`, float64 means since round 1) against the mean of the',
         '  shipped ultra WebP (max abs difference in sRGB levels; > 2 fails).',
@@ -441,6 +568,7 @@ async function main() {
         '|---|---|---|---|---|---|---|---|',
         ...st,
         '',
+        ...(await round2Stats(failures, report)),
       ].join('\n'),
     );
   }

@@ -7,7 +7,7 @@
 
 Sun-bleached grey timber (class C, 2 m x 2 m, seamless; P2 - ships on ultra / high, mobile falls back to
 timber_sal_weathered): seven vertical boards (grain along v, 0.2-0.36 m wide), silver-grey weathered surface with
-the soft earlywood eroded so the latewood stands proud, long split checks along the grain, end-grain cross joints
+the soft earlywood eroded so the latewood stands proud, long tapered checks that wander with the grain, end-grain cross joints
 with pegged (nail-free) battens, round hardwood pegs, a few knots, brown left in the deepest grooves, faint lichen.
 Target (MATERIAL_PRESETS.timber_weathered_grey): average #80776a, roughness 0.88 (0.78-0.96).
 
@@ -48,9 +48,24 @@ with core.timer("boards"):
     grain = 0.5 + 0.5 * np.sin(2 * np.pi * ph)
     ridge = grain ** 3  # latewood stands proud, earlywood eroded
     h = crown + 0.0007 * ridge + 0.00015 * kit.fbm(0.002, 2, aniso=(1.0, 20.0))
-    c1, c2, ccid = kit.worley(0.05, 1.0, aniso=(1.0, 10.0))
-    check = tg.smoothstep(0.04, 0.0, c2 - c1) * (ccid > 0.5) * tg.smoothstep(0.3, 0.6, kit.fbm(0.25, 3) * 0.5 + 0.5)
-    h -= 0.005 * check + 0.012 * gap + 0.006 * butt
+    # P2 round 2: drying CHECKS follow the grain - long tapered splits (0.15-0.7 m, up to 3 mm open in the middle,
+    # closing to nothing at both ends) that wander gently with the grain lines and sometimes run in echelon;
+    # no Voronoi zig-zag, no straight polylines
+    def check_shape(lu, lv, e1, e2):
+        L = 0.15 + 0.55 * e1 ** 1.5
+        t = lu / L
+        wv = 0.0025 * np.sin(lu * (9.0 + 14.0 * e2) + 6.28 * e2) + 0.0012 * np.sin(lu * 37.0 + 3.0 * e1)
+        wmax = 0.0006 + 0.0024 * e2 * (0.4 + 0.6 * e1)
+        w = wmax * np.clip(1.0 - (2.0 * t) ** 2, 0.0, 1.0) ** 0.8
+        q = np.abs(lv - wv) / np.maximum(w, 1e-6)
+        inside = (np.abs(t) < 0.5) & (q < 1.0)
+        return np.where(inside, (0.4 + 0.6 * w / 0.003) * np.sqrt(np.clip(1.0 - q * q, 0.0, 1.0)), -1e9)
+
+    ck = kit.scatter((0.09, 0.45), check_shape, density=0.55, jitter=0.9, angle=(np.pi / 2 - 0.02, np.pi / 2 + 0.02),
+                     x=(uw / W) % 1.0, y=y)
+    check = np.clip(ck.mask * np.clip(ck.h, 0.0, 1.0), 0.0, 1.0) * (1.0 - gap)
+    check = check * tg.smoothstep(0.004, 0.012, np.minimum(pu, 1.0 - pu) * widths[pid])  # not on the board edge
+    h -= 0.006 * check + 0.012 * gap + 0.006 * butt
     kf1, _, kid = kit.worley(0.4, 0.9)
     knot = tg.smoothstep(0.1, 0.0, kf1) * (kid > 0.8)
     h += 0.0015 * knot

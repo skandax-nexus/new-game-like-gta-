@@ -45,7 +45,7 @@ with core.timer("plaster relief"):
 
     # overlapping trowel strokes: three passes of arc bands; a later pass covers earlier strokes where they overlap
     def stroke(lu, lv, e1, e2):
-        r0 = 0.17 + 0.16 * e2
+        r0 = 0.1 + 0.3 * e2
         w = 0.09 + 0.04 * e1
         r = np.sqrt(lu * lu + lv * lv)
         th = np.arctan2(lv, lu)
@@ -61,11 +61,14 @@ with core.timer("plaster relief"):
         m = sc.mask
         r = np.sqrt(sc.lu ** 2 + sc.lv ** 2)
         th = np.arctan2(sc.lv, sc.lu)
-        r0 = 0.17 + 0.16 * sc.e2
+        r0 = 0.1 + 0.3 * sc.e2
         w = 0.09 + 0.04 * sc.e1
         ext = 0.55 + 0.75 * sc.e1
         t = np.clip((r - r0) / w, 0.0, 1.0)
         endf = tg.smoothstep(ext, ext - 0.35, np.abs(th))  # strokes feather out at their ends
+        # AD-10: BROKEN arcs - the trowel lifts and skips, so no stroke reads as a circle
+        brk = tg.smoothstep(-0.15, 0.35, np.sin(th * (2.0 + 3.0 * sc.e1) + 6.28 * sc.e2) + 0.6 * kit.fbm(0.08, 2))
+        endf = endf * brk
         # flip the ridge side per stroke (pushed outwards or inwards)
         tt = np.where(sc.e2 > 0.5, t, 1.0 - t)
         prof = (-0.0005 * np.sin(np.pi * t) + 0.0009 * np.exp(-((tt - 0.95) / 0.12) ** 2)) * endf
@@ -98,31 +101,47 @@ with core.timer("cracks"):
     h -= 0.001 * craze + 0.0012 * settle
 
 with core.timer("losses"):
-    # ~8 % losses at three scales, evenly spread (only a faint weathering modulation, so no salient cluster). A
-    # plaster loss is a FLAKE bounded by the crack network, not a round hole: each scale = a warped Voronoi crack
-    # net; a random share of its polygons has (partly) spalled off, the edge ragged and the remaining part of the
-    # flake broken along a noise front.
-    weather = 0.25 * kit.fbm(1.0, 2)
-    loss = np.zeros_like(x)
-    loss_size = np.zeros_like(x)
-    for cell_m, dens in ((0.16, 0.018), (0.09, 0.085), (0.04, 0.08)):
+    # AD-10: losses have a MACRO distribution - clean zones over ~60 % of the wall, loss zones (0.8-2 m) clustered
+    # along the settlement cracks; inside them flakes 3-25 cm bounded by the crack net (sub-3 cm flakes dropped).
+    # Two-step depth: the finish coat goes to a 2-3 mm buff-grey lime undercoat (with a chipped, raised, light-catching
+    # rim), and in the largest losses (~1/3 of the loss area) the undercoat has gone too, exposing the fired brick
+    # courses 8 mm deep. Total loss 5-12 % (solved).
+    zone = tg.smoothstep(0.45, 0.62, kit.fbm(1.4, 3) * 0.5 + 0.5 + 0.06 * kit.fbm(0.5, 2))  # weathered zones
+    dcrack = (s2 - s1) * 0.5 * 0.75  # m to the nearest settlement crack line
+    near = np.exp(-dcrack / 0.15)
+    pfield = zone * (0.45 + near) + 0.22 * kit.fbm(0.22, 3)
+    # flake nets: the loss edge follows flake polygons (per-flake random offset), so patches are connected, ragged
+    # and polygonal, with a few detached flakes at their margins - not confetti
+    jit = np.zeros_like(x)
+    for cell_m, amp in ((0.12, 0.3), (0.06, 0.16)):
         wx_, wy_ = kit.warp(cell_m * 0.18, cell_m * 0.8, 2)
         f1, f2, rid = kit.worley(cell_m, 0.95, x=wx_, y=wy_)
-        border = (f2 - f1) * 0.5 * cell_m
-        pres = (rid < dens * (1.0 + weather)).astype(np.float32)
-        front = kit.fbm(cell_m * 0.6, 3) + 0.6 * (((rid * 13.7) % 1.0) - 0.5)  # part of the flake still holds
-        rag = 0.0035 * kit.fbm(0.012, 2)  # ragged, chipped flake edge (mm)
-        m = pres * tg.smoothstep(0.0, 0.0025, border + rag - 0.001) * tg.smoothstep(-0.25, -0.05, front)
-        loss_size = np.where(m > loss, cell_m, loss_size)
-        loss = np.maximum(loss, m)
-    deep = loss * (loss_size > 0.15) * tg.smoothstep(0.45, 0.65, kit.fbm(0.04, 3) * 0.5 + 0.5)
-    edge = tg.smoothstep(0.0, 0.5, tg.blur(loss, kit.px(0.006)) * 1.0) * (1.0 - loss)
-    base_coat = -0.003 + 0.0006 * kit.fbm(0.01, 3)  # coarse sandy render
-    scratch = -0.006 + 0.0012 * kit.fbm(0.006, 2)  # scratch coat with coarse aggregate
-    under = base_coat * (1.0 - deep) + scratch * deep
+        jit += amp * (rid - 0.5)
+    score = pfield + jit + 0.03 * kit.fbm(0.015, 2)
+    thr = float(np.percentile(score, 100.0 * (1.0 - 0.085)))  # 8.5 % of the wall
+    loss = tg.smoothstep(thr - 0.004, thr + 0.004, score).astype(np.float32)
+    loss_size = kit.blur(loss, 0.1)  # local loss density ~ patch size
+    # brick: in the interior of the large patches only (eroded mask), and only in part of them
+    # brick share solved to ~1/3 of the loss area, in the interior of the large patches (eroded mask)
+    bscore = kit.blur(loss, 0.035) + 0.25 * kit.fbm(0.15, 3)
+    inside = loss > 0.5
+    bthr = float(np.percentile(bscore[inside], 100.0 * (1.0 - 0.33))) if inside.any() else 9.0
+    deep = (bscore > bthr).astype(np.float32) * loss
+    deep = np.clip(kit.blur(deep, 0.003) * 1.6, 0, 1) * loss
+    b = kit.bond(0.075, (0.22, 0.3), 0.012, stagger=0.5)
+    mortar = tg.smoothstep(0.009, 0.004, b["d"])  # raked, recessed lime mortar joints between brick courses
+    brick_h = -0.008 - 0.004 * mortar + 0.0008 * kit.fbm(0.01, 2) + 0.0006 * (b["id"] - 0.5)
+    # undercoat: 2.5 mm below the finish, coarse sandy surface
+    under_h = -0.0025 + 0.0004 * kit.fbm(0.01, 3) + 0.0002 * kit.fbm(0.003, 2)
+    under = under_h * (1.0 - deep) + brick_h * deep
+    # chipped raised rim: the finish coat curls / lifts 0.4 mm along the loss edge and is chipped back to fresh lime
+    ring = kit.blur(loss, 0.006)
+    edge = tg.smoothstep(0.02, 0.35, ring) * (1.0 - loss)
+    chip = edge * tg.smoothstep(0.2, 0.6, kit.fbm(0.02, 2) * 0.5 + 0.5)
     h = h * (1.0 - loss) + loss * under
-    h -= 0.0008 * edge * tg.smoothstep(0.3, 0.7, kit.fbm(0.02, 2) * 0.5 + 0.5)
-    core.log(f"loss coverage {float(loss.mean(dtype=np.float64)):.3f}, deep {float(deep.mean(dtype=np.float64)):.4f}")
+    h += 0.0004 * edge - 0.0005 * chip * tg.smoothstep(0.5, 0.0, ring)
+    core.log(f"loss coverage {float(loss.mean(dtype=np.float64)):.3f}, brick {float(deep.mean(dtype=np.float64)):.4f}, "
+             f"clean-zone share {float((kit.blur(loss, 0.3) < 0.01).mean()):.2f}")
     patch = loss
 
 with core.timer("albedo"):
@@ -132,13 +151,18 @@ with core.timer("albedo"):
     alb = K.tint(alb, "#dccdb0", 0.15 * tg.smoothstep(0.1, 0.6, kit.fbm(1.0, 3)))  # ochre-tinged wash
     alb = K.mul(alb, 1.0 - 0.06 * pores)
     alb = K.mul(alb, 1.0 + 0.03 * ridge - 0.02 * covered * (1.0 - ridge))  # fresh lime on the stroke ridges
-    render_col = K.ramp(0.5 + 0.3 * kit.fbm(0.05, 3) + 0.15 * kit.fbm(0.006, 2), [(0.0, "#b2a894"), (0.5, "#c4bba7"), (1.0, "#d3cab7")])
-    scratch_col = K.ramp(0.5 + 0.4 * kit.fbm(0.006, 2), [(0.0, "#9c927f"), (0.5, "#ada390"), (1.0, "#bfb6a2")])  # close to the render: no dark blot
-    under_col = render_col * (1.0 - deep[..., None]) + scratch_col * deep[..., None]
+    render_col = K.ramp(0.5 + 0.3 * kit.fbm(0.05, 3) + 0.15 * kit.fbm(0.006, 2), [(0.0, "#ada390"), (0.5, "#bcb39f"), (1.0, "#cbc2ae")])
+    # exposed fired brick (#9c5a40) with per-brick tone, lime mortar and lime residue clinging to the brick faces
+    btone = np.clip(0.5 + 0.5 * (b["id"] - 0.5) + 0.15 * kit.fbm(0.03, 2), 0, 1)
+    brick_col = K.ramp(btone, [(0.0, "#8a4e38"), (0.5, "#9c5a40"), (1.0, "#ab6a4c")])
+    brick_col = K.tint(brick_col, "#c9bfa9", 0.75 * mortar)
+    brick_col = K.tint(brick_col, "#c4baa4", 0.35 * tg.smoothstep(0.55, 0.8, kit.fbm(0.03, 3) * 0.5 + 0.5))
+    under_col = render_col * (1.0 - deep[..., None]) + brick_col * deep[..., None]
     alb = alb * (1.0 - patch[..., None]) + under_col * patch[..., None]
     # grime: cracks, loss rims (dust and soot collect in the undercut)
-    grime = np.clip(crack * 0.75 + edge * 0.5, 0, 1)
+    grime = np.clip(crack * 0.75 + 0.25 * edge * (1.0 - chip), 0, 1)
     alb = K.tint(alb, "#6b6253", 0.5 * grime)
+    alb = K.tint(alb, "#efe9dc", 0.5 * chip)  # chipped rim: fresh lime catches the light
     # rain streaks: -10 % value runs 2-8 cm wide, 0.5-2 m long, washing down; paler washed runs between them
     sn = kit.fbm(0.05, 3, aniso=(1.0, 22.0)) * 0.5 + 0.5
     streak = tg.smoothstep(0.55, 0.78, sn) * tg.smoothstep(-0.25, 0.35, kit.fbm(0.7, 3))
@@ -158,7 +182,7 @@ with core.timer("roughness"):
     rough = 0.86 + 0.03 * kit.fbm(0.3, 3) - 0.03 * coat + 0.04 * pores + 0.05 * crack
     rough = rough - 0.09 * damp + 0.04 * salt
     rough = rough - 0.04 * ridge + 0.03 * streak
-    rough = rough * (1.0 - patch) + patch * (0.92 * (1.0 - deep) + 0.95 * deep)
+    rough = rough * (1.0 - patch) + patch * (0.92 * (1.0 - deep) + 0.9 * deep)
 
 kit.finish(height=h, albedo=alb, rough=rough, ao="cycles", ao_distance=0.03, ao_samples=48,
            description="Weathered hand-troweled lime plaster (3 m): overlapping trowel strokes with lime ridges, craze "

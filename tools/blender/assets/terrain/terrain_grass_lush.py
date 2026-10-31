@@ -25,14 +25,14 @@ from _terrainkit import K, finish_terrain, layers  # noqa: E402
 S = 3.0
 # AD-4: olive-emerald, never lime - every texel at HSV saturation <= 0.5 and value <= 0.55 (enforced in calibration)
 kit = K.Kit(__file__, cls="T", size=(S, S), target="terrain:TERRAIN_LAYERS.grass_lush", family="grass",
-            rough_spread=0.05, sat_cap=0.47, value_cap=0.55)
+            rough_spread=0.05, sat_cap=0.452, value_cap=0.55)
 # AD-4 (round 2): the shipped baseColor is lossy WebP (q88, 4:2:0); its quantisation moves the dark blue channel of
 # an olive green by +-3 levels = +-0.03 HSV saturation, so a sward calibrated to the preset's own saturation (0.477)
-# cannot ship at p98 <= 0.50. Calibrate to an encode-safe mean inside the +-6 % tolerance instead: #606e3c =
-# preset #5f6f3a with R +1 %, G -1 %, B +3.4 % (luminance -0.4 %), saturation 0.455 (measured in ta-01.cjs stats).
-ENCODE_SAFE = "#606e3c"
+# cannot ship at p98 <= 0.50. Calibrate to an encode-safe mean inside the +-6 % tolerance instead: #606c3c =
+# preset #5f6f3a with R +1 %, G -2.7 %, B +3.4 % (hue 75 deg, saturation 0.444; measured in ta-01.cjs deltas/stats).
+ENCODE_SAFE = "#606c3c"
 kit.preset["baseColor"] = ENCODE_SAFE
-SAT_T = 0.455
+SAT_T = 0.444
 
 
 def clover(lu, lv, e1, e2):
@@ -65,7 +65,7 @@ with core.timer("tufts"):
     crown = np.clip(1.0 - tf1 * 0.09 / tuft_r, 0.0, 1.0)  # 1 at the tuft centre .. 0 at the rim
     gy_, gx_ = np.gradient(kit.blur(tf1, 0.004))
     radial = np.arctan2(-gy_, gx_).astype(np.float32)  # blades lean away from the crown (image rows run down)
-    tdens = np.clip(sward * (0.55 + 0.6 * crown), 0.0, 1.0)
+    tdens = np.clip(sward * (0.3 + 0.95 * crown), 0.0, 1.0)
 
 with core.timer("grass layers"):
     lean = 0.6  # weak prevailing lean (rad) on top of the radial splay
@@ -85,7 +85,7 @@ with core.timer("grass layers"):
     L = layers(kit, specs)
     veg = L["h"] > -1e5
     h = np.where(veg, np.maximum(L["h"], soil), soil)
-    h = h + 0.012 * crown ** 1.5 * veg  # tuft crowns stand up out of the sward
+    h = h + 0.025 * crown ** 1.5 * veg  # tuft crowns stand up out of the sward
 
 with core.timer("albedo"):
     # soil gaps: olive-brown thatch of dead blades, close to the sward in value AND chroma (AD-4: the lossy

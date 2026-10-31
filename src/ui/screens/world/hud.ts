@@ -523,7 +523,7 @@ export function worldHud(ctx: AppContext, ui: UIManager): Screen<'world_hud'> {
             const text = f.text;
             const sev = f.severity;
             setTimeout(() => {
-              if (!ui.modalOpen) ui.toast(text, sev, 3600);
+              if (!ui.modalOpen) ui.toast(text, sev, 3600, true);
             }, 0);
           }
         }

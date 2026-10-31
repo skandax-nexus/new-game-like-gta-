@@ -395,7 +395,11 @@ export class UIManager {
     const modal = this.layers.modal;
     let any = false;
     for (const c of modal.children) if (!(c as HTMLElement).classList.contains('ui-hidden')) any = true;
+    const opened = any && !modal.classList.contains('has-modal');
     modal.classList.toggle('has-modal', any);
+    // A modal just opened (throttled pushes can land after a same-tick toast): drop the transient toasts - their text
+    // is already in the notification feed - so none sits on the modal (Art Director round 1, overlay leaks).
+    if (opened) for (const t of [...this.layers.toast.querySelectorAll('.toast[data-transient]')]) t.remove();
   }
 
   /**
@@ -410,8 +414,13 @@ export class UIManager {
 
   // ------------------------------------------------------------------ toasts, loading
 
-  toast(text: string, severity: NotifySeverity = 'info', ms = 3200): void {
+  /**
+   * Show a toast. `transient`: it repeats a notification-feed entry, so it is dropped when a modal opens (explicit
+   * feedback such as 'Chronicle saved' is not transient and stays above the modal).
+   */
+  toast(text: string, severity: NotifySeverity = 'info', ms = 3200, transient = false): void {
     const el = h('div', { class: `toast ${severity}`, role: 'status' }, text);
+    if (transient) el.dataset.transient = '1';
     this.layers.toast.appendChild(el);
     while (this.layers.toast.children.length > 4) this.layers.toast.firstChild?.remove();
     setTimeout(() => el.remove(), ms);

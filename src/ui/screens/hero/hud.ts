@@ -182,6 +182,11 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
   let reserved: { l: number; t: number; r: number; b: number }[] = [];
   // Viewport width for clamping the enemy bars (read with the reserved boxes, never per frame); 0 = unknown.
   let viewW = typeof innerWidth === 'number' ? innerWidth : 0;
+  // Half width of the prompt bubble in viewport px (measured with the boxes when its text changes); 0 = unknown.
+  let promptHalf = 0;
+  let promptLabel = '';
+  // Props of the last render (the measurement re-places the bubble with them; track() keeps it on the target after).
+  let lastHeroProps: ScreenPropsMap['hero_hud'] | null = null;
   let measureQueued = false;
   const measureReserved = (): void => {
     if (measureQueued || typeof requestAnimationFrame !== 'function') return;
@@ -189,6 +194,8 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
     requestAnimationFrame(() => {
       measureQueued = false;
       viewW = innerWidth;
+      promptHalf = prompt.classList.contains('ui-hidden') ? 0 : prompt.getBoundingClientRect().width / 2;
+      if (lastHeroProps) placePrompt(lastHeroProps);
       reserved = [vitals, boss, objBox]
         .filter((e) => !e.classList.contains('ui-hidden'))
         .map((e) => e.getBoundingClientRect())
@@ -214,7 +221,11 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
   const placePrompt = (p: ScreenPropsMap['hero_hud']): void => {
     const a = p.promptAnchor;
     setClass(prompt, 'anchored', !!a);
-    if (a) setStyle(prompt, 'transform', `translate(${Math.round(a.x / (ui.scale || 1))}px, ${Math.round(a.y / (ui.scale || 1))}px) translate(-50%, -120%)`);
+    // A target near the screen edge keeps the whole bubble on screen (portrait: "Speak with th..." ran off the right
+    // edge); the bubble slides inward, its target stays the one in front of the hero.
+    const pad = 8;
+    const x = a && promptHalf > 0 && viewW > 2 * (promptHalf + pad) ? Math.min(Math.max(a.x, promptHalf + pad), viewW - promptHalf - pad) : a?.x ?? 0;
+    if (a) setStyle(prompt, 'transform', `translate(${Math.round(x / (ui.scale || 1))}px, ${Math.round(a.y / (ui.scale || 1))}px) translate(-50%, -120%)`);
     else setStyle(prompt, 'transform', '');
   };
   const renderEnemies = (enemies: readonly HeroEnemyBar[]): void => {
@@ -313,8 +324,14 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
         const key = hotkeyLabel(ctx.input.preset, { context: 'hero' }, 'hero_interact', ctx.settings.keybindings);
         setText(promptKey, ctx.input.touchMode ? 'Tap' : key || 'E');
         setText(promptText, p.prompt.replace(/\s*\(E\)$/, ''));
+        const label = `${promptKey.textContent ?? ''}|${promptText.textContent ?? ''}`;
+        if (label !== promptLabel) {
+          promptLabel = label;
+          measureReserved();
+        }
         placePrompt(p);
       }
+      lastHeroProps = p;
       // Captions
       setHidden(caption, !p.caption);
       if (p.caption) {
@@ -331,7 +348,8 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
       setHidden(touch, tc === 'none' || !touchMode);
       setHidden(combatBtns, tc !== 'combat');
       setHidden(interactBtn, tc === 'combat' || !p.prompt);
-      setHidden(lookHint, tc === 'none');
+      // The look hint is an onboarding label in the look area: it gives way to a prompt bubble (they collided on portrait).
+      setHidden(lookHint, tc === 'none' || !!p.prompt);
       setClass(el, 'in-combat', !!combat);
       void props;
     },
