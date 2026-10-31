@@ -52,8 +52,8 @@
       "name": "profiler world-1280x720: UI + input < 1 ms/frame at 60 fps (bench avg, 1x and 4x)",
       "ok": true,
       "observed": {
-        "bench1x": 0.055,
-        "bench4x": 0.379
+        "bench1x": 0.057,
+        "bench4x": 0.451
       }
     },
     {
@@ -87,8 +87,8 @@
       "name": "profiler battle-1280x720: UI + input < 1 ms/frame at 60 fps (bench avg, 1x and 4x)",
       "ok": true,
       "observed": {
-        "bench1x": 0.068,
-        "bench4x": 0.027
+        "bench1x": 0.172,
+        "bench4x": 0.118
       }
     },
     {
@@ -480,125 +480,190 @@
       "name": "contrast: every measured text run >= 4.5:1 (body) / 3:1 (large) on 69 captures",
       "ok": true,
       "observed": {
-        "texts": 2627,
+        "texts": 2595,
         "fails": []
       }
     },
     {
       "name": "touch: every interactive element >= 44x44 px on phone captures",
-      "ok": false,
+      "ok": true,
       "observed": {
         "targets": 1233,
+        "fails": []
+      }
+    },
+    {
+      "name": "truncation: no visible label cut to an ellipsis on 69 captures",
+      "ok": false,
+      "observed": {
         "fails": [
           {
-            "shot": "world-settlement-economy-landscape.png",
-            "w": 41.1,
-            "h": 44,
-            "label": "Economy",
-            "cls": "btn tab active",
-            "at": [
-              583,
-              151
-            ]
+            "shot": "battle-live-pc.png",
+            "text": "Royal Levy · 118",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
           },
           {
-            "shot": "world-settlement-economy-landscape.png",
-            "w": 41.1,
-            "h": 44,
-            "label": "Military",
-            "cls": "btn tab",
-            "at": [
-              626,
-              151
-            ]
+            "shot": "battle-live-pc.png",
+            "text": "Royal Levy · 117",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
           },
           {
-            "shot": "world-settlement-economy-landscape.png",
-            "w": 41.1,
-            "h": 44,
-            "label": "Civic",
-            "cls": "btn tab",
-            "at": [
-              669,
-              151
-            ]
+            "shot": "battle-colorblind-protan-pc.png",
+            "text": "Royal Levy · 118",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
           },
           {
-            "shot": "world-settlement-economy-landscape.png",
-            "w": 41.1,
-            "h": 44,
-            "label": "Defense",
-            "cls": "btn tab",
-            "at": [
-              713,
-              151
-            ]
+            "shot": "battle-colorblind-protan-pc.png",
+            "text": "Royal Levy · 117",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
           },
           {
-            "shot": "world-settlement-economy-landscape.png",
-            "w": 41.1,
-            "h": 44,
-            "label": "Recruit",
-            "cls": "btn tab",
-            "at": [
-              756,
-              151
-            ]
+            "shot": "battle-colorblind-deutan-pc.png",
+            "text": "Royal Levy · 118",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
           },
           {
-            "shot": "world-settlement-recruit-landscape.png",
-            "w": 41.1,
-            "h": 44,
-            "label": "Economy",
-            "cls": "btn tab",
-            "at": [
-              583,
-              151
-            ]
+            "shot": "battle-colorblind-deutan-pc.png",
+            "text": "Royal Levy · 117",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
           },
           {
-            "shot": "world-settlement-recruit-landscape.png",
-            "w": 41.1,
-            "h": 44,
-            "label": "Military",
-            "cls": "btn tab",
-            "at": [
-              626,
-              151
-            ]
+            "shot": "battle-colorblind-tritan-pc.png",
+            "text": "Royal Levy · 118",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
           },
           {
-            "shot": "world-settlement-recruit-landscape.png",
-            "w": 41.1,
-            "h": 44,
-            "label": "Civic",
-            "cls": "btn tab",
-            "at": [
-              669,
-              151
-            ]
+            "shot": "battle-colorblind-tritan-pc.png",
+            "text": "Royal Levy · 117",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
           },
           {
-            "shot": "world-settlement-recruit-landscape.png",
-            "w": 41.1,
-            "h": 44,
-            "label": "Defense",
-            "cls": "btn tab",
-            "at": [
-              713,
-              151
-            ]
+            "shot": "battle-radial-pc.png",
+            "text": "Royal Levy · 118",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
           },
           {
-            "shot": "world-settlement-recruit-landscape.png",
-            "w": 41.1,
-            "h": 44,
-            "label": "Recruit",
-            "cls": "btn tab active",
-            "at": [
-              756,
-              151
-            ]
+            "shot": "battle-radial-pc.png",
+            "text": "Royal Levy · 117",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
+          },
+          {
+            "shot": "battle-intents-pc.png",
+            "text": "Royal Levy · 118",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
+          },
+          {
+            "shot": "battle-intents-pc.png",
+            "text": "Royal Levy · 117",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
+          },
+          {
+            "shot": "battle-live-portrait.png",
+            "text": "Royal Levy · 117",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
+          },
+          {
+            "shot": "battle-radial-portrait.png",
+            "text": "Royal Levy · 117",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
+          },
+          {
+            "shot": "battle-results-portrait.png",
+            "text": "Royal Levy · 117",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
+          },
+          {
+            "shot": "battle-results-prisoners-portrait.png",
+            "text": "Royal Levy · 117",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
+          },
+          {
+            "shot": "battle-live-landscape.png",
+            "text": "Royal Levy · 118",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
+          },
+          {
+            "shot": "battle-live-landscape.png",
+            "text": "Royal Levy · 117",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
+          },
+          {
+            "shot": "battle-radial-landscape.png",
+            "text": "Royal Levy · 118",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
+          },
+          {
+            "shot": "battle-radial-landscape.png",
+            "text": "Royal Levy · 117",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
+          },
+          {
+            "shot": "battle-results-landscape.png",
+            "text": "Royal Levy · 118",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
+          },
+          {
+            "shot": "battle-results-landscape.png",
+            "text": "Royal Levy · 117",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
+          },
+          {
+            "shot": "battle-results-prisoners-landscape.png",
+            "text": "Royal Levy · 118",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
+          },
+          {
+            "shot": "battle-results-prisoners-landscape.png",
+            "text": "Royal Levy · 117",
+            "w": 68,
+            "need": 71,
+            "cls": "ff-name"
           }
         ]
       }
@@ -912,585 +977,710 @@
       "texts": 71,
       "contrastFails": [],
       "targets": 41,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "world-settlement-recruit-pc.png",
       "texts": 65,
       "contrastFails": [],
       "targets": 41,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "settlement-panel-pc.png",
       "texts": 93,
       "contrastFails": [],
       "targets": 52,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "settlement-panel-lower-pc.png",
       "texts": 74,
       "contrastFails": [],
       "targets": 49,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "world-army-card-pc.png",
       "texts": 67,
       "contrastFails": [],
       "targets": 35,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "army-panel-pc.png",
       "texts": 93,
       "contrastFails": [],
       "targets": 43,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "build-placement-pc.png",
       "texts": 86,
       "contrastFails": [],
       "targets": 41,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "market-pc.png",
       "texts": 31,
       "contrastFails": [],
       "targets": 8,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "age-panel-pc.png",
       "texts": 52,
       "contrastFails": [],
       "targets": 3,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "economy-panel-pc.png",
       "texts": 65,
       "contrastFails": [],
       "targets": 12,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "diplomacy-pc.png",
       "texts": 19,
       "contrastFails": [],
       "targets": 7,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "world-colorblind-protan-pc.png",
       "texts": 70,
       "contrastFails": [],
       "targets": 41,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "world-colorblind-deutan-pc.png",
       "texts": 70,
       "contrastFails": [],
       "targets": 41,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "world-colorblind-tritan-pc.png",
       "texts": 70,
       "contrastFails": [],
       "targets": 41,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "event-modal-pc.png",
       "texts": 7,
       "contrastFails": [],
       "targets": 1,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "event-modal-advisors-pc.png",
       "texts": 12,
       "contrastFails": [],
       "targets": 3,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "engagement-prompt-pc.png",
       "texts": 22,
       "contrastFails": [],
       "targets": 3,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "battle-deployment-pc.png",
       "texts": 78,
       "contrastFails": [],
       "targets": 37,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "battle-live-pc.png",
       "texts": 81,
       "contrastFails": [],
       "targets": 39,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": [
+        {
+          "text": "Royal Levy · 118",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        },
+        {
+          "text": "Royal Levy · 117",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        }
+      ]
     },
     {
       "shot": "battle-colorblind-protan-pc.png",
       "texts": 81,
       "contrastFails": [],
       "targets": 39,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": [
+        {
+          "text": "Royal Levy · 118",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        },
+        {
+          "text": "Royal Levy · 117",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        }
+      ]
     },
     {
       "shot": "battle-colorblind-deutan-pc.png",
       "texts": 81,
       "contrastFails": [],
       "targets": 39,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": [
+        {
+          "text": "Royal Levy · 118",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        },
+        {
+          "text": "Royal Levy · 117",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        }
+      ]
     },
     {
       "shot": "battle-colorblind-tritan-pc.png",
       "texts": 81,
       "contrastFails": [],
       "targets": 39,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": [
+        {
+          "text": "Royal Levy · 118",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        },
+        {
+          "text": "Royal Levy · 117",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        }
+      ]
     },
     {
       "shot": "battle-radial-pc.png",
       "texts": 22,
       "contrastFails": [],
       "targets": 25,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": [
+        {
+          "text": "Royal Levy · 118",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        },
+        {
+          "text": "Royal Levy · 117",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        }
+      ]
     },
     {
       "shot": "battle-intents-pc.png",
       "texts": 70,
       "contrastFails": [],
       "targets": 39,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": [
+        {
+          "text": "Royal Levy · 118",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        },
+        {
+          "text": "Royal Levy · 117",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        }
+      ]
     },
     {
       "shot": "battle-results-pc.png",
       "texts": 51,
       "contrastFails": [],
       "targets": 1,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "battle-results-prisoners-pc.png",
       "texts": 55,
       "contrastFails": [],
       "targets": 3,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "hero-explore-pc.png",
       "texts": 10,
       "contrastFails": [],
       "targets": 2,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "hero-combat-pc.png",
       "texts": 10,
       "contrastFails": [],
       "targets": 1,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "hero-scene-pc.png",
       "texts": 6,
       "contrastFails": [],
       "targets": 1,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "world-settlement-economy-portrait.png",
       "texts": 35,
       "contrastFails": [],
       "targets": 39,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "world-settlement-recruit-portrait.png",
       "texts": 30,
       "contrastFails": [],
       "targets": 39,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "settlement-panel-portrait.png",
       "texts": 37,
       "contrastFails": [],
       "targets": 15,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "settlement-panel-lower-portrait.png",
       "texts": 22,
       "contrastFails": [],
       "targets": 26,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "army-panel-portrait.png",
       "texts": 35,
       "contrastFails": [],
       "targets": 20,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "build-placement-portrait.png",
       "texts": 15,
       "contrastFails": [],
       "targets": 12,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "market-portrait.png",
       "texts": 31,
       "contrastFails": [],
       "targets": 8,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "age-panel-portrait.png",
       "texts": 34,
       "contrastFails": [],
       "targets": 1,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "economy-panel-portrait.png",
       "texts": 49,
       "contrastFails": [],
       "targets": 7,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "diplomacy-portrait.png",
       "texts": 13,
       "contrastFails": [],
       "targets": 5,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "event-modal-portrait.png",
       "texts": 7,
       "contrastFails": [],
       "targets": 1,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "event-modal-advisors-portrait.png",
       "texts": 12,
       "contrastFails": [],
       "targets": 3,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "engagement-prompt-portrait.png",
       "texts": 22,
       "contrastFails": [],
       "targets": 3,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "battle-deployment-portrait.png",
-      "texts": 38,
+      "texts": 34,
       "contrastFails": [],
       "targets": 21,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "battle-live-portrait.png",
-      "texts": 36,
+      "texts": 31,
       "contrastFails": [],
       "targets": 20,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": [
+        {
+          "text": "Royal Levy · 117",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        }
+      ]
     },
     {
       "shot": "battle-radial-portrait.png",
       "texts": 22,
       "contrastFails": [],
       "targets": 25,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": [
+        {
+          "text": "Royal Levy · 117",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        }
+      ]
     },
     {
       "shot": "battle-results-portrait.png",
       "texts": 44,
       "contrastFails": [],
       "targets": 1,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": [
+        {
+          "text": "Royal Levy · 117",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        }
+      ]
     },
     {
       "shot": "battle-results-prisoners-portrait.png",
       "texts": 46,
       "contrastFails": [],
       "targets": 3,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": [
+        {
+          "text": "Royal Levy · 117",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        }
+      ]
     },
     {
       "shot": "hero-explore-portrait.png",
       "texts": 9,
       "contrastFails": [],
       "targets": 3,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "hero-combat-portrait.png",
       "texts": 15,
       "contrastFails": [],
       "targets": 7,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "world-settlement-economy-landscape.png",
       "texts": 35,
       "contrastFails": [],
       "targets": 39,
-      "smallTargets": [
-        {
-          "w": 41.1,
-          "h": 44,
-          "label": "Economy",
-          "cls": "btn tab active",
-          "at": [
-            583,
-            151
-          ]
-        },
-        {
-          "w": 41.1,
-          "h": 44,
-          "label": "Military",
-          "cls": "btn tab",
-          "at": [
-            626,
-            151
-          ]
-        },
-        {
-          "w": 41.1,
-          "h": 44,
-          "label": "Civic",
-          "cls": "btn tab",
-          "at": [
-            669,
-            151
-          ]
-        },
-        {
-          "w": 41.1,
-          "h": 44,
-          "label": "Defense",
-          "cls": "btn tab",
-          "at": [
-            713,
-            151
-          ]
-        },
-        {
-          "w": 41.1,
-          "h": 44,
-          "label": "Recruit",
-          "cls": "btn tab",
-          "at": [
-            756,
-            151
-          ]
-        }
-      ]
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "world-settlement-recruit-landscape.png",
       "texts": 30,
       "contrastFails": [],
       "targets": 39,
-      "smallTargets": [
-        {
-          "w": 41.1,
-          "h": 44,
-          "label": "Economy",
-          "cls": "btn tab",
-          "at": [
-            583,
-            151
-          ]
-        },
-        {
-          "w": 41.1,
-          "h": 44,
-          "label": "Military",
-          "cls": "btn tab",
-          "at": [
-            626,
-            151
-          ]
-        },
-        {
-          "w": 41.1,
-          "h": 44,
-          "label": "Civic",
-          "cls": "btn tab",
-          "at": [
-            669,
-            151
-          ]
-        },
-        {
-          "w": 41.1,
-          "h": 44,
-          "label": "Defense",
-          "cls": "btn tab",
-          "at": [
-            713,
-            151
-          ]
-        },
-        {
-          "w": 41.1,
-          "h": 44,
-          "label": "Recruit",
-          "cls": "btn tab active",
-          "at": [
-            756,
-            151
-          ]
-        }
-      ]
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "settlement-panel-landscape.png",
       "texts": 30,
       "contrastFails": [],
       "targets": 13,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "settlement-panel-lower-landscape.png",
       "texts": 17,
       "contrastFails": [],
       "targets": 20,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "army-panel-landscape.png",
       "texts": 30,
       "contrastFails": [],
       "targets": 17,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "build-placement-landscape.png",
       "texts": 15,
       "contrastFails": [],
       "targets": 13,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "market-landscape.png",
       "texts": 22,
       "contrastFails": [],
       "targets": 6,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "age-panel-landscape.png",
       "texts": 20,
       "contrastFails": [],
       "targets": 1,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "economy-panel-landscape.png",
       "texts": 30,
       "contrastFails": [],
       "targets": 1,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "diplomacy-landscape.png",
       "texts": 12,
       "contrastFails": [],
       "targets": 5,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "event-modal-landscape.png",
       "texts": 7,
       "contrastFails": [],
       "targets": 1,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "event-modal-advisors-landscape.png",
       "texts": 8,
       "contrastFails": [],
       "targets": 3,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "engagement-prompt-landscape.png",
       "texts": 22,
       "contrastFails": [],
       "targets": 3,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "battle-deployment-landscape.png",
-      "texts": 50,
+      "texts": 37,
       "contrastFails": [],
       "targets": 24,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "battle-live-landscape.png",
-      "texts": 48,
+      "texts": 38,
       "contrastFails": [],
       "targets": 23,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": [
+        {
+          "text": "Royal Levy · 118",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        },
+        {
+          "text": "Royal Levy · 117",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        }
+      ]
     },
     {
       "shot": "battle-radial-landscape.png",
       "texts": 22,
       "contrastFails": [],
       "targets": 25,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": [
+        {
+          "text": "Royal Levy · 118",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        },
+        {
+          "text": "Royal Levy · 117",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        }
+      ]
     },
     {
       "shot": "battle-results-landscape.png",
       "texts": 28,
       "contrastFails": [],
       "targets": 1,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": [
+        {
+          "text": "Royal Levy · 118",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        },
+        {
+          "text": "Royal Levy · 117",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        }
+      ]
     },
     {
       "shot": "battle-results-prisoners-landscape.png",
       "texts": 32,
       "contrastFails": [],
       "targets": 3,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": [
+        {
+          "text": "Royal Levy · 118",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        },
+        {
+          "text": "Royal Levy · 117",
+          "w": 68,
+          "need": 71,
+          "cls": "ff-name"
+        }
+      ]
     },
     {
       "shot": "hero-explore-landscape.png",
       "texts": 10,
       "contrastFails": [],
       "targets": 3,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     },
     {
       "shot": "hero-combat-landscape.png",
       "texts": 14,
       "contrastFails": [],
       "targets": 7,
-      "smallTargets": []
+      "smallTargets": [],
+      "truncated": []
     }
   ],
   "profile": {
@@ -1501,9 +1691,9 @@
         "frames": 600,
         "updates": 40,
         "steps": 120,
-        "avgMs": 0.055,
-        "p95Ms": 0.5,
-        "maxMs": 16.3
+        "avgMs": 0.057,
+        "p95Ms": 0.6,
+        "maxMs": 16
       },
       "bench4x": {
         "screen": "world_hud",
@@ -1511,15 +1701,15 @@
         "frames": 600,
         "updates": 40,
         "steps": 480,
-        "avgMs": 0.379,
-        "p95Ms": 2.3,
-        "maxMs": 33.5
+        "avgMs": 0.451,
+        "p95Ms": 4,
+        "maxMs": 46.3
       },
       "liveSwiftShader": {
-        "ui": 2.513,
-        "input": 0.018,
-        "total": 2.531,
-        "max": 75.2
+        "ui": 2.543,
+        "input": 0.019,
+        "total": 2.562,
+        "max": 81.5
       }
     },
     "battle-1280x720": {
@@ -1529,9 +1719,9 @@
         "frames": 600,
         "updates": 85,
         "steps": 200,
-        "avgMs": 0.068,
-        "p95Ms": 1.8,
-        "maxMs": 5.2
+        "avgMs": 0.172,
+        "p95Ms": 3.2,
+        "maxMs": 15.5
       },
       "bench4x": {
         "screen": "battle_hud",
@@ -1539,15 +1729,15 @@
         "frames": 600,
         "updates": 85,
         "steps": 795,
-        "avgMs": 0.027,
-        "p95Ms": 0.2,
-        "maxMs": 3
+        "avgMs": 0.118,
+        "p95Ms": 0.3,
+        "maxMs": 9.2
       },
       "liveSwiftShader": {
-        "ui": 4.242,
+        "ui": 6.27,
         "input": 0.019,
-        "total": 4.261,
-        "max": 23.6
+        "total": 6.289,
+        "max": 34.1
       }
     }
   }

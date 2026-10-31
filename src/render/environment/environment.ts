@@ -12,7 +12,8 @@
  *   triggerLightning(dir?)                 storm flash (#d8e2ff x9, 80-160 ms double flash, sky +2 EV) - GFX-02 weather
  *                                          (the flash light is in the scene from setEnvironment in LIGHTNING_WEATHER)
  *   addPractical(kind, position)           -> handle { setPosition, setScale, remove } (lamps, torches, braziers, fires)
- *   sunDirection(out?)                     unit vector toward the key light (sun by day, moon at night)
+ *   sunDirection(out?)                     unit vector toward the shadow-casting key (sun by day, moon at night; at
+ *                                          twilight the stronger of the two - lighting/keyLight.ts)
  *   update(dt, focus | camera, look?)      per frame; focus = camera focus point (legacy), look = ZoomLook from GFX-05
  *                                          (else derived from the camera-to-focus distance and capped by tier)
  *   setQuality(q) (automatic on tier changes), setAssets(assets), setBounds(rect), info(), dispose()
@@ -44,6 +45,7 @@ import { bloomThresholdLinear } from '../lighting/ibl';
 import { CascadedShadows } from '../lighting/csm';
 import { LightningFlash } from '../lighting/lightning';
 import { PracticalLights, type PracticalHandle, type PracticalKind } from '../lighting/practicals';
+import { createTwilightKey, twilightKey, twilightKeySoftness } from '../lighting/keyLight';
 import { EXP2_DENSITY_SCALE, fogModeFor, writeAtmosphere, atmosphereSnapshot, type AtmosphereInputs } from './atmosphere/atmosphere';
 
 export interface EnvironmentRigOptions {
@@ -80,12 +82,6 @@ export function copyZoomLookInto(out: ZoomLook, src: ZoomLook): ZoomLook {
   return out;
 }
 
-/** Key light never drops below this elevation (deg): grazing suns smear shadows across the whole map. */
-const MIN_KEY_ELEVATION_DEG = 3;
-/** Sun -> moon key-light hand-over (solar elevation, deg). */
-const MOON_HANDOVER_DEG: readonly [number, number] = [-2, -8];
-/** Moon elevation range (deg) - a readable night key, never grazing, never straight down. */
-const MOON_ELEVATION_DEG: readonly [number, number] = [25, 62];
 /** Exposure ease time constant (s) for mood / override changes (ART_BIBLE §4.7: 0.6 s). */
 const EXPOSURE_EASE_S = 0.6;
 /** Hemisphere factor with IBL on (ART_BIBLE §4.2). */
@@ -130,6 +126,11 @@ export class EnvironmentRig {
   private readonly keyDir = new THREE.Vector3(0, 1, 0);
   private readonly scatterDir = new THREE.Vector3(0, 1, 0);
   private readonly keyColor = new THREE.Color();
+  /** Twilight key state (sun / moon weights, caster, fill) for the current solar elevation. */
+  private readonly key = createTwilightKey();
+  private keyIntensity = 0;
+  private keySoftnessDeg = 0;
+  private twilightFill = 0;
   private readonly focus = new THREE.Vector3();
   private hasFocus = false;
   private groundKnown = false;
@@ -418,17 +419,19 @@ export class EnvironmentRig {
   // ------------------------------------------------------------------------------------------------ apply
 
   private computeMoon(): void {
-    // Full-moon convention: opposite the sun in azimuth, elevation mirrored and clamped to a readable range.
+    // Twilight key model (lighting/keyLight.ts, AD round 2 R2-1): the sun and moon keys keep their own directions and
+    // cross-fade by intensity; the cascades cast from the stronger one. Full-moon convention: the moon is opposite
+    // the sun in azimuth, its elevation mirrored and clamped to a readable 25-62 deg.
+    const k = twilightKey(this.sunElevationDeg, this.key);
     const az = Math.atan2(this.sunDir.x, -this.sunDir.z) + Math.PI;
-    const el = THREE.MathUtils.clamp(-this.sunElevationDeg, MOON_ELEVATION_DEG[0], MOON_ELEVATION_DEG[1]) * DEG;
+    const el = k.moonKeyElevationDeg * DEG;
     this.moonDir.set(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el));
-    // Key light: the sun (never below MIN_KEY_ELEVATION) handing over to the moon as the sun sets (-2 -> -8 deg).
-    const moonW = 1 - THREE.MathUtils.smoothstep(this.sunElevationDeg, MOON_HANDOVER_DEG[1], MOON_HANDOVER_DEG[0]);
-    const minEl = MIN_KEY_ELEVATION_DEG * DEG;
-    const sunAz = Math.atan2(this.sunDir.x, -this.sunDir.z);
-    const sunEl = Math.max(minEl, this.sunElevationDeg * DEG);
-    this.keyDir.set(Math.sin(sunAz) * Math.cos(sunEl), Math.sin(sunEl), -Math.cos(sunAz) * Math.cos(sunEl));
-    if (moonW > 0) this.keyDir.lerp(this.moonDir, moonW).normalize();
+    if (k.moonCasts) this.keyDir.copy(this.moonDir);
+    else {
+      const sunAz = Math.atan2(this.sunDir.x, -this.sunDir.z);
+      const sunEl = k.sunKeyElevationDeg * DEG;
+      this.keyDir.set(Math.sin(sunAz) * Math.cos(sunEl), Math.sin(sunEl), -Math.cos(sunAz) * Math.cos(sunEl));
+    }
     // Fog in-scatter follows the sun until well after sunset (dusk glow), then the moon.
     const scatterMoon = 1 - THREE.MathUtils.smoothstep(this.sunElevationDeg, -10, -5);
     this.scatterDir.copy(this.sunDir).lerp(this.moonDir, scatterMoon).normalize();
@@ -440,13 +443,20 @@ export class EnvironmentRig {
     const q = this.quality;
     const env = this.env;
     // Key light (cascades share it).
+    // Twilight: sun / moon keys cross-fade by intensity (keyLight.ts); the energy they no longer carry becomes sky fill.
+    const tk = this.key;
     this.keyColor.setRGB(r.sunColor[0], r.sunColor[1], r.sunColor[2]);
-    this.shadows.setLight(this.keyColor, r.sunIntensity, r.sunSoftnessDeg);
-    // Hemisphere fill (x0.35 with IBL: the environment map carries most of the sky fill).
+    this.keyIntensity = r.sunIntensity * tk.keyWeight;
+    this.keySoftnessDeg = twilightKeySoftness(r.sunSoftnessDeg, tk);
+    this.shadows.setLight(this.keyColor, this.keyIntensity, this.keySoftnessDeg);
+    // Hemisphere fill (x0.35 with IBL: the environment map carries most of the sky fill) + the twilight fill.
     const iblOn = q.envMapSize > 0;
     this.hemi.color.setRGB(r.hemiSky[0], r.hemiSky[1], r.hemiSky[2]);
     this.hemi.groundColor.setRGB(r.hemiGround[0], r.hemiGround[1], r.hemiGround[2]);
-    this.hemi.intensity = r.hemiIntensity * (iblOn ? HEMI_WITH_IBL : 1);
+    const keyLum = 0.2126 * r.sunColor[0] + 0.7152 * r.sunColor[1] + 0.0722 * r.sunColor[2];
+    const skyLum = Math.max(1e-3, 0.2126 * r.hemiSky[0] + 0.7152 * r.hemiSky[1] + 0.0722 * r.hemiSky[2]);
+    this.twilightFill = (r.sunIntensity * tk.fillIrradiance * keyLum) / skyLum;
+    this.hemi.intensity = r.hemiIntensity * (iblOn ? HEMI_WITH_IBL : 1) + this.twilightFill;
     // Sky (procedural; baked when assets are attached).
     const preset = LIGHTING_PRESETS[r.dominant];
     this.sky.setLighting(r, this.sunDir, this.moonDir, env?.weather.cloudCover ?? 0.1, preset.sky.nishita.groundAlbedo);
@@ -471,7 +481,7 @@ export class EnvironmentRig {
     ps.shaftsTint[0] = r.fogInscatter[0];
     ps.shaftsTint[1] = r.fogInscatter[1];
     ps.shaftsTint[2] = r.fogInscatter[2];
-    ps.keyShare = r.keyFill / (1 + r.keyFill);
+    ps.keyShare = (r.keyFill / (1 + r.keyFill)) * tk.keyWeight;
     this.updatePostAssets();
     // Wetness and practicals.
     this.wetness = Math.max(r.wetness, surfaceWetnessFromWeather(env?.weather.wetness ?? 0));
@@ -633,6 +643,16 @@ export class EnvironmentRig {
       dominant: r.dominant,
       sunElevationDeg: Math.round(this.sunElevationDeg * 10) / 10,
       keyDir: [this.keyDir.x, this.keyDir.y, this.keyDir.z].map((v) => Math.round(v * 1000) / 1000),
+      key: {
+        caster: this.key.moonCasts ? 'moon' : 'sun',
+        elevationDeg: Math.round((Math.asin(THREE.MathUtils.clamp(this.keyDir.y, -1, 1)) / DEG) * 10) / 10,
+        sunWeight: Math.round(this.key.sunWeight * 1000) / 1000,
+        moonWeight: Math.round(this.key.moonWeight * 1000) / 1000,
+        intensity: Math.round(this.keyIntensity * 1000) / 1000,
+        presetIntensity: Math.round(r.sunIntensity * 1000) / 1000,
+        softnessDeg: Math.round(this.keySoftnessDeg * 100) / 100,
+        twilightFill: Math.round(this.twilightFill * 1000) / 1000,
+      },
       exposure: this.exposure,
       skyIrradianceTarget: r.skyIrradiance,
       sourceIrradiance: this.sourceIrradiance,

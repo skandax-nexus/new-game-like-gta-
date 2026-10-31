@@ -16,6 +16,10 @@
  *   shadow distance (ZoomLook.shadows.distanceM x tier scale, never closer than 1.25 x the focus distance).
  * - Stability: each cascade is fitted with the bounding sphere of its frustum slice (rotation-invariant size,
  *   radius quantised) and its centre is snapped to whole shadow texels in light space (no shimmering when panning).
+ *   Low tier (one hard 1024^2 cascade, AD round 2 R2-2): a tight light-space AABB of the slice instead (extents
+ *   quantised to LOW_FIT_QUANTUM_M, bounds snapped to whole texels per axis) with the far split pulled to
+ *   LOW_HERO_FAR_M (30 m) on the hero band; beyond it the existing last-cascade distance fade.
+ * - PCSS max penumbra grows with the key's softness (pcssMaxPenumbraTexels: >= 64 texels above 1.5 deg).
  * - Biases scale with the cascade texel: normalBias = 1.4 texels (world m), depth bias = 0.6 texel / depth range;
  *   low's hard cascade 2.2 / 0.8 texels plus a slope-scaled depth bias (NORMAL_BIAS_TEXELS, SLOPE_BIAS_TEXELS).
  * - Casters render back faces into the map (three's default shadowSide for FrontSide materials: closed architecture
@@ -52,6 +56,47 @@ export const DEPTH_BIAS_TEXELS: Readonly<Record<ShadowFilter, number>> = { hard:
 /** Slope-scaled depth bias of the hard filter: texels per unit tan(light angle), tan capped (grazing light). */
 export const SLOPE_BIAS_TEXELS = 0.6;
 export const SLOPE_BIAS_MAX_TAN = 6;
+
+/** PCSS max penumbra (texels) for crisp suns: ultra 28, high 18 (unchanged for softness <= PCSS_SOFT_FROM_DEG). */
+export const PCSS_BASE_MAX_PENUMBRA: Readonly<{ ultra: number; other: number }> = { ultra: 28, other: 18 };
+/** Softness (deg) from which the max penumbra grows, the texels reached at 1.5 deg, and the hard cap. */
+export const PCSS_SOFT_FROM_DEG = 0.75;
+export const PCSS_SOFT_PENUMBRA_AT_1_5_DEG = 64;
+export const PCSS_MAX_PENUMBRA_CAP = 128;
+
+/**
+ * PCSS max penumbra radius (shadow texels) for a sun of angular radius `softnessDeg`: the tier's base for crisp suns
+ * (golden 0.6-0.75, noon, night - unchanged), growing linearly above PCSS_SOFT_FROM_DEG so that any softness > 1.5 deg
+ * allows >= 64 texels (AD round 2), capped at 128.
+ */
+export function pcssMaxPenumbraTexels(softnessDeg: number, ultra: boolean): number {
+  const base = ultra ? PCSS_BASE_MAX_PENUMBRA.ultra : PCSS_BASE_MAX_PENUMBRA.other;
+  const grown = (PCSS_SOFT_PENUMBRA_AT_1_5_DEG * (softnessDeg - PCSS_SOFT_FROM_DEG)) / (1.5 - PCSS_SOFT_FROM_DEG);
+  return Math.min(PCSS_MAX_PENUMBRA_CAP, Math.max(base, grown));
+}
+
+/** Low tier's single cascade: far split on the hero band (m), blended back to the tier distance by the close band. */
+export const LOW_HERO_FAR_M = 30;
+/** ZoomLook shadow distances (m, before the tier scale) of the hero and close bands: the blend range of LOW_HERO_FAR_M. */
+export const LOW_FAR_BLEND_LOOK_M: readonly [number, number] = [90, 160];
+/** Extent quantum (m) of the low cascade's AABB fit. */
+export const LOW_FIT_QUANTUM_M = 0.5;
+
+/** Far split (m) of the low tier's single cascade for a look: LOW_HERO_FAR_M on the hero band, `far` from the close band. */
+export function lowCascadeFarM(look: ZoomLook, far: number): number {
+  const [a, b] = LOW_FAR_BLEND_LOOK_M;
+  const t = Math.min(1, Math.max(0, (look.shadows.distanceM - a) / (b - a)));
+  const w = t * t * (3 - 2 * t);
+  return Math.min(far, LOW_HERO_FAR_M) * (1 - w) + far * w;
+}
+
+/** Round an AABB extent up to LOW_FIT_QUANTUM_M (m). */
+export function quantiseExtent(m: number): number {
+  return Math.max(LOW_FIT_QUANTUM_M, Math.ceil(m / LOW_FIT_QUANTUM_M) * LOW_FIT_QUANTUM_M);
+}
+
+/** Evidence / debug: shadowIntensity >= 0 overrides every cascade's shadow.intensity (0 = unshadowed A/B frame). */
+export const CSM_DEBUG = { shadowIntensity: -1 };
 
 /** Debug cascade tints (?csm=1): red, green, blue, yellow. */
 export const CSM_DEBUG_COLORS: readonly (readonly [number, number, number])[] = [
@@ -161,7 +206,7 @@ export class CascadedShadows {
   private intensity = 3.4;
   private softnessDeg = 0.35;
   /** Last computed shadow distance (m) and texel sizes, for diagnostics. */
-  readonly info = { distance: 0, texels: [0, 0, 0, 0], radii: [0, 0, 0, 0], splits: [0, 0, 0, 0, 0] };
+  readonly info = { distance: 0, texels: [0, 0, 0, 0], texelsXY: [0, 0, 0, 0, 0, 0, 0, 0], radii: [0, 0, 0, 0], splits: [0, 0, 0, 0, 0], fit: 'sphere' as 'sphere' | 'aabb' };
 
   constructor(quality: QualitySettings) {
     this.group.name = 'sun_cascades';
@@ -245,8 +290,12 @@ export class CascadedShadows {
     const camNear = persp ? Math.max(0.05, persp.near) : 0.1;
     const near = focusDistance > 12 ? Math.max(camNear, focusDistance * SPLIT_NEAR_OF_FOCUS) : camNear;
     const camFar = persp ? persp.far : 2000;
-    const far = shadowDistanceFor(look, q, focusDistance, camFar);
+    let far = shadowDistanceFor(look, q, focusDistance, camFar);
+    // Low tier (one hard cascade): pull the far split in on the hero band so the 1024^2 map covers ~30 m (AD R2-2).
+    const tight = this.filter === 'hard' && this.count === 1;
+    if (tight) far = Math.max(camNear * 2, Math.min(far, lowCascadeFarM(look, far)));
     this.info.distance = far;
+    this.info.fit = tight ? 'aabb' : 'sphere';
     const active = activeCascadesFor(this.count, look);
     this.active = active;
     practicalSplits(near, far, active, look.shadows.cascadeSplitLambda, this.splits);
@@ -279,6 +328,10 @@ export class CascadedShadows {
         const sy = k & 2 ? 1 : -1;
         this.corners[k]!.set(sx * tanX * z, sy * tanY * z, -z).applyQuaternion(this.camQuat).add(this.camPos);
       }
+      if (tight) {
+        this.fitTight(l, s0, s1);
+        continue;
+      }
       this.center.set(0, 0, 0);
       for (const c of this.corners) this.center.add(c);
       this.center.multiplyScalar(1 / 8);
@@ -310,15 +363,81 @@ export class CascadedShadows {
       l.shadow.normalBias = texel * NORMAL_BIAS_TEXELS[this.filter];
       l.shadow.bias = -(texel * DEPTH_BIAS_TEXELS[this.filter]) / depthRange;
       l.shadow.radius = this.filter === 'pcf' ? pcfRadiusFromSoftness(this.softnessDeg * look.shadows.softnessScale, texel) : 1;
+      l.shadow.intensity = CSM_DEBUG.shadowIntensity >= 0 ? CSM_DEBUG.shadowIntensity : 1;
       g(G.CSM_CASCADE + i).set(s0, s1, texel, depthRange);
       this.info.texels[i] = texel;
+      this.info.texelsXY[i * 2] = texel;
+      this.info.texelsXY[i * 2 + 1] = texel;
       this.info.radii[i] = r;
     }
     for (let i = 0; i < this.info.splits.length; i++) this.info.splits[i] = i <= active ? this.splits[i]! : 0;
     g(G.CSM_PARAMS).set(q.shadows.enabled ? this.count : 0, FILTER_CODE[this.filter], this.debugColors ? 1 : 0, CSM_BLEND);
-    // PCSS: light size, blocker / filter samples (ultra more), max penumbra in texels.
+    // PCSS: light size, blocker / filter samples (ultra more), max penumbra in texels (grows with the sun's softness:
+    // dusk / monsoon / winter-fog penumbrae are metres wide at the tip of a long shadow - AD round 2, R2-1).
     const ultra = q.tier === 'ultra';
-    g(G.CSM_PCSS).set(softTan, ultra ? 16 : 12, ultra ? 32 : 20, ultra ? 28 : 18);
+    g(G.CSM_PCSS).set(softTan, ultra ? 16 : 12, ultra ? 32 : 20, pcssMaxPenumbraTexels(this.softnessDeg, ultra));
+  }
+
+  /**
+   * Low tier's single hard cascade (AD round 2, R2-2): fit the light-space AABB of the slice corners (this.corners)
+   * instead of the bounding sphere. Extents are quantised up to LOW_FIT_QUANTUM_M (stable texel size while the camera
+   * turns), bounds snapped to whole texels per axis (no crawling when panning). A hero camera looking along the ground
+   * gets ~2-3x the sphere fit's density along the light's vertical axis.
+   */
+  private fitTight(l: THREE.DirectionalLight, s0: number, s1: number): void {
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    let minZ = Infinity;
+    let maxZ = -Infinity;
+    for (const c of this.corners) {
+      const x = c.dot(this.axisX);
+      const y = c.dot(this.axisY);
+      const z = c.dot(this.lightDir);
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+      if (z < minZ) minZ = z;
+      if (z > maxZ) maxZ = z;
+    }
+    const size = l.shadow.mapSize.x;
+    const w = quantiseExtent(maxX - minX);
+    const h = quantiseExtent(maxY - minY);
+    const tx = w / size;
+    const ty = h / l.shadow.mapSize.y;
+    // Snap the low corner to whole texels; the box keeps its quantised size (the far edge may lose < 1 texel).
+    const x0 = Math.floor(minX / tx) * tx;
+    const y0 = Math.floor(minY / ty) * ty;
+    const cx = x0 + w * 0.5;
+    const cy = y0 + h * 0.5;
+    const back = maxZ + CSM_CASTER_EXTENT_M;
+    this.center.copy(this.axisX).multiplyScalar(cx).addScaledVector(this.axisY, cy).addScaledVector(this.lightDir, back);
+    l.position.copy(this.center);
+    l.target.position.copy(this.center).sub(this.lightDir);
+    l.target.updateMatrixWorld();
+    l.updateMatrixWorld();
+    const cam = l.shadow.camera as THREE.OrthographicCamera;
+    cam.left = -w * 0.5;
+    cam.right = w * 0.5;
+    cam.top = h * 0.5;
+    cam.bottom = -h * 0.5;
+    cam.near = 0.5;
+    cam.far = back - minZ + 1;
+    cam.updateProjectionMatrix();
+    const depthRange = cam.far - cam.near;
+    // Biases use the coarser axis (a texel is a w/size x h/size rectangle).
+    const texel = Math.max(tx, ty);
+    l.shadow.normalBias = texel * NORMAL_BIAS_TEXELS[this.filter];
+    l.shadow.bias = -(texel * DEPTH_BIAS_TEXELS[this.filter]) / depthRange;
+    l.shadow.radius = 1;
+    l.shadow.intensity = CSM_DEBUG.shadowIntensity >= 0 ? CSM_DEBUG.shadowIntensity : 1;
+    g(G.CSM_CASCADE).set(s0, s1, texel, depthRange);
+    this.info.texels[0] = texel;
+    this.info.texelsXY[0] = tx;
+    this.info.texelsXY[1] = ty;
+    this.info.radii[0] = Math.hypot(w, h) * 0.5;
   }
 
   /** Total shadow-map texels (diagnostics / memory). */

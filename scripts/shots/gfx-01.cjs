@@ -4,7 +4,7 @@
  * Lighting, Atmosphere & Post (GFX-01).
  *
  *   npx vite build --outDir .build/gfx-01 --emptyOutDir
- *   NODE_PATH=$(npm root -g) node scripts/shots/gfx-01.cjs [--only=presets,low,csm,zoom,labs,budgets,tiers,context]
+ *   NODE_PATH=$(npm root -g) node scripts/shots/gfx-01.cjs [--only=presets,twilight,low,csm,zoom,labs,budgets,tiers,context]
  *
  * Env: SHOTS_PORT (default 4403), SHOTS_DIST (default .build/gfx-01), SHOTS_OUT (default docs/sprint1/gfx-01).
  * Starts `vite preview` on the ticket port, opens deep links in headless Chromium (SwiftShader: frame times mean
@@ -20,6 +20,11 @@
  *   budgets  draw calls: battle 1000 @high, river 5000 @high, mobile 600 @low (before / after table)
  *   tiers    low -> ultra -> low x3: renderer.info.memory textures / geometries and post render targets unchanged
  *   context  WEBGL_lose_context: rendering pauses, restores, no errors
+ *   round 2  (AD R2-1) twilight A/B: every dusk / golden / night shot is re-rendered in the same frozen frame with the
+ *            key's cast shadows off (r2/<name>-noshadow.png); lit:shadow = linear luminance unshadowed / shadowed over
+ *            the pixels the shadow darkens (lower 65 % of the frame), plus the key elevation -> shadow length in caster
+ *            heights. (AD R2-2) low tier: probe() of the red wall -> shadow texel (m) and screen px per texel, 3x
+ *            nearest-neighbour crops of the golden ridge (r2/*-ridge-x3.png; *-r1.png = round 1).
  * Fails (exit 1) on console errors, page errors or failed budgets / checks.
  */
 'use strict';
@@ -54,6 +59,58 @@ const HERO = 'scene=hero';
 /** Draw calls measured on the baseline (before GFX-01, same deep links, SwiftShader 1280x720 / 844x390). */
 const BEFORE = { 'battle-1000-high': 81, 'battle-river-5000-high': 81, 'battle-mobile-low': 26 };
 const BUDGETS = { 'battle-1000-high': 400, 'battle-river-5000-high': 500, 'battle-mobile-low': 150 };
+
+/** Round 2 evidence folder (A/B frames, crops). */
+const R2 = path.join(OUT, 'r2');
+/** Presets re-rendered without the key's cast shadows (AD round 2, R2-1). */
+const TWILIGHT_AB = ['golden', 'dusk', 'night'];
+/** Red wall below the ridge shadow (AD R2-2 coordinates): probe points and the 3x crop boxes. */
+const RIDGE_PROBE = { desktop: [[800, 275], [830, 268], [855, 262]], phone: [[365, 330], [378, 340]] };
+const RIDGE_CROP = { desktop: { left: 740, top: 225, width: 160, height: 90 }, phone: { left: 315, top: 290, width: 75, height: 80 } };
+
+/** Same-frame A/B with the key's cast shadows off, written to r2/<name>-noshadow.png. */
+function noShadowAlt(name) {
+  return { suffix: 'noshadow', file: path.join(R2, `${name}-noshadow.png`), before: () => window.__SAMRAJYA_GFX__.setShadowIntensity(0) };
+}
+
+/**
+ * Lit:shadow from a same-frame A/B (with shadows `a`, without `b`): over the lower 65 % of the frame, the pixels the
+ * key's shadow darkens (b > 1.06 a in linear luminance) give litOverShadow = sum(b) / sum(a); also the p90 per-pixel
+ * ratio and the shadowed share of those rows.
+ */
+async function litShadow(fa, fb, y0 = 0.35) {
+  const A = await sharp(fa).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const B = await sharp(fb).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const lin = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  const L = (d, i) => 0.2126 * lin(d[i] / 255) + 0.7152 * lin(d[i + 1] / 255) + 0.0722 * lin(d[i + 2] / 255);
+  const { width, height, channels } = A.info;
+  let sa = 0;
+  let sb = 0;
+  let n = 0;
+  let total = 0;
+  const ratios = [];
+  for (let y = Math.floor(height * y0); y < height; y++)
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * channels;
+      const a = L(A.data, i);
+      const b = L(B.data, i);
+      total++;
+      if (b > 0.0015 && b > a * 1.06) {
+        sa += a;
+        sb += b;
+        n++;
+        ratios.push(b / Math.max(a, 1e-5));
+      }
+    }
+  ratios.sort((p, q) => p - q);
+  return {
+    shadowedPct: +((100 * n) / total).toFixed(2),
+    litOverShadow: n ? +(sb / sa).toFixed(3) : 1,
+    p90Ratio: n ? +ratios[Math.floor(n * 0.9)].toFixed(3) : 1,
+    shadowedLinear: n ? +(sa / n).toFixed(4) : null,
+    litLinear: n ? +(sb / n).toFixed(4) : null,
+  };
+}
 
 function wait(url, ms) {
   const t0 = Date.now();
@@ -151,6 +208,7 @@ async function maxRowJump(file, y0, y1) {
 
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
+  fs.mkdirSync(R2, { recursive: true });
   const server = spawn(process.execPath, [path.join(ROOT, 'node_modules/vite/bin/vite.js'), 'preview', '--outDir', DIST, '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], { cwd: ROOT, stdio: 'ignore' });
   const report = { generated: new Date().toISOString(), shots: [], checks: {}, budgets: [], tiers: null, context: null };
   const failures = [];
@@ -182,6 +240,7 @@ async function maxRowJump(file, y0, y1) {
       const file = path.join(OUT, `${name}.png`);
       if (!opts.noCapture) await page.screenshot({ path: file, timeout: 600000 });
       const extra = opts.after ? await page.evaluate(opts.after) : undefined;
+      const probe = opts.probe ? await page.evaluate((pts) => pts.map(([x, y]) => window.__SAMRAJYA_GFX__.probe(x, y)), opts.probe) : undefined;
       // Optional A/B in the same frozen frame (e.g. wetness override): `alt = { suffix, before }`.
       if (opts.alt) {
         // The page is frozen (waitFrames would never resolve): screenshot() renders the frame synchronously, and the
@@ -191,7 +250,7 @@ async function maxRowJump(file, y0, y1) {
           window.__SAMRAJYA__.screenshot();
           window.__SAMRAJYA__.screenshot();
         });
-        await page.screenshot({ path: path.join(OUT, `${name}-${opts.alt.suffix}.png`), timeout: 600000 });
+        await page.screenshot({ path: opts.alt.file || path.join(OUT, `${name}-${opts.alt.suffix}.png`), timeout: 600000 });
       }
       await page.close();
       const r = {
@@ -206,8 +265,11 @@ async function maxRowJump(file, y0, y1) {
         tier: gfx.tier,
         passes: gfx.post.passes,
         look: gfx.post.look,
-        env: gfx.env ? { preset: gfx.env.dominant, exposure: gfx.env.exposure, effectiveIrradiance: gfx.env.effectiveIrradiance, bakedSky: gfx.env.bakedSky, cascades: gfx.env.cascades, look: gfx.env.look, wetness: gfx.env.wetness } : null,
+        env: gfx.env
+          ? { preset: gfx.env.dominant, sunElevationDeg: gfx.env.sunElevationDeg, key: gfx.env.key, exposure: gfx.env.exposure, effectiveIrradiance: gfx.env.effectiveIrradiance, bakedSky: gfx.env.bakedSky, cascades: gfx.env.cascades, shadowDistance: gfx.env.shadowDistance, shadowTexelM: gfx.env.shadowTexelM, look: gfx.env.look, wetness: gfx.env.wetness }
+          : null,
         extra,
+        probe,
         errors,
       };
       report.shots.push(r);
@@ -216,18 +278,42 @@ async function maxRowJump(file, y0, y1) {
       return r;
     }
 
-    if (want('presets')) {
-      for (const p of PRESETS) {
-        await shot(`battle-${p.id}-ultra`, `${BATTLE}&quality=ultra&noui=1&${p.env}`, { advance: 200 });
+    if (want('presets') || want('twilight')) {
+      for (const p of want('presets') ? PRESETS : PRESETS.filter((x) => TWILIGHT_AB.includes(x.id))) {
+        // Dusk / golden / night: the same frozen frame with the key's cast shadows off (AD round 2, R2-1 lit:shadow).
+        const tw = TWILIGHT_AB.includes(p.id);
+        await shot(`battle-${p.id}-ultra`, `${BATTLE}&quality=ultra&noui=1&${p.env}`, { advance: 200, alt: tw ? noShadowAlt(`battle-${p.id}-ultra`) : undefined });
         // Monsoon: the same frozen frame again with the surface wetness forced to 0 (AD round 1, blocker 1).
-        const alt = p.id === 'monsoon' ? { suffix: 'dry', before: () => window.__SAMRAJYA_GFX__.setWetnessOverride(0) } : undefined;
+        const alt = p.id === 'monsoon' ? { suffix: 'dry', before: () => window.__SAMRAJYA_GFX__.setWetnessOverride(0) } : tw ? noShadowAlt(`hero-${p.id}-ultra`) : undefined;
         await shot(`hero-${p.id}-ultra`, `${HERO}&quality=ultra&noui=1&${p.env}`, { alt });
       }
     }
     // Dusk afterglow (AD round 1: re-shoot dusk at 18.4 h - the procedural sky keeps a warm band to -10 deg).
-    if (want('presets') || want('dusk')) {
-      await shot('battle-dusk184-ultra', `${BATTLE}&quality=ultra&noui=1&hour=18.4&season=sharad&weather=clear`, { advance: 200 });
-      await shot('hero-dusk184-ultra', `${HERO}&quality=ultra&noui=1&hour=18.4&season=sharad&weather=clear`);
+    if (want('presets') || want('dusk') || want('twilight')) {
+      await shot('battle-dusk184-ultra', `${BATTLE}&quality=ultra&noui=1&hour=18.4&season=sharad&weather=clear`, { advance: 200, alt: noShadowAlt('battle-dusk184-ultra') });
+      await shot('hero-dusk184-ultra', `${HERO}&quality=ultra&noui=1&hour=18.4&season=sharad&weather=clear`, { alt: noShadowAlt('hero-dusk184-ultra') });
+    }
+    // Twilight lit:shadow (AD round 2, R2-1): <= 1.8:1 in the dusk shots; golden / night printed for reference.
+    {
+      const out = {};
+      for (const name of ['hero-dusk184-ultra', 'hero-dusk-ultra', 'battle-dusk184-ultra', 'battle-dusk-ultra', 'hero-golden-ultra', 'battle-golden-ultra', 'hero-night-ultra', 'battle-night-ultra']) {
+        const a = path.join(OUT, `${name}.png`);
+        const b = path.join(R2, `${name}-noshadow.png`);
+        if (!fs.existsSync(a) || !fs.existsSync(b)) continue;
+        const shotRow = [...report.shots].reverse().find((r) => r.name === name);
+        const key = shotRow && shotRow.env ? shotRow.env.key : null;
+        const ls = await litShadow(a, b);
+        const lengthX = key ? +(1 / Math.tan((Math.max(0.1, key.elevationDeg) * Math.PI) / 180)).toFixed(2) : null;
+        out[name] = { ...ls, key, shadowLengthPerCasterHeight: lengthX };
+        if (name.includes('dusk')) {
+          out[name].pass = ls.litOverShadow <= 1.8 && (lengthX === null || lengthX <= 7 || (key && key.intensity <= 0.25 * key.presetIntensity && ls.shadowedPct < 0.5));
+          if (!out[name].pass) failures.push(`${name}: lit:shadow ${ls.litOverShadow} (> 1.8) or shadow ${lengthX}x caster`);
+        }
+      }
+      if (Object.keys(out).length) {
+        report.checks.twilightLitShadow = out;
+        console.log(JSON.stringify({ twilightLitShadow: out }));
+      }
     }
     // Wetness (ART_BIBLE §4.1 monsoon 0.85): luminance of fixed regions of the hero frame (deterministic camera),
     // monsoon wet / monsoon dry (same frame: only the surface wetness differs) and monsoon / noon (also the light).
@@ -253,14 +339,29 @@ async function maxRowJump(file, y0, y1) {
       }
     }
     if (want('low')) {
+      // Red-wall ridge (AD round 2, R2-2): probe points on the lit red face just below the ridge shadow.
+      const lowTexel = {};
       for (const p of PRESETS.filter((x) => ['noon', 'golden', 'night'].includes(x.id))) {
         await shot(`battle-${p.id}-low`, `${BATTLE}&quality=low&noui=1&${p.env}`, { advance: 200 });
-        await shot(`hero-${p.id}-low`, `${HERO}&quality=low&noui=1&${p.env}`);
+        const r = await shot(`hero-${p.id}-low`, `${HERO}&quality=low&noui=1&${p.env}`, { probe: RIDGE_PROBE.desktop });
+        lowTexel[`hero-${p.id}-low`] = { shadowDistance: r.env && r.env.shadowDistance, probe: r.probe };
       }
       // Phone portrait (AD round 1, blocker 2): the low tier's single cascade at 390x844 (no acne, no saw-tooth).
       for (const p of PRESETS.filter((x) => ['noon', 'golden'].includes(x.id))) {
-        await shot(`hero-${p.id}-low-phone`, `${HERO}&quality=low&noui=1&${p.env}`, { vp: [390, 844], mobile: true });
+        const r = await shot(`hero-${p.id}-low-phone`, `${HERO}&quality=low&noui=1&${p.env}`, { vp: [390, 844], mobile: true, probe: RIDGE_PROBE.phone });
+        lowTexel[`hero-${p.id}-low-phone`] = { shadowDistance: r.env && r.env.shadowDistance, probe: r.probe };
       }
+      // Target: <= 4 screen px per shadow texel on the red wall (golden, desktop and phone).
+      for (const [name, v] of Object.entries(lowTexel)) {
+        const px = (v.probe || []).filter(Boolean).map((p) => p.maxScreenPxPerTexel).filter((x) => typeof x === 'number');
+        v.maxScreenPxPerTexel = px.length ? Math.max(...px) : null;
+        if (name.includes('golden') && !(v.maxScreenPxPerTexel !== null && v.maxScreenPxPerTexel <= 4)) failures.push(`${name}: ${v.maxScreenPxPerTexel} screen px per shadow texel on the red wall (> 4)`);
+      }
+      report.checks.lowCascadeTexel = lowTexel;
+      console.log(JSON.stringify({ lowCascadeTexel: lowTexel }));
+      // 3x nearest-neighbour crops of the golden ridge (compare with r2/*-ridge-x3-r1.png from round 1).
+      await sharp(path.join(OUT, 'hero-golden-low.png')).extract(RIDGE_CROP.desktop).resize(RIDGE_CROP.desktop.width * 3, RIDGE_CROP.desktop.height * 3, { kernel: 'nearest' }).toFile(path.join(R2, 'hero-golden-low-ridge-x3.png'));
+      await sharp(path.join(OUT, 'hero-golden-low-phone.png')).extract(RIDGE_CROP.phone).resize(RIDGE_CROP.phone.width * 3, RIDGE_CROP.phone.height * 3, { kernel: 'nearest' }).toFile(path.join(R2, 'hero-golden-low-phone-ridge-x3.png'));
     }
     // Night readability: lower half of the tactical battle (the armies) must stay >= 12 % mean luma.
     for (const tier of ['ultra', 'low']) {

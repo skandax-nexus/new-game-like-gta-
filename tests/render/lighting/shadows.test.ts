@@ -189,9 +189,9 @@ describe('low tier: no acne, no saw-tooth (AD round 1, blocker 2)', () => {
     csm.update(cam, new THREE.Vector3(0.3, 0.8, 0.2).normalize(), look, 4.5);
     const texel = csm.info.texels[0]!;
     expect(csm.lights[0]!.shadow.normalBias).toBeCloseTo(texel * NORMAL_BIAS_TEXELS.hard, 9);
-    // Fitted to the hero band (~45-50 m of shadow distance on low).
-    expect(csm.info.distance).toBeGreaterThan(40);
-    expect(csm.info.distance).toBeLessThan(60);
+    // Fitted to the hero band: the far split is pulled in to 30 m on low (AD round 2, R2-2; was ~45 m).
+    expect(csm.info.distance).toBeGreaterThan(25);
+    expect(csm.info.distance).toBeLessThanOrEqual(30);
     csm.dispose();
   });
 });

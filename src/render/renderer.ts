@@ -25,6 +25,7 @@ import { G, g, installShaderGlobals, resetShaderGlobals } from './materials/chun
 import './lighting/shadowChunks';
 import './materials/chunks/surface';
 import { WETNESS_DEBUG } from './materials/chunks/wetness';
+import { CSM_DEBUG } from './lighting/csm';
 import './post/ssr';
 import './environment/atmosphere/heightFog';
 
@@ -153,6 +154,12 @@ export class RenderContext {
         setWetnessOverride: (w: number | null) => {
           WETNESS_DEBUG.override = w === null || !Number.isFinite(w) ? -1 : Math.min(1, Math.max(0, w));
         },
+        // setShadowIntensity(s | null): A/B the key's cast shadows in the same frame (0 = unshadowed; twilight lit:shadow).
+        setShadowIntensity: (v: number | null) => {
+          CSM_DEBUG.shadowIntensity = v === null || !Number.isFinite(v) ? -1 : Math.min(1, Math.max(0, v));
+        },
+        // probe(x, y): surface under a canvas pixel and the screen size (px) of one cascade-0 shadow texel there.
+        probe: (x: number, y: number) => this.probe(x, y),
       };
     }
     this.resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => this.resize()) : null;
@@ -226,6 +233,56 @@ export class RenderContext {
       contextLost: this.lost,
       assetsAttached: !!this.assets,
     };
+  }
+
+  /**
+   * Debug / evidence (not per frame; allocates): ray-cast the bound view at canvas pixel (x, y) (CSS px), and measure
+   * how many screen pixels one shadow texel of the key's first cascade ('sun') covers on that surface: a texel step
+   * along each light-space axis, slid along the light onto the surface plane, projected to the screen.
+   */
+  probe(x: number, y: number): Record<string, unknown> | null {
+    const scene = this.scene;
+    const camera = this.camera;
+    if (!scene || !camera) return null;
+    const el = this.renderer.domElement;
+    const w = el.clientWidth || el.width;
+    const h = el.clientHeight || el.height;
+    const ndc = new THREE.Vector2((x / w) * 2 - 1, 1 - (y / h) * 2);
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(ndc, camera);
+    const hit = ray.intersectObjects(scene.children, true).find((i) => i.object.name !== 'sky' && (i.object as THREE.Mesh).isMesh && !!i.face);
+    if (!hit || !hit.face) return null;
+    const n = hit.face.normal.clone().transformDirection(hit.object.matrixWorld);
+    const out: Record<string, unknown> = {
+      object: hit.object.name || hit.object.parent?.name || hit.object.type,
+      distance: +hit.distance.toFixed(3),
+      point: hit.point.toArray().map((v) => +v.toFixed(3)),
+      normal: n.toArray().map((v) => +v.toFixed(3)),
+    };
+    const sun = scene.getObjectByName('sun') as THREE.DirectionalLight | undefined;
+    if (!sun?.isDirectionalLight || !sun.castShadow) return out;
+    const cam = sun.shadow.camera as THREE.OrthographicCamera;
+    cam.updateMatrixWorld();
+    const ax = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 0).normalize();
+    const ay = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 1).normalize();
+    const toLight = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 2).normalize();
+    const tx = (cam.right - cam.left) / sun.shadow.mapSize.x;
+    const ty = (cam.top - cam.bottom) / sun.shadow.mapSize.y;
+    const ndl = n.dot(toLight);
+    const p0 = hit.point.clone().project(camera);
+    const stepPx = (axis: THREE.Vector3, t: number): number => {
+      // Q = P + t axis + s toLight with (Q - P) . n = 0.
+      const s = Math.abs(ndl) > 1e-3 ? (-t * axis.dot(n)) / ndl : 0;
+      const q = hit.point.clone().addScaledVector(axis, t).addScaledVector(toLight, s).project(camera);
+      return Math.hypot(((q.x - p0.x) * w) / 2, ((q.y - p0.y) * h) / 2);
+    };
+    const px = stepPx(ax, tx);
+    const py = stepPx(ay, ty);
+    out.shadowTexelM = [+tx.toFixed(4), +ty.toFixed(4)];
+    out.screenPxPerTexel = [+px.toFixed(2), +py.toFixed(2)];
+    out.maxScreenPxPerTexel = +Math.max(px, py).toFixed(2);
+    out.nDotL = +ndl.toFixed(3);
+    return out;
   }
 
   /** Attach the content-pipeline loaders (main.ts: render.attachAssets(assets)). */

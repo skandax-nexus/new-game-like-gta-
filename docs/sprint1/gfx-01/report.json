@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-31T01:22:06.107Z",
+  "generated": "2026-10-31T06:10:06.190Z",
   "shots": [
     {
       "name": "battle-dawn-ultra",
@@ -126,198 +126,6 @@
         "cascades": 4,
         "look": "hero",
         "wetness": 0
-      },
-      "errors": []
-    },
-    {
-      "name": "battle-golden-ultra",
-      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=ultra&noui=1&hour=17.4&season=sharad&weather=clear",
-      "ms": 74351,
-      "drawCalls": 89,
-      "shadowDrawCalls": 52,
-      "triangles": 4550219,
-      "textures": 39,
-      "geometries": 33,
-      "tier": "ultra",
-      "passes": [
-        "scene",
-        "gtao",
-        "ssr",
-        "composite",
-        "bloom",
-        "final",
-        "smaa"
-      ],
-      "look": "tactical",
-      "env": {
-        "preset": "golden",
-        "exposure": 1.0863539909539097,
-        "effectiveIrradiance": 0.42155367096939494,
-        "bakedSky": null,
-        "cascades": 4,
-        "look": "tactical",
-        "wetness": 0.003157438193402133
-      },
-      "errors": []
-    },
-    {
-      "name": "hero-golden-ultra",
-      "query": "scene=hero&quality=ultra&noui=1&hour=17.4&season=sharad&weather=clear",
-      "ms": 75024,
-      "drawCalls": 117,
-      "shadowDrawCalls": 64,
-      "triangles": 1796595,
-      "textures": 42,
-      "geometries": 42,
-      "tier": "ultra",
-      "passes": [
-        "scene",
-        "gtao",
-        "contact",
-        "ssr",
-        "composite",
-        "bloom",
-        "dof",
-        "final",
-        "taa"
-      ],
-      "look": "hero",
-      "env": {
-        "preset": "golden",
-        "exposure": 1.0863539909539097,
-        "effectiveIrradiance": 0.42155367096939494,
-        "bakedSky": null,
-        "cascades": 4,
-        "look": "hero",
-        "wetness": 0.003157438193402133
-      },
-      "errors": []
-    },
-    {
-      "name": "battle-dusk-ultra",
-      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=ultra&noui=1&hour=18.9&season=sharad&weather=clear",
-      "ms": 91359,
-      "drawCalls": 89,
-      "shadowDrawCalls": 52,
-      "triangles": 4550219,
-      "textures": 39,
-      "geometries": 33,
-      "tier": "ultra",
-      "passes": [
-        "scene",
-        "gtao",
-        "ssr",
-        "composite",
-        "bloom",
-        "final",
-        "smaa"
-      ],
-      "look": "tactical",
-      "env": {
-        "preset": "night",
-        "exposure": 2.5,
-        "effectiveIrradiance": 0.07999999999999999,
-        "bakedSky": null,
-        "cascades": 4,
-        "look": "tactical",
-        "wetness": 0.1
-      },
-      "errors": []
-    },
-    {
-      "name": "hero-dusk-ultra",
-      "query": "scene=hero&quality=ultra&noui=1&hour=18.9&season=sharad&weather=clear",
-      "ms": 86735,
-      "drawCalls": 117,
-      "shadowDrawCalls": 64,
-      "triangles": 1796595,
-      "textures": 42,
-      "geometries": 42,
-      "tier": "ultra",
-      "passes": [
-        "scene",
-        "gtao",
-        "contact",
-        "ssr",
-        "composite",
-        "bloom",
-        "dof",
-        "final",
-        "taa"
-      ],
-      "look": "hero",
-      "env": {
-        "preset": "night",
-        "exposure": 2.5,
-        "effectiveIrradiance": 0.07999999999999999,
-        "bakedSky": null,
-        "cascades": 4,
-        "look": "hero",
-        "wetness": 0.1
-      },
-      "errors": []
-    },
-    {
-      "name": "battle-night-ultra",
-      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=ultra&noui=1&hour=22&season=sharad&weather=clear",
-      "ms": 74322,
-      "drawCalls": 89,
-      "shadowDrawCalls": 52,
-      "triangles": 4550219,
-      "textures": 39,
-      "geometries": 33,
-      "tier": "ultra",
-      "passes": [
-        "scene",
-        "gtao",
-        "ssr",
-        "composite",
-        "bloom",
-        "final",
-        "smaa"
-      ],
-      "look": "tactical",
-      "env": {
-        "preset": "night",
-        "exposure": 2.5,
-        "effectiveIrradiance": 0.07999999999999999,
-        "bakedSky": null,
-        "cascades": 4,
-        "look": "tactical",
-        "wetness": 0.1
-      },
-      "errors": []
-    },
-    {
-      "name": "hero-night-ultra",
-      "query": "scene=hero&quality=ultra&noui=1&hour=22&season=sharad&weather=clear",
-      "ms": 79006,
-      "drawCalls": 121,
-      "shadowDrawCalls": 68,
-      "triangles": 1836031,
-      "textures": 42,
-      "geometries": 41,
-      "tier": "ultra",
-      "passes": [
-        "scene",
-        "gtao",
-        "contact",
-        "ssr",
-        "composite",
-        "bloom",
-        "dof",
-        "final",
-        "taa"
-      ],
-      "look": "hero",
-      "env": {
-        "preset": "night",
-        "exposure": 2.5,
-        "effectiveIrradiance": 0.07999999999999999,
-        "bakedSky": null,
-        "cascades": 4,
-        "look": "hero",
-        "wetness": 0.1
       },
       "errors": []
     },
@@ -510,278 +318,6 @@
         "cascades": 4,
         "look": "hero",
         "wetness": 0.35
-      },
-      "errors": []
-    },
-    {
-      "name": "battle-dusk184-ultra",
-      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=ultra&noui=1&hour=18.4&season=sharad&weather=clear",
-      "ms": 77941,
-      "drawCalls": 89,
-      "shadowDrawCalls": 52,
-      "triangles": 4550219,
-      "textures": 39,
-      "geometries": 33,
-      "tier": "ultra",
-      "passes": [
-        "scene",
-        "gtao",
-        "ssr",
-        "composite",
-        "bloom",
-        "final",
-        "smaa"
-      ],
-      "look": "tactical",
-      "env": {
-        "preset": "dusk",
-        "exposure": 2.04208036413813,
-        "effectiveIrradiance": 0.12260006434273156,
-        "bakedSky": null,
-        "cascades": 4,
-        "look": "tactical",
-        "wetness": 0.06920560844656447
-      },
-      "errors": []
-    },
-    {
-      "name": "hero-dusk184-ultra",
-      "query": "scene=hero&quality=ultra&noui=1&hour=18.4&season=sharad&weather=clear",
-      "ms": 62426,
-      "drawCalls": 117,
-      "shadowDrawCalls": 64,
-      "triangles": 1796595,
-      "textures": 42,
-      "geometries": 42,
-      "tier": "ultra",
-      "passes": [
-        "scene",
-        "gtao",
-        "contact",
-        "ssr",
-        "composite",
-        "bloom",
-        "dof",
-        "final",
-        "taa"
-      ],
-      "look": "hero",
-      "env": {
-        "preset": "dusk",
-        "exposure": 2.04208036413813,
-        "effectiveIrradiance": 0.12260006434273156,
-        "bakedSky": null,
-        "cascades": 4,
-        "look": "hero",
-        "wetness": 0.06920560844656447
-      },
-      "errors": []
-    },
-    {
-      "name": "battle-noon-low",
-      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=low&noui=1&hour=12.5&season=sharad&weather=clear",
-      "ms": 41801,
-      "drawCalls": 24,
-      "shadowDrawCalls": 5,
-      "triangles": 442519,
-      "textures": 11,
-      "geometries": 30,
-      "tier": "low",
-      "passes": [
-        "scene",
-        "final"
-      ],
-      "look": "tactical",
-      "env": {
-        "preset": "noon",
-        "exposure": 0.8,
-        "effectiveIrradiance": 0.75,
-        "bakedSky": null,
-        "cascades": 1,
-        "look": "tactical",
-        "wetness": 0
-      },
-      "errors": []
-    },
-    {
-      "name": "hero-noon-low",
-      "query": "scene=hero&quality=low&noui=1&hour=12.5&season=sharad&weather=clear",
-      "ms": 61791,
-      "drawCalls": 41,
-      "shadowDrawCalls": 11,
-      "triangles": 245817,
-      "textures": 10,
-      "geometries": 39,
-      "tier": "low",
-      "passes": [
-        "scene",
-        "final"
-      ],
-      "look": "hero",
-      "env": {
-        "preset": "noon",
-        "exposure": 0.8,
-        "effectiveIrradiance": 0.75,
-        "bakedSky": null,
-        "cascades": 1,
-        "look": "hero",
-        "wetness": 0
-      },
-      "errors": []
-    },
-    {
-      "name": "battle-golden-low",
-      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=low&noui=1&hour=17.4&season=sharad&weather=clear",
-      "ms": 47524,
-      "drawCalls": 24,
-      "shadowDrawCalls": 5,
-      "triangles": 442519,
-      "textures": 11,
-      "geometries": 30,
-      "tier": "low",
-      "passes": [
-        "scene",
-        "final"
-      ],
-      "look": "tactical",
-      "env": {
-        "preset": "golden",
-        "exposure": 1.0863539909539097,
-        "effectiveIrradiance": 0.42155367096939494,
-        "bakedSky": null,
-        "cascades": 1,
-        "look": "tactical",
-        "wetness": 0.003157438193402133
-      },
-      "errors": []
-    },
-    {
-      "name": "hero-golden-low",
-      "query": "scene=hero&quality=low&noui=1&hour=17.4&season=sharad&weather=clear",
-      "ms": 74370,
-      "drawCalls": 41,
-      "shadowDrawCalls": 11,
-      "triangles": 245817,
-      "textures": 10,
-      "geometries": 39,
-      "tier": "low",
-      "passes": [
-        "scene",
-        "final"
-      ],
-      "look": "hero",
-      "env": {
-        "preset": "golden",
-        "exposure": 1.0863539909539097,
-        "effectiveIrradiance": 0.42155367096939494,
-        "bakedSky": null,
-        "cascades": 1,
-        "look": "hero",
-        "wetness": 0.003157438193402133
-      },
-      "errors": []
-    },
-    {
-      "name": "battle-night-low",
-      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=low&noui=1&hour=22&season=sharad&weather=clear",
-      "ms": 57970,
-      "drawCalls": 24,
-      "shadowDrawCalls": 5,
-      "triangles": 442519,
-      "textures": 11,
-      "geometries": 30,
-      "tier": "low",
-      "passes": [
-        "scene",
-        "final"
-      ],
-      "look": "tactical",
-      "env": {
-        "preset": "night",
-        "exposure": 2.5,
-        "effectiveIrradiance": 0.07999999999999999,
-        "bakedSky": null,
-        "cascades": 1,
-        "look": "tactical",
-        "wetness": 0.1
-      },
-      "errors": []
-    },
-    {
-      "name": "hero-night-low",
-      "query": "scene=hero&quality=low&noui=1&hour=22&season=sharad&weather=clear",
-      "ms": 87655,
-      "drawCalls": 41,
-      "shadowDrawCalls": 11,
-      "triangles": 245817,
-      "textures": 10,
-      "geometries": 39,
-      "tier": "low",
-      "passes": [
-        "scene",
-        "final"
-      ],
-      "look": "hero",
-      "env": {
-        "preset": "night",
-        "exposure": 2.5,
-        "effectiveIrradiance": 0.07999999999999999,
-        "bakedSky": null,
-        "cascades": 1,
-        "look": "hero",
-        "wetness": 0.1
-      },
-      "errors": []
-    },
-    {
-      "name": "hero-noon-low-phone",
-      "query": "scene=hero&quality=low&noui=1&hour=12.5&season=sharad&weather=clear",
-      "ms": 36404,
-      "drawCalls": 36,
-      "shadowDrawCalls": 11,
-      "triangles": 240791,
-      "textures": 10,
-      "geometries": 34,
-      "tier": "low",
-      "passes": [
-        "scene",
-        "final"
-      ],
-      "look": "hero",
-      "env": {
-        "preset": "noon",
-        "exposure": 0.8,
-        "effectiveIrradiance": 0.75,
-        "bakedSky": null,
-        "cascades": 1,
-        "look": "hero",
-        "wetness": 0
-      },
-      "errors": []
-    },
-    {
-      "name": "hero-golden-low-phone",
-      "query": "scene=hero&quality=low&noui=1&hour=17.4&season=sharad&weather=clear",
-      "ms": 13637,
-      "drawCalls": 35,
-      "shadowDrawCalls": 10,
-      "triangles": 240203,
-      "textures": 10,
-      "geometries": 34,
-      "tier": "low",
-      "passes": [
-        "scene",
-        "final"
-      ],
-      "look": "hero",
-      "env": {
-        "preset": "golden",
-        "exposure": 1.0863539909539097,
-        "effectiveIrradiance": 0.42155367096939494,
-        "bakedSky": null,
-        "cascades": 1,
-        "look": "hero",
-        "wetness": 0.003157438193402133
       },
       "errors": []
     },
@@ -1699,6 +1235,1056 @@
         "wetness": 0.028500891930323097
       },
       "errors": []
+    },
+    {
+      "name": "battle-golden-ultra",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=ultra&noui=1&hour=17.4&season=sharad&weather=clear",
+      "ms": 148007,
+      "drawCalls": 89,
+      "shadowDrawCalls": 52,
+      "triangles": 4550219,
+      "textures": 39,
+      "geometries": 33,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "ssr",
+        "composite",
+        "bloom",
+        "final",
+        "smaa"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "golden",
+        "sunElevationDeg": 6.2,
+        "key": {
+          "caster": "sun",
+          "elevationDeg": 6.2,
+          "sunWeight": 1,
+          "moonWeight": 0,
+          "intensity": 3.97,
+          "presetIntensity": 3.97,
+          "softnessDeg": 0.75,
+          "twilightFill": 0
+        },
+        "exposure": 1.0863539909539097,
+        "effectiveIrradiance": 0.42155367096939494,
+        "bakedSky": null,
+        "cascades": 4,
+        "shadowDistance": 579,
+        "shadowTexelM": [
+          0.04,
+          0.141,
+          0.235,
+          0.393
+        ],
+        "look": "tactical",
+        "wetness": 0.003157438193402133
+      },
+      "errors": []
+    },
+    {
+      "name": "hero-golden-ultra",
+      "query": "scene=hero&quality=ultra&noui=1&hour=17.4&season=sharad&weather=clear",
+      "ms": 101188,
+      "drawCalls": 117,
+      "shadowDrawCalls": 64,
+      "triangles": 1796595,
+      "textures": 42,
+      "geometries": 42,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "bloom",
+        "dof",
+        "final",
+        "taa"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "golden",
+        "sunElevationDeg": 6.2,
+        "key": {
+          "caster": "sun",
+          "elevationDeg": 6.2,
+          "sunWeight": 1,
+          "moonWeight": 0,
+          "intensity": 3.97,
+          "presetIntensity": 3.97,
+          "softnessDeg": 0.75,
+          "twilightFill": 0
+        },
+        "exposure": 1.0863539909539097,
+        "effectiveIrradiance": 0.42155367096939494,
+        "bakedSky": null,
+        "cascades": 4,
+        "shadowDistance": 146,
+        "shadowTexelM": [
+          0.003,
+          0.013,
+          0.032,
+          0.117
+        ],
+        "look": "hero",
+        "wetness": 0.003157438193402133
+      },
+      "errors": []
+    },
+    {
+      "name": "battle-dusk-ultra",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=ultra&noui=1&hour=18.9&season=sharad&weather=clear",
+      "ms": 106865,
+      "drawCalls": 89,
+      "shadowDrawCalls": 52,
+      "triangles": 4550219,
+      "textures": 39,
+      "geometries": 33,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "ssr",
+        "composite",
+        "bloom",
+        "final",
+        "smaa"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "night",
+        "sunElevationDeg": -14.2,
+        "key": {
+          "caster": "moon",
+          "elevationDeg": 25,
+          "sunWeight": 0,
+          "moonWeight": 0.269,
+          "intensity": 0.148,
+          "presetIntensity": 0.55,
+          "softnessDeg": 2.3,
+          "twilightFill": 2.078
+        },
+        "exposure": 2.5,
+        "effectiveIrradiance": 0.07999999999999999,
+        "bakedSky": null,
+        "cascades": 4,
+        "shadowDistance": 579,
+        "shadowTexelM": [
+          0.04,
+          0.141,
+          0.235,
+          0.393
+        ],
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "hero-dusk-ultra",
+      "query": "scene=hero&quality=ultra&noui=1&hour=18.9&season=sharad&weather=clear",
+      "ms": 126654,
+      "drawCalls": 117,
+      "shadowDrawCalls": 64,
+      "triangles": 1796595,
+      "textures": 42,
+      "geometries": 42,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "bloom",
+        "dof",
+        "final",
+        "taa"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "night",
+        "sunElevationDeg": -14.2,
+        "key": {
+          "caster": "moon",
+          "elevationDeg": 25,
+          "sunWeight": 0,
+          "moonWeight": 0.269,
+          "intensity": 0.148,
+          "presetIntensity": 0.55,
+          "softnessDeg": 2.3,
+          "twilightFill": 2.078
+        },
+        "exposure": 2.5,
+        "effectiveIrradiance": 0.07999999999999999,
+        "bakedSky": null,
+        "cascades": 4,
+        "shadowDistance": 146,
+        "shadowTexelM": [
+          0.003,
+          0.013,
+          0.032,
+          0.117
+        ],
+        "look": "hero",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "battle-night-ultra",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=ultra&noui=1&hour=22&season=sharad&weather=clear",
+      "ms": 97010,
+      "drawCalls": 89,
+      "shadowDrawCalls": 52,
+      "triangles": 4550219,
+      "textures": 39,
+      "geometries": 33,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "ssr",
+        "composite",
+        "bloom",
+        "final",
+        "smaa"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "night",
+        "sunElevationDeg": -54.7,
+        "key": {
+          "caster": "moon",
+          "elevationDeg": 54.7,
+          "sunWeight": 0,
+          "moonWeight": 1,
+          "intensity": 0.55,
+          "presetIntensity": 0.55,
+          "softnessDeg": 0.4,
+          "twilightFill": 0
+        },
+        "exposure": 2.5,
+        "effectiveIrradiance": 0.07999999999999999,
+        "bakedSky": null,
+        "cascades": 4,
+        "shadowDistance": 579,
+        "shadowTexelM": [
+          0.04,
+          0.141,
+          0.235,
+          0.393
+        ],
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "hero-night-ultra",
+      "query": "scene=hero&quality=ultra&noui=1&hour=22&season=sharad&weather=clear",
+      "ms": 116123,
+      "drawCalls": 121,
+      "shadowDrawCalls": 68,
+      "triangles": 1836031,
+      "textures": 42,
+      "geometries": 41,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "bloom",
+        "dof",
+        "final",
+        "taa"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "night",
+        "sunElevationDeg": -54.7,
+        "key": {
+          "caster": "moon",
+          "elevationDeg": 54.7,
+          "sunWeight": 0,
+          "moonWeight": 1,
+          "intensity": 0.55,
+          "presetIntensity": 0.55,
+          "softnessDeg": 0.4,
+          "twilightFill": 0
+        },
+        "exposure": 2.5,
+        "effectiveIrradiance": 0.07999999999999999,
+        "bakedSky": null,
+        "cascades": 4,
+        "shadowDistance": 146,
+        "shadowTexelM": [
+          0.003,
+          0.013,
+          0.032,
+          0.117
+        ],
+        "look": "hero",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "battle-dusk184-ultra",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=ultra&noui=1&hour=18.4&season=sharad&weather=clear",
+      "ms": 114010,
+      "drawCalls": 89,
+      "shadowDrawCalls": 52,
+      "triangles": 4550219,
+      "textures": 39,
+      "geometries": 33,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "ssr",
+        "composite",
+        "bloom",
+        "final",
+        "smaa"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "dusk",
+        "sunElevationDeg": -7.4,
+        "key": {
+          "caster": "moon",
+          "elevationDeg": 25,
+          "sunWeight": 0,
+          "moonWeight": 0.009,
+          "intensity": 0.005,
+          "presetIntensity": 0.55,
+          "softnessDeg": 2.99,
+          "twilightFill": 0.865
+        },
+        "exposure": 2.04208036413813,
+        "effectiveIrradiance": 0.12260006434273156,
+        "bakedSky": null,
+        "cascades": 4,
+        "shadowDistance": 579,
+        "shadowTexelM": [
+          0.04,
+          0.141,
+          0.235,
+          0.393
+        ],
+        "look": "tactical",
+        "wetness": 0.06920560844656447
+      },
+      "errors": []
+    },
+    {
+      "name": "hero-dusk184-ultra",
+      "query": "scene=hero&quality=ultra&noui=1&hour=18.4&season=sharad&weather=clear",
+      "ms": 120405,
+      "drawCalls": 117,
+      "shadowDrawCalls": 64,
+      "triangles": 1796595,
+      "textures": 42,
+      "geometries": 42,
+      "tier": "ultra",
+      "passes": [
+        "scene",
+        "gtao",
+        "contact",
+        "ssr",
+        "composite",
+        "bloom",
+        "dof",
+        "final",
+        "taa"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "dusk",
+        "sunElevationDeg": -7.4,
+        "key": {
+          "caster": "moon",
+          "elevationDeg": 25,
+          "sunWeight": 0,
+          "moonWeight": 0.009,
+          "intensity": 0.005,
+          "presetIntensity": 0.55,
+          "softnessDeg": 2.99,
+          "twilightFill": 0.865
+        },
+        "exposure": 2.04208036413813,
+        "effectiveIrradiance": 0.12260006434273156,
+        "bakedSky": null,
+        "cascades": 4,
+        "shadowDistance": 146,
+        "shadowTexelM": [
+          0.003,
+          0.013,
+          0.032,
+          0.117
+        ],
+        "look": "hero",
+        "wetness": 0.06920560844656447
+      },
+      "errors": []
+    },
+    {
+      "name": "battle-noon-low",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=low&noui=1&hour=12.5&season=sharad&weather=clear",
+      "ms": 77823,
+      "drawCalls": 24,
+      "shadowDrawCalls": 5,
+      "triangles": 442519,
+      "textures": 11,
+      "geometries": 30,
+      "tier": "low",
+      "passes": [
+        "scene",
+        "final"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "noon",
+        "sunElevationDeg": 59.5,
+        "key": {
+          "caster": "sun",
+          "elevationDeg": 59.5,
+          "sunWeight": 1,
+          "moonWeight": 0,
+          "intensity": 3.4,
+          "presetIntensity": 3.4,
+          "softnessDeg": 0.35,
+          "twilightFill": 0
+        },
+        "exposure": 0.8,
+        "effectiveIrradiance": 0.75,
+        "bakedSky": null,
+        "cascades": 1,
+        "shadowDistance": 206,
+        "shadowTexelM": [
+          0.346
+        ],
+        "look": "tactical",
+        "wetness": 0
+      },
+      "errors": []
+    },
+    {
+      "name": "hero-noon-low",
+      "query": "scene=hero&quality=low&noui=1&hour=12.5&season=sharad&weather=clear",
+      "ms": 59104,
+      "drawCalls": 41,
+      "shadowDrawCalls": 11,
+      "triangles": 245817,
+      "textures": 10,
+      "geometries": 39,
+      "tier": "low",
+      "passes": [
+        "scene",
+        "final"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "noon",
+        "sunElevationDeg": 59.5,
+        "key": {
+          "caster": "sun",
+          "elevationDeg": 59.5,
+          "sunWeight": 1,
+          "moonWeight": 0,
+          "intensity": 3.4,
+          "presetIntensity": 3.4,
+          "softnessDeg": 0.35,
+          "twilightFill": 0
+        },
+        "exposure": 0.8,
+        "effectiveIrradiance": 0.75,
+        "bakedSky": null,
+        "cascades": 1,
+        "shadowDistance": 31,
+        "shadowTexelM": [
+          0.056
+        ],
+        "look": "hero",
+        "wetness": 0
+      },
+      "probe": [
+        {
+          "object": "arch_brick_house_heartland_brick",
+          "distance": 16.342,
+          "point": [
+            -530.743,
+            12.205,
+            -417.648
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ],
+          "shadowTexelM": [
+            0.0562,
+            0.0366
+          ],
+          "screenPxPerTexel": [
+            14.15,
+            3.12
+          ],
+          "maxScreenPxPerTexel": 14.15,
+          "nDotL": -0.13
+        },
+        {
+          "object": "arch_brick_house_heartland_brick",
+          "distance": 14.228,
+          "point": [
+            -530.661,
+            12.8,
+            -415.526
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ],
+          "shadowTexelM": [
+            0.0562,
+            0.0366
+          ],
+          "screenPxPerTexel": [
+            16.85,
+            3.65
+          ],
+          "maxScreenPxPerTexel": 16.85,
+          "nDotL": -0.13
+        },
+        {
+          "object": "arch_brick_house_heartland_brick",
+          "distance": 12.885,
+          "point": [
+            -530.609,
+            13.185,
+            -414.162
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ],
+          "shadowTexelM": [
+            0.0562,
+            0.0366
+          ],
+          "screenPxPerTexel": [
+            19.22,
+            4.09
+          ],
+          "maxScreenPxPerTexel": 19.22,
+          "nDotL": -0.13
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "battle-golden-low",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=low&noui=1&hour=17.4&season=sharad&weather=clear",
+      "ms": 55675,
+      "drawCalls": 24,
+      "shadowDrawCalls": 5,
+      "triangles": 442519,
+      "textures": 11,
+      "geometries": 30,
+      "tier": "low",
+      "passes": [
+        "scene",
+        "final"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "golden",
+        "sunElevationDeg": 6.2,
+        "key": {
+          "caster": "sun",
+          "elevationDeg": 6.2,
+          "sunWeight": 1,
+          "moonWeight": 0,
+          "intensity": 3.97,
+          "presetIntensity": 3.97,
+          "softnessDeg": 0.75,
+          "twilightFill": 0
+        },
+        "exposure": 1.0863539909539097,
+        "effectiveIrradiance": 0.42155367096939494,
+        "bakedSky": null,
+        "cascades": 1,
+        "shadowDistance": 206,
+        "shadowTexelM": [
+          0.232
+        ],
+        "look": "tactical",
+        "wetness": 0.003157438193402133
+      },
+      "errors": []
+    },
+    {
+      "name": "hero-golden-low",
+      "query": "scene=hero&quality=low&noui=1&hour=17.4&season=sharad&weather=clear",
+      "ms": 80170,
+      "drawCalls": 40,
+      "shadowDrawCalls": 10,
+      "triangles": 245229,
+      "textures": 10,
+      "geometries": 39,
+      "tier": "low",
+      "passes": [
+        "scene",
+        "final"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "golden",
+        "sunElevationDeg": 6.2,
+        "key": {
+          "caster": "sun",
+          "elevationDeg": 6.2,
+          "sunWeight": 1,
+          "moonWeight": 0,
+          "intensity": 3.97,
+          "presetIntensity": 3.97,
+          "softnessDeg": 0.75,
+          "twilightFill": 0
+        },
+        "exposure": 1.0863539909539097,
+        "effectiveIrradiance": 0.42155367096939494,
+        "bakedSky": null,
+        "cascades": 1,
+        "shadowDistance": 31,
+        "shadowTexelM": [
+          0.037
+        ],
+        "look": "hero",
+        "wetness": 0.003157438193402133
+      },
+      "probe": [
+        {
+          "object": "arch_brick_house_heartland_brick",
+          "distance": 16.342,
+          "point": [
+            -530.743,
+            12.205,
+            -417.648
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ],
+          "shadowTexelM": [
+            0.0371,
+            0.0356
+          ],
+          "screenPxPerTexel": [
+            0.48,
+            1.55
+          ],
+          "maxScreenPxPerTexel": 1.55,
+          "nDotL": -0.984
+        },
+        {
+          "object": "arch_brick_house_heartland_brick",
+          "distance": 14.228,
+          "point": [
+            -530.661,
+            12.8,
+            -415.526
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ],
+          "shadowTexelM": [
+            0.0371,
+            0.0356
+          ],
+          "screenPxPerTexel": [
+            0.61,
+            1.81
+          ],
+          "maxScreenPxPerTexel": 1.81,
+          "nDotL": -0.984
+        },
+        {
+          "object": "arch_brick_house_heartland_brick",
+          "distance": 12.885,
+          "point": [
+            -530.609,
+            13.185,
+            -414.162
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ],
+          "shadowTexelM": [
+            0.0371,
+            0.0356
+          ],
+          "screenPxPerTexel": [
+            0.74,
+            2.03
+          ],
+          "maxScreenPxPerTexel": 2.03,
+          "nDotL": -0.984
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "battle-night-low",
+      "query": "scene=battle&seed=7&soldiers=1000&preset=plains&quality=low&noui=1&hour=22&season=sharad&weather=clear",
+      "ms": 62660,
+      "drawCalls": 24,
+      "shadowDrawCalls": 5,
+      "triangles": 442519,
+      "textures": 11,
+      "geometries": 30,
+      "tier": "low",
+      "passes": [
+        "scene",
+        "final"
+      ],
+      "look": "tactical",
+      "env": {
+        "preset": "night",
+        "sunElevationDeg": -54.7,
+        "key": {
+          "caster": "moon",
+          "elevationDeg": 54.7,
+          "sunWeight": 0,
+          "moonWeight": 1,
+          "intensity": 0.55,
+          "presetIntensity": 0.55,
+          "softnessDeg": 0.4,
+          "twilightFill": 0
+        },
+        "exposure": 2.5,
+        "effectiveIrradiance": 0.07999999999999999,
+        "bakedSky": null,
+        "cascades": 1,
+        "shadowDistance": 206,
+        "shadowTexelM": [
+          0.373
+        ],
+        "look": "tactical",
+        "wetness": 0.1
+      },
+      "errors": []
+    },
+    {
+      "name": "hero-night-low",
+      "query": "scene=hero&quality=low&noui=1&hour=22&season=sharad&weather=clear",
+      "ms": 100383,
+      "drawCalls": 41,
+      "shadowDrawCalls": 11,
+      "triangles": 245817,
+      "textures": 10,
+      "geometries": 39,
+      "tier": "low",
+      "passes": [
+        "scene",
+        "final"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "night",
+        "sunElevationDeg": -54.7,
+        "key": {
+          "caster": "moon",
+          "elevationDeg": 54.7,
+          "sunWeight": 0,
+          "moonWeight": 1,
+          "intensity": 0.55,
+          "presetIntensity": 0.55,
+          "softnessDeg": 0.4,
+          "twilightFill": 0
+        },
+        "exposure": 2.5,
+        "effectiveIrradiance": 0.07999999999999999,
+        "bakedSky": null,
+        "cascades": 1,
+        "shadowDistance": 31,
+        "shadowTexelM": [
+          0.061
+        ],
+        "look": "hero",
+        "wetness": 0.1
+      },
+      "probe": [
+        {
+          "object": "arch_brick_house_heartland_brick",
+          "distance": 16.342,
+          "point": [
+            -530.743,
+            12.205,
+            -417.648
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ],
+          "shadowTexelM": [
+            0.043,
+            0.0605
+          ],
+          "screenPxPerTexel": [
+            1.22,
+            4.54
+          ],
+          "maxScreenPxPerTexel": 4.54,
+          "nDotL": 0.498
+        },
+        {
+          "object": "arch_brick_house_heartland_brick",
+          "distance": 14.228,
+          "point": [
+            -530.661,
+            12.8,
+            -415.526
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ],
+          "shadowTexelM": [
+            0.043,
+            0.0605
+          ],
+          "screenPxPerTexel": [
+            1.51,
+            5.3
+          ],
+          "maxScreenPxPerTexel": 5.3,
+          "nDotL": 0.498
+        },
+        {
+          "object": "arch_brick_house_heartland_brick",
+          "distance": 12.885,
+          "point": [
+            -530.609,
+            13.185,
+            -414.162
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ],
+          "shadowTexelM": [
+            0.043,
+            0.0605
+          ],
+          "screenPxPerTexel": [
+            1.78,
+            5.94
+          ],
+          "maxScreenPxPerTexel": 5.94,
+          "nDotL": 0.498
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "hero-noon-low-phone",
+      "query": "scene=hero&quality=low&noui=1&hour=12.5&season=sharad&weather=clear",
+      "ms": 41353,
+      "drawCalls": 36,
+      "shadowDrawCalls": 11,
+      "triangles": 240791,
+      "textures": 10,
+      "geometries": 34,
+      "tier": "low",
+      "passes": [
+        "scene",
+        "final"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "noon",
+        "sunElevationDeg": 59.5,
+        "key": {
+          "caster": "sun",
+          "elevationDeg": 59.5,
+          "sunWeight": 1,
+          "moonWeight": 0,
+          "intensity": 3.4,
+          "presetIntensity": 3.4,
+          "softnessDeg": 0.35,
+          "twilightFill": 0
+        },
+        "exposure": 0.8,
+        "effectiveIrradiance": 0.75,
+        "bakedSky": null,
+        "cascades": 1,
+        "shadowDistance": 31,
+        "shadowTexelM": [
+          0.032
+        ],
+        "look": "hero",
+        "wetness": 0
+      },
+      "probe": [
+        {
+          "object": "arch_brick_house_heartland_brick",
+          "distance": 17.682,
+          "point": [
+            -530.793,
+            11.757,
+            -418.967
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ],
+          "shadowTexelM": [
+            0.0166,
+            0.0322
+          ],
+          "screenPxPerTexel": [
+            4.38,
+            2.95
+          ],
+          "maxScreenPxPerTexel": 4.38,
+          "nDotL": -0.13
+        },
+        {
+          "object": "arch_brick_house_heartland_brick",
+          "distance": 16.649,
+          "point": [
+            -530.752,
+            11.798,
+            -417.882
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ],
+          "shadowTexelM": [
+            0.0166,
+            0.0322
+          ],
+          "screenPxPerTexel": [
+            4.62,
+            3.13
+          ],
+          "maxScreenPxPerTexel": 4.62,
+          "nDotL": -0.13
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "hero-golden-low-phone",
+      "query": "scene=hero&quality=low&noui=1&hour=17.4&season=sharad&weather=clear",
+      "ms": 19082,
+      "drawCalls": 35,
+      "shadowDrawCalls": 10,
+      "triangles": 240203,
+      "textures": 10,
+      "geometries": 34,
+      "tier": "low",
+      "passes": [
+        "scene",
+        "final"
+      ],
+      "look": "hero",
+      "env": {
+        "preset": "golden",
+        "sunElevationDeg": 6.2,
+        "key": {
+          "caster": "sun",
+          "elevationDeg": 6.2,
+          "sunWeight": 1,
+          "moonWeight": 0,
+          "intensity": 3.97,
+          "presetIntensity": 3.97,
+          "softnessDeg": 0.75,
+          "twilightFill": 0
+        },
+        "exposure": 1.0863539909539097,
+        "effectiveIrradiance": 0.42155367096939494,
+        "bakedSky": null,
+        "cascades": 1,
+        "shadowDistance": 31,
+        "shadowTexelM": [
+          0.034
+        ],
+        "look": "hero",
+        "wetness": 0.003157438193402133
+      },
+      "probe": [
+        {
+          "object": "arch_brick_house_heartland_brick",
+          "distance": 17.682,
+          "point": [
+            -530.793,
+            11.757,
+            -418.967
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ],
+          "shadowTexelM": [
+            0.0342,
+            0.0313
+          ],
+          "screenPxPerTexel": [
+            0.47,
+            1.46
+          ],
+          "maxScreenPxPerTexel": 1.46,
+          "nDotL": -0.984
+        },
+        {
+          "object": "arch_brick_house_heartland_brick",
+          "distance": 16.649,
+          "point": [
+            -530.752,
+            11.798,
+            -417.882
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ],
+          "shadowTexelM": [
+            0.0342,
+            0.0313
+          ],
+          "screenPxPerTexel": [
+            0.53,
+            1.55
+          ],
+          "maxScreenPxPerTexel": 1.55,
+          "nDotL": -0.984
+        }
+      ],
+      "errors": []
     }
   ],
   "checks": {
@@ -1745,13 +2331,13 @@
       }
     },
     "nightLowerHalf_ultra": {
-      "luma": 0.1399,
-      "linear": 0.0212,
+      "luma": 0.1397,
+      "linear": 0.021,
       "pass": true
     },
     "nightLowerHalf_low": {
-      "luma": 0.1478,
-      "linear": 0.0217,
+      "luma": 0.1482,
+      "linear": 0.022,
       "pass": true
     },
     "csm_ultra": {
@@ -2099,7 +2685,429 @@
       },
       "renderTargets": 3
     },
-    "tierCyclingLeakFree": true
+    "tierCyclingLeakFree": true,
+    "twilightLitShadow": {
+      "hero-dusk184-ultra": {
+        "shadowedPct": 0.2,
+        "litOverShadow": 1.091,
+        "p90Ratio": 1.128,
+        "shadowedLinear": 0.0134,
+        "litLinear": 0.0146,
+        "key": null,
+        "shadowLengthPerCasterHeight": null,
+        "pass": true
+      },
+      "hero-dusk-ultra": {
+        "shadowedPct": 12.06,
+        "litOverShadow": 1.254,
+        "p90Ratio": 1.334,
+        "shadowedLinear": 0.0114,
+        "litLinear": 0.0143,
+        "key": null,
+        "shadowLengthPerCasterHeight": null,
+        "pass": true
+      },
+      "battle-dusk184-ultra": {
+        "shadowedPct": 0.02,
+        "litOverShadow": 1.115,
+        "p90Ratio": 1.141,
+        "shadowedLinear": 0.0085,
+        "litLinear": 0.0095,
+        "key": null,
+        "shadowLengthPerCasterHeight": null,
+        "pass": true
+      },
+      "battle-dusk-ultra": {
+        "shadowedPct": 3.78,
+        "litOverShadow": 1.241,
+        "p90Ratio": 1.357,
+        "shadowedLinear": 0.0104,
+        "litLinear": 0.013,
+        "key": null,
+        "shadowLengthPerCasterHeight": null,
+        "pass": true
+      },
+      "hero-golden-ultra": {
+        "shadowedPct": 98.52,
+        "litOverShadow": 1.824,
+        "p90Ratio": 2.193,
+        "shadowedLinear": 0.0251,
+        "litLinear": 0.0459,
+        "key": null,
+        "shadowLengthPerCasterHeight": null
+      },
+      "battle-golden-ultra": {
+        "shadowedPct": 16.45,
+        "litOverShadow": 1.657,
+        "p90Ratio": 2.724,
+        "shadowedLinear": 0.0349,
+        "litLinear": 0.0579,
+        "key": null,
+        "shadowLengthPerCasterHeight": null
+      },
+      "hero-night-ultra": {
+        "shadowedPct": 3.71,
+        "litOverShadow": 4.17,
+        "p90Ratio": 7.638,
+        "shadowedLinear": 0.0074,
+        "litLinear": 0.0308,
+        "key": null,
+        "shadowLengthPerCasterHeight": null
+      },
+      "battle-night-ultra": {
+        "shadowedPct": 3.41,
+        "litOverShadow": 1.997,
+        "p90Ratio": 4.702,
+        "shadowedLinear": 0.0086,
+        "litLinear": 0.0173,
+        "key": null,
+        "shadowLengthPerCasterHeight": null
+      }
+    },
+    "lowCascadeTexel": {
+      "hero-noon-low": {
+        "shadowDistance": 31,
+        "probe": [
+          {
+            "object": "arch_brick_house_heartland_brick",
+            "distance": 16.342,
+            "point": [
+              -530.743,
+              12.205,
+              -417.648
+            ],
+            "normal": [
+              1,
+              0,
+              0
+            ],
+            "shadowTexelM": [
+              0.0562,
+              0.0366
+            ],
+            "screenPxPerTexel": [
+              14.15,
+              3.12
+            ],
+            "maxScreenPxPerTexel": 14.15,
+            "nDotL": -0.13
+          },
+          {
+            "object": "arch_brick_house_heartland_brick",
+            "distance": 14.228,
+            "point": [
+              -530.661,
+              12.8,
+              -415.526
+            ],
+            "normal": [
+              1,
+              0,
+              0
+            ],
+            "shadowTexelM": [
+              0.0562,
+              0.0366
+            ],
+            "screenPxPerTexel": [
+              16.85,
+              3.65
+            ],
+            "maxScreenPxPerTexel": 16.85,
+            "nDotL": -0.13
+          },
+          {
+            "object": "arch_brick_house_heartland_brick",
+            "distance": 12.885,
+            "point": [
+              -530.609,
+              13.185,
+              -414.162
+            ],
+            "normal": [
+              1,
+              0,
+              0
+            ],
+            "shadowTexelM": [
+              0.0562,
+              0.0366
+            ],
+            "screenPxPerTexel": [
+              19.22,
+              4.09
+            ],
+            "maxScreenPxPerTexel": 19.22,
+            "nDotL": -0.13
+          }
+        ],
+        "maxScreenPxPerTexel": 19.22
+      },
+      "hero-golden-low": {
+        "shadowDistance": 31,
+        "probe": [
+          {
+            "object": "arch_brick_house_heartland_brick",
+            "distance": 16.342,
+            "point": [
+              -530.743,
+              12.205,
+              -417.648
+            ],
+            "normal": [
+              1,
+              0,
+              0
+            ],
+            "shadowTexelM": [
+              0.0371,
+              0.0356
+            ],
+            "screenPxPerTexel": [
+              0.48,
+              1.55
+            ],
+            "maxScreenPxPerTexel": 1.55,
+            "nDotL": -0.984
+          },
+          {
+            "object": "arch_brick_house_heartland_brick",
+            "distance": 14.228,
+            "point": [
+              -530.661,
+              12.8,
+              -415.526
+            ],
+            "normal": [
+              1,
+              0,
+              0
+            ],
+            "shadowTexelM": [
+              0.0371,
+              0.0356
+            ],
+            "screenPxPerTexel": [
+              0.61,
+              1.81
+            ],
+            "maxScreenPxPerTexel": 1.81,
+            "nDotL": -0.984
+          },
+          {
+            "object": "arch_brick_house_heartland_brick",
+            "distance": 12.885,
+            "point": [
+              -530.609,
+              13.185,
+              -414.162
+            ],
+            "normal": [
+              1,
+              0,
+              0
+            ],
+            "shadowTexelM": [
+              0.0371,
+              0.0356
+            ],
+            "screenPxPerTexel": [
+              0.74,
+              2.03
+            ],
+            "maxScreenPxPerTexel": 2.03,
+            "nDotL": -0.984
+          }
+        ],
+        "maxScreenPxPerTexel": 2.03
+      },
+      "hero-night-low": {
+        "shadowDistance": 31,
+        "probe": [
+          {
+            "object": "arch_brick_house_heartland_brick",
+            "distance": 16.342,
+            "point": [
+              -530.743,
+              12.205,
+              -417.648
+            ],
+            "normal": [
+              1,
+              0,
+              0
+            ],
+            "shadowTexelM": [
+              0.043,
+              0.0605
+            ],
+            "screenPxPerTexel": [
+              1.22,
+              4.54
+            ],
+            "maxScreenPxPerTexel": 4.54,
+            "nDotL": 0.498
+          },
+          {
+            "object": "arch_brick_house_heartland_brick",
+            "distance": 14.228,
+            "point": [
+              -530.661,
+              12.8,
+              -415.526
+            ],
+            "normal": [
+              1,
+              0,
+              0
+            ],
+            "shadowTexelM": [
+              0.043,
+              0.0605
+            ],
+            "screenPxPerTexel": [
+              1.51,
+              5.3
+            ],
+            "maxScreenPxPerTexel": 5.3,
+            "nDotL": 0.498
+          },
+          {
+            "object": "arch_brick_house_heartland_brick",
+            "distance": 12.885,
+            "point": [
+              -530.609,
+              13.185,
+              -414.162
+            ],
+            "normal": [
+              1,
+              0,
+              0
+            ],
+            "shadowTexelM": [
+              0.043,
+              0.0605
+            ],
+            "screenPxPerTexel": [
+              1.78,
+              5.94
+            ],
+            "maxScreenPxPerTexel": 5.94,
+            "nDotL": 0.498
+          }
+        ],
+        "maxScreenPxPerTexel": 5.94
+      },
+      "hero-noon-low-phone": {
+        "shadowDistance": 31,
+        "probe": [
+          {
+            "object": "arch_brick_house_heartland_brick",
+            "distance": 17.682,
+            "point": [
+              -530.793,
+              11.757,
+              -418.967
+            ],
+            "normal": [
+              1,
+              0,
+              0
+            ],
+            "shadowTexelM": [
+              0.0166,
+              0.0322
+            ],
+            "screenPxPerTexel": [
+              4.38,
+              2.95
+            ],
+            "maxScreenPxPerTexel": 4.38,
+            "nDotL": -0.13
+          },
+          {
+            "object": "arch_brick_house_heartland_brick",
+            "distance": 16.649,
+            "point": [
+              -530.752,
+              11.798,
+              -417.882
+            ],
+            "normal": [
+              1,
+              0,
+              0
+            ],
+            "shadowTexelM": [
+              0.0166,
+              0.0322
+            ],
+            "screenPxPerTexel": [
+              4.62,
+              3.13
+            ],
+            "maxScreenPxPerTexel": 4.62,
+            "nDotL": -0.13
+          }
+        ],
+        "maxScreenPxPerTexel": 4.62
+      },
+      "hero-golden-low-phone": {
+        "shadowDistance": 31,
+        "probe": [
+          {
+            "object": "arch_brick_house_heartland_brick",
+            "distance": 17.682,
+            "point": [
+              -530.793,
+              11.757,
+              -418.967
+            ],
+            "normal": [
+              1,
+              0,
+              0
+            ],
+            "shadowTexelM": [
+              0.0342,
+              0.0313
+            ],
+            "screenPxPerTexel": [
+              0.47,
+              1.46
+            ],
+            "maxScreenPxPerTexel": 1.46,
+            "nDotL": -0.984
+          },
+          {
+            "object": "arch_brick_house_heartland_brick",
+            "distance": 16.649,
+            "point": [
+              -530.752,
+              11.798,
+              -417.882
+            ],
+            "normal": [
+              1,
+              0,
+              0
+            ],
+            "shadowTexelM": [
+              0.0342,
+              0.0313
+            ],
+            "screenPxPerTexel": [
+              0.53,
+              1.55
+            ],
+            "maxScreenPxPerTexel": 1.55,
+            "nDotL": -0.984
+          }
+        ],
+        "maxScreenPxPerTexel": 1.55
+      }
+    }
   },
   "budgets": [
     {
