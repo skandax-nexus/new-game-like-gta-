@@ -52,8 +52,8 @@
       "name": "profiler world-1280x720: UI + input < 1 ms/frame at 60 fps (bench avg, 1x and 4x)",
       "ok": true,
       "observed": {
-        "bench1x": 0.057,
-        "bench4x": 0.451
+        "bench1x": 0.101,
+        "bench4x": 0.255
       }
     },
     {
@@ -87,8 +87,8 @@
       "name": "profiler battle-1280x720: UI + input < 1 ms/frame at 60 fps (bench avg, 1x and 4x)",
       "ok": true,
       "observed": {
-        "bench1x": 0.172,
-        "bench4x": 0.118
+        "bench1x": 0.095,
+        "bench4x": 0.082
       }
     },
     {
@@ -494,178 +494,9 @@
     },
     {
       "name": "truncation: no visible label cut to an ellipsis on 69 captures",
-      "ok": false,
+      "ok": true,
       "observed": {
-        "fails": [
-          {
-            "shot": "battle-live-pc.png",
-            "text": "Royal Levy · 118",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-live-pc.png",
-            "text": "Royal Levy · 117",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-colorblind-protan-pc.png",
-            "text": "Royal Levy · 118",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-colorblind-protan-pc.png",
-            "text": "Royal Levy · 117",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-colorblind-deutan-pc.png",
-            "text": "Royal Levy · 118",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-colorblind-deutan-pc.png",
-            "text": "Royal Levy · 117",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-colorblind-tritan-pc.png",
-            "text": "Royal Levy · 118",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-colorblind-tritan-pc.png",
-            "text": "Royal Levy · 117",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-radial-pc.png",
-            "text": "Royal Levy · 118",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-radial-pc.png",
-            "text": "Royal Levy · 117",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-intents-pc.png",
-            "text": "Royal Levy · 118",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-intents-pc.png",
-            "text": "Royal Levy · 117",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-live-portrait.png",
-            "text": "Royal Levy · 117",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-radial-portrait.png",
-            "text": "Royal Levy · 117",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-results-portrait.png",
-            "text": "Royal Levy · 117",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-results-prisoners-portrait.png",
-            "text": "Royal Levy · 117",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-live-landscape.png",
-            "text": "Royal Levy · 118",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-live-landscape.png",
-            "text": "Royal Levy · 117",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-radial-landscape.png",
-            "text": "Royal Levy · 118",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-radial-landscape.png",
-            "text": "Royal Levy · 117",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-results-landscape.png",
-            "text": "Royal Levy · 118",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-results-landscape.png",
-            "text": "Royal Levy · 117",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-results-prisoners-landscape.png",
-            "text": "Royal Levy · 118",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          },
-          {
-            "shot": "battle-results-prisoners-landscape.png",
-            "text": "Royal Levy · 117",
-            "w": 68,
-            "need": 71,
-            "cls": "ff-name"
-          }
-        ]
+        "fails": []
       }
     }
   ],
@@ -1122,20 +953,7 @@
       "contrastFails": [],
       "targets": 39,
       "smallTargets": [],
-      "truncated": [
-        {
-          "text": "Royal Levy · 118",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        },
-        {
-          "text": "Royal Levy · 117",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        }
-      ]
+      "truncated": []
     },
     {
       "shot": "battle-colorblind-protan-pc.png",
@@ -1143,20 +961,7 @@
       "contrastFails": [],
       "targets": 39,
       "smallTargets": [],
-      "truncated": [
-        {
-          "text": "Royal Levy · 118",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        },
-        {
-          "text": "Royal Levy · 117",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        }
-      ]
+      "truncated": []
     },
     {
       "shot": "battle-colorblind-deutan-pc.png",
@@ -1164,20 +969,7 @@
       "contrastFails": [],
       "targets": 39,
       "smallTargets": [],
-      "truncated": [
-        {
-          "text": "Royal Levy · 118",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        },
-        {
-          "text": "Royal Levy · 117",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        }
-      ]
+      "truncated": []
     },
     {
       "shot": "battle-colorblind-tritan-pc.png",
@@ -1185,20 +977,7 @@
       "contrastFails": [],
       "targets": 39,
       "smallTargets": [],
-      "truncated": [
-        {
-          "text": "Royal Levy · 118",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        },
-        {
-          "text": "Royal Levy · 117",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        }
-      ]
+      "truncated": []
     },
     {
       "shot": "battle-radial-pc.png",
@@ -1206,20 +985,7 @@
       "contrastFails": [],
       "targets": 25,
       "smallTargets": [],
-      "truncated": [
-        {
-          "text": "Royal Levy · 118",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        },
-        {
-          "text": "Royal Levy · 117",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        }
-      ]
+      "truncated": []
     },
     {
       "shot": "battle-intents-pc.png",
@@ -1227,20 +993,7 @@
       "contrastFails": [],
       "targets": 39,
       "smallTargets": [],
-      "truncated": [
-        {
-          "text": "Royal Levy · 118",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        },
-        {
-          "text": "Royal Levy · 117",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        }
-      ]
+      "truncated": []
     },
     {
       "shot": "battle-results-pc.png",
@@ -1400,14 +1153,7 @@
       "contrastFails": [],
       "targets": 20,
       "smallTargets": [],
-      "truncated": [
-        {
-          "text": "Royal Levy · 117",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        }
-      ]
+      "truncated": []
     },
     {
       "shot": "battle-radial-portrait.png",
@@ -1415,14 +1161,7 @@
       "contrastFails": [],
       "targets": 25,
       "smallTargets": [],
-      "truncated": [
-        {
-          "text": "Royal Levy · 117",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        }
-      ]
+      "truncated": []
     },
     {
       "shot": "battle-results-portrait.png",
@@ -1430,14 +1169,7 @@
       "contrastFails": [],
       "targets": 1,
       "smallTargets": [],
-      "truncated": [
-        {
-          "text": "Royal Levy · 117",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        }
-      ]
+      "truncated": []
     },
     {
       "shot": "battle-results-prisoners-portrait.png",
@@ -1445,14 +1177,7 @@
       "contrastFails": [],
       "targets": 3,
       "smallTargets": [],
-      "truncated": [
-        {
-          "text": "Royal Levy · 117",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        }
-      ]
+      "truncated": []
     },
     {
       "shot": "hero-explore-portrait.png",
@@ -1588,20 +1313,7 @@
       "contrastFails": [],
       "targets": 23,
       "smallTargets": [],
-      "truncated": [
-        {
-          "text": "Royal Levy · 118",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        },
-        {
-          "text": "Royal Levy · 117",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        }
-      ]
+      "truncated": []
     },
     {
       "shot": "battle-radial-landscape.png",
@@ -1609,20 +1321,7 @@
       "contrastFails": [],
       "targets": 25,
       "smallTargets": [],
-      "truncated": [
-        {
-          "text": "Royal Levy · 118",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        },
-        {
-          "text": "Royal Levy · 117",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        }
-      ]
+      "truncated": []
     },
     {
       "shot": "battle-results-landscape.png",
@@ -1630,20 +1329,7 @@
       "contrastFails": [],
       "targets": 1,
       "smallTargets": [],
-      "truncated": [
-        {
-          "text": "Royal Levy · 118",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        },
-        {
-          "text": "Royal Levy · 117",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        }
-      ]
+      "truncated": []
     },
     {
       "shot": "battle-results-prisoners-landscape.png",
@@ -1651,20 +1337,7 @@
       "contrastFails": [],
       "targets": 3,
       "smallTargets": [],
-      "truncated": [
-        {
-          "text": "Royal Levy · 118",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        },
-        {
-          "text": "Royal Levy · 117",
-          "w": 68,
-          "need": 71,
-          "cls": "ff-name"
-        }
-      ]
+      "truncated": []
     },
     {
       "shot": "hero-explore-landscape.png",
@@ -1691,9 +1364,9 @@
         "frames": 600,
         "updates": 40,
         "steps": 120,
-        "avgMs": 0.057,
-        "p95Ms": 0.6,
-        "maxMs": 16
+        "avgMs": 0.101,
+        "p95Ms": 3,
+        "maxMs": 21.5
       },
       "bench4x": {
         "screen": "world_hud",
@@ -1701,15 +1374,15 @@
         "frames": 600,
         "updates": 40,
         "steps": 480,
-        "avgMs": 0.451,
-        "p95Ms": 4,
-        "maxMs": 46.3
+        "avgMs": 0.255,
+        "p95Ms": 1.3,
+        "maxMs": 23.7
       },
       "liveSwiftShader": {
-        "ui": 2.543,
-        "input": 0.019,
-        "total": 2.562,
-        "max": 81.5
+        "ui": 4.172,
+        "input": 0.003,
+        "total": 4.174,
+        "max": 86.9
       }
     },
     "battle-1280x720": {
@@ -1719,9 +1392,9 @@
         "frames": 600,
         "updates": 85,
         "steps": 200,
-        "avgMs": 0.172,
-        "p95Ms": 3.2,
-        "maxMs": 15.5
+        "avgMs": 0.095,
+        "p95Ms": 2.9,
+        "maxMs": 11
       },
       "bench4x": {
         "screen": "battle_hud",
@@ -1729,15 +1402,15 @@
         "frames": 600,
         "updates": 85,
         "steps": 795,
-        "avgMs": 0.118,
-        "p95Ms": 0.3,
-        "maxMs": 9.2
+        "avgMs": 0.082,
+        "p95Ms": 0.1,
+        "maxMs": 31.5
       },
       "liveSwiftShader": {
-        "ui": 6.27,
-        "input": 0.019,
-        "total": 6.289,
-        "max": 34.1
+        "ui": 7.074,
+        "input": 0.006,
+        "total": 7.08,
+        "max": 27
       }
     }
   }

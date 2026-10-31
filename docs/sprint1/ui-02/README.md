@@ -29,7 +29,7 @@ input CPU budget. All results with observed values: `shots-report.json`.
 
 ## Evidence images (every image described)
 
-59 captures: each screen at 1280 x 720 (`-pc`), 390 x 844 portrait (`-portrait`, quality low, touch) and 844 x 390
+75 captures (round 2 final run, 2026-10-31): each screen at 1280 x 720 (`-pc`), 390 x 844 portrait (`-portrait`, quality low, touch) and 844 x 390
 landscape (`-landscape`). World: The Broken Crown, seed 7, Suvarna Kingdom (Rajapura). Battle: 1,000-soldier plains
 skirmish, seed 7. Hero: Rajapura streets. All captured by `scripts/shots/ui-02.cjs` after the critique fixes listed
 further down; every one was opened and looked at.
@@ -139,11 +139,13 @@ Every capture was opened after each run; what the images showed and what changed
 
 | Check | Result |
 |---|---|
-| UI + input CPU, world HUD 1280 x 720, Rajapura selected (60 fps virtual timeline, `__SAMRAJYA_UI__.bench`, 10 s in 2 s chunks, prompts answered between) | 1x: avg 0.077 ms / frame (p95 0.4, max 12.5 when the settlement card recomputes); 4x: avg 0.133 ms (p95 1.5, max 16.9) - budget < 1 ms |
-| UI + input CPU, battle HUD 1280 x 720, two formations selected | 1x: avg 0.051 ms / frame (p95 1.5, max 4.7); 4x: avg 0.012 ms (p95 0, max 2.7) |
-| Live profiler EMA under SwiftShader (`uiInput.ms`, for transparency) | world 3.23 ms, battle 2.42 ms per frame - SwiftShader renders ~1 frame/s, so every frame carries a full HUD refresh; at 60 fps the throttles spread that work (HUD <= 10 Hz, settlement card <= 2 Hz, top bar <= 2.5 Hz, minimap layers <= 4 Hz world / ~8 Hz battle) |
-| Contrast (measured on the pixels, every visible text run) | 1839 text runs on 53 full-screen captures, 0 below the threshold |
-| Touch targets on phone captures | 441 interactive elements on the 34 full-screen phone captures, 0 below 44 x 44 px |
+| UI + input CPU, world HUD 1280 x 720, Rajapura selected (60 fps virtual timeline, `__SAMRAJYA_UI__.bench`, 10 s in 2 s chunks, prompts answered between) | 1x: avg 0.101 ms / frame (p95 3, max 21.5 when the settlement card recomputes SIM-01 `buildOptions`); 4x: avg 0.255 ms (p95 1.3, max 23.7) - budget < 1 ms |
+| UI + input CPU, battle HUD 1280 x 720, two formations selected | 1x: avg 0.095 ms / frame (p95 2.9, max 11); 4x: avg 0.082 ms (p95 0.1, max 31.5) |
+| Live profiler EMA under SwiftShader (`uiInput.ms`, for transparency) | world 4.17 ms, battle 7.08 ms per frame - SwiftShader renders ~1 frame/s on this shared 4-CPU box, so every frame carries a full HUD refresh; at 60 fps the throttles spread that work (HUD <= 10 Hz, settlement card <= 2 Hz, top bar <= 2.5 Hz, minimap layers <= 4 Hz world / ~8 Hz battle) |
+| Contrast (measured on the pixels, every visible text run) | 2,595 text runs on 69 full-screen captures, 0 below the threshold |
+| Touch targets on phone captures | 1,233 interactive elements on the 40 full-screen phone captures, 0 below 44 x 44 px |
+| Truncation (round 2) | no visible label cut to an ellipsis on the 69 full-screen captures |
+| Phone minimap expanded (round 2) | portrait 232 px (canvas 220), landscape 184 px (canvas 172); collapse + north-up buttons end above the canvas (world and battle) |
 | Esc closes the radial wheel without the pause menu | ok on all three viewports |
 | Open map areas pass pointer events to the game | ok (world, battle, hero, every viewport) |
 | Event modal / engagement prompt reached by stepping the campaign | ok (every viewport) |
@@ -151,7 +153,7 @@ Every capture was opened after each run; what the images showed and what changed
 | `?assets=off` world HUD | ok, no errors |
 | Console errors / page errors / failed requests / crash reports | none in any session |
 
-Builds: `npx vite build --outDir .build/ui-02` and `--mode single --outDir .build/ui-02-single` (2.6 MB one-file
+Builds: `npx vite build --outDir .build/ui-02` and `--mode single --outDir .build/ui-02-single` (2.79 MB one-file
 HTML) both succeed. Smoke: `docs/sprint1/ui-02/smoke/` (all 14 smoke shots passed, no console errors).
 
 ## Requests to other owners (not edited here)
@@ -275,6 +277,6 @@ Round 2 self-review (this pass, every capture re-opened) found and fixed:
   throttled HUD renders before clicking (a landscape run failed on a starved SwiftShader), and a merged partial
   re-run drops the old checks of the sessions it re-ran.
 
-Final capture ({{SHOTS}} shots, {{CHECKS}} checks): contrast {{TEXTS}} text runs on {{CAPS}} captures, 0 below 4.5:1 / 3:1;
-touch {{TARGETS}} phone targets, 0 under 44 px; no console / page errors, failed requests or crash reports. UI + input
-on the 60 fps bench at 1280 x 720: {{BENCH}}. Smoke: {{SMOKE}}. Single-file build {{SINGLE}}.
+Final capture (75 shots, 61 / 61 checks): contrast 2,595 text runs on 69 captures, 0 below 4.5:1 / 3:1;
+touch 1,233 phone targets, 0 under 44 px; no console / page errors, failed requests or crash reports. UI + input
+on the 60 fps bench at 1280 x 720: world 0.101 ms avg at 1x / 0.255 ms at 4x, battle 0.095 / 0.082 ms (budget < 1 ms); truncation 0 on 69 captures. Smoke (`SMOKE_SKIP_BUILD=1 SMOKE_DIST=.build/ui-02 SMOKE_PORT=4415 SMOKE_OUT=docs/sprint1/ui-02/smoke`): 14 / 14 shots, no console errors. Single-file build 2,789.58 kB (`.build/ui-02-single`).
