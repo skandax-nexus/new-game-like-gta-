@@ -9,9 +9,9 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 31202318,
-    "high": 17249393,
-    "mobile": 6010040
+    "ultra": 31344166,
+    "high": 17332141,
+    "mobile": 6009624
   },
   "assets": {
     "bamboo_lattice": {
@@ -2178,12 +2178,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "lime_plaster_weathered",
       "category": "materials",
-      "hash": "da6c4594ad",
+      "hash": "1418dadfea",
       "description": "Weathered hand-troweled lime plaster (3 m): overlapping trowel strokes with lime ridges, craze cracks, ~8 % multi-scale losses to the base render, rain streaks, faint damp with salt fringes.",
       "bytes": {
-        "ultra": 2813886,
-        "high": 650356,
-        "mobile": 171166
+        "ultra": 2861336,
+        "high": 661370,
+        "mobile": 172102
       },
       "tiers": [
         "ultra",
@@ -2204,51 +2204,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/lime_plaster_weathered/baseColor_2048.webp",
-            "bytes": 114802,
+            "bytes": 125044,
             "size": 2048
           },
           "high": {
             "url": "textures/lime_plaster_weathered/baseColor_1024.webp",
-            "bytes": 39024,
+            "bytes": 40364,
             "size": 1024
           },
           "mobile": {
             "url": "textures/lime_plaster_weathered/baseColor_512.webp",
-            "bytes": 14796,
+            "bytes": 14402,
             "size": 512
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/lime_plaster_weathered/normal_2048.webp",
-            "bytes": 2558074,
+            "bytes": 2589376,
             "size": 2048
           },
           "high": {
             "url": "textures/lime_plaster_weathered/normal_1024.webp",
-            "bytes": 554248,
+            "bytes": 557400,
             "size": 1024
           },
           "mobile": {
             "url": "textures/lime_plaster_weathered/normal_512.webp",
-            "bytes": 137290,
+            "bytes": 138170,
             "size": 512
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/lime_plaster_weathered/orm_2048.webp",
-            "bytes": 141010,
+            "bytes": 146916,
             "size": 2048
           },
           "high": {
             "url": "textures/lime_plaster_weathered/orm_1024.webp",
-            "bytes": 57084,
+            "bytes": 63606,
             "size": 1024
           },
           "mobile": {
             "url": "textures/lime_plaster_weathered/orm_512.webp",
-            "bytes": 19080,
+            "bytes": 19530,
             "size": 512
           }
         }
@@ -3174,11 +3174,11 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "sandstone_red_ashlar",
       "category": "materials",
-      "hash": "bca2461b92",
+      "hash": "d8f31b6ff1",
       "description": "Red sandstone ashlar (3 m): 0.43 m courses, 4 mm recessed lime joints, worn arrises, drafted margins, point-tooled fields, soft rust bleeds and liesegang bands, cross-bedding, chipped arrises, grime.",
       "bytes": {
-        "ultra": 264700,
-        "high": 224924,
+        "ultra": 361960,
+        "high": 299154,
         "mobile": 0
       },
       "tiers": [
@@ -3199,36 +3199,36 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/sandstone_red_ashlar/baseColor_1024.webp",
-            "bytes": 48792,
+            "bytes": 90292,
             "size": 1024
           },
           "high": {
             "url": "textures/sandstone_red_ashlar/baseColor_512.webp",
-            "bytes": 9016,
+            "bytes": 27486,
             "size": 512
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/sandstone_red_ashlar/normal_512.webp",
-            "bytes": 188600,
+            "bytes": 242102,
             "size": 512
           },
           "high": {
             "url": "textures/sandstone_red_ashlar/normal_512.webp",
-            "bytes": 188600,
+            "bytes": 242102,
             "size": 512
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/sandstone_red_ashlar/orm_512.webp",
-            "bytes": 27308,
+            "bytes": 29566,
             "size": 512
           },
           "high": {
             "url": "textures/sandstone_red_ashlar/orm_512.webp",
-            "bytes": 27308,
+            "bytes": 29566,
             "size": 512
           }
         }
@@ -5218,12 +5218,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_rock_granite",
       "category": "terrain",
-      "hash": "df13536629",
+      "hash": "823ba26952",
       "description": "Granite tor for triplanar projection (8 m, v = up): broad isotropic whaleback swells cut by sparse open-ended curved joints (steep, sheet and short fractures; tight to softly open, no closed cells or wedges), broken exfoliation arcs, spall chips, speckled grain, black water streaks, orange and grey-green crustose lichen.",
       "bytes": {
-        "ultra": 461974,
-        "high": 220832,
-        "mobile": 56476
+        "ultra": 459112,
+        "high": 218336,
+        "mobile": 55124
       },
       "tiers": [
         "ultra",
@@ -5244,51 +5244,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/terrain_rock_granite/baseColor_1024.webp",
-            "bytes": 275416,
+            "bytes": 275138,
             "size": 1024
           },
           "high": {
             "url": "textures/terrain_rock_granite/baseColor_512.webp",
-            "bytes": 34274,
+            "bytes": 34362,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_granite/baseColor_256.webp",
-            "bytes": 3178,
+            "bytes": 3172,
             "size": 256
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/terrain_rock_granite/normal_512.webp",
-            "bytes": 166292,
+            "bytes": 163426,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_granite/normal_512.webp",
-            "bytes": 166292,
+            "bytes": 163426,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_granite/normal_256.webp",
-            "bytes": 44064,
+            "bytes": 42706,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/terrain_rock_granite/orm_512.webp",
-            "bytes": 20266,
+            "bytes": 20548,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_granite/orm_512.webp",
-            "bytes": 20266,
+            "bytes": 20548,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_granite/orm_256.webp",
-            "bytes": 9234,
+            "bytes": 9246,
             "size": 256
           }
         }
