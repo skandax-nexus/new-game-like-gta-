@@ -106,6 +106,23 @@ async function regionLuminance(file, box) {
   return { luma: luma / n, linear: linear / n };
 }
 
+/** Clipped pixels (any channel >= 250, %) and luma percentiles (0..255) of a PNG (AD round 1, blocker 4). */
+async function clipStats(file) {
+  const { data, info } = await sharp(file).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const n = info.width * info.height;
+  const lum = new Float32Array(n);
+  let clip = 0;
+  for (let i = 0; i < n; i++) {
+    const r = data[i * info.channels];
+    const g = data[i * info.channels + 1];
+    const b = data[i * info.channels + 2];
+    if (r >= 250 || g >= 250 || b >= 250) clip++;
+    lum[i] = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+  lum.sort();
+  return { clippedPct: +((100 * clip) / n).toFixed(2), p98Luma: +lum[Math.floor(n * 0.98)].toFixed(1), p90Luma: +lum[Math.floor(n * 0.9)].toFixed(1) };
+}
+
 /** Hero frame regions (fractions of 1280x720, Rajapura default camera): lime plaster walls, red base, terrain. */
 const WET_REGIONS = {
   plasterNear: [770 / 1280, 880 / 1280, 180 / 720, 215 / 720],
@@ -270,6 +287,14 @@ async function maxRowJump(file, y0, y1) {
       const info = () => window.__SAMRAJYA_GFX__.info().post;
       report.checks.labHeroTaa = (await shot('lab-post-hero-taa-on', `${lab}&quality=ultra&taa=1`, { after: info })).extra;
       report.checks.labHeroNoTaa = (await shot('lab-post-hero-taa-off', `${lab}&quality=ultra&taa=0`, { after: info })).extra;
+      // Low-sun shafts + bloom must not clip the cinematic frame: <= 2 % clipped, p98 luma <= 245.
+      report.checks.labHeroClip = {};
+      for (const n of ['lab-post-hero-taa-on', 'lab-post-hero-taa-off']) {
+        const c = await clipStats(path.join(OUT, `${n}.png`));
+        report.checks.labHeroClip[n] = { ...c, pass: c.clippedPct <= 2 && c.p98Luma <= 245 };
+        if (!report.checks.labHeroClip[n].pass) failures.push(`${n}: ${c.clippedPct} % clipped, p98 ${c.p98Luma}`);
+      }
+      console.log(JSON.stringify({ labHeroClip: report.checks.labHeroClip }));
       report.checks.labHeroFocus = (await shot('lab-post-hero-dof-focus12', `${lab}&quality=ultra&focus=12`, { after: info })).extra;
       // Near-field DoF (AD round 1, blocker 3): the same frame with the single-layer DoF ('before'), and a pillar
       // 1.6 m in front of the lens with the focus on the hero (4.5 m), both layers vs single layer.

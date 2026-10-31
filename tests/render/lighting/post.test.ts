@@ -13,7 +13,8 @@ import { circleOfConfusionPx, DofPass, DOF_TILE_PX, nearFieldAlpha } from '../..
 import { halton, TAA_JITTER_PHASES } from '../../../src/render/post/scenePass';
 import { lensDirtPixels, LENS_DIRT_SIZE } from '../../../src/render/post/bloom';
 import { SSR_MASK_GLSL } from '../../../src/render/post/ssr';
-import { FinalPass, LUT_STRENGTH } from '../../../src/render/post/final';
+import { FinalPass, HIGHLIGHT_KNEE, highlightShoulder, LUT_STRENGTH, SHAFT_LOCAL_CAP, shaftSoftClamp, SUN_GLOW_UV } from '../../../src/render/post/final';
+import { SHAFT_MASK_CLAMP } from '../../../src/render/post/shafts';
 import { createPostFrame } from '../../../src/render/post/shared';
 import { installShaderGlobals } from '../../../src/render/materials/chunks/globals';
 
@@ -192,5 +193,49 @@ describe('near-field DoF (AD round 1, blocker 3)', () => {
     // Sub-2 px foregrounds fade in smoothly (no near layer for nearly sharp geometry).
     expect(nearFieldAlpha(1, 0)).toBe(0);
     expect(nearFieldAlpha(1, 1)).toBeCloseTo(0.5, 6);
+  });
+});
+
+describe('energy-conserving shafts + highlight shoulder (AD round 1, blocker 4)', () => {
+  it('added shaft radiance never exceeds 1.5x the local pre-shaft radiance and is ~linear when small', () => {
+    for (const local of [0.05, 0.4, 2, 6]) {
+      for (const added of [0.01, 0.5, 3, 50]) {
+        const a = shaftSoftClamp(added, local, 0);
+        expect(a).toBeLessThanOrEqual(SHAFT_LOCAL_CAP * local + 1e-9);
+        expect(a).toBeLessThanOrEqual(added + 1e-9);
+      }
+    }
+    expect(shaftSoftClamp(0.01, 4, 0)).toBeCloseTo(0.01, 4);
+    // A dark column beside bright sky: the neighbourhood sets the cap, not the column alone.
+    expect(shaftSoftClamp(1, 0.05, 0, 1.2)).toBeGreaterThan(shaftSoftClamp(1, 0.05, 0, 0));
+  });
+
+  it('the composite: luminance x in-scatter tint, soft clamp, faded inside the sun glow; mask clamps the sprite out', () => {
+    const f = new FinalPass(createPostFrame(), { bloom: true, shafts: true, dirt: false, lut: false, chromaticAberration: false, grade: true, vignette: true, fxaa: false, toneMapper: 'aces' }, { black: new THREE.Texture(), lut: new THREE.Data3DTexture() });
+    const src = f.material.fragmentShader;
+    expect(src).toContain('float sl = samLuma( texture2D( tShafts, uv ).rgb );');
+    expect(src).toContain('float add = cap * ( 1.0 - exp( -sl / max( cap, 1e-6 ) ) );');
+    expect(src).toContain(`smoothstep( ${SUN_GLOW_UV[0].toFixed(3)}, ${SUN_GLOW_UV[1].toFixed(3)}, length( ds ) )`);
+    expect(src).toContain('hdr += uShaftTint * ( add * away );');
+    // Old additive composite (sky colour x warm tint, uncapped) is gone.
+    expect(src).not.toContain('hdr += texture2D( tShafts, uv ).rgb * uShaftTint;');
+    // Hue-preserving highlight shoulder after grade / LUT.
+    expect(src).toContain('float mx = max( col.r, max( col.g, col.b ) );');
+    expect(SHAFT_MASK_CLAMP).toBeLessThan(50);
+    f.dispose();
+  });
+
+  it('the highlight shoulder is identity below the knee, monotonic, and only reaches 250/255 for >= ~1.06', () => {
+    expect(highlightShoulder(0.5)).toBe(0.5);
+    expect(highlightShoulder(HIGHLIGHT_KNEE)).toBeCloseTo(HIGHLIGHT_KNEE, 9);
+    let prev = 0;
+    for (let m = 0; m <= 1.5; m += 0.01) {
+      const v = highlightShoulder(m);
+      expect(v).toBeGreaterThanOrEqual(prev - 1e-12);
+      expect(v).toBeLessThan(1);
+      prev = v;
+    }
+    expect(highlightShoulder(1.0) * 255).toBeLessThan(250);
+    expect(highlightShoulder(1.2) * 255).toBeGreaterThanOrEqual(250);
   });
 });

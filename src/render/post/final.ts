@@ -2,7 +2,8 @@
  * Final pass, material name 'SamrajyaGrade' (the asset viewer inserts its A/B LUT pass right after it):
  * HDR (+ shafts + bloom + lens dirt) -> exposure -> ACES Filmic (three r170 maths, AgX selectable) -> sRGB ->
  * grade (GRADE_PRESETS, display-referred, as authored for the CTO baseline) x ZoomLook multipliers -> 32^3 LUT
- * (35 % on high / ultra; cross-faded on preset changes) -> vignette -> luminance grain -> dither. Edge chromatic
+ * (35 % on high / ultra; cross-faded on preset changes) -> hue-preserving highlight shoulder -> vignette -> luminance
+ * grain -> dither. Shafts are composited energy-conserving (SHAFT_LOCAL_CAP, SUN_GLOW_UV). Edge chromatic
  * aberration (close / hero bands, ultra) and a light HDR sharpen (strategic / tactical bands).
  * postMerged (low): FXAA runs inside this pass on tone-mapped taps, so the whole low-tier post is one fullscreen
  * draw. OWNER: Graphics Developer - Lighting, Atmosphere & Post (GFX-01).
@@ -15,6 +16,42 @@ export type ToneMapper = 'aces' | 'agx';
 
 /** Lighting-to-display LUT strength on high / ultra (ART_BIBLE §4.7). */
 export const LUT_STRENGTH = 0.35;
+
+/**
+ * Energy-conserving shaft composite (AD round 1, blocker 4; preset shaftsStrength stays as authored):
+ *   radiance = luminance(scatter) x the fog in-scatter tint (luminance 1) - no sky colour x warm tint double-warming;
+ *   soft-clamped to at most SHAFT_LOCAL_CAP x the local pre-shaft luminance - the brighter of the pixel and its
+ *   +-SHAFT_LOCAL_UV neighbourhood, floored at SHAFT_FLOOR display-relative, so beams still read in front of dark
+ *   columns: cap x (1 - exp(-added / cap));
+ *   faded out within the sun sprite's own glow (SUN_GLOW_UV inner / outer, height-normalised screen distance), so
+ *   shafts never stack on the sprite's bloom.
+ */
+export const SHAFT_LOCAL_CAP = 1.5;
+export const SHAFT_FLOOR = 0.3;
+/** Neighbourhood radius (height-normalised uv) of the local pre-shaft radiance. */
+export const SHAFT_LOCAL_UV = 0.04;
+export const SUN_GLOW_UV: readonly [number, number] = [0.03, 0.12];
+/**
+ * Hue-preserving highlight shoulder after the display-referred grade + LUT: the largest channel above HIGHLIGHT_KNEE
+ * rolls off exponentially toward 1 and the pixel keeps its channel ratios. A warm grade on a bright sky used to
+ * push red alone past 1 (a flat cream slab, 7-8 % of the cinematic frame clipped); now only values >= ~1.06 after
+ * the grade (the sun sprite and its immediate glow) reach 250 / 255.
+ */
+export const HIGHLIGHT_KNEE = 0.9;
+
+/** CPU mirror of the highlight shoulder for one max-channel value (tests). */
+export function highlightShoulder(m: number, knee = HIGHLIGHT_KNEE): number {
+  if (m <= knee) return m;
+  const w = 1 - knee;
+  return knee + w * (1 - Math.exp(-(m - knee) / w));
+}
+
+/** CPU mirror of the shaft soft clamp: radiance actually added for `added` over a pixel of luminance `local`. */
+export function shaftSoftClamp(added: number, local: number, floor: number, neighbourhood = 0): number {
+  const cap = SHAFT_LOCAL_CAP * Math.max(local, neighbourhood, floor);
+  if (added <= 0 || cap <= 0) return 0;
+  return cap * (1 - Math.exp(-added / cap));
+}
 
 export interface FinalFeatures {
   bloom: boolean;
@@ -77,6 +114,7 @@ uniform float uExposure;
 uniform float uBloom;
 uniform float uDirt;
 uniform vec3 uShaftTint;
+uniform vec3 uSunScreen;   // sun uv (xy), visibility (z)
 uniform float uContrast;
 uniform float uSaturation;
 uniform float uWarmth;
@@ -128,7 +166,23 @@ void main() {
     hdr *= 1.0 + uSharpen * clamp( ( lc - ln ) / max( ln, 1e-4 ), -0.5, 0.5 );
   }
   #ifdef USE_SHAFTS
-  hdr += texture2D( tShafts, uv ).rgb * uShaftTint;
+  {
+    // Energy-conserving shafts: luminance x in-scatter tint, soft-clamped to the local pre-shaft radiance, and
+    // faded inside the sun sprite's own glow (its bloom carries that light already).
+    float sl = samLuma( texture2D( tShafts, uv ).rgb );
+    if ( sl > 0.0 ) {
+      // Local pre-shaft radiance: this pixel or its neighbourhood (+-SHAFT_LOCAL_UV), whichever is brighter - a beam
+      // crossing a dark column beside bright sky may reach 1.5x the neighbourhood, never 1.5x the sky itself.
+      vec2 lo = vec2( ${SHAFT_LOCAL_UV.toFixed(3)} / uAspect, ${SHAFT_LOCAL_UV.toFixed(3)} );
+      float nb = 0.25 * ( samLuma( texture2D( tHdr, uv + vec2( lo.x, 0.0 ) ).rgb ) + samLuma( texture2D( tHdr, uv - vec2( lo.x, 0.0 ) ).rgb )
+        + samLuma( texture2D( tHdr, uv + vec2( 0.0, lo.y ) ).rgb ) + samLuma( texture2D( tHdr, uv - vec2( 0.0, lo.y ) ).rgb ) );
+      float cap = ${SHAFT_LOCAL_CAP.toFixed(2)} * max( max( samLuma( hdr ), nb ), ${SHAFT_FLOOR.toFixed(2)} * 0.6 / max( uExposure, 1e-3 ) );
+      float add = cap * ( 1.0 - exp( -sl / max( cap, 1e-6 ) ) );
+      vec2 ds = ( uv - uSunScreen.xy ) * vec2( uAspect, 1.0 );
+      float away = mix( 1.0, smoothstep( ${SUN_GLOW_UV[0].toFixed(3)}, ${SUN_GLOW_UV[1].toFixed(3)}, length( ds ) ), uSunScreen.z );
+      hdr += uShaftTint * ( add * away );
+    }
+  }
   #endif
   #ifdef USE_BLOOM
   vec3 bloom = texture2D( tBloom, uv ).rgb * uBloom;
@@ -155,6 +209,14 @@ void main() {
     col = mix( col, graded, uLutStrength );
   }
 #endif
+  // Hue-preserving highlight shoulder (HIGHLIGHT_KNEE): no single-channel clipping of warm-graded skies.
+  {
+    float mx = max( col.r, max( col.g, col.b ) );
+    if ( mx > ${HIGHLIGHT_KNEE.toFixed(3)} ) {
+      float w = ${(1 - HIGHLIGHT_KNEE).toFixed(3)};
+      col *= ( ${HIGHLIGHT_KNEE.toFixed(3)} + w * ( 1.0 - exp( -( mx - ${HIGHLIGHT_KNEE.toFixed(3)} ) / w ) ) ) / mx;
+    }
+  }
 #ifdef USE_VIGNETTE
   vec2 p = ( uv - 0.5 ) * vec2( uAspect, 1.0 );
   float v = smoothstep( 0.95, 0.25, length( p ) * 1.05 );
@@ -239,6 +301,7 @@ export class FinalPass extends QuadPass {
         uBloom: { value: 0 },
         uDirt: { value: 0 },
         uShaftTint: { value: new THREE.Vector3(1, 1, 1) },
+        uSunScreen: { value: new THREE.Vector3(0.5, 0.5, 0) },
         uContrast: { value: 1 },
         uSaturation: { value: 1 },
         uWarmth: { value: 0 },
@@ -271,6 +334,7 @@ export class FinalPass extends QuadPass {
     u.uBloom!.value = f.bloom ? f.bloomIntensity : 0;
     u.uDirt!.value = f.bloom ? this.dirtIntensity : 0;
     u.tShafts!.value = f.shafts ?? this.neutral.black;
+    (u.uSunScreen!.value as THREE.Vector3).copy(f.sunScreen);
     this.draw(renderer, this.material, this.renderToScreen ? null : writeBuffer);
   }
 

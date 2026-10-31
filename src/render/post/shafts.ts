@@ -4,7 +4,9 @@
  * (24 / 32 / 48) taps toward the sun's screen position with ResolvedLighting.shaftsDecay / shaftsDensity, jittered
  * with interleaved gradient noise. Half resolution unless !shaftsHalfRes (ultra). Active while the sun is below
  * 35 deg or r.shaftsStrength > 0.3, scaled by r.shaftsStrength x ZoomLook.atmosphere.shaftsScale and faded as the
- * sun leaves the screen. Added to the HDR image before tone mapping. OWNER: Graphics Developer - Lighting,
+ * sun leaves the screen. The mask clamps sky radiance display-relatively (SHAFT_MASK_CLAMP: the sun sprite never
+ * feeds the scatter). Composited energy-conserving in the final pass (post/final.ts: luminance x fog in-scatter tint,
+ * soft-clamped to 1.5x the local pre-shaft radiance, faded inside the sun sprite's glow), before tone mapping. OWNER: Graphics Developer - Lighting,
  * Atmosphere & Post (GFX-01).
  */
 import * as THREE from 'three';
@@ -13,6 +15,11 @@ import { colorTarget, NOISE_GLSL, postMaterial, QuadPass, type PostFrame } from 
 /** Shafts run while the sun is lower than this (deg) or the resolved strength exceeds SHAFTS_STRONG. */
 export const SHAFTS_MAX_ELEVATION_DEG = 35;
 export const SHAFTS_STRONG = 0.3;
+/**
+ * Occlusion-mask clamp, display-relative (x 0.6 / exposure, the radiance ACES maps to ~0.9): the sky around the sun
+ * feeds the scatter, the HDR sun sprite (luminance 50) does not - its own bloom carries that light (AD round 1).
+ */
+export const SHAFT_MASK_CLAMP = 6;
 
 /** Is the shafts pass worth running for this sun / lighting / band? (pure; tested) */
 export function shaftsActive(samples: number, strength: number, sunElevationDeg: number, bandScale: number, screenVisibility: number): boolean {
@@ -122,6 +129,7 @@ export class ShaftsPass extends QuadPass {
     const m = this.maskMat.uniforms;
     m.tColor!.value = f.sceneColor;
     m.tDepth!.value = f.depth;
+    m.uClamp!.value = (SHAFT_MASK_CLAMP * 0.6) / Math.max(1e-3, renderer.toneMappingExposure);
     (m.uSun!.value as THREE.Vector3).copy(f.sunScreen);
     this.draw(renderer, this.maskMat, this.mask);
     const s = this.scatterMat.uniforms;
