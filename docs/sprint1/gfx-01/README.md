@@ -226,3 +226,117 @@ Re-run on HEAD with build `.build/gfx-01-review` (shots on port 4454, smoke on 4
 - B3: the near layer is implemented as ruled (tile max, dilation, near gather, coverage alpha). The visible spread is
   small: the pillar-edge ramp widens from ~11 to ~13 px at 720p, because hero DoF is capped at f/2.8 / 10 px.
 - B4: fixed and measured. Saturation of the lab frame drops ~6 %; the game preset shots do not change.
+
+## Rework round 2 - Art Director blockers R2-1 / R2-2 (`docs/art/reviews/gfx-01.md`, round 2)
+
+Everything in this folder and `report.json` was re-captured after the fixes: 46 PNGs, `failures: []`, 0 console
+errors. New round-2 files are in `r2/`:
+- same-frame A/B frames with the key's cast shadows off (`*-noshadow.png`);
+- 3x nearest-neighbour crops of the golden ridge, now (`*-ridge-x3.png`) and round 1 (`*-ridge-x3-r1.png`);
+- contrast-normalised 3x crops of the dusk hero's own shadow, now and round 1 (`hero-dusk-ultra-feet-x3-norm(-r1).png`).
+
+### R2-1 Twilight key light
+
+**Diagnosis correction.** At the two shot times the 3 deg clamp was not the cause. At 18.4 h the sun is at -7.4 deg,
+and at 18.9 h it is at -14.2 deg. The old direction lerp had already handed the key to the moon (97 % and 100 %), at
+its clamped 25 deg. So the shadows were about 2.1x their caster, not 19x. What was wrong is what the review measured:
+- the full preset intensity (0.55) stayed on that key from the moment the sun set;
+- the moon softness was 0.4 deg, so the shadows were hard;
+- the result was near-black ribbons, the same 3-4:1 lit:shadow as the 22 h night (`hero-night-ultra` measures 4.4:1).
+
+The 3 deg clamp does matter between 17.8 h and 18.1 h, and the new model covers that range too.
+
+**Fix: `src/render/lighting/keyLight.ts`, applied in `environment.ts`.** The sun and moon keys keep their own
+directions and cross-fade by intensity.
+- Sun key weight:
+  - below +3 deg: 0.25 x `smoothstep(-4, 3, elevation)`, so a clamped key never carries more than 25 %;
+  - from 3 deg to 5.5 deg: rises from 25 % to 100 %;
+  - it is 0 below -4 deg.
+- Moon key: on its own 25-62 deg direction, weight `smoothstep(6, 30, -solar elevation)`. It is full long before 22 h.
+- The single caster switches to the stronger key at the intensity crossover. Both weights are below 0.02 there
+  (they are ~0 between -4 and -6 deg).
+- Penumbra: the twilight softness (3 deg) eases to the preset's value as the moon key comes in. With the new PCSS
+  cap (below), the remaining hero shadow widens with distance from the feet.
+- The flat-ground irradiance the keys no longer carry goes to the hemisphere fill (sky light, no shadow), so twilight
+  frames keep their level. Mean linear luminance, round 1 -> round 2: `hero-dusk` 0.0131 -> 0.0138, `battle-dusk` 0.0135 -> 0.0129, `hero-dusk184` 0.0166 -> 0.0176, `battle-dusk184` 0.0183 -> 0.0176.
+- Contact-shadow strength (`keyShare`) is scaled by the key weight.
+
+**PCSS max penumbra from softness (`csm.ts` `pcssMaxPenumbraTexels`).**
+- Crisp suns keep the tier base (28 texels ultra, 18 texels other tiers) up to 0.75 deg, so golden, noon and night
+  are unchanged.
+- Above 0.75 deg it grows linearly: 64 texels at 1.5 deg, capped at 128.
+- Monsoon (8 deg) and winter fog (2.5 deg) now get wide penumbrae (`hero-winter_fog-ultra`, `hero-monsoon-ultra`).
+
+**Measured** (`report.json` `checks.twilightLitShadow`). Lit:shadow is the linear luminance of the same frozen frame
+without / with the key's cast shadows, over the pixels the shadow darkens (lower 65 % of the frame).
+
+| Shot | Key (caster, elevation, weight) | Shadow length | Lit:shadow (p90) | Target |
+|---|---|---|---|---|
+| hero-dusk184-ultra (18.4 h) | moon 25 deg, 1 % | 2.1x | 1.10 (1.16) | <= 1.8, <= 7x |
+| hero-dusk-ultra (18.9 h) | moon 25 deg, 27 % | 2.1x | 1.25 (1.33) | <= 1.8, <= 7x |
+| battle-dusk184-ultra | moon 25 deg, 1 % | 2.1x | 1.16 (1.18) | <= 1.8, <= 7x |
+| battle-dusk-ultra | moon 25 deg, 27 % | 2.1x | 1.24 (1.35) | <= 1.8, <= 7x |
+| hero-golden-ultra (17.4 h, reference) | sun 6.2 deg, 100 % | 9.2x | 1.83 (2.19) | unchanged |
+| hero-night-ultra (22 h, reference) | moon 54.7 deg, 100 % | 0.7x | 4.39 (7.65) | unchanged |
+
+Golden and night are unchanged within run-to-run noise:
+- mean linear luminance is identical (golden 0.0572 / 0.0558, night 0.0198 / 0.0212);
+- the mean absolute pixel difference is 0.5 levels on battle shots and 3.5 levels on hero shots (hero idle and TAA
+  jitter).
+
+**The 25 % rule versus "golden unchanged".** These two targets cannot both hold literally. At 17.4 h the golden sun is
+at 6.2 deg (below 8 deg) and carries 100 % of its intensity, so the cap applies only to the clamped key. Another
+visible change: dawn at 6.2 h has the sun at +0.8 deg, so its key drops to 19 %, and the warm rim on the buildings
+in `hero-dawn-ultra` is weaker than in round 1. To change that, the knob is `TWILIGHT_KEY_CAP` / `SUN_KEY_FULL_DEG`
+in `keyLight.ts`.
+
+### R2-2 Golden-hour low tier
+
+**Diagnosis correction.** The teeth are not shadow-map stair steps. `__SAMRAJYA_GFX__.probe(x, y)` ray-casts from the
+shadowed red wall toward the key. It hits `arch_fort_wall` 71-77 m to the west, at y = 20.0-20.3: the height of the
+wall's merlons. Every `fort_wall` segment carries seven 1.2 m merlons at 2 m spacing (`architecture/buildings.ts`).
+The comb is the battlement's real shadow:
+- round 1 smeared it into "flame" teeth (0.1 m texels plus the fixed tent);
+- the tight fit alone resolved it into crisp square notches;
+- ultra's PCSS blurs it away, because a 75 m blocker under a 0.45 deg effective sun gives a 0.6 m penumbra.
+
+**Fixes (`csm.ts`, `shadowChunks.ts`).**
+1. **Tight fit, as asked.** The single low cascade fits a light-space AABB of the frustum slice instead of the bounding
+   sphere. Extents are quantised to 0.5 m and bounds snapped to whole texels per axis. The far split is pulled to 30 m
+   on the hero band, blended back to the tier distance by the close band, with the existing fade beyond it. Texel on
+   the red wall at golden: 0.037 x 0.036 m (round 1: about 0.1 m).
+2. **Blocker-distance footprint (`samShadowTentSoft`).** This is what removes the comb.
+   - The low tent first runs at lattice step 1 (16 fetches).
+   - 8 blocker taps sit on a ring sized for an 80 m blocker.
+   - The penumbra radius is distance x tan(softness), as in PCSS. It sets the lattice step s = radius / 1.5 texels
+     (1 to 8).
+   - The same tent is then re-filtered on that coarser lattice: noise-free and continuous, 16 more fetches on penumbra
+     pixels only. The slope bias grows with s.
+   - Near blockers keep s = 1, so contact shadows and the noon / night frames are unchanged.
+
+**Measured** (`report.json` `checks.lowCascadeTexel`). Screen pixels per shadow texel on the red wall:
+- `hero-golden-low`: 2.03 (target <= 4);
+- `hero-golden-low-phone`: 1.55.
+
+The shadow is now a soft gradient with only a faint undulation, as on ultra:
+- `r2/hero-golden-low-ridge-x3.png` vs `-r1.png`;
+- `r2/hero-golden-low-phone-ridge-x3.png` vs `-r1.png`.
+
+`hero-noon-low`, `hero-night-low` and `hero-noon-low-phone` are clean. `battle-*-low` stays at 24 draws (5 shadow).
+Low-tier cost: 24 fetches per shadowed pixel (was 16), and 40 on soft-penumbra pixels.
+
+### Everything else (re-run)
+
+| Check | Result |
+|---|---|
+| Night lower-half luma | 0.140 (ultra) / 0.148 (low) |
+| lab-post-hero clip | 0.00 %, p98 240 |
+| Horizon row jump | 1.14 / 1.09 |
+| Cascades | 4 PCSS / 3 PCSS / 2 PCF / 1 tent |
+| Draw calls | 72 / 72 / 24 (budgets 400 / 500 / 150) |
+| Tier cycling x3 | 11 textures / 30 geometries / 3 RT at every return to low |
+| Context loss | restored, 53 draws |
+
+New debug hooks for evidence scripts:
+- `__SAMRAJYA_GFX__.setShadowIntensity(v | null)`: same-frame shadow A/B;
+- `__SAMRAJYA_GFX__.probe(x, y)`: surface, shadow texel, screen px per texel, occluder.
