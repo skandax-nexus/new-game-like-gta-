@@ -4,7 +4,7 @@
  *
  *   npx vite build --outDir .build/ta-01/dist --emptyOutDir
  *   NODE_PATH=$(npm root -g) node scripts/shots/ta-01.cjs [--only=deltas,budgets,previews,tiling,swatches,decals,viewer,splat,stupa,mobile,varsha]
- *                                                         [--ids=a,b] [--fast]
+ *                                                         [--ids=a,b] [--fast] [--reuse]
  *
  * Env: SHOTS_PORT (default 4404), SHOTS_DIST (default .build/ta-01/dist), SHOTS_OUT (default docs/sprint1/ta-01).
  *
@@ -607,10 +607,14 @@ async function main() {
               // AD-8: the 1.2 m frame must be >= 60 % material. The viewer's detail preset puts the lookdev set in the
               // right half, so shoot at 1600 x 900 and crop the 16:9 window around the wall, column and sphere
               // (no rescaling up: the crop keeps the native ~1.2 m texel density).
+              // The material occupies x 0.6..1.0, y 0..0.6 of the 1600 x 900 detail frame: a 720 x 405 window at
+              // (880, 0) is ~85 % material (wall, column, sphere) and is only downscaled for the sheet.
+              // --reuse: re-crop the raw frames of an earlier run without shooting again.
               const full = file.replace(/\.png$/, '_full.png');
-              await shoot(`viewer ${s.id} ${sky} ${cam}`, full, `asset=${s.id}&hdri=${sky}&camera=${cam}&assets=ultra`, { vp: [1600, 900] });
-              if (fs.existsSync(full)) await sharp(full).extract({ left: 744, top: 24, width: 856, height: 482 }).toFile(file);
-            } else await shoot(`viewer ${s.id} ${sky} ${cam}`, file, `asset=${s.id}&hdri=${sky}&camera=${cam}&assets=ultra`);
+              if (!(args.reuse && fs.existsSync(full)))
+                await shoot(`viewer ${s.id} ${sky} ${cam}`, full, `asset=${s.id}&hdri=${sky}&camera=${cam}&assets=ultra`, { vp: [1600, 900] });
+              if (fs.existsSync(full)) await sharp(full).extract({ left: 880, top: 0, width: 720, height: 405 }).toFile(file);
+            } else if (!(args.reuse && fs.existsSync(file))) await shoot(`viewer ${s.id} ${sky} ${cam}`, file, `asset=${s.id}&hdri=${sky}&camera=${cam}&assets=ultra`);
             items.push({ file, label });
           }
           await sheet(items, 2, 640, 360, path.join(OUT, 'viewer', `${s.id}.jpg`), `${s.id} - asset viewer lookdev (wall corner, column, sphere), quality high, ultra textures`);

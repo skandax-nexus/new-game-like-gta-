@@ -433,16 +433,16 @@
       "kind": "material",
       "category": "materials",
       "script": "tools/blender/assets/materials/basalt_dressed.py",
-      "inputHash": "dc30a289f7d1b25754eaa613c01c6e2c4d7c469076618da951b123b765bcb471",
+      "inputHash": "77de701cab1a02040eae146809859cf4b4295d867cc922fc0c409705f31577f9",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
         "averageColor": "#57534f",
         "decals": [],
-        "description": "Chisel-dressed basalt ashlar (3 m): diagonal tooling per block, drafted margins, tight joints, hand-polished patches, weathering rind, salt bloom.",
+        "description": "Chisel-dressed basalt ashlar (3 m): diagonal tooling and point-chisel pocks per block, drafted margins, hand-polished arrises and patches, tight joints, weathering rind, salt bloom.",
         "heightRangeMeters": [
-          -0.00805,
-          0.0009
+          -0.00823,
+          0.00085
         ],
         "metalness": 0,
         "normalScale": 0.9,
@@ -463,9 +463,12 @@
             0.14
           ],
           "lumMean": 0.0878,
-          "lumP2": 0.0453,
-          "lumP98": 0.1216,
+          "lumP2": 0.0434,
+          "lumP98": 0.1237,
           "meanColor": "#57534f",
+          "ormRP5": 0.978,
+          "ormRP95": 1,
+          "ormRSpan": 0.022,
           "roughMean": 0.7,
           "roughP5": 0.5,
           "roughP95": 0.88,
@@ -474,9 +477,11 @@
             0.88
           ],
           "satMean": 0.092,
-          "satP95": 0.1,
+          "satP95": 0.099,
+          "satP98": 0.108,
           "saturationLimit": 0.45,
-          "target": "#57534f"
+          "target": "#57534f",
+          "valueP98": 0.401
         },
         "roughness": 0.7,
         "setClass": "C",
@@ -489,7 +494,7 @@
       "files": [
         {
           "path": "textures/basalt_dressed/baseColor_1024.webp",
-          "bytes": 22216,
+          "bytes": 24544,
           "tiers": [
             "ultra"
           ],
@@ -499,7 +504,7 @@
         },
         {
           "path": "textures/basalt_dressed/baseColor_512.webp",
-          "bytes": 8344,
+          "bytes": 8204,
           "tiers": [
             "high"
           ],
@@ -509,7 +514,7 @@
         },
         {
           "path": "textures/basalt_dressed/baseColor_256.webp",
-          "bytes": 3218,
+          "bytes": 3362,
           "tiers": [
             "mobile"
           ],
@@ -519,7 +524,7 @@
         },
         {
           "path": "textures/basalt_dressed/normal_512.webp",
-          "bytes": 125966,
+          "bytes": 148480,
           "tiers": [
             "ultra",
             "high"
@@ -530,7 +535,7 @@
         },
         {
           "path": "textures/basalt_dressed/normal_256.webp",
-          "bytes": 33768,
+          "bytes": 30142,
           "tiers": [
             "mobile"
           ],
@@ -540,7 +545,7 @@
         },
         {
           "path": "textures/basalt_dressed/orm_512.webp",
-          "bytes": 18944,
+          "bytes": 17352,
           "tiers": [
             "ultra",
             "high"
@@ -551,7 +556,7 @@
         },
         {
           "path": "textures/basalt_dressed/orm_256.webp",
-          "bytes": 8162,
+          "bytes": 8206,
           "tiers": [
             "mobile"
           ],
@@ -565,60 +570,60 @@
           "baseColor": {
             "ultra": {
               "path": "textures/basalt_dressed/baseColor_1024.webp",
-              "bytes": 22216,
+              "bytes": 24544,
               "size": 1024
             },
             "high": {
               "path": "textures/basalt_dressed/baseColor_512.webp",
-              "bytes": 8344,
+              "bytes": 8204,
               "size": 512
             },
             "mobile": {
               "path": "textures/basalt_dressed/baseColor_256.webp",
-              "bytes": 3218,
+              "bytes": 3362,
               "size": 256
             }
           },
           "normal": {
             "ultra": {
               "path": "textures/basalt_dressed/normal_512.webp",
-              "bytes": 125966,
+              "bytes": 148480,
               "size": 512
             },
             "high": {
               "path": "textures/basalt_dressed/normal_512.webp",
-              "bytes": 125966,
+              "bytes": 148480,
               "size": 512
             },
             "mobile": {
               "path": "textures/basalt_dressed/normal_256.webp",
-              "bytes": 33768,
+              "bytes": 30142,
               "size": 256
             }
           },
           "orm": {
             "ultra": {
               "path": "textures/basalt_dressed/orm_512.webp",
-              "bytes": 18944,
+              "bytes": 17352,
               "size": 512
             },
             "high": {
               "path": "textures/basalt_dressed/orm_512.webp",
-              "bytes": 18944,
+              "bytes": 17352,
               "size": 512
             },
             "mobile": {
               "path": "textures/basalt_dressed/orm_256.webp",
-              "bytes": 8162,
+              "bytes": 8206,
               "size": 256
             }
           }
         }
       },
       "bytes": {
-        "ultra": 167126,
-        "high": 153254,
-        "mobile": 45148
+        "ultra": 190376,
+        "high": 174036,
+        "mobile": 41710
       }
     },
     "brick_fired_old": {
@@ -3366,11 +3371,11 @@
       "kind": "material",
       "category": "materials",
       "script": "tools/blender/assets/materials/laterite_block.py",
-      "inputHash": "cf7114d2292605585827a1bd77ca93812b9e358dc126031e2c792c9b64d43854",
+      "inputHash": "95aa03bde947f9c14a83946f1c42bfa92c971c1ec84448e4fe4519d5d4e41caf",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
-        "averageColor": "#8f4a34",
+        "averageColor": "#8f5240",
         "decals": [],
         "description": "Laterite block masonry (2 m): 0.6 x 0.3 m vesicular red-brown blocks with ochre and pale clay-lined pits, manganese spots, chipped arrises, dry joints, dark crust patches.",
         "heightRangeMeters": [
@@ -3395,10 +3400,13 @@
             0.1,
             0.24
           ],
-          "lumMean": 0.1098,
-          "lumP2": 0.0493,
-          "lumP98": 0.1918,
-          "meanColor": "#8f4a34",
+          "lumMean": 0.1224,
+          "lumP2": 0.0547,
+          "lumP98": 0.2168,
+          "meanColor": "#8f5240",
+          "ormRP5": 0.648,
+          "ormRP95": 1,
+          "ormRSpan": 0.352,
           "roughMean": 0.9,
           "roughP5": 0.8,
           "roughP95": 0.98,
@@ -3406,10 +3414,12 @@
             0.8,
             0.98
           ],
-          "satMean": 0.637,
-          "satP95": 0.671,
+          "satMean": 0.553,
+          "satP95": 0.587,
+          "satP98": 0.594,
           "saturationLimit": 0.6,
-          "target": "#8f4a34"
+          "target": "#8f5240",
+          "valueP98": 0.681
         },
         "roughness": 0.9,
         "setClass": "C",
@@ -3422,7 +3432,7 @@
       "files": [
         {
           "path": "textures/laterite_block/baseColor_1024.webp",
-          "bytes": 193696,
+          "bytes": 192812,
           "tiers": [
             "ultra"
           ],
@@ -3432,7 +3442,7 @@
         },
         {
           "path": "textures/laterite_block/baseColor_512.webp",
-          "bytes": 72072,
+          "bytes": 71756,
           "tiers": [
             "high"
           ],
@@ -3442,7 +3452,7 @@
         },
         {
           "path": "textures/laterite_block/baseColor_256.webp",
-          "bytes": 20950,
+          "bytes": 20856,
           "tiers": [
             "mobile"
           ],
@@ -3473,7 +3483,7 @@
         },
         {
           "path": "textures/laterite_block/orm_512.webp",
-          "bytes": 51388,
+          "bytes": 51380,
           "tiers": [
             "ultra",
             "high"
@@ -3484,7 +3494,7 @@
         },
         {
           "path": "textures/laterite_block/orm_256.webp",
-          "bytes": 16738,
+          "bytes": 16782,
           "tiers": [
             "mobile"
           ],
@@ -3498,17 +3508,17 @@
           "baseColor": {
             "ultra": {
               "path": "textures/laterite_block/baseColor_1024.webp",
-              "bytes": 193696,
+              "bytes": 192812,
               "size": 1024
             },
             "high": {
               "path": "textures/laterite_block/baseColor_512.webp",
-              "bytes": 72072,
+              "bytes": 71756,
               "size": 512
             },
             "mobile": {
               "path": "textures/laterite_block/baseColor_256.webp",
-              "bytes": 20950,
+              "bytes": 20856,
               "size": 256
             }
           },
@@ -3532,26 +3542,26 @@
           "orm": {
             "ultra": {
               "path": "textures/laterite_block/orm_512.webp",
-              "bytes": 51388,
+              "bytes": 51380,
               "size": 512
             },
             "high": {
               "path": "textures/laterite_block/orm_512.webp",
-              "bytes": 51388,
+              "bytes": 51380,
               "size": 512
             },
             "mobile": {
               "path": "textures/laterite_block/orm_256.webp",
-              "bytes": 16738,
+              "bytes": 16782,
               "size": 256
             }
           }
         }
       },
       "bytes": {
-        "ultra": 601378,
-        "high": 479754,
-        "mobile": 137730
+        "ultra": 600486,
+        "high": 479430,
+        "mobile": 137680
       }
     },
     "lens_dirt": {
@@ -5644,7 +5654,7 @@
       "kind": "material",
       "category": "materials",
       "script": "tools/blender/assets/materials/sandstone_polished_mauryan.py",
-      "inputHash": "e43711a0e44985391066d2642665f8ca4894b4240000ebf81bf757a3c889b1b8",
+      "inputHash": "fb84355e6c03a5088f13dececfafcf352f75cc8ae0eba003330475fb520e6c67",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -5662,7 +5672,7 @@
             0.012,
             0.84
           ],
-          "deltaLumPct": -0.05,
+          "deltaLumPct": 0,
           "deltaRgbPct": [
             0,
             0,
@@ -5673,10 +5683,13 @@
             0.18,
             0.42
           ],
-          "lumMean": 0.5083,
-          "lumP2": 0.4416,
-          "lumP98": 0.5351,
+          "lumMean": 0.5085,
+          "lumP2": 0.4418,
+          "lumP98": 0.5354,
           "meanColor": "#cdbb9a",
+          "ormRP5": 0.997,
+          "ormRP95": 0.999,
+          "ormRSpan": 0.002,
           "roughMean": 0.18,
           "roughP5": 0.1,
           "roughP95": 0.32,
@@ -5684,10 +5697,12 @@
             0.1,
             0.32
           ],
-          "satMean": 0.247,
-          "satP95": 0.253,
+          "satMean": 0.249,
+          "satP95": 0.255,
+          "satP98": 0.256,
           "saturationLimit": 0.45,
-          "target": "#cdbb9a"
+          "target": "#cdbb9a",
+          "valueP98": 0.82
         },
         "roughness": 0.18,
         "setClass": "C",
@@ -5700,7 +5715,7 @@
       "files": [
         {
           "path": "textures/sandstone_polished_mauryan/baseColor_1024.webp",
-          "bytes": 87762,
+          "bytes": 85598,
           "tiers": [
             "ultra"
           ],
@@ -5710,7 +5725,7 @@
         },
         {
           "path": "textures/sandstone_polished_mauryan/baseColor_512.webp",
-          "bytes": 2732,
+          "bytes": 2852,
           "tiers": [
             "high"
           ],
@@ -5720,7 +5735,7 @@
         },
         {
           "path": "textures/sandstone_polished_mauryan/baseColor_256.webp",
-          "bytes": 800,
+          "bytes": 854,
           "tiers": [
             "mobile"
           ],
@@ -5776,17 +5791,17 @@
           "baseColor": {
             "ultra": {
               "path": "textures/sandstone_polished_mauryan/baseColor_1024.webp",
-              "bytes": 87762,
+              "bytes": 85598,
               "size": 1024
             },
             "high": {
               "path": "textures/sandstone_polished_mauryan/baseColor_512.webp",
-              "bytes": 2732,
+              "bytes": 2852,
               "size": 512
             },
             "mobile": {
               "path": "textures/sandstone_polished_mauryan/baseColor_256.webp",
-              "bytes": 800,
+              "bytes": 854,
               "size": 256
             }
           },
@@ -5827,9 +5842,9 @@
         }
       },
       "bytes": {
-        "ultra": 189846,
-        "high": 104816,
-        "mobile": 20056
+        "ultra": 187682,
+        "high": 104936,
+        "mobile": 20110
       }
     },
     "sandstone_red_ashlar": {
@@ -7646,7 +7661,7 @@
       "kind": "material",
       "category": "terrain",
       "script": "tools/blender/assets/terrain/terrain_alluvial_silt.py",
-      "inputHash": "90176a5a7ecee5760068654d8d2359be2551c8e836d0520bdb9bfa9f79e4519e",
+      "inputHash": "c8c66ecd24946606f54e947282301e748757457dbec806161f8083f94251652f",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -7655,7 +7670,7 @@
         "description": "Gangetic alluvial silt (4 m): dried ripple patches, curled mud-crack flakes, sparse hoof and foot prints, pale crests, damp hollows; macro-neutral.",
         "heightRangeMeters": [
           -0.0151,
-          0.00661
+          0.0066
         ],
         "metalness": 0,
         "normalScale": 0.7,
@@ -7675,10 +7690,15 @@
             0.15,
             0.32
           ],
+          "heightMix": 0.5,
           "lumMean": 0.2125,
-          "lumP2": 0.1828,
+          "lumP2": 0.1829,
           "lumP98": 0.2676,
           "meanColor": "#8d7d64",
+          "ormRMean": 0.758,
+          "ormRP5": 0.598,
+          "ormRP95": 0.945,
+          "ormRSpan": 0.347,
           "roughMean": 0.92,
           "roughP5": 0.88,
           "roughP95": 0.96,
@@ -7688,8 +7708,10 @@
           ],
           "satMean": 0.291,
           "satP95": 0.297,
+          "satP98": 0.298,
           "saturationLimit": 0.45,
-          "target": "#8d7d64"
+          "target": "#8d7d64",
+          "valueP98": 0.61
         },
         "roughness": 0.92,
         "setClass": "T",
@@ -7702,7 +7724,7 @@
       "files": [
         {
           "path": "textures/terrain_alluvial_silt/baseColor_1024.webp",
-          "bytes": 45176,
+          "bytes": 44966,
           "tiers": [
             "ultra"
           ],
@@ -7712,7 +7734,7 @@
         },
         {
           "path": "textures/terrain_alluvial_silt/baseColor_512.webp",
-          "bytes": 17294,
+          "bytes": 17498,
           "tiers": [
             "high"
           ],
@@ -7722,7 +7744,7 @@
         },
         {
           "path": "textures/terrain_alluvial_silt/baseColor_256.webp",
-          "bytes": 5938,
+          "bytes": 5970,
           "tiers": [
             "mobile"
           ],
@@ -7732,7 +7754,7 @@
         },
         {
           "path": "textures/terrain_alluvial_silt/normal_512.webp",
-          "bytes": 166338,
+          "bytes": 166290,
           "tiers": [
             "ultra",
             "high"
@@ -7743,7 +7765,7 @@
         },
         {
           "path": "textures/terrain_alluvial_silt/normal_256.webp",
-          "bytes": 42478,
+          "bytes": 42480,
           "tiers": [
             "mobile"
           ],
@@ -7753,7 +7775,7 @@
         },
         {
           "path": "textures/terrain_alluvial_silt/orm_512.webp",
-          "bytes": 17728,
+          "bytes": 32940,
           "tiers": [
             "ultra",
             "high"
@@ -7764,7 +7786,7 @@
         },
         {
           "path": "textures/terrain_alluvial_silt/orm_256.webp",
-          "bytes": 7466,
+          "bytes": 13946,
           "tiers": [
             "mobile"
           ],
@@ -7778,60 +7800,60 @@
           "baseColor": {
             "ultra": {
               "path": "textures/terrain_alluvial_silt/baseColor_1024.webp",
-              "bytes": 45176,
+              "bytes": 44966,
               "size": 1024
             },
             "high": {
               "path": "textures/terrain_alluvial_silt/baseColor_512.webp",
-              "bytes": 17294,
+              "bytes": 17498,
               "size": 512
             },
             "mobile": {
               "path": "textures/terrain_alluvial_silt/baseColor_256.webp",
-              "bytes": 5938,
+              "bytes": 5970,
               "size": 256
             }
           },
           "normal": {
             "ultra": {
               "path": "textures/terrain_alluvial_silt/normal_512.webp",
-              "bytes": 166338,
+              "bytes": 166290,
               "size": 512
             },
             "high": {
               "path": "textures/terrain_alluvial_silt/normal_512.webp",
-              "bytes": 166338,
+              "bytes": 166290,
               "size": 512
             },
             "mobile": {
               "path": "textures/terrain_alluvial_silt/normal_256.webp",
-              "bytes": 42478,
+              "bytes": 42480,
               "size": 256
             }
           },
           "orm": {
             "ultra": {
               "path": "textures/terrain_alluvial_silt/orm_512.webp",
-              "bytes": 17728,
+              "bytes": 32940,
               "size": 512
             },
             "high": {
               "path": "textures/terrain_alluvial_silt/orm_512.webp",
-              "bytes": 17728,
+              "bytes": 32940,
               "size": 512
             },
             "mobile": {
               "path": "textures/terrain_alluvial_silt/orm_256.webp",
-              "bytes": 7466,
+              "bytes": 13946,
               "size": 256
             }
           }
         }
       },
       "bytes": {
-        "ultra": 229242,
-        "high": 201360,
-        "mobile": 55882
+        "ultra": 244196,
+        "high": 216728,
+        "mobile": 62396
       }
     },
     "terrain_black_soil": {
@@ -8039,7 +8061,7 @@
       "kind": "material",
       "category": "terrain",
       "script": "tools/blender/assets/terrain/terrain_farmland_tilled.py",
-      "inputHash": "6c4689a988dd33c27c6314fa419924cdd0372532c0a389df0558751a5a13046e",
+      "inputHash": "a23b0be830bf72d532046203d2d86295640d9bcf6f7e0d3baba0cd7d59b50334",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -8070,10 +8092,15 @@
             0.15,
             0.32
           ],
+          "heightMix": 0.4,
           "lumMean": 0.1532,
           "lumP2": 0.0875,
           "lumP98": 0.2528,
           "meanColor": "#7e6a50",
+          "ormRMean": 0.77,
+          "ormRP5": 0.596,
+          "ormRP95": 0.944,
+          "ormRSpan": 0.349,
           "roughMean": 0.95,
           "roughP5": 0.92,
           "roughP95": 0.98,
@@ -8083,8 +8110,10 @@
           ],
           "satMean": 0.372,
           "satP95": 0.402,
+          "satP98": 0.402,
           "saturationLimit": 0.45,
-          "target": "#7e6a50"
+          "target": "#7e6a50",
+          "valueP98": 0.609
         },
         "roughness": 0.95,
         "setClass": "T",
@@ -8097,7 +8126,7 @@
       "files": [
         {
           "path": "textures/terrain_farmland_tilled/baseColor_1024.webp",
-          "bytes": 121584,
+          "bytes": 121640,
           "tiers": [
             "ultra"
           ],
@@ -8107,7 +8136,7 @@
         },
         {
           "path": "textures/terrain_farmland_tilled/baseColor_512.webp",
-          "bytes": 40440,
+          "bytes": 40420,
           "tiers": [
             "high"
           ],
@@ -8117,7 +8146,7 @@
         },
         {
           "path": "textures/terrain_farmland_tilled/baseColor_256.webp",
-          "bytes": 10718,
+          "bytes": 10702,
           "tiers": [
             "mobile"
           ],
@@ -8148,7 +8177,7 @@
         },
         {
           "path": "textures/terrain_farmland_tilled/orm_512.webp",
-          "bytes": 24186,
+          "bytes": 33376,
           "tiers": [
             "ultra",
             "high"
@@ -8159,7 +8188,7 @@
         },
         {
           "path": "textures/terrain_farmland_tilled/orm_256.webp",
-          "bytes": 7436,
+          "bytes": 11158,
           "tiers": [
             "mobile"
           ],
@@ -8173,17 +8202,17 @@
           "baseColor": {
             "ultra": {
               "path": "textures/terrain_farmland_tilled/baseColor_1024.webp",
-              "bytes": 121584,
+              "bytes": 121640,
               "size": 1024
             },
             "high": {
               "path": "textures/terrain_farmland_tilled/baseColor_512.webp",
-              "bytes": 40440,
+              "bytes": 40420,
               "size": 512
             },
             "mobile": {
               "path": "textures/terrain_farmland_tilled/baseColor_256.webp",
-              "bytes": 10718,
+              "bytes": 10702,
               "size": 256
             }
           },
@@ -8207,26 +8236,26 @@
           "orm": {
             "ultra": {
               "path": "textures/terrain_farmland_tilled/orm_512.webp",
-              "bytes": 24186,
+              "bytes": 33376,
               "size": 512
             },
             "high": {
               "path": "textures/terrain_farmland_tilled/orm_512.webp",
-              "bytes": 24186,
+              "bytes": 33376,
               "size": 512
             },
             "mobile": {
               "path": "textures/terrain_farmland_tilled/orm_256.webp",
-              "bytes": 7436,
+              "bytes": 11158,
               "size": 256
             }
           }
         }
       },
       "bytes": {
-        "ultra": 520806,
-        "high": 439662,
-        "mobile": 114252
+        "ultra": 530052,
+        "high": 448832,
+        "mobile": 117958
       }
     },
     "terrain_flagstone": {
@@ -9034,11 +9063,11 @@
       "kind": "material",
       "category": "terrain",
       "script": "tools/blender/assets/terrain/terrain_laterite_soil.py",
-      "inputHash": "2973f0bee40e8314ab392fbb0090563c4452089b8d18eeb3915225db889b0d03",
+      "inputHash": "6707e8d4aa99fc490382663b6cd043e61939b6899a5c9d5bdd4b1f75c83bb3b9",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
-        "averageColor": "#8e5038",
+        "averageColor": "#8e5a44",
         "decals": [],
         "description": "Laterite soil (4 m): brick-red clay with ferruginous pisolith gravel, vesicular laterite fragments, rain-wash channels, dry grass and leaves; macro-neutral.",
         "heightRangeMeters": [
@@ -9063,10 +9092,15 @@
             0.15,
             0.32
           ],
-          "lumMean": 0.1177,
-          "lumP2": 0.032,
-          "lumP98": 0.1565,
-          "meanColor": "#8e5038",
+          "heightMix": 0.45,
+          "lumMean": 0.1348,
+          "lumP2": 0.0369,
+          "lumP98": 0.1794,
+          "meanColor": "#8e5a44",
+          "ormRMean": 0.742,
+          "ormRP5": 0.574,
+          "ormRP95": 0.912,
+          "ormRSpan": 0.338,
           "roughMean": 0.93,
           "roughP5": 0.89,
           "roughP95": 0.97,
@@ -9074,10 +9108,12 @@
             0.89,
             0.97
           ],
-          "satMean": 0.606,
-          "satP95": 0.637,
+          "satMean": 0.52,
+          "satP95": 0.555,
+          "satP98": 0.562,
           "saturationLimit": 0.45,
-          "target": "#8e5038"
+          "target": "#8e5a44",
+          "valueP98": 0.63
         },
         "roughness": 0.93,
         "setClass": "T",
@@ -9090,7 +9126,7 @@
       "files": [
         {
           "path": "textures/terrain_laterite_soil/baseColor_1024.webp",
-          "bytes": 399990,
+          "bytes": 408540,
           "tiers": [
             "ultra"
           ],
@@ -9100,7 +9136,7 @@
         },
         {
           "path": "textures/terrain_laterite_soil/baseColor_512.webp",
-          "bytes": 109192,
+          "bytes": 110432,
           "tiers": [
             "high"
           ],
@@ -9110,7 +9146,7 @@
         },
         {
           "path": "textures/terrain_laterite_soil/baseColor_256.webp",
-          "bytes": 21084,
+          "bytes": 20968,
           "tiers": [
             "mobile"
           ],
@@ -9141,7 +9177,7 @@
         },
         {
           "path": "textures/terrain_laterite_soil/orm_512.webp",
-          "bytes": 28158,
+          "bytes": 41342,
           "tiers": [
             "ultra",
             "high"
@@ -9152,7 +9188,7 @@
         },
         {
           "path": "textures/terrain_laterite_soil/orm_256.webp",
-          "bytes": 8838,
+          "bytes": 15308,
           "tiers": [
             "mobile"
           ],
@@ -9166,17 +9202,17 @@
           "baseColor": {
             "ultra": {
               "path": "textures/terrain_laterite_soil/baseColor_1024.webp",
-              "bytes": 399990,
+              "bytes": 408540,
               "size": 1024
             },
             "high": {
               "path": "textures/terrain_laterite_soil/baseColor_512.webp",
-              "bytes": 109192,
+              "bytes": 110432,
               "size": 512
             },
             "mobile": {
               "path": "textures/terrain_laterite_soil/baseColor_256.webp",
-              "bytes": 21084,
+              "bytes": 20968,
               "size": 256
             }
           },
@@ -9200,26 +9236,26 @@
           "orm": {
             "ultra": {
               "path": "textures/terrain_laterite_soil/orm_512.webp",
-              "bytes": 28158,
+              "bytes": 41342,
               "size": 512
             },
             "high": {
               "path": "textures/terrain_laterite_soil/orm_512.webp",
-              "bytes": 28158,
+              "bytes": 41342,
               "size": 512
             },
             "mobile": {
               "path": "textures/terrain_laterite_soil/orm_256.webp",
-              "bytes": 8838,
+              "bytes": 15308,
               "size": 256
             }
           }
         }
       },
       "bytes": {
-        "ultra": 763142,
-        "high": 472344,
-        "mobile": 110086
+        "ultra": 784876,
+        "high": 486768,
+        "mobile": 116440
       }
     },
     "terrain_mud_wet": {
@@ -9639,7 +9675,7 @@
       "kind": "material",
       "category": "terrain",
       "script": "tools/blender/assets/terrain/terrain_pebbles.py",
-      "inputHash": "c77010eb28bf1f87980406e616b8ece8f1df31e3f3e80e3cb1cc65c7fa53b374",
+      "inputHash": "f795a020e9d20ba784cd452740421d86c4abcf1c7b837695e23d347d8a52e60d",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -9668,10 +9704,15 @@
             0.18,
             0.42
           ],
+          "heightMix": 0.35,
           "lumMean": 0.2278,
           "lumP2": 0.0977,
           "lumP98": 0.5341,
           "meanColor": "#8c8273",
+          "ormRMean": 0.711,
+          "ormRP5": 0.519,
+          "ormRP95": 0.96,
+          "ormRSpan": 0.441,
           "roughMean": 0.75,
           "roughP5": 0.65,
           "roughP95": 0.85,
@@ -9681,8 +9722,10 @@
           ],
           "satMean": 0.176,
           "satP95": 0.275,
+          "satP98": 0.287,
           "saturationLimit": 0.45,
-          "target": "#8c8273"
+          "target": "#8c8273",
+          "valueP98": 0.782
         },
         "roughness": 0.75,
         "setClass": "T",
@@ -9695,7 +9738,7 @@
       "files": [
         {
           "path": "textures/terrain_pebbles/baseColor_1024.webp",
-          "bytes": 174548,
+          "bytes": 174598,
           "tiers": [
             "ultra"
           ],
@@ -9705,7 +9748,7 @@
         },
         {
           "path": "textures/terrain_pebbles/baseColor_512.webp",
-          "bytes": 66892,
+          "bytes": 67202,
           "tiers": [
             "high"
           ],
@@ -9715,7 +9758,7 @@
         },
         {
           "path": "textures/terrain_pebbles/baseColor_256.webp",
-          "bytes": 22090,
+          "bytes": 21988,
           "tiers": [
             "mobile"
           ],
@@ -9746,7 +9789,7 @@
         },
         {
           "path": "textures/terrain_pebbles/orm_512.webp",
-          "bytes": 39258,
+          "bytes": 39146,
           "tiers": [
             "ultra",
             "high"
@@ -9757,7 +9800,7 @@
         },
         {
           "path": "textures/terrain_pebbles/orm_256.webp",
-          "bytes": 16112,
+          "bytes": 15556,
           "tiers": [
             "mobile"
           ],
@@ -9771,17 +9814,17 @@
           "baseColor": {
             "ultra": {
               "path": "textures/terrain_pebbles/baseColor_1024.webp",
-              "bytes": 174548,
+              "bytes": 174598,
               "size": 1024
             },
             "high": {
               "path": "textures/terrain_pebbles/baseColor_512.webp",
-              "bytes": 66892,
+              "bytes": 67202,
               "size": 512
             },
             "mobile": {
               "path": "textures/terrain_pebbles/baseColor_256.webp",
-              "bytes": 22090,
+              "bytes": 21988,
               "size": 256
             }
           },
@@ -9805,26 +9848,26 @@
           "orm": {
             "ultra": {
               "path": "textures/terrain_pebbles/orm_512.webp",
-              "bytes": 39258,
+              "bytes": 39146,
               "size": 512
             },
             "high": {
               "path": "textures/terrain_pebbles/orm_512.webp",
-              "bytes": 39258,
+              "bytes": 39146,
               "size": 512
             },
             "mobile": {
               "path": "textures/terrain_pebbles/orm_256.webp",
-              "bytes": 16112,
+              "bytes": 15556,
               "size": 256
             }
           }
         }
       },
       "bytes": {
-        "ultra": 619840,
-        "high": 512184,
-        "mobile": 152928
+        "ultra": 619778,
+        "high": 512382,
+        "mobile": 152270
       }
     },
     "terrain_river_sand": {
@@ -10032,7 +10075,7 @@
       "kind": "material",
       "category": "terrain",
       "script": "tools/blender/assets/terrain/terrain_road_earth.py",
-      "inputHash": "d6b4a5225893a4b1efc7cadf68831ab98d6f3538b293c6a4e8f7bceb8ad388e7",
+      "inputHash": "0f3808be1bb82d678c5102c7db779d7cd9e5c08c88e7904fa5be8fe65bd6ff68",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -10041,7 +10084,7 @@
         "description": "Packed-earth road (4 m, u along the road): two bullock-cart ruts 1.4 m apart, hoof-churned centre, footprints on the shoulders, pebbles, straw, dust; macro-neutral.",
         "heightRangeMeters": [
           -0.02346,
-          0.01347
+          0.01346
         ],
         "metalness": 0,
         "normalScale": 1,
@@ -10061,10 +10104,15 @@
             0.15,
             0.32
           ],
+          "heightMix": 0.4,
           "lumMean": 0.226,
-          "lumP2": 0.1872,
+          "lumP2": 0.1873,
           "lumP98": 0.2776,
           "meanColor": "#9a7e5e",
+          "ormRMean": 0.841,
+          "ormRP5": 0.626,
+          "ormRP95": 0.975,
+          "ormRSpan": 0.349,
           "roughMean": 0.88,
           "roughP5": 0.83,
           "roughP95": 0.93,
@@ -10074,8 +10122,10 @@
           ],
           "satMean": 0.391,
           "satP95": 0.407,
+          "satP98": 0.408,
           "saturationLimit": 0.45,
-          "target": "#9a7e5e"
+          "target": "#9a7e5e",
+          "valueP98": 0.651
         },
         "roughness": 0.88,
         "ruts": {
@@ -10097,7 +10147,7 @@
       "files": [
         {
           "path": "textures/terrain_road_earth/baseColor_1024.webp",
-          "bytes": 83482,
+          "bytes": 82274,
           "tiers": [
             "ultra"
           ],
@@ -10107,7 +10157,7 @@
         },
         {
           "path": "textures/terrain_road_earth/baseColor_512.webp",
-          "bytes": 24732,
+          "bytes": 24652,
           "tiers": [
             "high"
           ],
@@ -10117,7 +10167,7 @@
         },
         {
           "path": "textures/terrain_road_earth/baseColor_256.webp",
-          "bytes": 5728,
+          "bytes": 5490,
           "tiers": [
             "mobile"
           ],
@@ -10127,7 +10177,7 @@
         },
         {
           "path": "textures/terrain_road_earth/normal_512.webp",
-          "bytes": 211812,
+          "bytes": 211606,
           "tiers": [
             "ultra",
             "high"
@@ -10138,7 +10188,7 @@
         },
         {
           "path": "textures/terrain_road_earth/normal_256.webp",
-          "bytes": 52156,
+          "bytes": 51864,
           "tiers": [
             "mobile"
           ],
@@ -10148,7 +10198,7 @@
         },
         {
           "path": "textures/terrain_road_earth/orm_512.webp",
-          "bytes": 14444,
+          "bytes": 24344,
           "tiers": [
             "ultra",
             "high"
@@ -10159,7 +10209,7 @@
         },
         {
           "path": "textures/terrain_road_earth/orm_256.webp",
-          "bytes": 5260,
+          "bytes": 8844,
           "tiers": [
             "mobile"
           ],
@@ -10173,60 +10223,60 @@
           "baseColor": {
             "ultra": {
               "path": "textures/terrain_road_earth/baseColor_1024.webp",
-              "bytes": 83482,
+              "bytes": 82274,
               "size": 1024
             },
             "high": {
               "path": "textures/terrain_road_earth/baseColor_512.webp",
-              "bytes": 24732,
+              "bytes": 24652,
               "size": 512
             },
             "mobile": {
               "path": "textures/terrain_road_earth/baseColor_256.webp",
-              "bytes": 5728,
+              "bytes": 5490,
               "size": 256
             }
           },
           "normal": {
             "ultra": {
               "path": "textures/terrain_road_earth/normal_512.webp",
-              "bytes": 211812,
+              "bytes": 211606,
               "size": 512
             },
             "high": {
               "path": "textures/terrain_road_earth/normal_512.webp",
-              "bytes": 211812,
+              "bytes": 211606,
               "size": 512
             },
             "mobile": {
               "path": "textures/terrain_road_earth/normal_256.webp",
-              "bytes": 52156,
+              "bytes": 51864,
               "size": 256
             }
           },
           "orm": {
             "ultra": {
               "path": "textures/terrain_road_earth/orm_512.webp",
-              "bytes": 14444,
+              "bytes": 24344,
               "size": 512
             },
             "high": {
               "path": "textures/terrain_road_earth/orm_512.webp",
-              "bytes": 14444,
+              "bytes": 24344,
               "size": 512
             },
             "mobile": {
               "path": "textures/terrain_road_earth/orm_256.webp",
-              "bytes": 5260,
+              "bytes": 8844,
               "size": 256
             }
           }
         }
       },
       "bytes": {
-        "ultra": 309738,
-        "high": 250988,
-        "mobile": 63144
+        "ultra": 318224,
+        "high": 260602,
+        "mobile": 66198
       }
     },
     "terrain_rock_basalt": {
@@ -11362,7 +11412,7 @@
       "kind": "material",
       "category": "materials",
       "script": "tools/blender/assets/materials/timber_sal_weathered.py",
-      "inputHash": "b8a0577c263b713bd76cbe5a6db8e5c187a29c6b7d92f4127a943d99e85aa846",
+      "inputHash": "e6295dacd692e57b6bb814699b048c0c1c31ac645e9651f9c5bf17a51d4636c4",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -11381,7 +11431,7 @@
             0.012,
             0.84
           ],
-          "deltaLumPct": 0.01,
+          "deltaLumPct": 0,
           "deltaRgbPct": [
             0,
             0,
@@ -11396,6 +11446,9 @@
           "lumP2": 0.0278,
           "lumP98": 0.0897,
           "meanColor": "#5e4631",
+          "ormRP5": 0.947,
+          "ormRP95": 1,
+          "ormRSpan": 0.053,
           "roughMean": 0.8,
           "roughP5": 0.65,
           "roughP95": 0.92,
@@ -11405,8 +11458,10 @@
           ],
           "satMean": 0.483,
           "satP95": 0.528,
+          "satP98": 0.606,
           "saturationLimit": 0.6,
-          "target": "#5e4631"
+          "target": "#5e4631",
+          "valueP98": 0.415
         },
         "roughness": 0.8,
         "setClass": "C",
@@ -11419,7 +11474,7 @@
       "files": [
         {
           "path": "textures/timber_sal_weathered/baseColor_1024.webp",
-          "bytes": 56464,
+          "bytes": 56400,
           "tiers": [
             "ultra"
           ],
@@ -11429,7 +11484,7 @@
         },
         {
           "path": "textures/timber_sal_weathered/baseColor_512.webp",
-          "bytes": 9216,
+          "bytes": 9134,
           "tiers": [
             "high"
           ],
@@ -11439,7 +11494,7 @@
         },
         {
           "path": "textures/timber_sal_weathered/baseColor_256.webp",
-          "bytes": 2914,
+          "bytes": 2886,
           "tiers": [
             "mobile"
           ],
@@ -11470,7 +11525,7 @@
         },
         {
           "path": "textures/timber_sal_weathered/orm_512.webp",
-          "bytes": 38100,
+          "bytes": 38178,
           "tiers": [
             "ultra",
             "high"
@@ -11495,17 +11550,17 @@
           "baseColor": {
             "ultra": {
               "path": "textures/timber_sal_weathered/baseColor_1024.webp",
-              "bytes": 56464,
+              "bytes": 56400,
               "size": 1024
             },
             "high": {
               "path": "textures/timber_sal_weathered/baseColor_512.webp",
-              "bytes": 9216,
+              "bytes": 9134,
               "size": 512
             },
             "mobile": {
               "path": "textures/timber_sal_weathered/baseColor_256.webp",
-              "bytes": 2914,
+              "bytes": 2886,
               "size": 256
             }
           },
@@ -11529,12 +11584,12 @@
           "orm": {
             "ultra": {
               "path": "textures/timber_sal_weathered/orm_512.webp",
-              "bytes": 38100,
+              "bytes": 38178,
               "size": 512
             },
             "high": {
               "path": "textures/timber_sal_weathered/orm_512.webp",
-              "bytes": 38100,
+              "bytes": 38178,
               "size": 512
             },
             "mobile": {
@@ -11546,9 +11601,9 @@
         }
       },
       "bytes": {
-        "ultra": 275160,
-        "high": 227912,
-        "mobile": 55746
+        "ultra": 275174,
+        "high": 227908,
+        "mobile": 55718
       }
     },
     "timber_teak_carved": {

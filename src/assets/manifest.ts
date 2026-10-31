@@ -9,9 +9,9 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 31902250,
-    "high": 17492017,
-    "mobile": 6071356
+    "ultra": 31976816,
+    "high": 17561365,
+    "mobile": 6086864
   },
   "assets": {
     "bamboo_lattice": {
@@ -309,12 +309,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "basalt_dressed",
       "category": "materials",
-      "hash": "dc30a289f7",
-      "description": "Chisel-dressed basalt ashlar (3 m): diagonal tooling per block, drafted margins, tight joints, hand-polished patches, weathering rind, salt bloom.",
+      "hash": "77de701cab",
+      "description": "Chisel-dressed basalt ashlar (3 m): diagonal tooling and point-chisel pocks per block, drafted margins, hand-polished arrises and patches, tight joints, weathering rind, salt bloom.",
       "bytes": {
-        "ultra": 167126,
-        "high": 153254,
-        "mobile": 45148
+        "ultra": 190376,
+        "high": 174036,
+        "mobile": 41710
       },
       "tiers": [
         "ultra",
@@ -335,51 +335,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/basalt_dressed/baseColor_1024.webp",
-            "bytes": 22216,
+            "bytes": 24544,
             "size": 1024
           },
           "high": {
             "url": "textures/basalt_dressed/baseColor_512.webp",
-            "bytes": 8344,
+            "bytes": 8204,
             "size": 512
           },
           "mobile": {
             "url": "textures/basalt_dressed/baseColor_256.webp",
-            "bytes": 3218,
+            "bytes": 3362,
             "size": 256
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/basalt_dressed/normal_512.webp",
-            "bytes": 125966,
+            "bytes": 148480,
             "size": 512
           },
           "high": {
             "url": "textures/basalt_dressed/normal_512.webp",
-            "bytes": 125966,
+            "bytes": 148480,
             "size": 512
           },
           "mobile": {
             "url": "textures/basalt_dressed/normal_256.webp",
-            "bytes": 33768,
+            "bytes": 30142,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/basalt_dressed/orm_512.webp",
-            "bytes": 18944,
+            "bytes": 17352,
             "size": 512
           },
           "high": {
             "url": "textures/basalt_dressed/orm_512.webp",
-            "bytes": 18944,
+            "bytes": 17352,
             "size": 512
           },
           "mobile": {
             "url": "textures/basalt_dressed/orm_256.webp",
-            "bytes": 8162,
+            "bytes": 8206,
             "size": 256
           }
         }
@@ -2070,12 +2070,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "laterite_block",
       "category": "materials",
-      "hash": "cf7114d229",
+      "hash": "95aa03bde9",
       "description": "Laterite block masonry (2 m): 0.6 x 0.3 m vesicular red-brown blocks with ochre and pale clay-lined pits, manganese spots, chipped arrises, dry joints, dark crust patches.",
       "bytes": {
-        "ultra": 601378,
-        "high": 479754,
-        "mobile": 137730
+        "ultra": 600486,
+        "high": 479430,
+        "mobile": 137680
       },
       "tiers": [
         "ultra",
@@ -2087,7 +2087,7 @@ export const ASSET_MANIFEST = {
         2,
         2
       ],
-      "averageColor": "#8f4a34",
+      "averageColor": "#8f5240",
       "roughness": 0.9,
       "metalness": 0,
       "normalScale": 1.3,
@@ -2096,17 +2096,17 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/laterite_block/baseColor_1024.webp",
-            "bytes": 193696,
+            "bytes": 192812,
             "size": 1024
           },
           "high": {
             "url": "textures/laterite_block/baseColor_512.webp",
-            "bytes": 72072,
+            "bytes": 71756,
             "size": 512
           },
           "mobile": {
             "url": "textures/laterite_block/baseColor_256.webp",
-            "bytes": 20950,
+            "bytes": 20856,
             "size": 256
           }
         },
@@ -2130,17 +2130,17 @@ export const ASSET_MANIFEST = {
         "orm": {
           "ultra": {
             "url": "textures/laterite_block/orm_512.webp",
-            "bytes": 51388,
+            "bytes": 51380,
             "size": 512
           },
           "high": {
             "url": "textures/laterite_block/orm_512.webp",
-            "bytes": 51388,
+            "bytes": 51380,
             "size": 512
           },
           "mobile": {
             "url": "textures/laterite_block/orm_256.webp",
-            "bytes": 16738,
+            "bytes": 16782,
             "size": 256
           }
         }
@@ -3094,12 +3094,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "sandstone_polished_mauryan",
       "category": "materials",
-      "hash": "e43711a0e4",
+      "hash": "fb84355e6c",
       "description": "Mauryan mirror-polished Chunar sandstone (2 m): cloud mottle, faint bedding wisps, dark speckle, grinding waves; polish dulled in patches. Use with clearcoat 0.6.",
       "bytes": {
-        "ultra": 189846,
-        "high": 104816,
-        "mobile": 20056
+        "ultra": 187682,
+        "high": 104936,
+        "mobile": 20110
       },
       "tiers": [
         "ultra",
@@ -3120,17 +3120,17 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/sandstone_polished_mauryan/baseColor_1024.webp",
-            "bytes": 87762,
+            "bytes": 85598,
             "size": 1024
           },
           "high": {
             "url": "textures/sandstone_polished_mauryan/baseColor_512.webp",
-            "bytes": 2732,
+            "bytes": 2852,
             "size": 512
           },
           "mobile": {
             "url": "textures/sandstone_polished_mauryan/baseColor_256.webp",
-            "bytes": 800,
+            "bytes": 854,
             "size": 256
           }
         },
@@ -4098,12 +4098,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_alluvial_silt",
       "category": "terrain",
-      "hash": "90176a5a7e",
+      "hash": "c8c66ecd24",
       "description": "Gangetic alluvial silt (4 m): dried ripple patches, curled mud-crack flakes, sparse hoof and foot prints, pale crests, damp hollows; macro-neutral.",
       "bytes": {
-        "ultra": 229242,
-        "high": 201360,
-        "mobile": 55882
+        "ultra": 244196,
+        "high": 216728,
+        "mobile": 62396
       },
       "tiers": [
         "ultra",
@@ -4124,51 +4124,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/terrain_alluvial_silt/baseColor_1024.webp",
-            "bytes": 45176,
+            "bytes": 44966,
             "size": 1024
           },
           "high": {
             "url": "textures/terrain_alluvial_silt/baseColor_512.webp",
-            "bytes": 17294,
+            "bytes": 17498,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_alluvial_silt/baseColor_256.webp",
-            "bytes": 5938,
+            "bytes": 5970,
             "size": 256
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/terrain_alluvial_silt/normal_512.webp",
-            "bytes": 166338,
+            "bytes": 166290,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_alluvial_silt/normal_512.webp",
-            "bytes": 166338,
+            "bytes": 166290,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_alluvial_silt/normal_256.webp",
-            "bytes": 42478,
+            "bytes": 42480,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/terrain_alluvial_silt/orm_512.webp",
-            "bytes": 17728,
+            "bytes": 32940,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_alluvial_silt/orm_512.webp",
-            "bytes": 17728,
+            "bytes": 32940,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_alluvial_silt/orm_256.webp",
-            "bytes": 7466,
+            "bytes": 13946,
             "size": 256
           }
         }
@@ -4258,12 +4258,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_farmland_tilled",
       "category": "terrain",
-      "hash": "6c4689a988",
+      "hash": "a23b0be830",
       "description": "Ploughed field (4 m): 13 ox-plough furrows along u (0.31 m), clods, tilth, stubble rows, straw; rotate UVs per plot; macro-neutral.",
       "bytes": {
-        "ultra": 520806,
-        "high": 439662,
-        "mobile": 114252
+        "ultra": 530052,
+        "high": 448832,
+        "mobile": 117958
       },
       "tiers": [
         "ultra",
@@ -4284,17 +4284,17 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/terrain_farmland_tilled/baseColor_1024.webp",
-            "bytes": 121584,
+            "bytes": 121640,
             "size": 1024
           },
           "high": {
             "url": "textures/terrain_farmland_tilled/baseColor_512.webp",
-            "bytes": 40440,
+            "bytes": 40420,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_farmland_tilled/baseColor_256.webp",
-            "bytes": 10718,
+            "bytes": 10702,
             "size": 256
           }
         },
@@ -4318,17 +4318,17 @@ export const ASSET_MANIFEST = {
         "orm": {
           "ultra": {
             "url": "textures/terrain_farmland_tilled/orm_512.webp",
-            "bytes": 24186,
+            "bytes": 33376,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_farmland_tilled/orm_512.webp",
-            "bytes": 24186,
+            "bytes": 33376,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_farmland_tilled/orm_256.webp",
-            "bytes": 7436,
+            "bytes": 11158,
             "size": 256
           }
         }
@@ -4658,12 +4658,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_laterite_soil",
       "category": "terrain",
-      "hash": "2973f0bee4",
+      "hash": "6707e8d4aa",
       "description": "Laterite soil (4 m): brick-red clay with ferruginous pisolith gravel, vesicular laterite fragments, rain-wash channels, dry grass and leaves; macro-neutral.",
       "bytes": {
-        "ultra": 763142,
-        "high": 472344,
-        "mobile": 110086
+        "ultra": 784876,
+        "high": 486768,
+        "mobile": 116440
       },
       "tiers": [
         "ultra",
@@ -4675,7 +4675,7 @@ export const ASSET_MANIFEST = {
         4,
         4
       ],
-      "averageColor": "#8e5038",
+      "averageColor": "#8e5a44",
       "roughness": 0.93,
       "metalness": 0,
       "normalScale": 1,
@@ -4684,17 +4684,17 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/terrain_laterite_soil/baseColor_1024.webp",
-            "bytes": 399990,
+            "bytes": 408540,
             "size": 1024
           },
           "high": {
             "url": "textures/terrain_laterite_soil/baseColor_512.webp",
-            "bytes": 109192,
+            "bytes": 110432,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_laterite_soil/baseColor_256.webp",
-            "bytes": 21084,
+            "bytes": 20968,
             "size": 256
           }
         },
@@ -4718,17 +4718,17 @@ export const ASSET_MANIFEST = {
         "orm": {
           "ultra": {
             "url": "textures/terrain_laterite_soil/orm_512.webp",
-            "bytes": 28158,
+            "bytes": 41342,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_laterite_soil/orm_512.webp",
-            "bytes": 28158,
+            "bytes": 41342,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_laterite_soil/orm_256.webp",
-            "bytes": 8838,
+            "bytes": 15308,
             "size": 256
           }
         }
@@ -4898,12 +4898,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_pebbles",
       "category": "terrain",
-      "hash": "c77010eb28",
+      "hash": "f795a020e9",
       "description": "River pebbles and gravel (2 m): packed rounded pebbles 2-10 cm of mixed stone, imbricated, angular scree, sand in the gaps, silt film; macro-neutral.",
       "bytes": {
-        "ultra": 619840,
-        "high": 512184,
-        "mobile": 152928
+        "ultra": 619778,
+        "high": 512382,
+        "mobile": 152270
       },
       "tiers": [
         "ultra",
@@ -4924,17 +4924,17 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/terrain_pebbles/baseColor_1024.webp",
-            "bytes": 174548,
+            "bytes": 174598,
             "size": 1024
           },
           "high": {
             "url": "textures/terrain_pebbles/baseColor_512.webp",
-            "bytes": 66892,
+            "bytes": 67202,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_pebbles/baseColor_256.webp",
-            "bytes": 22090,
+            "bytes": 21988,
             "size": 256
           }
         },
@@ -4958,17 +4958,17 @@ export const ASSET_MANIFEST = {
         "orm": {
           "ultra": {
             "url": "textures/terrain_pebbles/orm_512.webp",
-            "bytes": 39258,
+            "bytes": 39146,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_pebbles/orm_512.webp",
-            "bytes": 39258,
+            "bytes": 39146,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_pebbles/orm_256.webp",
-            "bytes": 16112,
+            "bytes": 15556,
             "size": 256
           }
         }
@@ -5058,12 +5058,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_road_earth",
       "category": "terrain",
-      "hash": "d6b4a52258",
+      "hash": "0f3808be1b",
       "description": "Packed-earth road (4 m, u along the road): two bullock-cart ruts 1.4 m apart, hoof-churned centre, footprints on the shoulders, pebbles, straw, dust; macro-neutral.",
       "bytes": {
-        "ultra": 309738,
-        "high": 250988,
-        "mobile": 63144
+        "ultra": 318224,
+        "high": 260602,
+        "mobile": 66198
       },
       "tiers": [
         "ultra",
@@ -5084,51 +5084,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/terrain_road_earth/baseColor_1024.webp",
-            "bytes": 83482,
+            "bytes": 82274,
             "size": 1024
           },
           "high": {
             "url": "textures/terrain_road_earth/baseColor_512.webp",
-            "bytes": 24732,
+            "bytes": 24652,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_road_earth/baseColor_256.webp",
-            "bytes": 5728,
+            "bytes": 5490,
             "size": 256
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/terrain_road_earth/normal_512.webp",
-            "bytes": 211812,
+            "bytes": 211606,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_road_earth/normal_512.webp",
-            "bytes": 211812,
+            "bytes": 211606,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_road_earth/normal_256.webp",
-            "bytes": 52156,
+            "bytes": 51864,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/terrain_road_earth/orm_512.webp",
-            "bytes": 14444,
+            "bytes": 24344,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_road_earth/orm_512.webp",
-            "bytes": 14444,
+            "bytes": 24344,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_road_earth/orm_256.webp",
-            "bytes": 5260,
+            "bytes": 8844,
             "size": 256
           }
         }
@@ -5586,12 +5586,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "timber_sal_weathered",
       "category": "materials",
-      "hash": "b8a0577c26",
+      "hash": "e6295dacd6",
       "description": "Weathered sal timber (2 m, grain along v): five adzed planks, scallops, coarse grain, checks, knots, peg holes, silvering with brown in the grooves.",
       "bytes": {
-        "ultra": 275160,
-        "high": 227912,
-        "mobile": 55746
+        "ultra": 275174,
+        "high": 227908,
+        "mobile": 55718
       },
       "tiers": [
         "ultra",
@@ -5612,17 +5612,17 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/timber_sal_weathered/baseColor_1024.webp",
-            "bytes": 56464,
+            "bytes": 56400,
             "size": 1024
           },
           "high": {
             "url": "textures/timber_sal_weathered/baseColor_512.webp",
-            "bytes": 9216,
+            "bytes": 9134,
             "size": 512
           },
           "mobile": {
             "url": "textures/timber_sal_weathered/baseColor_256.webp",
-            "bytes": 2914,
+            "bytes": 2886,
             "size": 256
           }
         },
@@ -5646,12 +5646,12 @@ export const ASSET_MANIFEST = {
         "orm": {
           "ultra": {
             "url": "textures/timber_sal_weathered/orm_512.webp",
-            "bytes": 38100,
+            "bytes": 38178,
             "size": 512
           },
           "high": {
             "url": "textures/timber_sal_weathered/orm_512.webp",
-            "bytes": 38100,
+            "bytes": 38178,
             "size": 512
           },
           "mobile": {
