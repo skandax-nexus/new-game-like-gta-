@@ -29,9 +29,9 @@ layout of both carved sandstones), `terrain/_terrainkit.py`, `decals/_decalkit.p
 
 | file | what |
 |---|---|
-| [deltas.md](deltas.md) | mean baseColor of every PUBLISHED WebP (all tiers) vs the Art Director target - all 37 targeted sets within +-6 % (worst tier: terrain_mud_wet 1.49 %) |
+| [deltas.md](deltas.md) | mean baseColor of every PUBLISHED WebP (all tiers) vs the Art Director target - all 37 targeted sets within +-6 % (worst tier: terrain_grass_lush 4.01 %, its encode-safe mean, see AD-4 below) |
 | [stats.md](stats.md) | round 1 checks: cache QA mean == shipped mean (B2), HSV saturation / value p98 and lime share (AD-4), ORM.r span of every terrain layer (B6) |
-| [budgets.md](budgets.md) | WP1 bytes per set and tier from the manifest: **25.05 / 12.95 / 3.14 MB** of 36 / 16 / 5.3 |
+| [budgets.md](budgets.md) | WP1 bytes per set and tier from the manifest: **24.47 / 12.74 / 3.07 MB** of 36 / 16 / 5.3 |
 | [tiling_sheet.jpg](tiling_sheet.jpg), `tiling/<id>.jpg` | 3 x 3 repeats, orthographic, raking golden sun (11 deg), Cycles, shipped maps - every set |
 | `viewer/<id>.jpg` | asset viewer lookdev (wall corner, column, sphere) at ~1.2 m (`camera=detail`, cropped to the ~85 % of the frame that is material) and ~9 m (`camera=overview`) under sky_day and sky_golden, ultra textures - every architecture set |
 | [mobile_sheet.jpg](mobile_sheet.jpg), `mobile/<id>_<cam>.jpg` | every P0 set on the MOBILE tier (`assets=mobile`, `quality=low`, sky_day): architecture at ~1.2 m and ~9 m, terrain layers as a splat patch (AD-9) |
@@ -120,6 +120,17 @@ Numbers are measured on the shipped files by `scripts/shots/ta-01.cjs` (stats.md
 - **Art Director co-sign.** Round 2 has not been re-reviewed yet: the AD round 2 rulings (AD-10, AD-11) are addressed
   above and await co-sign.
 - **P2 sets are class C** (512 px data maps over 2-3 m): tooling and arris wear read at 1-3 m, not in extreme close-up.
+
+### Technical Art Director final review (after round 2)
+
+- **terrain_rock_basalt lichen line (reviewer fix).** The shipped baseColor still carried one continuous pale tan line
+  (+15-20 % value) along the whole flow-top contact: `kit.lichen(zone=lip)` with 2.5 % coverage filled the ~2 % lip
+  band end to end. The lip zone is now gated by u-only patch noise, so lichen holds in sparse patches along the lip
+  (talus lichen unchanged). Republished under the lock; mean #5a5650 unchanged, QA value p98 0.399 -> 0.391; tiling,
+  swatch, slope, splat and Cycles previews re-captured.
+- Accepted as non-blocking: the 10 m strata period of basalt / sandstone at 30 m, the repeated granite relief shadow
+  at 24 m, AD-10 brick windows at 3 x 3, and the flat 4-layer splat lookdev showing the basalt as stripes (the rock
+  layer is slope-gated in game; `slope_sheet.jpg` is the escarpment evidence).
 
 ## Review round 1 rework (Technical Art Director B1-B7, Art Director AD-1..AD-9)
 

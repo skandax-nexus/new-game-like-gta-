@@ -35,7 +35,7 @@
 | terrain_pebbles | terrain | T | ultra,high,mobile | 605 | 500 | 149 |
 | terrain_river_sand | terrain | T | ultra,high,mobile | 284 | 243 | 97 |
 | terrain_road_earth | terrain | T | ultra,high,mobile | 311 | 254 | 65 |
-| terrain_rock_basalt | terrain | T | ultra,high,mobile | 264 | 256 | 82 |
+| terrain_rock_basalt | terrain | T | ultra,high,mobile | 267 | 257 | 82 |
 | terrain_rock_granite | terrain | T | ultra,high,mobile | 448 | 213 | 54 |
 | terrain_rock_sandstone | terrain | T | ultra,high,mobile | 230 | 213 | 65 |
 | terrain_salt_crust | terrain | T | ultra,high | 357 | 327 | 0 |

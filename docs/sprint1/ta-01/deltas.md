@@ -39,7 +39,7 @@ Tolerance +-6 %. The decal atlas has no single target (n/a).
 | terrain_pebbles | T | #8c8273 | #8c8273 | #8c8273 | #8c8273 | -0.06 / 0.13 / -0.03 | 0.16 | 0.45 | PASS |
 | terrain_river_sand | T | #c4b18e | #c4b18e | #c4b18e | #c4b28e | 0.02 / 0.08 / -0.23 | 0.11 | 0.73 | PASS |
 | terrain_road_earth | T | #9a7e5e | #9a7e5e | #9a7e5e | #9b7f5e | -0.02 / 0.16 / -0.3 | 0.2 | 0.95 | PASS |
-| terrain_rock_basalt | T | #5a5650 | #5a5650 | #5a5650 | #5a5650 | -0.25 / 0.33 / -0.08 | 0.35 | 0.73 | PASS |
+| terrain_rock_basalt | T | #5a5650 | #5a5650 | #5a5650 | #5a5650 | -0.24 / 0.33 / -0.08 | 0.36 | 0.78 | PASS |
 | terrain_rock_granite | T | #87827a | #87827a | #87827a | #87837a | 0.04 / 0.13 / 0.02 | 0.23 | 0.77 | PASS |
 | terrain_rock_sandstone | T | #a88a6c | #a88a6c | #a88a6c | #a98a6c | 0.12 / 0.04 / -0.05 | 0.14 | 0.72 | PASS |
 | terrain_salt_crust | T | #d9d2c4 | #d9d2c4 | #d9d2c4 | - | 0.1 / -0.04 / 0.13 | 0 | 0.13 | PASS |

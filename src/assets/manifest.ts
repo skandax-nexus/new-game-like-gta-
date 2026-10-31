@@ -9,9 +9,9 @@ import type { AssetManifest } from './types';
 export const ASSET_MANIFEST = {
   "version": 1,
   "totals": {
-    "ultra": 31344166,
-    "high": 17332141,
-    "mobile": 6009624
+    "ultra": 31346644,
+    "high": 17333759,
+    "mobile": 6010154
   },
   "assets": {
     "bamboo_lattice": {
@@ -5138,12 +5138,12 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "terrain_rock_basalt",
       "category": "terrain",
-      "hash": "c35b18cd1d",
+      "hash": "170d076d63",
       "description": "Deccan Trap basalt for triplanar projection (10 m, v = up): one flow per tile - colonnade of unbroken columns 0.45-1.5 m whose prism facets are re-dealt at sparse curved cross-joints (normal-only light / dark), a hackly fanning entablature of curved columnettes, one recessed vesicular flow top that pinches out, talus; rind, streaks, lichen.",
       "bytes": {
-        "ultra": 270728,
-        "high": 261784,
-        "mobile": 83890
+        "ultra": 273206,
+        "high": 263402,
+        "mobile": 84420
       },
       "tiers": [
         "ultra",
@@ -5164,51 +5164,51 @@ export const ASSET_MANIFEST = {
         "baseColor": {
           "ultra": {
             "url": "textures/terrain_rock_basalt/baseColor_1024.webp",
-            "bytes": 13594,
+            "bytes": 15446,
             "size": 1024
           },
           "high": {
             "url": "textures/terrain_rock_basalt/baseColor_512.webp",
-            "bytes": 4650,
+            "bytes": 5642,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_basalt/baseColor_256.webp",
-            "bytes": 1538,
+            "bytes": 1898,
             "size": 256
           }
         },
         "normal": {
           "ultra": {
             "url": "textures/terrain_rock_basalt/normal_512.webp",
-            "bytes": 231182,
+            "bytes": 231362,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_basalt/normal_512.webp",
-            "bytes": 231182,
+            "bytes": 231362,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_basalt/normal_256.webp",
-            "bytes": 71334,
+            "bytes": 71312,
             "size": 256
           }
         },
         "orm": {
           "ultra": {
             "url": "textures/terrain_rock_basalt/orm_512.webp",
-            "bytes": 25952,
+            "bytes": 26398,
             "size": 512
           },
           "high": {
             "url": "textures/terrain_rock_basalt/orm_512.webp",
-            "bytes": 25952,
+            "bytes": 26398,
             "size": 512
           },
           "mobile": {
             "url": "textures/terrain_rock_basalt/orm_256.webp",
-            "bytes": 11018,
+            "bytes": 11210,
             "size": 256
           }
         }

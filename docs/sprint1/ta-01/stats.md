@@ -40,7 +40,7 @@
 | terrain_pebbles | #8c8273 | #8c8273 | 0 | 0.282 | 0.784 | 0 | 0.525 / 0.961 / **0.435** |
 | terrain_river_sand | #c4b18e | #c4b18e | 0 | 0.3 | 0.812 | 0 | 0.612 / 0.965 / **0.353** |
 | terrain_road_earth | #9a7e5e | #9a7e5e | 0 | 0.422 | 0.651 | 0 | 0.627 / 0.976 / **0.349** |
-| terrain_rock_basalt | #5a5650 | #5a5650 | 0 | 0.141 | 0.388 | 0 | 0.631 / 0.965 / **0.333** |
+| terrain_rock_basalt | #5a5650 | #5a5650 | 0 | 0.141 | 0.384 | 0 | 0.631 / 0.965 / **0.333** |
 | terrain_rock_granite | #87827a | #87827a | 0 | 0.174 | 0.592 | 0 | 0.627 / 0.961 / **0.333** |
 | terrain_rock_sandstone | #a88a6c | #a88a6c | 0 | 0.373 | 0.686 | 0 | 0.612 / 0.98 / **0.369** |
 | terrain_salt_crust | #d9d2c4 | #d9d2c4 | 0 | 0.111 | 0.875 | 0 | 0.612 / 0.969 / **0.357** |
@@ -64,4 +64,4 @@
 
 **B4 terrain_rock_basalt** flow top (recessed band = lowest 8 % of the height) mean HSV value vs #5a5650:
 
-- 0.346 vs 0.353: -2 % (target -10 % .. +8 %)
+- 0.345 vs 0.353: -2.1 % (target -10 % .. +8 %)

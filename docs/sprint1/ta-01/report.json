@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-31T13:19:48.803Z",
+  "generated": "2026-10-31T15:25:32.112Z",
   "tolerancePct": 6,
   "sets": {
     "bamboo_lattice": {
@@ -1736,11 +1736,11 @@
           "size": 1024,
           "mean": "#5a5650",
           "deltaRgbPct": [
-            -0.25,
+            -0.24,
             0.33,
             -0.08
           ],
-          "deltaLumPct": 0.35,
+          "deltaLumPct": 0.36,
           "pass": true
         },
         "high": {
@@ -1748,9 +1748,9 @@
           "size": 512,
           "mean": "#5a5650",
           "deltaRgbPct": [
-            -0.23,
+            -0.21,
             0.39,
-            -0.03
+            -0.05
           ],
           "deltaLumPct": 0.46,
           "pass": true
@@ -1760,11 +1760,11 @@
           "size": 256,
           "mean": "#5a5650",
           "deltaRgbPct": [
-            -0.09,
-            0.51,
-            0.12
+            -0.04,
+            0.54,
+            0.08
           ],
-          "deltaLumPct": 0.73,
+          "deltaLumPct": 0.78,
           "pass": true
         }
       },
@@ -1773,7 +1773,7 @@
         "shippedMean": "#5a5650",
         "qaVsShippedMaxLevels": 0,
         "satP98": 0.141,
-        "valueP98": 0.388,
+        "valueP98": 0.384,
         "limePct": 0,
         "ormR": {
           "p5": 0.631,
@@ -1970,7 +1970,19 @@
       }
     }
   },
-  "budgets": null,
+  "budgets": {
+    "bytes": {
+      "ultra": 25658742,
+      "high": 13358190,
+      "mobile": 3217840
+    },
+    "budgetMB": {
+      "ultra": 36,
+      "high": 16,
+      "mobile": 5.3
+    },
+    "withinBudget": true
+  },
   "shots": [
     {
       "name": "viewer bamboo_lattice sky_day detail",
@@ -2453,162 +2465,6 @@
       "errors": []
     },
     {
-      "name": "splat river sky_golden",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_river_sand,terrain_pebbles,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_golden&assets=ultra",
-      "ms": 24605,
-      "errors": []
-    },
-    {
-      "name": "splat floodplain sky_golden",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_alluvial_silt,terrain_grass_lush,terrain_river_sand,terrain_rock_sandstone&hdri=sky_golden&assets=ultra",
-      "ms": 22679,
-      "errors": []
-    },
-    {
-      "name": "splat farmland sky_golden",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_farmland_tilled,terrain_grass_lush,terrain_road_earth,terrain_rock_sandstone&hdri=sky_golden&assets=ultra",
-      "ms": 27035,
-      "errors": []
-    },
-    {
-      "name": "splat grassland sky_golden",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_grass_lush,terrain_grass_dry,terrain_alluvial_silt,terrain_rock_granite&hdri=sky_golden&assets=ultra",
-      "ms": 20437,
-      "errors": []
-    },
-    {
-      "name": "splat scrub sky_golden",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_grass_dry,ground_dry_earth,terrain_pebbles,terrain_rock_granite&hdri=sky_golden&assets=ultra",
-      "ms": 32382,
-      "errors": []
-    },
-    {
-      "name": "splat dry_plain sky_golden",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=ground_dry_earth,terrain_grass_dry,terrain_salt_crust,terrain_rock_sandstone&hdri=sky_golden&assets=ultra",
-      "ms": 32606,
-      "errors": []
-    },
-    {
-      "name": "splat forest sky_golden",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_forest_litter,terrain_grass_lush,terrain_laterite_soil,terrain_rock_granite&hdri=sky_golden&assets=ultra",
-      "ms": 34467,
-      "errors": []
-    },
-    {
-      "name": "splat dense_forest sky_golden",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_forest_litter,terrain_laterite_soil,terrain_grass_lush,terrain_rock_basalt&hdri=sky_golden&assets=ultra",
-      "ms": 25340,
-      "errors": []
-    },
-    {
-      "name": "splat hills sky_golden",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_grass_dry,terrain_laterite_soil,terrain_pebbles,terrain_rock_granite&hdri=sky_golden&assets=ultra",
-      "ms": 26282,
-      "errors": []
-    },
-    {
-      "name": "splat rocky sky_golden",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_pebbles,terrain_grass_dry,terrain_laterite_soil,terrain_rock_granite&hdri=sky_golden&assets=ultra",
-      "ms": 24985,
-      "errors": []
-    },
-    {
-      "name": "splat plateau sky_golden",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_laterite_soil,terrain_black_soil,terrain_grass_dry,terrain_rock_basalt&hdri=sky_golden&assets=ultra",
-      "ms": 19885,
-      "errors": []
-    },
-    {
-      "name": "splat sandbank sky_golden",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_river_sand,terrain_pebbles,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_golden&assets=ultra",
-      "ms": 25767,
-      "errors": []
-    },
-    {
-      "name": "splat marsh sky_golden",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_mud_wet,terrain_grass_lush,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_golden&assets=ultra",
-      "ms": 26606,
-      "errors": []
-    },
-    {
-      "name": "splat river sky_day",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_river_sand,terrain_pebbles,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
-      "ms": 24574,
-      "errors": []
-    },
-    {
-      "name": "splat floodplain sky_day",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_alluvial_silt,terrain_grass_lush,terrain_river_sand,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
-      "ms": 25568,
-      "errors": []
-    },
-    {
-      "name": "splat farmland sky_day",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_farmland_tilled,terrain_grass_lush,terrain_road_earth,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
-      "ms": 27170,
-      "errors": []
-    },
-    {
-      "name": "splat grassland sky_day",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_grass_lush,terrain_grass_dry,terrain_alluvial_silt,terrain_rock_granite&hdri=sky_day&assets=ultra",
-      "ms": 31597,
-      "errors": []
-    },
-    {
-      "name": "splat scrub sky_day",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_grass_dry,ground_dry_earth,terrain_pebbles,terrain_rock_granite&hdri=sky_day&assets=ultra",
-      "ms": 30388,
-      "errors": []
-    },
-    {
-      "name": "splat dry_plain sky_day",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=ground_dry_earth,terrain_grass_dry,terrain_salt_crust,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
-      "ms": 25824,
-      "errors": []
-    },
-    {
-      "name": "splat forest sky_day",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_forest_litter,terrain_grass_lush,terrain_laterite_soil,terrain_rock_granite&hdri=sky_day&assets=ultra",
-      "ms": 27560,
-      "errors": []
-    },
-    {
-      "name": "splat dense_forest sky_day",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_forest_litter,terrain_laterite_soil,terrain_grass_lush,terrain_rock_basalt&hdri=sky_day&assets=ultra",
-      "ms": 17898,
-      "errors": []
-    },
-    {
-      "name": "splat hills sky_day",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_grass_dry,terrain_laterite_soil,terrain_pebbles,terrain_rock_granite&hdri=sky_day&assets=ultra",
-      "ms": 15448,
-      "errors": []
-    },
-    {
-      "name": "splat rocky sky_day",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_pebbles,terrain_grass_dry,terrain_laterite_soil,terrain_rock_granite&hdri=sky_day&assets=ultra",
-      "ms": 18217,
-      "errors": []
-    },
-    {
-      "name": "splat plateau sky_day",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_laterite_soil,terrain_black_soil,terrain_grass_dry,terrain_rock_basalt&hdri=sky_day&assets=ultra",
-      "ms": 19221,
-      "errors": []
-    },
-    {
-      "name": "splat sandbank sky_day",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_river_sand,terrain_pebbles,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
-      "ms": 16185,
-      "errors": []
-    },
-    {
-      "name": "splat marsh sky_day",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_mud_wet,terrain_grass_lush,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
-      "ms": 21146,
-      "errors": []
-    },
-    {
       "name": "mobile sandstone_buff detail",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=low&noaudio=1&noui=1&asset=sandstone_buff&camera=detail&hdri=sky_day&assets=mobile",
       "ms": 7436,
@@ -2876,31 +2732,230 @@
       "errors": []
     },
     {
+      "name": "splat river sky_golden",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_river_sand,terrain_pebbles,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_golden&assets=ultra",
+      "ms": 20952,
+      "errors": []
+    },
+    {
+      "name": "splat floodplain sky_golden",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_alluvial_silt,terrain_grass_lush,terrain_river_sand,terrain_rock_sandstone&hdri=sky_golden&assets=ultra",
+      "ms": 21245,
+      "errors": []
+    },
+    {
+      "name": "splat farmland sky_golden",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_farmland_tilled,terrain_grass_lush,terrain_road_earth,terrain_rock_sandstone&hdri=sky_golden&assets=ultra",
+      "ms": 26810,
+      "errors": []
+    },
+    {
+      "name": "splat grassland sky_golden",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_grass_lush,terrain_grass_dry,terrain_alluvial_silt,terrain_rock_granite&hdri=sky_golden&assets=ultra",
+      "ms": 34019,
+      "errors": []
+    },
+    {
+      "name": "splat scrub sky_golden",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_grass_dry,ground_dry_earth,terrain_pebbles,terrain_rock_granite&hdri=sky_golden&assets=ultra",
+      "ms": 20658,
+      "errors": []
+    },
+    {
+      "name": "splat dry_plain sky_golden",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=ground_dry_earth,terrain_grass_dry,terrain_salt_crust,terrain_rock_sandstone&hdri=sky_golden&assets=ultra",
+      "ms": 24521,
+      "errors": []
+    },
+    {
+      "name": "splat forest sky_golden",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_forest_litter,terrain_grass_lush,terrain_laterite_soil,terrain_rock_granite&hdri=sky_golden&assets=ultra",
+      "ms": 22932,
+      "errors": []
+    },
+    {
+      "name": "splat dense_forest sky_golden",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_forest_litter,terrain_laterite_soil,terrain_grass_lush,terrain_rock_basalt&hdri=sky_golden&assets=ultra",
+      "ms": 29774,
+      "errors": []
+    },
+    {
+      "name": "splat hills sky_golden",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_grass_dry,terrain_laterite_soil,terrain_pebbles,terrain_rock_granite&hdri=sky_golden&assets=ultra",
+      "ms": 27657,
+      "errors": []
+    },
+    {
+      "name": "splat rocky sky_golden",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_pebbles,terrain_grass_dry,terrain_laterite_soil,terrain_rock_granite&hdri=sky_golden&assets=ultra",
+      "ms": 23152,
+      "errors": []
+    },
+    {
+      "name": "splat plateau sky_golden",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_laterite_soil,terrain_black_soil,terrain_grass_dry,terrain_rock_basalt&hdri=sky_golden&assets=ultra",
+      "ms": 23839,
+      "errors": []
+    },
+    {
+      "name": "splat sandbank sky_golden",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_river_sand,terrain_pebbles,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_golden&assets=ultra",
+      "ms": 24880,
+      "errors": []
+    },
+    {
+      "name": "splat marsh sky_golden",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_mud_wet,terrain_grass_lush,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_golden&assets=ultra",
+      "ms": 33610,
+      "errors": []
+    },
+    {
+      "name": "splat river sky_day",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_river_sand,terrain_pebbles,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
+      "ms": 28462,
+      "errors": []
+    },
+    {
+      "name": "splat floodplain sky_day",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_alluvial_silt,terrain_grass_lush,terrain_river_sand,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
+      "ms": 36492,
+      "errors": []
+    },
+    {
+      "name": "splat farmland sky_day",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_farmland_tilled,terrain_grass_lush,terrain_road_earth,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
+      "ms": 29457,
+      "errors": []
+    },
+    {
+      "name": "splat grassland sky_day",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_grass_lush,terrain_grass_dry,terrain_alluvial_silt,terrain_rock_granite&hdri=sky_day&assets=ultra",
+      "ms": 26864,
+      "errors": []
+    },
+    {
+      "name": "splat scrub sky_day",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_grass_dry,ground_dry_earth,terrain_pebbles,terrain_rock_granite&hdri=sky_day&assets=ultra",
+      "ms": 24626,
+      "errors": []
+    },
+    {
+      "name": "splat dry_plain sky_day",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=ground_dry_earth,terrain_grass_dry,terrain_salt_crust,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
+      "ms": 25048,
+      "errors": []
+    },
+    {
+      "name": "splat forest sky_day",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_forest_litter,terrain_grass_lush,terrain_laterite_soil,terrain_rock_granite&hdri=sky_day&assets=ultra",
+      "ms": 30286,
+      "errors": []
+    },
+    {
+      "name": "splat dense_forest sky_day",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_forest_litter,terrain_laterite_soil,terrain_grass_lush,terrain_rock_basalt&hdri=sky_day&assets=ultra",
+      "ms": 27709,
+      "errors": []
+    },
+    {
+      "name": "splat hills sky_day",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_grass_dry,terrain_laterite_soil,terrain_pebbles,terrain_rock_granite&hdri=sky_day&assets=ultra",
+      "ms": 23838,
+      "errors": []
+    },
+    {
+      "name": "splat rocky sky_day",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_pebbles,terrain_grass_dry,terrain_laterite_soil,terrain_rock_granite&hdri=sky_day&assets=ultra",
+      "ms": 35802,
+      "errors": []
+    },
+    {
+      "name": "splat plateau sky_day",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_laterite_soil,terrain_black_soil,terrain_grass_dry,terrain_rock_basalt&hdri=sky_day&assets=ultra",
+      "ms": 29928,
+      "errors": []
+    },
+    {
+      "name": "splat sandbank sky_day",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_river_sand,terrain_pebbles,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
+      "ms": 28966,
+      "errors": []
+    },
+    {
+      "name": "splat marsh sky_day",
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_mud_wet,terrain_grass_lush,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
+      "ms": 32605,
+      "errors": []
+    },
+    {
       "name": "slope terrain_rock_basalt ultra sky_golden far",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=terrain_rock_basalt&hdri=sky_golden&camera=overview&assets=ultra",
-      "ms": 21935,
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=terrain_rock_basalt&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 30064,
       "errors": []
     },
     {
       "name": "slope terrain_rock_basalt ultra sky_day far",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=terrain_rock_basalt&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 22302,
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=terrain_rock_basalt&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 27199,
       "errors": []
     },
     {
       "name": "slope terrain_rock_basalt ultra sky_day near",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=terrain_rock_basalt&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 24762,
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=terrain_rock_basalt&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 22073,
       "errors": []
     },
     {
       "name": "slope terrain_rock_basalt mobile sky_day far",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=low&noaudio=1&noui=1&asset=terrain_rock_basalt&hdri=sky_day&camera=overview&assets=mobile",
-      "ms": 10943,
+      "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=low&noaudio=1&noui=1&asset=terrain_rock_basalt&hdri=sky_day&camera=overview&assets=mobile",
+      "ms": 15394,
       "errors": []
     }
   ],
   "failures": [],
+  "ad4": {
+    "ultra": {
+      "satP98": 0.491,
+      "valueP98": 0.49,
+      "limePct": 0,
+      "hue": [
+        72,
+        75,
+        79
+      ]
+    },
+    "high": {
+      "satP98": 0.491,
+      "valueP98": 0.482,
+      "limePct": 0,
+      "hue": [
+        72,
+        75,
+        78
+      ]
+    },
+    "mobile": {
+      "satP98": 0.487,
+      "valueP98": 0.471,
+      "limePct": 0,
+      "hue": [
+        72,
+        75,
+        78
+      ]
+    }
+  },
+  "ad11": {
+    "hueDevP5": -1,
+    "hueDevP95": 3.5,
+    "satP98": 0.373,
+    "laminaValueContrastP90": 4.6
+  },
+  "b4": {
+    "flowTopValue": 0.345,
+    "target": 0.353,
+    "deltaPct": -2.1
+  },
   "splat": {
     "river": {
       "layers": [

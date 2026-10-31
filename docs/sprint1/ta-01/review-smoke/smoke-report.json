@@ -1,45 +1,11 @@
 {
-  "build": "0.1.0+2a10dc3",
+  "build": "0.1.0+20d4921",
   "quality": "high",
   "shots": [
     {
-      "name": "menu",
-      "url": "http://127.0.0.1:4454/?scene=menu&quality=high&noaudio=1",
-      "ms": 100226,
-      "errors": [],
-      "state": {
-        "scene": "menu",
-        "mode": null,
-        "paused": false,
-        "timeScale": 1,
-        "quality": "high",
-        "sceneState": {
-          "scene": "menu",
-          "center": {
-            "x": -534.3999999999999,
-            "z": -598.72
-          }
-        },
-        "fps": 1.291133851482412,
-        "errors": 0
-      },
-      "frame": {
-        "dominantShare": 0.007,
-        "lumaStdev": 44.74,
-        "pageBgShare": 0.001
-      },
-      "view3d": {
-        "dominantShare": 0.003,
-        "lumaStdev": 40.817,
-        "pageBgShare": 0,
-        "layersHidden": 2
-      },
-      "blankAttempts": []
-    },
-    {
       "name": "world",
       "url": "http://127.0.0.1:4454/?scene=world&quality=high&noaudio=1&seed=7&paused=1",
-      "ms": 81328,
+      "ms": 99630,
       "errors": [],
       "state": {
         "scene": "world",
@@ -102,17 +68,17 @@
           },
           "blocked": false
         },
-        "fps": 0.8455542309039374,
+        "fps": 0.7368472912062333,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.01,
-        "lumaStdev": 40.273,
+        "lumaStdev": 39.045,
         "pageBgShare": 0.001
       },
       "view3d": {
         "dominantShare": 0.002,
-        "lumaStdev": 21.571,
+        "lumaStdev": 21.932,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -121,7 +87,7 @@
     {
       "name": "world-overview",
       "url": "http://127.0.0.1:4454/?scene=world&quality=high&noaudio=1&seed=7&paused=1&camera=overview",
-      "ms": 75665,
+      "ms": 121908,
       "errors": [],
       "state": {
         "scene": "world",
@@ -184,51 +150,17 @@
           },
           "blocked": false
         },
-        "fps": 0.8972920832800612,
+        "fps": 0.8953963862202912,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.01,
-        "lumaStdev": 39.729,
-        "pageBgShare": 0.001
+        "lumaStdev": 39.617,
+        "pageBgShare": 0
       },
       "view3d": {
-        "dominantShare": 0.019,
-        "lumaStdev": 19.713,
-        "pageBgShare": 0,
-        "layersHidden": 2
-      },
-      "blankAttempts": []
-    },
-    {
-      "name": "menu-mobile",
-      "url": "http://127.0.0.1:4454/?scene=menu&quality=low&noaudio=1",
-      "ms": 32069,
-      "errors": [],
-      "state": {
-        "scene": "menu",
-        "mode": null,
-        "paused": false,
-        "timeScale": 1,
-        "quality": "low",
-        "sceneState": {
-          "scene": "menu",
-          "center": {
-            "x": -534.3999999999999,
-            "z": -598.72
-          }
-        },
-        "fps": 4.101971940298156,
-        "errors": 0
-      },
-      "frame": {
-        "dominantShare": 0.018,
-        "lumaStdev": 49.969,
-        "pageBgShare": 0.004
-      },
-      "view3d": {
-        "dominantShare": 0.005,
-        "lumaStdev": 46.833,
+        "dominantShare": 0.028,
+        "lumaStdev": 22.27,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -237,7 +169,7 @@
     {
       "name": "assetviewer-stupa",
       "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=hero&noui=1",
-      "ms": 112956,
+      "ms": 66952,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -283,7 +215,7 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 5.292326193232185,
+        "fps": 7.190824996930578,
         "errors": 0
       },
       "frame": {
@@ -302,7 +234,7 @@
     {
       "name": "assetviewer-torana",
       "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=close&noui=1",
-      "ms": 103621,
+      "ms": 104543,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -348,7 +280,7 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 13.908470920600125,
+        "fps": 6.497197969199303,
         "errors": 0
       },
       "frame": {
@@ -367,7 +299,7 @@
     {
       "name": "assetviewer-sandstone",
       "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=ultra&noaudio=1&asset=sandstone_carved_red&hdri=sky_day&noui=1",
-      "ms": 52948,
+      "ms": 80294,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -413,7 +345,7 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 10.365803730720513,
+        "fps": 4.599698449415248,
         "errors": 0
       },
       "frame": {
@@ -432,7 +364,7 @@
     {
       "name": "assetviewer-mobile",
       "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=low&noaudio=1&asset=stupa_sanchi&hdri=sky_day&camera=overview",
-      "ms": 19192,
+      "ms": 31116,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -478,17 +410,17 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 12.035467799353315,
+        "fps": 10.140576291209412,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.019,
-        "lumaStdev": 53.307,
+        "lumaStdev": 53.725,
         "pageBgShare": 0
       },
       "view3d": {
-        "dominantShare": 0.009,
-        "lumaStdev": 50.847,
+        "dominantShare": 0.005,
+        "lumaStdev": 51.294,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -497,7 +429,7 @@
     {
       "name": "assetviewer-fallback",
       "url": "http://127.0.0.1:4454/?scene=assetviewer&quality=high&noaudio=1&asset=stupa_sanchi&assets=off",
-      "ms": 30897,
+      "ms": 47350,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -529,17 +461,17 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 4.809109333524089,
+        "fps": 5.038253546475674,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.019,
-        "lumaStdev": 53.696,
+        "lumaStdev": 53.922,
         "pageBgShare": 0
       },
       "view3d": {
-        "dominantShare": 0.022,
-        "lumaStdev": 52.327,
+        "dominantShare": 0.021,
+        "lumaStdev": 52.559,
         "pageBgShare": 0,
         "layersHidden": 2
       },
