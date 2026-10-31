@@ -53,6 +53,13 @@ export const SPLIT_NEAR_OF_FOCUS = 0.3;
  */
 export const NORMAL_BIAS_TEXELS: Readonly<Record<ShadowFilter, number>> = { hard: 2.2, pcf: 1.4, pcss: 1.4 };
 export const DEPTH_BIAS_TEXELS: Readonly<Record<ShadowFilter, number>> = { hard: 0.8, pcf: 0.6, pcss: 0.6 };
+/**
+ * Low tier blocker search (shadowChunks samShadowTentSoft): 8 taps on a ring sized for a blocker up to
+ * LOW_SEARCH_BLOCKER_M away (max LOW_SEARCH_MAX_TEXELS = 2 x the max step), and the max lattice step of the widened tent.
+ */
+export const LOW_SEARCH_BLOCKER_M = 80;
+export const LOW_SEARCH_MAX_TEXELS = 16;
+export const LOW_MAX_TENT_STEP = 8;
 /** Slope-scaled depth bias of the hard filter: texels per unit tan(light angle), tan capped (grazing light). */
 export const SLOPE_BIAS_TEXELS = 0.6;
 export const SLOPE_BIAS_MAX_TAN = 6;

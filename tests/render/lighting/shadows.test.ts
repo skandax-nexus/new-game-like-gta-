@@ -173,7 +173,11 @@ describe('low tier: no acne, no saw-tooth (AD round 1, blocker 2)', () => {
     expect(CSM_PARS_GLSL).toContain('return sum / 9.0;');
     // Hard filter (CSM_PARAMS.y = 0) -> tent with slope bias; PCF / PCSS unchanged.
     expect(CSM_PARS_GLSL).toContain('if ( prm.y < 0.5 ) {');
-    expect(CSM_PARS_GLSL).toMatch(/sh = samShadowTent\( map, s\.shadowMapSize, s\.shadowBias - [0-9.]+ \* tanT \* c\.z/);
+    expect(CSM_PARS_GLSL).toMatch(/sh = samShadowTentSoft\( map, s\.shadowMapSize, s\.shadowBias, [0-9.]+ \* tanT \* c\.z/);
+    // Round 2 (R2-2): blocker-distance footprint - 8 search taps, lattice step from the penumbra radius, wider tent.
+    expect(CSM_PARS_GLSL).toContain('float samShadowTentS( sampler2D map, vec2 size, float z, vec2 uv, float s, inout vec2 blk )');
+    expect(CSM_PARS_GLSL).toContain('float s = clamp( dist * softTan / texelM / 1.5, 1.0, 8.0 );');
+    expect(CSM_PARS_GLSL).toContain('if ( s <= 1.001 ) return sh;');
     expect(SLOPE_BIAS_TEXELS).toBeGreaterThan(0);
   });
 

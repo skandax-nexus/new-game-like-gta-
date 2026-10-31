@@ -282,6 +282,12 @@ export class RenderContext {
     out.screenPxPerTexel = [+px.toFixed(2), +py.toFixed(2)];
     out.maxScreenPxPerTexel = +Math.max(px, py).toFixed(2);
     out.nDotL = +ndl.toFixed(3);
+    out.toLight = toLight.toArray().map((v) => +v.toFixed(3));
+    // What shadows this point (first surface toward the key light), for diagnosing shadow shapes.
+    const occ = new THREE.Raycaster(hit.point.clone().addScaledVector(n, 0.05), toLight, 0, 400)
+      .intersectObjects(scene.children, true)
+      .find((i) => i.object.name !== 'sky' && (i.object as THREE.Mesh).isMesh && i.object !== (sun as THREE.Object3D));
+    out.occluder = occ ? { object: occ.object.name || occ.object.parent?.name || occ.object.type, distance: +occ.distance.toFixed(2), point: occ.point.toArray().map((v) => +v.toFixed(2)) } : null;
     return out;
   }
 
