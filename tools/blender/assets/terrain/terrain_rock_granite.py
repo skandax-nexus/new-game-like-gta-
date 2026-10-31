@@ -51,7 +51,8 @@ with core.timer("blocks"):
     r_round = size * (0.1 + 0.3 * openness) * (0.7 + 0.6 * bid)
     tq = np.clip(d / np.maximum(r_round, 1e-3), 0.0, 1.0)
     prof = np.sqrt(np.clip(1.0 - (1.0 - tq) ** 2, 0.0, 1.0))  # quarter circle 0 (joint) -> 1 (face)
-    depth = (0.02 + 0.3 * openness * openness) * np.clip(size / 2.4, 0.3, 1.0)
+    # open clefts read dark but not as bottomless wedges (a single salient black wedge repeats at 3 x 3)
+    depth = (0.02 + 0.13 * openness * openness) * np.clip(size / 2.4, 0.3, 1.0)
     h = depth * (prof - 1.0)
     # each block at its own depth and with a gentle crown / tilt (whaleback faces of different height)
     h += 0.08 * (bid - 0.5) * np.clip(size / 2.4, 0.3, 1.0)
@@ -62,7 +63,7 @@ with core.timer("blocks"):
     open_cleft = tg.smoothstep(0.08, 0.0, d) * tg.smoothstep(0.35, 0.7, openness)
     h -= 0.012 * hair
     # rock-surface undulation at several scales (domes are not smooth spheres)
-    h += 0.045 * kit.fbm(1.6, 3) + 0.012 * kit.fbm(0.35, 3)
+    h += 0.03 * (kit.fbm(1.6, 3, ridged=True) - 0.5) + 0.012 * kit.fbm(0.35, 3)
     crest = np.clip(prof * crown, 0.0, 1.0)
 
 with core.timer("exfoliation"):
@@ -72,7 +73,9 @@ with core.timer("exfoliation"):
     cw = crown + 0.18 * kit.fbm(0.9, 3) + 0.05 * kit.fbm(0.2, 2)
     t1 = 0.25 + 0.3 * ((bid * 13.7) % 1.0)
     gate = big * tg.smoothstep(0.1, 0.4, kit.fbm(2.2, 2) * 0.5 + 0.5)
-    sheet = tg.smoothstep(t1, t1 + 0.02, cw) * gate
+    # the sheet edge is a BROKEN arc: it shows only along part of its length (never a closed outline)
+    arc = tg.smoothstep(0.0, 0.3, kit.fbm(0.7, 3, aniso=(1.6, 0.6)))
+    sheet = tg.smoothstep(t1, t1 + 0.02, cw) * gate * arc
     lip = tg.smoothstep(0.0, 0.25, sheet) * tg.smoothstep(1.0, 0.75, sheet) * gate
     peel = gate * (1.0 - sheet) * tg.smoothstep(t1 - 0.25, t1 - 0.02, cw)
     h += (0.02 + 0.02 * bid) * sheet
@@ -101,7 +104,7 @@ with core.timer("albedo"):
     rock = K.mul(rock, 1.0 - 0.25 * pits)
     rock = K.tint(rock, "#ab9585", 0.35 * peel)  # fresher, pinker rock where the sheet peeled
     rock = K.tint(rock, "#9a9187", 0.25 * chip)
-    rock = K.tint(rock, "#4a423a", 0.2 * lip)  # undercut shadow line of the sheet edge
+    rock = K.tint(rock, "#4a423a", 0.08 * lip)  # faint grime under the sheet edge (relief carries the step)
     rock = K.tint(rock, "#4a443d", 0.5 * hair)
     rock = K.tint(rock, "#6e5d4b", 0.5 * grus)
     # black water streaks from the block shoulders and joint lips, running down v
@@ -121,7 +124,7 @@ with core.timer("albedo"):
     green = np.clip(lic["crust"] * ~sp_ + lic["rosette"] * ~sr_, 0, 1)
     rock = K.tint(rock, "#a8784a", 0.45 * orange)
     rock = K.tint(rock, "#8c8e78", 0.55 * green)
-    rock = K.tint(rock, "#c2bba8", 0.3 * lic["centre"])
+    rock = K.tint(rock, "#b0aa98", 0.1 * lic["centre"])
     h += lic["h"]
     alb = K.compress_chroma(rock, 0.9)
 

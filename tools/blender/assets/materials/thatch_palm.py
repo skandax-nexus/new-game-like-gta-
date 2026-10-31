@@ -59,7 +59,9 @@ with core.timer("courses"):
             w = [v * W / sum(w) for v in w]
             cuts = np.cumsum([0.0] + w[:-1]) + float(rng.uniform(0, W))
             n = len(cuts)
-            tips = rng.uniform(-0.05, 0.3, n) + 0.08 * layer  # leaflet lengths differ
+            # leaflet lengths differ a lot and most reach the course edge: the gaps are few, small and irregular
+            # (a comb of equal teeth over a dark band is what AD-7 rejected)
+            tips = rng.uniform(-0.12, 0.16, n) ** 1.0 + 0.06 * layer + 0.08 * float(rng.uniform(-1, 1))
             shear = rng.uniform(-0.18, 0.18, n)  # splay / droop angle (m of u per course height)
             fill = rng.uniform(0.8, 1.0, n)
             ids = rng.uniform(0, 1, n)
@@ -106,7 +108,7 @@ with core.timer("courses"):
     curl = tg.smoothstep(0.75, 1.0, llu) * ((lid * 5.3) % 1.0 > 0.6) * in_leaf
     h -= 0.004 * layer_lo * in_leaf * (1.0 - plait)  # the lower leaflet layer sits deeper
     h += 0.004 * curl
-    h = np.where(hole, h - 0.02, h)
+    h = np.where(hole, h - 0.012, h)
     h += 0.0004 * kit.fbm(0.02, 2, aniso=(1.0, 6.0))
 
 with core.timer("albedo"):
@@ -120,8 +122,9 @@ with core.timer("albedo"):
     leaf = K.mul(leaf, 1.0 + 0.1 * rib * (1.0 - plait) + 0.06 * plait * (over - 0.5))
     damp = tg.smoothstep(0.75, 1.0, lv)
     leaf = K.mul(leaf, 1.0 - 0.25 * damp)
-    gapc = K.hexlin("#3a3122")[None, None, :]
-    alb = np.where(hole[..., None], gapc + 0.0 * leaf, leaf)
+    # through a gap the older, darker mat of the course below shows (not a black void)
+    gapc = K.mul(K.tint(leaf, "#4e432e", 0.7), 0.7)
+    alb = np.where(hole[..., None], gapc, leaf)
     alb = K.compress_chroma(alb, 0.75)
 
 with core.timer("roughness"):

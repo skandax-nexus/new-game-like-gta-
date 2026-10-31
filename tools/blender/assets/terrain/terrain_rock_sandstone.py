@@ -44,7 +44,7 @@ with core.timer("sets and joints"):
     nb = int(jb["nb"])
     below, above, thick = jb["below"], jb["above"], jb["thick"]
     lv = below / np.maximum(thick, 1e-3)
-    soft_b = rng.uniform(0, 1, nb) < 0.3
+    soft_b = rng.uniform(0, 1, nb) < 0.22
     tone_b = rng.uniform(0, 1, nb)
     soft = soft_b[band].astype(np.float32)
     soft = np.where(thick > 1.3, 0.0, soft)  # thick sets are the massive hard cliff formers
@@ -73,11 +73,14 @@ with core.timer("bed profiles"):
     jopen = tg.smoothstep(0.45, 0.85, jb["open_v"])
     jw = 0.02 + 0.09 * jopen * (0.6 + 0.4 * (kit.fbm(0.8, 2) * 0.5 + 0.5))
     jd = jb["side"] + 0.015 * kit.fbm(0.05, 2)
-    joint = tg.smoothstep(jw, 0.0, jd) * tg.smoothstep(-0.35, 0.15, kit.fbm(0.9, 3, aniso=(0.35, 1.0)))  # joints fade in and out
+    # joints fade in and out along their length, and thin beds (< ~0.8 m) rarely show them: a packet of thin beds
+    # cut by joints at a steady rhythm reads as a brick / plank wall (B5)
+    thin_fade = tg.smoothstep(0.5, 1.1, thick) * (0.35 + 0.65 * tg.smoothstep(0.3, 0.7, jb["rand3"]))
+    joint = tg.smoothstep(jw, 0.0, jd) * tg.smoothstep(-0.35, 0.15, kit.fbm(0.9, 3, aniso=(0.35, 1.0))) * thin_fade
     jr = 0.08 + 0.1 * jopen  # weathered, rounded joint shoulders (not a cut line)
-    h -= (0.006 + 0.15 * jopen) * joint + 0.07 * jopen * (1.0 - np.sqrt(np.clip(1.0 - (1.0 - np.clip(jd / jr, 0, 1)) ** 2, 0, 1)))
+    h -= (0.006 + 0.15 * jopen) * joint + 0.07 * jopen * thin_fade * (1.0 - np.sqrt(np.clip(1.0 - (1.0 - np.clip(jd / jr, 0, 1)) ** 2, 0, 1)))
     bedding = tg.smoothstep(0.02, 0.0, np.minimum(below, above)) * (1.0 - soft)
-    h -= (0.004 + 0.03 * jb["open_h"] ** 2) * bedding
+    h -= (0.004 + 0.03 * jb["open_h"] ** 2) * bedding * (0.4 + 0.6 * tg.smoothstep(0.5, 1.2, thick))
     # massive hard beds weather into lumpy, undulating fronts (no planks)
     h += (0.05 * kit.fbm(0.9, 3) + 0.04 * kit.fbm(2.5, 2, aniso=(2.0, 1.0))) * (1.0 - soft)
 
@@ -95,18 +98,19 @@ with core.timer("cross-bedding"):
     phi = g / sp - kb * x * xb + 0.15 * kit.fbm(2.0, 2)  # planar foresets, barely warped (no wood-grain rings)
     saw = phi - np.floor(phi)
     lam = tg.smoothstep(0.0, 0.25, saw) * tg.smoothstep(1.0, 0.6, saw)  # etched rib profile
-    lam_amp = (0.003 + 0.003 * soft) * tg.smoothstep(0.0, 0.08, lv) * (0.4 + 0.6 * tg.smoothstep(-0.3, 0.3, kit.fbm(1.0, 2)))
+    lam_amp = (0.005 + 0.003 * soft) * tg.smoothstep(0.0, 0.08, lv) * (0.4 + 0.6 * tg.smoothstep(-0.3, 0.3, kit.fbm(1.0, 2)))
     h += lam_amp * lam
     lam_tone = (np.floor(phi) * 0.618) % 1.0  # lamina-to-lamina tone variation
 
 with core.timer("tafoni"):
-    tz = tg.smoothstep(0.7, 0.8, kit.fbm(2.5, 3) * 0.5 + 0.5 + 0.12 * soft + 0.1 * under_lip)
-    hf1, hf2, hid = kit.worley(0.1, 0.9)
+    # sparse and broken up: small irregular honeycomb clusters, never one salient stamp per tile
+    tz = tg.smoothstep(0.8, 0.88, kit.fbm(2.5, 3) * 0.5 + 0.5 + 0.12 * soft + 0.1 * under_lip + 0.12 * kit.fbm(0.35, 3))
+    hf1, hf2, hid = kit.worley(0.07, 0.9)
     wall = tg.smoothstep(0.0, 0.12, hf2 - hf1)
     bowl = np.clip(1.0 - (hf1 / (0.55 + 0.25 * hid)) ** 2, 0.0, 1.0)
     # cavities, not bumps: each cell a deep bowl (sqrt profile = steep sides) bounded by thin sharp walls
     honey = tz * np.sqrt(bowl) * wall
-    h -= 0.09 * honey + 0.06 * tz
+    h -= 0.06 * honey + 0.04 * tz
 
 with core.timer("surface"):
     h += 0.025 * kit.fbm(0.8, 3) + 0.008 * kit.fbm(0.15, 3) + 0.0012 * kit.fbm(0.02, 3)
@@ -116,7 +120,7 @@ with core.timer("surface"):
     h += spall * (-0.015 + 0.3 * fc["h"] * 0.05)
 
 with core.timer("albedo"):
-    t = np.clip(0.5 + 0.3 * (tone - 0.5) + 0.12 * kit.fbm(0.9, 3) + 0.32 * (lam_tone - 0.5) * xb + 0.04 * kit.fbm(0.04, 2), 0, 1)
+    t = np.clip(0.5 + 0.3 * (tone - 0.5) + 0.12 * kit.fbm(0.9, 3) + 0.45 * (lam_tone - 0.5) * xb + 0.04 * kit.fbm(0.04, 2), 0, 1)
     alb = K.ramp(t, [(0.0, "#8c6450"), (0.3, "#9c785e"), (0.55, "#ab8b6c"), (0.8, "#bda27f"), (1.0, "#c9b18f")])
     alb = K.tint(alb, "#857269", 0.35 * tg.smoothstep(0.8, 0.97, tone))  # purple-grey reduced sets
     alb = K.tint(alb, "#a2624a", 0.25 * tg.smoothstep(0.2, 0.04, tone))  # iron-red sets
@@ -126,7 +130,7 @@ with core.timer("albedo"):
     alb = K.tint(alb, "#9b6a4c", 0.05 * lies * tg.smoothstep(0.2, 0.6, kit.fbm(2.0, 2)))  # faint: strong rings read as wood grain
     alb = K.mul(alb, 1.0 - 0.55 * under_lip)  # overhang shadow line under every hard lip
     alb = K.tint(alb, "#5a4a3e", 0.5 * joint * jopen)
-    alb = K.mul(alb, 1.0 - 0.5 * honey - 0.12 * tz)
+    alb = K.mul(alb, 1.0 - 0.4 * honey - 0.06 * tz)
     alb = K.tint(alb, "#c39878", 0.3 * spall)
     # varnish streaks from the lips and joints
     src = (tg.smoothstep(0.1, 0.0, below) * soft_below_bed * (1.0 - soft) + 0.5 * joint)

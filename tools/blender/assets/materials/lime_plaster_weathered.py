@@ -105,7 +105,7 @@ with core.timer("losses"):
     weather = 0.25 * kit.fbm(1.0, 2)
     loss = np.zeros_like(x)
     loss_size = np.zeros_like(x)
-    for cell_m, dens in ((0.18, 0.03), (0.09, 0.075), (0.04, 0.07)):
+    for cell_m, dens in ((0.16, 0.018), (0.09, 0.085), (0.04, 0.08)):
         wx_, wy_ = kit.warp(cell_m * 0.18, cell_m * 0.8, 2)
         f1, f2, rid = kit.worley(cell_m, 0.95, x=wx_, y=wy_)
         border = (f2 - f1) * 0.5 * cell_m
@@ -133,7 +133,7 @@ with core.timer("albedo"):
     alb = K.mul(alb, 1.0 - 0.06 * pores)
     alb = K.mul(alb, 1.0 + 0.03 * ridge - 0.02 * covered * (1.0 - ridge))  # fresh lime on the stroke ridges
     render_col = K.ramp(0.5 + 0.3 * kit.fbm(0.05, 3) + 0.15 * kit.fbm(0.006, 2), [(0.0, "#b2a894"), (0.5, "#c4bba7"), (1.0, "#d3cab7")])
-    scratch_col = K.ramp(0.5 + 0.4 * kit.fbm(0.006, 2), [(0.0, "#8f8573"), (0.5, "#a49a86"), (1.0, "#b9b09c")])
+    scratch_col = K.ramp(0.5 + 0.4 * kit.fbm(0.006, 2), [(0.0, "#9c927f"), (0.5, "#ada390"), (1.0, "#bfb6a2")])  # close to the render: no dark blot
     under_col = render_col * (1.0 - deep[..., None]) + scratch_col * deep[..., None]
     alb = alb * (1.0 - patch[..., None]) + under_col * patch[..., None]
     # grime: cracks, loss rims (dust and soot collect in the undercut)

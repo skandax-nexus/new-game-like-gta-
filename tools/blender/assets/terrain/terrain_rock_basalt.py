@@ -54,8 +54,10 @@ with core.timer("flows"):
     fthick = fb + ft
     fl = fb / np.maximum(fthick, 1e-3)  # 0 base .. 1 top
     # per-flow zone fractions: colonnade top / entablature top (the rest is the rubbly flow top)
-    col_top = np.array([0.62, 0.52])[flow] + 0.06 * kit.fbm(1.5, 2)
-    ent_top = np.array([0.9, 0.84])[flow] + 0.025 * kit.fbm(1.0, 2)
+    # zone boundaries wander strongly along u (the entablature thickens, thins and pinches out; the rubbly top
+    # swells into talus aprons): no uniform stripe across the escarpment
+    col_top = np.array([0.6, 0.5])[flow] + 0.13 * kit.fbm(2.5, 2) + 0.04 * kit.fbm(0.7, 2)
+    ent_top = np.array([0.9, 0.84])[flow] + 0.045 * kit.fbm(1.8, 2) + 0.015 * kit.fbm(0.5, 2)
     top_zone = tg.smoothstep(ent_top - 0.015, ent_top + 0.015, fl)  # rubbly vesicular flow top
     ent_zone = tg.smoothstep(col_top - 0.03, col_top + 0.03, fl) * (1.0 - top_zone)
     col_zone = 1.0 - tg.smoothstep(col_top - 0.03, col_top + 0.03, fl)
@@ -78,9 +80,12 @@ with core.timer("colonnade"):
     prism = prism + face_tilt * (left - 0.5 * width) * (prism >= plateau - 1e-4)
     # cross-joints: hairline step at each segment boundary (segments sit at slightly different depths)
     fell = (jb["block"] > 0.93).astype(np.float32)  # a few column segments fell out (planar back face)
-    seg_off = 0.01 * (jb["rand3"] - 0.5) - 0.06 * fell
-    # cross-joints break single columns at their own heights, never a course across the whole colonnade
-    cross = tg.smoothstep(0.006, 0.0, np.minimum(jb["below"], jb["above"])) * (jb["rand1"] > 0.55)
+    # cross-joints break single columns at their own heights, never a course across the whole colonnade: only
+    # ~40 % of the column segments show a cross-joint, and only those sit at their own depth (the others continue
+    # the column below without a step, so no horizontal line runs across the colonnade)
+    has_cross = (jb["rand1"] > 0.6).astype(np.float32)
+    seg_off = (0.012 * (jb["rand3"] - 0.5) - 0.06 * fell) * np.maximum(has_cross, fell)
+    cross = tg.smoothstep(0.006, 0.0, np.minimum(jb["below"], jb["above"])) * has_cross
     col_h = prism + seg_off - 0.008 * cross
     col_h += 0.012 * kit.fbm(0.4, 3) + 0.006 * kit.fbm(0.12, 3) + 0.0015 * kit.fbm(0.03, 2)
     joint_line = tg.smoothstep(0.025, 0.0, jb["side"]) * jpres
@@ -119,11 +124,12 @@ with core.timer("albedo"):
     rock = K.tint(rock, "#2c2b2a", 0.5 * joint_line * col_zone + 0.22 * ent_crack * ent_zone + 0.3 * cross * col_zone)
     fresh = fell * col_zone
     rock = K.tint(rock, "#3a3a3c", 0.4 * fresh)
-    topc = K.ramp(0.5 + 0.3 * kit.fbm(0.1, 3), [(0.0, "#4e4842"), (0.5, "#5b534b"), (1.0, "#686056")])
+    # flow-top rubble: the same grey-black basalt, a little browner from weathering (not an orange 'cake' band)
+    topc = K.ramp(0.5 + 0.3 * kit.fbm(0.1, 3) + 0.25 * (rub.id - 0.5), [(0.0, "#3e3c3a"), (0.5, "#4f4c48"), (1.0, "#615c55")])
     topc = K.mul(topc, 1.0 - 0.35 * ves)
-    topc = K.tint(topc, "#51483f", 0.6 * soil)
+    topc = K.tint(topc, "#4a4038", 0.55 * soil)
     rock = rock * (1.0 - top_zone[..., None]) + topc * top_zone[..., None]
-    rock = K.tint(rock, "#6c5244", 0.25 * bole * (1.0 - top_zone))
+    rock = K.tint(rock, "#5e4a40", 0.15 * bole * (1.0 - top_zone))
     # white zeolite / calcite amygdales (clustered, size-varied, sparse)
     zeo = kit.specks(0.05, coverage=0.004, size=(0.002, 0.012), cluster_m=0.6) * (ent_zone + top_zone)
     rock = K.tint(rock, "#b8b3a6", 0.7 * zeo)

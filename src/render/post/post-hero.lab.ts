@@ -7,6 +7,8 @@
  *
  * URL: &view=hero|battle (default hero)  &taa=0|1|auto (default auto = TAA in the hero band on ultra)
  *      &focus=<m> (hero DoF focus override)  &tonemap=aces|agx
+ *      &dofnear=0 (single-layer DoF: the round-1 'before')  &near=1 (a pillar 1.6 m in front of the lens, left third:
+ *      the near-field DoF test with the focus on the hero)
  *   __SAMRAJYA__.call('post.view', 'battle')   __SAMRAJYA__.call('post.taa', false)
  *   __SAMRAJYA__.call('post.focus', 12)        __SAMRAJYA__.call('post.tonemap', 'agx')
  *   __SAMRAJYA__.call('post.info')             -> PostPipeline.info()
@@ -140,6 +142,19 @@ function build(ctx: AppContext, host: LabHost): LabInstance {
   const tm = urlParam('tonemap');
   if (tm === 'agx' || tm === 'aces') post.setToneMapping(tm);
   const heroTarget = stage.localToWorld(new THREE.Vector3(0, 1.5, 4));
+  post.setDofNearField(urlParam('dofnear') !== '0');
+  // Near pillar (placed in front of the lens once the hero view is framed): foreground bokeh over a sharp subject.
+  const nearPillar = urlParam('near') === '1' ? mesh(new THREE.CylinderGeometry(0.16, 0.18, 5, 24), polished, 0, 2.5, 0) : null;
+  const placeNearPillar = (): void => {
+    if (!nearPillar) return;
+    nearPillar.visible = view === 'hero';
+    const cam = host.camera;
+    cam.updateMatrixWorld();
+    const fwd = cam.getWorldDirection(new THREE.Vector3());
+    const right = new THREE.Vector3().crossVectors(fwd, cam.up).normalize();
+    const p = cam.position.clone().addScaledVector(fwd, 1.6).addScaledVector(right, -0.42);
+    nearPillar.position.set(p.x, 2.5, p.z);
+  };
 
   const applyView = (): void => {
     // Camera opposite the sun (looking into it) so the colonnade throws shafts toward the lens.
@@ -148,6 +163,7 @@ function build(ctx: AppContext, host: LabHost): LabInstance {
     else host.frame({ x: 0, y: 0, z: -160 }, 220, yaw + 25, 42);
     post.setTaa(taa);
     post.setFocus(view === 'hero' ? focus : null);
+    placeNearPillar();
     info();
   };
   const info = (): void => {
@@ -171,6 +187,7 @@ function build(ctx: AppContext, host: LabHost): LabInstance {
       post.setTaa('auto');
       post.setFocus(null);
       post.setToneMapping('aces');
+      post.setDofNearField(true);
       scene.remove(root);
       root.clear();
     },

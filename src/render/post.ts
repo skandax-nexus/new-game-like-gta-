@@ -16,6 +16,7 @@
  *   post.setFocus(distanceM, fStop, maxBlurPx)  hero camera / cutscene focus (null = follow the zoom band)
  *   post.setTaa(true | false | 'auto')          force TAA (cutscenes) / off / hero band only (default)
  *   post.setToneMapping('aces' | 'agx')         ACES Filmic (default, authored) or AgX (lookdev comparison)
+ *   post.setDofNearField(on)                    near-field DoF layer (default on; off = single layer, lab A/B)
  * Debug: info() lists the passes that ran last frame with their key parameters.
  */
 import * as THREE from 'three';
@@ -176,6 +177,7 @@ export class PostPipeline {
   private focusOverride: { distance: number; fStop: number; maxBlurPx: number; strength: number } | null = null;
   private taaMode: TaaMode = 'auto';
   private toneMapper: ToneMapper = 'aces';
+  private dofNearField = true;
   private readonly sun = {
     toSun: new THREE.Vector3(0, 1, 0),
     toKey: new THREE.Vector3(0, 1, 0),
@@ -282,6 +284,15 @@ export class PostPipeline {
     this.focusOverride = distanceM === null ? null : { distance: Math.max(0.1, distanceM), fStop, maxBlurPx, strength };
   }
 
+  /**
+   * Near-field DoF layer (an out-of-focus foreground spreads over the scene behind it; AD round 1). On by default;
+   * off reproduces the single-layer DoF (lab before / after comparisons).
+   */
+  setDofNearField(on: boolean): void {
+    this.dofNearField = on;
+    if (this.passes.dof) this.passes.dof.nearField = on;
+  }
+
   /** TAA: true = on (cutscenes), false = off, 'auto' = hero band only. Needs QualitySettings.antialias 'taa'. */
   setTaa(mode: TaaMode): void {
     if (mode !== this.taaMode) this.passes.taa?.reset();
@@ -377,7 +388,7 @@ export class PostPipeline {
     if (p.composite) n += 1;
     if (p.shafts) n += 2;
     if (p.bloom) n += (p.bloom as unknown as { down: unknown[]; up: unknown[] }).down.length + (p.bloom as unknown as { up: unknown[] }).up.length;
-    if (p.dof) n += 3;
+    if (p.dof) n += 6; // half, blur, out, tile, tileMax, near
     if (p.taa) n += 2;
     if (p.smaa) n += 2;
     return n;
@@ -406,6 +417,7 @@ export class PostPipeline {
     const shafts = plan.shafts ? new ShaftsPass(f, plan.shafts.samples, plan.shafts.scale) : null;
     const bloom = plan.bloom ? new BloomPass(f) : null;
     const dof = plan.dof ? new DofPass(f) : null;
+    if (dof) dof.nearField = this.dofNearField;
     const final = new FinalPass(f, { ...plan.final, toneMapper: this.toneMapper }, { black: this.neutral.black, lut: this.neutral.lut });
     if (this.neutral.dirt) final.uniforms.tDirt!.value = this.neutral.dirt;
     const w = Math.max(1, this.width * this.pixelRatio);
