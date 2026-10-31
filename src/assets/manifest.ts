@@ -71,6 +71,14 @@ export const ASSET_MANIFEST = {
           "heightMeters": 0.825
         }
       ],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.00194,
+          0.00391
+        ],
+        "setClass": "S"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -331,6 +339,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 0.9,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.00823,
+          0.00085
+        ],
+        "setClass": "C"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -411,6 +427,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.00575,
+          0.00186
+        ],
+        "setClass": "S"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -491,6 +515,261 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1,
       "trims": [],
+      "decals": [
+        {
+          "name": "mandana_border_ochre",
+          "category": "mandana",
+          "surface": "wall",
+          "tileU": true,
+          "u0": 0,
+          "v0": 0.875,
+          "u1": 0.5,
+          "v1": 1,
+          "sizeMeters": [
+            2,
+            0.5
+          ]
+        },
+        {
+          "name": "mandana_border_white",
+          "category": "mandana",
+          "surface": "wall",
+          "tileU": true,
+          "u0": 0.5,
+          "v0": 0.875,
+          "u1": 1,
+          "v1": 1,
+          "sizeMeters": [
+            2,
+            0.5
+          ]
+        },
+        {
+          "name": "kolam_pulli",
+          "category": "kolam",
+          "surface": "ground",
+          "tileU": false,
+          "u0": 0,
+          "v0": 0.625,
+          "u1": 0.25,
+          "v1": 0.875,
+          "sizeMeters": [
+            1,
+            1
+          ]
+        },
+        {
+          "name": "kolam_lotus",
+          "category": "kolam",
+          "surface": "ground",
+          "tileU": false,
+          "u0": 0.25,
+          "v0": 0.625,
+          "u1": 0.5,
+          "v1": 0.875,
+          "sizeMeters": [
+            1,
+            1
+          ]
+        },
+        {
+          "name": "kolam_star",
+          "category": "kolam",
+          "surface": "ground",
+          "tileU": false,
+          "u0": 0.5,
+          "v0": 0.625,
+          "u1": 0.75,
+          "v1": 0.875,
+          "sizeMeters": [
+            1,
+            1
+          ]
+        },
+        {
+          "name": "kolam_interlace",
+          "category": "kolam",
+          "surface": "ground",
+          "tileU": false,
+          "u0": 0.75,
+          "v0": 0.625,
+          "u1": 1,
+          "v1": 0.875,
+          "sizeMeters": [
+            1,
+            1
+          ]
+        },
+        {
+          "name": "plaster_crack_corner",
+          "category": "crack",
+          "surface": "wall",
+          "tileU": false,
+          "u0": 0,
+          "v0": 0.375,
+          "u1": 0.25,
+          "v1": 0.625,
+          "sizeMeters": [
+            1,
+            1
+          ]
+        },
+        {
+          "name": "plaster_crack_craze",
+          "category": "crack",
+          "surface": "wall",
+          "tileU": false,
+          "u0": 0.25,
+          "v0": 0.375,
+          "u1": 0.5,
+          "v1": 0.625,
+          "sizeMeters": [
+            1,
+            1
+          ]
+        },
+        {
+          "name": "soot_plume",
+          "category": "soot",
+          "surface": "wall",
+          "tileU": false,
+          "u0": 0.5,
+          "v0": 0.375,
+          "u1": 0.75,
+          "v1": 0.625,
+          "sizeMeters": [
+            1,
+            1
+          ]
+        },
+        {
+          "name": "charring",
+          "category": "charring",
+          "surface": "any",
+          "tileU": false,
+          "u0": 0.75,
+          "v0": 0.375,
+          "u1": 1,
+          "v1": 0.625,
+          "sizeMeters": [
+            1,
+            1
+          ]
+        },
+        {
+          "name": "damp_rising",
+          "category": "damp",
+          "surface": "wall",
+          "tileU": true,
+          "u0": 0,
+          "v0": 0.125,
+          "u1": 0.5,
+          "v1": 0.375,
+          "sizeMeters": [
+            2,
+            1
+          ]
+        },
+        {
+          "name": "damp_leak",
+          "category": "damp",
+          "surface": "wall",
+          "tileU": false,
+          "u0": 0.5,
+          "v0": 0.125,
+          "u1": 0.75,
+          "v1": 0.375,
+          "sizeMeters": [
+            1,
+            1
+          ]
+        },
+        {
+          "name": "puddle_large",
+          "category": "puddle",
+          "surface": "ground",
+          "tileU": false,
+          "u0": 0.75,
+          "v0": 0.125,
+          "u1": 1,
+          "v1": 0.375,
+          "sizeMeters": [
+            1,
+            1
+          ]
+        },
+        {
+          "name": "puddle_small_a",
+          "category": "puddle",
+          "surface": "ground",
+          "tileU": false,
+          "u0": 0.75,
+          "v0": 0,
+          "u1": 0.875,
+          "v1": 0.125,
+          "sizeMeters": [
+            0.5,
+            0.5
+          ]
+        },
+        {
+          "name": "puddle_small_b",
+          "category": "puddle",
+          "surface": "ground",
+          "tileU": false,
+          "u0": 0.875,
+          "v0": 0,
+          "u1": 1,
+          "v1": 0.125,
+          "sizeMeters": [
+            0.5,
+            0.5
+          ]
+        },
+        {
+          "name": "rut_endcap",
+          "category": "rut",
+          "surface": "ground",
+          "tileU": false,
+          "u0": 0,
+          "v0": 0,
+          "u1": 0.25,
+          "v1": 0.125,
+          "sizeMeters": [
+            1,
+            0.5
+          ]
+        },
+        {
+          "name": "footprint_trail",
+          "category": "footprints",
+          "surface": "ground",
+          "tileU": true,
+          "u0": 0.25,
+          "v0": 0,
+          "u1": 0.75,
+          "v1": 0.125,
+          "sizeMeters": [
+            2,
+            0.5
+          ]
+        }
+      ],
+      "decalAtlas": {
+        "opacity": "orm.b",
+        "regions": 17,
+        "sizeMeters": [
+          4,
+          4
+        ]
+      },
+      "extras": {
+        "heightRangeMeters": [
+          -0.02799,
+          0.00667
+        ],
+        "setClass": "A"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -542,6 +821,11 @@ export const ASSET_MANIFEST = {
             "bytes": 7092,
             "size": 256
           }
+        }
+      },
+      "channels": {
+        "orm": {
+          "blue": "decalOpacity"
         }
       }
     },
@@ -1861,6 +2145,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1.2,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.09,
+          0.07331
+        ],
+        "setClass": "C"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -1941,6 +2233,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.01182,
+          0.0101
+        ],
+        "setClass": "T"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -2092,6 +2392,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1.3,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.02045,
+          0.00582
+        ],
+        "setClass": "C"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -2200,6 +2508,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 0.6,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.01276,
+          0.00161
+        ],
+        "setClass": "H"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -2630,6 +2946,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1.1,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.00975,
+          0.00923
+        ],
+        "setClass": "C"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -2710,6 +3034,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 0.8,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.0061,
+          0.00245
+        ],
+        "setClass": "S"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -2790,6 +3122,15 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1.2,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.01588,
+          0.031
+        ],
+        "setClass": "S",
+        "vUp": "v points UP the roof slope (tile lips face -v)"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -2848,7 +3189,7 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "sandstone_buff",
       "category": "materials",
-      "hash": "74b15041ce",
+      "hash": "080a72e6ae",
       "description": "Buff Sanchi/Chunar sandstone trim sheet (same bands as sandstone_carved_red): ashlar, creeper scroll, dentils, padma, bead-and-reel, lotus medallion frieze; black lichen, pink bedding, chipped arrises.",
       "bytes": {
         "ultra": 4496520,
@@ -2913,6 +3254,99 @@ export const ASSET_MANIFEST = {
           "heightMeters": 0.64
         }
       ],
+      "decals": [
+        {
+          "name": "spiral_rosette",
+          "u": 0.086963,
+          "v": 0.212627,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.211963,
+          "v": 0.227373,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.336963,
+          "v": 0.212627,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.461963,
+          "v": 0.227373,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.586963,
+          "v": 0.212627,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.711963,
+          "v": 0.227373,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.836963,
+          "v": 0.212627,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.961963,
+          "v": 0.227373,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "lotus_medallion",
+          "u": 0.125,
+          "v": 0.58,
+          "r": 0.087,
+          "r_v": 0.087
+        },
+        {
+          "name": "lotus_medallion",
+          "u": 0.375,
+          "v": 0.58,
+          "r": 0.087,
+          "r_v": 0.087
+        },
+        {
+          "name": "lotus_medallion",
+          "u": 0.625,
+          "v": 0.58,
+          "r": 0.087,
+          "r_v": 0.087
+        },
+        {
+          "name": "lotus_medallion",
+          "u": 0.875,
+          "v": 0.58,
+          "r": 0.087,
+          "r_v": 0.087
+        }
+      ],
+      "extras": {
+        "heightRangeMeters": [
+          -0.0231,
+          0.02232
+        ],
+        "setClass": "H"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -2971,7 +3405,7 @@ export const ASSET_MANIFEST = {
       "kind": "material",
       "id": "sandstone_carved_red",
       "category": "materials",
-      "hash": "fd4c7e11c4",
+      "hash": "2a2035d1d3",
       "description": "Weathered carved red sandstone trim sheet: ashlar, creeper scroll, dentils, padma, bead-and-reel, lotus medallion frieze; per-block hue jitter, lichen and soot crusts (WP1-09 retune).",
       "bytes": {
         "ultra": 1366912,
@@ -3036,6 +3470,99 @@ export const ASSET_MANIFEST = {
           "heightMeters": 0.64
         }
       ],
+      "decals": [
+        {
+          "name": "spiral_rosette",
+          "u": 0.086963,
+          "v": 0.212627,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.211963,
+          "v": 0.227373,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.336963,
+          "v": 0.212627,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.461963,
+          "v": 0.227373,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.586963,
+          "v": 0.212627,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.711963,
+          "v": 0.227373,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.836963,
+          "v": 0.212627,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.961963,
+          "v": 0.227373,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "lotus_medallion",
+          "u": 0.125,
+          "v": 0.58,
+          "r": 0.087,
+          "r_v": 0.087
+        },
+        {
+          "name": "lotus_medallion",
+          "u": 0.375,
+          "v": 0.58,
+          "r": 0.087,
+          "r_v": 0.087
+        },
+        {
+          "name": "lotus_medallion",
+          "u": 0.625,
+          "v": 0.58,
+          "r": 0.087,
+          "r_v": 0.087
+        },
+        {
+          "name": "lotus_medallion",
+          "u": 0.875,
+          "v": 0.58,
+          "r": 0.087,
+          "r_v": 0.087
+        }
+      ],
+      "extras": {
+        "heightRangeMeters": [
+          -0.02283,
+          0.02229
+        ],
+        "setClass": "S"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -3116,6 +3643,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 0.25,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.00015,
+          0.00015
+        ],
+        "setClass": "C"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -3195,6 +3730,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 0.8,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.01657,
+          0.00232
+        ],
+        "setClass": "C"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -3895,6 +4438,15 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1,
       "trims": [],
+      "decals": [],
+      "slopeAxis": "v",
+      "extras": {
+        "heightRangeMeters": [
+          -0.03341,
+          0.0578
+        ],
+        "setClass": "C"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -4120,6 +4672,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 0.7,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.0151,
+          0.0066
+        ],
+        "setClass": "T"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -4200,6 +4760,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1.2,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.05186,
+          0.01796
+        ],
+        "setClass": "T"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -4280,6 +4848,16 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1.3,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "furrowAxis": "u",
+        "furrowSpacingMeters": 0.3077,
+        "heightRangeMeters": [
+          -0.007,
+          0.03115
+        ],
+        "setClass": "T"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -4360,6 +4938,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.0354,
+          0.01442
+        ],
+        "setClass": "T"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -4440,6 +5026,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1.2,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.01273,
+          0.02575
+        ],
+        "setClass": "T"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -4520,6 +5114,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.0033,
+          0.01039
+        ],
+        "setClass": "T"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -4600,6 +5202,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.00448,
+          0.03303
+        ],
+        "setClass": "T"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -4680,6 +5290,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.00734,
+          0.01458
+        ],
+        "setClass": "T"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -4760,6 +5378,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 0.8,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.00718,
+          0.0113
+        ],
+        "setClass": "T"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -4840,6 +5466,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 0.6,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.00047,
+          0.00857
+        ],
+        "setClass": "T"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -4920,6 +5554,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1.4,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.00647,
+          0.03318
+        ],
+        "setClass": "T"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -5000,6 +5642,19 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 0.8,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "flowAxis": "+u",
+        "heightRangeMeters": [
+          -0.00477,
+          0.012
+        ],
+        "rippleWavelengthMeters": [
+          0.1,
+          0.2
+        ],
+        "setClass": "T"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -5080,6 +5735,23 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1,
       "trims": [],
+      "decals": [],
+      "ruts": {
+        "axis": "u",
+        "centersMeters": [
+          1.3,
+          2.7
+        ],
+        "gaugeMeters": 1.4,
+        "widthMeters": 0.22
+      },
+      "extras": {
+        "heightRangeMeters": [
+          -0.02346,
+          0.01346
+        ],
+        "setClass": "T"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -5160,6 +5832,16 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1.5,
       "trims": [],
+      "decals": [],
+      "projection": "triplanar",
+      "extras": {
+        "heightRangeMeters": [
+          -0.29291,
+          0.13229
+        ],
+        "setClass": "T",
+        "vUp": "v = world up on side projections"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -5240,6 +5922,16 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1.4,
       "trims": [],
+      "decals": [],
+      "projection": "triplanar",
+      "extras": {
+        "heightRangeMeters": [
+          -0.08882,
+          0.08964
+        ],
+        "setClass": "T",
+        "vUp": "v = world up on side projections"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -5320,6 +6012,16 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1.3,
       "trims": [],
+      "decals": [],
+      "projection": "triplanar",
+      "extras": {
+        "heightRangeMeters": [
+          -0.23737,
+          0.1764
+        ],
+        "setClass": "T",
+        "vUp": "v = world up on side projections"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -5399,6 +6101,14 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 0.9,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.00705,
+          0.03022
+        ],
+        "setClass": "T"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -5464,6 +6174,15 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1.4,
       "trims": [],
+      "decals": [],
+      "extras": {
+        "heightRangeMeters": [
+          -0.00299,
+          0.05178
+        ],
+        "setClass": "S",
+        "vUp": "v points UP the roof slope (stems hang toward -v)"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -5543,6 +6262,15 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1.2,
       "trims": [],
+      "decals": [],
+      "slopeAxis": "v",
+      "extras": {
+        "heightRangeMeters": [
+          -0.01227,
+          0.06875
+        ],
+        "setClass": "C"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -5608,6 +6336,15 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1.1,
       "trims": [],
+      "decals": [],
+      "grainAxis": "v",
+      "extras": {
+        "heightRangeMeters": [
+          -0.01208,
+          0.00713
+        ],
+        "setClass": "C"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -5731,6 +6468,71 @@ export const ASSET_MANIFEST = {
           "heightMeters": 0.5
         }
       ],
+      "decals": [
+        {
+          "name": "spiral_rosette",
+          "u": 0.086963,
+          "v": 0.252627,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.211963,
+          "v": 0.267373,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.336963,
+          "v": 0.252627,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.461963,
+          "v": 0.267373,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.586963,
+          "v": 0.252627,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.711963,
+          "v": 0.267373,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.836963,
+          "v": 0.252627,
+          "r": 0.02875,
+          "r_v": 0.02875
+        },
+        {
+          "name": "spiral_rosette",
+          "u": 0.961963,
+          "v": 0.267373,
+          "r": 0.02875,
+          "r_v": 0.02875
+        }
+      ],
+      "extras": {
+        "heightRangeMeters": [
+          -0.02005,
+          0.02214
+        ],
+        "setClass": "S"
+      },
       "maps": {
         "baseColor": {
           "ultra": {
@@ -5810,6 +6612,15 @@ export const ASSET_MANIFEST = {
       "metalness": 0,
       "normalScale": 1.2,
       "trims": [],
+      "decals": [],
+      "grainAxis": "v",
+      "extras": {
+        "heightRangeMeters": [
+          -0.01718,
+          0.02032
+        ],
+        "setClass": "C"
+      },
       "maps": {
         "baseColor": {
           "ultra": {

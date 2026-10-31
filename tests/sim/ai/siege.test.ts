@@ -19,7 +19,7 @@ import type { EngineerWorkState } from '../../../src/core/types';
 import { ringPoint } from '../../../src/sim/tactical/fort';
 import { RULES } from '../../../src/data/rules';
 import { runFor } from '../tactical/helpers';
-import { siegeBattle, summarize, TOWN_RADIUS } from './harness/sieges';
+import { GARRISON, siegeBattle, summarize, TOWN_RADIUS } from './harness/sieges';
 import type { TestBattle } from '../tactical/helpers';
 
 /** A finished ram of side 0 standing uncrewed at (x, z) (its engineers routed). */
@@ -96,6 +96,20 @@ describe('siege attack (AI besiegers)', () => {
     const reasoned = s.outcome === 'withdrawal' && s.withdrawReason !== null;
     expect(breach || reasoned, `${s.outcome} / ${s.withdrawReason}`).toBe(true);
     expect(s.minutes).toBeLessThan(29);
+  }, 180_000);
+
+  it('a stalled assault never runs out the clock in silence: against a stronger garrison it ends in a breach or states why it gave up', () => {
+    // Lead re-review round 1: with a third archer and spear block on the walls the ram crew routs 24 m before the gate
+    // and the last engineers stand trapped behind their own palisade - the plan must notice it has no headway.
+    const b = siegeBattle('engineers', {
+      controllers: ['ai', 'ai'],
+      timeLimitSec: 1800,
+      defenders: [...GARRISON, { cls: 'archers', x: -40, z: 60 }, { cls: 'spearmen', x: 30, z: 30 }],
+    });
+    const s = summarize(b, 1800);
+    const breach = (s.outcome === 'siege_breach' || s.outcome === 'rout') && s.winner === 0;
+    expect(breach || s.withdrawReason !== null, `${s.outcome} at ${s.minutes.toFixed(1)} min, reason ${s.withdrawReason}`).toBe(true);
+    if (!breach) expect(b.state.sides[0].withdrawn).toBe(true);
   }, 180_000);
 });
 

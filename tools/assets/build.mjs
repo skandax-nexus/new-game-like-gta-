@@ -17,8 +17,9 @@
  *                                        --previews-dir also copies the previews of every asset just baked
  *   npm run assets -- --style lighting:LIGHTING_PRESETS.dawn.sky   print style values (JSON) - used by scripts
  *   npm run assets -- --manifest         regenerate src/assets/manifest.ts from the record (generator changes)
- *   npm run assets -- --restamp          maintenance: re-stamp caches + build record after a change to the
- *                                        runner's hashing scheme only (asset inputs unchanged)
+ *   npm run assets -- --restamp [ids]    maintenance: re-stamp caches + build record after a change to the
+ *                                        runner's hashing scheme only (asset inputs unchanged), or - with ids -
+ *                                        after a library edit proven not to change those assets' outputs
  *
  * Docstring tags (first 4000 chars of the script):
  *   @asset <id>          == file name, snake_case
@@ -867,18 +868,22 @@ async function main() {
     return;
   }
   if (flags.has('--restamp')) {
+    // With ids: only those assets (a library edit proven not to change their outputs, e.g. a code path their
+    // styles disable); their dependents keep their stamps and stay DIRTY until rebuilt. Without ids: all.
+    const only = ids.length ? new Set(ids) : null;
     const hashes = new Map();
     for (const id of topoOrder(assets, [...assets.keys()])) {
       const a = assets.get(id);
       const h = inputHashFor(a, (d) => hashes.get(d) ?? '');
       hashes.set(id, h);
+      if (only && !only.has(id)) continue;
       const outDir = path.join(CACHE_DIR, id);
       if (fs.existsSync(path.join(outDir, 'asset.json'))) fs.writeFileSync(path.join(outDir, '.inputhash'), h);
       console.log(`[assets] ${id}: restamped ${h.slice(0, 10)}`);
     }
     await withPublishLock('restamp', async () => {
       const fresh = loadPublished();
-      for (const [id, h] of hashes) if (fresh.assets[id]) fresh.assets[id].inputHash = h;
+      for (const [id, h] of hashes) if (fresh.assets[id] && (!only || only.has(id))) fresh.assets[id].inputHash = h;
       savePublished(fresh);
       writeManifest(fresh);
     });

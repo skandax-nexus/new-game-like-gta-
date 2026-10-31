@@ -28,10 +28,25 @@ export interface TextureFileEntry {
   readonly bytes: number;
   /** Square size in pixels. */
   readonly size: number;
+  /**
+   * Present when the file keeps an alpha channel: what it holds (straight, not premultiplied), e.g. 'puddleMask' /
+   * 'standingWaterMask' / 'mask' on a terrain baseColor (standing water for the splat shader). Absent = opaque RGB.
+   */
+  readonly alpha?: string;
+}
+
+/** What a map's channels carry beyond their standard meaning, e.g. orm `{blue: 'decalOpacity'}`, baseColor `{alpha: 'puddleMask'}`. */
+export interface TextureChannelUsage {
+  readonly red?: string;
+  readonly green?: string;
+  readonly blue?: string;
+  readonly alpha?: string;
 }
 
 export interface TextureSetEntry {
   readonly maps: { readonly [K in TextureMapName]?: TierMap<TextureFileEntry> };
+  /** Non-standard channel usage per map (absent = every channel has its standard meaning). */
+  readonly channels?: { readonly [K in TextureMapName]?: TextureChannelUsage };
 }
 
 export interface TrimEntry {
@@ -56,6 +71,53 @@ interface AssetEntryBase {
   readonly fallback: string | null;
 }
 
+/**
+ * Decal-atlas region (decals_settlement...): a rectangle of the sheet placed as a projected / mesh decal.
+ * UVs in the trim convention (v 0 = bottom of the sheet); opacity lives in the channel `decalAtlas.opacity` names.
+ */
+export interface DecalRegionEntry {
+  readonly name: string;
+  /** mandana | kolam | crack | soot | charring | damp | ... */
+  readonly category: string;
+  /** wall | ground | any */
+  readonly surface: string;
+  /** The region repeats along u (borders, rising damp bands). */
+  readonly tileU: boolean;
+  readonly u0: number;
+  readonly v0: number;
+  readonly u1: number;
+  readonly v1: number;
+  /** World size of the region [width, height] in meters. */
+  readonly sizeMeters: readonly number[];
+}
+
+/** Single carved motif on a trim sheet (spiral_rosette, lotus_medallion...): centre (u, v) and radii in UV units. */
+export interface DecalOrnamentEntry {
+  readonly name: string;
+  readonly u: number;
+  readonly v: number;
+  readonly r: number;
+  readonly r_v: number;
+}
+
+export type MaterialDecalEntry = DecalRegionEntry | DecalOrnamentEntry;
+
+/** Narrow a material decal to the atlas-region form. */
+export function isDecalRegion(d: MaterialDecalEntry): d is DecalRegionEntry {
+  return 'u0' in d;
+}
+
+/** Texture-space axis: 'u' / 'v', optionally signed ('+u' = flow toward +u). */
+export type MaterialAxis = 'u' | 'v' | '+u' | '-u' | '+v' | '-v';
+
+/** Cart ruts of a road layer (terrain_road_earth): rut centre lines across the tile, along `axis`. */
+export interface MaterialRutsEntry {
+  readonly axis: MaterialAxis;
+  readonly centersMeters: readonly number[];
+  readonly gaugeMeters: number;
+  readonly widthMeters: number;
+}
+
 export interface MaterialAssetEntry extends AssetEntryBase, TextureSetEntry {
   readonly kind: 'material';
   readonly tileSizeMeters: readonly [number, number] | readonly number[];
@@ -65,6 +127,19 @@ export interface MaterialAssetEntry extends AssetEntryBase, TextureSetEntry {
   readonly metalness: number;
   readonly normalScale: number;
   readonly trims: readonly TrimEntry[];
+  /** Decal regions of a decal atlas, or single ornament motifs of a trim sheet ([] when none). */
+  readonly decals: readonly MaterialDecalEntry[];
+  /** 'triplanar' for cliff / rock splat layers authored with v = world up on the side projections (absent = UV). */
+  readonly projection?: 'uv' | 'triplanar';
+  /** Wood grain direction in texture space (timber sets). */
+  readonly grainAxis?: MaterialAxis;
+  /** Texture axis that runs up a roof slope (thatch, slab roofs). */
+  readonly slopeAxis?: MaterialAxis;
+  readonly ruts?: MaterialRutsEntry;
+  /** Decal atlas layout: opacity channel ('orm.b'), region count, sheet size in meters. */
+  readonly decalAtlas?: { readonly opacity: string; readonly regions: number; readonly sizeMeters: readonly number[] };
+  /** Other script metadata passed through (setClass, heightRangeMeters, vUp, furrowAxis, flowAxis...). */
+  readonly extras?: { readonly [key: string]: JsonValue };
 }
 
 export interface ModelLodEntry {

@@ -298,7 +298,7 @@ export function planMilitary(sit: Situation, strategy: boolean): void {
   if (!strategy) return;
   // 3. Offensives (main army; others join it).
   const homeThreat = threats.some((t) => t.besieged || (t.threat > t.defense && (!main || t.threat > 0.5 * armyStrength(main))));
-  if (main && !tasked.has(main.id) && !homeThreat && armySupplyDays(world, main) >= 8) offensive(sit, main, seen, ratio, homeSafe(sit, main), tasked);
+  if (main && !tasked.has(main.id) && !homeThreat && marchReady(world, main)) offensive(sit, main, seen, ratio, homeSafe(sit, main), tasked);
   // 4. Raids (raid weight >= 1): a secondary mounted force raids weakly held enemy settlements.
   if (sit.personality.weights.raid >= 1 && sit.enemies.length > 0) {
     for (const a of sit.armies) {
@@ -335,6 +335,19 @@ export function planMilitary(sit: Situation, strategy: boolean): void {
   const aggr = aggressionOf(sit);
   const stance: ArmyStance = aggr > 0.62 ? 'aggressive' : aggr < 0.38 ? 'cautious' : 'balanced';
   for (const a of sit.armies) if (a.stance !== stance && !a.engagementId) issue(sit, { kind: 'set_army_stance', armyId: a.id, stance });
+}
+
+/**
+ * Fed well enough to march on an offensive: 8+ days of food, or drawing from an own source (line intact) with the train
+ * at least RESUPPLY_DONE full - the share at which a resupply ends. Lead re-review round 1: a host grown by recruits
+ * outgrew its one train (sandbox seed 5: 7.6 days at 88%, fed at Rajapura) and stood at home 486 days at war, neither
+ * resupplying (the train never fills further) nor marching.
+ */
+function marchReady(world: Situation['world'], a: ArmyState): boolean {
+  const days = armySupplyDays(world, a);
+  if (days >= 8) return true;
+  const share = a.supply.foodCapacity > 0 ? a.supply.food / a.supply.foodCapacity : 1;
+  return a.supply.sourceId !== null && a.supply.lineIntact && share >= RESUPPLY_DONE && days >= 3;
 }
 
 /** How urgently a threatened settlement needs help: the capital and besieged towns first, then the deficit. */

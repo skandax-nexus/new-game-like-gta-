@@ -105,6 +105,10 @@ export const TEXTURE_ENCODING = {
   flipbook_lossless: { lossless: true, effort: 6 },
   flipbook_near_lossless: { nearLossless: true, quality: 60, effort: 6 },
   image: { quality: 88, alphaQuality: 92, smartSubsample: true, effort: 6 },
+  // Texture-set `encoding` overrides (asset.json files[].encoding): fine saturated detail (grass blades) shifts in
+  // saturation under lossy 4:2:0 - near-lossless keeps full chroma (terrain_grass_lush: +225 KB at 1024, lime 0 %).
+  texture_near_lossless: { nearLossless: true, quality: 60, effort: 5 },
+  texture_lossless: { lossless: true, effort: 5 },
 };
 
 /** Texture maps the runtime understands (anything else is cache-only). */

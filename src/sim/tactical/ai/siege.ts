@@ -35,8 +35,8 @@
  *  - Dry archers draw arrows from the supply train when the army has one.
  *  - Withdrawal (the reason is kept in the side's plan memory `withdrawReason` and the plan log): nothing left to
  *    breach the walls with (no engineers, elephants, crewed ram, breach or ladder) for 30 s; the assault is spent
- *    (below SIEGE_AI.spentShare of its starting strength with no way in); or the storm was thrown back (nobody fit to
- *    storm for 30 s).
+ *    (below SIEGE_AI.spentShare of its starting strength with no way in); the assault stalled (no way in and no headway
+ *    of any kind for SIEGE_AI.stallSec - see `stalled`); or the storm was thrown back (nobody fit to storm for 30 s).
  * Defence (the garrison):
  *  - Archers man the intact towers nearest the threatened point (breach, ladder, the gate nearest the enemy) first -
  *    the nearest free archer to each tower, towers in order of angular distance from the threat, while the threat is
@@ -48,7 +48,7 @@
  *    of the walls when nothing stronger guards them, and come back inside afterwards.
  * Plan memory (BattleSideState.aiMemory): `sgPhase`, `sgStart`, `sgRamDone`, `sgRamX/Z`, `sgGate`, `sgScreen`,
  * `sgScreenStart`, `sgScreenAt`, `sgRun`, `sgStage`, `sgStageWait`, `sgGo`, `sgNoStorm`, `sgRow*` (stable left-to-right
- * orders), `up<i>` / `ux<i>` (jam marks), `sgRepair`, `hopeless`, `withdrawReason`, `sally`.
+ * orders), `up<i>` / `ux<i>` (jam marks), `sgPg*` (headway marks), `sgRepair`, `hopeless`, `withdrawReason`, `sally`.
  */
 import type { EngineerWorkState, FormationOrder, FormationState } from '../../../core/types';
 import { dcos, dsin, facingOf, PI } from '../../../core/math';
@@ -104,6 +104,13 @@ export const SIEGE_AI = {
   spentShare: 0.35,
   /** ... and after this long (s) with nothing left to breach the walls with. */
   hopelessSec: 30,
+  /**
+   * Without a way in, the assault withdraws after this long (s) with no headway at all: no wall or gate damage, no
+   * siege work progressing, no engineers / elephants on the move, no crewed ram nearer the gate, no known
+   * defender losing men or arrows (a deadlock - e.g. its
+   * last engineers trapped - never runs out the time limit; SIM-02 lead re-review round 1).
+   */
+  stallSec: 240,
 } as const;
 
 const p = { x: 0, z: 0 };
@@ -282,6 +289,63 @@ function withdraw(ai: AiSide, reason: string): void {
   ai.mem.withdrawReason = reason;
   setPhase(ai, 'withdraw', reason);
   ai.cmds.push({ kind: 'withdraw_all' });
+}
+
+/**
+ * Headway watchdog (SIEGE_AI.stallSec): true once the assault has made no headway for that long. Headway is any of:
+ * more damage on the walls and gates, own siege works further along, engineers / elephants on the move, a crewed ram
+ * nearer the gate than ever, known defenders with fewer men or arrows. Memory `sgPgT` (last headway), `sgPgDmg`,
+ * `sgPgWork`, `sgPgFoe`, `sgPgTX` / `sgPgTZ`, `sgPgRam`.
+ */
+function stalled(ai: AiSide, ramDist: number): boolean {
+  const s = ai.state;
+  const sg = s.siege!;
+  let dmg = 0;
+  for (const gt of sg.gates) dmg += gt.maxHp - Math.max(0, gt.hp);
+  for (const seg of sg.segments) dmg += seg.maxHp - Math.max(0, seg.hp);
+  let work = 0;
+  for (const w of s.works) if (w.side === ai.side && w.hp > 0) work += w.progress;
+  let foe = 0;
+  for (const e of ai.known) foe += e.soldiers + e.ammo;
+  // Siege tools (engineers, elephants) on the move: their summed position (a trapped formation does not move at all,
+  // whatever order or sidestep it is given; one walking to a distant site does).
+  let toolX = 0;
+  let toolZ = 0;
+  for (const f of ai.own) {
+    if (f.unitClass !== 'engineers' && f.unitClass !== 'war_elephants') continue;
+    toolX += f.x;
+    toolZ += f.z;
+  }
+  const ram = Number.isFinite(ramDist) ? ramDist : 1e6;
+  const m = ai.mem;
+  if (typeof m.sgPgT !== 'number') {
+    m.sgPgT = s.time;
+    m.sgPgDmg = dmg;
+    m.sgPgWork = work;
+    m.sgPgFoe = foe;
+    m.sgPgTX = toolX;
+    m.sgPgTZ = toolZ;
+    m.sgPgRam = ram;
+    return false;
+  }
+  let headway = false;
+  if (dmg > (m.sgPgDmg as number) + 0.5) headway = true;
+  if (work > (m.sgPgWork as number) + 1e-3) headway = true;
+  if (foe < (m.sgPgFoe as number)) headway = true;
+  if (Math.abs(toolX - (m.sgPgTX as number)) + Math.abs(toolZ - (m.sgPgTZ as number)) > 0.5) headway = true;
+  if (ram < (m.sgPgRam as number) - 3) headway = true;
+  // Marks follow the state both ways (a repaired gate or a lost work is not counted as headway when regained).
+  m.sgPgDmg = dmg;
+  m.sgPgWork = work;
+  m.sgPgFoe = foe;
+  m.sgPgTX = toolX;
+  m.sgPgTZ = toolZ;
+  if (ram < (m.sgPgRam as number)) m.sgPgRam = ram;
+  if (headway) {
+    m.sgPgT = s.time;
+    return false;
+  }
+  return s.time - (m.sgPgT as number) >= SIEGE_AI.stallSec;
 }
 
 const engineers: FormationState[] = [];
@@ -513,6 +577,10 @@ function attack(ai: AiSide, g: FortGeometry): void {
   let lead = Infinity;
   for (const f of batterers) lead = Math.min(lead, outwardOf(f.x, f.z));
   const ramDist = crew ? dist(crew, axis) : Infinity;
+  if (!kind && stalled(ai, ramDist)) {
+    withdraw(ai, `the assault stalled (no headway against the walls for ${Math.round(SIEGE_AI.stallSec / 60)} min)`);
+    return;
+  }
   const committed = kind !== null || laddersUp || ramDist <= SIEGE_AI.commitRamDist || (crew === null && elephants.length > 0 && lead <= SIEGE_AI.commitRamDist);
 
   // --- The screen: the freshest melee blocks walk ahead of the batterers and draw the walls' volleys (wall shooters
@@ -549,7 +617,7 @@ function attack(ai: AiSide, g: FortGeometry): void {
   if (toolsReady && typeof ai.mem.sgScreenStart !== 'number') ai.mem.sgScreenStart = s.time;
   if (kind) setPhase(ai, 'storm', kind === 'breach' ? 'the way in is open' : 'ladders are up');
   else if (committed) setPhase(ai, 'cover', laddersUp ? 'ladders are up: the archers close to their palisades' : 'the ram is near the gate: the archers close to their palisades');
-  else if (going) setPhase(ai, 'approach', `${crew ? 'the ram goes' : 'the elephants go'} in behind the screen${palisadesPending === 0 && palisades > 0 ? ' (palisades up)' : ''}`);
+  else if (going) setPhase(ai, 'approach', `${crew ? 'the ram goes' : elephants.length > 0 ? 'the elephants go' : 'the assault goes'} in behind the screen${palisadesPending === 0 && palisades > 0 ? ' (palisades up)' : ''}`);
   else if (toolsReady) setPhase(ai, 'screen', screened ? 'the screen walks out to draw the walls’ arrows; palisades go up behind it' : 'palisades go up');
   else setPhase(ai, 'prepare', 'the ram is built out of bow shot');
 

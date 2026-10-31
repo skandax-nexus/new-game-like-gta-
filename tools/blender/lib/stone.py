@@ -141,7 +141,7 @@ def surface(h: np.ndarray, ao: np.ndarray, masks: dict, wm: dict, size_m: tuple[
     t = (0.5 + 0.2 * tg.fbm(x, y, _f(0.8, W), 5, rng) + 0.36 * (stone - 0.5)
          + 0.07 * tg.fbm(x, y, _f(12, W), 3, rng) + 0.06 * tg.fbm(x, y, _f(45, W), 3, rng)
          + 0.05 * tg.fbm(x, y, _f(160, W), 2, rng))
-    bed = np.sin(2 * np.pi * (y * W * 6.5 + 1.4 * tg.fbm(x, y, _f(0.6, W), 3, rng)))
+    bed = np.sin(2 * np.pi * (y * _f(6.5, W) + 1.4 * tg.fbm(x, y, _f(0.6, W), 3, rng)))  # integer cycles: seamless
     t += 0.035 * bed * style.banding
     col = tg.gradient_map(np.clip(t, 0.0, 1.0), style.stops)
     # hue mottling independent of value: purple-brown vs orange-red zones (5-30 cm), like real Vindhyan stone
@@ -153,9 +153,11 @@ def surface(h: np.ndarray, ao: np.ndarray, masks: dict, wm: dict, size_m: tuple[
     tints = np.stack([tg.hex_to_linear(c) for c in style.tints])
     tidx = np.clip((stone * 7.31 % 1.0) * len(style.tints), 0, len(style.tints) - 1).astype(np.int64)
     col *= tints[tidx]
-    # iron banding: broad tone waves + a few thin, faint liesegang lines (parallel, warped)
+    # iron banding: broad tone waves + a few thin, faint liesegang lines (parallel, warped). The wave vector is
+    # integer cycles per tile (2.4 / m in v, 1.05 / m in u, rounded: 5 and 2 on a 2 m tile, as
+    # materials/_sandstone.iron_banding), so the bands meet themselves across the tile border.
     wx, wy = tg.warp(x, y, 0.08, _f(0.5, W), 3, rng)
-    phase = (wy * 0.8 + wx * 0.35) * W * 3.0
+    phase = wy * _f(2.4, W) + wx * int(round(1.05 * W))
     col *= (1.0 + 0.06 * np.sin(2 * np.pi * phase) * style.banding)[..., None]
     lines = tg.smoothstep(0.965, 0.995, np.sin(2 * np.pi * phase * 2.0)) * style.banding
     lines *= tg.smoothstep(-0.1, 0.4, tg.fbm(x, y, _f(0.7, W), 3, rng))

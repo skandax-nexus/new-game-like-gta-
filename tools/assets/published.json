@@ -1293,6 +1293,11 @@
               "size": 256
             }
           }
+        },
+        "channels": {
+          "orm": {
+            "blue": "decalOpacity"
+          }
         }
       },
       "bytes": {
@@ -4985,7 +4990,7 @@
       "kind": "material",
       "category": "materials",
       "script": "tools/blender/assets/materials/sandstone_buff.py",
-      "inputHash": "74b15041ceebd9adf8a80783c52b13fba4818135e99d12eac4b4d3bfab38b5ef",
+      "inputHash": "080a72e6aebb56058d391e35296dde200a6f30657189f5e3bec5ae91d428c316",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -5329,7 +5334,7 @@
       "kind": "material",
       "category": "materials",
       "script": "tools/blender/assets/materials/sandstone_carved_red.py",
-      "inputHash": "fd4c7e11c4f11b03881d7d8d15a6d895862f28a72ae60a9a0dfb4decb16c0eb7",
+      "inputHash": "2a2035d1d34771134e5b2c47916fea0a1eaa11f7413a725513e517f18971d2f6",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {

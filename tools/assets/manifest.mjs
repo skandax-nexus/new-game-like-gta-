@@ -23,8 +23,51 @@ function tierMap(src, fn) {
 
 function setEntry(set) {
   const maps = {};
-  for (const [map, tiers] of Object.entries(set.maps)) maps[map] = tierMap(tiers, (f) => ({ url: f.path, bytes: f.bytes, size: f.size }));
-  return { maps };
+  const channels = set.channels ?? {};
+  for (const [map, tiers] of Object.entries(set.maps)) {
+    const alpha = channels[map]?.alpha;
+    maps[map] = tierMap(tiers, (f) => ({ url: f.path, bytes: f.bytes, size: f.size, ...(alpha ? { alpha } : {}) }));
+  }
+  return Object.keys(channels).length ? { maps, channels } : { maps };
+}
+
+/** Material meta keys with a typed manifest field, or cache-only (never passed through as `extras`). */
+const MATERIAL_TYPED_META = new Set([
+  'averageColor', 'decalAtlas', 'decals', 'description', 'grainAxis', 'metalness', 'normalScale', 'projection',
+  'puddleMask', 'qa', 'roughness', 'ruts', 'slopeAxis', 'tileSizeMeters', 'trims', 'waterMask',
+]);
+
+/** Decal regions (meta.decals): atlas regions {name, category, surface, tileU, u0, v0, u1, v1, sizeMeters} or ornaments {name, u, v, r, r_v}. */
+function decalEntry(d) {
+  if (d.u0 !== undefined)
+    return {
+      name: d.name,
+      category: d.category ?? '',
+      surface: d.surface ?? 'any',
+      tileU: !!d.tileU,
+      u0: round(d.u0, 6),
+      v0: round(d.v0, 6),
+      u1: round(d.u1, 6),
+      v1: round(d.v1, 6),
+      sizeMeters: roundVec(d.sizeMeters, 4),
+    };
+  return { name: d.name, u: round(d.u, 6), v: round(d.v, 6), r: round(d.r, 6), r_v: round(d.r_v ?? d.r, 6) };
+}
+
+/** Optional material metadata: projection / axes / ruts / decal atlas, and the remaining meta keys as `extras`. */
+function materialExtras(m) {
+  const out = {};
+  if (m.projection !== undefined) out.projection = m.projection;
+  if (m.grainAxis !== undefined) out.grainAxis = m.grainAxis;
+  if (m.slopeAxis !== undefined) out.slopeAxis = m.slopeAxis;
+  if (m.ruts !== undefined)
+    out.ruts = { axis: m.ruts.axis, centersMeters: roundVec(m.ruts.centersMeters), gaugeMeters: round(m.ruts.gaugeMeters), widthMeters: round(m.ruts.widthMeters) };
+  if (m.decalAtlas !== undefined)
+    out.decalAtlas = { opacity: m.decalAtlas.opacity, regions: m.decalAtlas.regions, sizeMeters: roundVec(m.decalAtlas.sizeMeters) };
+  const extras = {};
+  for (const k of Object.keys(m).sort()) if (!MATERIAL_TYPED_META.has(k)) extras[k] = m[k];
+  if (Object.keys(extras).length) out.extras = extras;
+  return out;
 }
 
 function bounds(b) {
@@ -59,6 +102,8 @@ function entryFor(a) {
         metalness: round(m.metalness ?? 0, 3),
         normalScale: round(m.normalScale ?? 1, 3),
         trims: (m.trims ?? []).map((t) => ({ name: t.name, v0: round(t.v0, 6), v1: round(t.v1, 6), heightMeters: round(t.heightMeters, 4) })),
+        decals: (m.decals ?? []).map(decalEntry),
+        ...materialExtras(m),
         ...setEntry(a.set),
       };
     case 'model': {

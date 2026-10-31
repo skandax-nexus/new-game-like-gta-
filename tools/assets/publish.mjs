@@ -70,22 +70,103 @@ function bySize(tiers, sizeOf) {
 }
 
 // =========================================================================================== textures
-/** Encode one square source texture into per-tier WebP files. Returns { [tier]: {path, bytes, size} }. */
-async function publishTexture(srcPath, map, relPrefix, outFiles, tierScale = 1, tiers = TIERS) {
+/** Per-file channel usage keys in asset.json (`files[].alpha = 'puddleMask'`, `files[].blue = 'decalOpacity'`). */
+export const CHANNEL_KEYS = ['red', 'green', 'blue', 'alpha'];
+/** Per-file `encoding` overrides for texture-set maps (asset.json files[].encoding). */
+const TEXTURE_ENCODING_OVERRIDES = { near_lossless: 'texture_near_lossless', lossless: 'texture_lossless' };
+
+/**
+ * Pixel size of one texture on one tier: `tierSizes` ({ultra: 1024, high: 512, mobile: 512}, absent tiers fall
+ * back to the scale rule) wins over `tierScale` (tier max x scale); never above the source, never below 64, never
+ * above the tier's texture budget (TIER_MAX_TEXTURE).
+ */
+export function textureTierSize(srcSize, tier, { tierScale = 1, tierSizes = null } = {}, where = 'texture') {
+  const explicit = tierSizes?.[tier];
+  if (explicit !== undefined && (!Number.isInteger(explicit) || explicit < 1)) throw new Error(`${where}: tierSizes.${tier} must be a positive integer`);
+  if (explicit !== undefined && explicit > TIER_MAX_TEXTURE[tier]) throw new Error(`${where}: tierSizes.${tier} = ${explicit} exceeds the ${tier} limit ${TIER_MAX_TEXTURE[tier]}`);
+  const want = explicit ?? Math.round(TIER_MAX_TEXTURE[tier] * tierScale);
+  return Math.min(srcSize, Math.max(64, want));
+}
+
+/** Channel usage of one asset.json file entry ({blue: 'decalOpacity', alpha: 'puddleMask'}), or null. */
+export function channelUsage(f, where = 'texture') {
+  const out = {};
+  for (const k of CHANNEL_KEYS) {
+    if (f[k] === undefined || f[k] === null || f[k] === false) continue;
+    if (typeof f[k] !== 'string' || !/^[a-zA-Z][a-zA-Z0-9_]*$/.test(f[k])) throw new Error(`${where}: channel usage ${k} must be a camelCase name (got ${JSON.stringify(f[k])})`);
+    out[k] = f[k];
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+/** WebP settings for a map, honouring a per-file `encoding` override ('near_lossless' | 'lossless'). */
+export function textureEncodingFor(map, encoding, where = 'texture') {
+  if (encoding === undefined || encoding === null) return TEXTURE_ENCODING[map] ?? TEXTURE_ENCODING.baseColor;
+  const key = TEXTURE_ENCODING_OVERRIDES[encoding];
+  if (!key) throw new Error(`${where}: unknown texture encoding "${encoding}" (${Object.keys(TEXTURE_ENCODING_OVERRIDES).join(' | ')})`);
+  return TEXTURE_ENCODING[key];
+}
+
+/**
+ * Resize RGB and A of an RGBA source independently (straight alpha: no premultiply, so a data mask in alpha never
+ * darkens the colour - sharp premultiplies RGBA resizes) and return raw RGBA at size x size.
+ */
+async function resizeStraightAlpha(srcPath, size) {
+  const { data, info } = await sharp(srcPath, { limitInputPixels: false }).raw({ depth: 'uchar' }).toBuffer({ resolveWithObject: true });
+  if (info.channels !== 4) throw new Error(`${srcPath}: an alpha usage needs an RGBA source (got ${info.channels} channels)`);
+  const n = info.width * info.height;
+  const rgb = Buffer.alloc(n * 3);
+  const a = Buffer.alloc(n);
+  for (let i = 0; i < n; i++) {
+    rgb[i * 3] = data[i * 4];
+    rgb[i * 3 + 1] = data[i * 4 + 1];
+    rgb[i * 3 + 2] = data[i * 4 + 2];
+    a[i] = data[i * 4 + 3];
+  }
+  const resize = (buf, channels) =>
+    size === info.width
+      ? Promise.resolve(buf)
+      : sharp(buf, { raw: { width: info.width, height: info.height, channels } }).resize(size, size, { kernel: 'lanczos3', fit: 'fill' }).raw().toBuffer();
+  const [rgbS, aS] = await Promise.all([resize(rgb, 3), resize(a, 1)]);
+  const out = Buffer.alloc(size * size * 4);
+  for (let i = 0; i < size * size; i++) {
+    out[i * 4] = rgbS[i * 3];
+    out[i * 4 + 1] = rgbS[i * 3 + 1];
+    out[i * 4 + 2] = rgbS[i * 3 + 2];
+    out[i * 4 + 3] = aS[i];
+  }
+  return out;
+}
+
+/**
+ * Encode one square source texture into per-tier WebP files. Returns { [tier]: {path, bytes, size} }.
+ * `opts`: tierScale / tierSizes (textureTierSize), encoding (textureEncodingFor), alpha (usage name: keep the
+ * source alpha channel, straight - otherwise alpha is dropped).
+ */
+async function publishTexture(srcPath, map, relPrefix, outFiles, opts = {}, tiers = TIERS) {
   const meta = await sharp(srcPath).metadata();
   const srcSize = Math.max(meta.width ?? 0, meta.height ?? 0);
   if (!srcSize) throw new Error(`cannot read ${srcPath}`);
   if ((meta.width ?? 0) !== (meta.height ?? 0)) throw new Error(`${srcPath}: textures must be square (got ${meta.width}x${meta.height})`);
-  const enc = TEXTURE_ENCODING[map] ?? TEXTURE_ENCODING.baseColor;
+  const where = `${path.basename(srcPath)} (${map})`;
+  const enc = textureEncodingFor(map, opts.encoding, where);
+  const keepAlpha = typeof opts.alpha === 'string' && opts.alpha.length > 0;
+  if (keepAlpha && !meta.hasAlpha) throw new Error(`${where}: alpha usage "${opts.alpha}" but the source has no alpha channel`);
   const result = {};
-  for (const [size, ts] of bySize(tiers, (t) => Math.min(srcSize, Math.max(64, Math.round(TIER_MAX_TEXTURE[t] * tierScale))))) {
+  for (const [size, ts] of bySize(tiers, (t) => textureTierSize(srcSize, t, opts, where))) {
     const relPath = `${relPrefix}${map}_${size}.webp`;
     const out = path.join(PUBLIC_DIR, relPath);
     ensureDir(out);
-    let img = sharp(srcPath, { limitInputPixels: false });
-    if (size !== srcSize) img = img.resize(size, size, { kernel: 'lanczos3', fit: 'fill' });
-    // Keep values as stored (no ICC conversion): base color is sRGB-encoded, data maps are linear.
-    await img.removeAlpha().webp(enc).toFile(out);
+    if (keepAlpha) {
+      // exact: keep RGB under alpha 0 (the alpha is a data mask, not coverage)
+      const raw = await resizeStraightAlpha(srcPath, size);
+      await sharp(raw, { raw: { width: size, height: size, channels: 4 } }).webp({ ...enc, exact: true }).toFile(out);
+    } else {
+      let img = sharp(srcPath, { limitInputPixels: false });
+      if (size !== srcSize) img = img.resize(size, size, { kernel: 'lanczos3', fit: 'fill' });
+      // Keep values as stored (no ICC conversion): base color is sRGB-encoded, data maps are linear.
+      await img.removeAlpha().webp(enc).toFile(out);
+    }
     const f = record(outFiles, relPath, ts, { kind: 'texture', map, size });
     for (const t of ts) result[t] = { path: relPath, bytes: f.bytes, size };
   }
@@ -94,10 +175,12 @@ async function publishTexture(srcPath, map, relPrefix, outFiles, tierScale = 1, 
 
 /**
  * Publish the texture maps of one set. `setName` null = the material asset itself (files whose role
- * is a map name), otherwise model-local set files ({set, map}).
+ * is a map name), otherwise model-local set files ({set, map}). Per-file channel usage (red/green/blue/alpha)
+ * is recorded as `channels: {map: {blue: 'decalOpacity'}}` (only when any file declares one).
  */
 export async function publishTextureSet(assetId, srcDir, metaFiles, kindDir, setName, outFiles, tiers = TIERS) {
   const maps = {};
+  const channels = {};
   const files = metaFiles.filter((f) =>
     setName === null ? TEXTURE_MAPS.includes(f.role) && !f.set && f.ship !== false : f.set === setName && f.ship !== false,
   );
@@ -105,10 +188,13 @@ export async function publishTextureSet(assetId, srcDir, metaFiles, kindDir, set
     const map = setName === null ? f.role : f.map;
     if (!TEXTURE_MAPS.includes(map)) throw new Error(`${assetId}: unknown texture map "${map}"`);
     const prefix = setName === null ? `${kindDir}/${assetId}/` : `${kindDir}/${assetId}/${setName}.`;
-    maps[map] = await publishTexture(path.join(srcDir, f.path), map, prefix, outFiles, f.tierScale ?? 1, tiers);
+    const usage = channelUsage(f, `${assetId}: ${map}`);
+    if (usage) channels[map] = usage;
+    const opts = { tierScale: f.tierScale ?? 1, tierSizes: f.tierSizes ?? null, encoding: f.encoding ?? null, alpha: usage?.alpha ?? null };
+    maps[map] = await publishTexture(path.join(srcDir, f.path), map, prefix, outFiles, opts, tiers);
   }
   if (!Object.keys(maps).length) throw new Error(`${assetId}: texture set ${setName ?? '(material)'} has no shippable maps`);
-  return { maps };
+  return Object.keys(channels).length ? { maps, channels } : { maps };
 }
 
 /** Fill the RGB of (nearly) transparent texels from opaque neighbours so filtering never pulls in black. */
@@ -766,6 +852,47 @@ function validateModelMeta(id, m, clips) {
   }
 }
 
+const AXIS = /^[+-]?[uv]$/;
+
+/** Validate the typed optional material metadata (decals, projection, axes, ruts, channel usage). */
+function validateMaterialMeta(id, m, set) {
+  const where = `${id}.material`;
+  if (m.decals !== undefined) {
+    if (!Array.isArray(m.decals)) throw new Error(`${where}.decals must be an array`);
+    m.decals.forEach((d, i) => {
+      const w = `${where}.decals[${i}]`;
+      if (!isObj(d) || typeof d.name !== 'string' || !d.name) throw new Error(`${w}: needs a name`);
+      if (d.u0 !== undefined) {
+        if (![d.u0, d.v0, d.u1, d.v1].every((x) => isNum(x) && x >= 0 && x <= 1) || d.u1 <= d.u0 || d.v1 <= d.v0)
+          throw new Error(`${w} (${d.name}): atlas region needs 0 <= u0 < u1 <= 1, 0 <= v0 < v1 <= 1`);
+        if (!isVec(d.sizeMeters, 2) || typeof d.category !== 'string' || typeof d.surface !== 'string' || typeof d.tileU !== 'boolean')
+          throw new Error(`${w} (${d.name}): atlas region is {name, category, surface, tileU, u0, v0, u1, v1, sizeMeters [w, h]}`);
+      } else if (![d.u, d.v, d.r].every(isNum) || (d.r_v !== undefined && !isNum(d.r_v))) {
+        throw new Error(`${w} (${d.name}): ornament decal is {name, u, v, r, r_v} (or an atlas region with u0..v1)`);
+      }
+    });
+  }
+  if (m.projection !== undefined && !['uv', 'triplanar'].includes(m.projection)) throw new Error(`${where}.projection must be 'uv' | 'triplanar'`);
+  for (const k of ['grainAxis', 'slopeAxis'])
+    if (m[k] !== undefined && (typeof m[k] !== 'string' || !AXIS.test(m[k]))) throw new Error(`${where}.${k} must be u | v (optionally signed)`);
+  if (m.ruts !== undefined) {
+    const r = m.ruts;
+    if (!isObj(r) || typeof r.axis !== 'string' || !AXIS.test(r.axis) || !Array.isArray(r.centersMeters) || !r.centersMeters.every(isNum) || !isNum(r.gaugeMeters) || !isNum(r.widthMeters))
+      throw new Error(`${where}.ruts: {axis, centersMeters[], gaugeMeters, widthMeters}`);
+  }
+  if (m.decalAtlas !== undefined) {
+    const a = m.decalAtlas;
+    if (!isObj(a) || typeof a.opacity !== 'string' || !isNum(a.regions) || !isVec(a.sizeMeters, 2)) throw new Error(`${where}.decalAtlas: {opacity, regions, sizeMeters [w, h]}`);
+  }
+  const extras = Object.fromEntries(Object.entries(m).filter(([k]) => k !== 'qa'));
+  validateJson(extras, where);
+  if (JSON.stringify(extras).length > 32768) throw new Error(`${where} metadata exceeds 32 KB`);
+  for (const [map, usage] of Object.entries(set?.channels ?? {})) {
+    if (!set.maps?.[map]) throw new Error(`${where}: channel usage for unpublished map ${map}`);
+    channelUsage(usage, `${where}.channels.${map}`);
+  }
+}
+
 /** Structural checks of one build-record entry (publish time and `--check`). */
 export function validateRecordEntry(a) {
   const tiers = a.tiers ?? TIERS;
@@ -773,6 +900,9 @@ export function validateRecordEntry(a) {
   for (const f of a.files) for (const t of f.tiers) if (!tiers.includes(t)) throw new Error(`${a.id}: ${f.path} ships on ${t}, outside @tiers`);
   const m = a.meta ?? {};
   switch (a.kind) {
+    case 'material':
+      validateMaterialMeta(a.id, m, a.set);
+      break;
     case 'model':
       validateModelMeta(a.id, m, m.clips ?? []);
       break;

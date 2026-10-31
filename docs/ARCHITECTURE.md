@@ -452,7 +452,7 @@ Blender) | `--list` | `--check` (files, sizes, manifest freshness, budgets; CI-s
 
 | Kind | Script outputs (asset.json roles) | Published | Manifest entry |
 |---|---|---|---|
-| `material` | `baseColor` (sRGB), `normal` (16-bit, OpenGL +Y), `orm` (R AO, G rough, B metal), `height` (cache only) | WebP per tier | tile size, average color, roughness, trims (UV v ranges), decals |
+| `material` | `baseColor` (sRGB, optional straight alpha = a data mask), `normal` (16-bit, OpenGL +Y), `orm` (R AO, G rough, B metal), `height` (cache only). Per file: `tierScale` or `tierSizes` ({ultra, high, mobile} px), `encoding` (`near_lossless` / `lossless`), channel usage `red`/`green`/`blue`/`alpha` (e.g. orm `blue: 'decalOpacity'`, baseColor `alpha: 'puddleMask'`) | WebP per tier (alpha kept only with an alpha usage; RGB and A resized separately) | tile size, average color, roughness, trims (UV v ranges), decals (atlas regions `{name, category, surface, tileU, u0, v0, u1, v1, sizeMeters}` or ornaments `{name, u, v, r, r_v}`), `channels` per map (+ `alpha` on each file entry), optional `projection` / `grainAxis` / `slopeAxis` / `ruts` / `decalAtlas`, other script meta as `extras` |
 | `model` | `lod0`, `lod1`... GLB (texture-less proxy materials, UVMap + UVLightmap, tangents); `{set, map}` textures (e.g. `macro`) | meshopt GLBs + set WebPs | LODs (triangles, draw calls, switch distance), minLod per tier, bounds, clips, materialSets, sets |
 | `hdri` | `hdri_<tier>` EXR (half, DWAB, sun disc removed) | EXR per tier | sun direction / color / intensity, ambient irradiance |
 
