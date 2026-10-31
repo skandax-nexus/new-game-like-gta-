@@ -280,3 +280,62 @@ Round 2 self-review (this pass, every capture re-opened) found and fixed:
 Final capture (75 shots, 61 / 61 checks): contrast 2,595 text runs on 69 captures, 0 below 4.5:1 / 3:1;
 touch 1,233 phone targets, 0 under 44 px; no console / page errors, failed requests or crash reports. UI + input
 on the 60 fps bench at 1280 x 720: world 0.101 ms avg at 1x / 0.255 ms at 4x, battle 0.095 / 0.082 ms (budget < 1 ms); truncation 0 on 69 captures. Smoke (`SMOKE_SKIP_BUILD=1 SMOKE_DIST=.build/ui-02 SMOKE_PORT=4415 SMOKE_OUT=docs/sprint1/ui-02/smoke`): 14 / 14 shots, no console errors. Single-file build 2,789.58 kB (`.build/ui-02-single`).
+
+## Lead UI/UX re-review after rework round 1 (round 2)
+
+Lead blocking items L1-L3 and the Art Director list are fixed and shown in the evidence. Verified on a fresh review
+capture (`SHOTS_SKIP_BUILD=1 SHOTS_DIST=.build/ui-02-review SHOTS_PORT=4465 SHOTS_OUT=docs/sprint1/ui-02/review`,
+then `--only=battle,hero` with `SHOTS_MERGE=1` after the fixes below). The review smoke is in
+`docs/sprint1/ui-02/review-smoke/`.
+
+- **L1 (battle control groups):** verified in `battle-live-*`:
+  - PC shows only the assigned groups (1, 2, 4);
+  - portrait shows 5 slots, with "Hold to set" on empty ones;
+  - landscape shows a number over "×N" column.
+  - Taps go through `ctx.input.injectAction`; `tests/ui/hud/battleGroups.test.ts` covers tap, double-tap and long-press.
+- **L2 (recruitment cancel):** verified in `settlement-panel-lower-*`. The button is disabled with its reason until
+  `cancel_recruitment` exists. Feature detection follows the `validateCommand` contract: unknown kinds return null,
+  and a control probe catches faction-level refusals. The exact command is requested from the CTO and SIM-01.
+- **L3 (evidence):** `settlement-panel-lower-*`, `event-modal-advisors-*` (portraits plus a locked choice with its
+  reason) and `battle-results-prisoners-*` are captured at all three sizes and audited.
+
+Fixed by the reviewer (`[Lead UI/UX Engineer]` commits):
+
+| Finding | Fix |
+|---|---|
+| Portrait hero: the prompt bubble ran off the right edge ("Speak with th...") under the "DRAG TO LOOK" hint (first landed in a WIP snapshot from the interrupted review) | The bubble is clamped inside the viewport (measured once when its text changes). The look hint gives way to a prompt. |
+| The clamp above moved the bubble's tail too, so on portrait it pointed 80 px left of the potter. The capture failed `the prompt bubble points at the potter` | The tail shifts by the clamp distance (`--tail-dx`, limited to the pill's straight edge). The capture now measures the tail and adds a "bubble stays inside the screen" check. |
+| Feed toasts that landed in the same tick as a modal opening sat on top of the modal | Toasts that repeat a feed entry are transient and are dropped when a modal opens. Explicit feedback toasts stay. Covered by a test in `tests/ui/hud/uiManager.test.ts`. |
+| Battle results listed two identical "Spearmen" rows (and "Royal Guards", "Horsemen"), while the cards say Levy I / Levy II / Guards / Horse | `resultTitles()` in `services/battleLabels.ts` applies the same rule, with the full unit name in the title. Covered by a test. |
+| Phone battle results: the bottom-right lotus corner sits on the scrolling modal, so it rode up with the content and floated mid-list above the sticky footer | Hidden on phone battle results; the lacquer footer band closes the panel. |
+
+Review capture: 75 shots, 64 / 64 checks.
+- **Contrast:** 2,594 text runs on 69 captures; none below 4.5:1 or 3:1.
+- **Touch:** 1,233 phone targets; none under 44 px.
+- **Truncation:** no label cut to an ellipsis.
+- **Errors:** no console or page errors.
+- **UI + input on the 60 fps bench at 1280 x 720** (budget under 1 ms):
+
+| Scene | 1x | 4x |
+|---|---|---|
+| World | 0.054 ms | 0.37 ms |
+| Battle | 0.155 ms | 0.073 ms |
+
+Builds: production build `.build/ui-02-review`; single-file build 2,801.61 kB. Review smoke
+(`SMOKE_SKIP_BUILD=1 SMOKE_DIST=.build/ui-02-review SMOKE_PORT=4465 SMOKE_OUT=docs/sprint1/ui-02/review-smoke`):
+14 / 14 shots, no console errors.
+
+The full `npm test` run fails 11 tests in 9 files, all outside UI-02 paths:
+- strategic siege, construction, politics and contracts;
+- tactical determinism;
+- the CPU perf budgets for pathing and the tactical step, which fail under the shared-CPU load.
+
+UI and input: 14 files, 124 tests, all passing.
+
+Non-blocking follow-ups for the developer:
+- Other phone modals that scroll (for example the landscape `event-modal-advisors`) show the same floating lotus corner
+  when scrolled. Pin it with a sticky pseudo-element, or hide it on scrolling phone modals.
+- Army panel unit rows read "Spearmen" three times. Number repeats as the battle cards do, once the army model has
+  stable unit order.
+- The Great Road landmark silhouette's gate reads as a Japanese torii (straight double lintel). A Sanchi torana has
+  three curved architraves with volute ends. Ask the Art Director to co-sign or redraw.

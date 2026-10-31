@@ -2636,7 +2636,8 @@
 .hh-prompt.anchored::after {
   content: '';
   position: absolute;
-  left: 50%;
+  /* --tail-dx: the bubble is clamped inside the screen edge, the tail still points at the target (hero/hud.ts). */
+  left: calc(50% + var(--tail-dx, 0px));
   bottom: -7px;
   width: 12px;
   height: 12px;

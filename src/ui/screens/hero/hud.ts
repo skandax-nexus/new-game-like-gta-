@@ -223,9 +223,15 @@ export function heroHud(ctx: AppContext, ui: UIManager): Screen<'hero_hud'> {
     setClass(prompt, 'anchored', !!a);
     // A target near the screen edge keeps the whole bubble on screen (portrait: "Speak with th..." ran off the right
     // edge); the bubble slides inward, its target stays the one in front of the hero.
+    // The tail keeps pointing at the target: it shifts by the clamp distance (--tail-dx, in the bubble's own px),
+    // limited to the straight part of the pill so it never leaves the rounded ends.
     const pad = 8;
+    const sc = ui.scale || 1;
     const x = a && promptHalf > 0 && viewW > 2 * (promptHalf + pad) ? Math.min(Math.max(a.x, promptHalf + pad), viewW - promptHalf - pad) : a?.x ?? 0;
-    if (a) setStyle(prompt, 'transform', `translate(${Math.round(x / (ui.scale || 1))}px, ${Math.round(a.y / (ui.scale || 1))}px) translate(-50%, -120%)`);
+    const tailMax = Math.max(0, promptHalf / sc - 22);
+    const tail = a ? Math.max(-tailMax, Math.min(tailMax, (a.x - x) / sc)) : 0;
+    setStyle(prompt, '--tail-dx', `${Math.round(tail)}px`);
+    if (a) setStyle(prompt, 'transform', `translate(${Math.round(x / sc)}px, ${Math.round(a.y / sc)}px) translate(-50%, -120%)`);
     else setStyle(prompt, 'transform', '');
   };
   const renderEnemies = (enemies: readonly HeroEnemyBar[]): void => {

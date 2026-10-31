@@ -917,11 +917,17 @@ async function heroSession(browser, base, vpName) {
     await frames(s, 6);
     const st = await ev(s, () => window.__SAMRAJYA__.call('hero-hud.state'));
     const bubble = await ev(s, () => {
-      const r = document.querySelector('.hh-prompt')?.getBoundingClientRect();
-      return r ? { x: r.left + r.width / 2, bottom: r.bottom } : null;
+      const el = document.querySelector('.hh-prompt');
+      const r = el?.getBoundingClientRect();
+      if (!el || !r) return null;
+      // The tail (::after) points at the target; a bubble clamped inside the screen edge shifts it by --tail-dx.
+      const dx = (parseFloat(el.style.getPropertyValue('--tail-dx')) || 0) * (el.offsetWidth ? r.width / el.offsetWidth : 1);
+      return { x: r.left + r.width / 2 + dx, box: r.left + r.width / 2, bottom: r.bottom, left: r.left, right: r.right };
     });
     const a = st.anchors.potter;
     check(`hero (${s.vpName}): the prompt bubble points at the potter (projected head)`, !!bubble && Math.abs(bubble.x - a.x) < 24 && bubble.bottom <= a.y + 4 && a.y - bubble.bottom < 40, { bubble, potter: a });
+    const vw = await ev(s, () => innerWidth);
+    check(`hero (${s.vpName}): the prompt bubble stays inside the screen`, !!bubble && bubble.left >= 0 && bubble.right <= vw, { bubble, vw });
     await shot(s, 'hero-explore', 'hero HUD exploring (lab hero-hud): prompt bubble on the potter (projected 3D target), objective, compass strip, caption; phones: stick + interact');
   }, 'hero: explore');
   await step(s, async () => {
