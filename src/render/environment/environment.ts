@@ -94,6 +94,8 @@ const HEMI_WITH_IBL = 0.35;
 export const LIGHTNING_WEATHER: ReadonlySet<WeatherKind> = new Set<WeatherKind>(['storm', 'monsoon_rain']);
 
 const WET_TAG_FRAMES = 600;
+/** Ease time constant (s) of the fog base following the ground under the focus. */
+const GROUND_EASE_S = 2;
 /** Legacy scene groups (by name) and their wetness class for the global patch (see tagLegacyWetness). */
 const LEGACY_WETNESS: readonly (readonly [string, 'own' | number])[] = [
   ['terrain', 'own'],
@@ -130,6 +132,7 @@ export class EnvironmentRig {
   private readonly keyColor = new THREE.Color();
   private readonly focus = new THREE.Vector3();
   private hasFocus = false;
+  private groundKnown = false;
   private lookOverride: ZoomLook | null = null;
   private readonly camPos = new THREE.Vector3();
   private readonly camDir = new THREE.Vector3();
@@ -201,6 +204,7 @@ export class EnvironmentRig {
       windSpeed: 0,
       time: 0,
       cameraY: 0,
+      groundY: 0,
       horizonRaw: null,
       calibration: 1,
       skyMultiplier: 1,
@@ -535,6 +539,13 @@ export class EnvironmentRig {
     a.windSpeed = this.env?.weather.windSpeed ?? 2;
     a.time = this.time;
     a.cameraY = this.camPos.y;
+    // Fog / mist base follows the ground under the focus (eased 2 s so the layer does not pump over hills).
+    if (this.hasFocus) {
+      if (!this.groundKnown) {
+        a.groundY = this.focus.y;
+        this.groundKnown = true;
+      } else a.groundY += (this.focus.y - a.groundY) * (1 - Math.exp(-step / GROUND_EASE_S));
+    }
     // Horizon ring (aerial perspective + map-edge fade target): the baked sky's own ring when one is active (sampled
     // from its EXR, calibrated like the dome), else the procedural readback.
     if (this.sky.bakedActive) {

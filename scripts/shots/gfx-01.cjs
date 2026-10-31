@@ -220,6 +220,11 @@ async function maxRowJump(file, y0, y1) {
         await shot(`hero-${p.id}-ultra`, `${HERO}&quality=ultra&noui=1&${p.env}`, { alt });
       }
     }
+    // Dusk afterglow (AD round 1: re-shoot dusk at 18.4 h - the procedural sky keeps a warm band to -10 deg).
+    if (want('presets') || want('dusk')) {
+      await shot('battle-dusk184-ultra', `${BATTLE}&quality=ultra&noui=1&hour=18.4&season=sharad&weather=clear`, { advance: 200 });
+      await shot('hero-dusk184-ultra', `${HERO}&quality=ultra&noui=1&hour=18.4&season=sharad&weather=clear`);
+    }
     // Wetness (ART_BIBLE §4.1 monsoon 0.85): luminance of fixed regions of the hero frame (deterministic camera),
     // monsoon wet / monsoon dry (same frame: only the surface wetness differs) and monsoon / noon (also the light).
     {

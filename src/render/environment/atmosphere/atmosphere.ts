@@ -5,6 +5,7 @@
  *
  * - Height fog: colours are DISPLAYED colours converted to radiance with fogRadiance(colour, exposure); density x
  *   ZoomLook.atmosphere.fogDensityScale; falloff, base height, in-scatter lobe and max opacity from the resolver.
+ * - Base height (fog and mist slab) is relative to the ground under the camera focus (AtmosphereInputs.groundY).
  * - Mist slab: extra density below base + mist.topM, broken up by 2 octaves of world noise (40 m, 9 m, amplitude
  *   0.5) scrolling with the wind at 0.3x (tier `height_mist` only).
  * - Sky-dome fog: the same fog at d = 20 km, clamp 0.6 (the sky melts into the haze at the horizon).
@@ -49,6 +50,11 @@ export interface AtmosphereInputs {
   time: number;
   /** Camera height (m) - the horizon ring's sky-fog amount depends on it. */
   cameraY: number;
+  /**
+   * Ground height (m) under the camera focus, eased: the resolver's fog base height and mist-slab top are relative to
+   * the local ground (Rajapura sits well above y = 0; AD round 1 - the dawn mist was below the ground).
+   */
+  groundY: number;
   /** Raw (uncalibrated) horizon sky radiance at 8 azimuths (rgb triples), or null when unknown. */
   horizonRaw: ArrayLike<number> | null;
   /** IBL calibration applied to the raw sky (scene.environmentIntensity). */
@@ -72,7 +78,8 @@ export function writeAtmosphere(r: ResolvedLighting, inp: AtmosphereInputs): voi
   // Mist only exists with height fog (tier medium+); the classic FogExp2 path ignores these slots.
   const mist = inp.mode > 0 ? r.mistDensity * inp.fogDensityScale : 0;
   // Density is always written: the sky dome uses it on every tier (the classic FogExp2 material path ignores it).
-  g(G.FOG_DENSITY).set(density, r.fogHeightFalloff, r.fogBaseHeight, r.fogBaseHeight + r.mistTopM);
+  const base = r.fogBaseHeight + inp.groundY;
+  g(G.FOG_DENSITY).set(density, r.fogHeightFalloff, base, base + r.mistTopM);
   const scroll = inp.windSpeed * MIST_NOISE.windScroll * inp.time;
   g(G.FOG_MIST).set(mist, inp.mode === 2 ? MIST_NOISE.amplitude : 0, -inp.windX * scroll, -inp.windZ * scroll);
   const b = inp.bounds;
@@ -87,7 +94,7 @@ export function writeAtmosphere(r: ResolvedLighting, inp: AtmosphereInputs): voi
   }
   const dirY = Math.sin((1.5 * Math.PI) / 180);
   const ce = Math.cos((1.5 * Math.PI) / 180);
-  const alpha = skyDomeFogAlpha(density, r.fogHeightFalloff, r.fogBaseHeight, inp.cameraY, dirY, SKY_FOG_CLAMP, SKY_FOG_DISTANCE_M);
+  const alpha = skyDomeFogAlpha(density, r.fogHeightFalloff, base, inp.cameraY, dirY, SKY_FOG_CLAMP, SKY_FOG_DISTANCE_M);
   const power = Math.max(1, r.fogInscatterPower);
   for (let k = 0; k < 8; k++) {
     const a = (k / 8) * Math.PI * 2 - Math.PI;

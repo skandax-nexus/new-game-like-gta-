@@ -200,11 +200,28 @@ void main() {
 }
 `;
 
+/**
+ * Twilight afterglow over the night gradient: warm horizon band / plum above it (linear radiance, same units as
+ * NIGHT_SKY), strength 1 down to AFTERGLOW_DEG[0] and gone at AFTERGLOW_DEG[1] (solar elevation, deg).
+ */
+export const AFTERGLOW = { warm: [0.2, 0.075, 0.032], plum: [0.05, 0.028, 0.05] } as const;
+export const AFTERGLOW_DEG: readonly [number, number] = [-4, -10];
+
+/** Afterglow strength for a solar elevation (deg): 1 above -4, 0 below -10 (smooth). */
+export function afterglowStrength(elevDeg: number): number {
+  const t = Math.min(1, Math.max(0, (elevDeg - AFTERGLOW_DEG[1]) / (AFTERGLOW_DEG[0] - AFTERGLOW_DEG[1])));
+  return t * t * (3 - 2 * t);
+}
+
+const glslVec3 = (c: readonly number[]): string => `vec3( ${c.map((v) => v.toFixed(4)).join(', ')} )`;
+
 /** Common fragment body. The sun-disc term of three's Sky is deliberately absent (ART_BIBLE §4.4 rule 1). */
 const SKY_FRAGMENT_COMMON = /* glsl */ `
+#define AFTERGLOW_WARM ${glslVec3(AFTERGLOW.warm)}
+#define AFTERGLOW_PLUM ${glslVec3(AFTERGLOW.plum)}
 uniform vec3 uSunDir;
 uniform vec4 uPreetham;
-uniform vec4 uNight;       // x = night weight, y = cloud darkening at night, zw unused
+uniform vec4 uNight;       // x = night weight, y = cloud darkening at night, z = afterglow strength, w unused
 uniform vec3 uNightZenith;
 uniform vec3 uNightHorizon;
 uniform vec4 uCloud;       // x = coverage 0..1, y = brightness, zw = scroll offset
@@ -289,6 +306,17 @@ vec3 samSkyRadiance( vec3 dir, out float cloudA ) {
   vec3 hd = normalize( vec3( dir.x, max( dir.y, 0.0 ), dir.z ) + vec3( 0.0, 1e-4, 0.0 ) );
   vec3 day = samPreetham( hd );
   vec3 night = mix( uNightHorizon, uNightZenith, sqrt( clamp( dir.y, 0.0, 1.0 ) ) );
+  // Afterglow (civil / nautical twilight, sun -2 .. -10 deg): a warm band low on the solar-azimuth horizon fading
+  // through plum into the night gradient (AD round 1: dusk was never seen).
+  if ( uNight.z > 0.0 ) {
+    vec2 h = dir.xz;
+    vec2 s = uSunDir.xz;
+    float az = dot( h, s ) * inversesqrt( max( dot( h, h ) * dot( s, s ), 1e-8 ) );
+    float lobe = pow( clamp( az * 0.5 + 0.5, 0.0, 1.0 ), 3.0 );
+    float y = max( dir.y, 0.0 );
+    vec3 glow = mix( AFTERGLOW_PLUM, AFTERGLOW_WARM, exp( -y / 0.07 ) ) * exp( -y / 0.22 );
+    night += glow * ( lobe * uNight.z );
+  }
   vec3 clear = mix( day, night, uNight.x );
   vec4 c = samClouds( hd, clear );
   cloudA = c.a;
@@ -596,6 +624,7 @@ export class SkySystem {
     this.night = t * t * (3 - 2 * t);
     const n = this.shared.uNight!.value as THREE.Vector4;
     n.x = this.night;
+    n.z = this.night > 0 ? afterglowStrength(elev) : 0;
     const c = this.shared.uCloud!.value as THREE.Vector4;
     c.x = THREE.MathUtils.clamp(cloudCover, 0, 1);
     if (groundAlbedo) (this.shared.uGround!.value as THREE.Color).setRGB(groundAlbedo[0], groundAlbedo[1], groundAlbedo[2]);

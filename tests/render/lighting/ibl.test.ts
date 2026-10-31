@@ -24,7 +24,7 @@ import {
   pcssPenumbraUv,
   sampleCubeFaces,
 } from '../../../src/render/lighting/ibl';
-import { buildSkyShader, NIGHT_SKY, preethamFor } from '../../../src/render/environment/sky';
+import { AFTERGLOW, AFTERGLOW_DEG, afterglowStrength, buildSkyShader, NIGHT_SKY, preethamFor } from '../../../src/render/environment/sky';
 
 interface ExrData {
   data: Float32Array;
@@ -166,5 +166,27 @@ describe('light-scale helpers', () => {
     expect(mid).toBeGreaterThan(1);
     expect(mid).toBeLessThan(6);
     expect(pcfRadiusFromSoftness(1.5, texel * 2)).toBeLessThan(mid);
+  });
+});
+
+describe('twilight afterglow (AD round 1: dusk never appeared)', () => {
+  it('full above -4 deg, gone below -10 deg, monotonic; warm band low toward the sun, plum above', () => {
+    expect(afterglowStrength(-2)).toBe(1);
+    expect(afterglowStrength(-4)).toBe(1);
+    expect(afterglowStrength(-10)).toBe(0);
+    expect(afterglowStrength(-12)).toBe(0);
+    let prev = 0;
+    for (let e = -12; e <= 0; e += 0.5) {
+      const v = afterglowStrength(e);
+      expect(v).toBeGreaterThanOrEqual(prev);
+      prev = v;
+    }
+    expect(AFTERGLOW_DEG).toEqual([-4, -10]);
+    // Warm: R > G > B; plum: R and B above G.
+    expect(AFTERGLOW.warm[0]).toBeGreaterThan(AFTERGLOW.warm[1]);
+    expect(AFTERGLOW.warm[1]).toBeGreaterThan(AFTERGLOW.warm[2]);
+    expect(AFTERGLOW.plum[2]).toBeGreaterThan(AFTERGLOW.plum[1]);
+    // In both the visible dome and the IBL source (it is part of the sky radiance, never of the sun disc).
+    for (const envBake of [false, true]) expect(buildSkyShader({ envBake }).fragmentShader).toContain('night += glow * ( lobe * uNight.z );');
   });
 });

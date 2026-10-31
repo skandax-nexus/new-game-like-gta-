@@ -80,6 +80,37 @@ describe('the rig applies the sky-dome fog and the mist slab from ResolvedLighti
     expect(s.edge).not.toBeNull();
   });
 
+  it('fog base and mist slab follow the ground under the focus (AD round 1: Rajapura sits above y = 0)', () => {
+    const fake = fakeRenderContext('high');
+    const scene = new THREE.Scene();
+    const rig = new EnvironmentRig(fake.ctx, scene, { sceneSize: 1024 });
+    rig.sky.bakeEnabled = false;
+    rigs.push(rig);
+    rig.setEnvironment(dawn());
+    const cam = new THREE.PerspectiveCamera(50, 16 / 9, 0.1, 6000);
+    cam.position.set(0, 40, 5);
+    cam.lookAt(0, 38, 0);
+    const focus = new THREE.Vector3(0, 37, 0);
+    rig.update(1 / 60, focus);
+    fake.frame(scene, cam, 1 / 60);
+    const r = rig.resolved;
+    let s = atmosphereSnapshot();
+    expect(s.baseHeight).toBeCloseTo(r.fogBaseHeight + 37, 9);
+    expect(s.mistTop).toBeCloseTo(r.fogBaseHeight + 37 + r.mistTopM, 6);
+    // The focus walks down a hill: the layer eases toward the new ground (no pumping), and arrives.
+    focus.y = 17;
+    rig.update(0.1, focus);
+    fake.frame(scene, cam, 0.1);
+    s = atmosphereSnapshot();
+    expect(s.baseHeight - r.fogBaseHeight).toBeLessThan(37);
+    expect(s.baseHeight - r.fogBaseHeight).toBeGreaterThan(30);
+    for (let i = 0; i < 80; i++) {
+      rig.update(0.25, focus);
+      fake.frame(scene, cam, 0.25);
+    }
+    expect(atmosphereSnapshot().baseHeight - r.fogBaseHeight).toBeCloseTo(17, 1);
+  });
+
   it('the hero band thickens the fog (x1.25) and the strategic band thins it (x0.35)', () => {
     const near = setup('ultra', dawn(), 4.5);
     near.frame();
