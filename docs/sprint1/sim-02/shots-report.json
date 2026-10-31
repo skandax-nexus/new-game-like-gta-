@@ -46,6 +46,25 @@
    ]
   },
   {
+   "name": "battle: camera zoomed onto the melee (6 formations in contact at pixel 702,225; 86 m away)",
+   "ok": true,
+   "observed": {
+    "melee": {
+     "x": 1811.4346189174323,
+     "z": 886.3315042575236
+    },
+    "pixel": {
+     "x": 702,
+     "y": 225
+    },
+    "camera": {
+     "x": 1790,
+     "z": 948,
+     "distance": 86
+    }
+   }
+  },
+  {
    "name": "battle: no console errors, page errors, failed requests or crash reports",
    "ok": true,
    "observed": []
@@ -161,7 +180,7 @@
   },
   {
    "name": "battle-aivsai-contact.png",
-   "note": "t=105s soldiers 687/750 vs 628/750"
+   "note": "t=105s soldiers 687/750 vs 628/750; camera on the melee"
   },
   {
    "name": "battle-aivsai-river.png",

@@ -11,7 +11,7 @@
  *
  * Captures + assertions (exit 1 on any failure, console errors, page errors, failed requests or crash reports):
  *   battle-aivsai-deploy.png   ?aivsai=1 plains battle, 1,500 soldiers (?noui=1): both battle AIs deployed
- *   battle-aivsai-contact.png  the same battle 75 s into the fight, the camera panned onto the formations in contact
+ *   battle-aivsai-contact.png  the same battle 75 s into the fight, the camera zoomed (cursor-anchored) onto the formations in contact
  *   battle-aivsai-river.png    ?aivsai=1 river crossing, 2,000 soldiers, 90 s in: the AIs at the ford
  *   world-ai-year.png          the world map after an AI-only sandbox year (save from scripts/sim-ai/autoplay.mjs,
  *                              loaded into the game; run on a few days if the year ended in fog): borders, armies and towns as the
@@ -120,34 +120,32 @@ async function readSave(page, slot) {
   }, slot);
 }
 
-/** Hold an arrow key for `ms` of real time and let the camera settle; returns the camera's focus shift. */
-async function nudge(page, key, ms) {
-  const c0 = (await sceneState(page)).camera;
-  await page.keyboard.down(key);
-  await page.waitForTimeout(ms);
-  await page.keyboard.up(key);
-  await page.evaluate(() => window.__SAMRAJYA__.waitFrames(20));
-  const c1 = (await sceneState(page)).camera;
-  return { x: c1.x - c0.x, z: c1.z - c0.z };
-}
-
-/** Pan the battle camera's focus to (x, z) with the arrow keys (the pan basis is measured, not assumed). */
-async function panTo(page, x, z) {
-  const up = await nudge(page, 'ArrowUp', 250);
-  const right = await nudge(page, 'ArrowRight', 250);
-  const lu = Math.hypot(up.x, up.z) || 1;
-  const lr = Math.hypot(right.x, right.z) || 1;
-  for (let i = 0; i < 12; i++) {
-    const c = (await sceneState(page)).camera;
-    const dx = x - c.x;
-    const dz = z - c.z;
-    if (Math.hypot(dx, dz) < 12) return;
-    // Components along the measured up / right shifts (they are near-orthogonal on the ground).
-    const a = (dx * up.x + dz * up.z) / (lu * lu);
-    const b = (dx * right.x + dz * right.z) / (lr * lr);
-    if (Math.abs(a) > 0.05) await nudge(page, a > 0 ? 'ArrowUp' : 'ArrowDown', Math.min(2000, Math.abs(a) * 250));
-    if (Math.abs(b) > 0.05) await nudge(page, b > 0 ? 'ArrowRight' : 'ArrowLeft', Math.min(2000, Math.abs(b) * 250));
-  }
+/**
+ * Screen pixel of ground point (x, z) for the battle camera state (BattleScene: fov 50, RtsCameraController pitch
+ * curve pitchNear 0.28 / pitchFar 1.05 over distance 14-900; flat ground assumed - fine on the plains preset).
+ */
+function screenOf(cam, x, z, w, h) {
+  const t = Math.min(1, Math.max(0, (cam.distance - 14) / (900 - 14)));
+  const pitch = Math.min(1.45, Math.max(0.12, 0.28 + (1.05 - 0.28) * Math.pow(t, 0.6) + (cam.tilt || 0)));
+  const horiz = Math.cos(pitch) * cam.distance;
+  const eye = [cam.x + Math.sin(cam.yaw) * horiz, Math.sin(pitch) * cam.distance, cam.z + Math.cos(cam.yaw) * horiz];
+  const at = [cam.x, Math.min(6, cam.distance * 0.02), cam.z];
+  const sub = (u, v) => [u[0] - v[0], u[1] - v[1], u[2] - v[2]];
+  const dot = (u, v) => u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
+  const cross = (u, v) => [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+  const norm = (u) => {
+    const l = Math.hypot(u[0], u[1], u[2]) || 1;
+    return [u[0] / l, u[1] / l, u[2] / l];
+  };
+  const f = norm(sub(at, eye));
+  const r = norm(cross(f, [0, 1, 0]));
+  const u = cross(r, f);
+  const v = sub([x, 0, z], eye);
+  const depth = dot(v, f);
+  const k = 1 / Math.tan((50 * Math.PI) / 360);
+  const ndcX = (dot(v, r) / depth) * (k * h) / w;
+  const ndcY = (dot(v, u) / depth) * k;
+  return { x: Math.round((ndcX + 1) * 0.5 * w), y: Math.round((1 - ndcY) * 0.5 * h) };
 }
 
 async function captureBattle(browser, base) {
@@ -174,18 +172,18 @@ async function captureBattle(browser, base) {
   const engaged = live.formations.filter((f) => f.soldiers > 0 && f.engagedWith && f.engagedWith.length > 0);
   const melee = engaged.length > 0 ? { x: engaged.reduce((t, f) => t + f.x, 0) / engaged.length, z: engaged.reduce((t, f) => t + f.z, 0) / engaged.length } : null;
   if (melee) {
-    await panTo(page, melee.x, melee.z);
-    await page.mouse.move(640, 360);
+    // Cursor-anchored zoom (RtsCameraController keeps the ground point under the cursor): put the cursor on the melee's
+    // projected pixel and wheel in; re-project after each notch.
     let cam = (await sceneState(page)).camera;
-    for (let i = 0; i < 12 && cam.distance > 150; i++) {
+    for (let i = 0; i < 10 && cam.distance > 95; i++) {
+      const px = screenOf(cam, melee.x, melee.z, 1280, 720);
+      await page.mouse.move(Math.min(1240, Math.max(40, px.x)), Math.min(680, Math.max(40, px.y)));
       await page.mouse.wheel(0, -240);
-      await page.evaluate(() => window.__SAMRAJYA__.waitFrames(8));
+      await page.evaluate(() => window.__SAMRAJYA__.waitFrames(4));
       cam = (await sceneState(page)).camera;
     }
-    await panTo(page, melee.x, melee.z);
-    cam = (await sceneState(page)).camera;
-    const off = Math.hypot(cam.x - melee.x, cam.z - melee.z);
-    check(`battle: camera on the melee (${engaged.length} formations in contact; ${Math.round(off)} m off, ${Math.round(cam.distance)} m away)`, off < 40 && cam.distance < 220, { melee, camera: { x: Math.round(cam.x), z: Math.round(cam.z), distance: Math.round(cam.distance) } });
+    const px = screenOf(cam, melee.x, melee.z, 1280, 720);
+    check(`battle: camera zoomed onto the melee (${engaged.length} formations in contact at pixel ${px.x},${px.y}; ${Math.round(cam.distance)} m away)`, cam.distance < 140 && px.x > 160 && px.x < 1120 && px.y > 90 && px.y < 630, { melee, pixel: px, camera: { x: Math.round(cam.x), z: Math.round(cam.z), distance: Math.round(cam.distance) } });
   }
   await page.waitForTimeout(5000);
   await page.evaluate(() => window.__SAMRAJYA__.waitFrames(4));
