@@ -145,6 +145,33 @@ function loadRng(state: BattleState, side: SideIndex, mem: AiMemory): Rng {
   return rngTmp;
 }
 
+/** One battle AI plan decision (debug log, not state: QA and the siege-watch tool read it; it never feeds a decision). */
+export interface BattlePlanEntry {
+  battleId: string;
+  side: SideIndex;
+  time: number;
+  text: string;
+}
+
+const planLog: BattlePlanEntry[] = [];
+const PLAN_LOG_LIMIT = 400;
+
+/** Record a plan decision (phase changes, withdrawal reasons) in the bounded debug log. */
+export function logPlan(ai: AiSide, text: string): void {
+  planLog.push({ battleId: ai.state.setup.id, side: ai.side, time: ai.state.time, text });
+  if (planLog.length > PLAN_LOG_LIMIT + 100) planLog.splice(0, planLog.length - PLAN_LOG_LIMIT);
+}
+
+/** The battle AI's recent plan decisions (oldest first). */
+export function battlePlanLog(): readonly BattlePlanEntry[] {
+  return planLog;
+}
+
+/** Clear the plan log. */
+export function resetBattlePlanLog(): void {
+  planLog.length = 0;
+}
+
 /** Persist the AI RNG back into memory. */
 export function saveRng(ai: AiSide): void {
   ai.rng.saveTo(rngState);

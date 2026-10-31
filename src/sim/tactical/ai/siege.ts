@@ -40,12 +40,12 @@ import type { EngineerWorkState, FormationState } from '../../../core/types';
 import { dcos, dsin, facingOf, PI } from '../../../core/math';
 import { UNITS } from '../../../data/units';
 import type { FortGeometry } from '../fort';
-import { angleFromCenter, distFromCenter, ringPoint, segmentMidAngle } from '../fort';
+import { angleFromCenter, distFromCenter, GATE_HALF_WIDTH, ringPoint, segmentMidAngle } from '../fort';
 import { effectiveRange } from '../projectiles';
 import { breachPoint } from '../siege';
 import { isShooter } from '../stats';
 import type { AiSide } from './common';
-import { dist, formationStrength, gap, give, shape, stance } from './common';
+import { dist, formationStrength, gap, give, logPlan, shape, stance } from './common';
 
 /** Siege plan numbers (SIM-02 review round 1, Creative Director rules). */
 export const SIEGE_AI = {
@@ -61,6 +61,23 @@ export const SIEGE_AI = {
   fireShare: 0.85,
   /** A finished ram waits at most this long (s) for its palisade cover before it goes in. */
   coverWaitSec: 90,
+  /** Screen blocks (melee blocks walking ahead of the ram to draw the walls' volleys). */
+  screens: 2,
+  /** The screen stands this far nearer the walls than the leading batterer (m). */
+  screenLead: 22,
+  /** ... but never nearer the wall face than this (m, plus half its depth). */
+  screenMinOut: 6,
+  /** Half width of the ram's lane the screen keeps clear (m). */
+  lane: 14,
+  /** A screen block falls back to regroup below this share of its men or below screenMorale... */
+  screenKeep: 0.6,
+  screenMorale: 40,
+  /** ... and only blocks above this share (and screenMorale + 10) take the screen. */
+  screenFresh: 0.75,
+  /** The stormers gather this far outside the way in (m) ... */
+  stageOut: 45,
+  /** ... and go in together once gathered, or after this long (s). */
+  stageSec: 60,
   /** Without a way in, the assault withdraws below this share of its starting strength. */
   spentShare: 0.35,
   /** ... and after this long (s) with nothing left to breach the walls with. */
@@ -232,14 +249,16 @@ function outwardOf(x: number, z: number): number {
   return (x - axis.x) * axis.ux + (z - axis.z) * axis.uz;
 }
 
-function setPhase(ai: AiSide, phase: string): void {
-  if (ai.mem.sgPhase !== phase) ai.mem.sgPhase = phase;
+function setPhase(ai: AiSide, phase: string, why: string): void {
+  if (ai.mem.sgPhase === phase) return;
+  ai.mem.sgPhase = phase;
+  logPlan(ai, `siege attack: ${phase} - ${why}`);
 }
 
 function withdraw(ai: AiSide, reason: string): void {
   if (ai.state.sides[ai.side].withdrawn) return;
   ai.mem.withdrawReason = reason;
-  setPhase(ai, 'withdraw');
+  setPhase(ai, 'withdraw', reason);
   ai.cmds.push({ kind: 'withdraw_all' });
 }
 
@@ -249,7 +268,64 @@ const archers: FormationState[] = [];
 const melee: FormationState[] = [];
 const mounted: FormationState[] = [];
 const stormers: FormationState[] = [];
-const placed: FormationState[] = [];
+const screens: FormationState[] = [];
+const batterers: FormationState[] = [];
+const ordered: FormationState[] = [];
+
+/**
+ * Keep `list` in a stable left-to-right order across thinks (memory `key`: formation indices). Newcomers are slotted by
+ * their lateral position, so formations take the posts on their own side of the axis and do not cross each other.
+ */
+function rowOrder(ai: AiSide, key: string, list: FormationState[]): void {
+  ordered.length = 0;
+  const prev = typeof ai.mem[key] === 'string' && (ai.mem[key] as string).length > 0 ? (ai.mem[key] as string).split(',') : [];
+  for (const id of prev) {
+    const f = list.find((m) => m.index === Number(id));
+    if (f) ordered.push(f);
+  }
+  for (const f of list) {
+    if (ordered.includes(f)) continue;
+    const l = lateralOf(f.x, f.z);
+    let k = 0;
+    while (k < ordered.length && lateralOf(ordered[k]!.x, ordered[k]!.z) > l) k++;
+    ordered.splice(k, 0, f);
+  }
+  list.length = 0;
+  for (const f of ordered) list.push(f);
+  const sig = list.map((f) => f.index).join(',');
+  if (ai.mem[key] !== sig) ai.mem[key] = sig;
+}
+
+/** A melee block fit to screen: fresh enough to stand the walls' volleys (a hurt one falls back to regroup). */
+function screenFit(f: FormationState, keep: boolean): boolean {
+  const share = f.soldiers / Math.max(1, f.maxSoldiers);
+  return keep ? share >= SIEGE_AI.screenKeep && f.morale >= SIEGE_AI.screenMorale : share >= SIEGE_AI.screenFresh && f.morale >= SIEGE_AI.screenMorale + 10;
+}
+
+/** Screen blocks kept in memory (`sgScreen`) while fit; refilled from the strongest fit melee blocks. */
+function pickScreens(ai: AiSide): void {
+  screens.length = 0;
+  const prev = typeof ai.mem.sgScreen === 'string' && (ai.mem.sgScreen as string).length > 0 ? (ai.mem.sgScreen as string).split(',') : [];
+  for (const id of prev) {
+    const f = melee.find((m) => m.index === Number(id));
+    if (f && screens.length < SIEGE_AI.screens && screenFit(f, true)) screens.push(f);
+  }
+  // Keep one block back when there are 3+ (the storm's first wave).
+  const want = Math.min(SIEGE_AI.screens, melee.length >= 3 ? melee.length - 1 : melee.length);
+  while (screens.length < want) {
+    let best: FormationState | null = null;
+    for (const f of melee) {
+      if (screens.includes(f) || !screenFit(f, false)) continue;
+      if (!best || f.soldiers > best.soldiers) best = f;
+    }
+    if (!best) break;
+    screens.push(best);
+  }
+  // Left-to-right by position (screen 0 takes the + side).
+  screens.sort((a, b) => lateralOf(b.x, b.z) - lateralOf(a.x, a.z) || a.index - b.index);
+  const sig = screens.map((f) => f.index).join(',');
+  if (ai.mem.sgScreen !== sig) ai.mem.sgScreen = sig;
+}
 
 function attack(ai: AiSide, g: FortGeometry): void {
   const s = ai.state;
@@ -260,12 +336,12 @@ function attack(ai: AiSide, g: FortGeometry): void {
   melee.length = 0;
   mounted.length = 0;
   stormers.length = 0;
-  placed.length = 0;
+  batterers.length = 0;
   for (const f of ai.own) {
     if (f.unitClass === 'engineers') engineers.push(f);
     else if (f.unitClass === 'war_elephants') elephants.push(f);
     else if (UNITS[f.unitClass].category === 'ranged' && isShooter(ai.ctx.stats[f.index]!)) archers.push(f);
-    else if (f.unitClass === 'spearmen' || f.unitClass === 'elite_guards') melee.push(f);
+    else if (UNITS[f.unitClass].category === 'infantry') melee.push(f);
     else if (f.unitClass !== 'supply_train') mounted.push(f);
   }
   if (typeof ai.mem.sgStart !== 'number') ai.mem.sgStart = Math.max(1, ai.ownStr);
@@ -276,6 +352,10 @@ function attack(ai: AiSide, g: FortGeometry): void {
   if (kind) setAxis(g, angleFromCenter(g, target.x, target.z), gi);
   else if (gi >= 0) setAxis(g, g.gateAngle[gi]!, gi);
   else setAxis(g, g.mainAngle, -1);
+  rowOrder(ai, 'sgRowM', melee);
+  rowOrder(ai, 'sgRowA', archers);
+  rowOrder(ai, 'sgRowH', mounted);
+  rowOrder(ai, 'sgRowE', engineers);
 
   // --- Rams: one crewed (its crew standing - siege.ts drops the crew of a ram whose engineers rout) is a tool; an
   // abandoned one is a tool only while an engineer formation is left to take it over.
@@ -289,7 +369,10 @@ function attack(ai: AiSide, g: FortGeometry): void {
     else abandoned ??= w;
   }
   const crew = ram ? s.formations[ram.formation]! : null;
-  if (ram && typeof ai.mem.sgRamDone !== 'number') ai.mem.sgRamDone = s.time;
+  if (ram && typeof ai.mem.sgRamDone !== 'number') {
+    ai.mem.sgRamDone = s.time;
+    logPlan(ai, 'siege attack: the ram is ready');
+  }
 
   // --- Withdrawal: nothing left to breach the walls with, or the assault is spent before it found a way in.
   const hasTools = engineers.length > 0 || elephants.length > 0 || ram !== null;
@@ -307,9 +390,7 @@ function attack(ai: AiSide, g: FortGeometry): void {
 
   // --- Geometry of this think: out of bow shot on the axis, the archers' slots and their palisades.
   const tOff = standoff(ai, axis.x, axis.z, axis.ux, axis.uz, 30, 12);
-  const ramDist = ram ? dist(ram, axis) : Infinity;
   const laddersUp = siege.segments.some((x) => x.ladder && x.hp > 0);
-  const committed = kind !== null || laddersUp || ramDist <= SIEGE_AI.commitRamDist;
   // Wall shooter over the gate the archers aim at (else the gate itself, on the wall walk).
   let aimX = axis.x - axis.ux * 12;
   let aimZ = axis.z - axis.uz * 12;
@@ -324,13 +405,73 @@ function attack(ai: AiSide, g: FortGeometry): void {
   }
   const slots = archerSlots(ai, aimX, aimZ);
   const palisades = shooters.length > 0 ? Math.ceil(archers.length / 2) : 0;
+  let palisadesPending = 0;
+  let palisadeOut = Infinity;
+  for (let k = 0; k < palisades; k++) {
+    if (!palisadeDone(ai, k, slots)) palisadesPending++;
+    palisadeSite(k, slots, p);
+    palisadeOut = Math.min(palisadeOut, outwardOf(p.x, p.z));
+  }
+  // The ram site (kept while it stays out of bow shot: the builders do not chase a moving point).
+  if (typeof ai.mem.sgRamX !== 'number' || exposed(ai, ai.mem.sgRamX as number, ai.mem.sgRamZ as number, 6) || ai.mem.sgGate !== axis.gate) {
+    onAxis(tOff, 0, p);
+    ai.mem.sgRamX = Math.round(p.x);
+    ai.mem.sgRamZ = Math.round(p.z);
+    ai.mem.sgGate = axis.gate;
+  }
+  const ramX = ai.mem.sgRamX as number;
+  const ramZ = ai.mem.sgRamZ as number;
+  const ramOut = Math.max(tOff, outwardOf(ramX, ramZ));
+
+  // --- The batterers: the crewed ram and the elephants. The way in is battered from the gate.
+  if (crew && axis.gate >= 0) batterers.push(crew);
+  for (const f of elephants) if (axis.gate >= 0 && !kind) batterers.push(f);
+  const noRamComing = !ram && !building && !(abandoned && engineers.length > 0) && !engineers.some((f) => f.order.type === 'construct' && f.order.work === 'ram');
+  // Batterer nearest the walls (outward distance along the axis).
+  let lead = Infinity;
+  for (const f of batterers) lead = Math.min(lead, outwardOf(f.x, f.z));
+  const ramDist = crew ? dist(crew, axis) : Infinity;
+  const committed = kind !== null || laddersUp || ramDist <= SIEGE_AI.commitRamDist || (crew === null && elephants.length > 0 && lead <= SIEGE_AI.commitRamDist);
+
+  // --- The screen: the freshest melee blocks walk ahead of the batterers and draw the walls' volleys (wall shooters
+  // loose at the nearest enemy, and their quivers run dry) - first in front of the palisade sites while those go up,
+  // then ahead of the ram. A block worn below SIEGE_AI.screenKeep falls back out of bow shot and another takes over.
+  pickScreens(ai);
+  const toolsReady = ram !== null || (noRamComing && elephants.length > 0);
+  const screened = shooters.length > 0 && screens.length > 0 && !kind && toolsReady;
+  const screenOut = Math.max(30, Math.min(tOff - 20, palisadeOut - 30));
+  let screenPosted = !screened;
+  if (screened) {
+    screenPosted = true;
+    for (let i = 0; i < screens.length; i++) {
+      screenPost(i, screens[i]!, screenOut, p);
+      if (dist(screens[i]!, p) > 25) screenPosted = false;
+    }
+    if (screenPosted && typeof ai.mem.sgScreenAt !== 'number') ai.mem.sgScreenAt = s.time;
+  }
+
+  // --- Phase: prepare (ram building) -> screen (the screen walks out, palisades go up behind it) -> approach (the ram
+  // and the elephants go in behind the screen) -> cover (the ram is within commitRamDist: archers close) -> storm.
+  let going = typeof ai.mem.sgRun === 'number';
+  if (!going && toolsReady && !kind) {
+    const waited = typeof ai.mem.sgScreenAt === 'number' ? s.time - (ai.mem.sgScreenAt as number) : 0;
+    const builders = engineers.some((f) => f !== crew);
+    if (screenPosted && (palisadesPending === 0 || !builders || waited >= SIEGE_AI.coverWaitSec)) {
+      ai.mem.sgRun = s.time;
+      going = true;
+    }
+  }
+  if (kind) setPhase(ai, 'storm', kind === 'breach' ? 'the way in is open' : 'ladders are up');
+  else if (committed) setPhase(ai, 'cover', laddersUp ? 'ladders are up: the archers close to their palisades' : 'the ram is near the gate: the archers close to their palisades');
+  else if (going) setPhase(ai, 'approach', `${crew ? 'the ram goes' : 'the elephants go'} in behind the screen${palisadesPending === 0 && palisades > 0 ? ' (palisades up)' : ''}`);
+  else if (toolsReady) setPhase(ai, 'screen', screened ? 'the screen walks out to draw the walls’ arrows; palisades go up behind it' : 'palisades go up');
+  else setPhase(ai, 'prepare', 'the ram is built out of bow shot');
 
   // --- Engineers.
   let ramJob = !ram && !building && axis.gate >= 0 && kind !== 'breach';
   let recrew = ramJob ? abandoned : null;
   if (recrew) ramJob = false;
-  let palisadesPending = 0;
-  for (let k = 0; k < palisades; k++) if (!palisadeDone(ai, k, slots)) palisadesPending++;
+  let wait = 0;
   for (const f of engineers) {
     if (f === crew || f.engagedWith.length > 0) continue;
     const busy = f.order.type === 'construct' ? f.order : null;
@@ -341,66 +482,66 @@ function attack(ai: AiSide, g: FortGeometry): void {
       continue;
     }
     if (ramJob) {
-      onAxis(tOff, 0, p);
-      give(ai, f, { type: 'construct', work: 'ram', x: p.x, z: p.z, facing: axis.inward });
+      give(ai, f, { type: 'construct', work: 'ram', x: ramX, z: ramZ, facing: axis.inward });
       ramJob = false;
       continue;
     }
-    // A palisade for each pair of archer slots still without one (one engineer formation per palisade).
+    // A palisade for each pair of archer slots still without one (one engineer formation per palisade), once the screen
+    // stands in front of the sites (or there is no screen).
     if (busy && busy.work === 'palisade' && !palisadeAt(ai, busy.x, busy.z, true)) continue;
-    let k = -1;
-    for (let j = 0; j < palisades && k < 0; j++) if (!palisadeDone(ai, j, slots) && !palisadeClaimed(ai, j, slots)) k = j;
-    if (k >= 0) {
-      palisadeSite(k, slots, p);
-      give(ai, f, { type: 'construct', work: 'palisade', x: p.x, z: p.z, facing: slots.face[2 * k]! });
-      continue;
+    if (toolsReady && screenPosted) {
+      let k = -1;
+      for (let j = 0; j < palisades && k < 0; j++) if (!palisadeDone(ai, j, slots) && !palisadeClaimed(ai, j, slots)) k = j;
+      if (k >= 0) {
+        palisadeSite(k, slots, p);
+        give(ai, f, { type: 'construct', work: 'palisade', x: p.x, z: p.z, facing: slots.face[2 * k]! });
+        continue;
+      }
     }
-    // Ladders once the walls are under cover: segments either side of the gate's segment (alternating).
+    // Ladders once the archers cover the walls: segments either side of the gate's segment (alternating).
     if (committed && axis.gate >= 0 && kind !== 'breach' && ladder(ai, g, f)) continue;
-    // Otherwise wait out of bow shot to the side of the axis, ready to take over a ram.
-    onAxis(tOff + 15, (f.index % 2 === 0 ? 1 : -1) * (SIEGE_AI.corridor + 12 + f.width / 2), p);
+    // Otherwise wait out of bow shot beside the ram site, ready to take over a ram.
+    const side = wait++ % 2 === 0 ? 1 : -1;
+    onAxis(ramOut + 10, side * (SIEGE_AI.lane + 30 + f.width / 2), p);
     give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
-    placed.push(f);
   }
-  // --- The ram: waits out of bow shot until its cover is ready, then goes in to the gate on the axis.
-  let running = false;
-  if (crew && ram && axis.gate >= 0) {
-    const done = ai.mem.sgRamDone as number;
-    const coverReady = palisadesPending === 0 || s.time - done >= SIEGE_AI.coverWaitSec || !engineers.some((f) => f !== crew);
-    running = typeof ai.mem.sgRun === 'number' || coverReady;
-    if (running) {
-      if (typeof ai.mem.sgRun !== 'number') ai.mem.sgRun = s.time;
-      ringPoint(g, g.gateAngle[axis.gate]!, g.radius + 4 + crew.depth / 2, p);
-      give(ai, crew, { type: 'move_to', x: p.x, z: p.z, facing: g.gateAngle[axis.gate]! + PI, run: false });
-    } else {
-      onAxis(Math.max(tOff, outwardOf(ram.x, ram.z)), 0, p);
-      give(ai, crew, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
-    }
-  }
-  setPhase(ai, kind ? 'storm' : committed ? 'cover' : running ? 'approach' : 'prepare');
 
-  // --- Elephants batter the gate - with the ram, or at once when no ram is coming; charge sallies near them.
-  const noRam = !ram && !building && engineers.length === 0;
-  for (const f of elephants) {
+  // --- Batterers: out of bow shot (the elephants behind the ram) until the cover is ready, then in to the gate.
+  for (const f of batterers) {
     if (f.engagedWith.length > 0) continue;
-    const out = nearestOutside(ai, g, f, 90);
-    if (out) {
-      give(ai, f, { type: 'charge', target: out.index });
-      continue;
+    if (f.unitClass === 'war_elephants') {
+      const out = nearestOutside(ai, g, f, 90);
+      if (out) {
+        give(ai, f, { type: 'charge', target: out.index });
+        continue;
+      }
     }
-    if (kind) {
-      stormers.push(f);
-      continue;
-    }
-    if (axis.gate >= 0 && (running || noRam || committed)) {
-      ringPoint(g, g.gateAngle[axis.gate]!, g.radius + 4 + f.depth / 2, p);
-      give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: g.gateAngle[axis.gate]! + PI, run: false });
-    } else {
-      onAxis(tOff + 10, (f.index % 2 === 0 ? -1 : 1) * (SIEGE_AI.corridor + f.width / 2 + 4), p);
+    const gate = axis.gate;
+    if (going || committed) {
+      ringPoint(g, g.gateAngle[gate]!, g.radius + 4 + f.depth / 2, p);
+      give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: g.gateAngle[gate]! + PI, run: false });
+    } else if (f === crew) {
+      onAxis(Math.max(ramOut, outwardOf(f.x, f.z)), 0, p);
       give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
-      placed.push(f);
+    } else {
+      onAxis(ramOut + 22 + f.depth / 2, 0, p);
+      give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
     }
   }
+  // Elephants with a way in storm.
+  for (const f of elephants) if (!batterers.includes(f) && f.engagedWith.length === 0 && kind) stormers.push(f);
+
+  // --- Screen posts: ahead of the batterers once they go in, else in front of the palisade sites.
+  if (screened) {
+    for (let i = 0; i < screens.length; i++) {
+      const f = screens[i]!;
+      if (f.engagedWith.length > 0) continue;
+      const out = going || committed ? Math.max(SIEGE_AI.screenMinOut + f.depth / 2, Math.min(screenOut, lead - SIEGE_AI.screenLead)) : screenOut;
+      screenPost(i, f, out, p);
+      give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
+    }
+  }
+
   // --- Archers: out of bow shot (loose) until the ram is close to the gate / ladders are up; then their firing slots.
   for (let i = 0; i < archers.length; i++) {
     const f = archers[i]!;
@@ -418,11 +559,15 @@ function attack(ai: AiSide, g: FortGeometry): void {
       const t = standoff(ai, fx, fz, bx, bz, 0, f.depth / 2 + 4);
       give(ai, f, { type: 'move_to', x: fx + bx * t, z: fz + bz * t, facing: face, run: false });
     }
-    placed.push(f);
   }
-  // --- Infantry: out of bow shot behind the archers; storm once there is a way in.
-  for (let i = 0; i < melee.length; i++) {
-    const f = melee[i]!;
+  // --- Infantry: the screen as above; the others wait in a row out of bow shot behind the ram site, and storm once
+  // there is a way in.
+  let rowW = 0;
+  for (const f of melee) rowW += f.width + 10;
+  let rowL = rowW / 2;
+  for (const f of melee) {
+    const l = rowL - f.width / 2 - 5;
+    rowL -= f.width + 10;
     if (f.engagedWith.length > 0) continue;
     if (kind) {
       stormers.push(f);
@@ -433,12 +578,12 @@ function attack(ai: AiSide, g: FortGeometry): void {
       give(ai, f, { type: 'attack_target', target: near.index, run: false });
       continue;
     }
-    const l = (i - (melee.length - 1) / 2) * (f.width + 8);
-    onAxis(tOff + 45 + f.depth / 2, l, p);
+    if (screened && screens.includes(f)) continue;
+    onAxis(ramOut + 45 + f.depth / 2, l, p);
     give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
   }
-  for (let i = 0; i < stormers.length; i++) storm(ai, g, stormers[i]!, target, i === 0);
-  // --- Mounted: outside, on the flanks of the axis, against sallies.
+  if (kind) storming(ai, g, target);
+  // --- Mounted: outside, on the flanks of the axis (left half left, right half right), against sallies.
   for (let i = 0; i < mounted.length; i++) {
     const f = mounted[i]!;
     if (f.engagedWith.length > 0) continue;
@@ -447,11 +592,13 @@ function attack(ai: AiSide, g: FortGeometry): void {
       give(ai, f, { type: 'charge', target: out.index });
       continue;
     }
-    const a = angleFromCenter(g, axis.x, axis.z) + (i % 2 === 0 ? -1 : 1) * (0.35 + 0.1 * Math.floor(i / 2));
+    const right = i < mounted.length / 2;
+    const k = right ? i : mounted.length - 1 - i;
+    // Lateral +: the side of (vx, vz); an angle step around the ring clockwise moves along -v.
+    const a = angleFromCenter(g, axis.x, axis.z) + (right ? -1 : 1) * (0.35 + 0.1 * k);
     const r = standoff(ai, g.cx, g.cz, dsin(a), dcos(a), g.radius + 40, f.depth / 2 + 6);
     ringPoint(g, a, r, p);
     give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: a + PI, run: false });
-    placed.push(f);
   }
   // --- Right of way: once there is a way in, every formation that does not storm keeps the approach clear.
   if (kind) {
@@ -460,6 +607,57 @@ function attack(ai: AiSide, g: FortGeometry): void {
       clearCorridor(ai, f);
     }
   }
+}
+
+/** Post of screen block i at `out` m along the axis: blocks side by side, clear of the batterers' lane. */
+function screenPost(i: number, f: FormationState, out: number, o: { x: number; z: number }): { x: number; z: number } {
+  // At the wall the blocks stand beside the gate; further out they leave the ram's lane free.
+  const lane = out < 25 ? GATE_HALF_WIDTH + 6 : SIEGE_AI.lane;
+  const side = i % 2 === 0 ? 1 : -1;
+  const l = side * (lane + f.width / 2 + Math.floor(i / 2) * (f.width + 6));
+  return onAxis(out, l, o);
+}
+
+/**
+ * The storm: the stormers gather SIEGE_AI.stageOut m outside the way in (side by side, out of the corridor's middle)
+ * and go in together once gathered or after SIEGE_AI.stageSec; those already inside fight on. The one nearest the way in
+ * holds the inside of the breach, the others fight the defenders contesting it.
+ */
+function storming(ai: AiSide, g: FortGeometry, target: { x: number; z: number }): void {
+  const s = ai.state;
+  stormers.sort((a, b) => dist(a, target) - dist(b, target) || a.index - b.index);
+  if (typeof ai.mem.sgStage !== 'number') {
+    ai.mem.sgStage = s.time;
+    logPlan(ai, `siege attack: ${stormers.length} stormers gather before the way in`);
+  }
+  let gathered = true;
+  for (let i = 0; i < stormers.length; i++) {
+    const f = stormers[i]!;
+    if (distFromCenter(g, f.x, f.z) < g.radius - 4 || f.engagedWith.length > 0) continue;
+    stagePost(i, f, p);
+    if (dist(f, p) > 30) gathered = false;
+  }
+  const go = ai.mem.sgGo === true || gathered || s.time - (ai.mem.sgStage as number) >= SIEGE_AI.stageSec;
+  if (go && ai.mem.sgGo !== true) {
+    ai.mem.sgGo = true;
+    logPlan(ai, `siege attack: the storm goes in (${gathered ? 'all gathered' : 'the wait is over'})`);
+  }
+  for (let i = 0; i < stormers.length; i++) {
+    const f = stormers[i]!;
+    const inside = distFromCenter(g, f.x, f.z) < g.radius - 4;
+    if (!go && !inside) {
+      stagePost(i, f, p);
+      give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
+      continue;
+    }
+    storm(ai, g, f, target, i === 0);
+  }
+}
+
+/** Gathering post of stormer i before the way in. */
+function stagePost(i: number, f: FormationState, o: { x: number; z: number }): { x: number; z: number } {
+  const k = i === 0 ? 0 : (i % 2 === 1 ? 1 : -1) * Math.ceil(i / 2);
+  return onAxis(SIEGE_AI.stageOut + f.depth / 2 + Math.floor(Math.abs(k) / 2) * 12, k * (f.width + 8), o);
 }
 
 /** Firing slots of the archers (two per palisade, pairs alternating sides of the axis) and their facings. */

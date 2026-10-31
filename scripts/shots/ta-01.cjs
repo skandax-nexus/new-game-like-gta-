@@ -366,6 +366,20 @@ reflectedLight.indirectDiffuse *= ambientOcclusion;
   reflectedLight.indirectSpecular *= computeSpecularOcclusion( dotNV, ambientOcclusion, material.roughness );
 #endif`);
   };
+  // the hidden lookdev pieces (wall corner, column, sphere) must not keep casting their shadows onto the escarpment
+  for (const sc of scenes) sc.traverse((m) => {
+    if (!m.isMesh) return;
+    m.castShadow = false;
+    // the column / sphere may carry cloned materials (same image source): hide them too, or they poke through the hill
+    const mm = m.material;
+    if (mm && ((mm.map && sm.map && mm.map.source === sm.map.source) || (mm.normalMap && sm.normalMap && mm.normalMap.source === sm.normalMap.source))) m.visible = false;
+    // anything small left of the lookdev rig (contact-shadow blobs, helpers) would show through the hill
+    if (m.geometry) {
+      if (!m.geometry.boundingSphere) m.geometry.computeBoundingSphere();
+      const r = m.geometry.boundingSphere ? m.geometry.boundingSphere.radius * Math.max(m.scale.x, m.scale.y, m.scale.z) : 0;
+      if (r < 30) m.visible = false;
+    }
+  });
   const hill = new src.constructor(geo, mat);
   hill.name = 'ta01_slope_lookdev';
   hill.castShadow = false;
@@ -376,6 +390,7 @@ reflectedLight.indirectDiffuse *= ambientOcclusion;
   const at = o.at;
   scene.onBeforeRender = function (renderer, sc, camera, rt) {
     if (prev) prev.call(this, renderer, sc, camera, rt);
+    if (renderer && renderer.shadowMap) renderer.shadowMap.needsUpdate = true; // re-render shadows without the hidden pieces
     if (camera && camera.isPerspectiveCamera) {
       camera.position.set(eye[0], eye[1], eye[2]);
       camera.lookAt(at[0], at[1], at[2]);
