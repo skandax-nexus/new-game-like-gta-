@@ -18,7 +18,10 @@
  *   world-colorblind-<mode>, battle-colorblind-<mode>     pc: protan / deutan / tritan (settings.colorblind; the minimap
  *                                                         canvas follows the remaps)
  *   build-placement                                       placement HUD (props pushed by this script until GP-03 drives it)
- *   market, age-panel, economy-panel, diplomacy           AoE / realm screens (diplomacy: AI reply reasons)
+ *   market, age-panel, economy-panel, diplomacy           AoE / realm screens (diplomacy: AI reply reasons; phones: the age
+ *                                                         panel scrolled to its landmark cards)
+ *   age-landmarks-<faction>-<age>                         pc: the age panel for every faction's landmark pair (all 16
+ *                                                         illustration bands at real size; band geometry checked)
  *   event-modal, engagement-prompt                        real prompts reached by stepping the campaign
  *   event-modal-advisors                                  the day-3 succession event: advisor portraits ("Recommended by") and
  *                                                         a locked choice with its reason
@@ -514,6 +517,38 @@ async function selectCap0(s) {
   await settle(s, 300);
 }
 
+/**
+ * Landmark illustration bands in the open age panel (Art Director round 2, B1f): each band is fully on screen, 88 px
+ * tall, its art fitted with 'meet' (never cropped), and the subject's top (from the band's own art bounds) sits
+ * >= 4 px below the band top. Returns the landmark names shown.
+ */
+async function landmarkBandsCheck(s, label) {
+  const r = await ev(s, () =>
+    [...document.querySelectorAll('.age-panel:not(.ui-hidden) .landmark-card')].map((card) => {
+      const band = card.querySelector('.lm-band');
+      const art = band && band.querySelector('svg');
+      const b = band ? band.getBoundingClientRect() : null;
+      // The highest drawn subject point: union of the subject layers' bounding boxes (sky / ground / planes excluded).
+      let top = Infinity;
+      if (art) for (const p of art.querySelectorAll('path')) {
+        if (/lm-(far|plain|road|rut|water|glint|smoke)/.test(p.getAttribute('class') || '')) continue;
+        top = Math.min(top, p.getBoundingClientRect().top);
+      }
+      return {
+        name: (card.querySelector('.lm-name') || {}).textContent,
+        h: b ? Math.round(b.height) : 0,
+        w: b ? Math.round(b.width) : 0,
+        onScreen: !!b && b.top >= 0 && b.left >= 0 && b.right <= innerWidth + 0.5 && b.bottom <= innerHeight + 0.5,
+        fit: art ? art.getAttribute('preserveAspectRatio') : null,
+        headroom: b && Number.isFinite(top) ? Math.round((top - b.top) * 10) / 10 : null,
+      };
+    }),
+  );
+  const ok = r.length >= 2 && r.every((c) => c.h === 88 && c.fit === 'xMidYMax meet' && c.headroom !== null && c.headroom >= 4);
+  check(`${label} (${s.vpName}): >= 2 landmark bands, 88 px tall, 'meet' fit, subject top >= 4 px below the band top`, ok, r);
+  return r.map((c) => c.name);
+}
+
 async function worldSession(browser, base, vpName) {
   const s = await newPage(browser, vpName);
   const phone = s.vp.mobile;
@@ -620,12 +655,58 @@ async function worldSession(browser, base, vpName) {
 
   await step(s, async () => {
     await click(s, '.realm-btn', /ages/);
-    await shot(s, 'age-panel', 'age panel: requirements checklist, two landmark cards, unlock preview');
+    // Phones: the landmark cards sit below the checklist - scroll them into view so the illustration bands are seen.
+    if (phone) await ev(s, () => document.querySelector('.age-panel .landmark-cards')?.scrollIntoView({ block: 'start' }));
+    await landmarkBandsCheck(s, 'age panel');
+    await shot(s, 'age-panel', phone ? 'age panel scrolled to the two landmark cards (illustration bands at real size)' : 'age panel: requirements checklist, two landmark cards, unlock preview');
     await closeAll(s, ['age_panel']);
     await click(s, '.realm-btn', /economy/);
     await shot(s, 'economy-panel', 'economy panel: ledger and projection, tax policy, royal reserve, rationing, granaries');
     await closeAll(s, ['economy_panel']);
   }, 'world: age / economy panels');
+
+  // Every landmark band at real size (Art Director round 2): the real age panel for each faction's landmark pair,
+  // fed a copy of the live world with that faction at the age before the pair (single-landmark-per-age factions: the
+  // Mahajanapada landmark completed in their capital, so the card pair is that landmark + the Samrajya one).
+  if (!phone) {
+    const PAIRS = [
+      ['heartland', 'janapada', []],
+      ['heartland', 'mahajanapada', []],
+      ['highland', 'janapada', []],
+      ['highland', 'mahajanapada', []],
+      ['forest', 'mahajanapada', ['lm_elephant_grove']],
+      ['frontier', 'mahajanapada', ['lm_salt_caravanserai']],
+      ['maritime', 'mahajanapada', ['lm_lamp_tower']],
+      ['citystates', 'mahajanapada', ['lm_coin_house']],
+    ];
+    const seen = new Set();
+    for (const [fid, age, done] of PAIRS) {
+      await step(s, async () => {
+        await ev(
+          s,
+          ([f, a, d]) => {
+            const w = JSON.parse(JSON.stringify(window.__SAMRAJYA_UI__.props('world_hud').world));
+            const fac = w.factions[f];
+            if (!fac) return null;
+            fac.age = a;
+            fac.landmarks = d.slice();
+            const sid = fac.capitalSettlementId && w.settlements[fac.capitalSettlementId] ? fac.capitalSettlementId : Object.keys(w.settlements).find((k) => w.settlements[k].ownerFactionId === f);
+            for (const id of d) if (sid) w.settlements[sid].landmarks.push({ id, builtBy: f, completedDay: 0, condition: 1 });
+            window.__SAMRAJYA__.showScreen('age_panel', { world: w, factionId: f });
+          },
+          [fid, age, done],
+        );
+        await settle(s, 300);
+        await ev(s, () => document.querySelector('.age-panel .landmark-cards')?.scrollIntoView({ block: 'nearest' }));
+        const names = await landmarkBandsCheck(s, `landmark pair ${fid} (${age} -> next)`);
+        for (const nm of names) seen.add(nm);
+        const label = `${fid}-${age === 'janapada' ? 'mahajanapada' : 'samrajya'}`;
+        await shot(s, `age-landmarks-${label}`, `age panel, ${fid}: landmark cards ${names.join(' + ')} (bands at real size)`);
+        await closeAll(s, ['age_panel']);
+      }, `world: landmark pair ${fid} ${age}`);
+    }
+    check(`world (${vpName}): all 16 landmark bands captured at real size in the age panel`, seen.size === 16, [...seen]);
+  }
 
   await step(s, async () => {
     await click(s, '.realm-btn', /diplomacy/);

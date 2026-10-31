@@ -4126,8 +4126,9 @@
   visibility: hidden;
 }
 
-/* --- Age panel landmark cards: illustration band (>= 96 x 72; interim ink silhouettes, components/landmarkArt.ts)
-   and a flat-stone disabled "Choose site" (ink at 60% on flat sandstone; no 45%-opacity mud). --- */
+/* --- Age panel landmark cards: illustration band (88 px tall, full card width; interim ink silhouettes authored in a
+   240 x 88 band viewBox and fitted with 'meet', components/landmarkArt.ts - never cropped) and a flat-stone disabled
+   "Choose site" (ink at 60% on flat sandstone; no 45%-opacity mud). --- */
 .lm-band {
   margin: -12px -12px 2px;
   height: 88px;
@@ -4141,26 +4142,93 @@
   width: 100%;
   height: 100%;
 }
+/* Band layers (landmarkArt.ts): sky gradient, sun + halo, pale far ridge, ground strip with a lit lip, ink subject,
+   warm light through openings, and a few accent fills (saffron awnings, guild banners, salt, gold coin). */
+.lm-art .lm-sun {
+  fill: #fde3a2;
+  opacity: 0.92;
+}
+.lm-art .lm-halo {
+  fill: #ffe9b8;
+  opacity: 0.32;
+}
+.lm-art .lm-far {
+  fill: #c8783f;
+  opacity: 0.42;
+}
+.lm-art .lm-ground {
+  fill: #5a3820;
+}
+.lm-art .lm-ground-lip {
+  fill: #8a5a32;
+}
 .lm-art .lm-ink {
   fill: #2a1a10;
 }
-.lm-art .lm-ground {
-  fill: #3a2414;
+/* Aerial perspective: farther ink planes are lighter and warmer. */
+.lm-art .lm-ink2 {
+  fill: #47291a;
+}
+.lm-art .lm-ink3 {
+  fill: #643a22;
+}
+.lm-art .lm-hill {
+  fill: #5a3820;
+}
+.lm-art .lm-plain {
+  fill: #9a6236;
 }
 .lm-art .lm-road {
-  fill: #c98b4a;
+  fill: #d6a464;
 }
-.lm-art .lm-cut {
+.lm-art .lm-rut {
+  fill: #8a5a34;
+  opacity: 0.55;
+}
+.lm-art .lm-rut.lm-faint {
+  opacity: 0.3;
+}
+.lm-art .lm-cut,
+.lm-art .lm-gate {
   fill: #f2b866;
+}
+.lm-art .lm-deep {
+  fill: #6a3e20;
 }
 .lm-art .lm-water {
   fill: #6f9fb4;
 }
+.lm-art .lm-glint {
+  fill: #ffe6aa;
+  opacity: 0.75;
+}
 .lm-art .lm-fire {
   fill: #ffd27a;
 }
+.lm-art .lm-smoke {
+  fill: #6a4a3a;
+  opacity: 0.32;
+}
 .lm-art .lm-steps {
-  fill: #e7a85c;
+  fill: #d99a55;
+}
+.lm-art .lm-awning {
+  fill: #e07a2a;
+}
+.lm-art .lm-banner {
+  fill: #c2412c;
+}
+.lm-art .lm-banner2 {
+  fill: #3d5a96;
+}
+.lm-art .lm-sack {
+  fill: #d6bf8e;
+}
+.lm-art .lm-coin {
+  fill: #e2b45a;
+}
+.lm-art .lm-log {
+  fill: #b47c48;
 }
 .landmark-card .btn.stone:disabled,
 .landmark-card .btn.stone.disabled {
