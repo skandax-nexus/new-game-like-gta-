@@ -4,14 +4,19 @@
  *
  * Each field army carries an operation in the realm's plan memory (`op_<armyId>`): defend, hunt, siege, raid, join,
  * resupply, home. Orders are issued only when the operation or its target changes (no daily re-pathing).
- *  - Supply first (daily): an army below 5 days of food that is not about to win a siege marches to resupply; a siege
- *    camp gets a depot 150 m behind it and grain requisitioned into it from the nearest own settlement that can spare
- *    it (the player's conquest path, rules 1-3 of §7.8).
+ *  - Supply first (daily): an army whose train runs low marches to resupply at the nearest own town with grain to spare
+ *    over its 30-day floor (explicit sourceId), else the nearest town, topped up from the royal reserve (send_relief).
+ *    It is done at 60% of its train; with no gain in 3 days it tries another source, after two fruitless tries it
+ *    goes back to its operations (CD review round 1, B1 a). A siege camp gets a depot 150 m behind it and grain
+ *    requisitioned into it from the nearest own settlement that can spare it (the player's conquest path, §7.8).
  *  - Defence (daily): a settlement under siege, or facing more hostile strength than it holds, is relieved by the
  *    nearest army strong enough to beat the threat (own strength >= the enemy's x 1.0-1.2 by aggression); a weaker
  *    army instead garrisons the town if it gets there first. Never attacks a stronger host.
- *  - Offensives (strategy runs, at war - or against free towns for realms with an appetite): the main army hunts a
- *    weaker enemy army it can see, else besieges the best settlement by value / distance / defence, provided it beats
+ *  - Defence spells end: a pursuit (defence or hunt) of one enemy gives up after 10 days (not chased again for 20); a
+ *    host that has chased threats for 15 days without a battle stops for 20 days (vital threats excepted; B1 b).
+ *  - Offensives (strategy runs, at war - or against free towns for realms with an appetite): first the realm's own lost
+ *    towns (held at the start or for 90+ days) the host outmatches (B1 c); then the main army hunts a weaker enemy army
+ *    it can see, else besieges the best settlement by value / distance / defence, provided it beats
  *    the garrison plus nearby enemy armies by 1.2-1.6x (aggression), carries engineers (or elephants) for walls, has
  *    food, and the fords are open (no long marches in flood). It assaults once the walls are breached (1.3x the
  *    defenders) or laddered (2x); a capital needs 1.6x more to be besieged and is stormed only through a breach at 2.5x,
@@ -21,6 +26,7 @@
  *    It lifts a siege that turned hopeless. No siege in a realm whose field strength (realm strength
  *    minus garrisons) outmatches the host x (1 - 0.4 aggression). Raiders (raid weight) send their horse to raid weakly
  *    held enemy settlements.
+ *    When it finds nothing it can take it records `noTarget` (the stall audit and the quiet-war peace read it).
  *  - Concentration: secondary armies march to the main army and merge with it; idle armies return to their station.
  *  - Stance from the battle personality (aggressive / balanced / cautious).
  * Perception: hostile armies count only while seen (`visibility`) or as last-seen ghosts; garrisons the realm has no
@@ -32,11 +38,17 @@ import { RULES } from '../../../data/rules';
 import { armyStrength, MERGE_DISTANCE } from '../armies';
 import { assaultState, settlementHostile } from '../siege';
 import { intelLevel } from '../espionage';
-import { validateCreateDepot } from '../supply';
+import { armyFoodNeed, validateCreateDepot } from '../supply';
 import { hostileToArmy } from '../state';
 import type { Situation } from './core';
 import { armySupplyDays, dist, forget, garrisonStrength, issue, note, num, recently, remember, str } from './core';
 import { mainArmy } from './recruit';
+
+/** A defence spell without a battle ends after this many days (no endless shuttling between threats). */
+const DEFEND_SPELL = 15;
+
+/** A resupplying army is done at this share of its train (CD-B1 a). */
+const RESUPPLY_DONE = 0.6;
 
 /** A defender chases a threat only while it stays this close to the town it threatens (m). */
 const DEFEND_RADIUS = 2500;
@@ -155,7 +167,10 @@ export function planMilitary(sit: Situation, strategy: boolean): void {
   const seen = contacts(sit);
   const main = mainArmy(sit);
   const ratio = attackRatio(sit);
-  if (strategy) cleanMemory(sit);
+  if (strategy) {
+    cleanMemory(sit);
+    markHeld(sit);
+  }
   // 1. Supply (siege camps are fed by siegeWork below).
   const besieging: ArmyState[] = [];
   for (const a of sit.armies) {
@@ -168,15 +183,17 @@ export function planMilitary(sit: Situation, strategy: boolean): void {
       continue;
     }
     // Armies carry 5 days of rations; one drawing from a source in reach is fed. March to resupply when the train
-    // runs low with no source, or is nearly empty.
+    // runs low with no source, or is nearly empty - to a source with grain to spare (CD-B1 a).
     const days = armySupplyDays(world, a);
     const share = a.supply.foodCapacity > 0 ? a.supply.food / a.supply.foodCapacity : 1;
     const fed = a.supply.sourceId !== null && a.supply.lineIntact;
     if (a.status !== 'garrisoned' && a.order.kind !== 'resupply' && ((share < 0.4 && !fed) || days < 1.5)) {
-      order(sit, a, { kind: 'resupply', sourceId: null }, 'resupply', `marches to resupply (${days.toFixed(1)} days of food)`, tasked);
+      const src = resupplySource(sit, a, null);
+      order(sit, a, { kind: 'resupply', sourceId: src ? src.id : null }, 'resupply', `marches to resupply at ${src ? src.name : 'the nearest town'} (${days.toFixed(1)} days of food)`, tasked);
+      remember(sit, `rsp_${a.id}`, `${sit.day},${Math.round(a.supply.food)}`);
       continue;
     }
-    if (a.order.kind === 'resupply' && share < 0.9) tasked.add(a.id);
+    if (a.order.kind === 'resupply') resupplying(sit, a, share, tasked);
   }
   // 2. Defence. The capital or a besieged town may recall an army from its own siege. A defence order stands for 5
   // days while its enemy is still in the field (no daily switching between two threats).
@@ -197,16 +214,41 @@ export function planMilitary(sit: Situation, strategy: boolean): void {
     }
     tasked.add(a.id);
   }
-  // Give up a pursuit that has run 10 days.
+  // Give up a pursuit (defence or hunt) that has run 10 days: that enemy is not chased again for 20 days.
   for (const a of sit.armies) {
     const op = str(sit, `op_${a.id}`, '');
-    if (!op.startsWith('defend:') || sit.day - num(sit, `opd_${a.id}`, sit.day) < 10) continue;
+    if (!(op.startsWith('defend:') || op.startsWith('hunt:')) || sit.day - num(sit, `opd_${a.id}`, sit.day) < 10) continue;
     const e = op.split(':')[1] ?? '';
     if (!world.armies[e]) continue;
     remember(sit, `nochase_${e}`, sit.day);
     forget(sit, `op_${a.id}`);
+    if (op.startsWith('hunt:')) note(sit, 'army', `${a.name}: gives up the chase of ${world.armies[e]?.name ?? e} after 10 days`);
     tasked.delete(a.id);
     engaged.delete(e);
+  }
+  // A defence spell (defend orders, whatever the enemy) that has run 15 days without a battle ends: the host stops
+  // shuttling between threats for 20 days (vital ones excepted) and the garrisons hold. Memory `dfs_<id>` (spell start),
+  // `nodefend_<id>`.
+  for (const a of sit.armies) {
+    const op = str(sit, `op_${a.id}`, '');
+    const key = `dfs_${a.id}`;
+    if (a.engagementId || a.status === 'in_battle' || !op.startsWith('defend:')) {
+      if (key in sit.f.ai.memory && !op.startsWith('defend:')) forget(sit, key);
+      else if (key in sit.f.ai.memory) remember(sit, key, sit.day);
+      continue;
+    }
+    const since = num(sit, key, -1);
+    if (since < 0) {
+      remember(sit, key, num(sit, `opd_${a.id}`, sit.day));
+      continue;
+    }
+    if (sit.day - since < DEFEND_SPELL) continue;
+    forget(sit, key);
+    forget(sit, `op_${a.id}`);
+    remember(sit, `nodefend_${a.id}`, sit.day);
+    tasked.delete(a.id);
+    engaged.delete(op.split(':')[1] ?? '');
+    note(sit, 'army', `${a.name}: ends ${DEFEND_SPELL} days of chasing threats without a battle - the garrisons hold`);
   }
   // A band too small to matter is left to the garrisons (recruit.ts raises them); one that keeps evading for 10 days
   // is not chased for the next 20 (no hunt across the map after a remnant that will not stand).
@@ -223,6 +265,7 @@ export function planMilitary(sit: Situation, strategy: boolean): void {
     for (const a of sit.armies) {
       if (tasked.has(a.id)) continue;
       if (a.status === 'besieging' && !vital) continue;
+      if (!vital && recently(sit, `nodefend_${a.id}`, 20)) continue;
       const own = armyStrength(a);
       if (own < es * Math.max(1, ratio - 0.4)) continue;
       // A host marching on a siege is not turned back for a raid: only a siege at home or a real threat recalls it.
@@ -314,7 +357,7 @@ function homeSafe(sit: Situation, main: ArmyState): boolean {
 }
 
 /** A realm's field strength: its total strength minus its garrisons. */
-function fieldStrength(sit: Situation, fid: string): number {
+export function fieldStrength(sit: Situation, fid: string): number {
   let field = sit.strength[fid] ?? 0;
   for (const id of sortedKeys(sit.world.settlements)) {
     const s = sit.world.settlements[id]!;
@@ -327,12 +370,20 @@ function fieldStrength(sit: Situation, fid: string): number {
 function offensive(sit: Situation, a: ArmyState, seen: readonly Contact[], ratio: number, safe: boolean, tasked: Set<string>): void {
   const { world } = sit;
   const own = armyStrength(a);
+  // First: retake the realm's own lost towns the host outmatches (CD-B1 c).
+  const back = retakeTarget(sit, a, seen, ratio);
+  if (back) {
+    order(sit, a, { kind: 'besiege', settlementId: back.t.id }, `siege:${back.t.id}`, `marches to retake ${back.t.name} (${Math.round(own)} against ~${Math.round(back.def)} defenders)`, tasked);
+    if (a.forcedMarch) issue(sit, { kind: 'forced_march', armyId: a.id, on: false });
+    forget(sit, 'noTarget');
+    return;
+  }
   // Field battle with a weaker host in reach.
   let prey: Contact | null = null;
   let pd = Infinity;
   for (const c of seen) {
     if (!c.army || c.army.status === 'garrisoned' || c.army.engagementId) continue;
-    if (own < c.strength * ratio) continue;
+    if (own < c.strength * ratio || recently(sit, `nochase_${c.id}`, 20)) continue;
     const d = dist(a, c);
     if (!safe && sit.capital && dist(sit.capital, c) > 2000) continue;
     if (nearestOwn(sit, c) > 3000) continue;
@@ -342,6 +393,7 @@ function offensive(sit: Situation, a: ArmyState, seen: readonly Contact[], ratio
     }
   }
   if (prey && prey.army) {
+    forget(sit, 'noTarget');
     order(sit, a, { kind: 'attack_army', targetArmyId: prey.army.id }, `hunt:${prey.army.id}`, `attacks ${prey.army.name} (${Math.round(own)} vs ${Math.round(prey.strength)})`, tasked);
     return;
   }
@@ -400,7 +452,12 @@ function offensive(sit: Situation, a: ArmyState, seen: readonly Contact[], ratio
   if (best) {
     order(sit, a, { kind: 'besiege', settlementId: best.id }, `siege:${best.id}`, `marches to besiege ${best.name} (${Math.round(own)} against ~${Math.round(bestDef)} defenders${best.ownerFactionId ? '' : ', a free town'})`, tasked);
     if (a.forcedMarch) issue(sit, { kind: 'forced_march', armyId: a.id, on: false });
+    forget(sit, 'noTarget');
+    return;
   }
+  // Nothing the host can take (too strong, walled without siege tools, out of reach): recorded for the stall audit and
+  // the quiet-war peace (diplomacy.ts).
+  remember(sit, 'noTarget', sit.day);
 }
 
 /** Siege camp: assault when breached and strong enough, feed the camp, give up a hopeless siege. */
@@ -502,8 +559,142 @@ function raid(sit: Situation, a: ArmyState, seen: readonly Contact[], tasked: Se
 /** Drop plan memory of armies that no longer exist. */
 function cleanMemory(sit: Situation): void {
   for (const k of Object.keys(sit.f.ai.memory).sort()) {
-    if (!k.startsWith('op_') && !k.startsWith('opd_') && !k.startsWith('depot_') && !k.startsWith('nochase_')) continue;
+    if (!k.startsWith('op_') && !k.startsWith('opd_') && !k.startsWith('depot_') && !k.startsWith('nochase_') && !k.startsWith('rsp_') && !k.startsWith('rst_') && !k.startsWith('dfs_') && !k.startsWith('nodefend_')) continue;
     const id = k.slice(k.indexOf('_') + 1);
     if (!sit.world.armies[id]) forget(sit, k);
+  }
+}
+
+/** Has the realm held `t` (at the start, or since - plan memory `held_<id>`)? */
+function heldBefore(sit: Situation, t: SettlementState): boolean {
+  return t.initialOwnerFactionId === sit.fid || sit.f.ai.memory[`held_${t.id}`] === true;
+}
+
+/** Remember the towns the realm has held 90+ days (strategy runs), so a lost one is known as its own. */
+export function markHeld(sit: Situation): void {
+  // A conquest becomes "ours" after 90 days (two realms do not both chase the same town as their own).
+  for (const s of sit.owned) if (sit.f.ai.memory[`held_${s.id}`] !== true && s.initialOwnerFactionId !== sit.fid && sit.day - s.ownerSinceDay >= 90) remember(sit, `held_${s.id}`, true);
+}
+
+/**
+ * The realm's own lost town the host should retake first (CD-B1 c): held by an enemy at war (or rebels), within
+ * 4,500 m, not being captured, walls only with siege tools, and the host outmatches its defenders (ratio). Nearest
+ * first, the capital's region first.
+ */
+function retakeTarget(sit: Situation, a: ArmyState, seen: readonly Contact[], ratio: number): { t: SettlementState; def: number } | null {
+  const { world } = sit;
+  const own = armyStrength(a);
+  const tools = hasSiegeTools(a);
+  let best: SettlementState | null = null;
+  let bestDef = 0;
+  let bd = Infinity;
+  for (const id of sortedKeys(world.settlements)) {
+    const t = world.settlements[id]!;
+    if (t.ownerFactionId === sit.fid || t.pendingCapture || !heldBefore(sit, t) || !settlementHostile(world, sit.fid, t)) continue;
+    if (t.ownerFactionId !== null && !sit.enemies.includes(t.ownerFactionId)) continue;
+    if (t.fortLevel >= 1 && !tools) continue;
+    const d = dist(a, t);
+    if (d > 4500) continue;
+    const def = defenseOf(sit, t, seen);
+    if (own < Math.max(1, def) * ratio) continue;
+    if (d < bd) {
+      bd = d;
+      best = t;
+      bestDef = def;
+    }
+  }
+  return best ? { t: best, def: bestDef } : null;
+}
+
+/** Spare grain of an own settlement over its 30-day floor. */
+function spareGrain(s: SettlementState): number {
+  return Math.max(0, s.foodStored) - RULES.storage.keepDays * Math.max(0, s.foodConsumption);
+}
+
+/**
+ * Where an army should resupply (CD-B1 a): the nearest own settlement (not besieged, within 4,000 m) with grain to spare
+ * over its 30-day floor - 10 days of the army's need at least - other than `not`; else the nearest own settlement, which
+ * the royal reserve then tops up (send_relief) when it has grain.
+ */
+function resupplySource(sit: Situation, a: ArmyState, not: string | null): SettlementState | null {
+  const need = Math.max(1, armyFoodNeed(sit.world, a));
+  let best: SettlementState | null = null;
+  let bd = Infinity;
+  let near: SettlementState | null = null;
+  let nd = Infinity;
+  for (const s of sit.owned) {
+    if (s.besiegedBy || s.id === not) continue;
+    const d = dist(a, s);
+    if (d > 4000) continue;
+    if (d < nd) {
+      nd = d;
+      near = s;
+    }
+    if (spareGrain(s) >= Math.max(500, 10 * need) && d < bd) {
+      bd = d;
+      best = s;
+    }
+  }
+  if (best) return best;
+  if (near && sit.f.foodReserve > 0) relieveFor(sit, a, near);
+  return near;
+}
+
+/** Top up `s` from the royal reserve so it can feed the army: 20 days of its need over the floor. */
+function relieveFor(sit: Situation, a: ArmyState, s: SettlementState): void {
+  if (recently(sit, `hostRelief_${s.id}`, 3)) return;
+  const need = Math.max(1, armyFoodNeed(sit.world, a));
+  const want = Math.ceil(20 * need - spareGrain(s));
+  const food = Math.min(Math.floor(sit.f.foodReserve * 0.5), Math.max(0, want));
+  if (food < 100) return;
+  remember(sit, `hostRelief_${s.id}`, sit.day);
+  issue(sit, { kind: 'send_relief', settlementId: s.id, food, wealth: 0 });
+  note(sit, 'army', `${a.name}: ${food} grain sent from the royal reserve to ${s.name} to feed the host`);
+}
+
+/**
+ * An army on a resupply order (CD-B1 a): done at 60% of its train; with no gain in 3 days it is sent to another source
+ * with grain to spare (or its town is relieved from the reserve); after two fruitless tries it lives off its train and
+ * forage and goes back to its operations. Memory `rsp_<id>` "day,food" (the last gain), `rst_<id>` (tries).
+ */
+function resupplying(sit: Situation, a: ArmyState, share: number, tasked: Set<string>): void {
+  const key = `rsp_${a.id}`;
+  const done = (why: string): void => {
+    forget(sit, key);
+    forget(sit, `rst_${a.id}`);
+    if (str(sit, `op_${a.id}`, '') === 'resupply') {
+      forget(sit, `op_${a.id}`);
+      note(sit, 'army', `${a.name}: ${why}`);
+    }
+    issue(sit, { kind: 'army_order', armyId: a.id, order: { kind: 'idle' } });
+  };
+  if (share >= RESUPPLY_DONE) {
+    done(`resupplied (${Math.round(100 * share)}% of its train)`);
+    return;
+  }
+  const mark = str(sit, key, '');
+  const [d0, f0] = mark ? mark.split(',').map(Number) : [sit.day, a.supply.food];
+  if (!mark || a.supply.food > (f0 ?? 0) + 1) {
+    remember(sit, key, `${sit.day},${Math.round(a.supply.food)}`);
+    tasked.add(a.id);
+    return;
+  }
+  if (sit.day - (d0 ?? sit.day) < 3) {
+    tasked.add(a.id);
+    return;
+  }
+  const tries = num(sit, `rst_${a.id}`, 0);
+  if (tries >= 2) {
+    done(`gives up resupplying (${Math.round(100 * share)}% of its train; no grain to spare within reach)`);
+    return;
+  }
+  remember(sit, `rst_${a.id}`, tries + 1);
+  remember(sit, key, `${sit.day},${Math.round(a.supply.food)}`);
+  const cur = a.order.kind === 'resupply' ? a.order.sourceId : null;
+  const src = resupplySource(sit, a, cur);
+  tasked.add(a.id);
+  if (src && src.id !== cur) {
+    issue(sit, { kind: 'army_order', armyId: a.id, order: { kind: 'resupply', sourceId: src.id } });
+    note(sit, 'army', `${a.name}: no grain gained in 3 days - resupplies at ${src.name} instead`);
   }
 }

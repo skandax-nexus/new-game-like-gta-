@@ -12,7 +12,7 @@ import { defaultSandbox } from '../../../../src/data/campaign';
 import { getEventDef } from '../../../../src/data/events';
 import { situate } from '../../../../src/sim/strategic/ai/core';
 import { aiSchedule } from '../../../../src/sim/strategic/ai';
-import { warRule, warScoreFor } from '../../../../src/sim/strategic/ai/diplomacy';
+import { peaceCase, warRule } from '../../../../src/sim/strategic/ai/diplomacy';
 import { ageChecklist, landmarkChosenForAge } from '../../../../src/sim/strategic/ages';
 import { activeTreaty } from '../../../../src/sim/strategic/treaties';
 import { totalDays } from '../../../../src/sim/strategic/seasons';
@@ -73,12 +73,14 @@ export interface CampaignAudit {
   landmarkStarts: { day: number; factionId: FactionId; landmarkId: string }[];
   captures: { day: number; settlementId: string; from: FactionId | null; to: FactionId }[];
   peaceMade: { day: number; a: FactionId; b: FactionId }[];
+  /** Realms that fell (alive -> false) and the day; `landed` = it held a settlement on day 0. */
+  eliminated: { day: number; factionId: FactionId; landed: boolean }[];
   events: number;
 }
 
 function newAudit(w: WorldState): CampaignAudit {
   const z = (): Record<FactionId, number> => Object.fromEntries(Object.keys(w.factions).map((f) => [f, 0]));
-  return { days: 0, worstDebtStreak: z(), debtStreak: z(), wars: [], peace: [], ageUps: [], readyStreak: z(), worstReadyStreak: z(), landmarkStarts: [], captures: [], peaceMade: [], events: 0 };
+  return { days: 0, worstDebtStreak: z(), debtStreak: z(), wars: [], peace: [], ageUps: [], readyStreak: z(), worstReadyStreak: z(), landmarkStarts: [], captures: [], peaceMade: [], eliminated: [], events: 0 };
 }
 
 interface PairRule {
@@ -122,6 +124,8 @@ export function runAudited(w: WorldState, days: number, onDay?: (w: WorldState, 
   const audit = newAudit(w);
   const out: SimEvent[] = [];
   let rules: Map<string, PairRule> | null = null;
+  const landed = new Set(Object.values(w.settlements).map((s) => s.ownerFactionId).filter((x): x is FactionId => x !== null));
+  const alive = new Set(Object.keys(w.factions).filter((f) => w.factions[f]!.alive));
   for (let d = 0; d < days; d++) {
     for (let h = 0; h < 24; h++) {
       reopen(w);
@@ -168,6 +172,10 @@ export function runAudited(w: WorldState, days: number, onDay?: (w: WorldState, 
     const day = totalDays(w.calendar);
     for (const fid of Object.keys(w.factions).sort()) {
       const f = w.factions[fid]!;
+      if (!f.alive && alive.has(fid)) {
+        alive.delete(fid);
+        audit.eliminated.push({ day, factionId: fid, landed: landed.has(fid) });
+      }
       if (!f.alive) {
         audit.debtStreak[fid] = 0;
         // A fallen realm owes no peace proposal.
@@ -180,18 +188,19 @@ export function runAudited(w: WorldState, days: number, onDay?: (w: WorldState, 
       const ready = cl.allMet && cl.nextAge !== null && !landmarkChosenForAge(w, fid, cl.nextAge);
       audit.readyStreak[fid] = ready ? (audit.readyStreak[fid] ?? 0) + 1 : 0;
       audit.worstReadyStreak[fid] = Math.max(audit.worstReadyStreak[fid] ?? 0, audit.readyStreak[fid]!);
-      // Peace watch: each war spell below peaceWarScore must see a proposal (or the war end) within 31 days.
+      // Peace watch: each war spell below peaceWarScore, with the realm's field strength under 1.5x the enemy's (CD-B3 d:
+      // a stronger host retakes instead), must see a proposal (or the war end) within 31 days.
       const sit = situate(w, fid);
       for (const b of sit.enemies) {
-        const score = warScoreFor(sit, b);
+        const owed = peaceCase(sit, b).sue;
         let watch = audit.peace.find((p) => p.a === fid && p.b === b && p.sued === null);
-        if (score < sit.personality.peaceWarScore) {
+        if (owed) {
           if (!watch) {
             watch = { a: fid, b, belowSince: day, sued: null };
             audit.peace.push(watch);
           }
           if (w.diplomacy.proposals.some((p) => p.from === fid && p.to === b && p.type === 'peace' && p.day >= watch!.belowSince)) watch.sued = day;
-        } else if (watch) watch.sued = day; // recovered above the line: nothing owed
+        } else if (watch) watch.sued = day; // recovered above the line (or strong enough to retake): nothing owed
       }
       for (const p of audit.peace) if (p.a === fid && p.sued === null && !sit.enemies.includes(p.b)) p.sued = day;
     }

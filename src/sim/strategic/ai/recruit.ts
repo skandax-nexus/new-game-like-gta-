@@ -7,8 +7,11 @@
  *    for standing garrisons. Never into upkeep it cannot pay: the projected month after the new
  *    upkeep must stay >= 0, or the treasury must carry the deficit for two years (one year at war).
  *  - Composition: a personality doctrine (shares of spearmen, archers, horse, guards, elephants...) filtered by the
- *    roster, the age and the buildings that train them; the class furthest below its share is raised next; every
- *    field army gets a supply train and, for realms that besiege, engineers.
+ *    roster, the age and the buildings that train them; the class furthest below its share is raised next; the main
+ *    host gets one supply train and, for realms that besiege, one engineer formation - two when its planned siege
+ *    target has fort level 2+ (CD-B2) - raised one formation per job.
+ *  - Budget: at war or under threat the treasury less one month of upkeep (the landmark saving is ignored); in peace
+ *    three months of upkeep and the landmark saving stay in hand.
  *  - Where: settlements that can train the class, have the recruits and the grain. Recruits join the main field
  *    army (`targetArmyId`) when there is one; otherwise the settlement's rally point musters a new host (the military
  *    planner merges it). Standing garrisons first: two formations in the capital and forts at war, one in towns and
@@ -85,7 +88,7 @@ function nextClass(sit: Situation, main: ArmyState | null): UnitClass | null {
   // Every host marches with a supply train; besiegers bring engineers.
   if (main && !main.units.some((u) => u.unitClass === 'supply_train') && !(comp.get('supply_train') ?? 0) && canTrain(sit, 'supply_train')) return 'supply_train';
   const w = sit.personality.weights;
-  if (main && (w.expand >= 1 || sit.enemies.length > 0) && !main.units.some((u) => u.unitClass === 'engineers') && !(comp.get('engineers') ?? 0) && canTrain(sit, 'engineers')) return 'engineers';
+  if (main && (w.expand >= 1 || sit.enemies.length > 0) && engineersFor(sit, main) < engineersWanted(sit, main) && canTrain(sit, 'engineers')) return 'engineers';
   const doctrine = DOCTRINE[sit.f.ai.personality] ?? DOCTRINE.opportunist!;
   let total = 0;
   for (const [cls, n] of comp) if (cls in doctrine) total += n;
@@ -103,13 +106,53 @@ function nextClass(sit: Situation, main: ArmyState | null): UnitClass | null {
   return best ?? (canTrain(sit, 'spearmen') ? 'spearmen' : null);
 }
 
+/** At war, or a town under threat (hostile strength > 0.3 x its defence) or besieged. */
+export function pressed(sit: Situation): boolean {
+  if (sit.enemies.length > 0) return true;
+  for (const t of sit.threats) if (t.threat > 0.3 * Math.max(1, t.defense) || t.besieged) return true;
+  return false;
+}
+
+/**
+ * Engineer formations a host should carry (CD-B2): one, or two when its planned siege target has fort level 2+ (the
+ * §7.8 pacing: one formation brings Giridurg's 4,200 wall HP down in ~50 days, two in ~27).
+ */
+export function engineersWanted(sit: Situation, main: ArmyState): number {
+  const op = sit.f.ai.memory[`op_${main.id}`];
+  if (typeof op === 'string' && op.startsWith('siege:')) {
+    const t = sit.world.settlements[op.slice(6)];
+    if (t && t.fortLevel >= 2) return 2;
+  }
+  return 1;
+}
+
+/** Engineer formations with the host, plus those in training for it (or for no army) and this run's recruit orders. */
+function engineersFor(sit: Situation, main: ArmyState): number {
+  let n = 0;
+  for (const u of main.units) if (u.unitClass === 'engineers') n++;
+  for (const s of sit.owned) for (const j of s.recruitment) if (j.unitClass === 'engineers' && (j.targetArmyId === main.id || j.targetArmyId === null)) n += j.formations;
+  for (const c of sit.commands) if (c.cmd.kind === 'recruit' && c.cmd.unitClass === 'engineers') n += c.cmd.formations;
+  return n;
+}
+
+/** Support classes go one formation per job: a host carries 1-2 engineer formations and one supply train (CD-B2). */
+const ONE_PER_JOB: readonly UnitClass[] = ['engineers', 'supply_train'];
+
 /** Soldiers the realm wants under arms now. */
 export function soldierTarget(sit: Situation): number {
   const cap = soldierCeiling(sit);
-  let pressed = sit.enemies.length > 0;
-  for (const t of sit.threats) if (t.threat > 0.3 * Math.max(1, t.defense) || t.besieged) pressed = true;
-  if (pressed) return cap;
+  if (pressed(sit)) return cap;
   return cap * (sit.f.ai.personality === 'defensive' ? 0.8 : 0.7);
+}
+
+/**
+ * Wealth recruitment may spend (CD review round 1): at war or under threat the treasury less one month of upkeep - the
+ * landmark saving does not starve the army; in peace three months of upkeep and the landmark saving stay in hand
+ * (economy.ts `spendable`).
+ */
+export function recruitRoom(sit: Situation): number {
+  if (!pressed(sit)) return spendable(sit);
+  return sit.f.treasury - Math.max(0, num(sit, 'upkeep', 150));
 }
 
 /** Recruitment run (staggered with economy runs). */
@@ -125,7 +168,7 @@ export function planRecruitment(sit: Situation, crisis: boolean): void {
   if (sit.soldiers + queued < cap) for (const s of sit.owned) if (s.garrison.length < garrisonMinimum(sit, s) && s.recruitment.length === 0) garrisonGap = true;
   if (sit.soldiers + queued >= target && !garrisonGap) return;
   const main = mainArmy(sit);
-  let room = spendable(sit);
+  let room = recruitRoom(sit);
   let net = num(sit, 'net', 0);
   const atWar = sit.enemies.length > 0;
   let jobs = 0;
@@ -223,7 +266,7 @@ export function garrisonMinimum(sit: Situation, s: SettlementState): number {
 function tryRecruit(sit: Situation, s: SettlementState, cls: UnitClass, targetArmyId: string | null, room: number, net: number, atWar: boolean, why: string, garrison = false, gap = 0): { wealth: number; upkeep: number; soldiers: number } | null {
   const { world, f } = sit;
   const per = recruitCost(world, sit.fid, cls, 1);
-  const want = garrison ? 1 : Math.max(1, Math.min(RULES.recruitment.maxFormationsPerJob, Math.floor(gap / Math.max(1, per.recruits))));
+  const want = garrison || ONE_PER_JOB.includes(cls) ? 1 : Math.max(1, Math.min(RULES.recruitment.maxFormationsPerJob, Math.floor(gap / Math.max(1, per.recruits))));
   for (let n = want; n >= 1; n--) {
     const chk = validateRecruit(world, sit.fid, s.id, cls, n, targetArmyId);
     if (!chk.ok || chk.cost.wealth > room) continue;

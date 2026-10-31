@@ -27,7 +27,7 @@ import type { FactionId, IssuedStrategicCommand, TerrainQuery, WorldState } from
 import { sortedKeys } from '../../core/ids';
 import { totalDays } from './seasons';
 import { remember, situate } from './ai/core';
-import { considerPeace, considerTreaties, considerWar } from './ai/diplomacy';
+import { considerPeace, considerTreaties, considerWar, planTributeAfterPeace } from './ai/diplomacy';
 import { planGrain, planGrainDaily, planLabor, planTaxes, planTreasury } from './ai/economy';
 import { planAge, planConstruction } from './ai/build';
 import { planDemobilize, planRecruitment, planStandDown } from './ai/recruit';
@@ -37,8 +37,8 @@ import { planGoals } from './ai/goals';
 
 export { aiJournal, resetAiJournal } from './ai/core';
 export type { AiJournalEntry } from './ai/core';
-export { warRule, WAR_FORBIDDING_TREATIES } from './ai/diplomacy';
-export type { WarRuleResult } from './ai/diplomacy';
+export { peaceCase, warRule, WAR_FORBIDDING_TREATIES } from './ai/diplomacy';
+export type { PeaceCase, WarRuleResult } from './ai/diplomacy';
 export { chooseAiEventChoice } from './ai/politics';
 export { landmarkScore, preferredLandmark } from './ai/build';
 
@@ -92,6 +92,7 @@ export function runCampaignAI(world: WorldState, factionId: FactionId, terrain: 
   // Daily: answers, peace, grain emergencies, supply and defence.
   planEvents(sit);
   considerPeace(sit);
+  planTributeAfterPeace(sit);
   planGrainDaily(sit);
   planStandDown(sit);
   if (when.strategy) {

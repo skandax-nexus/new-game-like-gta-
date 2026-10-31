@@ -12,15 +12,17 @@ import { situate } from '../../../src/sim/strategic/ai/core';
 import { daysToNextHarvest, grainOutlook, planGrain, planLabor, planTaxes, planTreasury } from '../../../src/sim/strategic/ai/economy';
 import { preferredLandmark } from '../../../src/sim/strategic/ai/build';
 import { planMilitary } from '../../../src/sim/strategic/ai/military';
-import { planDemobilize, planRecruitment, soldierCeiling } from '../../../src/sim/strategic/ai/recruit';
+import { planDemobilize, planRecruitment, pressed, recruitRoom, soldierCeiling } from '../../../src/sim/strategic/ai/recruit';
+import { considerPeace, considerTreaties, peaceCase } from '../../../src/sim/strategic/ai/diplomacy';
 import { armyStrength, makeArmy } from '../../../src/sim/strategic/armies';
-import { createTreaty } from '../../../src/sim/strategic/diplomacy';
+import { createTreaty, validateProposal } from '../../../src/sim/strategic/diplomacy';
 import { recruitCost } from '../../../src/sim/strategic/recruitment';
 import { applyStrategicCommand, getRegionHeightfield } from '../../../src/sim/strategic/world';
 import { relationKey } from '../../../src/core/ids';
 import { campaign, runDays } from '../strategic/helpers';
 import type { CampaignAudit } from './harness/campaign';
 import { aiSandbox, runAudited } from './harness/campaign';
+import { stallWatch } from './harness/stalls';
 
 const YEARS3 = 1080;
 
@@ -60,9 +62,16 @@ describe('AI-only sandbox, 3 years, 6 realms (SIM-02 acceptance)', () => {
     it(`seed ${seed}: no debt spiral, wars per the rule, peace sued, landmarks started`, () => {
       resetAiJournal(true);
       const w = aiSandbox(seed);
-      const audit = runAudited(w, YEARS3);
+      const stalls = stallWatch();
+      const audit = runAudited(w, YEARS3, (world) => stalls.day(world));
       expect(audit.days).toBe(YEARS3);
       checkAudit(seed, audit);
+      // Stall audit (CD-B1 d): while at war no AI field army keeps the same operation for more than 45 days (a siege
+      // camp runs as long as the walls hold and is not a stall).
+      // No landed realm is eliminated before day 180 (CD review round 1).
+      for (const e of audit.eliminated) if (e.landed) expect(e.day, `seed ${seed}: ${e.factionId} eliminated on day ${e.day}`).toBeGreaterThanOrEqual(180);
+      const worst = stalls.worst()[0];
+      if (worst) expect(worst.days, `seed ${seed}: ${stalls.report().join(', ')}`).toBeLessThanOrEqual(45);
       expect(audit.wars.some((x) => x.byAi), `seed ${seed}: the AI declared no war in 3 years`).toBe(true);
       for (const e of aiJournal()) kinds.add(e.kind);
       ageUps.push(...audit.ageUps);
@@ -230,6 +239,136 @@ describe('planners', () => {
     let raised = 0;
     for (const c of sit.commands) if (c.cmd.kind === 'recruit') raised += recruitCost(w, 'heartland', c.cmd.unitClass, c.cmd.formations).recruits;
     expect(sit.soldiers + raised).toBeLessThanOrEqual(soldierCeiling(sit));
+  });
+
+  it('engineers and supply trains are raised one formation per job; a host carries 1 engineer formation, 2 for a fort level 2+ target (CD-B2)', () => {
+    const w = aiSandbox(3);
+    w.factions.heartland!.treasury = 1e6;
+    setWar(w, 'heartland', 'highland', true);
+    const host = Object.values(w.armies).find((a) => a.factionId === 'heartland' && !a.id.startsWith('garrison_'))!;
+    host.units = host.units.filter((u) => u.unitClass !== 'engineers');
+    const sit = situate(w, 'heartland');
+    planRecruitment(sit, false);
+    const eng = sit.commands.filter((c) => c.cmd.kind === 'recruit' && c.cmd.unitClass === 'engineers');
+    expect(eng.length, JSON.stringify(sit.commands.map((c) => c.cmd))).toBe(1);
+    expect(eng[0]!.cmd.kind === 'recruit' && eng[0]!.cmd.formations).toBe(1);
+    for (const c of sit.commands) if (c.cmd.kind === 'recruit' && (c.cmd.unitClass === 'engineers' || c.cmd.unitClass === 'supply_train')) expect(c.cmd.formations).toBe(1);
+    // With one engineer formation in the host: none more - unless the planned siege is of a fort level 2+ town.
+    host.units.push({ ...host.units[0]!, id: 'u_eng_1', unitClass: 'engineers', soldiers: 40 });
+    const again = situate(w, 'heartland');
+    planRecruitment(again, false);
+    expect(again.commands.some((c) => c.cmd.kind === 'recruit' && c.cmd.unitClass === 'engineers')).toBe(false);
+    w.settlements.giridurg!.fortLevel = 3;
+    w.factions.heartland!.ai.memory[`op_${host.id}`] = 'siege:giridurg';
+    const walls = situate(w, 'heartland');
+    planRecruitment(walls, false);
+    const second = walls.commands.filter((c) => c.cmd.kind === 'recruit' && c.cmd.unitClass === 'engineers');
+    expect(second.length).toBe(1);
+    expect(second[0]!.cmd.kind === 'recruit' && second[0]!.cmd.formations).toBe(1);
+  });
+
+  it('at war the landmark saving and the 3-month floor do not starve recruitment (treasury less one month of upkeep)', () => {
+    const w = aiSandbox(3);
+    const f = w.factions.heartland!;
+    f.ai.memory.upkeep = 1000;
+    f.ai.memory.saveWealth = 4000;
+    f.ai.memory.net = 1000;
+    f.treasury = 4500;
+    const peaceSit = situate(w, 'heartland');
+    // In peace and unthreatened: 4,500 - 3 x 1,000 - 4,000 < 0: nothing to spend.
+    peaceSit.enemies = [];
+    peaceSit.threats = [];
+    expect(pressed(peaceSit)).toBe(false);
+    expect(recruitRoom(peaceSit)).toBe(4500 - 3000 - 4000);
+    setWar(w, 'heartland', 'highland', true);
+    const warSit = situate(w, 'heartland');
+    expect(recruitRoom(warSit)).toBe(3500);
+    planRecruitment(warSit, false);
+    expect(warSit.commands.some((c) => c.cmd.kind === 'recruit'), JSON.stringify(warSit.commands.map((c) => c.cmd))).toBe(true);
+  });
+
+  it('a resupplying host is done at 60% of its train; with no grain gained in 3 days it goes to a town with grain to spare (CD-B1 a)', () => {
+    const w = aiSandbox(3);
+    runDays(w, 2, { autoEvents: false, autoEngagements: false });
+    const host = Object.values(w.armies).find((a) => a.factionId === 'heartland' && !a.id.startsWith('garrison_'))!;
+    const f = w.factions.heartland!;
+    host.order = { kind: 'resupply', sourceId: 'rajapura' };
+    host.supply.food = host.supply.foodCapacity * 0.62;
+    let sit = situate(w, 'heartland');
+    planMilitary(sit, false);
+    expect(sit.commands.some((c) => c.cmd.kind === 'army_order' && c.cmd.armyId === host.id && c.cmd.order.kind === 'idle')).toBe(true);
+    // Below 60% and no gain for 3 days at a town pinned at its floor: another town with grain to spare is chosen.
+    host.order = { kind: 'resupply', sourceId: 'rajapura' };
+    host.supply.food = host.supply.foodCapacity * 0.3;
+    f.ai.memory[`rsp_${host.id}`] = `${situate(w, 'heartland').day - 4},${Math.round(host.supply.food)}`;
+    w.settlements.rajapura!.foodStored = 30 * w.settlements.rajapura!.foodConsumption;
+    sit = situate(w, 'heartland');
+    planMilitary(sit, false);
+    const re = sit.commands.find((c) => c.cmd.kind === 'army_order' && c.cmd.armyId === host.id && c.cmd.order.kind === 'resupply');
+    const relief = sit.commands.find((c) => c.cmd.kind === 'send_relief');
+    expect(re !== undefined || relief !== undefined, JSON.stringify(sit.commands.map((c) => c.cmd))).toBe(true);
+    if (re && re.cmd.kind === 'army_order' && re.cmd.order.kind === 'resupply') {
+      expect(re.cmd.order.sourceId).not.toBe('rajapura');
+      const src = w.settlements[re.cmd.order.sourceId!]!;
+      expect(src.foodStored - 30 * src.foodConsumption).toBeGreaterThan(0);
+    }
+  });
+
+  it('the main host retakes its own lost town before hunting or besieging elsewhere (CD-B1 c)', () => {
+    const w = aiSandbox(3);
+    runDays(w, 2, { autoEvents: false, autoEngagements: false });
+    setWar(w, 'heartland', 'frontier', true);
+    const host = Object.values(w.armies).find((a) => a.factionId === 'heartland' && !a.id.startsWith('garrison_'))!;
+    // Marudesha's host is elsewhere (no threat to defend against); it holds Suvarna's Dhanyagram with a token garrison.
+    for (const a of Object.values(w.armies)) if (a.factionId === 'frontier') delete w.armies[a.id];
+    const t = w.settlements.dhanyagram!;
+    t.ownerFactionId = 'frontier';
+    t.garrison = t.garrison.slice(0, 1);
+    host.supply.food = host.supply.foodCapacity;
+    const sit = situate(w, 'heartland');
+    planMilitary(sit, true);
+    const o = sit.commands.find((c) => c.cmd.kind === 'army_order' && c.cmd.armyId === host.id);
+    expect(o && o.cmd.kind === 'army_order' ? o.cmd.order : null, JSON.stringify(sit.commands.map((c) => c.cmd))).toEqual({ kind: 'besiege', settlementId: 'dhanyagram' });
+  });
+
+  it('peace: sued only below peaceWarScore with field strength under 1.5x the enemy; much weaker it offers tribute (CD-B3)', () => {
+    const w = aiSandbox(3);
+    setWar(w, 'heartland', 'frontier', true);
+    const r = w.diplomacy.relations[relationKey('heartland', 'frontier')]!;
+    // Marudesha's host is down to a fifth of its men.
+    for (const a of Object.values(w.armies)) if (a.factionId === 'frontier') for (const u of a.units) u.soldiers = Math.max(1, Math.floor(u.soldiers * 0.2));
+    // Marudesha losing badly: it sues - as a tributary of Suvarna (strength ratio under its tributaryRatio).
+    r.warScore = r.a === 'frontier' ? -60 : 60;
+    const weak = situate(w, 'frontier');
+    const c = peaceCase(weak, 'heartland');
+    expect(c.sue).toBe(true);
+    expect(c.tributary).toBe(true);
+    considerPeace(weak);
+    const p = weak.commands.find((x) => x.cmd.kind === 'propose');
+    expect(p && p.cmd.kind === 'propose' ? [p.cmd.type, p.cmd.terms.overlord, p.cmd.terms.payer] : null).toEqual(['peace', 'heartland', 'frontier']);
+    const income = w.factions.frontier!.ledger.taxIncome + w.factions.frontier!.ledger.tradeIncome;
+    expect(p && p.cmd.kind === 'propose' ? p.cmd.terms.tributePerMonth : 0).toBe(Math.max(1, Math.round(0.1 * income)));
+    // Suvarna with a losing war score but a field host 1.5x+ Marudesha's: no peace - it retakes instead.
+    r.warScore = r.a === 'heartland' ? -60 : 60;
+    const strong = situate(w, 'heartland');
+    expect(peaceCase(strong, 'frontier').fieldRatio).toBeGreaterThanOrEqual(1.5);
+    considerPeace(strong);
+    expect(strong.commands.some((x) => x.cmd.kind === 'propose')).toBe(false);
+  });
+
+  it('no proposal the world would refuse is issued or journaled (validateProposal first)', () => {
+    resetAiJournal(true);
+    const w = aiSandbox(3);
+    setWar(w, 'heartland', 'frontier', true);
+    const sit = situate(w, 'heartland');
+    // At war: no treaty proposal but peace is valid; a demand for tribute at war would be refused, so none is made.
+    sit.f.ai.memory.lastProposalDay = -999;
+    considerTreaties(sit);
+    for (const c of sit.commands) {
+      if (c.cmd.kind !== 'propose') continue;
+      expect(validateProposal(w, 'heartland', c.cmd.to, c.cmd.type, c.cmd.terms), JSON.stringify(c.cmd)).toBeNull();
+    }
+    expect(sit.commands.some((c) => c.cmd.kind === 'propose' && c.cmd.type === 'demand_tribute')).toBe(false);
   });
 
   it('demobilisation: formations split off to be stood down are disbanded the next day, never merged back', () => {
