@@ -84,6 +84,37 @@ publish keeps baseColor alpha (CTO request still open). The original round 0 lis
 3. terrain_mud_wet / terrain_paddy_mud water masks ship as cache files until publish keeps baseColor alpha.
 4. Mandana / kolam motif vocabulary in `decals_settlement` (period check).
 
+## Review round 2 rework (Technical Art Director B3 / B4 / AD-4 / P2, Art Director AD-10 / AD-11)
+
+Republished under `flock .asset-cache/.publish.lock npm run assets -- <ids>`: terrain_rock_basalt, terrain_rock_granite,
+terrain_rock_sandstone, terrain_grass_lush, lime_plaster_weathered, thatch_palm, timber_weathered_grey,
+sandstone_red_ashlar. The shared kits (`_matkit.py`, `_terrainkit.py`) did not change, so no other id went dirty.
+Numbers are measured on the shipped files by `scripts/shots/ta-01.cjs` (stats.md "Review round 2", deltas.md).
+
+| item | fix | evidence |
+|---|---|---|
+| B4 terrain_rock_basalt | rewritten as ONE trap flow per 10 m tile. Colonnade: columns 0.45-1.5 m whose joints run unbroken through the whole colonnade; every joint wanders on its own and opens / closes along its length. Each column is a low-slope prism (planar centre face + two oblique faces) whose facets drift slowly along it - no block-by-block re-dealing (that read as masonry). Sparse curved cross-joints 2-4 m apart on each column's own heights, ~2.5 % fallen segments. Light / dark only from the normal: no albedo seam on any joint, and the joint slots are shallow so their lit wall never reads as a pale seam. Entablature 2-3.6 m: thin curved columnettes (0.16-0.45 m) whose lean drifts irregularly along u (fan, no regular scallops), chopped by conchoidal chips, same mean face plane and grey as the colonnade. ONE recessed vesicular flow top 0-0.9 m that pinches out over ~40 % of the width, with a talus apron where it is thick. Flow-top value -2 % vs #5a5650 | `tiling/terrain_rock_basalt.jpg`, `../../screenshots/pipeline/wp1/terrain_rock_basalt_cycles.jpg` (wall), `slope/terrain_rock_basalt_*`, splat plateau / dense_forest |
+| B3 terrain_rock_granite | no closed cells at all: broad isotropic whaleback swells carrying a weathered fractured-facet skin (planar facets at 1.6 / 0.55 / 0.18 m, arrises rounded), cut by sparse OPEN-ENDED near-planar joints in four families (steep, sheet, secondary, short fractures) that fade out at both ends - no triple junctions, so no wedges, and no shared block long axis. Joint cores are narrow V-notches (<= 3 cm deep, shoulders 30 % of that), so no joint is the darkest mark; black streaks softened | `tiling/terrain_rock_granite.jpg`, `..._cycles.jpg`, `slope/terrain_rock_granite_*`, splat hills / rocky / grassland |
+| AD-11 terrain_rock_sandstone | foresets are now STRAIGHT planar laminae (not following the wavy set base) with one palaeocurrent (80 % of sets dip the same way: no herringbone), in half of the sets only, relief 6-9 mm; albedo lamina contrast 4.6 % (p90, <= 8 %), hue -1 / +3.5 deg of #a88a6c, saturation p98 0.373; each bed weathers back by its own amount (strata carried by relief); 35 % soft recessed beds; joints and block steps only in massive beds (> 1-2 m), so thin-bed packets no longer read as masonry; no speck beds | stats.md, `tiling/terrain_rock_sandstone.jpg`, `slope/terrain_rock_sandstone_*`, splat_sheet_day.jpg |
+| AD-11 slope lookdev | the three rock layers on a 38-58 deg escarpment with world-space triplanar (v = up): ultra golden / ultra day / ultra day ~7 m / mobile day | `slope_sheet.jpg`, `slope/` |
+| AD-4 terrain_grass_lush | owned-path fix (the CTO per-texture encoding option has not landed): chroma pre-filtered to the shipped 2 x 2 block, each texel's HSV saturation set from the target with hue held within +-5 deg of the sward, calibrated to the encode-safe mean #606c3c (within +-6 % of #5f6f3a). Shipped WebP: lime 0 %, saturation p98 0.491 / 0.491 / 0.487, value p98 <= 0.49, blade hue 72-79 deg on every tier. Blades rebuilt: folded, tapered blades of varied width (2-6 mm) and length that point AWAY from their tuft crown per blade (the old per-texel angle bent blades into rings / C shapes), crowns raised in the height map | stats.md, `../../screenshots/pipeline/wp1/terrain_grass_lush_cycles_closeup.jpg` |
+| AD-10 lime_plaster_weathered | macro loss zones (0.9 m noise) leave clean zones; losses cluster along OPEN-ENDED settlement cracks (no closed loops); flakes under ~3 cm dropped; ragged chipped outlines; two-step depth: 2.5 mm buff-grey lime undercoat lip, and in the larger patches (~1/3 of the loss area) exposed #9c5a40 brick courses 8 mm deep with lime residue and dusty faces; chipped raised rim; broken trowel arcs; total loss 8.5 % | `tiling/lime_plaster_weathered.jpg`, `..._cycles_closeup.jpg`, `viewer/lime_plaster_weathered.jpg` |
+| P2 thatch_palm | broad flat leaflets 20-60 mm in frond tufts of 5-12, random length / lean / droop, tips at all heights over the course below, dark gaps; no comb row | `viewer/thatch_palm.jpg`, `..._cycles_closeup.jpg` |
+| P2 timber_weathered_grey | checks are tapered, wandering splits that follow the grain (no straight polylines / sawtooth) | `viewer/timber_weathered_grey.jpg`, `..._cycles_closeup.jpg` |
+| P2 sandstone_red_ashlar | random punch-pit point tooling (no lattice), 2.5-6 cm arris wear 7-15 mm deep, recessed lime joints, sparse angular spalls, per-block tone, soft rust bleeds | `viewer/sandstone_red_ashlar.jpg`, `..._cycles_closeup.jpg` |
+
+### Open after round 2
+
+- **AD-10 vs B1.** The AD-10 macro loss mask means a 3 m tile carries a few brick windows, and those repeat at 3 x 3.
+  I kept them small and spread over several clusters; the large brick-revealing losses should still come from the
+  model macro maps and decals (round 0 ruling 1).
+- **Rock periods.** Basalt and sandstone strata are horizontal by nature, so a 10 m tile still shows its period as
+  horizontal bands at 30 m; granite shows a few repeated relief shadows (not joints) at 24 m. Stochastic / macro
+  tiling in the splat (GFX-02) is the remaining lever.
+- **CTO request (unchanged): per-texture `encoding` (near_lossless) for material baseColor.** No longer blocking
+  AD-4 (the shipped file now passes), but it would let grass_lush keep sharper blade albedo.
+- **P2 sets are class C** (512 px data maps over 2-3 m): tooling and arris wear read at 1-3 m, not in extreme close-up.
+
 ## Review round 1 rework (Technical Art Director B1-B7, Art Director AD-1..AD-9)
 
 Every WP1 id was rebuilt and republished under the publish lock (the shared-kit hash changed, so all of them were
