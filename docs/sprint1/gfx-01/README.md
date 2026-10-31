@@ -160,3 +160,48 @@ Built passes disable themselves per frame when idle (shafts need the sun on scre
   `WETNESS_GLSL` in `splat.ts`; water writes its SSR weight to alpha and uses `injectHeightFog`; weather calls
   `env.triggerLightning()`.
 - **GFX-05 / GP-02**: pass ZoomLook into `env.update(dt, camera, look)`; hero / cutscene focus via `post.setFocus`.
+
+## Rework round 1 - Art Director blockers (`docs/art/reviews/gfx-01.md`)
+
+Every PNG in this folder and `report.json` were re-captured after the fixes (`scripts/shots/gfx-01.cjs`, 46 PNGs,
+`failures: []`, 0 console errors in every shot). The resolution scale is now pinned to 1 in every capture, so the
+low / medium / high shots show the tier rather than SwiftShader speed. The `review/` folder holds the round-1 state
+(the "before" of each blocker).
+
+| # | Blocker | Fix (commit) | Evidence |
+|---|---|---|---|
+| 1 | Monsoon not wet in today's scenes | a2c5418. A global chunk patch on `metalnessmap_fragment` reaches every MeshStandard/Physical (W15, like the fog chunk). Porosity = `smoothstep(0.35, 0.9, roughness) x (1 - metalness)`; orientation weights walls 0.9 / up 1 / overhangs 0.6; albedo `x mix(1, 0.52, wet)`; roughness toward 0.12 (weight 0.85). Puddles stay with `createPbrMaterial` and the splat hook. Opt-outs: `SAM_OWN_WETNESS` (pbr, splat, the legacy terrain shader, which keeps its own 0.28 x wetness) and `SAM_WET_POROSITY` (the vegetation group: 0.45). Weather dampness below 0.15 no longer shows. | Albedo at wetness 0.85 (unit-tested CPU mirror): plaster / sandstone walls x0.63-0.68, roughness 0.39-0.44; foliage 18 % darker; terrain 24 % darker; nothing changes at 0, on metals or on polish. Rendered A/B in the same frozen frame (`hero-monsoon-ultra.png` vs `hero-monsoon-ultra-dry.png`), linear luminance wet / dry: plaster near 0.71, plaster far 0.74, red base 0.69. The tone curve and the added gloss compress the 0.63-0.68 albedo ratio on screen. Against `hero-noon-ultra.png`: plaster 0.62-0.75, red base 0.51, terrain 0.40 (light changes too). |
+| 2 | Low-tier acne / saw-tooth | e859dc9. The low tier's 'hard' cascade now uses `samShadowTent`: nine bilinear 2x2 compares folded into one 4x4 fetch (16 taps, the cost of three's PCF). The footprint is fixed, so there is no penumbra growth. A slope-scaled depth bias (0.6 texel x tan, capped at 6) from `dot(N, L)`. Normal bias 2.2 texels and depth bias 0.8 texel on low. Back faces render into the map (three's default for FrontSide). The cascade is fitted to the hero band (49 m). | `hero-noon-low.png`: no streaks on the red building and no eave comb on the plaster house. `hero-golden-low.png`: the ridge shadow on the red wall is a soft ramp, no teeth. Also `hero-night-low.png`, phone portrait `hero-noon-low-phone.png` / `hero-golden-low-phone.png` (390x844), and `battle-*-low.png` at the same 24 draws. |
+| 3 | Near-field DoF hard silhouette | 2910c9f. A near layer: near CoC tile max over 8x8 px, 3x3 dilation, half-res near gather with the dilated radius (near-field samples only), composited with `alpha = coverage x smoothstep(0, 1, dilatedNearCoc / 2 px)`. The far-field rule is unchanged. `post.setDofNearField(on)`; lab `&dofnear=0` gives the single layer, `&near=1` a pillar 1.6 m in front of the lens. | `lab-post-hero-dof-focus12.png` vs `-single.png`: luminance just outside the cape edge 0.624 -> 0.607 (the foreground now spreads over the column); just inside 0.148 -> 0.125 (fewer background bites). `lab-post-hero-dof-nearpillar.png` vs `-single.png`: the pillar edge melts over the railing. |
+| 4 | Low-sun shafts + bloom clip 8 % | 09f351c. Measured first: with shafts off the frame still clipped 4.95 %, also with bloom off. 68-96 % of clipped pixels were red-only: the warm display-referred grade + LUT pushed a cream sky past 1 in one channel. Shafts are now `luminance x fog in-scatter tint`, soft-clamped to 1.5x the local pre-shaft radiance (pixel or +-0.04 uv neighbourhood, display-relative floor), and fade inside the sun sprite's glow. The occlusion mask clamps display-relatively, so the sprite does not feed the scatter. A hue-preserving highlight shoulder follows grade + LUT (knee 0.9). `shaftsStrength` is unchanged as authored. | `lab-post-hero-taa-on/off.png`: clipped 7.9-8.0 % -> **0.00 %**, p98 luma 249 -> **240.2**. The sky between the columns keeps its warm-to-pale gradient; lamp bloom and lens dirt stay. Both in `report.json` `checks.labHeroClip`. The script fails above 2 % or p98 > 245. |
+
+Non-blocking notes:
+- **Dusk:** the procedural sky keeps a warm afterglow band on the solar-azimuth horizon, fading through plum. Full
+  strength down to -4 deg, gone at -10 deg; part of the sky radiance, so the IBL follows (48b77b1). Re-shot at
+  18.4 h: `battle-dusk184-ultra.png`, `hero-dusk184-ultra.png`. The resolver now returns `dusk` there. The default
+  cameras face away from the western glow; the band shows toward the sun.
+- **Dawn mist:** the fog base and the mist-slab top follow the ground under the camera focus (eased 2 s). They were
+  absolute y = 0 while Rajapura sits well above it. See `hero-dawn-ultra.png`.
+- **Evidence hygiene:** resolution scale pinned to 1 in the shots script (`__SAMRAJYA_GFX__.pinResolutionScale`).
+  `scripts/smoke.cjs` belongs to the CTO (request filed).
+- **Dark band at the strategic map's left edge** (`zoom-world-strategic.png`): not lighting. It is in the same
+  place at 12 h and 16 h, on low (no GTAO, a different shadow filter) and inside the single cascade under `?csm=1`.
+  Most likely cause: terrain below the water level, darkened x0.55 by `terrain.ts` with no water plane over it
+  near the edge. Owner: GFX-02 / terrain. The grey wedge is the map-edge fade into the horizon colour; the outer
+  terrain skirt is GFX-02's.
+- **Low-tier detached tree shadows** (`battle-golden-low.png`): the tent filter softens them. The hero has no
+  shadow on low because `soldierRenderer.ts` disables `castShadow` on low (GP-01's file; request filed).
+
+Rework results (`report.json`): night lower-half luma 0.140 ultra / 0.148 low. Seam row-jump 1.14 / 1.09.
+Cascades 4 PCSS / 3 PCSS / 2 PCF / 1 tent. Tier cycling x3: 11 tex / 30 geo / 3 RT at every return to low.
+Context loss: restored, 53 draws.
+
+Draw calls, before -> after:
+
+| Bench | Before GFX-01 | Now |
+|---|---|---|
+| battle 1,000 @high | 81 | 72 (36 shadow) |
+| battle river 5,000 @high | 81 | 72 (36 shadow) |
+| battle mobile @low | 26 | 24 (5 shadow) |
+
+The post-stack draw count rises by 3 when DoF runs (tiles, dilation, near gather).
