@@ -184,9 +184,13 @@ async function maxRowJump(file, y0, y1) {
       const extra = opts.after ? await page.evaluate(opts.after) : undefined;
       // Optional A/B in the same frozen frame (e.g. wetness override): `alt = { suffix, before }`.
       if (opts.alt) {
+        // The page is frozen (waitFrames would never resolve): screenshot() renders the frame synchronously, and the
+        // rig's frame hook applies the change before it draws.
         await page.evaluate(opts.alt.before);
-        await page.evaluate(() => window.__SAMRAJYA__.waitFrames(4));
-        await page.evaluate(() => void window.__SAMRAJYA__.screenshot());
+        await page.evaluate(() => {
+          window.__SAMRAJYA__.screenshot();
+          window.__SAMRAJYA__.screenshot();
+        });
         await page.screenshot({ path: path.join(OUT, `${name}-${opts.alt.suffix}.png`), timeout: 600000 });
       }
       await page.close();
