@@ -1,42 +1,56 @@
 /**
- * Siege battle AI (DESIGN_SPEC §6.6.5, §6.1 siege deploy zones; SIM-02 spec 1 "siege attack / defence"). OWNER: AI
- * Engineer - Battle AI, Intents & Campaign AI (SIM-02).
+ * Siege battle AI (DESIGN_SPEC §6.6.5, §6.1 siege deploy zones; SIM-02 spec 1 "siege attack / defence"; SIM-02 review
+ * round 1: lead items 1-3, Creative Director siege rules a-d). OWNER: AI Engineer - Battle AI, Intents & Campaign AI
+ * (SIM-02).
  *
  * Attack (the side outside the ring). The plan is laid along the approach axis of the target gate (the main gate while
- * it stands): the ram's path to the gate is kept clear, everything else stands to the sides of it.
- *  - Wall reach: every known wall shooter (an enemy shooter with arrows on or inside the walls) reaches its effective
+ * it stands): the ram's lane to the gate is kept clear, everything else stands to the sides of it.
+ *  - Wall reach: every known wall shooter (an enemy shooter WITH ARROWS on or inside the walls) reaches its effective
  *    range (walls x1.2, tower x1.2 - projectiles.ts, + the height bonus) plus SIEGE_AI.standoffMargin (15 m). Points
- *    beyond that are "out of bow shot".
- *  - Engineer works: the first engineer formation builds the ram out of bow shot on the approach axis; the next ones
- *    raise a palisade (40 s, 20 m, 300 HP) 15 m in front of each pair of archer firing slots; once the archers have
- *    closed, free engineers raise ladders against the segments flanking the gate. A ram whose crew routed is taken over
- *    by the next free engineer formation (construct 'ram' at the abandoned ram re-crews it).
- *  - The ram waits out of bow shot until its cover is ready (the palisades are up, or there is nobody left to build
- *    them, or SIEGE_AI.coverWaitSec has passed), then goes in on the axis to the gate. Elephants go in with it (or at
- *    once when no ram is coming) and batter the gate (siege x soldiers HP/s).
- *  - Archers stand off beyond the walls' reach, in loose order, on both sides of the axis, until the ram is within
- *    SIEGE_AI.commitRamDist (60 m) of the gate, ladders are up or there is a way in; then they close to their firing
- *    slots behind the palisades (SIEGE_AI.fireShare x their range from the wall shooters over the gate) and shoot the
- *    defenders there.
- *  - Infantry waits out of bow shot behind the archers until the gate breaks, a wall falls or ladders are up, then
- *    storms: the first block in holds the inside of the breach (siege victory after 60 s uncontested, `breachHold`),
- *    the others fight the defenders contesting it. Stormers have right of way: every other formation keeps
- *    SIEGE_AI.corridor (40 m) clear of the breach approach. The mounted stay outside, on the flanks, against sallies.
- *  - Withdrawal (the reason is kept in the side's plan memory, `withdrawReason`): nothing left to breach the walls with
- *    (no engineer, elephant, crewed ram, breach or ladder) for 30 s; or the assault is spent (below
- *    SIEGE_AI.spentShare of its starting strength with no way in yet).
+ *    beyond that are "out of bow shot". Wall shooters loose at the nearest enemy and carry 20 volleys: once dry they
+ *    are no threat and the stand-off collapses onto the walls.
+ *  - Phases (memory `sgPhase`, every change in the plan log `battlePlanLog`):
+ *    prepare - the engineer formation nearest the site builds the ram out of bow shot on the axis (the site is kept in
+ *      memory while it stays out of bow shot); archers stand off (loose); infantry waits in a row behind the ram site,
+ *      engineers beside it, the mounted on the flanks (each on its own side of the axis: no crossing paths).
+ *    screen - ram ready (or no ram coming and elephants to batter): the freshest melee blocks (SIEGE_AI.screens) walk
+ *      out in front of the palisade sites and draw the walls' volleys; free engineers raise a palisade (40 s, 20 m,
+ *      300 HP; morale "behind works") 15 m in front of each pair of archer firing slots. A screen block worn below
+ *      SIEGE_AI.screenKeep of its men (or morale 40) falls back out of bow shot and a fresh one takes its place.
+ *    approach - once the screen is posted and the palisades are up (or nobody is left to build them, or
+ *      SIEGE_AI.coverWaitSec passed): the ram and the elephants go in on the axis; the screen walks SIEGE_AI.screenLead
+ *      ahead of them beside the lane (the nearest target for the walls, and friends within 80 m for the crew's nerve),
+ *      ending beside the gate.
+ *    cover - the ram is within SIEGE_AI.commitRamDist (60 m) of the gate or ladders are up: the archers close to their
+ *      firing slots behind the palisades (SIEGE_AI.fireShare x their range from the wall shooters over the gate); free
+ *      engineers raise ladders against the segments flanking the gate. A ram whose crew routed is re-crewed by the next
+ *      free engineer formation (construct 'ram' at the abandoned ram).
+ *    storm - a breach, broken gate or laddered segment: the stormers (melee blocks above SIEGE_AI.stormFit of their
+ *      men, elephants) gather SIEGE_AI.stageOut m before the way in and go in together once gathered (or when the
+ *      farthest could have walked up, at most SIEGE_AI.stageSec); the one nearest the way in holds the inside of the
+ *      breach (siege victory after 60 s uncontested), the others fight the defenders contesting it; the mounted follow
+ *      as the second wave once a stormer is inside. Right of way: every formation that does not storm keeps
+ *      SIEGE_AI.corridor (40 m) clear of the approach.
+ *  - Jams: formations do not pass through each other; one that makes no headway for SIEGE_AI.stuckSec sidesteps.
+ *  - Dry archers draw arrows from the supply train when the army has one.
+ *  - Withdrawal (the reason is kept in the side's plan memory `withdrawReason` and the plan log): nothing left to
+ *    breach the walls with (no engineers, elephants, crewed ram, breach or ladder) for 30 s; the assault is spent
+ *    (below SIEGE_AI.spentShare of its starting strength with no way in); or the storm was thrown back (nobody fit to
+ *    storm for 30 s).
  * Defence (the garrison):
- *  - Archers man the intact towers nearest the threatened point (breach, ladder, the gate under attack) first - the
- *    nearest free archer to each tower, towers in order of distance from the threat, as long as the threat is within
- *    their range from there - then fan along the wall walk around the threat (orders.ts keeps them at their post).
- *  - Spears and guards defend the inside of the threatened point (radius 35-45 m).
- *  - Engineers repair the most damaged intact gate (+10 HP/s).
+ *  - Archers man the intact towers nearest the threatened point (breach, ladder, the gate nearest the enemy) first -
+ *    the nearest free archer to each tower, towers in order of angular distance from the threat, while the threat is
+ *    within their range from there - then fan along the wall walk around the threat (orders.ts keeps them at post).
+ *  - Spears and guards defend the inside of the threatened point, one behind the other on its radius (radius 35-45 m),
+ *    deep enough to leave the wall walk and the archers' ways to the towers free.
+ *  - Engineers repair the damaged gate nearest the threat (badly damaged ones first) until it is whole (+10 HP/s).
  *  - Sally: mounted (else guards) ride out through an intact gate against a ram crew or engineers at work within 150 m
  *    of the walls when nothing stronger guards them, and come back inside afterwards.
- * Plan memory (BattleSideState.aiMemory): `sgPhase` (prepare / approach / cover / storm), `sgRamDone`, `sgRun`,
- * `hopeless`, `withdrawReason`, `sgStart` (starting strength).
+ * Plan memory (BattleSideState.aiMemory): `sgPhase`, `sgStart`, `sgRamDone`, `sgRamX/Z`, `sgGate`, `sgScreen`,
+ * `sgScreenStart`, `sgScreenAt`, `sgRun`, `sgStage`, `sgStageWait`, `sgGo`, `sgNoStorm`, `sgRow*` (stable left-to-right
+ * orders), `up<i>` / `ux<i>` (jam marks), `sgRepair`, `hopeless`, `withdrawReason`, `sally`.
  */
-import type { EngineerWorkState, FormationState } from '../../../core/types';
+import type { EngineerWorkState, FormationOrder, FormationState } from '../../../core/types';
 import { dcos, dsin, facingOf, PI } from '../../../core/math';
 import { UNITS } from '../../../data/units';
 import type { FortGeometry } from '../fort';
@@ -76,8 +90,16 @@ export const SIEGE_AI = {
   screenFresh: 0.75,
   /** The stormers gather this far outside the way in (m) ... */
   stageOut: 45,
-  /** ... and go in together once gathered, or after this long (s). */
-  stageSec: 60,
+  /** ... and go in together once gathered, or once the farthest could have walked up (+10 s), at most this long (s). */
+  stageSec: 150,
+  /** Palisades go up once the screen is posted, or this long (s) after the batterers are ready. */
+  palisadeAfterSec: 20,
+  /** Blocks below this share of their men do not storm. */
+  stormFit: 0.35,
+  /** A formation making no headway on its way for this long (s) sidesteps ... */
+  stuckSec: 10,
+  /** ... for this long (s). */
+  sidestepSec: 8,
   /** Without a way in, the assault withdraws below this share of its starting strength. */
   spentShare: 0.35,
   /** ... and after this long (s) with nothing left to breach the walls with. */
@@ -327,6 +349,64 @@ function pickScreens(ai: AiSide): void {
   if (ai.mem.sgScreen !== sig) ai.mem.sgScreen = sig;
 }
 
+const stepping = new Set<number>();
+
+/** An attack order, unless the formation is sidestepping out of a jam (see `unstuck`). */
+function order(ai: AiSide, f: FormationState, o: FormationOrder): void {
+  if (!stepping.has(f.index)) give(ai, f, o);
+}
+
+/**
+ * Formations do not pass through each other: two meeting head-on can stall. A formation on its way (move / construct
+ * order, still > 15 m off) that makes under 3 m of headway in SIEGE_AI.stuckSec sidesteps 20 m to one side of its way
+ * (by index parity) and resumes its order after SIEGE_AI.sidestepSec. Memory: `up<i>` "x,z,t" (headway mark),
+ * `ux<i>` (sidestep until).
+ */
+function unstuck(ai: AiSide, f: FormationState): boolean {
+  const t = ai.state.time;
+  const kU = `ux${f.index}`;
+  const kP = `up${f.index}`;
+  const until = ai.mem[kU];
+  if (typeof until === 'number') {
+    if (t < until) return true;
+    delete ai.mem[kU];
+  }
+  const o = f.order;
+  if ((o.type !== 'move_to' && o.type !== 'construct') || f.engagedWith.length > 0 || f.activity !== 'moving') {
+    if (kP in ai.mem) delete ai.mem[kP];
+    return false;
+  }
+  const dx = o.x - f.x;
+  const dz = o.z - f.z;
+  if (dx * dx + dz * dz < 15 * 15) {
+    if (kP in ai.mem) delete ai.mem[kP];
+    return false;
+  }
+  const rec = ai.mem[kP];
+  const mark = (): void => {
+    ai.mem[kP] = `${Math.round(f.x)},${Math.round(f.z)},${t}`;
+  };
+  if (typeof rec !== 'string') {
+    mark();
+    return false;
+  }
+  const parts = rec.split(',');
+  const x0 = Number(parts[0]);
+  const z0 = Number(parts[1]);
+  const t0 = Number(parts[2]);
+  if ((f.x - x0) * (f.x - x0) + (f.z - z0) * (f.z - z0) > 9) {
+    mark();
+    return false;
+  }
+  if (t - t0 < SIEGE_AI.stuckSec) return false;
+  const a = facingOf(dx, dz) + (f.index % 2 === 1 ? PI / 2 : -PI / 2);
+  give(ai, f, { type: 'move_to', x: f.x + dsin(a) * 20, z: f.z + dcos(a) * 20, facing: null, run: false });
+  ai.mem[kU] = t + SIEGE_AI.sidestepSec;
+  delete ai.mem[kP];
+  logPlan(ai, `siege: formation ${f.index} sidesteps out of a jam`);
+  return true;
+}
+
 function attack(ai: AiSide, g: FortGeometry): void {
   const s = ai.state;
   const siege = s.siege!;
@@ -356,6 +436,8 @@ function attack(ai: AiSide, g: FortGeometry): void {
   rowOrder(ai, 'sgRowA', archers);
   rowOrder(ai, 'sgRowH', mounted);
   rowOrder(ai, 'sgRowE', engineers);
+  stepping.clear();
+  for (const f of ai.own) if (unstuck(ai, f)) stepping.add(f.index);
 
   // --- Rams: one crewed (its crew standing - siege.ts drops the crew of a ram whose engineers rout) is a tool; an
   // abandoned one is a tool only while an engineer formation is left to take it over.
@@ -438,7 +520,10 @@ function attack(ai: AiSide, g: FortGeometry): void {
   // then ahead of the ram. A block worn below SIEGE_AI.screenKeep falls back out of bow shot and another takes over.
   pickScreens(ai);
   const toolsReady = ram !== null || (noRamComing && elephants.length > 0);
-  const screened = shooters.length > 0 && screens.length > 0 && !kind && toolsReady;
+  const going0 = typeof ai.mem.sgRun === 'number';
+  // The screen escorts the batterers all the way to the gate (friends within 80 m steady them), even once the walls'
+  // quivers are dry; before they go in it stands out only while the walls can shoot.
+  const screened = screens.length > 0 && !kind && toolsReady && (shooters.length > 0 || going0 || committed);
   const screenOut = Math.max(30, Math.min(tOff - 20, palisadeOut - 30));
   let screenPosted = !screened;
   if (screened) {
@@ -452,7 +537,7 @@ function attack(ai: AiSide, g: FortGeometry): void {
 
   // --- Phase: prepare (ram building) -> screen (the screen walks out, palisades go up behind it) -> approach (the ram
   // and the elephants go in behind the screen) -> cover (the ram is within commitRamDist: archers close) -> storm.
-  let going = typeof ai.mem.sgRun === 'number';
+  let going = going0;
   if (!going && toolsReady && !kind) {
     const waited = typeof ai.mem.sgScreenAt === 'number' ? s.time - (ai.mem.sgScreenAt as number) : 0;
     const builders = engineers.some((f) => f !== crew);
@@ -461,6 +546,7 @@ function attack(ai: AiSide, g: FortGeometry): void {
       going = true;
     }
   }
+  if (toolsReady && typeof ai.mem.sgScreenStart !== 'number') ai.mem.sgScreenStart = s.time;
   if (kind) setPhase(ai, 'storm', kind === 'breach' ? 'the way in is open' : 'ladders are up');
   else if (committed) setPhase(ai, 'cover', laddersUp ? 'ladders are up: the archers close to their palisades' : 'the ram is near the gate: the archers close to their palisades');
   else if (going) setPhase(ai, 'approach', `${crew ? 'the ram goes' : 'the elephants go'} in behind the screen${palisadesPending === 0 && palisades > 0 ? ' (palisades up)' : ''}`);
@@ -471,39 +557,51 @@ function attack(ai: AiSide, g: FortGeometry): void {
   let ramJob = !ram && !building && axis.gate >= 0 && kind !== 'breach';
   let recrew = ramJob ? abandoned : null;
   if (recrew) ramJob = false;
-  let wait = 0;
+  // The ram builder: the free engineer formation nearest the site (no crossing paths).
+  let builder: FormationState | null = null;
+  if (ramJob && !abandoned) {
+    let bd = Infinity;
+    for (const f of engineers) {
+      if (f === crew || f.engagedWith.length > 0) continue;
+      const d = (f.x - ramX) * (f.x - ramX) + (f.z - ramZ) * (f.z - ramZ);
+      if (d < bd) {
+        bd = d;
+        builder = f;
+      }
+    }
+  }
   for (const f of engineers) {
     if (f === crew || f.engagedWith.length > 0) continue;
     const busy = f.order.type === 'construct' ? f.order : null;
     if (busy && busy.work === 'ram' && building && dist(building, busy) < 8) continue; // building the ram
     if (recrew) {
-      give(ai, f, { type: 'construct', work: 'ram', x: recrew.x, z: recrew.z, facing: recrew.facing });
+      order(ai, f, { type: 'construct', work: 'ram', x: recrew.x, z: recrew.z, facing: recrew.facing });
       recrew = null;
       continue;
     }
-    if (ramJob) {
-      give(ai, f, { type: 'construct', work: 'ram', x: ramX, z: ramZ, facing: axis.inward });
+    if (ramJob && (f === builder || builder === null)) {
+      order(ai, f, { type: 'construct', work: 'ram', x: ramX, z: ramZ, facing: axis.inward });
       ramJob = false;
       continue;
     }
     // A palisade for each pair of archer slots still without one (one engineer formation per palisade), once the screen
     // stands in front of the sites (or there is no screen).
     if (busy && busy.work === 'palisade' && !palisadeAt(ai, busy.x, busy.z, true)) continue;
-    if (toolsReady && screenPosted) {
+    if (toolsReady && (screenPosted || s.time - (ai.mem.sgScreenStart as number) >= SIEGE_AI.palisadeAfterSec)) {
       let k = -1;
       for (let j = 0; j < palisades && k < 0; j++) if (!palisadeDone(ai, j, slots) && !palisadeClaimed(ai, j, slots)) k = j;
       if (k >= 0) {
         palisadeSite(k, slots, p);
-        give(ai, f, { type: 'construct', work: 'palisade', x: p.x, z: p.z, facing: slots.face[2 * k]! });
+        order(ai, f, { type: 'construct', work: 'palisade', x: p.x, z: p.z, facing: slots.face[2 * k]! });
         continue;
       }
     }
     // Ladders once the archers cover the walls: segments either side of the gate's segment (alternating).
     if (committed && axis.gate >= 0 && kind !== 'breach' && ladder(ai, g, f)) continue;
-    // Otherwise wait out of bow shot beside the ram site, ready to take over a ram.
-    const side = wait++ % 2 === 0 ? 1 : -1;
+    // Otherwise wait out of bow shot beside the ram site (on its own side of the axis), ready to take over a ram.
+    const side = lateralOf(f.x, f.z) >= 0 ? 1 : -1;
     onAxis(ramOut + 10, side * (SIEGE_AI.lane + 30 + f.width / 2), p);
-    give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
+    order(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
   }
 
   // --- Batterers: out of bow shot (the elephants behind the ram) until the cover is ready, then in to the gate.
@@ -512,20 +610,20 @@ function attack(ai: AiSide, g: FortGeometry): void {
     if (f.unitClass === 'war_elephants') {
       const out = nearestOutside(ai, g, f, 90);
       if (out) {
-        give(ai, f, { type: 'charge', target: out.index });
+        order(ai, f, { type: 'charge', target: out.index });
         continue;
       }
     }
     const gate = axis.gate;
     if (going || committed) {
       ringPoint(g, g.gateAngle[gate]!, g.radius + 4 + f.depth / 2, p);
-      give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: g.gateAngle[gate]! + PI, run: false });
+      order(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: g.gateAngle[gate]! + PI, run: false });
     } else if (f === crew) {
       onAxis(Math.max(ramOut, outwardOf(f.x, f.z)), 0, p);
-      give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
+      order(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
     } else {
       onAxis(ramOut + 22 + f.depth / 2, 0, p);
-      give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
+      order(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
     }
   }
   // Elephants with a way in storm.
@@ -538,26 +636,32 @@ function attack(ai: AiSide, g: FortGeometry): void {
       if (f.engagedWith.length > 0) continue;
       const out = going || committed ? Math.max(SIEGE_AI.screenMinOut + f.depth / 2, Math.min(screenOut, lead - SIEGE_AI.screenLead)) : screenOut;
       screenPost(i, f, out, p);
-      give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
+      order(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
     }
   }
 
+  const train = ai.own.find((t) => t.unitClass === 'supply_train') ?? null;
   // --- Archers: out of bow shot (loose) until the ram is close to the gate / ladders are up; then their firing slots.
   for (let i = 0; i < archers.length; i++) {
     const f = archers[i]!;
     if (f.engagedWith.length > 0) continue;
+    // Dry archers draw arrows from the supply train when there is one.
+    if (f.ammo <= 0 && train) {
+      order(ai, f, { type: 'resupply', target: train.index });
+      continue;
+    }
     if (shooters.length > 0) shape(ai, f, 'loose');
     const fx = slots.x[i]!;
     const fz = slots.z[i]!;
     const face = slots.face[i]!;
     if (committed) {
-      give(ai, f, { type: 'move_to', x: fx, z: fz, facing: face, run: false });
+      order(ai, f, { type: 'move_to', x: fx, z: fz, facing: face, run: false });
     } else {
       // Back along the slot's line (away from the aim point) until out of bow shot.
       const bx = dsin(face + PI);
       const bz = dcos(face + PI);
       const t = standoff(ai, fx, fz, bx, bz, 0, f.depth / 2 + 4);
-      give(ai, f, { type: 'move_to', x: fx + bx * t, z: fz + bz * t, facing: face, run: false });
+      order(ai, f, { type: 'move_to', x: fx + bx * t, z: fz + bz * t, facing: face, run: false });
     }
   }
   // --- Infantry: the screen as above; the others wait in a row out of bow shot behind the ram site, and storm once
@@ -570,26 +674,44 @@ function attack(ai: AiSide, g: FortGeometry): void {
     rowL -= f.width + 10;
     if (f.engagedWith.length > 0) continue;
     if (kind) {
-      stormers.push(f);
+      // Worn blocks (below SIEGE_AI.stormFit of their men) stay out of the storm and keep the approach clear.
+      if (f.soldiers >= SIEGE_AI.stormFit * f.maxSoldiers) stormers.push(f);
       continue;
     }
     const near = nearestOutside(ai, g, f, 60);
     if (near) {
-      give(ai, f, { type: 'attack_target', target: near.index, run: false });
+      order(ai, f, { type: 'attack_target', target: near.index, run: false });
       continue;
     }
     if (screened && screens.includes(f)) continue;
     onAxis(ramOut + 45 + f.depth / 2, l, p);
-    give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
+    order(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
   }
-  if (kind) storming(ai, g, target);
-  // --- Mounted: outside, on the flanks of the axis (left half left, right half right), against sallies.
+  if (kind) {
+    // The storm is thrown back: nobody fit to storm is left for SIEGE_AI.hopelessSec.
+    if (stormers.length === 0) {
+      if (typeof ai.mem.sgNoStorm !== 'number') ai.mem.sgNoStorm = s.time;
+      if (s.time - (ai.mem.sgNoStorm as number) > SIEGE_AI.hopelessSec) {
+        withdraw(ai, 'the storm was thrown back (no troops fit to storm the way in are left)');
+        return;
+      }
+    } else delete ai.mem.sgNoStorm;
+    storming(ai, g, target);
+  }
+  // --- Mounted: outside, on the flanks of the axis (left half left, right half right), against sallies; once the storm
+  // is in (a stormer inside the walls), they follow it as its second wave.
+  const stormIn = kind !== null && ai.mem.sgGo === true && stormers.some((f) => distFromCenter(g, f.x, f.z) < g.radius - 4);
   for (let i = 0; i < mounted.length; i++) {
     const f = mounted[i]!;
     if (f.engagedWith.length > 0) continue;
+    if (stormIn && f.soldiers >= SIEGE_AI.stormFit * f.maxSoldiers) {
+      stormers.push(f);
+      storm(ai, g, f, target, false);
+      continue;
+    }
     const out = nearestOutside(ai, g, f, 250);
     if (out) {
-      give(ai, f, { type: 'charge', target: out.index });
+      order(ai, f, { type: 'charge', target: out.index });
       continue;
     }
     const right = i < mounted.length / 2;
@@ -598,7 +720,7 @@ function attack(ai: AiSide, g: FortGeometry): void {
     const a = angleFromCenter(g, axis.x, axis.z) + (right ? -1 : 1) * (0.35 + 0.1 * k);
     const r = standoff(ai, g.cx, g.cz, dsin(a), dcos(a), g.radius + 40, f.depth / 2 + 6);
     ringPoint(g, a, r, p);
-    give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: a + PI, run: false });
+    order(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: a + PI, run: false });
   }
   // --- Right of way: once there is a way in, every formation that does not storm keeps the approach clear.
   if (kind) {
@@ -627,8 +749,16 @@ function storming(ai: AiSide, g: FortGeometry, target: { x: number; z: number })
   const s = ai.state;
   stormers.sort((a, b) => dist(a, target) - dist(b, target) || a.index - b.index);
   if (typeof ai.mem.sgStage !== 'number') {
+    // Wait for the farthest stormer to walk up (10 s of slack), at most SIEGE_AI.stageSec.
+    let eta = 0;
+    for (let i = 0; i < stormers.length; i++) {
+      const f = stormers[i]!;
+      stagePost(i, f, p);
+      eta = Math.max(eta, dist(f, p) / Math.max(0.5, ai.ctx.stats[f.index]!.walkSpeed));
+    }
     ai.mem.sgStage = s.time;
-    logPlan(ai, `siege attack: ${stormers.length} stormers gather before the way in`);
+    ai.mem.sgStageWait = Math.min(SIEGE_AI.stageSec, Math.round(eta + 10));
+    logPlan(ai, `siege attack: ${stormers.length} stormers gather before the way in (up to ${ai.mem.sgStageWait as number} s)`);
   }
   let gathered = true;
   for (let i = 0; i < stormers.length; i++) {
@@ -637,7 +767,7 @@ function storming(ai: AiSide, g: FortGeometry, target: { x: number; z: number })
     stagePost(i, f, p);
     if (dist(f, p) > 30) gathered = false;
   }
-  const go = ai.mem.sgGo === true || gathered || s.time - (ai.mem.sgStage as number) >= SIEGE_AI.stageSec;
+  const go = ai.mem.sgGo === true || gathered || s.time - (ai.mem.sgStage as number) >= (ai.mem.sgStageWait as number);
   if (go && ai.mem.sgGo !== true) {
     ai.mem.sgGo = true;
     logPlan(ai, `siege attack: the storm goes in (${gathered ? 'all gathered' : 'the wait is over'})`);
@@ -647,7 +777,7 @@ function storming(ai: AiSide, g: FortGeometry, target: { x: number; z: number })
     const inside = distFromCenter(g, f.x, f.z) < g.radius - 4;
     if (!go && !inside) {
       stagePost(i, f, p);
-      give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
+      order(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: false });
       continue;
     }
     storm(ai, g, f, target, i === 0);
@@ -751,7 +881,7 @@ function ladder(ai: AiSide, g: FortGeometry, f: FormationState): boolean {
     if (st.ladder || st.hp <= 0) continue;
     const a = segmentMidAngle(seg, g.segments);
     ringPoint(g, a, g.radius + 8, p);
-    give(ai, f, { type: 'construct', work: 'ladder', x: p.x, z: p.z, facing: a + PI });
+    order(ai, f, { type: 'construct', work: 'ladder', x: p.x, z: p.z, facing: a + PI });
     return true;
   }
   return false;
@@ -766,7 +896,7 @@ function clearCorridor(ai: AiSide, f: FormationState): void {
   if (Math.abs(l) >= need) return;
   const s = l >= 0 ? 1 : -1;
   onAxis(Math.max(t, 15 + f.depth / 2), s * (need + 6), p);
-  give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: true });
+  order(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: axis.inward, run: true });
 }
 
 /** March on the way in; the first block holds the inside of the breach, the rest fight the defenders contesting it. */
@@ -776,7 +906,7 @@ function storm(ai: AiSide, g: FortGeometry, f: FormationState, target: { x: numb
   if (!inside) {
     // Through the breach toward the inside point.
     ringPoint(g, a, g.radius - 22 - f.depth / 2, p);
-    give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: a + PI, run: false });
+    order(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: a + PI, run: false });
     return;
   }
   // Contesting defenders within 70 m of the breach: fight them (the holder only those inside 40 m).
@@ -790,15 +920,15 @@ function storm(ai: AiSide, g: FortGeometry, f: FormationState, target: { x: numb
     }
   }
   if (best) {
-    give(ai, f, { type: 'attack_target', target: best.index, run: false });
+    order(ai, f, { type: 'attack_target', target: best.index, run: false });
     return;
   }
   ringPoint(g, a, g.radius - 22 - f.depth / 2, p);
-  if (holder) give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: a + PI, run: false });
+  if (holder) order(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: a + PI, run: false });
   else {
     const e = nearestInside(ai, g, f);
-    if (e) give(ai, f, { type: 'attack_target', target: e.index, run: false });
-    else give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: a + PI, run: false });
+    if (e) order(ai, f, { type: 'attack_target', target: e.index, run: false });
+    else order(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: a + PI, run: false });
   }
 }
 
@@ -889,6 +1019,8 @@ function defend(ai: AiSide, g: FortGeometry): void {
   dMounted.length = 0;
   dEngineers.length = 0;
   manned.length = 0;
+  stepping.clear();
+  for (const f of ai.own) if (unstuck(ai, f)) stepping.add(f.index);
   for (const f of ai.own) {
     if (f.unitClass === 'engineers') dEngineers.push(f);
     else if (UNITS[f.unitClass].category === 'ranged' && isShooter(ai.ctx.stats[f.index]!)) dArchers.push(f);
@@ -918,7 +1050,7 @@ function defend(ai: AiSide, g: FortGeometry): void {
     if (dist(p, tp) > 0.9 * ai.ctx.stats[best.index]!.range) break;
     manned.push(best);
     ringPoint(g, a, g.radius - 9 - best.depth / 2, p);
-    if (dist(best, p) > 6) give(ai, best, { type: 'move_to', x: p.x, z: p.z, facing: a, run: false });
+    if (dist(best, p) > 6) order(ai, best, { type: 'move_to', x: p.x, z: p.z, facing: a, run: false });
   }
   let slot = 0;
   for (const f of dArchers) {
@@ -928,7 +1060,7 @@ function defend(ai: AiSide, g: FortGeometry): void {
     const k = i === 0 ? 0 : (i % 2 === 1 ? 1 : -1) * Math.ceil(i / 2);
     const a = ta + (k * (f.width + 10)) / g.radius + (level === 2 ? 0.25 * (i % 2 === 0 ? 1 : -1) : 0);
     ringPoint(g, a, g.radius - 9 - f.depth / 2, p);
-    give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: a, run: false });
+    order(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: a, run: false });
   }
   // --- Sally against a ram crew / engineers at work near the walls.
   const sallyTarget = sallyCandidate(ai, g);
@@ -936,7 +1068,7 @@ function defend(ai: AiSide, g: FortGeometry): void {
   for (const f of sallyForce) {
     if (f.engagedWith.length > 0) continue;
     if (sallyTarget && formationStrength(s, f) > 0.7 * guardStrength(ai, sallyTarget)) {
-      give(ai, f, { type: 'attack_target', target: sallyTarget.index, run: true });
+      order(ai, f, { type: 'attack_target', target: sallyTarget.index, run: true });
       ai.mem.sally = s.time;
     }
   }
@@ -947,15 +1079,17 @@ function defend(ai: AiSide, g: FortGeometry): void {
       const t = s.formations[f.order.target];
       if (t && t.soldiers > 0 && t.activity !== 'routing' && distFromCenter(g, t.x, t.z) < g.radius + 160) return;
     }
-    const row = Math.floor(i / 3);
-    const col = (i % 3) - 1;
-    const r = g.radius - 30 - row * 26;
+    // One behind the other on the threatened point's radius (the archers' ways to the towers flanking it stay open),
+    // three deep at most, then side by side; deep enough to leave the wall walk and the tower posts free.
+    const row = i % 3;
+    const col = Math.floor(i / 3) === 0 ? 0 : (Math.floor(i / 3) % 2 === 1 ? 1 : -1) * Math.ceil(Math.floor(i / 3) / 2);
+    const r = g.radius - 42 - row * 26;
     ringPoint(g, ta, r, p);
     const rx = -dcos(ta);
     const rz = dsin(ta);
     const x = p.x + rx * col * (f.width + 8);
     const z = p.z + rz * col * (f.width + 8);
-    give(ai, f, { type: 'defend', x, z, radius: level === 2 ? 45 : 35 });
+    order(ai, f, { type: 'defend', x, z, radius: level === 2 ? 45 : 35 });
   });
   for (const f of dMounted) {
     if (f.engagedWith.length > 0) continue;
@@ -964,28 +1098,38 @@ function defend(ai: AiSide, g: FortGeometry): void {
       if (t && t.soldiers > 0 && t.activity !== 'routing' && distFromCenter(g, t.x, t.z) < g.radius + 160) continue;
     }
     ringPoint(g, ta, g.radius * 0.35, p);
-    give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: ta, run: false });
+    order(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: ta, run: false });
   }
-  // --- Engineers: repair the most damaged intact gate.
-  let gi = -1;
-  let worst = 1;
-  for (let i = 0; i < siege.gates.length; i++) {
-    const gt = siege.gates[i]!;
-    const share = gt.hp / Math.max(1, gt.maxHp);
-    if (gt.hp > 0 && share < worst - 1e-6) {
-      worst = share;
-      gi = i;
+  // --- Engineers: repair the damaged intact gate nearest the threat (the gate under attack first); a gate under repair
+  // is kept until it is whole (no walking between two damaged gates).
+  let gi = typeof ai.mem.sgRepair === 'number' ? (ai.mem.sgRepair as number) : -1;
+  const keep = gi >= 0 && siege.gates[gi] !== undefined && siege.gates[gi]!.hp > 0 && siege.gates[gi]!.hp < siege.gates[gi]!.maxHp;
+  if (!keep) {
+    gi = -1;
+    let bd = Infinity;
+    for (let i = 0; i < siege.gates.length; i++) {
+      const gt = siege.gates[i]!;
+      if (gt.hp <= 0 || gt.hp >= gt.maxHp - 1e-6) continue;
+      ringPoint(g, g.gateAngle[i]!, g.radius, p);
+      // Distance to the threat, less 100 m per tenth of the gate lost (a badly damaged gate comes first).
+      const d = dist(p, tp) - 1000 * (1 - gt.hp / Math.max(1, gt.maxHp));
+      if (d < bd) {
+        bd = d;
+        gi = i;
+      }
     }
+    if (gi >= 0) ai.mem.sgRepair = gi;
+    else delete ai.mem.sgRepair;
   }
   for (const f of dEngineers) {
     if (f.engagedWith.length > 0) continue;
     stance(ai, f, 'defensive');
     if (gi >= 0) {
       ringPoint(g, g.gateAngle[gi]!, g.radius - 12, p);
-      give(ai, f, { type: 'construct', work: 'repair_gate', x: p.x, z: p.z, facing: g.gateAngle[gi]! });
+      order(ai, f, { type: 'construct', work: 'repair_gate', x: p.x, z: p.z, facing: g.gateAngle[gi]! });
     } else {
       ringPoint(g, ta, g.radius * 0.3, p);
-      give(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: ta, run: false });
+      order(ai, f, { type: 'move_to', x: p.x, z: p.z, facing: ta, run: false });
     }
   }
 }

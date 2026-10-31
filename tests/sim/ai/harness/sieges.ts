@@ -86,7 +86,7 @@ export interface SiegeSummary {
   palisades: number;
   palisadesBuilt: number | null;
   ladders: number;
-  /** Least distance of an attacking archer formation to a wall shooter before the ram came within 60 m (m). */
+  /** Least distance of an attacking archer formation to a wall archer with arrows before the ram came within 60 m (m). */
   archerExposure: number;
   /** Attacker archers' soldiers when the ram was first within 60 m of the gate (or at the end). */
   archersAtCommit: number;
@@ -94,7 +94,7 @@ export interface SiegeSummary {
   maxTowersManned: number;
   /** Gate HP regained by repairs (sum of increases). */
   gateRepaired: number;
-  /** Defender formations that went out of the walls (> radius + 20 m) at some point. */
+  /** Defender formations that went out of the walls (> radius + 20 m) to attack something (not routing). */
   sallies: number;
   losses: [number, number];
   /** Longest stretch (s) a storming attacker formation stood still outside the breach with a way in open. */
@@ -181,13 +181,13 @@ export function summarize(b: TestBattle, maxSec = 1800, log?: (line: string) => 
       for (const a of archers) {
         if (a.soldiers <= 0) continue;
         for (const d of st.formations) {
-          if (d.side !== 1 || d.unitClass !== 'archers' || d.soldiers <= 0) continue;
+          if (d.side !== 1 || d.unitClass !== 'archers' || d.soldiers <= 0 || d.ammo <= 0) continue;
           sum.archerExposure = Math.min(sum.archerExposure, Math.hypot(a.x - d.x, a.z - d.z));
         }
       }
     }
     for (const f of st.formations) {
-      if (f.side === 1 && f.soldiers > 0 && distFromCenter(b.ctx.fort!, f.x, f.z) > TOWN_RADIUS + 20) sallied.add(f.index);
+      if (f.side === 1 && f.soldiers > 0 && f.activity !== 'routing' && f.order.type === 'attack_target' && distFromCenter(b.ctx.fort!, f.x, f.z) > TOWN_RADIUS + 20) sallied.add(f.index);
       // A storming formation (an attacker melee block with a way in open) standing still outside the walls.
       if (f.side === 0 && sg.breaches.length > 0 && (f.unitClass === 'spearmen' || f.unitClass === 'elite_guards') && f.soldiers > 0 && f.activity !== 'routing') {
         const outside = distFromCenter(b.ctx.fort!, f.x, f.z) > TOWN_RADIUS - 3;
