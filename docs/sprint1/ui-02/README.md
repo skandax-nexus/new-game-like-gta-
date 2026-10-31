@@ -29,7 +29,7 @@ input CPU budget. All results with observed values: `shots-report.json`.
 
 ## Evidence images (every image described)
 
-75 captures (round 2 final run, 2026-10-31): each screen at 1280 x 720 (`-pc`), 390 x 844 portrait (`-portrait`, quality low, touch) and 844 x 390
+83 captures (rework round 2 final run, 2026-10-31; the 8 new `age-landmarks-*` are PC only): each screen at 1280 x 720 (`-pc`), 390 x 844 portrait (`-portrait`, quality low, touch) and 844 x 390
 landscape (`-landscape`). World: The Broken Crown, seed 7, Suvarna Kingdom (Rajapura). Battle: 1,000-soldier plains
 skirmish, seed 7. Hero: Rajapura streets. All captured by `scripts/shots/ui-02.cjs` after the critique fixes listed
 further down; every one was opened and looked at.
@@ -340,4 +340,65 @@ Non-blocking follow-ups for the developer:
 - Army panel unit rows read "Spearmen" three times. Number repeats as the battle cards do, once the army model has
   stable unit order.
 - The Great Road landmark silhouette's gate reads as a Japanese torii (straight double lintel). A Sanchi torana has
-  three curved architraves with volute ends. Ask the Art Director to co-sign or redraw.
+  three curved architraves with volute ends. Ask the Art Director to co-sign or redraw. (Done in rework round 2,
+  below.)
+
+## Rework round 2 (developer): Art Director B1, landmark illustration bands
+
+The Art Director's one blocking item (B1 a-f, contact sheet `docs/art/reviews/ui-02/landmark_art_r2.jpg`) is fixed in
+`src/ui/components/landmarkArt.ts` (all 16 bands redrawn) and the `.lm-*` rules in `src/ui/components/hud.css`.
+Nothing in the review was factually wrong. One count differs: the review says 15 bands, but `src/data/ages.ts` has 16
+landmarks (4 Suvarna, 4 Giridurga, 2 each for the other four realms), and all 16 were redrawn and captured.
+
+| Item | Fix | Evidence |
+|---|---|---|
+| (f) Cropping | Art is authored in a band-shaped 240 x 88 viewBox: ground line y = 76, 200 x 64 safe box (x 20-220, y 12-76). It is fitted with `xMidYMax meet`, so the whole viewBox is always visible. Sky, far ridge, ground and terrain masses (cliffs, hills, rock faces) are drawn far past the viewBox (x -400 to 640), so a wider card adds sky and ground at the sides and a narrower one adds sky on top. Nothing is cut at any card width. | `tests/ui/hud/landmarkArt.test.ts`: every subject reaches the ground line and its top (curve control points included) is >= 5 units below the band top. The capture's per-band check, measured on the rendered SVG, gives headroom 5.9-32 px on PC, 8.3-9.9 px on phones. `landmark-bands-sheet.png` shows 246 / 348 / 390 px. |
+| (a) Great Road | Sanchi torana: two square posts with block capitals; three sagging architraves, each ending in a spiral volute beyond the posts; 3 struts per bay; an 8-spoke wheel finial. The road is paved with darker kerbs and two faint cart ruts and no centre markings. Milestone pillars on both kerbs and a far one, and a tree row on both sides diminishing to the horizon. | `age-panel-*`, `age-landmarks-heartland-samrajya-pc` |
+| (b) Pillars of the Spoken Law | No lions. The taller central pillar has a bell capital, an abacus and an open 8-spoke wheel 17 units (17 px at band size) across. The inner pillars carry a standing bull and an elephant, both turned to the centre. The outer pair carry a horse and a small wheel, completing the spec's bull / elephant / horse / wheel set. Vedika railing across the square. | same |
+| (c) Hall of a Hundred Pillars | No merlons. Low hipped roof with deep eaves, a central wagon-vault ridge with gavaksha gable ends, 7 kalasha finials, saffron awnings between 11 bell-capital pillars, moulded plinth. | `age-landmarks-heartland-mahajanapada-pc` |
+| (d) Salt Caravanserai | Low mud-brick court with square flat-topped corner towers. The trabeated timber gate has two posts, a flat lintel with projecting beam ends and a flat-roofed gate room. Timber veranda roofs inside the court, salt sacks, and a dromedary with its sacks. No arch, no crenellation. | `age-landmarks-frontier-samrajya-pc` |
+| (e) Hall of the Guilds | Two-storey timber hall: ground-floor posts, a balcony on projecting beam ends with a vedika railing, an upper storey, and a barrel-vault roof ending in gavaksha gables with kalashas. Four swallow-tailed guild banners (red and indigo). | `age-landmarks-maritime-samrajya-pc` |
+| Acceptance: nothing East Asian, Greco-Roman, Persian or Islamic-era | The other 11 bands were redrawn to ART_BIBLE §8.7 in the same pass:<br>- Royal Granary: three wagon-vault roofs seen broadside, stepping back in aerial perspective. End-on vaults read as domes.<br>- Oath Stone: seven stones around the carved stone, with a lit lamp pillar.<br>- Cliff Cistern: chaitya-arch niches, a wagon-roof pavilion on the cliff, aqueduct, stepped tank.<br>- Thousand Steps: three bastioned wall tiers on a lighter hill, zig-zag stair, gate tower, torches.<br>- Assembly Caves: a lit chaitya window with timber ribs over a veranda in deep shade.<br>- Elephant Grove: banyan with prop roots, elephant, kutagara pavilion.<br>- Canopy Watch: tree platforms, rope bridges, lookout with banners.<br>- Beacon Line: master tower with iron fire basket and smoke, chain of hill beacons.<br>- Lamp Tower: tapered tower with fire cage on a stone jetty, square-sailed boats (no lateen sails).<br>- Coin House: wagon-vault mint, punch-marked coin (arched hill, sun, taurine), guarded court.<br>- Engineers' Arsenal: crane, siege tower in scaffolding, covered ram, timber stacks; no crenellation.<br>A source guard in the test rejects lions, torii, pishtaq, pediments, merlons, crenellations and dashed markings. | `landmark-bands-sheet.png`, all `age-landmarks-*` |
+| Re-captures | `age-panel-{pc,portrait,landscape}`; phones are scrolled to the landmark cards. Eight `age-landmarks-<faction>-<age>-pc` captures put every faction's pair in the real panel, so all 16 bands appear at real size. | `world (pc): all 16 landmark bands captured` check |
+
+One deviation from ART_BIBLE §8.7, for the Art Director to rule on. The Elephant Grove spec asks for a "steep
+three-tier thatch roof". At 246 x 88 px every tiered version read as a pagoda (East Asian), and an end-on horseshoe
+read as an onion dome; both were tried in the critique loop. The band therefore shows the kutagara pavilion of the
+Bharhut / Sanchi reliefs: a stilted deck under a barrel-thatch roof seen broadside, with gavaksha gables. The
+3D model can keep the three tiers, where the camera shows the form properly.
+
+Also done this round (Lead non-blocking follow-up): every phone modal now drops the bottom-right lotus corner,
+generalising the lead's battle-results rule. The corner is absolute on the scrolling sheet and used to float mid-list
+when scrolled. Seen in `event-modal-advisors-*`, `diplomacy-*` and `market-*`. The other follow-up (army panel
+"Spearmen" x 3) still waits on a stable unit order from the army model.
+
+Final run (`SHOTS_SKIP_BUILD=1 SHOTS_PORT=4415 node scripts/shots/ui-02.cjs` on `.build/ui-02`): 83 shots, 76 / 76
+checks.
+
+- **Contrast:** 3,011 text runs on 77 audited captures; none below 4.5:1 or 3:1.
+- **Touch:** 1,255 targets audited, 508 of them on the 40 phone captures; none under 44 px.
+- **Truncation:** no label cut to an ellipsis.
+- **Errors:** no console or page errors.
+- **UI + input on the 60 fps bench at 1280 x 720** (budget under 1 ms):
+
+| Scene | 1x | 4x |
+|---|---|---|
+| World | 0.109 ms | 0.132 ms |
+| Battle | 0.091 ms | 0.075 ms |
+
+The live SwiftShader EMA is printed in `shots-report.json` for transparency: world 10.1 ms, battle 4.5 ms. SwiftShader
+draws about one frame a second, so every frame carries a full HUD refresh.
+
+Builds and smoke:
+- Production build `.build/ui-02`.
+- Single-file build `.build/ui-02-single`: 2,830.33 kB.
+- Smoke (`SMOKE_SKIP_BUILD=1 SMOKE_DIST=.build/ui-02 SMOKE_PORT=4415 SMOKE_OUT=docs/sprint1/ui-02/smoke`): 14 / 14, no
+  console errors.
+
+Tests: typecheck clean; UI and input 14 files, 126 tests, all passing. The full `npm test` run has 931 passing and 9
+failing, none in UI-02 paths:
+- strategic siege x3, construction (Palace), politics (careful year);
+- contracts migration (battles);
+- tactical determinism (mid-siege resume);
+- the SIM-02 CPU perf budgets for the campaign AI and battle AI, which fail under the shared-CPU load.
+

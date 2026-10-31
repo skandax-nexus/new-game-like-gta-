@@ -16,6 +16,226 @@
       }
     },
     {
+      "name": "age panel (pc): >= 2 landmark bands, 88 px tall, 'meet' fit, subject top >= 4 px below the band top",
+      "ok": true,
+      "observed": [
+        {
+          "name": "Pillars of the Spoken Law",
+          "h": 88,
+          "w": 246,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 9.9
+        },
+        {
+          "name": "The Great Road",
+          "h": 88,
+          "w": 246,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 8.3
+        }
+      ]
+    },
+    {
+      "name": "landmark pair heartland (janapada -> next) (pc): >= 2 landmark bands, 88 px tall, 'meet' fit, subject top >= 4 px below the band top",
+      "ok": true,
+      "observed": [
+        {
+          "name": "Hall of a Hundred Pillars",
+          "h": 88,
+          "w": 246,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 13
+        },
+        {
+          "name": "The Royal Granary",
+          "h": 88,
+          "w": 246,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 16.8
+        }
+      ]
+    },
+    {
+      "name": "landmark pair heartland (mahajanapada -> next) (pc): >= 2 landmark bands, 88 px tall, 'meet' fit, subject top >= 4 px below the band top",
+      "ok": true,
+      "observed": [
+        {
+          "name": "Pillars of the Spoken Law",
+          "h": 88,
+          "w": 246,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 9.9
+        },
+        {
+          "name": "The Great Road",
+          "h": 88,
+          "w": 246,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 8.3
+        }
+      ]
+    },
+    {
+      "name": "landmark pair highland (janapada -> next) (pc): >= 2 landmark bands, 88 px tall, 'meet' fit, subject top >= 4 px below the band top",
+      "ok": true,
+      "observed": [
+        {
+          "name": "Oath Stone of the Seven Clans",
+          "h": 88,
+          "w": 246,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 17.6
+        },
+        {
+          "name": "The Cliff Cistern",
+          "h": 88,
+          "w": 246,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 6.7
+        }
+      ]
+    },
+    {
+      "name": "landmark pair highland (mahajanapada -> next) (pc): >= 2 landmark bands, 88 px tall, 'meet' fit, subject top >= 4 px below the band top",
+      "ok": true,
+      "observed": [
+        {
+          "name": "Citadel of a Thousand Steps",
+          "h": 88,
+          "w": 246,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 6.1
+        },
+        {
+          "name": "Assembly Caves of the League",
+          "h": 88,
+          "w": 246,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 6.7
+        }
+      ]
+    },
+    {
+      "name": "landmark pair forest (mahajanapada -> next) (pc): >= 2 landmark bands, 88 px tall, 'meet' fit, subject top >= 4 px below the band top",
+      "ok": true,
+      "observed": [
+        {
+          "name": "Elephant Grove of Gajavana",
+          "h": 88,
+          "w": 246,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 5.9
+        },
+        {
+          "name": "The Canopy Watch",
+          "h": 88,
+          "w": 246,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 11.6
+        }
+      ]
+    },
+    {
+      "name": "landmark pair frontier (mahajanapada -> next) (pc): >= 2 landmark bands, 88 px tall, 'meet' fit, subject top >= 4 px below the band top",
+      "ok": true,
+      "observed": [
+        {
+          "name": "Caravanserai of the Salt Road",
+          "h": 88,
+          "w": 246,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 32
+        },
+        {
+          "name": "Beacon Line of the Western Passes",
+          "h": 88,
+          "w": 246,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 10.9
+        }
+      ]
+    },
+    {
+      "name": "landmark pair maritime (mahajanapada -> next) (pc): >= 2 landmark bands, 88 px tall, 'meet' fit, subject top >= 4 px below the band top",
+      "ok": true,
+      "observed": [
+        {
+          "name": "Lamp Tower of the River Mouth",
+          "h": 88,
+          "w": 246,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 7.1
+        },
+        {
+          "name": "Hall of the Guilds",
+          "h": 88,
+          "w": 246,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 7.3
+        }
+      ]
+    },
+    {
+      "name": "landmark pair citystates (mahajanapada -> next) (pc): >= 2 landmark bands, 88 px tall, 'meet' fit, subject top >= 4 px below the band top",
+      "ok": true,
+      "observed": [
+        {
+          "name": "The Coin House",
+          "h": 88,
+          "w": 246,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 12.5
+        },
+        {
+          "name": "Engineers' Arsenal",
+          "h": 88,
+          "w": 246,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 15.8
+        }
+      ]
+    },
+    {
+      "name": "world (pc): all 16 landmark bands captured at real size in the age panel",
+      "ok": true,
+      "observed": [
+        "Hall of a Hundred Pillars",
+        "The Royal Granary",
+        "Pillars of the Spoken Law",
+        "The Great Road",
+        "Oath Stone of the Seven Clans",
+        "The Cliff Cistern",
+        "Citadel of a Thousand Steps",
+        "Assembly Caves of the League",
+        "Elephant Grove of Gajavana",
+        "The Canopy Watch",
+        "Caravanserai of the Salt Road",
+        "Beacon Line of the Western Passes",
+        "Lamp Tower of the River Mouth",
+        "Hall of the Guilds",
+        "The Coin House",
+        "Engineers' Arsenal"
+      ]
+    },
+    {
       "name": "world (pc): colour-blind mode protan applied to <html>",
       "ok": true,
       "observed": "protan"
@@ -52,8 +272,8 @@
       "name": "profiler world-1280x720: UI + input < 1 ms/frame at 60 fps (bench avg, 1x and 4x)",
       "ok": true,
       "observed": {
-        "bench1x": 0.101,
-        "bench4x": 0.255
+        "bench1x": 0.109,
+        "bench4x": 0.132
       }
     },
     {
@@ -87,8 +307,8 @@
       "name": "profiler battle-1280x720: UI + input < 1 ms/frame at 60 fps (bench avg, 1x and 4x)",
       "ok": true,
       "observed": {
-        "bench1x": 0.095,
-        "bench4x": 0.082
+        "bench1x": 0.091,
+        "bench4x": 0.075
       }
     },
     {
@@ -115,13 +335,30 @@
       "observed": {
         "bubble": {
           "x": 880,
-          "bottom": 274.20001220703125
+          "box": 880,
+          "bottom": 274.20001220703125,
+          "left": 786.1875,
+          "right": 973.8125
         },
         "potter": {
           "x": 880.3022098238275,
           "y": 283.39948143533195,
           "visible": true
         }
+      }
+    },
+    {
+      "name": "hero (pc): the prompt bubble stays inside the screen",
+      "ok": true,
+      "observed": {
+        "bubble": {
+          "x": 880,
+          "box": 880,
+          "bottom": 274.20001220703125,
+          "left": 786.1875,
+          "right": 973.8125
+        },
+        "vw": 1280
       }
     },
     {
@@ -166,6 +403,28 @@
         "construction": 1,
         "recruitment": 2
       }
+    },
+    {
+      "name": "age panel (portrait): >= 2 landmark bands, 88 px tall, 'meet' fit, subject top >= 4 px below the band top",
+      "ok": true,
+      "observed": [
+        {
+          "name": "Pillars of the Spoken Law",
+          "h": 88,
+          "w": 346,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 9.9
+        },
+        {
+          "name": "The Great Road",
+          "h": 88,
+          "w": 346,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 8.3
+        }
+      ]
     },
     {
       "name": ".wh-minimap minimap (portrait): expanded >= 220 px with both buttons above the map",
@@ -275,14 +534,31 @@
       "ok": true,
       "observed": {
         "bubble": {
-          "x": 360,
-          "bottom": 360.20001220703125
+          "x": 360.17287234042556,
+          "box": 280,
+          "bottom": 360.20001220703125,
+          "left": 185.796875,
+          "right": 374.203125
         },
         "potter": {
           "x": 359.71373930880765,
           "y": 369.4946241441965,
           "visible": true
         }
+      }
+    },
+    {
+      "name": "hero (portrait): the prompt bubble stays inside the screen",
+      "ok": true,
+      "observed": {
+        "bubble": {
+          "x": 360.17287234042556,
+          "box": 280,
+          "bottom": 360.20001220703125,
+          "left": 185.796875,
+          "right": 374.203125
+        },
+        "vw": 390
       }
     },
     {
@@ -322,6 +598,28 @@
         "construction": 1,
         "recruitment": 2
       }
+    },
+    {
+      "name": "age panel (landscape): >= 2 landmark bands, 88 px tall, 'meet' fit, subject top >= 4 px below the band top",
+      "ok": true,
+      "observed": [
+        {
+          "name": "Pillars of the Spoken Law",
+          "h": 88,
+          "w": 393,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 9.9
+        },
+        {
+          "name": "The Great Road",
+          "h": 88,
+          "w": 393,
+          "onScreen": true,
+          "fit": "xMidYMax meet",
+          "headroom": 8.3
+        }
+      ]
     },
     {
       "name": ".wh-minimap minimap (landscape): expanded >= 180 px with both buttons above the map",
@@ -432,13 +730,30 @@
       "observed": {
         "bubble": {
           "x": 552,
-          "bottom": 145.1999969482422
+          "box": 552,
+          "bottom": 145.1999969482422,
+          "left": 457.796875,
+          "right": 646.203125
         },
         "potter": {
           "x": 552.1636969879066,
           "y": 153.50805244413812,
           "visible": true
         }
+      }
+    },
+    {
+      "name": "hero (landscape): the prompt bubble stays inside the screen",
+      "ok": true,
+      "observed": {
+        "bubble": {
+          "x": 552,
+          "box": 552,
+          "bottom": 145.1999969482422,
+          "left": 457.796875,
+          "right": 646.203125
+        },
+        "vw": 844
       }
     },
     {
@@ -477,10 +792,10 @@
       "observed": []
     },
     {
-      "name": "contrast: every measured text run >= 4.5:1 (body) / 3:1 (large) on 69 captures",
+      "name": "contrast: every measured text run >= 4.5:1 (body) / 3:1 (large) on 77 captures",
       "ok": true,
       "observed": {
-        "texts": 2595,
+        "texts": 3011,
         "fails": []
       }
     },
@@ -488,12 +803,12 @@
       "name": "touch: every interactive element >= 44x44 px on phone captures",
       "ok": true,
       "observed": {
-        "targets": 1233,
+        "targets": 1255,
         "fails": []
       }
     },
     {
-      "name": "truncation: no visible label cut to an ellipsis on 69 captures",
+      "name": "truncation: no visible label cut to an ellipsis on 77 captures",
       "ok": true,
       "observed": {
         "fails": []
@@ -540,6 +855,38 @@
     {
       "name": "economy-panel-pc.png",
       "note": "economy panel: ledger and projection, tax policy, royal reserve, rationing, granaries"
+    },
+    {
+      "name": "age-landmarks-heartland-mahajanapada-pc.png",
+      "note": "age panel, heartland: landmark cards Hall of a Hundred Pillars + The Royal Granary (bands at real size)"
+    },
+    {
+      "name": "age-landmarks-heartland-samrajya-pc.png",
+      "note": "age panel, heartland: landmark cards Pillars of the Spoken Law + The Great Road (bands at real size)"
+    },
+    {
+      "name": "age-landmarks-highland-mahajanapada-pc.png",
+      "note": "age panel, highland: landmark cards Oath Stone of the Seven Clans + The Cliff Cistern (bands at real size)"
+    },
+    {
+      "name": "age-landmarks-highland-samrajya-pc.png",
+      "note": "age panel, highland: landmark cards Citadel of a Thousand Steps + Assembly Caves of the League (bands at real size)"
+    },
+    {
+      "name": "age-landmarks-forest-samrajya-pc.png",
+      "note": "age panel, forest: landmark cards Elephant Grove of Gajavana + The Canopy Watch (bands at real size)"
+    },
+    {
+      "name": "age-landmarks-frontier-samrajya-pc.png",
+      "note": "age panel, frontier: landmark cards Caravanserai of the Salt Road + Beacon Line of the Western Passes (bands at real size)"
+    },
+    {
+      "name": "age-landmarks-maritime-samrajya-pc.png",
+      "note": "age panel, maritime: landmark cards Lamp Tower of the River Mouth + Hall of the Guilds (bands at real size)"
+    },
+    {
+      "name": "age-landmarks-citystates-samrajya-pc.png",
+      "note": "age panel, citystates: landmark cards The Coin House + Engineers' Arsenal (bands at real size)"
     },
     {
       "name": "diplomacy-pc.png",
@@ -655,7 +1002,7 @@
     },
     {
       "name": "age-panel-portrait.png",
-      "note": "age panel: requirements checklist, two landmark cards, unlock preview"
+      "note": "age panel scrolled to the two landmark cards (illustration bands at real size)"
     },
     {
       "name": "economy-panel-portrait.png",
@@ -743,7 +1090,7 @@
     },
     {
       "name": "age-panel-landscape.png",
-      "note": "age panel: requirements checklist, two landmark cards, unlock preview"
+      "note": "age panel scrolled to the two landmark cards (illustration bands at real size)"
     },
     {
       "name": "economy-panel-landscape.png",
@@ -880,6 +1227,70 @@
       "texts": 65,
       "contrastFails": [],
       "targets": 12,
+      "smallTargets": [],
+      "truncated": []
+    },
+    {
+      "shot": "age-landmarks-heartland-mahajanapada-pc.png",
+      "texts": 57,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": [],
+      "truncated": []
+    },
+    {
+      "shot": "age-landmarks-heartland-samrajya-pc.png",
+      "texts": 52,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": [],
+      "truncated": []
+    },
+    {
+      "shot": "age-landmarks-highland-mahajanapada-pc.png",
+      "texts": 57,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": [],
+      "truncated": []
+    },
+    {
+      "shot": "age-landmarks-highland-samrajya-pc.png",
+      "texts": 52,
+      "contrastFails": [],
+      "targets": 3,
+      "smallTargets": [],
+      "truncated": []
+    },
+    {
+      "shot": "age-landmarks-forest-samrajya-pc.png",
+      "texts": 52,
+      "contrastFails": [],
+      "targets": 2,
+      "smallTargets": [],
+      "truncated": []
+    },
+    {
+      "shot": "age-landmarks-frontier-samrajya-pc.png",
+      "texts": 52,
+      "contrastFails": [],
+      "targets": 2,
+      "smallTargets": [],
+      "truncated": []
+    },
+    {
+      "shot": "age-landmarks-maritime-samrajya-pc.png",
+      "texts": 52,
+      "contrastFails": [],
+      "targets": 2,
+      "smallTargets": [],
+      "truncated": []
+    },
+    {
+      "shot": "age-landmarks-citystates-samrajya-pc.png",
+      "texts": 52,
+      "contrastFails": [],
+      "targets": 2,
       "smallTargets": [],
       "truncated": []
     },
@@ -1093,9 +1504,9 @@
     },
     {
       "shot": "age-panel-portrait.png",
-      "texts": 34,
+      "texts": 23,
       "contrastFails": [],
-      "targets": 1,
+      "targets": 2,
       "smallTargets": [],
       "truncated": []
     },
@@ -1253,9 +1664,9 @@
     },
     {
       "shot": "age-panel-landscape.png",
-      "texts": 20,
+      "texts": 22,
       "contrastFails": [],
-      "targets": 1,
+      "targets": 2,
       "smallTargets": [],
       "truncated": []
     },
@@ -1341,7 +1752,7 @@
     },
     {
       "shot": "hero-explore-landscape.png",
-      "texts": 10,
+      "texts": 9,
       "contrastFails": [],
       "targets": 3,
       "smallTargets": [],
@@ -1364,9 +1775,9 @@
         "frames": 600,
         "updates": 40,
         "steps": 120,
-        "avgMs": 0.101,
-        "p95Ms": 3,
-        "maxMs": 21.5
+        "avgMs": 0.109,
+        "p95Ms": 0.7,
+        "maxMs": 37.2
       },
       "bench4x": {
         "screen": "world_hud",
@@ -1374,15 +1785,15 @@
         "frames": 600,
         "updates": 40,
         "steps": 480,
-        "avgMs": 0.255,
-        "p95Ms": 1.3,
-        "maxMs": 23.7
+        "avgMs": 0.132,
+        "p95Ms": 0.7,
+        "maxMs": 23.8
       },
       "liveSwiftShader": {
-        "ui": 4.172,
-        "input": 0.003,
-        "total": 4.174,
-        "max": 86.9
+        "ui": 10.116,
+        "input": 0.021,
+        "total": 10.137,
+        "max": 59
       }
     },
     "battle-1280x720": {
@@ -1392,9 +1803,9 @@
         "frames": 600,
         "updates": 85,
         "steps": 200,
-        "avgMs": 0.095,
-        "p95Ms": 2.9,
-        "maxMs": 11
+        "avgMs": 0.091,
+        "p95Ms": 1.7,
+        "maxMs": 14.6
       },
       "bench4x": {
         "screen": "battle_hud",
@@ -1402,15 +1813,15 @@
         "frames": 600,
         "updates": 85,
         "steps": 795,
-        "avgMs": 0.082,
-        "p95Ms": 0.1,
-        "maxMs": 31.5
+        "avgMs": 0.075,
+        "p95Ms": 0.2,
+        "maxMs": 11
       },
       "liveSwiftShader": {
-        "ui": 7.074,
-        "input": 0.006,
-        "total": 7.08,
-        "max": 27
+        "ui": 4.425,
+        "input": 0.039,
+        "total": 4.464,
+        "max": 28.7
       }
     }
   }
