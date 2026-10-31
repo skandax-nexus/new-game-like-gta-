@@ -12,7 +12,7 @@ planar-laminated) read mainly as light / dark lamina tones and curve tangentiall
 base, etched out as fine ribs by differential weathering.
 - Thin SOFT beds (~a third) recess 8-15 cm under the hard beds, which overhang with a sharp lower lip: a dark
   shadow line under every lip.
-- Irregular blocky joints per set (3.5-9 m apart, rounded weathered shoulders, tilted, wandering, some running through several sets, most
+- Irregular blocky joints per set (3.5-9 m apart, each visible along only part of its length, rounded weathered shoulders, tilted, wandering, some running through several sets, most
   stopping at a bedding plane), each block at its own slight depth and tilt; joint edges broken, not chamfered.
 - Sparse TAFONI: a few honeycomb patches per tile (7-13 cm cells with thin walls), preferring the soft beds under
   overhangs.
@@ -38,6 +38,8 @@ x, y = kit.x, kit.y
 rng = kit.rng
 
 with core.timer("sets and joints"):
+    # widely spaced joints (3.5-9 m; denser joints turn the face into block masonry), and each joint shows only
+    # along part of its length (see `joint` below) so they never form a steady rhythm at 3 x 3 (B5)
     jb = joint_bands(kit, spacing=(0.4, 2.8), amp=0.45, feature=2.5, vspacing=(3.5, 9.0), carry=0.9, tilt=0.12,
                      wander=0.35, vfeature=1.4, pinch=True)
     band = jb["band"].astype(np.int64)
@@ -76,7 +78,7 @@ with core.timer("bed profiles"):
     # joints fade in and out along their length, and thin beds (< ~0.8 m) rarely show them: a packet of thin beds
     # cut by joints at a steady rhythm reads as a brick / plank wall (B5)
     thin_fade = tg.smoothstep(0.5, 1.1, thick) * (0.35 + 0.65 * tg.smoothstep(0.3, 0.7, jb["rand3"]))
-    joint = tg.smoothstep(jw, 0.0, jd) * tg.smoothstep(-0.35, 0.15, kit.fbm(0.9, 3, aniso=(0.35, 1.0))) * thin_fade
+    joint = tg.smoothstep(jw, 0.0, jd) * tg.smoothstep(-0.05, 0.4, kit.fbm(0.9, 3, aniso=(0.35, 1.0))) * thin_fade
     jr = 0.08 + 0.1 * jopen  # weathered, rounded joint shoulders (not a cut line)
     h -= (0.006 + 0.15 * jopen) * joint + 0.07 * jopen * thin_fade * (1.0 - np.sqrt(np.clip(1.0 - (1.0 - np.clip(jd / jr, 0, 1)) ** 2, 0, 1)))
     bedding = tg.smoothstep(0.02, 0.0, np.minimum(below, above)) * (1.0 - soft)

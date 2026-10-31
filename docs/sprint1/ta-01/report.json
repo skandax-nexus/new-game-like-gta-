@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-30T14:54:11.196Z",
+  "generated": "2026-10-31T02:55:41.302Z",
   "tolerancePct": 6,
   "sets": {
     "bamboo_lattice": {
@@ -1559,78 +1559,6 @@
   "budgets": null,
   "shots": [
     {
-      "name": "viewer bamboo_lattice sky_day detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=bamboo_lattice&hdri=sky_day&camera=detail&assets=ultra",
-      "ms": 28485,
-      "errors": []
-    },
-    {
-      "name": "viewer bamboo_lattice sky_day overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=bamboo_lattice&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 27710,
-      "errors": []
-    },
-    {
-      "name": "viewer bamboo_lattice sky_golden detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=bamboo_lattice&hdri=sky_golden&camera=detail&assets=ultra",
-      "ms": 36601,
-      "errors": []
-    },
-    {
-      "name": "viewer bamboo_lattice sky_golden overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=bamboo_lattice&hdri=sky_golden&camera=overview&assets=ultra",
-      "ms": 46991,
-      "errors": []
-    },
-    {
-      "name": "viewer basalt_dressed sky_day detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=basalt_dressed&hdri=sky_day&camera=detail&assets=ultra",
-      "ms": 35000,
-      "errors": []
-    },
-    {
-      "name": "viewer basalt_dressed sky_day overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=basalt_dressed&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 40417,
-      "errors": []
-    },
-    {
-      "name": "viewer basalt_dressed sky_golden detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=basalt_dressed&hdri=sky_golden&camera=detail&assets=ultra",
-      "ms": 38889,
-      "errors": []
-    },
-    {
-      "name": "viewer basalt_dressed sky_golden overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=basalt_dressed&hdri=sky_golden&camera=overview&assets=ultra",
-      "ms": 47757,
-      "errors": []
-    },
-    {
-      "name": "viewer brick_fired_old sky_day detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=brick_fired_old&hdri=sky_day&camera=detail&assets=ultra",
-      "ms": 33800,
-      "errors": []
-    },
-    {
-      "name": "viewer brick_fired_old sky_day overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=brick_fired_old&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 44270,
-      "errors": []
-    },
-    {
-      "name": "viewer brick_fired_old sky_golden detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=brick_fired_old&hdri=sky_golden&camera=detail&assets=ultra",
-      "ms": 25406,
-      "errors": []
-    },
-    {
-      "name": "viewer brick_fired_old sky_golden overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=brick_fired_old&hdri=sky_golden&camera=overview&assets=ultra",
-      "ms": 34083,
-      "errors": []
-    },
-    {
       "name": "viewer ground_dry_earth sky_day detail",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=ground_dry_earth&hdri=sky_day&camera=detail&assets=ultra",
       "ms": 32343,
@@ -1652,126 +1580,6 @@
       "name": "viewer ground_dry_earth sky_golden overview",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=ground_dry_earth&hdri=sky_golden&camera=overview&assets=ultra",
       "ms": 30234,
-      "errors": []
-    },
-    {
-      "name": "viewer laterite_block sky_day detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=laterite_block&hdri=sky_day&camera=detail&assets=ultra",
-      "ms": 37426,
-      "errors": []
-    },
-    {
-      "name": "viewer laterite_block sky_day overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=laterite_block&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 42004,
-      "errors": []
-    },
-    {
-      "name": "viewer laterite_block sky_golden detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=laterite_block&hdri=sky_golden&camera=detail&assets=ultra",
-      "ms": 30730,
-      "errors": []
-    },
-    {
-      "name": "viewer laterite_block sky_golden overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=laterite_block&hdri=sky_golden&camera=overview&assets=ultra",
-      "ms": 33511,
-      "errors": []
-    },
-    {
-      "name": "viewer mud_plaster sky_day detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=mud_plaster&hdri=sky_day&camera=detail&assets=ultra",
-      "ms": 31551,
-      "errors": []
-    },
-    {
-      "name": "viewer mud_plaster sky_day overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=mud_plaster&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 23897,
-      "errors": []
-    },
-    {
-      "name": "viewer mud_plaster sky_golden detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=mud_plaster&hdri=sky_golden&camera=detail&assets=ultra",
-      "ms": 20670,
-      "errors": []
-    },
-    {
-      "name": "viewer mud_plaster sky_golden overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=mud_plaster&hdri=sky_golden&camera=overview&assets=ultra",
-      "ms": 19635,
-      "errors": []
-    },
-    {
-      "name": "viewer roof_tile_terracotta sky_day detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=roof_tile_terracotta&hdri=sky_day&camera=detail&assets=ultra",
-      "ms": 16437,
-      "errors": []
-    },
-    {
-      "name": "viewer roof_tile_terracotta sky_day overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=roof_tile_terracotta&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 19834,
-      "errors": []
-    },
-    {
-      "name": "viewer roof_tile_terracotta sky_golden detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=roof_tile_terracotta&hdri=sky_golden&camera=detail&assets=ultra",
-      "ms": 17417,
-      "errors": []
-    },
-    {
-      "name": "viewer roof_tile_terracotta sky_golden overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=roof_tile_terracotta&hdri=sky_golden&camera=overview&assets=ultra",
-      "ms": 22729,
-      "errors": []
-    },
-    {
-      "name": "viewer sandstone_buff sky_day detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_buff&hdri=sky_day&camera=detail&assets=ultra",
-      "ms": 22078,
-      "errors": []
-    },
-    {
-      "name": "viewer sandstone_buff sky_day overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_buff&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 24172,
-      "errors": []
-    },
-    {
-      "name": "viewer sandstone_buff sky_golden detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_buff&hdri=sky_golden&camera=detail&assets=ultra",
-      "ms": 25748,
-      "errors": []
-    },
-    {
-      "name": "viewer sandstone_buff sky_golden overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_buff&hdri=sky_golden&camera=overview&assets=ultra",
-      "ms": 31314,
-      "errors": []
-    },
-    {
-      "name": "viewer sandstone_carved_red sky_day detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_carved_red&hdri=sky_day&camera=detail&assets=ultra",
-      "ms": 36546,
-      "errors": []
-    },
-    {
-      "name": "viewer sandstone_carved_red sky_day overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_carved_red&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 41683,
-      "errors": []
-    },
-    {
-      "name": "viewer sandstone_carved_red sky_golden detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_carved_red&hdri=sky_golden&camera=detail&assets=ultra",
-      "ms": 23650,
-      "errors": []
-    },
-    {
-      "name": "viewer sandstone_carved_red sky_golden overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_carved_red&hdri=sky_golden&camera=overview&assets=ultra",
-      "ms": 34540,
       "errors": []
     },
     {
@@ -1823,30 +1631,6 @@
       "errors": []
     },
     {
-      "name": "viewer timber_teak_carved sky_day detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=timber_teak_carved&hdri=sky_day&camera=detail&assets=ultra",
-      "ms": 26891,
-      "errors": []
-    },
-    {
-      "name": "viewer timber_teak_carved sky_day overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=timber_teak_carved&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 40159,
-      "errors": []
-    },
-    {
-      "name": "viewer timber_teak_carved sky_golden detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=timber_teak_carved&hdri=sky_golden&camera=detail&assets=ultra",
-      "ms": 27536,
-      "errors": []
-    },
-    {
-      "name": "viewer timber_teak_carved sky_golden overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=timber_teak_carved&hdri=sky_golden&camera=overview&assets=ultra",
-      "ms": 30652,
-      "errors": []
-    },
-    {
       "name": "stupa_sanchi samrajya_set=sandstone_carved_red",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=stupa_sanchi&hdri=sky_golden&camera=hero&assets=ultra",
       "ms": 28900,
@@ -1891,30 +1675,6 @@
       "errors": []
     },
     {
-      "name": "viewer lime_plaster_weathered sky_day detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=lime_plaster_weathered&hdri=sky_day&camera=detail&assets=ultra",
-      "ms": 6077,
-      "errors": []
-    },
-    {
-      "name": "viewer lime_plaster_weathered sky_day overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=lime_plaster_weathered&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 14517,
-      "errors": []
-    },
-    {
-      "name": "viewer lime_plaster_weathered sky_golden detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=lime_plaster_weathered&hdri=sky_golden&camera=detail&assets=ultra",
-      "ms": 14151,
-      "errors": []
-    },
-    {
-      "name": "viewer lime_plaster_weathered sky_golden overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=lime_plaster_weathered&hdri=sky_golden&camera=overview&assets=ultra",
-      "ms": 15645,
-      "errors": []
-    },
-    {
       "name": "viewer mud_brick_sundried sky_day detail",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=mud_brick_sundried&hdri=sky_day&camera=detail&assets=ultra",
       "ms": 5753,
@@ -1936,102 +1696,6 @@
       "name": "viewer mud_brick_sundried sky_golden overview",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=mud_brick_sundried&hdri=sky_golden&camera=overview&assets=ultra",
       "ms": 5963,
-      "errors": []
-    },
-    {
-      "name": "viewer sandstone_red_ashlar sky_day detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_red_ashlar&hdri=sky_day&camera=detail&assets=ultra",
-      "ms": 6634,
-      "errors": []
-    },
-    {
-      "name": "viewer sandstone_red_ashlar sky_day overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_red_ashlar&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 15362,
-      "errors": []
-    },
-    {
-      "name": "viewer sandstone_red_ashlar sky_golden detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_red_ashlar&hdri=sky_golden&camera=detail&assets=ultra",
-      "ms": 13736,
-      "errors": []
-    },
-    {
-      "name": "viewer sandstone_red_ashlar sky_golden overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_red_ashlar&hdri=sky_golden&camera=overview&assets=ultra",
-      "ms": 15237,
-      "errors": []
-    },
-    {
-      "name": "viewer stone_slab_roof sky_day detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=stone_slab_roof&hdri=sky_day&camera=detail&assets=ultra",
-      "ms": 6908,
-      "errors": []
-    },
-    {
-      "name": "viewer stone_slab_roof sky_day overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=stone_slab_roof&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 8246,
-      "errors": []
-    },
-    {
-      "name": "viewer stone_slab_roof sky_golden detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=stone_slab_roof&hdri=sky_golden&camera=detail&assets=ultra",
-      "ms": 8603,
-      "errors": []
-    },
-    {
-      "name": "viewer stone_slab_roof sky_golden overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=stone_slab_roof&hdri=sky_golden&camera=overview&assets=ultra",
-      "ms": 11136,
-      "errors": []
-    },
-    {
-      "name": "viewer thatch_grass sky_day detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_grass&hdri=sky_day&camera=detail&assets=ultra",
-      "ms": 20752,
-      "errors": []
-    },
-    {
-      "name": "viewer thatch_grass sky_day overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_grass&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 21574,
-      "errors": []
-    },
-    {
-      "name": "viewer thatch_grass sky_golden detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_grass&hdri=sky_golden&camera=detail&assets=ultra",
-      "ms": 18113,
-      "errors": []
-    },
-    {
-      "name": "viewer thatch_grass sky_golden overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_grass&hdri=sky_golden&camera=overview&assets=ultra",
-      "ms": 19862,
-      "errors": []
-    },
-    {
-      "name": "viewer thatch_palm sky_day detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_palm&hdri=sky_day&camera=detail&assets=ultra",
-      "ms": 6459,
-      "errors": []
-    },
-    {
-      "name": "viewer thatch_palm sky_day overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_palm&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 11874,
-      "errors": []
-    },
-    {
-      "name": "viewer thatch_palm sky_golden detail",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_palm&hdri=sky_golden&camera=detail&assets=ultra",
-      "ms": 7633,
-      "errors": []
-    },
-    {
-      "name": "viewer thatch_palm sky_golden overview",
-      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_palm&hdri=sky_golden&camera=overview&assets=ultra",
-      "ms": 9599,
       "errors": []
     },
     {
@@ -2212,6 +1876,342 @@
       "name": "splat marsh sky_day",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&splat=terrain_mud_wet,terrain_grass_lush,terrain_alluvial_silt,terrain_rock_sandstone&hdri=sky_day&assets=ultra",
       "ms": 19941,
+      "errors": []
+    },
+    {
+      "name": "viewer bamboo_lattice sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=bamboo_lattice&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 62835,
+      "errors": []
+    },
+    {
+      "name": "viewer bamboo_lattice sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=bamboo_lattice&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 55364,
+      "errors": []
+    },
+    {
+      "name": "viewer bamboo_lattice sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=bamboo_lattice&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 70434,
+      "errors": []
+    },
+    {
+      "name": "viewer bamboo_lattice sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=bamboo_lattice&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 35270,
+      "errors": []
+    },
+    {
+      "name": "viewer basalt_dressed sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=basalt_dressed&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 100629,
+      "errors": []
+    },
+    {
+      "name": "viewer basalt_dressed sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=basalt_dressed&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 61837,
+      "errors": []
+    },
+    {
+      "name": "viewer basalt_dressed sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=basalt_dressed&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 51186,
+      "errors": []
+    },
+    {
+      "name": "viewer basalt_dressed sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=basalt_dressed&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 41109,
+      "errors": []
+    },
+    {
+      "name": "viewer brick_fired_old sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=brick_fired_old&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 79417,
+      "errors": []
+    },
+    {
+      "name": "viewer brick_fired_old sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=brick_fired_old&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 55307,
+      "errors": []
+    },
+    {
+      "name": "viewer brick_fired_old sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=brick_fired_old&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 76462,
+      "errors": []
+    },
+    {
+      "name": "viewer brick_fired_old sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=brick_fired_old&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 40102,
+      "errors": []
+    },
+    {
+      "name": "viewer laterite_block sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=laterite_block&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 64822,
+      "errors": []
+    },
+    {
+      "name": "viewer laterite_block sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=laterite_block&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 39345,
+      "errors": []
+    },
+    {
+      "name": "viewer laterite_block sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=laterite_block&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 44077,
+      "errors": []
+    },
+    {
+      "name": "viewer laterite_block sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=laterite_block&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 44102,
+      "errors": []
+    },
+    {
+      "name": "viewer lime_plaster_weathered sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=lime_plaster_weathered&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 65541,
+      "errors": []
+    },
+    {
+      "name": "viewer lime_plaster_weathered sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=lime_plaster_weathered&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 36058,
+      "errors": []
+    },
+    {
+      "name": "viewer lime_plaster_weathered sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=lime_plaster_weathered&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 50923,
+      "errors": []
+    },
+    {
+      "name": "viewer lime_plaster_weathered sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=lime_plaster_weathered&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 31446,
+      "errors": []
+    },
+    {
+      "name": "viewer mud_plaster sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=mud_plaster&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 55885,
+      "errors": []
+    },
+    {
+      "name": "viewer mud_plaster sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=mud_plaster&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 44255,
+      "errors": []
+    },
+    {
+      "name": "viewer mud_plaster sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=mud_plaster&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 45982,
+      "errors": []
+    },
+    {
+      "name": "viewer mud_plaster sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=mud_plaster&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 46742,
+      "errors": []
+    },
+    {
+      "name": "viewer roof_tile_terracotta sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=roof_tile_terracotta&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 53049,
+      "errors": []
+    },
+    {
+      "name": "viewer roof_tile_terracotta sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=roof_tile_terracotta&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 43326,
+      "errors": []
+    },
+    {
+      "name": "viewer roof_tile_terracotta sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=roof_tile_terracotta&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 43798,
+      "errors": []
+    },
+    {
+      "name": "viewer roof_tile_terracotta sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=roof_tile_terracotta&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 42402,
+      "errors": []
+    },
+    {
+      "name": "viewer sandstone_buff sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_buff&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 43513,
+      "errors": []
+    },
+    {
+      "name": "viewer sandstone_buff sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_buff&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 33931,
+      "errors": []
+    },
+    {
+      "name": "viewer sandstone_buff sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_buff&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 56259,
+      "errors": []
+    },
+    {
+      "name": "viewer sandstone_buff sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_buff&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 27238,
+      "errors": []
+    },
+    {
+      "name": "viewer sandstone_carved_red sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_carved_red&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 81355,
+      "errors": []
+    },
+    {
+      "name": "viewer sandstone_carved_red sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_carved_red&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 29358,
+      "errors": []
+    },
+    {
+      "name": "viewer sandstone_carved_red sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_carved_red&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 62053,
+      "errors": []
+    },
+    {
+      "name": "viewer sandstone_carved_red sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_carved_red&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 39129,
+      "errors": []
+    },
+    {
+      "name": "viewer sandstone_red_ashlar sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_red_ashlar&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 51007,
+      "errors": []
+    },
+    {
+      "name": "viewer sandstone_red_ashlar sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_red_ashlar&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 30407,
+      "errors": []
+    },
+    {
+      "name": "viewer sandstone_red_ashlar sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_red_ashlar&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 99810,
+      "errors": []
+    },
+    {
+      "name": "viewer sandstone_red_ashlar sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=sandstone_red_ashlar&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 28699,
+      "errors": []
+    },
+    {
+      "name": "viewer stone_slab_roof sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=stone_slab_roof&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 80852,
+      "errors": []
+    },
+    {
+      "name": "viewer stone_slab_roof sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=stone_slab_roof&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 38386,
+      "errors": []
+    },
+    {
+      "name": "viewer stone_slab_roof sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=stone_slab_roof&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 80036,
+      "errors": []
+    },
+    {
+      "name": "viewer stone_slab_roof sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=stone_slab_roof&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 32459,
+      "errors": []
+    },
+    {
+      "name": "viewer thatch_grass sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_grass&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 54400,
+      "errors": []
+    },
+    {
+      "name": "viewer thatch_grass sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_grass&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 42592,
+      "errors": []
+    },
+    {
+      "name": "viewer thatch_grass sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_grass&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 61788,
+      "errors": []
+    },
+    {
+      "name": "viewer thatch_grass sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_grass&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 37771,
+      "errors": []
+    },
+    {
+      "name": "viewer thatch_palm sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_palm&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 87890,
+      "errors": []
+    },
+    {
+      "name": "viewer thatch_palm sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_palm&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 48556,
+      "errors": []
+    },
+    {
+      "name": "viewer thatch_palm sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_palm&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 111712,
+      "errors": []
+    },
+    {
+      "name": "viewer thatch_palm sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=thatch_palm&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 33830,
+      "errors": []
+    },
+    {
+      "name": "viewer timber_teak_carved sky_day detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=timber_teak_carved&hdri=sky_day&camera=detail&assets=ultra",
+      "ms": 60633,
+      "errors": []
+    },
+    {
+      "name": "viewer timber_teak_carved sky_day overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=timber_teak_carved&hdri=sky_day&camera=overview&assets=ultra",
+      "ms": 27355,
+      "errors": []
+    },
+    {
+      "name": "viewer timber_teak_carved sky_golden detail",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=timber_teak_carved&hdri=sky_golden&camera=detail&assets=ultra",
+      "ms": 60182,
+      "errors": []
+    },
+    {
+      "name": "viewer timber_teak_carved sky_golden overview",
+      "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=timber_teak_carved&hdri=sky_golden&camera=overview&assets=ultra",
+      "ms": 44774,
       "errors": []
     }
   ],

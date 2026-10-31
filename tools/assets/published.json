@@ -838,7 +838,7 @@
       "kind": "material",
       "category": "decals",
       "script": "tools/blender/assets/decals/decals_settlement.py",
-      "inputHash": "e6e336cdff09228c9302e2b5fb5ffa5d9abc6098f6586e7d04094cce666c4891",
+      "inputHash": "24f663eeaff5de9bd158f863ead337d83fcf69b1e13f21caa5d41e0815358375",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -1124,6 +1124,9 @@
           "lumP2": 0.0323,
           "lumP98": 0.7625,
           "meanColor": "#7f705d",
+          "ormRP5": 0.961,
+          "ormRP95": 1,
+          "ormRSpan": 0.039,
           "roughMean": 0.819,
           "roughP5": 0.401,
           "roughP95": 0.95,
@@ -1133,7 +1136,9 @@
           ],
           "satMean": 0.314,
           "satP95": 0.673,
-          "saturationLimit": 0.45
+          "satP98": 0.677,
+          "saturationLimit": 0.45,
+          "valueP98": 0.914
         },
         "roughness": 0.819,
         "setClass": "A",
@@ -1146,7 +1151,7 @@
       "files": [
         {
           "path": "textures/decals_settlement/baseColor_1024.webp",
-          "bytes": 64514,
+          "bytes": 64458,
           "tiers": [
             "ultra"
           ],
@@ -1156,7 +1161,7 @@
         },
         {
           "path": "textures/decals_settlement/baseColor_512.webp",
-          "bytes": 25964,
+          "bytes": 25950,
           "tiers": [
             "high"
           ],
@@ -1166,7 +1171,7 @@
         },
         {
           "path": "textures/decals_settlement/baseColor_256.webp",
-          "bytes": 8586,
+          "bytes": 8598,
           "tiers": [
             "mobile"
           ],
@@ -1176,7 +1181,7 @@
         },
         {
           "path": "textures/decals_settlement/normal_1024.webp",
-          "bytes": 192612,
+          "bytes": 192772,
           "tiers": [
             "ultra"
           ],
@@ -1186,7 +1191,7 @@
         },
         {
           "path": "textures/decals_settlement/normal_512.webp",
-          "bytes": 59916,
+          "bytes": 59910,
           "tiers": [
             "high"
           ],
@@ -1196,7 +1201,7 @@
         },
         {
           "path": "textures/decals_settlement/normal_256.webp",
-          "bytes": 15676,
+          "bytes": 15768,
           "tiers": [
             "mobile"
           ],
@@ -1206,7 +1211,7 @@
         },
         {
           "path": "textures/decals_settlement/orm_1024.webp",
-          "bytes": 67488,
+          "bytes": 67370,
           "tiers": [
             "ultra"
           ],
@@ -1216,7 +1221,7 @@
         },
         {
           "path": "textures/decals_settlement/orm_512.webp",
-          "bytes": 22610,
+          "bytes": 22536,
           "tiers": [
             "high"
           ],
@@ -1226,7 +1231,7 @@
         },
         {
           "path": "textures/decals_settlement/orm_256.webp",
-          "bytes": 7116,
+          "bytes": 7092,
           "tiers": [
             "mobile"
           ],
@@ -1240,60 +1245,60 @@
           "baseColor": {
             "ultra": {
               "path": "textures/decals_settlement/baseColor_1024.webp",
-              "bytes": 64514,
+              "bytes": 64458,
               "size": 1024
             },
             "high": {
               "path": "textures/decals_settlement/baseColor_512.webp",
-              "bytes": 25964,
+              "bytes": 25950,
               "size": 512
             },
             "mobile": {
               "path": "textures/decals_settlement/baseColor_256.webp",
-              "bytes": 8586,
+              "bytes": 8598,
               "size": 256
             }
           },
           "normal": {
             "ultra": {
               "path": "textures/decals_settlement/normal_1024.webp",
-              "bytes": 192612,
+              "bytes": 192772,
               "size": 1024
             },
             "high": {
               "path": "textures/decals_settlement/normal_512.webp",
-              "bytes": 59916,
+              "bytes": 59910,
               "size": 512
             },
             "mobile": {
               "path": "textures/decals_settlement/normal_256.webp",
-              "bytes": 15676,
+              "bytes": 15768,
               "size": 256
             }
           },
           "orm": {
             "ultra": {
               "path": "textures/decals_settlement/orm_1024.webp",
-              "bytes": 67488,
+              "bytes": 67370,
               "size": 1024
             },
             "high": {
               "path": "textures/decals_settlement/orm_512.webp",
-              "bytes": 22610,
+              "bytes": 22536,
               "size": 512
             },
             "mobile": {
               "path": "textures/decals_settlement/orm_256.webp",
-              "bytes": 7116,
+              "bytes": 7092,
               "size": 256
             }
           }
         }
       },
       "bytes": {
-        "ultra": 324614,
-        "high": 108490,
-        "mobile": 31378
+        "ultra": 324600,
+        "high": 108396,
+        "mobile": 31458
       }
     },
     "fx_dust": {
@@ -2833,7 +2838,7 @@
       "kind": "material",
       "category": "materials",
       "script": "tools/blender/assets/materials/granite_rubble.py",
-      "inputHash": "c9ecdb3d99bcebe6054440fe598215d0ae7b68cb2da5d1b13b72a262d7aaf45c",
+      "inputHash": "020371b37277dcdf06e8f9d541cf149e4a442c227ef6d4c61f34b0217835679e",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -2863,8 +2868,8 @@
             0.42
           ],
           "lumMean": 0.2401,
-          "lumP2": 0.083,
-          "lumP98": 0.3126,
+          "lumP2": 0.1474,
+          "lumP98": 0.2989,
           "meanColor": "#8a8680",
           "ormRP5": 0.371,
           "ormRP95": 1,
@@ -2876,12 +2881,12 @@
             0.7,
             0.95
           ],
-          "satMean": 0.084,
-          "satP95": 0.225,
-          "satP98": 0.23,
+          "satMean": 0.076,
+          "satP95": 0.153,
+          "satP98": 0.212,
           "saturationLimit": 0.45,
           "target": "#8a8680",
-          "valueP98": 0.61
+          "valueP98": 0.598
         },
         "roughness": 0.82,
         "setClass": "C",
@@ -2894,7 +2899,7 @@
       "files": [
         {
           "path": "textures/granite_rubble/baseColor_1024.webp",
-          "bytes": 189120,
+          "bytes": 173020,
           "tiers": [
             "ultra"
           ],
@@ -2904,7 +2909,7 @@
         },
         {
           "path": "textures/granite_rubble/baseColor_512.webp",
-          "bytes": 47558,
+          "bytes": 39632,
           "tiers": [
             "high"
           ],
@@ -2914,7 +2919,7 @@
         },
         {
           "path": "textures/granite_rubble/baseColor_256.webp",
-          "bytes": 10296,
+          "bytes": 7938,
           "tiers": [
             "mobile"
           ],
@@ -2970,17 +2975,17 @@
           "baseColor": {
             "ultra": {
               "path": "textures/granite_rubble/baseColor_1024.webp",
-              "bytes": 189120,
+              "bytes": 173020,
               "size": 1024
             },
             "high": {
               "path": "textures/granite_rubble/baseColor_512.webp",
-              "bytes": 47558,
+              "bytes": 39632,
               "size": 512
             },
             "mobile": {
               "path": "textures/granite_rubble/baseColor_256.webp",
-              "bytes": 10296,
+              "bytes": 7938,
               "size": 256
             }
           },
@@ -3021,9 +3026,9 @@
         }
       },
       "bytes": {
-        "ultra": 489440,
-        "high": 347878,
-        "mobile": 99068
+        "ultra": 473340,
+        "high": 339952,
+        "mobile": 96710
       }
     },
     "ground_dry_earth": {
@@ -4367,7 +4372,7 @@
       "kind": "material",
       "category": "materials",
       "script": "tools/blender/assets/materials/mud_brick_sundried.py",
-      "inputHash": "6aedf27bfe16cbd316f735e03e5729e1ae434f419cc0e713526a903b59715624",
+      "inputHash": "dd07f5635fe5294c954b3716ec034b6e7fd61f0c94657bbd7b0845bf8e0e8d6a",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -4400,6 +4405,9 @@
           "lumP2": 0.2178,
           "lumP98": 0.3097,
           "meanColor": "#a88866",
+          "ormRP5": 0.84,
+          "ormRP95": 1,
+          "ormRSpan": 0.16,
           "roughMean": 0.95,
           "roughP5": 0.88,
           "roughP95": 1,
@@ -4408,9 +4416,11 @@
             1
           ],
           "satMean": 0.393,
-          "satP95": 0.403,
+          "satP95": 0.402,
+          "satP98": 0.404,
           "saturationLimit": 0.45,
-          "target": "#a88866"
+          "target": "#a88866",
+          "valueP98": 0.697
         },
         "roughness": 0.95,
         "setClass": "C",
@@ -4423,7 +4433,7 @@
       "files": [
         {
           "path": "textures/mud_brick_sundried/baseColor_1024.webp",
-          "bytes": 29744,
+          "bytes": 29726,
           "tiers": [
             "ultra"
           ],
@@ -4433,7 +4443,7 @@
         },
         {
           "path": "textures/mud_brick_sundried/baseColor_512.webp",
-          "bytes": 11326,
+          "bytes": 11280,
           "tiers": [
             "high"
           ],
@@ -4443,7 +4453,7 @@
         },
         {
           "path": "textures/mud_brick_sundried/baseColor_256.webp",
-          "bytes": 4078,
+          "bytes": 4088,
           "tiers": [
             "mobile"
           ],
@@ -4453,7 +4463,7 @@
         },
         {
           "path": "textures/mud_brick_sundried/normal_512.webp",
-          "bytes": 263784,
+          "bytes": 263434,
           "tiers": [
             "ultra",
             "high"
@@ -4474,7 +4484,7 @@
         },
         {
           "path": "textures/mud_brick_sundried/orm_512.webp",
-          "bytes": 23456,
+          "bytes": 23480,
           "tiers": [
             "ultra",
             "high"
@@ -4485,7 +4495,7 @@
         },
         {
           "path": "textures/mud_brick_sundried/orm_256.webp",
-          "bytes": 8978,
+          "bytes": 8990,
           "tiers": [
             "mobile"
           ],
@@ -4499,29 +4509,29 @@
           "baseColor": {
             "ultra": {
               "path": "textures/mud_brick_sundried/baseColor_1024.webp",
-              "bytes": 29744,
+              "bytes": 29726,
               "size": 1024
             },
             "high": {
               "path": "textures/mud_brick_sundried/baseColor_512.webp",
-              "bytes": 11326,
+              "bytes": 11280,
               "size": 512
             },
             "mobile": {
               "path": "textures/mud_brick_sundried/baseColor_256.webp",
-              "bytes": 4078,
+              "bytes": 4088,
               "size": 256
             }
           },
           "normal": {
             "ultra": {
               "path": "textures/mud_brick_sundried/normal_512.webp",
-              "bytes": 263784,
+              "bytes": 263434,
               "size": 512
             },
             "high": {
               "path": "textures/mud_brick_sundried/normal_512.webp",
-              "bytes": 263784,
+              "bytes": 263434,
               "size": 512
             },
             "mobile": {
@@ -4533,26 +4543,26 @@
           "orm": {
             "ultra": {
               "path": "textures/mud_brick_sundried/orm_512.webp",
-              "bytes": 23456,
+              "bytes": 23480,
               "size": 512
             },
             "high": {
               "path": "textures/mud_brick_sundried/orm_512.webp",
-              "bytes": 23456,
+              "bytes": 23480,
               "size": 512
             },
             "mobile": {
               "path": "textures/mud_brick_sundried/orm_256.webp",
-              "bytes": 8978,
+              "bytes": 8990,
               "size": 256
             }
           }
         }
       },
       "bytes": {
-        "ultra": 316984,
-        "high": 298566,
-        "mobile": 82544
+        "ultra": 316640,
+        "high": 298194,
+        "mobile": 82566
       }
     },
     "mud_plaster": {
@@ -8263,7 +8273,7 @@
       "kind": "material",
       "category": "terrain",
       "script": "tools/blender/assets/terrain/terrain_flagstone.py",
-      "inputHash": "6f4a071daaa9fd8d6a71f0c9822a927e60ba02309f3bb6a5b30799ce9506f4f9",
+      "inputHash": "19614e3e0eb351991f1373b9be8159315785a95b55dd25c9ae50ca8dba813422",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -8294,8 +8304,8 @@
           ],
           "heightMix": 0.4,
           "lumMean": 0.3058,
-          "lumP2": 0.0787,
-          "lumP98": 0.3548,
+          "lumP2": 0.079,
+          "lumP98": 0.345,
           "meanColor": "#a09582",
           "ormRMean": 0.828,
           "ormRP5": 0.608,
@@ -8309,11 +8319,11 @@
             0.86
           ],
           "satMean": 0.191,
-          "satP95": 0.196,
-          "satP98": 0.295,
+          "satP95": 0.195,
+          "satP98": 0.294,
           "saturationLimit": 0.45,
           "target": "#a09582",
-          "valueP98": 0.67
+          "valueP98": 0.662
         },
         "roughness": 0.78,
         "setClass": "T",
@@ -8326,7 +8336,7 @@
       "files": [
         {
           "path": "textures/terrain_flagstone/baseColor_1024.webp",
-          "bytes": 64596,
+          "bytes": 63744,
           "tiers": [
             "ultra"
           ],
@@ -8336,7 +8346,7 @@
         },
         {
           "path": "textures/terrain_flagstone/baseColor_512.webp",
-          "bytes": 19504,
+          "bytes": 19188,
           "tiers": [
             "high"
           ],
@@ -8346,7 +8356,7 @@
         },
         {
           "path": "textures/terrain_flagstone/baseColor_256.webp",
-          "bytes": 4322,
+          "bytes": 4266,
           "tiers": [
             "mobile"
           ],
@@ -8402,17 +8412,17 @@
           "baseColor": {
             "ultra": {
               "path": "textures/terrain_flagstone/baseColor_1024.webp",
-              "bytes": 64596,
+              "bytes": 63744,
               "size": 1024
             },
             "high": {
               "path": "textures/terrain_flagstone/baseColor_512.webp",
-              "bytes": 19504,
+              "bytes": 19188,
               "size": 512
             },
             "mobile": {
               "path": "textures/terrain_flagstone/baseColor_256.webp",
-              "bytes": 4322,
+              "bytes": 4266,
               "size": 256
             }
           },
@@ -8453,9 +8463,9 @@
         }
       },
       "bytes": {
-        "ultra": 268102,
-        "high": 223010,
-        "mobile": 54950
+        "ultra": 267250,
+        "high": 222694,
+        "mobile": 54894
       }
     },
     "terrain_forest_litter": {
@@ -10688,7 +10698,7 @@
       "kind": "material",
       "category": "terrain",
       "script": "tools/blender/assets/terrain/terrain_rock_sandstone.py",
-      "inputHash": "1e9252659f523c2d63182030d911af259206603cf2232737cdd8b2671d533f59",
+      "inputHash": "293d99f5eb0947c546a7121e35f17159c630253117c2e432a31648d4e49a56a7",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -10696,8 +10706,8 @@
         "decals": [],
         "description": "Sandstone cliff for triplanar projection (10 m, v = up): cross-bedded sets 0.3-2 m with tangential foresets, recessed soft beds under overhanging lips, irregular blocky joints, sparse tafoni, varnish streaks, lichen.",
         "heightRangeMeters": [
-          -0.16287,
-          0.1732
+          -0.08932,
+          0.17312
         ],
         "metalness": 0,
         "normalScale": 1.3,
@@ -10720,13 +10730,13 @@
           ],
           "heightMix": 0.4,
           "lumMean": 0.2758,
-          "lumP2": 0.1999,
-          "lumP98": 0.3617,
+          "lumP2": 0.2,
+          "lumP98": 0.3616,
           "meanColor": "#a88a6c",
-          "ormRMean": 0.796,
+          "ormRMean": 0.795,
           "ormRP5": 0.618,
-          "ormRP95": 0.962,
-          "ormRSpan": 0.344,
+          "ormRP95": 0.961,
+          "ormRSpan": 0.343,
           "roughMean": 0.82,
           "roughP5": 0.75,
           "roughP95": 0.89,
@@ -10753,7 +10763,7 @@
       "files": [
         {
           "path": "textures/terrain_rock_sandstone/baseColor_1024.webp",
-          "bytes": 55264,
+          "bytes": 54268,
           "tiers": [
             "ultra"
           ],
@@ -10763,7 +10773,7 @@
         },
         {
           "path": "textures/terrain_rock_sandstone/baseColor_512.webp",
-          "bytes": 19890,
+          "bytes": 19822,
           "tiers": [
             "high"
           ],
@@ -10773,7 +10783,7 @@
         },
         {
           "path": "textures/terrain_rock_sandstone/baseColor_256.webp",
-          "bytes": 7278,
+          "bytes": 7268,
           "tiers": [
             "mobile"
           ],
@@ -10783,7 +10793,7 @@
         },
         {
           "path": "textures/terrain_rock_sandstone/normal_512.webp",
-          "bytes": 216386,
+          "bytes": 213948,
           "tiers": [
             "ultra",
             "high"
@@ -10794,7 +10804,7 @@
         },
         {
           "path": "textures/terrain_rock_sandstone/normal_256.webp",
-          "bytes": 66778,
+          "bytes": 65962,
           "tiers": [
             "mobile"
           ],
@@ -10804,7 +10814,7 @@
         },
         {
           "path": "textures/terrain_rock_sandstone/orm_512.webp",
-          "bytes": 21288,
+          "bytes": 20890,
           "tiers": [
             "ultra",
             "high"
@@ -10815,7 +10825,7 @@
         },
         {
           "path": "textures/terrain_rock_sandstone/orm_256.webp",
-          "bytes": 9062,
+          "bytes": 9108,
           "tiers": [
             "mobile"
           ],
@@ -10829,60 +10839,60 @@
           "baseColor": {
             "ultra": {
               "path": "textures/terrain_rock_sandstone/baseColor_1024.webp",
-              "bytes": 55264,
+              "bytes": 54268,
               "size": 1024
             },
             "high": {
               "path": "textures/terrain_rock_sandstone/baseColor_512.webp",
-              "bytes": 19890,
+              "bytes": 19822,
               "size": 512
             },
             "mobile": {
               "path": "textures/terrain_rock_sandstone/baseColor_256.webp",
-              "bytes": 7278,
+              "bytes": 7268,
               "size": 256
             }
           },
           "normal": {
             "ultra": {
               "path": "textures/terrain_rock_sandstone/normal_512.webp",
-              "bytes": 216386,
+              "bytes": 213948,
               "size": 512
             },
             "high": {
               "path": "textures/terrain_rock_sandstone/normal_512.webp",
-              "bytes": 216386,
+              "bytes": 213948,
               "size": 512
             },
             "mobile": {
               "path": "textures/terrain_rock_sandstone/normal_256.webp",
-              "bytes": 66778,
+              "bytes": 65962,
               "size": 256
             }
           },
           "orm": {
             "ultra": {
               "path": "textures/terrain_rock_sandstone/orm_512.webp",
-              "bytes": 21288,
+              "bytes": 20890,
               "size": 512
             },
             "high": {
               "path": "textures/terrain_rock_sandstone/orm_512.webp",
-              "bytes": 21288,
+              "bytes": 20890,
               "size": 512
             },
             "mobile": {
               "path": "textures/terrain_rock_sandstone/orm_256.webp",
-              "bytes": 9062,
+              "bytes": 9108,
               "size": 256
             }
           }
         }
       },
       "bytes": {
-        "ultra": 292938,
-        "high": 257564,
-        "mobile": 83118
+        "ultra": 289106,
+        "high": 254660,
+        "mobile": 82338
       }
     },
     "terrain_salt_crust": {
@@ -10890,7 +10900,7 @@
       "kind": "material",
       "category": "terrain",
       "script": "tools/blender/assets/terrain/terrain_salt_crust.py",
-      "inputHash": "d65518ca8cf4c12a5315bffe112a70200c61c2a342f9b650eb2ee6a8081c031c",
+      "inputHash": "af9657cf817ceee8a1417ef6737bc16b4a34d67460c9a5d257f5edbb7207f0ff",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -10908,7 +10918,7 @@
             0.012,
             0.84
           ],
-          "deltaLumPct": 0.03,
+          "deltaLumPct": 0,
           "deltaRgbPct": [
             0,
             0,
@@ -10919,10 +10929,15 @@
             0.5,
             0.78
           ],
-          "lumMean": 0.6485,
-          "lumP2": 0.6028,
-          "lumP98": 0.698,
+          "heightMix": 0.4,
+          "lumMean": 0.6483,
+          "lumP2": 0.6027,
+          "lumP98": 0.6978,
           "meanColor": "#d9d2c4",
+          "ormRMean": 0.742,
+          "ormRP5": 0.615,
+          "ormRP95": 0.973,
+          "ormRSpan": 0.358,
           "roughMean": 0.7,
           "roughP5": 0.62,
           "roughP95": 0.78,
@@ -10932,8 +10947,10 @@
           ],
           "satMean": 0.097,
           "satP95": 0.109,
+          "satP98": 0.111,
           "saturationLimit": 0.45,
-          "target": "#d9d2c4"
+          "target": "#d9d2c4",
+          "valueP98": 0.876
         },
         "roughness": 0.7,
         "setClass": "T",
@@ -10946,7 +10963,7 @@
       "files": [
         {
           "path": "textures/terrain_salt_crust/baseColor_1024.webp",
-          "bytes": 46384,
+          "bytes": 46014,
           "tiers": [
             "ultra"
           ],
@@ -10956,7 +10973,7 @@
         },
         {
           "path": "textures/terrain_salt_crust/baseColor_512.webp",
-          "bytes": 14660,
+          "bytes": 14948,
           "tiers": [
             "high"
           ],
@@ -10977,7 +10994,7 @@
         },
         {
           "path": "textures/terrain_salt_crust/orm_512.webp",
-          "bytes": 43484,
+          "bytes": 45222,
           "tiers": [
             "ultra",
             "high"
@@ -10998,12 +11015,12 @@
           "baseColor": {
             "ultra": {
               "path": "textures/terrain_salt_crust/baseColor_1024.webp",
-              "bytes": 46384,
+              "bytes": 46014,
               "size": 1024
             },
             "high": {
               "path": "textures/terrain_salt_crust/baseColor_512.webp",
-              "bytes": 14660,
+              "bytes": 14948,
               "size": 512
             }
           },
@@ -11022,20 +11039,20 @@
           "orm": {
             "ultra": {
               "path": "textures/terrain_salt_crust/orm_512.webp",
-              "bytes": 43484,
+              "bytes": 45222,
               "size": 512
             },
             "high": {
               "path": "textures/terrain_salt_crust/orm_512.webp",
-              "bytes": 43484,
+              "bytes": 45222,
               "size": 512
             }
           }
         }
       },
       "bytes": {
-        "ultra": 364472,
-        "high": 332748,
+        "ultra": 365840,
+        "high": 334774,
         "mobile": 0
       }
     },
@@ -11918,7 +11935,7 @@
       "kind": "material",
       "category": "materials",
       "script": "tools/blender/assets/materials/timber_weathered_grey.py",
-      "inputHash": "3896572c8bbdf01c12240355eab9a0f8b7f0fa38094f6ff083949475fbcfcde0",
+      "inputHash": "7156dfbc2a8343f449ba234f991f8ded5ae53bfc3435f087557f74ed99baa59d",
       "draft": false,
       "blender": "5.2.3 LTS",
       "meta": {
@@ -11937,7 +11954,7 @@
             0.012,
             0.84
           ],
-          "deltaLumPct": 0.01,
+          "deltaLumPct": 0,
           "deltaRgbPct": [
             0,
             0,
@@ -11952,6 +11969,9 @@
           "lumP2": 0.0978,
           "lumP98": 0.2435,
           "meanColor": "#80776a",
+          "ormRP5": 0.88,
+          "ormRP95": 1,
+          "ormRSpan": 0.12,
           "roughMean": 0.88,
           "roughP5": 0.78,
           "roughP95": 0.96,
@@ -11961,8 +11981,10 @@
           ],
           "satMean": 0.173,
           "satP95": 0.225,
+          "satP98": 0.228,
           "saturationLimit": 0.6,
-          "target": "#80776a"
+          "target": "#80776a",
+          "valueP98": 0.562
         },
         "roughness": 0.88,
         "setClass": "C",
@@ -11975,7 +11997,7 @@
       "files": [
         {
           "path": "textures/timber_weathered_grey/baseColor_1024.webp",
-          "bytes": 69504,
+          "bytes": 69044,
           "tiers": [
             "ultra"
           ],
@@ -11985,7 +12007,7 @@
         },
         {
           "path": "textures/timber_weathered_grey/baseColor_512.webp",
-          "bytes": 10578,
+          "bytes": 10596,
           "tiers": [
             "high"
           ],
@@ -12027,12 +12049,12 @@
           "baseColor": {
             "ultra": {
               "path": "textures/timber_weathered_grey/baseColor_1024.webp",
-              "bytes": 69504,
+              "bytes": 69044,
               "size": 1024
             },
             "high": {
               "path": "textures/timber_weathered_grey/baseColor_512.webp",
-              "bytes": 10578,
+              "bytes": 10596,
               "size": 512
             }
           },
@@ -12063,8 +12085,8 @@
         }
       },
       "bytes": {
-        "ultra": 212898,
-        "high": 153972,
+        "ultra": 212438,
+        "high": 153990,
         "mobile": 0
       }
     },

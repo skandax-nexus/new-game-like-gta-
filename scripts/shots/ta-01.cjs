@@ -46,7 +46,10 @@ const PORT = Number(process.env.SHOTS_PORT || 4404);
 const DIST = process.env.SHOTS_DIST || '.build/ta-01/dist';
 const OUT = path.resolve(ROOT, process.env.SHOTS_OUT || 'docs/sprint1/ta-01');
 const RAW = path.join(ROOT, '.build', 'ta-01', 'shots');
-const args = Object.fromEntries(process.argv.slice(2).map((a) => (/^--([^=]+)=?(.*)$/.exec(a) || [null, a, '1']).slice(1)));
+const args = Object.fromEntries(process.argv.slice(2).map((a) => {
+  const [k, v] = (/^--([^=]+)=?(.*)$/.exec(a) || [null, a, '1']).slice(1);
+  return [k, v === '' ? '1' : v]; // bare flags (--fast, --reuse) are true
+}));
 const ONLY = args.only ? new Set(args.only.split(',')) : null;
 const run = (g) => !ONLY || ONLY.has(g);
 const sharp = require(path.join(ROOT, 'node_modules', 'sharp'));
