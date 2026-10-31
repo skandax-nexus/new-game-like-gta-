@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-31T13:14:41.179Z",
+  "generated": "2026-10-31T13:19:48.803Z",
   "tolerancePct": 6,
   "sets": {
     "bamboo_lattice": {
@@ -2830,73 +2830,73 @@
     {
       "name": "slope terrain_rock_sandstone ultra sky_golden far",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=terrain_rock_sandstone&hdri=sky_golden&camera=overview&assets=ultra",
-      "ms": 24716,
+      "ms": 25075,
       "errors": []
     },
     {
       "name": "slope terrain_rock_sandstone ultra sky_day far",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=terrain_rock_sandstone&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 23039,
+      "ms": 27898,
       "errors": []
     },
     {
       "name": "slope terrain_rock_sandstone ultra sky_day near",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=terrain_rock_sandstone&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 25706,
+      "ms": 24109,
       "errors": []
     },
     {
       "name": "slope terrain_rock_sandstone mobile sky_day far",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=low&noaudio=1&noui=1&asset=terrain_rock_sandstone&hdri=sky_day&camera=overview&assets=mobile",
-      "ms": 9305,
+      "ms": 12526,
       "errors": []
     },
     {
       "name": "slope terrain_rock_granite ultra sky_golden far",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=terrain_rock_granite&hdri=sky_golden&camera=overview&assets=ultra",
-      "ms": 22779,
+      "ms": 31650,
       "errors": []
     },
     {
       "name": "slope terrain_rock_granite ultra sky_day far",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=terrain_rock_granite&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 32653,
+      "ms": 22984,
       "errors": []
     },
     {
       "name": "slope terrain_rock_granite ultra sky_day near",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=terrain_rock_granite&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 28320,
+      "ms": 26779,
       "errors": []
     },
     {
       "name": "slope terrain_rock_granite mobile sky_day far",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=low&noaudio=1&noui=1&asset=terrain_rock_granite&hdri=sky_day&camera=overview&assets=mobile",
-      "ms": 17230,
+      "ms": 10610,
       "errors": []
     },
     {
       "name": "slope terrain_rock_basalt ultra sky_golden far",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=terrain_rock_basalt&hdri=sky_golden&camera=overview&assets=ultra",
-      "ms": 24959,
+      "ms": 21935,
       "errors": []
     },
     {
       "name": "slope terrain_rock_basalt ultra sky_day far",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=terrain_rock_basalt&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 24088,
+      "ms": 22302,
       "errors": []
     },
     {
       "name": "slope terrain_rock_basalt ultra sky_day near",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&noui=1&asset=terrain_rock_basalt&hdri=sky_day&camera=overview&assets=ultra",
-      "ms": 24724,
+      "ms": 24762,
       "errors": []
     },
     {
       "name": "slope terrain_rock_basalt mobile sky_day far",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=low&noaudio=1&noui=1&asset=terrain_rock_basalt&hdri=sky_day&camera=overview&assets=mobile",
-      "ms": 12110,
+      "ms": 10943,
       "errors": []
     }
   ],

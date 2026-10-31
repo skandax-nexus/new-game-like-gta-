@@ -1,11 +1,11 @@
 {
-  "build": "0.1.0+d69c448",
+  "build": "0.1.0+24d0d1f",
   "quality": "high",
   "shots": [
     {
       "name": "menu",
       "url": "http://127.0.0.1:4404/?scene=menu&quality=high&noaudio=1",
-      "ms": 89531,
+      "ms": 93895,
       "errors": [],
       "state": {
         "scene": "menu",
@@ -20,17 +20,17 @@
             "z": -598.72
           }
         },
-        "fps": 1.9718331844549992,
+        "fps": 1.8321000140787236,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.007,
-        "lumaStdev": 44.545,
+        "lumaStdev": 44.619,
         "pageBgShare": 0.001
       },
       "view3d": {
         "dominantShare": 0.003,
-        "lumaStdev": 40.588,
+        "lumaStdev": 40.516,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -39,7 +39,7 @@
     {
       "name": "world",
       "url": "http://127.0.0.1:4404/?scene=world&quality=high&noaudio=1&seed=7&paused=1",
-      "ms": 47675,
+      "ms": 51899,
       "errors": [],
       "state": {
         "scene": "world",
@@ -102,17 +102,17 @@
           },
           "blocked": false
         },
-        "fps": 1.1343527327153613,
+        "fps": 1.340217832885468,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.01,
-        "lumaStdev": 40.273,
+        "lumaStdev": 40.268,
         "pageBgShare": 0.001
       },
       "view3d": {
         "dominantShare": 0.002,
-        "lumaStdev": 21.572,
+        "lumaStdev": 22.063,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -121,7 +121,7 @@
     {
       "name": "world-overview",
       "url": "http://127.0.0.1:4404/?scene=world&quality=high&noaudio=1&seed=7&paused=1&camera=overview",
-      "ms": 44457,
+      "ms": 74214,
       "errors": [],
       "state": {
         "scene": "world",
@@ -184,17 +184,17 @@
           },
           "blocked": false
         },
-        "fps": 1.0743927650094243,
+        "fps": 1.7368146618438454,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.01,
-        "lumaStdev": 39.729,
+        "lumaStdev": 39.922,
         "pageBgShare": 0.001
       },
       "view3d": {
-        "dominantShare": 0.019,
-        "lumaStdev": 19.713,
+        "dominantShare": 0.018,
+        "lumaStdev": 20.28,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -203,7 +203,7 @@
     {
       "name": "battle",
       "url": "http://127.0.0.1:4404/?scene=battle&quality=high&noaudio=1&seed=7&soldiers=1000&preset=plains",
-      "ms": 53130,
+      "ms": 52550,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -213,8 +213,8 @@
         "quality": "high",
         "sceneState": {
           "battleId": "skirmish_7",
-          "time": 25.9,
-          "tick": 517,
+          "time": 26.1,
+          "tick": 521,
           "phase": "deployment",
           "sides": [
             {
@@ -247,17 +247,17 @@
             "tilt": 0
           }
         },
-        "fps": 1.0365420991317975,
+        "fps": 1.1076113798410123,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.009,
-        "lumaStdev": 36.295,
+        "lumaStdev": 36.202,
         "pageBgShare": 0
       },
       "view3d": {
         "dominantShare": 0.002,
-        "lumaStdev": 17.494,
+        "lumaStdev": 17.906,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -266,7 +266,7 @@
     {
       "name": "battle-close",
       "url": "http://127.0.0.1:4404/?scene=battle&quality=high&noaudio=1&seed=7&soldiers=1000&preset=plains&camera=close",
-      "ms": 45893,
+      "ms": 50884,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -276,8 +276,8 @@
         "quality": "high",
         "sceneState": {
           "battleId": "skirmish_7",
-          "time": 35.8,
-          "tick": 715,
+          "time": 36.2,
+          "tick": 724,
           "phase": "active",
           "sides": [
             {
@@ -285,7 +285,7 @@
               "soldiers": 500,
               "initial": 500,
               "routed": 0,
-              "morale": 80
+              "morale": 81
             },
             {
               "faction": "highland",
@@ -310,17 +310,17 @@
             "tilt": -0.05
           }
         },
-        "fps": 1.036955491138508,
+        "fps": 1.3150864893247192,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.011,
-        "lumaStdev": 37.805,
+        "lumaStdev": 38.146,
         "pageBgShare": 0.001
       },
       "view3d": {
         "dominantShare": 0.003,
-        "lumaStdev": 29.091,
+        "lumaStdev": 29.824,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -329,7 +329,7 @@
     {
       "name": "battle-river-5000",
       "url": "http://127.0.0.1:4404/?scene=battle&quality=high&noaudio=1&seed=11&soldiers=5000&preset=river_crossing&hour=17",
-      "ms": 68667,
+      "ms": 74856,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -339,8 +339,8 @@
         "quality": "high",
         "sceneState": {
           "battleId": "skirmish_11",
-          "time": 16,
-          "tick": 320,
+          "time": 16.2,
+          "tick": 323,
           "phase": "deployment",
           "sides": [
             {
@@ -373,17 +373,17 @@
             "tilt": 0
           }
         },
-        "fps": 0.8731454182968821,
+        "fps": 0.9257430748922734,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.009,
-        "lumaStdev": 37.115,
+        "lumaStdev": 37.17,
         "pageBgShare": 0.001
       },
       "view3d": {
         "dominantShare": 0.001,
-        "lumaStdev": 26.511,
+        "lumaStdev": 27.155,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -392,7 +392,7 @@
     {
       "name": "hero",
       "url": "http://127.0.0.1:4404/?scene=hero&quality=high&noaudio=1",
-      "ms": 112884,
+      "ms": 103769,
       "errors": [],
       "state": {
         "scene": "hero",
@@ -409,17 +409,17 @@
           "prompt": null,
           "pois": 10
         },
-        "fps": 1.3167423915617513,
+        "fps": 1.8335296092706672,
         "errors": 0
       },
       "frame": {
-        "dominantShare": 0.004,
-        "lumaStdev": 32.298,
+        "dominantShare": 0.003,
+        "lumaStdev": 32.497,
         "pageBgShare": 0
       },
       "view3d": {
-        "dominantShare": 0.004,
-        "lumaStdev": 30.464,
+        "dominantShare": 0.003,
+        "lumaStdev": 30.668,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -428,7 +428,7 @@
     {
       "name": "menu-mobile",
       "url": "http://127.0.0.1:4404/?scene=menu&quality=low&noaudio=1",
-      "ms": 26376,
+      "ms": 19995,
       "errors": [],
       "state": {
         "scene": "menu",
@@ -443,17 +443,17 @@
             "z": -598.72
           }
         },
-        "fps": 4.705218067785825,
+        "fps": 5.521133637034525,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.018,
-        "lumaStdev": 49.86,
+        "lumaStdev": 50.007,
         "pageBgShare": 0.004
       },
       "view3d": {
-        "dominantShare": 0.005,
-        "lumaStdev": 46.733,
+        "dominantShare": 0.004,
+        "lumaStdev": 46.144,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -462,7 +462,7 @@
     {
       "name": "battle-mobile",
       "url": "http://127.0.0.1:4404/?scene=battle&quality=low&noaudio=1&seed=7&soldiers=600&preset=plains",
-      "ms": 20453,
+      "ms": 26252,
       "errors": [],
       "state": {
         "scene": "battle",
@@ -472,8 +472,8 @@
         "quality": "low",
         "sceneState": {
           "battleId": "skirmish_7",
-          "time": 20.6,
-          "tick": 411,
+          "time": 21.2,
+          "tick": 424,
           "phase": "deployment",
           "sides": [
             {
@@ -506,17 +506,17 @@
             "tilt": 0
           }
         },
-        "fps": 2.9066011768485516,
+        "fps": 3.2671095345838563,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.012,
-        "lumaStdev": 38.999,
+        "lumaStdev": 38.849,
         "pageBgShare": 0
       },
       "view3d": {
-        "dominantShare": 0.005,
-        "lumaStdev": 16.76,
+        "dominantShare": 0.004,
+        "lumaStdev": 16.943,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -525,7 +525,7 @@
     {
       "name": "assetviewer-stupa",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=hero&noui=1",
-      "ms": 74373,
+      "ms": 48118,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -571,7 +571,7 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 9.959745988340218,
+        "fps": 8.263220967076846,
         "errors": 0
       },
       "frame": {
@@ -590,7 +590,7 @@
     {
       "name": "assetviewer-torana",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=ultra&noaudio=1&asset=stupa_sanchi&hdri=sky_golden&camera=close&noui=1",
-      "ms": 59194,
+      "ms": 57107,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -636,7 +636,7 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 12.184548975428532,
+        "fps": 5.383097075068775,
         "errors": 0
       },
       "frame": {
@@ -655,7 +655,7 @@
     {
       "name": "assetviewer-sandstone",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=ultra&noaudio=1&asset=sandstone_carved_red&hdri=sky_day&noui=1",
-      "ms": 49962,
+      "ms": 40466,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -701,7 +701,7 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 6.430742841631478,
+        "fps": 7.330081177143104,
         "errors": 0
       },
       "frame": {
@@ -720,7 +720,7 @@
     {
       "name": "assetviewer-mobile",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=low&noaudio=1&asset=stupa_sanchi&hdri=sky_day&camera=overview",
-      "ms": 20900,
+      "ms": 24848,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -766,17 +766,17 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 9.06246633302133,
+        "fps": 12.162984078799646,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.019,
-        "lumaStdev": 53.307,
+        "lumaStdev": 53.725,
         "pageBgShare": 0
       },
       "view3d": {
-        "dominantShare": 0.009,
-        "lumaStdev": 50.847,
+        "dominantShare": 0.005,
+        "lumaStdev": 51.294,
         "pageBgShare": 0,
         "layersHidden": 2
       },
@@ -785,7 +785,7 @@
     {
       "name": "assetviewer-fallback",
       "url": "http://127.0.0.1:4404/?scene=assetviewer&quality=high&noaudio=1&asset=stupa_sanchi&assets=off",
-      "ms": 30532,
+      "ms": 31811,
       "errors": [],
       "state": {
         "scene": "assetviewer",
@@ -817,17 +817,17 @@
           "prepass": "tagged",
           "notes": []
         },
-        "fps": 6.386821345762664,
+        "fps": 5.3508450404516985,
         "errors": 0
       },
       "frame": {
         "dominantShare": 0.019,
-        "lumaStdev": 53.696,
+        "lumaStdev": 53.922,
         "pageBgShare": 0
       },
       "view3d": {
-        "dominantShare": 0.022,
-        "lumaStdev": 52.327,
+        "dominantShare": 0.021,
+        "lumaStdev": 52.559,
         "pageBgShare": 0,
         "layersHidden": 2
       },

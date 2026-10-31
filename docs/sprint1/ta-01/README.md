@@ -113,6 +113,12 @@ Numbers are measured on the shipped files by `scripts/shots/ta-01.cjs` (stats.md
   tiling in the splat (GFX-02) is the remaining lever.
 - **CTO request (unchanged): per-texture `encoding` (near_lossless) for material baseColor.** No longer blocking
   AD-4 (the shipped file now passes), but it would let grass_lush keep sharper blade albedo.
+- **Slope lookdev artifact.** Every slope frame has a camera-locked dark (day) / bright (golden) smudge in the
+  middle of the frame. It moves with the camera, survives hiding every lookdev mesh, disabling their shadows and
+  moving the escarpment 30 m away, so it comes from the viewer's screen-space post stack when the camera is driven from
+  `onBeforeRender`. It is not in the textures (compare the Cycles walls and the tiling shots).
+- **Art Director co-sign.** Round 2 has not been re-reviewed yet: the AD round 2 rulings (AD-10, AD-11) are addressed
+  above and await co-sign.
 - **P2 sets are class C** (512 px data maps over 2-3 m): tooling and arris wear read at 1-3 m, not in extreme close-up.
 
 ## Review round 1 rework (Technical Art Director B1-B7, Art Director AD-1..AD-9)
