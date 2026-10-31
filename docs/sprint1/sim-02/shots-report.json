@@ -77,27 +77,27 @@
      },
      {
       "id": "forest",
-      "treasury": 4922,
-      "settlements": 3,
-      "soldiers": 632
+      "treasury": 2539,
+      "settlements": 8,
+      "soldiers": 667
      },
      {
       "id": "frontier",
-      "treasury": 1103,
-      "settlements": 1,
-      "soldiers": 93
+      "treasury": 330,
+      "settlements": 0,
+      "soldiers": 0
      },
      {
       "id": "heartland",
-      "treasury": 3275,
-      "settlements": 10,
-      "soldiers": 423
+      "treasury": 3258,
+      "settlements": 7,
+      "soldiers": 695
      },
      {
       "id": "highland",
-      "treasury": 573,
+      "treasury": 1047,
       "settlements": 1,
-      "soldiers": 302
+      "soldiers": 86
      },
      {
       "id": "maritime",
@@ -169,7 +169,7 @@
   },
   {
    "name": "world-ai-year.png",
-   "note": "after 360 days of six AI realms: forest 3 towns 632 soldiers, frontier 1 towns 93 soldiers, heartland 10 towns 423 soldiers, highland 1 towns 302 soldiers"
+   "note": "after 360 days of six AI realms: forest 8 towns 667 soldiers, heartland 7 towns 695 soldiers, highland 1 towns 86 soldiers"
   },
   {
    "name": "world-ai-live.png",
@@ -182,7 +182,7 @@
    "year": -299,
    "month": 0,
    "day": 0,
-   "hour": 15
+   "hour": 17
   },
   "season": "vasanta",
   "weather": "clear",
@@ -195,27 +195,27 @@
    },
    {
     "id": "forest",
-    "treasury": 4922,
-    "settlements": 3,
-    "soldiers": 632
+    "treasury": 2539,
+    "settlements": 8,
+    "soldiers": 667
    },
    {
     "id": "frontier",
-    "treasury": 1103,
-    "settlements": 1,
-    "soldiers": 93
+    "treasury": 330,
+    "settlements": 0,
+    "soldiers": 0
    },
    {
     "id": "heartland",
-    "treasury": 3275,
-    "settlements": 10,
-    "soldiers": 423
+    "treasury": 3258,
+    "settlements": 7,
+    "soldiers": 695
    },
    {
     "id": "highland",
-    "treasury": 573,
+    "treasury": 1047,
     "settlements": 1,
-    "soldiers": 302
+    "soldiers": 86
    },
    {
     "id": "maritime",
@@ -224,7 +224,7 @@
     "soldiers": 0
    }
   ],
-  "armies": 4,
+  "armies": 3,
   "engagements": 0,
   "pendingEvents": 0,
   "victory": "ongoing"

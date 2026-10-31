@@ -4258,10 +4258,11 @@
 :root[data-layout='phone-landscape'] .modal.battle-results {
   scroll-padding-bottom: 76px;
 }
-/* The modal itself scrolls on phones, so its bottom-right lotus corner (absolute on the scroller) rode up with the
-   content and floated mid-list above the sticky footer (Lead review round 2); the footer band closes the panel. */
-:root[data-layout='phone'] .modal.battle-results::after,
-:root[data-layout='phone-landscape'] .modal.battle-results::after {
+/* Phone modals are full-screen scrollers, so the bottom-right lotus corner (absolute on the scroller) rode up with the
+   content and floated mid-list (battle results above the sticky footer, Lead review round 2; event advisors and the
+   other scrolling sheets, Lead follow-up). Every phone modal drops it: the screen edge or footer band closes the panel. */
+:root[data-layout='phone'] .modal::after,
+:root[data-layout='phone-landscape'] .modal::after {
   display: none;
 }
 /* Sparkline empty state (market at day 0). */

@@ -11,7 +11,7 @@
  *
  * Captures + assertions (exit 1 on any failure, console errors, page errors, failed requests or crash reports):
  *   battle-aivsai-deploy.png   ?aivsai=1 plains battle, 1,500 soldiers (?noui=1): both battle AIs deployed
- *   battle-aivsai-contact.png  the same battle 75 s into the fight: lines in contact, horse on the wings
+ *   battle-aivsai-contact.png  the same battle 75 s into the fight, the camera panned onto the formations in contact
  *   battle-aivsai-river.png    ?aivsai=1 river crossing, 2,000 soldiers, 90 s in: the AIs at the ford
  *   world-ai-year.png          the world map after an AI-only sandbox year (save from scripts/sim-ai/autoplay.mjs,
  *                              loaded into the game; run on a few days if the year ended in fog): borders, armies and towns as the
@@ -120,6 +120,36 @@ async function readSave(page, slot) {
   }, slot);
 }
 
+/** Hold an arrow key for `ms` of real time and let the camera settle; returns the camera's focus shift. */
+async function nudge(page, key, ms) {
+  const c0 = (await sceneState(page)).camera;
+  await page.keyboard.down(key);
+  await page.waitForTimeout(ms);
+  await page.keyboard.up(key);
+  await page.evaluate(() => window.__SAMRAJYA__.waitFrames(20));
+  const c1 = (await sceneState(page)).camera;
+  return { x: c1.x - c0.x, z: c1.z - c0.z };
+}
+
+/** Pan the battle camera's focus to (x, z) with the arrow keys (the pan basis is measured, not assumed). */
+async function panTo(page, x, z) {
+  const up = await nudge(page, 'ArrowUp', 250);
+  const right = await nudge(page, 'ArrowRight', 250);
+  const lu = Math.hypot(up.x, up.z) || 1;
+  const lr = Math.hypot(right.x, right.z) || 1;
+  for (let i = 0; i < 12; i++) {
+    const c = (await sceneState(page)).camera;
+    const dx = x - c.x;
+    const dz = z - c.z;
+    if (Math.hypot(dx, dz) < 12) return;
+    // Components along the measured up / right shifts (they are near-orthogonal on the ground).
+    const a = (dx * up.x + dz * up.z) / (lu * lu);
+    const b = (dx * right.x + dz * right.z) / (lr * lr);
+    if (Math.abs(a) > 0.05) await nudge(page, a > 0 ? 'ArrowUp' : 'ArrowDown', Math.min(2000, Math.abs(a) * 250));
+    if (Math.abs(b) > 0.05) await nudge(page, b > 0 ? 'ArrowRight' : 'ArrowLeft', Math.min(2000, Math.abs(b) * 250));
+  }
+}
+
 async function captureBattle(browser, base) {
   const ctx = await newPage(browser, [1280, 720]);
   const { page } = ctx;
@@ -138,7 +168,28 @@ async function captureBattle(browser, base) {
   await battleSeconds(page, 75);
   st = await sceneState(page);
   check('battle: the fight is on 75 s after deployment (losses on both sides)', st.sides.every((s) => s.soldiers < s.initial) || st.outcome !== null, st.sides);
-  await shot(page, 'battle-aivsai-contact', `t=${st.time}s soldiers ${st.sides.map((s) => `${s.soldiers}/${s.initial}`).join(' vs ')}`);
+  // Frame the melee (lead review note): the centre of the formations in contact, read from the state; pan the camera
+  // there (arrow keys, basis learned from the camera's own response) and zoom in; let the toasts fade (real time).
+  const live = (await readSave(page, 'sim02melee')).battle;
+  const engaged = live.formations.filter((f) => f.soldiers > 0 && f.engagedWith && f.engagedWith.length > 0);
+  const melee = engaged.length > 0 ? { x: engaged.reduce((t, f) => t + f.x, 0) / engaged.length, z: engaged.reduce((t, f) => t + f.z, 0) / engaged.length } : null;
+  if (melee) {
+    await panTo(page, melee.x, melee.z);
+    await page.mouse.move(640, 360);
+    let cam = (await sceneState(page)).camera;
+    for (let i = 0; i < 12 && cam.distance > 150; i++) {
+      await page.mouse.wheel(0, -240);
+      await page.evaluate(() => window.__SAMRAJYA__.waitFrames(8));
+      cam = (await sceneState(page)).camera;
+    }
+    await panTo(page, melee.x, melee.z);
+    cam = (await sceneState(page)).camera;
+    const off = Math.hypot(cam.x - melee.x, cam.z - melee.z);
+    check(`battle: camera on the melee (${engaged.length} formations in contact; ${Math.round(off)} m off, ${Math.round(cam.distance)} m away)`, off < 40 && cam.distance < 220, { melee, camera: { x: Math.round(cam.x), z: Math.round(cam.z), distance: Math.round(cam.distance) } });
+  }
+  await page.waitForTimeout(5000);
+  await page.evaluate(() => window.__SAMRAJYA__.waitFrames(4));
+  await shot(page, 'battle-aivsai-contact', `t=${st.time}s soldiers ${st.sides.map((s) => `${s.soldiers}/${s.initial}`).join(' vs ')}; camera on the melee`);
   await finish(ctx, 'battle');
 
   const ctx2 = await newPage(browser, [1280, 720]);
