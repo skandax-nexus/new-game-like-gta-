@@ -282,3 +282,75 @@ Evidence for round 3:
 - The surface lab.
 - CSM debug views.
 - The draw-call budgets.
+
+---
+
+# Round 3 - Art Director re-review of rework round 2, and rulings on the open questions
+
+**Verdict: approved (9/10). I co-sign the GFX-01 look.** Both round-2 blockers are fixed in the shipped game frames.
+The open questions are ruled below, and none of them needs more GFX-01 work.
+
+## What I looked at
+
+- `hero-dusk184-ultra`, `hero-dusk-ultra`, `battle-dusk184-ultra`, `hero-dawn-ultra`, `hero-golden-low-phone` and
+  `lab-surface-dry-high` in `docs/sprint1/gfx-01/`.
+- `r2/`: the ridge crops (now and round 1) and the no-shadow A/B frames.
+- The README sections 'Rework round 2' and the Lead's round-2 re-review, including `checks.twilightLitShadow` and
+  `checks.lowCascadeTexel` as reported there.
+
+## Round-2 blockers
+
+| # | Status | Notes |
+|---|---|---|
+| R2-1 twilight key | **Met** | The black ribbons and the street-wide bands are gone at 18.4 h and 18.9 h, hero and battle. Lit:shadow 1.10-1.25 (target <= 1.8); shadows are 2.1x their caster (target <= 7x). The moon key comes in on its own direction. `battle-dusk184` keeps the plum horizon and the armies read cleanly. The diagnosis correction (moon at 25 deg with the full preset intensity, not the 3 deg clamp) is accepted. |
+| R2-2 golden low teeth | **Met** | At 2.03 px per texel (desktop) and 1.55 px (phone), the comb is resolved. The faint undulation that remains is the real shadow of the fort-wall merlons 71-77 m away, softened by blocker distance as on ultra. It does not read as teeth at 1x in `hero-golden-low` or `-phone`. |
+
+## Rulings
+
+1. **25 % key cap versus "golden 17.4 h unchanged" (round-2 point 1): accepted as implemented.** I meant the cap to
+   stop a horizon-clamped key from drawing long shadows. A real sun at 6.2 deg should cast golden-hour shadows at full
+   strength. So the cap applies only to clamped keys (true sun below 3 deg), and golden stays at 100 %.
+2. **Dawn at 6.2 h (sun +0.8 deg, key 19 %, frame R/G 0.94 -> 0.89): keep the current values.** At +0.8 deg the sun
+   is only just above the horizon, so a weak key with a soft rim is correct. `hero-dawn-ultra` still shows the warm rim
+   on the left plaster and the red bases, and the mist sits on the ground. Read together, the cool fill and the warm
+   rim are the dawn of the lookdev sheet. `TWILIGHT_KEY_CAP` and `SUN_KEY_FULL_DEG` stay as they are. If a later
+   lookdev pass wants more warmth, I will add it in the dawn preset's grade (`style/lighting.ts`), not by
+   strengthening a key that sits on the horizon.
+3. **Golden-low merlon undulation (round-2 point 2): keep the faint undulation.** It is real geometry. A shadow with
+   the undulation removed would be wrong at 75 m. No further work.
+4. **Nearly shadowless dusk with the moon key fading in (round-2 point 3): accepted.** 1.10-1.25 lit:shadow is the
+   afterglow look I asked for. The hemisphere fill holds the frame level (mean luminance within 6 % of round 1).
+5. **18.9 h in sharad resolves to night, not dusk (open question since round 0): correct, and no re-key.** At 18.9 h
+   the sun is at -14.2 deg, past nautical twilight, so night is the honest answer. In sharad the dusk preset leads from
+   about 17.7 h to 18.5 h (+2 to -8 deg; the sun drops about 13.6 deg per hour here). The 18.4 h shots show it, and the sky's afterglow band (full to -4 deg, gone by -10 deg) is guarded in
+   `tests/render/lighting/ibl.test.ts`. I am
+   withdrawing my round-1 action to re-key `TIME_OF_DAY_TRACKS`: the current keys (night -12, dusk -4, golden 8)
+   already put dusk in charge from about -8 to +2 deg. A re-key would move the GFX-01 evidence without improving any
+   frame. Dusk shots should use 18.4 h from now on.
+6. **Hero-band DoF strength, near ground still blurs: unchanged (f/2.8, 10 px).** The blur in front of the hero is
+   about 3/4 of 10 px and grounds the third-person frame. For cutscenes I added
+   **`CINEMATIC_DOF` (f/2, 24 px) in `src/render/style/zoom.ts`**, which closes my round-2 follow-up. GFX-05's
+   cinematic director (and GP-02's mission shots) pass it to `post.setFocus(distance, fStop, maxBlurPx, strength)`
+   while a scripted shot runs, then `setFocus(null)`. It is never used during play.
+7. **Shaft strength against a low sun: unchanged** (golden 0.45, golden_dust 0.6, hero band x1.25). The 1.5x local cap
+   makes shafts subtler over dark columns (round-1 note 2). That is the price of the 0 % clip and I accept it. The
+   between-column gradient is the priority.
+8. **Back-lit foliage under the golden sun: accepted.** In the surface lab the leaf cards read yellow-olive (leaf
+   transmission x a 2700 K sun), not orange, which is physically right. I will judge it again on TA-04 / GFX-03's real
+   tree assets, with their own ORM.b thickness.
+9. **LUT strength: 35 % stays.** I will re-judge shadow colour under the baked skies now that `render.attachAssets` is
+   in `main.ts` (CTO, dd74fc5), in GFX-02 / GFX-03 co-signs. That will be a grade or LUT change in my own paths if
+   needed, not GFX-01 work.
+10. **Wetness on albedo x0.63-0.68 reading 0.71-0.74 on screen (round-1 note 1): do not push the albedo factor.**
+    The monsoon preset is overcast, and damp-not-soaked is the right read for it. The ground half of the wet look is
+    GFX-02's adoption of the shared wetness model (the terrain still uses its own 0.28 term). Once that lands, wet
+    and dry will separate on screen without darkening the walls further.
+
+## Remaining follow-ups (not GFX-01; owners unchanged from round 2)
+
+- **GFX-02:** terrain on the shared wetness model; the outer skirt / map edge; the band below the water level.
+- **GFX-05 / GP-02:** use `CINEMATIC_DOF` for scripted shots.
+- **GP-01:** the hero casts a shadow on low.
+- **Lead Graphics:** the `LEGACY_WETNESS` tagging window.
+- **Art Director (mine):** re-judge golden, dusk and night shadow colour with baked skies + LUT in the next lighting
+  co-sign. Shoot dusk at 18.4 h in every future evidence set.

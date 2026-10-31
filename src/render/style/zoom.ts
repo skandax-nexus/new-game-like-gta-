@@ -138,6 +138,14 @@ export const ZOOM_BANDS: readonly ZoomLook[] = [
   },
 ];
 
+/**
+ * Cutscene / cinematic-camera focus (AD GFX-01 round 3): pass to `post.setFocus(subjectDistanceM, fStop, maxBlurPx,
+ * strength)` while a scripted shot runs, then `setFocus(null)` to return to the band. A wider aperture and more blur
+ * than the hero gameplay band (f/2.8, 10 px) give a Wukong-style foreground melt through the near-field layer; never use
+ * it during play. Quality caps still apply (no DoF below high).
+ */
+export const CINEMATIC_DOF: Readonly<{ strength: number; fStop: number; maxBlurPx: number }> = { strength: 1, fStop: 2, maxBlurPx: 24 };
+
 /** What each quality tier may enable regardless of the band (bands only scale down from QualitySettings). */
 export const QUALITY_CAPS: Readonly<Record<QualityTier, { dof: boolean; grain: boolean; chromaticAberration: boolean; contactShadows: boolean; parallax: boolean; shafts: boolean; maxOutlinePx: number }>> = {
   low: { dof: false, grain: false, chromaticAberration: false, contactShadows: false, parallax: false, shafts: false, maxOutlinePx: 2 },
