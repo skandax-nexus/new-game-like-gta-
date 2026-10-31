@@ -340,3 +340,8 @@ Low-tier cost: 24 fetches per shadowed pixel (was 16), and 40 on soft-penumbra p
 New debug hooks for evidence scripts:
 - `__SAMRAJYA_GFX__.setShadowIntensity(v | null)`: same-frame shadow A/B;
 - `__SAMRAJYA_GFX__.probe(x, y)`: surface, shadow texel, screen px per texel, occluder.
+
+Builds and smoke (round 2): `tsc` is clean. `tests/render/lighting` + `tests/core/quality` + `purity` pass (105
+tests). The full suite has 10 failures, all in sim / contracts suites owned by other tickets: the round-1 set plus the
+CPU-load-sensitive battle-AI perf test. `vite build` and `--mode single` both build. Smoke on port 4403
+(`smoke/`): 14/14 shots, no console errors, every shot looked at.
