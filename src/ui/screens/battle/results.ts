@@ -12,6 +12,7 @@ import type { Screen, UIManager } from '../../ui';
 import { icon, unitIcon } from '../../components/icons';
 import { factionChip, panelFrame, section } from '../../components/widgets';
 import { factionName } from '../world/common';
+import { resultTitles } from '../../services/battleLabels';
 
 const REASON: Readonly<Record<BattleEndReason, string>> = {
   rout: 'The enemy broke and fled',
@@ -82,8 +83,10 @@ export function battleResults(ctx: AppContext, ui: UIManager): Screen<'battle_re
       o.sides.forEach((s, i) => tb.append(h('tr', { class: i === ps ? 'mine' : '' }, h('td', null, factionChip(s.factionId, 'sm'), ` ${factionName(s.factionId)}`, i === ps ? h('span', { class: 'badge bh-you' }, 'You') : null), h('td', null, fmtInt(s.startSoldiers)), h('td', null, fmtInt(s.survivors)), h('td', null, fmtInt(s.killed)), h('td', null, fmtInt(s.captured)), h('td', null, fmtInt(s.pursuitLosses)))));
       table.append(tb);
       clear(forms);
-      for (const f of o.sides[ps].formations) {
-        forms.append(h('div', { class: `br-form${f.routed ? ' routed' : ''}` }, icon(unitIcon(f.unitClass)), h('span', { class: 'br-fname' }, UNITS[f.unitClass].name), h('span', null, `${fmtInt(f.startSoldiers)} → ${fmtInt(f.survivors)}`), f.routed ? h('span', { class: 'danger' }, 'routed') : null, f.experienceGained > 0 ? h('span', { class: 'positive' }, `+${Math.round(f.experienceGained * 100)}% exp`) : null, f.routedEnemies > 0 ? h('span', { class: 'muted' }, `${f.routedEnemies} routed`) : null));
+      // Same short titles as the formation cards (Levy I / Levy II), full unit name in the title attribute.
+      const titles = resultTitles(o.sides[ps].formations);
+      for (const [k, f] of o.sides[ps].formations.entries()) {
+        forms.append(h('div', { class: `br-form${f.routed ? ' routed' : ''}` }, icon(unitIcon(f.unitClass)), h('span', { class: 'br-fname', title: UNITS[f.unitClass].name }, titles[k] ?? UNITS[f.unitClass].name), h('span', null, `${fmtInt(f.startSoldiers)} → ${fmtInt(f.survivors)}`), f.routed ? h('span', { class: 'danger' }, 'routed') : null, f.experienceGained > 0 ? h('span', { class: 'positive' }, `+${Math.round(f.experienceGained * 100)}% exp`) : null, f.routedEnemies > 0 ? h('span', { class: 'muted' }, `${f.routedEnemies} routed`) : null));
       }
       clear(prisoners);
       const mine = o.sides[ps];

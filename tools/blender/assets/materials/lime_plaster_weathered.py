@@ -131,7 +131,9 @@ with core.timer("losses"):
     # drop flakes under ~3 cm (opening: blur, then re-threshold); the lost area is re-solved below
     lo_ = kit.blur(loss, 0.008)
     thr2 = float(np.percentile(lo_, 100.0 * (1.0 - 0.085)))
-    loss = tg.smoothstep(max(thr2, 0.45) - 0.05, max(thr2, 0.45) + 0.05, lo_).astype(np.float32)
+    # ragged, chipped loss outline (1-2 cm bites), not a smooth blob edge
+    lo_ = lo_ + 0.22 * kit.fbm(0.012, 3) + 0.1 * (kit.white(0.006) - 0.5)
+    loss = tg.smoothstep(max(thr2, 0.45) - 0.03, max(thr2, 0.45) + 0.03, lo_).astype(np.float32)
     loss_size = kit.blur(loss, 0.1)  # local loss density ~ patch size
     # brick: in the interior of the large patches only (eroded mask), and only in part of them
     # brick share solved to ~1/3 of the loss area, in the interior of the large patches (eroded mask)
@@ -166,7 +168,8 @@ with core.timer("albedo"):
     render_col = K.ramp(0.5 + 0.3 * kit.fbm(0.05, 3) + 0.15 * kit.fbm(0.006, 2), [(0.0, "#ada390"), (0.5, "#bcb39f"), (1.0, "#cbc2ae")])
     # exposed fired brick (#9c5a40) with per-brick tone, lime mortar and lime residue clinging to the brick faces
     btone = np.clip(0.5 + 0.5 * (b["id"] - 0.5) + 0.15 * kit.fbm(0.03, 2), 0, 1)
-    brick_col = K.ramp(btone, [(0.0, "#8a4e38"), (0.5, "#9c5a40"), (1.0, "#ab6a4c")])
+    brick_col = K.ramp(btone, [(0.0, "#7f4a37"), (0.5, "#94583f"), (1.0, "#a5674b")])
+    brick_col = K.tint(brick_col, "#8a6a58", 0.3 * tg.smoothstep(-0.2, 0.6, kit.fbm(0.05, 3)))  # dusty, weathered faces
     brick_col = K.tint(brick_col, "#b9af9a", 0.55 * mortar)
     brick_col = K.tint(brick_col, "#c4baa4", 0.45 * tg.smoothstep(0.45, 0.8, kit.fbm(0.03, 3) * 0.5 + 0.5))  # lime residue
     brick_col = K.tint(brick_col, "#5e4a3e", 0.25 * tg.smoothstep(-0.2, 0.5, kit.fbm(0.08, 2)))  # grime, weathered faces

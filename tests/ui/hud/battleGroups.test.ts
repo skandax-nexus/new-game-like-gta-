@@ -7,7 +7,7 @@
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { installDom, ShimElement, ShimEvent } from './domShim';
-import { battleGroupsFrom, classCode, formationTitles, roman } from '../../../src/ui/services/battleLabels';
+import { battleGroupsFrom, classCode, formationTitles, resultTitles, roman } from '../../../src/ui/services/battleLabels';
 import { testBattle } from '../../sim/tactical/helpers';
 
 let dom: ReturnType<typeof installDom>;
@@ -45,6 +45,13 @@ describe('formation titles', () => {
     expect(formationTitles(b, 1).get(b.formations.find((f) => f.side === 1)!.index)).toBe('Levy');
     expect(classCode('war_elephants')).toBe('ELE');
     expect(classCode('elite_guards')).toBe('GRD');
+  });
+
+  it('battle results use the same titles as the cards (results come in formation-index order)', () => {
+    const own = b.formations.filter((f) => f.side === 0);
+    const t = formationTitles(b, 0);
+    expect(resultTitles(own)).toEqual(own.map((f) => t.get(f.index)));
+    expect(resultTitles([{ unitClass: 'archers' }])).toEqual(['Archers']);
   });
 });
 

@@ -81,8 +81,8 @@ with core.timer("joints"):
     # V-notch core and a low rounded shoulder where the joint is open; openness per joint and along it
     jx, jy = kit.warp(0.12, 1.4, 3)
     fams = [  # (cell m, length, core half-width, angle range (rad, around +u), bow, density, max depth m)
-        (1.6, (2.4, 3.2), (0.003, 0.012), (np.pi / 2 - 0.35, np.pi / 2 + 0.35), 0.03, 0.4, 0.045),  # steep joints
-        (2.0, (3.0, 4.0), (0.003, 0.011), (-0.25, 0.25), 0.05, 0.4, 0.04),                        # sheet joints
+        (1.6, (2.4, 3.2), (0.003, 0.012), (np.pi / 2 - 0.35, np.pi / 2 + 0.35), 0.03, 0.4, 0.03),  # steep joints
+        (2.0, (3.0, 4.0), (0.003, 0.011), (-0.25, 0.25), 0.05, 0.4, 0.028),                        # sheet joints
         (1.0, (0.8, 1.8), (0.002, 0.005), (0.0, np.pi), 0.06, 0.3, 0.012),                         # secondary
         (0.5, (0.3, 0.8), (0.0012, 0.0025), (0.0, np.pi), 0.05, 0.25, 0.004),                      # short fractures
     ]
@@ -96,7 +96,7 @@ with core.timer("joints"):
         op = (0.3 + 0.7 * sc.e1) * along
         notch = np.clip((p - 5.0 / 6.0) * 6.0, 0.0, 1.0) ** 0.7  # V core
         shoulder = tg.smoothstep(0.0, 1.0, p) ** 2 * op  # low rounded arris only where open
-        d = dmax * (0.25 + 0.75 * op) * notch + 0.45 * dmax * shoulder
+        d = dmax * (0.25 + 0.75 * op) * notch + 0.3 * dmax * shoulder  # shallow: no joint is the darkest mark
         better = d > jdepth
         jdepth = np.where(better, d, jdepth)
         jopen = np.where(better, op, jopen)

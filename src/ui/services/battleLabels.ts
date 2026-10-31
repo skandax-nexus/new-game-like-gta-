@@ -67,6 +67,22 @@ export function formationTitles(b: Readonly<BattleState>, side: SideIndex): Map<
   return out;
 }
 
+/**
+ * The same titles for a side's formation results (battle results screen), so "Levy I" on the cards is "Levy I" in
+ * the results, not two identical "Spearmen" rows. Results come in formation-index order (sim/tactical/outcome.ts).
+ */
+export function resultTitles(formations: readonly { unitClass: UnitClass }[]): string[] {
+  const total = new Map<UnitClass, number>();
+  for (const f of formations) total.set(f.unitClass, (total.get(f.unitClass) ?? 0) + 1);
+  const seen = new Map<UnitClass, number>();
+  return formations.map((f) => {
+    const word = CLASS_WORD[f.unitClass] ?? UNITS[f.unitClass]?.name ?? f.unitClass;
+    const n = (seen.get(f.unitClass) ?? 0) + 1;
+    seen.set(f.unitClass, n);
+    return (total.get(f.unitClass) ?? 0) > 1 ? `${word} ${roman(n)}` : word;
+  });
+}
+
 /** Group numbers in the order the row shows them (keys 1..9 then 0). */
 export const GROUP_ORDER: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
 
